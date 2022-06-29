@@ -11,8 +11,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-defined( 'ABSPATH' ) || exit;
-
 /**
  * Class Main
  *
@@ -105,12 +103,14 @@ class Main {
 		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_styles' ) );
 		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_scripts' ) );
 
+		add_filter( 'woocommerce_shipping_methods', array( $this, 'add_shipping_method' ) );
+
 		// Locate woocommerce template.
 		add_filter( 'woocommerce_locate_template', array( $this, 'woocommerce_locate_template' ), 20, 3 );
 	}
 
 	/**
-	 * Localisation
+	 * Localisation.
 	 */
 	public function load_textdomain() {
 		load_plugin_textdomain( 'postnl-for-woocommerce', false, dirname( plugin_basename( __FILE__ ) ) . '/languages/' );
@@ -128,6 +128,18 @@ class Main {
 	 */
 	public function enqueue_scripts() {
 		wp_enqueue_script( 'mc-customization-frontend', POSTNL_WC_PLUGIN_DIR_URL . '/assets/js/frontend.js', array( 'jquery' ), '1.0.0', true );
+	}
+
+	/**
+	 * Add PostNL Shipping Method to WooCommerce.
+	 *
+	 * @param array( WC_Shipping_Method ) $shipping_methods Array of existing WC shipping methods.
+	 *
+	 * @return array( WC_Shipping_Method )
+	 */
+	public function add_shipping_method( $shipping_methods ) {
+		$shipping_methods['pr_postnl'] = new Method\PostNL();
+		return $shipping_methods;
 	}
 
 	/**
@@ -151,22 +163,6 @@ class Main {
 			<p><?php esc_html_e( 'PostNL plugin requires WooCommerce to be installed and activated!', 'postnl-for-woocommerce' ); ?></p>
 		</div>
 		<?php
-	}
-
-	/**
-	 * Static function to check if user role is shop manager or not.
-	 *
-	 * @return bool
-	 */
-	public static function is_shop_manager() {
-		$user          = wp_get_current_user();
-		$allowed_roles = array( 'shop_manager', 'administrator' );
-
-		if ( array_intersect( $allowed_roles, $user->roles ) ) {
-			return true;    // When user is shop manager.
-		} else {
-			return false;   // When user is not shop manager.
-		}
 	}
 
 	/**

@@ -57,4 +57,27 @@ class User {
 
 		return in_array( $role, $user_roles, true );
 	}
+
+	/**
+	 * Static function to check if user role is shop manager or not.
+	 *
+	 * @param int $user_id WordPress User ID.
+	 *
+	 * @return bool
+	 */
+	public static function is_shop_manager( $user_id = false ) {
+		$user = new \WP_User( $user_id );
+
+		if ( ! $user->exists() ) {
+			$user = wp_get_current_user();
+		}
+
+		$allowed_roles = array( 'shop_manager', 'administrator' );
+
+		if ( array_intersect( $allowed_roles, $user->roles ) ) {
+			return true;    // When user is shop manager.
+		} else {
+			return false;   // When user is not shop manager.
+		}
+	}
 }

@@ -1,6 +1,6 @@
 <?php
 /**
- * Class Order\PostNL file.
+ * Class Order\AbstractOrder file.
  *
  * @package Progressus\PostNLWooCommerce\Order
  */
@@ -12,11 +12,11 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Class PostNL_WC_Order
+ * Class AbstractOrder
  *
  * @package Progressus\PostNLWooCommerce\Order
  */
-abstract class PostNL_WC_Order {
+abstract class AbstractOrder {
 	/**
 	 * Saved shipping settings.
 	 *
@@ -51,7 +51,7 @@ abstract class PostNL_WC_Order {
 	 */
 	public function add_meta_box() {
 		// translators: %s will be replaced by service name.
-		add_meta_box( 'woocommerce-shipment-dhl-label', sprintf( __( '%s Label & Tracking', 'postnl-for-woocommerce' ), $this->service ), array( $this, 'meta_box' ), 'shop_order', 'side', 'high' );
+		add_meta_box( 'woocommerce-shipment-postnl-label', sprintf( __( '%s Label & Tracking', 'postnl-for-woocommerce' ), $this->service ), array( $this, 'meta_box' ), 'shop_order', 'side', 'high' );
 	}
 
 	/**
@@ -59,7 +59,13 @@ abstract class PostNL_WC_Order {
 	 */
 	public function meta_box() {
 
+		$this->additional_meta_box();
 	}
+
+	/**
+	 * Additional fields of the meta box for child class.
+	 */
+	abstract public function additional_meta_box();
 
 	/**
 	 * Saving meta box in order admin page.

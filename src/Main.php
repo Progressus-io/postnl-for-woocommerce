@@ -25,6 +25,20 @@ class Main {
 	private $version = '1.0.0';
 
 	/**
+	 * Shipping Product.
+	 *
+	 * @var Progressus\PostNLWooCommerce\Product\PostNL
+	 */
+	public $shipping_product = null;
+
+	/**
+	 * Shipping Order.
+	 *
+	 * @var Progressus\PostNLWooCommerce\Order\PostNL
+	 */
+	public $shipping_order = null;
+
+	/**
 	 * Instance to call certain functions globally within the plugin
 	 *
 	 * @var _instance
@@ -90,7 +104,8 @@ class Main {
 	 * Initialize the plugin.
 	 */
 	public function init() {
-		new Order();
+		$this->get_shipping_order();
+		$this->get_shipping_product();
 	}
 
 	/**
@@ -133,13 +148,39 @@ class Main {
 	/**
 	 * Add PostNL Shipping Method to WooCommerce.
 	 *
-	 * @param array( WC_Shipping_Method ) $shipping_methods Array of existing WC shipping methods.
+	 * @param array<WC_Shipping_Method> $shipping_methods Array of existing WC shipping methods.
 	 *
-	 * @return array( WC_Shipping_Method )
+	 * @return array<WC_Shipping_Method>
 	 */
 	public function add_shipping_method( $shipping_methods ) {
 		$shipping_methods['pr_postnl'] = new Method\PostNL();
 		return $shipping_methods;
+	}
+
+	/**
+	 * Get order class.
+	 *
+	 * @return Order\PostNL
+	 */
+	public function get_shipping_order() {
+		if ( empty( $this->shipping_order ) ) {
+			$this->shipping_order = new Order\PostNL();
+		}
+
+		return $this->shipping_order;
+	}
+
+	/**
+	 * Get product class.
+	 *
+	 * @return Product\PostNL
+	 */
+	public function get_shipping_product() {
+		if ( empty( $this->shipping_product ) ) {
+			$this->shipping_product = new Product\PostNL();
+		}
+
+		return $this->shipping_product;
 	}
 
 	/**

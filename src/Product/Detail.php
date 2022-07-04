@@ -1,6 +1,6 @@
 <?php
 /**
- * Class Order\AbstractProduct file.
+ * Class Product\Detail file.
  *
  * @package PostNLWooCommerce\Product
  */
@@ -12,11 +12,11 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Class AbstractProduct
+ * Class Detail
  *
  * @package PostNLWooCommerce\Product
  */
-abstract class AbstractProduct {
+class Detail {
 	/**
 	 * Saved shipping settings.
 	 *
@@ -78,16 +78,7 @@ abstract class AbstractProduct {
 				'placeholder' => 'HS Code',
 			)
 		);
-
-		$this->additional_product_settings();
 	}
-
-	/**
-	 * Add the meta box for shipment info on the product page for child class.
-	 *
-	 * @access public
-	 */
-	abstract public function additional_product_settings();
 
 	/**
 	 * Saving meta box in product admin page.
@@ -113,15 +104,5 @@ abstract class AbstractProduct {
 		}
 
 		$product->save();
-
-		$this->save_additional_product_settings( $product_id );
 	}
-
-	/**
-	 * Saving meta box in product admin page for child class.
-	 *
-	 * @param int $product_id Product Post ID.
-	 * @access public
-	 */
-	abstract public function save_additional_product_settings( $product_id );
 }

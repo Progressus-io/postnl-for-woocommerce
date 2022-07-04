@@ -105,6 +105,7 @@ class Main {
 	 */
 	public function init() {
 		$this->get_shipping_order();
+		$this->get_shipping_order_bulk();
 		$this->get_shipping_product();
 	}
 
@@ -158,16 +159,29 @@ class Main {
 	}
 
 	/**
-	 * Get order class.
+	 * Get order detail class.
 	 *
-	 * @return Order\PostNL
+	 * @return Order\Detail
 	 */
 	public function get_shipping_order() {
 		if ( empty( $this->shipping_order ) ) {
-			$this->shipping_order = new Order\PostNL();
+			$this->shipping_order = new Order\Detail();
 		}
 
 		return $this->shipping_order;
+	}
+
+	/**
+	 * Get order bulk class.
+	 *
+	 * @return Order\Bulk
+	 */
+	public function get_shipping_order_bulk() {
+		if ( empty( $this->shipping_order_bulk ) ) {
+			$this->shipping_order_bulk = new Order\Bulk();
+		}
+
+		return $this->shipping_order_bulk;
 	}
 
 	/**
@@ -177,7 +191,7 @@ class Main {
 	 */
 	public function get_shipping_product() {
 		if ( empty( $this->shipping_product ) ) {
-			$this->shipping_product = new Product\PostNL();
+			$this->shipping_product = new Product\Detail();
 		}
 
 		return $this->shipping_product;

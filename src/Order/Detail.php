@@ -1,6 +1,6 @@
 <?php
 /**
- * Class Order\PostNL file.
+ * Class Order\Detail file.
  *
  * @package PostNLWooCommerce\Order
  */
@@ -12,11 +12,64 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Class PostNL
+ * Class Detail
  *
  * @package PostNLWooCommerce\Order
  */
-class PostNL extends AbstractOrder {
+class Detail {
+	/**
+	 * Saved shipping settings.
+	 *
+	 * @var shipping_settings
+	 */
+	protected $shipping_settings = array();
+
+	/**
+	 * Current service.
+	 *
+	 * @var service
+	 */
+	protected $service = 'PostNL';
+
+	/**
+	 * Init and hook in the integration.
+	 */
+	public function __construct() {
+		$this->init_hooks();
+	}
+
+	/**
+	 * Collection of hooks when initiation.
+	 */
+	public function init_hooks() {
+		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_order_detail_css' ) );
+		add_action( 'add_meta_boxes', array( $this, 'add_meta_box' ), 20 );
+		add_action( 'woocommerce_process_shop_order_meta', array( $this, 'save_meta_box' ), 0, 2 );
+	}
+
+	/**
+	 * Enqueue CSS file in order detail page.
+	 */
+	public function enqueue_order_detail_css() {
+		wp_enqueue_style( 'postnl_order_detail', POSTNL_WC_PLUGIN_DIR_URL . '/assets/css/admin-postnl-order-detail.css', array(), POSTNL_WC_VERSION );
+	}
+
+	/**
+	 * Adding meta box in order admin page.
+	 */
+	public function add_meta_box() {
+		// translators: %s will be replaced by service name.
+		add_meta_box( 'woocommerce-shipment-postnl-label', sprintf( __( '%s Label & Tracking', 'postnl-for-woocommerce' ), $this->service ), array( $this, 'meta_box' ), 'shop_order', 'side', 'high' );
+	}
+
+	/**
+	 * Fields of the meta box.
+	 */
+	public function meta_box() {
+
+		$this->additional_meta_box();
+	}
+
 	/**
 	 * Additional fields of the meta box for child class.
 	 */
@@ -28,7 +81,7 @@ class PostNL extends AbstractOrder {
 			)
 		);
 		?>
-		<div id="shipment-dhl-label-form">
+		<div id="shipment-postnl-label-form">
 			<div class="shipment-postnl-row-container shipment-postnl-row-delivery-type">
 			<?php
 				woocommerce_wp_select(
@@ -51,7 +104,7 @@ class PostNL extends AbstractOrder {
 				woocommerce_wp_checkbox(
 					array(
 						'id'          => 'postnl_insured_shipping',
-						'label'       => __( 'Insured Shipping: ', 'dhl-for-woocommerce' ),
+						'label'       => __( 'Insured Shipping: ', 'postnl-for-woocommerce' ),
 						'placeholder' => '',
 						'description' => '',
 						'value'       => '',
@@ -65,7 +118,7 @@ class PostNL extends AbstractOrder {
 				woocommerce_wp_checkbox(
 					array(
 						'id'          => 'postnl_return_no_answer',
-						'label'       => __( 'Return if no answer: ', 'dhl-for-woocommerce' ),
+						'label'       => __( 'Return if no answer: ', 'postnl-for-woocommerce' ),
 						'placeholder' => '',
 						'description' => '',
 						'value'       => '',
@@ -79,7 +132,7 @@ class PostNL extends AbstractOrder {
 				woocommerce_wp_checkbox(
 					array(
 						'id'          => 'postnl_signature_on_delivery',
-						'label'       => __( 'Signature on Delivery: ', 'dhl-for-woocommerce' ),
+						'label'       => __( 'Signature on Delivery: ', 'postnl-for-woocommerce' ),
 						'placeholder' => '',
 						'description' => '',
 						'value'       => '',
@@ -93,7 +146,7 @@ class PostNL extends AbstractOrder {
 				woocommerce_wp_checkbox(
 					array(
 						'id'          => 'postnl_only_home_address',
-						'label'       => __( 'Only Home Address: ', 'dhl-for-woocommerce' ),
+						'label'       => __( 'Only Home Address: ', 'postnl-for-woocommerce' ),
 						'placeholder' => '',
 						'description' => '',
 						'value'       => '',
@@ -106,11 +159,17 @@ class PostNL extends AbstractOrder {
 			<?php
 				woocommerce_wp_text_input(
 					array(
-						'id'          => 'postnl_num_labels',
-						'label'       => __( 'Number of Labels: ', 'dhl-for-woocommerce' ),
-						'placeholder' => '',
-						'description' => '',
-						'value'       => '',
+						'id'                => 'postnl_num_labels',
+						'label'             => __( 'Number of Labels: ', 'postnl-for-woocommerce' ),
+						'placeholder'       => '',
+						'description'       => '',
+						'class'             => 'short',
+						'value'             => '',
+						'custom_attributes' => array(
+							'step' => 'any',
+							'min'  => '0',
+						),
+						'type'              => 'number',
 					)
 				);
 			?>
@@ -121,7 +180,7 @@ class PostNL extends AbstractOrder {
 				woocommerce_wp_checkbox(
 					array(
 						'id'          => 'postnl_create_return_label',
-						'label'       => __( 'Create Return Label: ', 'dhl-for-woocommerce' ),
+						'label'       => __( 'Create Return Label: ', 'postnl-for-woocommerce' ),
 						'placeholder' => '',
 						'description' => '',
 						'value'       => '',
@@ -131,5 +190,15 @@ class PostNL extends AbstractOrder {
 			</div>
 		</div>
 		<?php
+	}
+
+	/**
+	 * Saving meta box in order admin page.
+	 *
+	 * @param int     $post_id Order post ID.
+	 * @param WP_Post $post Order post object.
+	 */
+	public function save_meta_box( $post_id, $post = null ) {
+		// Loop through inputs within id 'shipment-postnl-label-form'.
 	}
 }

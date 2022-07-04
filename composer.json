@@ -1,11 +1,11 @@
 {
-  "name": "progressus/postnl-for-woocommerce",
+  "name": "postnl/postnl-for-woocommerce",
   "license": "GPL-3.0",
   "require": {
   },
   "autoload": {
     "psr-4": {
-      "Progressus\\PostNLWooCommerce\\": "src/"
+      "PostNLWooCommerce\\": "src/"
     }
   }
 }

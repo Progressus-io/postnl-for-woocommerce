@@ -2,10 +2,10 @@
 /**
  * Class Order file.
  *
- * @package Progressus\PostNLWooCommerce
+ * @package PostNLWooCommerce
  */
 
-namespace Progressus\PostNLWooCommerce;
+namespace PostNLWooCommerce;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -14,7 +14,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Class Order
  *
- * @package Progressus\PostNLWooCommerce
+ * @package PostNLWooCommerce
  */
 class Order {
 	/**
@@ -52,3 +52,10 @@ class Order {
 		return $actions;
 	}
 }
+
+// "default" should be in the end of id.
+// remove "pr_"
+// remove "postnl_" 
+// use postnl from the ID.
+// remove Progresus/ from PostNL
+// Check the number field.

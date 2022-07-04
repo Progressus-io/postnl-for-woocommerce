@@ -22,7 +22,7 @@
  * @link       http://mosquitocurtains.com/
  * @since      1.0.0
  *
- * @package    Progressus\PostNLWooCommerce
+ * @package    PostNLWooCommerce
  */
 
 // If uninstall not called from WordPress, then exit.

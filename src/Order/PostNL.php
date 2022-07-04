@@ -2,10 +2,10 @@
 /**
  * Class Order\PostNL file.
  *
- * @package Progressus\PostNLWooCommerce\Order
+ * @package PostNLWooCommerce\Order
  */
 
-namespace Progressus\PostNLWooCommerce\Order;
+namespace PostNLWooCommerce\Order;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -14,7 +14,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Class PostNL
  *
- * @package Progressus\PostNLWooCommerce\Order
+ * @package PostNLWooCommerce\Order
  */
 class PostNL extends AbstractOrder {
 	/**

@@ -2,10 +2,10 @@
 /**
  * Class Main file.
  *
- * @package Progressus\PostNLWooCommerce
+ * @package PostNLWooCommerce
  */
 
-namespace Progressus\PostNLWooCommerce;
+namespace PostNLWooCommerce;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -14,7 +14,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Class Main
  *
- * @package Progressus\PostNLWooCommerce
+ * @package PostNLWooCommerce
  */
 class Main {
 	/**
@@ -27,14 +27,14 @@ class Main {
 	/**
 	 * Shipping Product.
 	 *
-	 * @var Progressus\PostNLWooCommerce\Product\PostNL
+	 * @var PostNLWooCommerce\Product\PostNL
 	 */
 	public $shipping_product = null;
 
 	/**
 	 * Shipping Order.
 	 *
-	 * @var Progressus\PostNLWooCommerce\Order\PostNL
+	 * @var PostNLWooCommerce\Order\PostNL
 	 */
 	public $shipping_order = null;
 

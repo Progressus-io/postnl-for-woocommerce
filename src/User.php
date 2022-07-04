@@ -2,10 +2,10 @@
 /**
  * Class Main file.
  *
- * @package Progressus\PostNLWooCommerce
+ * @package PostNLWooCommerce
  */
 
-namespace Progressus\PostNLWooCommerce;
+namespace PostNLWooCommerce;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -14,7 +14,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Class User
  *
- * @package Progressus\PostNLWooCommerce
+ * @package PostNLWooCommerce
  */
 class User {
 	/**

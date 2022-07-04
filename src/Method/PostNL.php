@@ -126,7 +126,7 @@ class PostNL extends \WC_Shipping_Method {
 				'type'        => 'title',
 				'description' => esc_html__( 'Please configure your label parameters.', 'postnl-for-woocommerce' ),
 			),
-			'default_return_address'    => array(
+			'return_address_default'    => array(
 				'title'       => esc_html__( 'Default Return Address', 'postnl-for-woocommerce' ),
 				'type'        => 'checkbox',
 				'description' => esc_html__( 'Default whether to create a return address or not.', 'postnl-for-woocommerce' ),

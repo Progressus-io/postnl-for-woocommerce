@@ -154,18 +154,18 @@ class Main {
 	 * @return array<WC_Shipping_Method>
 	 */
 	public function add_shipping_method( $shipping_methods ) {
-		$shipping_methods['pr_postnl'] = new Method\PostNL();
+		$shipping_methods['pr_postnl'] = new Shipping_Method\PostNL();
 		return $shipping_methods;
 	}
 
 	/**
-	 * Get order detail class.
+	 * Get order single class.
 	 *
-	 * @return Order\Detail
+	 * @return Order\Single
 	 */
 	public function get_shipping_order() {
 		if ( empty( $this->shipping_order ) ) {
-			$this->shipping_order = new Order\Detail();
+			$this->shipping_order = new Order\Single();
 		}
 
 		return $this->shipping_order;
@@ -187,11 +187,11 @@ class Main {
 	/**
 	 * Get product class.
 	 *
-	 * @return Product\PostNL
+	 * @return Product\Single
 	 */
 	public function get_shipping_product() {
 		if ( empty( $this->shipping_product ) ) {
-			$this->shipping_product = new Product\Detail();
+			$this->shipping_product = new Product\Single();
 		}
 
 		return $this->shipping_product;

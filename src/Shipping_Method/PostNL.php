@@ -1,11 +1,11 @@
 <?php
 /**
- * Class Method/PostNL file.
+ * Class Shipping_Method/PostNL file.
  *
- * @package PostNLWooCommerce\Method
+ * @package PostNLWooCommerce\Shipping_Method
  */
 
-namespace PostNLWooCommerce\Method;
+namespace PostNLWooCommerce\Shipping_Method;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -14,7 +14,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Class PostNL
  *
- * @package PostNLWooCommerce\Method
+ * @package PostNLWooCommerce\Shipping_Method
  */
 class PostNL extends \WC_Shipping_Method {
 	/**

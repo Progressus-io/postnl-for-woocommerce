@@ -1,6 +1,6 @@
 <?php
 /**
- * Class Order\Detail file.
+ * Class Order\Single file.
  *
  * @package PostNLWooCommerce\Order
  */
@@ -12,11 +12,11 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Class Detail
+ * Class Single
  *
  * @package PostNLWooCommerce\Order
  */
-class Detail {
+class Single {
 	/**
 	 * Saved shipping settings.
 	 *

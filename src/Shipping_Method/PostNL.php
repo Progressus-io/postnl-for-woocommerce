@@ -23,7 +23,7 @@ class PostNL extends \WC_Shipping_Method {
 	 * @param int $instance_id Instance ID.
 	 */
 	public function __construct( $instance_id = 0 ) {
-		$this->id           = 'postnl';
+		$this->id           = POSTNL_SETTINGS_ID;
 		$this->instance_id  = absint( $instance_id );
 		$this->method_title = __( 'PostNL', 'postnl-for-woocommerce' );
 
@@ -51,12 +51,12 @@ class PostNL extends \WC_Shipping_Method {
 	public function init_form_fields() {
 		$this->form_fields = array(
 			// Account Settings.
-			'account_settings_title'   => array(
+			'account_settings_title'    => array(
 				'title'       => esc_html__( 'Account Settings', 'postnl-for-woocommerce' ),
 				'type'        => 'title',
 				'description' => esc_html__( 'Please configure your shipping parameters and your access towards the PostNL APIs by means of authentication.', 'postnl-for-woocommerce' ),
 			),
-			'customer_num'             => array(
+			'customer_num'              => array(
 				'title'             => esc_html__( 'Customer Number', 'postnl-for-woocommerce' ),
 				'type'              => 'text',
 				'description'       => esc_html__( 'Your customer number (10 digits - numerical). This will be provided by your local PostNL sales organization.', 'postnl-for-woocommerce' ),
@@ -65,7 +65,7 @@ class PostNL extends \WC_Shipping_Method {
 				'placeholder'       => '1234567890',
 				'custom_attributes' => array( 'maxlength' => '10' ),
 			),
-			'customer_code'            => array(
+			'customer_code'             => array(
 				'title'             => esc_html__( 'Customer Code', 'postnl-for-woocommerce' ),
 				'type'              => 'text',
 				'description'       => esc_html__( 'Your customer code (10 digits - numerical). This will be provided by your local PostNL sales organization.', 'postnl-for-woocommerce' ),
@@ -74,7 +74,7 @@ class PostNL extends \WC_Shipping_Method {
 				'placeholder'       => '1234567890',
 				'custom_attributes' => array( 'maxlength' => '10' ),
 			),
-			'location_code'            => array(
+			'location_code'             => array(
 				'title'             => esc_html__( 'Location Code', 'postnl-for-woocommerce' ),
 				'type'              => 'text',
 				'description'       => esc_html__( 'Your location code', 'postnl-for-woocommerce' ),
@@ -83,7 +83,7 @@ class PostNL extends \WC_Shipping_Method {
 				'placeholder'       => '',
 				'custom_attributes' => array( 'maxlength' => '10' ),
 			),
-			'globalpack_type_barcode'  => array(
+			'globalpack_type_barcode'   => array(
 				'title'             => esc_html__( 'Type Barcode GlobalPack', 'postnl-for-woocommerce' ),
 				'type'              => 'text',
 				'description'       => esc_html__( 'Your type barcode for GlobalPack', 'postnl-for-woocommerce' ),
@@ -92,7 +92,7 @@ class PostNL extends \WC_Shipping_Method {
 				'placeholder'       => '',
 				'custom_attributes' => array( 'maxlength' => '10' ),
 			),
-			'globalpack_customer_code' => array(
+			'globalpack_customer_code'  => array(
 				'title'             => esc_html__( 'GlobalPack Customer Code', 'postnl-for-woocommerce' ),
 				'type'              => 'text',
 				'description'       => esc_html__( 'Your customer code for GlobalPack', 'postnl-for-woocommerce' ),
@@ -101,7 +101,7 @@ class PostNL extends \WC_Shipping_Method {
 				'placeholder'       => '',
 				'custom_attributes' => array( 'maxlength' => '10' ),
 			),
-			'api_keys'                 => array(
+			'api_keys'                  => array(
 				'title'             => esc_html__( 'API Keys', 'postnl-for-woocommerce' ),
 				'type'              => 'text',
 				'description'       => esc_html__( 'Your API keys to authenticate the PostNL API', 'postnl-for-woocommerce' ),
@@ -110,7 +110,7 @@ class PostNL extends \WC_Shipping_Method {
 				'placeholder'       => '',
 				'custom_attributes' => array( 'maxlength' => '10' ),
 			),
-			'enable_logging'           => array(
+			'enable_logging'            => array(
 				'title'             => esc_html__( 'Enable Logging', 'postnl-for-woocommerce' ),
 				'type'              => 'checkbox',
 				'description'       => esc_html__( 'Enable logging.', 'postnl-for-woocommerce' ),
@@ -134,7 +134,7 @@ class PostNL extends \WC_Shipping_Method {
 				'default'     => '',
 				'placeholder' => '',
 			),
-			'return_name'              => array(
+			'return_name'               => array(
 				'title'       => esc_html__( 'Name', 'postnl-for-woocommerce' ),
 				'type'        => 'text',
 				'description' => esc_html__( 'Enter Return Name.', 'postnl-for-woocommerce' ),

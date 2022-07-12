@@ -76,6 +76,21 @@ class Single extends Base {
 	}
 
 	/**
+	 * Additional fields of the meta box for child class.
+	 */
+	public function meta_box_html() {
+		?>
+		<div id="shipment-postnl-label-form">
+			<?php $this->fields_generator( $this->meta_box_fields() ); ?>
+
+			<div class="button-container">
+				<button class="button button-primary button-save-form"><?php esc_html_e( 'Save Shipment', 'postnl-for-woocommerce' ); ?></button>
+			</div>
+		</div>
+		<?php
+	}
+
+	/**
 	 * Saving meta box in order admin page.
 	 *
 	 * @param int     $post_id Order post ID.

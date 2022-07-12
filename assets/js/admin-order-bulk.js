@@ -1,6 +1,6 @@
 ( function( $ ) {
 
-	var postnl_create_label_bulk = {
+	var postnl_order_bulk = {
 		// init Class
 		init: function() {
 			jQuery( '#posts-filter' )
@@ -30,6 +30,6 @@
 		},
 	};
 
-	postnl_create_label_bulk.init();
+	postnl_order_bulk.init();
 
 } )( jQuery );

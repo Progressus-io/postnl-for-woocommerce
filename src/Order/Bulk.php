@@ -52,8 +52,8 @@ class Bulk extends Base {
 			wp_enqueue_script( 'thickbox' );
 
 			wp_enqueue_script(
-				'postnl-create-label-bulk',
-				POSTNL_WC_PLUGIN_DIR_URL . '/assets/js/admin-postnl-create-label-bulk.js',
+				'postnl-admin-order-bulk',
+				POSTNL_WC_PLUGIN_DIR_URL . '/assets/js/admin-order-bulk.js',
 				array( 'thickbox' ),
 				POSTNL_WC_VERSION,
 				true

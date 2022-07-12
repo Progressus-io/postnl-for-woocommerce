@@ -31,7 +31,7 @@ class Single extends Base {
 	 * Enqueue CSS file in order detail page.
 	 */
 	public function enqueue_order_single_css() {
-		wp_enqueue_style( 'postnl_order_single', POSTNL_WC_PLUGIN_DIR_URL . '/assets/css/admin-postnl-order-single.css', array(), POSTNL_WC_VERSION );
+		wp_enqueue_style( 'postnl-admin-order-single', POSTNL_WC_PLUGIN_DIR_URL . '/assets/css/admin-order-single.css', array(), POSTNL_WC_VERSION );
 	}
 
 	/**

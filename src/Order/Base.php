@@ -157,6 +157,10 @@ abstract class Base {
 					woocommerce_wp_textarea_input( $field );
 					break;
 
+				case 'break':
+					echo '<div class="postnl-break-line ' . esc_attr( $field['id'] ) . '"><hr /></div>';
+					break;
+
 				case 'text':
 				case 'number':
 				default:

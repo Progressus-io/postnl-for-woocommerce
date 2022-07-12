@@ -25,6 +25,13 @@ class Main {
 	private $version = '1.0.0';
 
 	/**
+	 * The ID of this plugin settings.
+	 *
+	 * @var settings_id
+	 */
+	public $settings_id = 'postnl';
+
+	/**
 	 * Shipping Product.
 	 *
 	 * @var PostNLWooCommerce\Product\PostNL
@@ -34,9 +41,23 @@ class Main {
 	/**
 	 * Shipping Order.
 	 *
-	 * @var PostNLWooCommerce\Order\PostNL
+	 * @var PostNLWooCommerce\Order\Single
 	 */
 	public $shipping_order = null;
+
+	/**
+	 * Shipping Order Bulk.
+	 *
+	 * @var PostNLWooCommerce\Order\Bulk
+	 */
+	public $shipping_order_bulk = null;
+
+	/**
+	 * Shipping Settings.
+	 *
+	 * @var PostNLWooCommerce\Shipping_Method\Settings
+	 */
+	public $shipping_settings = null;
 
 	/**
 	 * Instance to call certain functions globally within the plugin
@@ -80,7 +101,7 @@ class Main {
 		$this->define( 'POSTNL_WC_PLUGIN_DIR_URL', untrailingslashit( plugins_url( '/', POSTNL_WC_PLUGIN_FILE ) ) );
 
 		$this->define( 'POSTNL_WC_VERSION', $this->version );
-
+		$this->define( 'POSTNL_SETTINGS_ID', $this->settings_id );
 		$this->define( 'POSTNL_WC_LOG_DIR', $upload_dir['basedir'] . '/wc-logs/' );
 	}
 
@@ -195,6 +216,19 @@ class Main {
 		}
 
 		return $this->shipping_product;
+	}
+
+	/**
+	 * Get settings class.
+	 *
+	 * @return Shipping_Method\Settings
+	 */
+	public function get_shipping_settings() {
+		if ( empty( $this->shipping_settings ) ) {
+			$this->shipping_settings = new Shipping_Method\Settings();
+		}
+
+		return $this->shipping_settings;
 	}
 
 	/**

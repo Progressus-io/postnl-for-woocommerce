@@ -37,4 +37,13 @@ if ( ! defined( 'POSTNL_WC_PLUGIN_FILE' ) ) {
 
 require_once 'vendor/autoload.php';
 
-Main::instance();
+/**
+ * Main PostNL for WooCommerce.
+ *
+ * @return Main instance.
+ */
+function postnl() {
+	return Main::instance();
+}
+
+postnl();

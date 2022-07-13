@@ -25,11 +25,32 @@ abstract class Base {
 	protected $shipping_settings = array();
 
 	/**
+	 * Nonce key for ajax call.
+	 *
+	 * @var nonce_key
+	 */
+	protected $nonce_key = 'create-postnl-label';
+
+	/**
 	 * Current service.
 	 *
 	 * @var service
 	 */
 	protected $service = 'PostNL';
+
+	/**
+	 * Prefix for meta box fields.
+	 *
+	 * @var prefix
+	 */
+	protected $prefix = 'postnl_';
+
+	/**
+	 * Meta name for saved fields.
+	 *
+	 * @var saved_meta
+	 */
+	protected $saved_meta = '_postnl_saved_fields';
 
 	/**
 	 * Init and hook in the integration.
@@ -44,6 +65,31 @@ abstract class Base {
 	abstract public function init_hooks();
 
 	/**
+	 * Get nonce field.
+	 *
+	 * @return array
+	 */
+	public function get_nonce_fields() {
+		return array_filter(
+			$this->meta_box_fields(),
+			function( $field ) {
+				return ( ! empty( $field['nonce'] ) && true === $field['nonce'] );
+			}
+		);
+	}
+
+	/**
+	 * Get field name without prefix.
+	 *
+	 * @param String $field_name Name of the field.
+	 *
+	 * @return String
+	 */
+	public function remove_prefix_field( $field_name ) {
+		return str_replace( $this->prefix, '', $field_name );
+	}
+
+	/**
 	 * Generating meta box fields.
 	 */
 	public function meta_box_fields() {
@@ -51,12 +97,17 @@ abstract class Base {
 			'postnl_order_meta_box_fields',
 			array(
 				array(
-					'id'    => 'postnl_label_nonce',
-					'type'  => 'hidden',
-					'value' => wp_create_nonce( 'create-postnl-label' ),
+					'id'                => $this->prefix . 'delivery_type',
+					'type'              => 'text',
+					'label'             => __( 'Delivery Type:', 'postnl-for-woocommerce' ),
+					'description'       => '',
+					'class'             => 'long',
+					'value'             => 'Standard',
+					'custom_attributes' => array( 'readonly' => 'readonly' ),
+					'container'         => true,
 				),
 				array(
-					'id'          => 'postnl_insured_shipping',
+					'id'          => $this->prefix . 'insured_shipping',
 					'type'        => 'checkbox',
 					'label'       => __( 'Insured Shipping: ', 'postnl-for-woocommerce' ),
 					'placeholder' => '',
@@ -65,7 +116,11 @@ abstract class Base {
 					'container'   => true,
 				),
 				array(
-					'id'          => 'postnl_return_no_answer',
+					'id'   => $this->prefix . 'break_1',
+					'type' => 'break',
+				),
+				array(
+					'id'          => $this->prefix . 'return_no_answer',
 					'type'        => 'checkbox',
 					'label'       => __( 'Return if no answer: ', 'postnl-for-woocommerce' ),
 					'placeholder' => '',
@@ -74,7 +129,7 @@ abstract class Base {
 					'container'   => true,
 				),
 				array(
-					'id'          => 'postnl_signature_on_delivery',
+					'id'          => $this->prefix . 'signature_on_delivery',
 					'type'        => 'checkbox',
 					'label'       => __( 'Signature on Delivery: ', 'postnl-for-woocommerce' ),
 					'placeholder' => '',
@@ -83,7 +138,7 @@ abstract class Base {
 					'container'   => true,
 				),
 				array(
-					'id'          => 'postnl_only_home_address',
+					'id'          => $this->prefix . 'only_home_address',
 					'type'        => 'checkbox',
 					'label'       => __( 'Only Home Address: ', 'postnl-for-woocommerce' ),
 					'placeholder' => '',
@@ -92,7 +147,7 @@ abstract class Base {
 					'container'   => true,
 				),
 				array(
-					'id'                => 'postnl_num_labels',
+					'id'                => $this->prefix . 'num_labels',
 					'type'              => 'number',
 					'label'             => __( 'Number of Labels: ', 'postnl-for-woocommerce' ),
 					'placeholder'       => '',
@@ -114,6 +169,12 @@ abstract class Base {
 					'description' => '',
 					'value'       => '',
 					'container'   => true,
+				),
+				array(
+					'id'    => $this->prefix . 'label_nonce',
+					'type'  => 'hidden',
+					'nonce' => true,
+					'value' => wp_create_nonce( $this->nonce_key ),
 				),
 			)
 		);
@@ -158,7 +219,7 @@ abstract class Base {
 					break;
 
 				case 'break':
-					echo '<div class="postnl-break-line ' . esc_attr( $field['id'] ) . '"><hr /></div>';
+					echo '<div class="postnl-break-line ' . esc_attr( $field['id'] ) . '"><hr id="' . esc_attr( $field['id'] ) . '" /></div>';
 					break;
 
 				case 'text':

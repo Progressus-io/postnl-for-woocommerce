@@ -6,18 +6,14 @@
 		// init Class
 		init: function() {
 			jQuery( '#shipment-postnl-label-form' )
-				.on( 'click', 'a.delete-tracking', this.delete_tracking )
+				.on( 'click', 'a.delete-label', this.delete_label )
 				.on( 'click', 'button.button-save-form', this.save_form );
 		},
 
 		// When a user enters a new tracking item
 		save_form: function () {
-
-			if ( !$( 'input#tracking_number' ).val() ) {
-				return false;
-			}
-
-			$( '#shipment-tracking-form' ).block( {
+			var label_form = jQuery( '#shipment-postnl-label-form' );
+			label_form.block( {
 				message: null,
 				overlayCSS: {
 					background: '#fff',
@@ -25,30 +21,33 @@
 				}
 			} );
 
+			
 			var data = {
-				action:                   'wc_shipment_tracking_save_form',
-				order_id:                 woocommerce_admin_meta_boxes.post_id,
-				tracking_provider:        $( '#tracking_provider' ).val(),
-				custom_tracking_provider: $( '#custom_tracking_provider' ).val(),
-				custom_tracking_link:     $( 'input#custom_tracking_link' ).val(),
-				tracking_number:          $( 'input#tracking_number' ).val(),
-				date_shipped:             $( 'input#date_shipped' ).val(),
-				security:                 $( '#wc_shipment_tracking_create_nonce' ).val()
+				action:   'postnl_order_save_form',
+				order_id: woocommerce_admin_meta_boxes.post_id,
 			};
+			
+			for ( var i = 0; i < postnl_admin_order_obj.fields.length; i++ ) {
+				var field_name = postnl_admin_order_obj.fields[ i ].replace( postnl_admin_order_obj.prefix, '' );
+				var maybe_field = label_form.find( '#' + postnl_admin_order_obj.fields[ i ] );
 
+				if ( ! maybe_field.is( ':input' ) ) {
+					continue;
+				}
+				
+				if ( 'checkbox' === maybe_field.prop( 'type' ) ) {
+					data[ field_name ] = maybe_field.is( ':checked' ) ? maybe_field.val() : '';
+				} else {
+					data[ field_name ] = maybe_field.val();
+				}
+			}
 
+			console.log( data );
 			$.post( woocommerce_admin_meta_boxes.ajax_url, data, function( response ) {
-				$( '#shipment-tracking-form' ).unblock();
-				if ( response != '-1' ) {
-					$( '#shipment-tracking-form' ).hide();
-					$( '#woocommerce-shipment-tracking #tracking-items' ).append( response );
-					$( '#woocommerce-shipment-tracking button.button-show-form' ).show();
-					$( '#tracking_provider' ).selectedIndex = 0;
-					$( '#custom_tracking_provider' ).val( '' );
-					$( 'input#custom_tracking_link' ).val( '' );
-					$( 'input#tracking_number' ).val( '' );
-					$( 'input#date_shipped' ).val( '' );
-					$('p.preview_tracking_link').hide();
+				label_form.unblock();
+				console.log( response );
+				if ( response.success === true ) {
+					alert( 'ok' );
 				}
 			});
 
@@ -56,7 +55,7 @@
 		},
 
 		// Delete a tracking item
-		delete_tracking: function() {
+		delete_label: function() {
 
 			var tracking_id = $( this ).attr( 'rel' );
 
@@ -111,5 +110,5 @@
 
 	postnl_order_single.init();
 
-	window.wc_shipment_tracking_refresh = postnl_order_single.refresh_items;
+	window.postnl_order_single_refresh = postnl_order_single.refresh_items;
 } )( jQuery );

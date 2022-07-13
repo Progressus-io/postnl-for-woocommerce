@@ -25,6 +25,7 @@ class Bulk extends Base {
 		add_filter( 'bulk_actions-edit-shop_order', array( $this, 'add_order_bulk_actions' ), 10, 1 );
 		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_modal_box_assets' ) );
 		add_action( 'admin_footer', array( $this, 'model_content_fields_create_label' ) );
+		add_filter( 'postnl_order_meta_box_fields', array( $this, 'additional_meta_box' ), 10, 1 );
 	}
 
 	/**
@@ -59,6 +60,30 @@ class Bulk extends Base {
 				true
 			);
 		}
+	}
+
+	/**
+	 * Adding additional meta box in order admin page.
+	 *
+	 * @param array $fields List of fields for order admin page.
+	 */
+	public function additional_meta_box( $fields ) {
+		$screen = get_current_screen();
+
+		if ( empty( $screen ) ) {
+			return $fields;
+		}
+
+		if ( 'edit' === $screen->base && 'shop_order' === $screen->post_type && $screen->in_admin() ) {
+			return array_filter(
+				$fields,
+				function( $field ) {
+					return ( $this->prefix . 'delivery_type' !== $field['id'] );
+				}
+			);
+		}
+
+		return $fields;
 	}
 
 	/**

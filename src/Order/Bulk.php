@@ -23,6 +23,7 @@ class Bulk extends Base {
 	 */
 	public function init_hooks() {
 		add_filter( 'bulk_actions-edit-shop_order', array( $this, 'add_order_bulk_actions' ), 10, 1 );
+		add_filter( 'handle_bulk_actions-edit-shop_order', array( $this, 'process_order_bulk_actions' ), 10, 3 );
 		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_modal_box_assets' ) );
 		add_action( 'admin_footer', array( $this, 'model_content_fields_create_label' ) );
 		add_filter( 'postnl_order_meta_box_fields', array( $this, 'additional_meta_box' ), 10, 1 );
@@ -39,6 +40,36 @@ class Bulk extends Base {
 		$bulk_actions['postnl-create-label'] = esc_html__( 'PostNL Create Label', 'postnl-for-woocommerce' );
 
 		return $bulk_actions;
+	}
+
+	/**
+	 * Process PostNL in bulk.
+	 *
+	 * @param String $redirect Redirect URL after the bulk has been processed.
+	 * @param String $doaction The chosen action.
+	 * @param array  $object_ids All chose IDs.
+	 *
+	 * @return string
+	 */
+	public function process_order_bulk_actions( $redirect, $doaction, $object_ids ) {
+		if ( 'postnl-create-label' !== $doaction ) {
+			return $redirect;
+		}
+		error_log( print_r( $_REQUEST, true ) );
+		error_log( print_r( $object_ids, true ) );
+		try {
+			if ( ! empty( $object_ids ) ) {
+				foreach ( $object_ids as $order_id ) {
+					$this->save_meta_box( $order_id );
+				}
+			}
+		} catch ( \Exception $e ) {
+			error_log( print_r( $e, true ) );
+			// Should return some errors.
+			return $redirect;
+		}
+
+		return $redirect;
 	}
 
 	/**
@@ -101,8 +132,7 @@ class Bulk extends Base {
 			?>
 			<div id="postnl-create-label-modal" style="display:none;">
 				<div id="postnl-action-create-label">
-
-					<?php $this->meta_box_html(); ?>
+					<?php $this->fields_generator( $this->meta_box_fields() ); ?>
 
 					<br>
 					<button type="button" class="button button-primary" id="postnl_create_label_proceed"><?php esc_html_e( 'Submit', 'postnl-for-woocommerce' ); ?></button>

@@ -42,7 +42,6 @@
 				}
 			}
 
-			console.log( data );
 			$.post( woocommerce_admin_meta_boxes.ajax_url, data, function( response ) {
 				label_form.unblock();
 				console.log( response );

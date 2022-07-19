@@ -82,57 +82,16 @@ class Single extends Base {
 	}
 
 	/**
-	 * Saving meta box in order admin page.
-	 *
-	 * @param int     $post_id Order post ID.
-	 * @param WP_Post $post Order post object.
-	 */
-	public function save_meta_box( $post_id, $post = null ) {
-		// Loop through inputs within id 'shipment-postnl-label-form'.
-	}
-
-	/**
 	 * Saving meta box in order admin page using ajax.
 	 */
 	public function save_meta_box_ajax() {
-		// Get array of nonce fields.
-		$nonce_fields = array_values( $this->get_nonce_fields() );
-
-		if ( empty( $nonce_fields ) ) {
+		try {
+			$saved_data = $this->save_meta_box( false );
+			wp_send_json_success( $saved_data );
+		} catch ( \Exception $e ) {
 			wp_send_json_error(
-				array( 'message' => esc_html__( 'Cannot find nonce field!', 'postnl-for-woocommerce' ) ),
+				array( 'message' => $e->getMessage() ),
 			);
 		}
-		error_log( print_r( $nonce_fields, true ) );
-		// Check nonce before proceed.
-		check_ajax_referer( $this->nonce_key, $this->remove_prefix_field( $nonce_fields[0]['id'] ) );
-
-		$order_id = ! empty( $_POST['order_id'] ) ? sanitize_text_field( wp_unslash( $_POST['order_id'] ) ) : 0;
-		$order    = wc_get_order( $order_id );
-
-		if ( ! is_a( $order, 'WC_Order' ) ) {
-			wp_send_json_error(
-				array( 'message' => esc_html__( 'Order does not exists!', 'postnl-for-woocommerce' ) ),
-			);
-		}
-
-		$saved_data = array();
-
-		// Loop through inputs within id 'shipment-postnl-label-form'.
-		foreach ( $this->meta_box_fields() as $field ) {
-			// Don't save nonce field.
-			if ( $nonce_fields[0]['id'] === $field['id'] ) {
-				continue;
-			}
-
-			$post_name  = $this->remove_prefix_field( $field['id'] );
-			$post_value = ! empty( $_POST[ $post_name ] ) ? sanitize_text_field( wp_unslash( $_POST[ $post_name ] ) ) : '';
-
-			$saved_data [ $field['id'] ] = $post_value;
-		}
-
-		update_post_meta( $order_id, $this->saved_meta, $saved_data );
-
-		wp_send_json_success( $saved_data );
 	}
 }

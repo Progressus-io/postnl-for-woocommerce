@@ -3,9 +3,11 @@
 	var postnl_order_bulk = {
 		// init Class
 		init: function() {
-			jQuery( '#posts-filter' )
+			var posts_filter = jQuery( '#posts-filter' );
+			
+			posts_filter
 				.on( 'change', '#bulk-action-selector-top', this.toggle_create_label_modal );
-			jQuery( '#posts-filter' )
+			posts_filter
 				.on( 'change', '#bulk-action-selector-bottom', this.toggle_create_label_modal );
 		},
 
@@ -20,7 +22,17 @@
 
 				// Show thickbox modal.
 				tb_show( "", '/?TB_inline=true&width=460&height=420&inlineId=postnl-create-label-modal' );
-				jQuery("#TB_window #TB_ajaxWindowTitle").text(title); // Set title
+				var tb_window = jQuery( '#TB_window' );
+				tb_window.find( '#TB_ajaxWindowTitle' ).text(title); // Set title
+				tb_window.find( '#postnl_create_label_proceed' ).on( 'click', function( evt ) {
+					evt.preventDefault();
+
+					post_form.append( '<div id="postnl-field-container" style="display:none;"></div>' );
+					tb_window.find( '.shipment-postnl-row-container' ).each( function() {
+						post_form.find( '#postnl-field-container' ).append( jQuery( this ) );
+					} );
+					post_form.submit();
+				} );
 
 			}else{
 				jQuery('#TB_closeWindowButton').click();

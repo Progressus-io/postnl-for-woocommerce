@@ -55,10 +55,9 @@ class Bulk extends Base {
 		if ( 'postnl-create-label' !== $doaction ) {
 			return $redirect;
 		}
-		error_log( print_r( $_REQUEST, true ) );
+
 		if ( ! empty( $object_ids ) ) {
 			foreach ( $object_ids as $order_id ) {
-				error_log( $order_id );
 				$this->save_meta_value( $order_id, $_REQUEST );
 			}
 		}

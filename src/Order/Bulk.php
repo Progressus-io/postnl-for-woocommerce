@@ -24,7 +24,7 @@ class Bulk extends Base {
 	public function init_hooks() {
 		add_filter( 'bulk_actions-edit-shop_order', array( $this, 'add_order_bulk_actions' ), 10, 1 );
 		add_filter( 'handle_bulk_actions-edit-shop_order', array( $this, 'process_order_bulk_actions' ), 10, 3 );
-		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_modal_box_assets' ) );
+		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_bulk_assets' ) );
 		add_action( 'admin_footer', array( $this, 'model_content_fields_create_label' ) );
 		add_filter( 'postnl_order_meta_box_fields', array( $this, 'additional_meta_box' ), 10, 1 );
 	}
@@ -56,17 +56,11 @@ class Bulk extends Base {
 			return $redirect;
 		}
 		error_log( print_r( $_REQUEST, true ) );
-		error_log( print_r( $object_ids, true ) );
-		try {
-			if ( ! empty( $object_ids ) ) {
-				foreach ( $object_ids as $order_id ) {
-					$this->save_meta_box( $order_id );
-				}
+		if ( ! empty( $object_ids ) ) {
+			foreach ( $object_ids as $order_id ) {
+				error_log( $order_id );
+				$this->save_meta_value( $order_id, $_REQUEST );
 			}
-		} catch ( \Exception $e ) {
-			error_log( print_r( $e, true ) );
-			// Should return some errors.
-			return $redirect;
 		}
 
 		return $redirect;
@@ -75,13 +69,20 @@ class Bulk extends Base {
 	/**
 	 * Collection of hooks when initiation.
 	 */
-	public function enqueue_modal_box_assets() {
+	public function enqueue_bulk_assets() {
 		global $pagenow, $typenow;
 
 		if ( 'shop_order' === $typenow && 'edit.php' === $pagenow ) {
 			// Enqueue the assets.
 			wp_enqueue_style( 'thickbox' );
 			wp_enqueue_script( 'thickbox' );
+
+			wp_enqueue_style(
+				'postnl-admin-order-bulk',
+				POSTNL_WC_PLUGIN_DIR_URL . '/assets/css/admin-order-bulk.css',
+				array(),
+				POSTNL_WC_VERSION
+			);
 
 			wp_enqueue_script(
 				'postnl-admin-order-bulk',

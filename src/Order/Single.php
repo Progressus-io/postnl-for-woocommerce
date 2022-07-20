@@ -82,11 +82,49 @@ class Single extends Base {
 	}
 
 	/**
+	 * Saving meta box in order admin page.
+	 *
+	 * @param  int     $order_id Order post ID.
+	 * @param  WP_Post $post Order post object.
+	 * @throws \Exception Throw error for invalid nonce.
+	 */
+	public function save_meta_box( $order_id, $post = null ) {
+		$saved_data = $this->save_meta_value( $order_id, $_REQUEST );
+
+		return $saved_data;
+	}
+
+	/**
 	 * Saving meta box in order admin page using ajax.
+	 *
+	 * @throws \Exception Throw error for invalid nonce.
 	 */
 	public function save_meta_box_ajax() {
 		try {
-			$saved_data = $this->save_meta_box( false );
+			// Get array of nonce fields.
+			$nonce_fields = array_values( $this->get_nonce_fields() );
+
+			if ( empty( $nonce_fields ) ) {
+				throw new \Exception( esc_html__( 'Cannot find nonce field!', 'postnl-for-woocommerce' ) );
+			}
+
+			// Check nonce before proceed.
+			$nonce_result = check_ajax_referer( $this->nonce_key, $this->remove_prefix_field( $nonce_fields[0]['id'] ), false );
+			if ( false === $nonce_result ) {
+				throw new \Exception( esc_html__( 'Nonce is invalid!', 'postnl-for-woocommerce' ) );
+			}
+
+			if ( ! $order_id ) {
+				$order_id = ! empty( $_REQUEST['order_id'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['order_id'] ) ) : 0;
+			}
+
+			// Check if order id is really an ID from shop_order post type.
+			$order = wc_get_order( $order_id );
+			if ( ! is_a( $order, 'WC_Order' ) ) {
+				throw new \Exception( esc_html__( 'Order does not exists!', 'postnl-for-woocommerce' ) );
+			}
+
+			$saved_data = $this->save_meta_value( $order_id, $_REQUEST );
 			wp_send_json_success( $saved_data );
 		} catch ( \Exception $e ) {
 			wp_send_json_error(

@@ -48,9 +48,9 @@ abstract class Base {
 	/**
 	 * Meta name for saved fields.
 	 *
-	 * @var saved_meta
+	 * @var meta_name
 	 */
-	protected $saved_meta = '_postnl_saved_fields';
+	protected $meta_name = '_postnl_saved_fields';
 
 	/**
 	 * Init and hook in the integration.
@@ -241,34 +241,12 @@ abstract class Base {
 	/**
 	 * Saving meta box in order admin page.
 	 *
-	 * @param  int     $order_id Order post ID.
-	 * @param  WP_Post $post Order post object.
-	 * @throws \Exception Throw error for invalid nonce.
+	 * @param  int   $order_id Order post ID.
+	 * @param  array $meta_values PostNL meta values.
 	 */
-	public function save_meta_box( $order_id, $post = null ) {
+	public function save_meta_value( $order_id, $meta_values ) {
 		// Get array of nonce fields.
-		error_log( $order_id );
 		$nonce_fields = array_values( $this->get_nonce_fields() );
-
-		if ( empty( $nonce_fields ) ) {
-			throw new \Exception( esc_html__( 'Cannot find nonce field!', 'postnl-for-woocommerce' ) );
-		}
-
-		// Check nonce before proceed.
-		$nonce_result = check_ajax_referer( $this->nonce_key, $this->remove_prefix_field( $nonce_fields[0]['id'] ), false );
-		if ( false === $nonce_result ) {
-			throw new \Exception( esc_html__( 'Nonce is invalid!', 'postnl-for-woocommerce' ) );
-		}
-
-		if ( ! $order_id ) {
-			$order_id = ! empty( $_POST['order_id'] ) ? sanitize_text_field( wp_unslash( $_POST['order_id'] ) ) : 0;
-		}
-
-		// Check if order id is really an ID from shop_order post type.
-		$order = wc_get_order( $order_id );
-		if ( ! is_a( $order, 'WC_Order' ) ) {
-			throw new \Exception( esc_html__( 'Order does not exists!', 'postnl-for-woocommerce' ) );
-		}
 
 		$saved_data = array();
 
@@ -279,13 +257,12 @@ abstract class Base {
 				continue;
 			}
 
-			$post_name  = $this->remove_prefix_field( $field['id'] );
-			$post_value = ! empty( $_REQUEST[ $post_name ] ) ? sanitize_text_field( wp_unslash( $_REQUEST[ $post_name ] ) ) : '';
+			$post_value = ! empty( $meta_values[ $field['id'] ] ) ? sanitize_text_field( wp_unslash( $meta_values[ $field['id'] ] ) ) : '';
 
 			$saved_data [ $field['id'] ] = $post_value;
 		}
 
-		update_post_meta( $order_id, $this->saved_meta, $saved_data );
+		update_post_meta( $order_id, $this->meta_name, $saved_data );
 
 		return $saved_data;
 	}

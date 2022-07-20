@@ -28,7 +28,7 @@
 			};
 			
 			for ( var i = 0; i < postnl_admin_order_obj.fields.length; i++ ) {
-				var field_name = postnl_admin_order_obj.fields[ i ].replace( postnl_admin_order_obj.prefix, '' );
+				var field_name = postnl_admin_order_obj.fields[ i ];
 				var maybe_field = label_form.find( '#' + postnl_admin_order_obj.fields[ i ] );
 
 				if ( ! maybe_field.is( ':input' ) ) {

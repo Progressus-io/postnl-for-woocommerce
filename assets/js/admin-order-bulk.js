@@ -29,7 +29,8 @@
 
 					post_form.append( '<div id="postnl-field-container" style="display:none;"></div>' );
 					tb_window.find( '.shipment-postnl-row-container' ).each( function() {
-						post_form.find( '#postnl-field-container' ).append( jQuery( this ) );
+						var field_clone = jQuery( this ).clone();
+						post_form.find( '#postnl-field-container' ).append( field_clone );
 					} );
 					post_form.submit();
 				} );

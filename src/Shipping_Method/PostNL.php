@@ -202,9 +202,9 @@ class PostNL extends \WC_Shipping_Method {
 				'placeholder' => '',
 			),
 			'return_company'            => array(
-				'title'       => esc_html__( 'Company', 'postnl-for-woocommerce' ),
+				'title'       => esc_html__( 'Company Name', 'postnl-for-woocommerce' ),
 				'type'        => 'text',
-				'description' => esc_html__( 'Enter Return Company.', 'postnl-for-woocommerce' ),
+				'description' => esc_html__( 'Enter return company name.', 'postnl-for-woocommerce' ),
 				'desc_tip'    => true,
 				'default'     => '',
 			),
@@ -214,6 +214,7 @@ class PostNL extends \WC_Shipping_Method {
 				'description' => esc_html__( 'Enter replynumber.', 'postnl-for-woocommerce' ),
 				'desc_tip'    => true,
 				'default'     => '',
+				'class'       => 'country-nl',
 			),
 			'return_address'            => array(
 				'title'       => esc_html__( 'Street Address', 'postnl-for-woocommerce' ),
@@ -221,6 +222,7 @@ class PostNL extends \WC_Shipping_Method {
 				'description' => esc_html__( 'Enter Return Street Address.', 'postnl-for-woocommerce' ),
 				'desc_tip'    => true,
 				'default'     => '',
+				'class'       => 'country-be',
 			),
 			'return_address_no'         => array(
 				'title'       => esc_html__( 'House Number', 'postnl-for-woocommerce' ),
@@ -228,6 +230,7 @@ class PostNL extends \WC_Shipping_Method {
 				'description' => esc_html__( 'Enter return house number.', 'postnl-for-woocommerce' ),
 				'desc_tip'    => true,
 				'default'     => '',
+				'class'       => 'country-be',
 			),
 			'return_address_city'       => array(
 				'title'       => esc_html__( 'City', 'postnl-for-woocommerce' ),

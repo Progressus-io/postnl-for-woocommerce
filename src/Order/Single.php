@@ -33,28 +33,32 @@ class Single extends Base {
 	 * Enqueue CSS file in order detail page.
 	 */
 	public function enqueue_order_single_css_script() {
-		wp_enqueue_style( 'postnl-admin-order-single', POSTNL_WC_PLUGIN_DIR_URL . '/assets/css/admin-order-single.css', array(), POSTNL_WC_VERSION );
+		$screen = get_current_screen();
 
-		wp_enqueue_script(
-			'postnl-admin-order-single',
-			POSTNL_WC_PLUGIN_DIR_URL . '/assets/js/admin-order-single.js',
-			array( 'jquery' ),
-			POSTNL_WC_VERSION,
-			true
-		);
-		wp_localize_script(
-			'postnl-admin-order-single',
-			'postnl_admin_order_obj',
-			array(
-				'prefix' => $this->prefix,
-				'fields' => array_map(
-					function( $meta_field ) {
-						return empty( $meta_field['id'] ) ? '' : $meta_field['id'];
-					},
-					$this->meta_box_fields(),
-				),
-			)
-		);
+		if ( ! empty( $screen->id ) && 'shop_order' === $screen->id && ! empty( $screen->base ) && 'post' === $screen->base ) {
+			wp_enqueue_style( 'postnl-admin-order-single', POSTNL_WC_PLUGIN_DIR_URL . '/assets/css/admin-order-single.css', array(), POSTNL_WC_VERSION );
+
+			wp_enqueue_script(
+				'postnl-admin-order-single',
+				POSTNL_WC_PLUGIN_DIR_URL . '/assets/js/admin-order-single.js',
+				array( 'jquery' ),
+				POSTNL_WC_VERSION,
+				true
+			);
+			wp_localize_script(
+				'postnl-admin-order-single',
+				'postnl_admin_order_obj',
+				array(
+					'prefix' => $this->prefix,
+					'fields' => array_map(
+						function( $meta_field ) {
+							return empty( $meta_field['id'] ) ? '' : $meta_field['id'];
+						},
+						$this->meta_box_fields(),
+					),
+				)
+			);
+		}
 	}
 
 	/**

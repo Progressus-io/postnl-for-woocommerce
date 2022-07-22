@@ -69,9 +69,9 @@ class Bulk extends Base {
 	 * Collection of hooks when initiation.
 	 */
 	public function enqueue_bulk_assets() {
-		global $pagenow, $typenow;
+		$screen = get_current_screen();
 
-		if ( 'shop_order' === $typenow && 'edit.php' === $pagenow ) {
+		if ( ! empty( $screen->id ) && 'edit-shop_order' === $screen->id && ! empty( $screen->base ) && 'edit' === $screen->base ) {
 			// Enqueue the assets.
 			wp_enqueue_style( 'thickbox' );
 			wp_enqueue_script( 'thickbox' );

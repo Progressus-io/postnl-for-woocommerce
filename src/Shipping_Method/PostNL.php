@@ -340,45 +340,45 @@ class PostNL extends \WC_Shipping_Method {
 				'default'     => '',
 				'placeholder' => '',
 			),
-			'dropoff_day_mon'     => array(
+			'dropoff_day_mon'           => array(
 				'title'       => __( 'Drop off Days', 'postnl-for-woocommerce' ),
 				'type'        => 'checkbox',
 				'label'       => __( 'Monday', 'postnl-for-woocommerce' ),
 				'description' => __( 'Select which days you ship orders.', 'postnl-for-woocommerce' ),
 				'desc_tip'    => true,
 			),
-			'dropoff_day_tue'     => array(
+			'dropoff_day_tue'           => array(
 				'type'  => 'checkbox',
 				'label' => __( 'Tuesday', 'postnl-for-woocommerce' ),
 			),
-			'dropoff_day_wed'     => array(
+			'dropoff_day_wed'           => array(
 				'type'  => 'checkbox',
 				'label' => __( 'Wednesday', 'postnl-for-woocommerce' ),
 			),
-			'dropoff_day_thu'     => array(
+			'dropoff_day_thu'           => array(
 				'type'  => 'checkbox',
 				'label' => __( 'Thursday', 'postnl-for-woocommerce' ),
 			),
-			'dropoff_day_fri'     => array(
+			'dropoff_day_fri'           => array(
 				'type'  => 'checkbox',
 				'label' => __( 'Friday', 'postnl-for-woocommerce' ),
 			),
-			'dropoff_day_sat'     => array(
+			'dropoff_day_sat'           => array(
 				'type'  => 'checkbox',
 				'label' => __( 'Saturday', 'postnl-for-woocommerce' ),
 			),
-			'dropoff_day_sun'     => array(
+			'dropoff_day_sun'           => array(
 				'type'  => 'checkbox',
 				'label' => __( 'Sunday', 'postnl-for-woocommerce' ),
 			),
 
 			// Shipping Outside Europe Settings.
-			'shipping_outside_eu_title'    => array(
+			'shipping_outside_eu_title' => array(
 				'title'       => esc_html__( 'Shipping Outside Europe Settings', 'postnl-for-woocommerce' ),
 				'type'        => 'title',
 				'description' => esc_html__( 'Please configure your shipping outside Europe option parameters.', 'postnl-for-woocommerce' ),
 			),
-			'globalpack_type_barcode'   => array(
+			'globalpack_barcode_type'   => array(
 				'title'             => esc_html__( 'GlobalPack Barcode Type', 'postnl-for-woocommerce' ),
 				'type'              => 'text',
 				'description'       => esc_html__( 'e.g. "CD"', 'postnl-for-woocommerce' ),

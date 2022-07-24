@@ -241,12 +241,30 @@ class Settings extends \WC_Settings_API {
 	}
 
 	/**
+	 * Return true if 'print returnlabel directly with shipping label' field is ticked.
+	 *
+	 * @return Bool
+	 */
+	public function is_return_direct_print_enabled() {
+		return ( 'yes' === $this->get_return_direct_print_label() );
+	}
+
+	/**
 	 * Get enable delivery from the settings.
 	 *
 	 * @return String
 	 */
 	public function get_enable_delivery() {
 		return $this->get_option( 'enable_delivery', '' );
+	}
+
+	/**
+	 * Return true if delivery field is ticked.
+	 *
+	 * @return Bool
+	 */
+	public function is_delivery_enabled() {
+		return ( 'yes' === $this->get_enable_delivery() );
 	}
 
 	/**
@@ -259,6 +277,15 @@ class Settings extends \WC_Settings_API {
 	}
 
 	/**
+	 * Return true if delivery days field is ticked.
+	 *
+	 * @return Bool
+	 */
+	public function is_pickup_points_enabled() {
+		return ( 'yes' === $this->get_enable_pickup_points() );
+	}
+
+	/**
 	 * Get enable delivery days from the settings.
 	 *
 	 * @return String
@@ -268,12 +295,30 @@ class Settings extends \WC_Settings_API {
 	}
 
 	/**
+	 * Return true if delivery days field is ticked.
+	 *
+	 * @return Bool
+	 */
+	public function is_delivery_days_enabled() {
+		return ( 'yes' === $this->get_enable_delivery_days() );
+	}
+
+	/**
 	 * Get enable evening delivery from the settings.
 	 *
 	 * @return String
 	 */
 	public function get_enable_evening_delivery() {
 		return $this->get_option( 'enable_evening_delivery', '' );
+	}
+
+	/**
+	 * Return true if evening delivery field is ticked.
+	 *
+	 * @return Bool
+	 */
+	public function is_evening_delivery_enabled() {
+		return ( 'yes' === $this->get_enable_evening_delivery() );
 	}
 
 	/**
@@ -313,12 +358,30 @@ class Settings extends \WC_Settings_API {
 	}
 
 	/**
+	 * Return true if dropoff monday field is ticked.
+	 *
+	 * @return Bool
+	 */
+	public function is_dropoff_monday_enabled() {
+		return ( 'yes' === $this->get_dropoff_monday() );
+	}
+
+	/**
 	 * Get dropoff tuesday value from the settings.
 	 *
 	 * @return String
 	 */
 	public function get_dropoff_tuesday() {
 		return $this->get_option( 'dropoff_day_tue', '' );
+	}
+
+	/**
+	 * Return true if dropoff tuesday field is ticked.
+	 *
+	 * @return Bool
+	 */
+	public function is_dropoff_tuesday_enabled() {
+		return ( 'yes' === $this->get_dropoff_tuesday() );
 	}
 
 	/**
@@ -331,12 +394,30 @@ class Settings extends \WC_Settings_API {
 	}
 
 	/**
+	 * Return true if dropoff wednesday field is ticked.
+	 *
+	 * @return Bool
+	 */
+	public function is_dropoff_wednesday_enabled() {
+		return ( 'yes' === $this->get_dropoff_wednesday() );
+	}
+
+	/**
 	 * Get dropoff thursday value from the settings.
 	 *
 	 * @return String
 	 */
 	public function get_dropoff_thursday() {
 		return $this->get_option( 'dropoff_day_thu', '' );
+	}
+
+	/**
+	 * Return true if dropoff thursday field is ticked.
+	 *
+	 * @return Bool
+	 */
+	public function is_dropoff_thursday_enabled() {
+		return ( 'yes' === $this->get_dropoff_thursday() );
 	}
 
 	/**
@@ -349,6 +430,15 @@ class Settings extends \WC_Settings_API {
 	}
 
 	/**
+	 * Return true if dropoff friday field is ticked.
+	 *
+	 * @return Bool
+	 */
+	public function is_dropoff_friday_enabled() {
+		return ( 'yes' === $this->get_dropoff_friday() );
+	}
+
+	/**
 	 * Get dropoff saturday value from the settings.
 	 *
 	 * @return String
@@ -358,12 +448,69 @@ class Settings extends \WC_Settings_API {
 	}
 
 	/**
+	 * Return true if dropoff saturday field is ticked.
+	 *
+	 * @return Bool
+	 */
+	public function is_dropoff_saturday_enabled() {
+		return ( 'yes' === $this->get_dropoff_saturday() );
+	}
+
+	/**
 	 * Get dropoff sunday value from the settings.
 	 *
 	 * @return String
 	 */
 	public function get_dropoff_sunday() {
 		return $this->get_option( 'dropoff_day_sun', '' );
+	}
+
+	/**
+	 * Return true if dropoff sunday field is ticked.
+	 *
+	 * @return Bool
+	 */
+	public function is_dropoff_sunday_enabled() {
+		return ( 'yes' === $this->get_dropoff_sunday() );
+	}
+
+	/**
+	 * Get dropoff days from the settings.
+	 *
+	 * @return Array
+	 */
+	public function get_dropoff_days() {
+		$dropoff_days = array();
+
+		if ( $this->is_dropoff_monday_enabled() ) {
+			$dropoff_days[] = 'mon';
+		}
+
+		if ( $this->is_dropoff_tuesday_enabled() ) {
+			$dropoff_days[] = 'tue';
+		}
+
+		if ( $this->is_dropoff_wednesday_enabled() ) {
+			$dropoff_days[] = 'wed';
+		}
+
+		if ( $this->is_dropoff_thursday_enabled() ) {
+			$dropoff_days[] = 'thu';
+		}
+
+		if ( $this->is_dropoff_friday_enabled() ) {
+			$dropoff_days[] = 'fri';
+		}
+
+		if ( $this->is_dropoff_saturday_enabled() ) {
+			$dropoff_days[] = 'sat';
+		}
+
+		if ( $this->is_dropoff_sunday_enabled() ) {
+			$dropoff_days[] = 'sun';
+		}
+
+		return $dropoff_days;
 	}
 
 	/**
@@ -421,6 +568,15 @@ class Settings extends \WC_Settings_API {
 	}
 
 	/**
+	 * Return true if track trace email field is ticked.
+	 *
+	 * @return Bool
+	 */
+	public function is_ask_position_a4_enabled() {
+		return ( 'yes' === $this->get_ask_position_a4() );
+	}
+
+	/**
 	 * Get track trace email from the settings.
 	 *
 	 * @return String
@@ -430,12 +586,30 @@ class Settings extends \WC_Settings_API {
 	}
 
 	/**
+	 * Return true if track trace email field is ticked.
+	 *
+	 * @return Bool
+	 */
+	public function is_track_trace_email_enabled() {
+		return ( 'yes' === $this->get_track_trace_email() );
+	}
+
+	/**
 	 * Get woocommerce email checkbox value from the settings.
 	 *
 	 * @return String
 	 */
 	public function get_woocommerce_email() {
 		return $this->get_option( 'woocommerce_email', '' );
+	}
+
+	/**
+	 * Return true if woocommerce email field is ticked.
+	 *
+	 * @return Bool
+	 */
+	public function is_woocommerce_email_enabled() {
+		return ( 'yes' === $this->get_woocommerce_email() );
 	}
 
 	/**
@@ -457,11 +631,29 @@ class Settings extends \WC_Settings_API {
 	}
 
 	/**
+	 * Return true if check dutch address field is ticked.
+	 *
+	 * @return Bool
+	 */
+	public function is_check_dutch_address_enabled() {
+		return ( 'yes' === $this->get_check_dutch_address() );
+	}
+
+	/**
 	 * Get enable logging value from the settings.
 	 *
 	 * @return String
 	 */
 	public function get_enable_logging() {
 		return $this->get_option( 'enable_logging', '' );
+	}
+
+	/**
+	 * Return true if enable logging field is ticked.
+	 *
+	 * @return Bool
+	 */
+	public function is_logging_enabled() {
+		return ( 'yes' === $this->get_enable_logging() );
 	}
 }

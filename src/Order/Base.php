@@ -245,6 +245,12 @@ abstract class Base {
 	 * @param  array $meta_values PostNL meta values.
 	 */
 	public function save_meta_value( $order_id, $meta_values ) {
+		$order = wc_get_order( $order_id );
+
+		if ( ! is_a( $order, 'WC_Order' ) ) {
+			return false;
+		}
+
 		// Get array of nonce fields.
 		$nonce_fields = array_values( $this->get_nonce_fields() );
 
@@ -262,7 +268,8 @@ abstract class Base {
 			$saved_data [ $field['id'] ] = $post_value;
 		}
 
-		update_post_meta( $order_id, $this->meta_name, $saved_data );
+		$order->update_meta_data( $this->meta_name, $saved_data );
+		$order->save();
 
 		return $saved_data;
 	}

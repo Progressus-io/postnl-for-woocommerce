@@ -128,6 +128,7 @@ class Main {
 		$this->get_shipping_order();
 		$this->get_shipping_order_bulk();
 		$this->get_shipping_product();
+		$this->get_frontend();
 	}
 
 	/**
@@ -175,7 +176,7 @@ class Main {
 	 * @return array<WC_Shipping_Method>
 	 */
 	public function add_shipping_method( $shipping_methods ) {
-		$shipping_methods['pr_postnl'] = new Shipping_Method\PostNL();
+		$shipping_methods[ $this->$settings_id ] = new Shipping_Method\PostNL();
 		return $shipping_methods;
 	}
 
@@ -216,6 +217,15 @@ class Main {
 		}
 
 		return $this->shipping_product;
+	}
+
+	/**
+	 * Get frontend class.
+	 *
+	 * @return Frontend\Delivery_Day
+	 */
+	public function get_frontend() {
+		return new Frontend\Delivery_Day();
 	}
 
 	/**

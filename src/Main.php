@@ -222,10 +222,11 @@ class Main {
 	/**
 	 * Get frontend class.
 	 *
-	 * @return Frontend\Delivery_Day
+	 * @return Frontend\Delivery_Type
 	 */
 	public function get_frontend() {
-		return new Frontend\Delivery_Day();
+		new Frontend\Delivery_Type();
+		new Frontend\Delivery_Day();
 	}
 
 	/**

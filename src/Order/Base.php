@@ -43,14 +43,14 @@ abstract class Base {
 	 *
 	 * @var prefix
 	 */
-	protected $prefix = 'postnl_';
+	protected $prefix = POSTNL_SETTINGS_ID . '_';
 
 	/**
 	 * Meta name for saved fields.
 	 *
 	 * @var meta_name
 	 */
-	protected $meta_name = '_postnl_saved_fields';
+	protected $meta_name = '_' . POSTNL_SETTINGS_ID . '_saved_fields';
 
 	/**
 	 * Init and hook in the integration.
@@ -90,7 +90,7 @@ abstract class Base {
 	}
 
 	/**
-	 * Generating meta box fields.
+	 * List of meta box fields.
 	 */
 	public function meta_box_fields() {
 		return apply_filters(

@@ -1,6 +1,6 @@
 <?php
 /**
- * Class Main file.
+ * Class User file.
  *
  * @package PostNLWooCommerce
  */

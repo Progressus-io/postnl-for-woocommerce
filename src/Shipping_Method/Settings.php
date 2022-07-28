@@ -25,6 +25,26 @@ class Settings extends \WC_Settings_API {
 	public $id = POSTNL_SETTINGS_ID;
 
 	/**
+	 * The unique instance of the plugin.
+	 *
+	 * @var PostNLWooCommerce\Shipping_Method\Settings
+	 */
+	private static $instance;
+
+	/**
+	 * Gets an instance of the settings.
+	 *
+	 * @return Settings
+	 */
+	public static function get_instance() {
+		if ( null === self::$instance ) {
+			self::$instance = new self();
+		}
+
+		return self::$instance;
+	}
+
+	/**
 	 * Get API Key from the settings.
 	 *
 	 * @return String

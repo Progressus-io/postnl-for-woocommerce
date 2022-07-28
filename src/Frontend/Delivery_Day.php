@@ -7,6 +7,8 @@
 
 namespace PostNLWooCommerce\Frontend;
 
+use PostNLWooCommerce\Utils;
+
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
@@ -16,77 +18,84 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @package PostNLWooCommerce\Frontend
  */
-class Delivery_Day {
+class Delivery_Day extends Base {
+
 	/**
-	 * Init and hook in the integration.
+	 * Set the template filename.
 	 */
-	public function __construct() {
-		$this->init_hooks();
+	public function set_template_file() {
+		$this->template_file = 'checkout/postnl-delivery-day.php';
 	}
 
 	/**
-	 * Collection of hooks when initiation.
+	 * List of frontend delivery day fields.
 	 */
-	public function init_hooks() {
-		add_action( 'woocommerce_review_order_after_shipping', array( $this, 'add_fields' ) );
-		add_filter( 'woocommerce_checkout_posted_data', array( $this, 'validate_fields' ) );
-		add_action( 'woocommerce_checkout_update_order_meta', array( $this, 'save_data' ), 10, 2 );
+	public function get_fields() {
+		$dropoff_days = $this->get_dropoff_days();
+		$fields       = array();
+
+		if ( ! empty( $dropoff_days ) ) {
+			$fields[] = array(
+				'id'          => $this->prefix . 'delivery_day',
+				'type'        => 'radio',
+				'label'       => __( 'Delivery Day:', 'postnl-for-woocommerce' ),
+				'description' => '',
+				'class'       => 'postnl-checkout-field',
+				'options'     => $this->get_dropoff_days(),
+				'error_text'  => esc_html__( 'Please choose the delivery day!', 'postnl-for-woocommerce' ),
+			);
+		}
+
+		return apply_filters( 'postnl_frontend_delivery_day_fields', $fields );
 	}
 
 	/**
-	 * Add delivery day fields.
+	 * Check if this feature is enabled from the settings.
+	 *
+	 * @return bool
 	 */
-	public function add_fields() {
-		$template_args = array();
-		wc_get_template( 'checkout/postnl-delivery-day.php', $template_args, '', POSTNL_WC_PLUGIN_DIR_PATH . '/templates/' );
+	public function is_enabled() {
+		return (
+			$this->settings->is_delivery_enabled() &&
+			$this->settings->is_delivery_days_enabled() &&
+			! empty( $this->get_fields() )
+		);
+	}
+
+	/**
+	 * Get the enabled dropoff days from the settings.
+	 *
+	 * @return array
+	 */
+	public function get_dropoff_days() {
+		$dropoff_days = $this->settings->get_dropoff_days();
+
+		return array_filter(
+			Utils::days_of_week(),
+			function( $key ) use ( $dropoff_days ) {
+				return in_array( $key, $dropoff_days, true );
+			},
+			ARRAY_FILTER_USE_KEY
+		);
 	}
 
 	/**
 	 * Validate delivery day fields.
 	 *
-	 * @param array $data Array of posted data.
+	 * @param array $posted_data Array of posted data.
+	 *
+	 * @return array
 	 */
-	public function validate_fields( $data ) {
-		$nonce_value    = wc_get_var( $_REQUEST['woocommerce-process-checkout-nonce'], wc_get_var( $_REQUEST['_wpnonce'], '' ) ); // phpcs:ignore
-		$expiry_message = sprintf(
-			/* translators: %s: shop cart url */
-			__( 'Sorry, your session has expired. <a href="%s" class="wc-backward">Return to shop</a>', 'woocommerce' ),
-			esc_url( wc_get_page_permalink( 'shop' ) )
-		);
+	public function validate_fields( $posted_data ) {
+		foreach ( $this->get_fields() as $field ) {
+			if ( empty( $posted_data[ $field['id'] ] ) ) {
+				wc_add_notice( $field['error_text'], 'error' );
+				return $data;
+			}
 
-		if ( empty( $nonce_value ) || ! wp_verify_nonce( $nonce_value, 'woocommerce-process_checkout' ) ) {
-			return $data;
+			$data[ $field['id'] ] = sanitize_text_field( wp_unslash( $posted_data[ $field['id'] ] ) );
 		}
-
-		if ( empty( $_POST['postnl_delivery_day'] ) ) {
-			wc_add_notice( __( 'Please choose the delivery day!', 'postnl-for-woocommerce' ), 'error' );
-			return $data;
-		}
-
-		$data['postnl_delivery_day'] = sanitize_text_field( wp_unslash( $_POST['postnl_delivery_day'] ) );
 
 		return $data;
-	}
-
-	/**
-	 * Save delivery day value to meta.
-	 *
-	 * @param int   $order_id ID of the order.
-	 * @param array $posted_data Posted values.
-	 */
-	public function save_data( $order_id, $posted_data ) {
-
-		$order = wc_get_order( $order_id );
-
-		if ( ! is_a( $order, 'WC_Order' ) ) {
-			return;
-		}
-
-		foreach ( $posted_data as $key => $value ) {
-			if ( false !== strpos( $key, 'postnl_' ) ) {
-				$order->update_meta_data( $key, $value );
-			}
-		}
-		$order->save();
 	}
 }

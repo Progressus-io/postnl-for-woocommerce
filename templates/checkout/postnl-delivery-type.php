@@ -1,6 +1,6 @@
 <?php
 /**
- * Template for delivery day file.
+ * Template for delivery type file.
  *
  * @package PostNLWooCommerce\Template
  */

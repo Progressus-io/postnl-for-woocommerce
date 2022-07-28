@@ -221,8 +221,6 @@ class Main {
 
 	/**
 	 * Get frontend class.
-	 *
-	 * @return Frontend\Delivery_Type
 	 */
 	public function get_frontend() {
 		new Frontend\Delivery_Type();

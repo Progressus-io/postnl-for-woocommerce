@@ -80,13 +80,14 @@ class Delivery_Day extends Base {
 	}
 
 	/**
-	 * Validate delivery day fields.
+	 * Validate delivery type fields.
 	 *
-	 * @param array $posted_data Array of posted data.
+	 * @param array $data Array of posted data.
+	 * @param array $posted_data Array of global _POST data.
 	 *
 	 * @return array
 	 */
-	public function validate_fields( $posted_data ) {
+	public function validate_fields( $data, $posted_data ) {
 		foreach ( $this->get_fields() as $field ) {
 			if ( empty( $posted_data[ $field['id'] ] ) ) {
 				wc_add_notice( $field['error_text'], 'error' );

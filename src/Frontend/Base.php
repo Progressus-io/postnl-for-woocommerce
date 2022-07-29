@@ -132,10 +132,20 @@ abstract class Base {
 			return $data;
 		}
 
-		$data = $this->validate_fields( $_POST );
+		$data = $this->validate_fields( $data, $_POST );
 
 		return $data;
 	}
+
+	/**
+	 * Validate delivery type fields.
+	 *
+	 * @param array $data Array of posted data.
+	 * @param array $posted_data Array of global _POST data.
+	 *
+	 * @return array
+	 */
+	abstract public function validate_fields( $data, $posted_data );
 
 	/**
 	 * Save frontend field value to meta.

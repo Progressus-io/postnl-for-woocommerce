@@ -265,6 +265,10 @@ abstract class Base {
 
 			$post_value = ! empty( $meta_values[ $field['id'] ] ) ? sanitize_text_field( wp_unslash( $meta_values[ $field['id'] ] ) ) : '';
 
+			if ( ! empty( $order->get_meta( $field['id'] ) ) ) {
+				$post_value = $order->get_meta( $field['id'] );
+			}
+
 			$saved_data [ $field['id'] ] = $post_value;
 		}
 

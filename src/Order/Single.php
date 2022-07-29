@@ -70,12 +70,40 @@ class Single extends Base {
 	}
 
 	/**
-	 * Additional fields of the meta box for child class.
+	 * Add value to meta box fields.
+	 *
+	 * @param WP_Post $post current post object.
 	 */
-	public function meta_box_html() {
+	public function add_meta_box_value( $post ) {
+		$meta_fields = $this->meta_box_fields();
+
+		if ( ! empty( $post->ID ) ) {
+			$order = wc_get_order( $post->ID );
+
+			$meta_fields = array_map(
+				function ( $field ) use ( $order ) {
+					if ( ! empty( $order->get_meta( $field['id'] ) ) ) {
+						$field['value'] = $order->get_meta( $field['id'] );
+					}
+
+					return $field;
+				},
+				$meta_fields
+			);
+		}
+
+		return $meta_fields;
+	}
+
+	/**
+	 * Additional fields of the meta box for child class.
+	 *
+	 * @param WP_Post $post current post object.
+	 */
+	public function meta_box_html( $post ) {
 		?>
 		<div id="shipment-postnl-label-form">
-			<?php $this->fields_generator( $this->meta_box_fields() ); ?>
+			<?php $this->fields_generator( $this->add_meta_box_value( $post ) ); ?>
 
 			<div class="button-container">
 				<button class="button button-primary button-save-form"><?php esc_html_e( 'Generate Label', 'postnl-for-woocommerce' ); ?></button>

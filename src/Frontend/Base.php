@@ -8,6 +8,7 @@
 namespace PostNLWooCommerce\Frontend;
 
 use PostNLWooCommerce\Shipping_Method\Settings;
+use PostNLWooCommerce\Utils;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;

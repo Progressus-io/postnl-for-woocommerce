@@ -7,6 +7,8 @@
 
 namespace PostNLWooCommerce\Order;
 
+use PostNLWooCommerce\Utils;
+
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }

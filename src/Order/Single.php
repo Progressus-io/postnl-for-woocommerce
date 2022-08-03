@@ -7,6 +7,8 @@
 
 namespace PostNLWooCommerce\Order;
 
+use PostNLWooCommerce\Utils;
+
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
@@ -70,12 +72,40 @@ class Single extends Base {
 	}
 
 	/**
-	 * Additional fields of the meta box for child class.
+	 * Add value to meta box fields.
+	 *
+	 * @param WP_Post $post current post object.
+	 *
+	 * @return array
 	 */
-	public function meta_box_html() {
+	public function add_meta_box_value( $post ) {
+		$meta_fields = $this->meta_box_fields();
+
+		if ( ! empty( $post->ID ) ) {
+			$order      = wc_get_order( $post->ID );
+			$order_data = $order->get_meta( $this->meta_name );
+
+			foreach ( $meta_fields as $index => $field ) {
+				$field_name = Utils::remove_prefix_field( $this->prefix, $field['id'] );
+
+				if ( ! empty( $order_data['frontend'][ $field_name ] ) ) {
+					$meta_fields[ $index ]['value'] = $order_data['frontend'][ $field_name ];
+				}
+			}
+		}
+
+		return $meta_fields;
+	}
+
+	/**
+	 * Additional fields of the meta box for child class.
+	 *
+	 * @param WP_Post $post current post object.
+	 */
+	public function meta_box_html( $post ) {
 		?>
 		<div id="shipment-postnl-label-form">
-			<?php $this->fields_generator( $this->meta_box_fields() ); ?>
+			<?php $this->fields_generator( $this->add_meta_box_value( $post ) ); ?>
 
 			<div class="button-container">
 				<button class="button button-primary button-save-form"><?php esc_html_e( 'Generate Label', 'postnl-for-woocommerce' ); ?></button>

@@ -128,6 +128,7 @@ class Main {
 		$this->get_shipping_order();
 		$this->get_shipping_order_bulk();
 		$this->get_shipping_product();
+		$this->get_frontend();
 	}
 
 	/**
@@ -216,6 +217,15 @@ class Main {
 		}
 
 		return $this->shipping_product;
+	}
+
+	/**
+	 * Get frontend class.
+	 */
+	public function get_frontend() {
+		new Frontend\Delivery_Type();
+		new Frontend\Delivery_Day();
+		new Frontend\Dropoff_Points();
 	}
 
 	/**

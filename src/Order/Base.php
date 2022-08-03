@@ -50,12 +50,13 @@ abstract class Base {
 	 *
 	 * @var meta_name
 	 */
-	protected $meta_name = '_' . POSTNL_SETTINGS_ID . '_saved_fields';
+	protected $meta_name;
 
 	/**
 	 * Init and hook in the integration.
 	 */
 	public function __construct() {
+		$this->meta_name = '_' . $this->prefix . 'data';
 		$this->init_hooks();
 	}
 
@@ -76,17 +77,6 @@ abstract class Base {
 				return ( ! empty( $field['nonce'] ) && true === $field['nonce'] );
 			}
 		);
-	}
-
-	/**
-	 * Get field name without prefix.
-	 *
-	 * @param String $field_name Name of the field.
-	 *
-	 * @return String
-	 */
-	public function remove_prefix_field( $field_name ) {
-		return str_replace( $this->prefix, '', $field_name );
 	}
 
 	/**
@@ -264,6 +254,10 @@ abstract class Base {
 			}
 
 			$post_value = ! empty( $meta_values[ $field['id'] ] ) ? sanitize_text_field( wp_unslash( $meta_values[ $field['id'] ] ) ) : '';
+
+			if ( ! empty( $order->get_meta( $field['id'] ) ) ) {
+				$post_value = $order->get_meta( $field['id'] );
+			}
 
 			$saved_data [ $field['id'] ] = $post_value;
 		}

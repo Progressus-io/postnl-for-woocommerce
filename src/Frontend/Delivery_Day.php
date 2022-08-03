@@ -31,20 +31,17 @@ class Delivery_Day extends Base {
 	 * List of frontend delivery day fields.
 	 */
 	public function get_fields() {
-		$dropoff_days = $this->get_dropoff_days();
-		$fields       = array();
-
-		if ( ! empty( $dropoff_days ) ) {
-			$fields[] = array(
+		$fields = array(
+			array(
 				'id'          => $this->prefix . 'delivery_day',
-				'type'        => 'radio',
+				'type'        => 'select',
 				'label'       => __( 'Delivery Day:', 'postnl-for-woocommerce' ),
 				'description' => '',
 				'class'       => 'postnl-checkout-field',
-				'options'     => $this->get_dropoff_days(),
+				'options'     => Utils::days_of_week(),
 				'error_text'  => esc_html__( 'Please choose the delivery day!', 'postnl-for-woocommerce' ),
-			);
-		}
+			),
+		);
 
 		return apply_filters( 'postnl_frontend_delivery_day_fields', $fields );
 	}

@@ -73,23 +73,23 @@ class Single extends Base {
 	 * Add value to meta box fields.
 	 *
 	 * @param WP_Post $post current post object.
+	 *
+	 * @return array
 	 */
 	public function add_meta_box_value( $post ) {
 		$meta_fields = $this->meta_box_fields();
 
 		if ( ! empty( $post->ID ) ) {
-			$order = wc_get_order( $post->ID );
+			$order      = wc_get_order( $post->ID );
+			$order_data = $order->get_meta( $this->meta_name );
 
-			$meta_fields = array_map(
-				function ( $field ) use ( $order ) {
-					if ( ! empty( $order->get_meta( $field['id'] ) ) ) {
-						$field['value'] = $order->get_meta( $field['id'] );
-					}
+			foreach ( $meta_fields as $index => $field ) {
+				$field_name = Utils::remove_prefix_field( $this->prefix, $field['id'] );
 
-					return $field;
-				},
-				$meta_fields
-			);
+				if ( ! empty( $order_data['frontend'][ $field_name ] ) ) {
+					$meta_fields[ $index ]['value'] = $order_data['frontend'][ $field_name ];
+				}
+			}
 		}
 
 		return $meta_fields;

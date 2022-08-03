@@ -33,4 +33,16 @@ class Utils {
 			'sun' => esc_html__( 'Sunday', 'postnl-for-woocommerce' ),
 		);
 	}
+
+	/**
+	 * Get field name without prefix.
+	 *
+	 * @param String $prefix Prefix of the field.
+	 * @param String $field_name Name of the field.
+	 *
+	 * @return String
+	 */
+	public static function remove_prefix_field( $prefix, $field_name ) {
+		return str_replace( $prefix, '', $field_name );
+	}
 }

@@ -41,10 +41,18 @@ abstract class Base {
 	protected $prefix = POSTNL_SETTINGS_ID . '_';
 
 	/**
+	 * Prefix for meta box fields.
+	 *
+	 * @var meta_name
+	 */
+	protected $meta_name;
+
+	/**
 	 * Init and hook in the integration.
 	 */
 	public function __construct() {
-		$this->settings = Settings::get_instance();
+		$this->settings  = Settings::get_instance();
+		$this->meta_name = '_' . $this->prefix . 'data';
 		$this->set_template_file();
 		$this->init_hooks();
 	}
@@ -146,25 +154,46 @@ abstract class Base {
 	abstract public function validate_fields( $data, $posted_data );
 
 	/**
+	 * Get frontend data from Order object.
+	 *
+	 * @param int $order_id ID of the order.
+	 *
+	 * @return array.
+	 */
+	public function get_data( $order_id ) {
+		$order = wc_get_order( $order_id );
+
+		if ( ! is_a( $order, 'WC_Order' ) ) {
+			return array();
+		}
+
+		$data = $order->get_meta( $this->meta_name );
+		return ! empty( $data ) && is_array( $data ) ? $data : array();
+	}
+
+	/**
 	 * Save frontend field value to meta.
 	 *
 	 * @param int   $order_id ID of the order.
 	 * @param array $posted_data Posted values.
 	 */
 	public function save_data( $order_id, $posted_data ) {
-
 		$order = wc_get_order( $order_id );
 
 		if ( ! is_a( $order, 'WC_Order' ) ) {
 			return;
 		}
 
+		$data = $this->get_data( $order->get_id() );
+
 		foreach ( $this->get_fields() as $field ) {
 			if ( array_key_exists( $field['id'], $posted_data ) ) {
-				$order->update_meta_data( $field['id'], $posted_data[ $field['id'] ] );
+				$field_name                      = Utils::remove_prefix_field( $this->prefix, $field['id'] );
+				$data['frontend'][ $field_name ] = sanitize_text_field( wp_unslash( $posted_data[ $field['id'] ] ) );
 			}
 		}
 
+		$order->update_meta_data( $this->meta_name, $data );
 		$order->save();
 	}
 }

@@ -50,12 +50,13 @@ abstract class Base {
 	 *
 	 * @var meta_name
 	 */
-	protected $meta_name = '_' . POSTNL_SETTINGS_ID . '_saved_fields';
+	protected $meta_name;
 
 	/**
 	 * Init and hook in the integration.
 	 */
 	public function __construct() {
+		$this->meta_name = '_' . $this->prefix . 'data';
 		$this->init_hooks();
 	}
 
@@ -76,17 +77,6 @@ abstract class Base {
 				return ( ! empty( $field['nonce'] ) && true === $field['nonce'] );
 			}
 		);
-	}
-
-	/**
-	 * Get field name without prefix.
-	 *
-	 * @param String $field_name Name of the field.
-	 *
-	 * @return String
-	 */
-	public function remove_prefix_field( $field_name ) {
-		return str_replace( $this->prefix, '', $field_name );
 	}
 
 	/**

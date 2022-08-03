@@ -64,9 +64,7 @@ abstract class Base {
 	 *
 	 * @return bool
 	 */
-	public function is_enabled() {
-		return ( $this->settings->is_delivery_enabled() && ! empty( $this->get_fields() ) );
-	}
+	abstract public function is_enabled();
 
 	/**
 	 * Collection of hooks when initiation.

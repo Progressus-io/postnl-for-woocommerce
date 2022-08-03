@@ -24,10 +24,7 @@ class Dropoff_Points extends Base {
 	 * @return bool
 	 */
 	public function is_enabled() {
-		return (
-			$this->settings->is_delivery_enabled() &&
-			$this->settings->is_pickup_points_enabled()
-		);
+		return $this->settings->is_pickup_points_enabled();
 	}
 
 	/**
@@ -46,10 +43,15 @@ class Dropoff_Points extends Base {
 			array(
 				array(
 					'id'          => $this->prefix . 'dropoff_points',
-					'type'        => 'text',
+					'type'        => 'select',
 					'label'       => __( 'Dropoff Points:', 'postnl-for-woocommerce' ),
 					'description' => '',
 					'class'       => 'postnl-checkout-field',
+					'options'     => array(
+						''         => esc_html__( '- Choose Dropoff Points -', 'postnl-for-woocommerce' ),
+						'point_1' => esc_html__( 'Point 1', 'postnl-for-woocommerce' ),
+						'point_2' => esc_html__( 'Point 2', 'postnl-for-woocommerce' ),
+					),
 					'error_text'  => esc_html__( 'Please choose the dropoff points!', 'postnl-for-woocommerce' ),
 				),
 			)

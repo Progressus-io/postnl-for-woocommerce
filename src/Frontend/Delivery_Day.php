@@ -52,11 +52,7 @@ class Delivery_Day extends Base {
 	 * @return bool
 	 */
 	public function is_enabled() {
-		return (
-			$this->settings->is_delivery_enabled() &&
-			$this->settings->is_delivery_days_enabled() &&
-			! empty( $this->get_fields() )
-		);
+		return $this->settings->is_delivery_days_enabled();
 	}
 
 	/**

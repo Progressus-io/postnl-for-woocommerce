@@ -16,10 +16,9 @@ if ( empty( $fields ) ) {
 foreach ( $fields as $field ) {
 	?>
 	<tr class="dhl-co-tr dhl-co-tr-fist">
-		<td><?php echo esc_html( $field['label'] ); ?></td>
-		<td>
+		<td colspan="2">
 		<?php
-			esc_html_e( 'Dropoff Points', 'postnl-for-woocommerce' );
+			woocommerce_form_field( $field['id'], $field, $field['value'] );
 		?>
 		</td>
 	</tr>

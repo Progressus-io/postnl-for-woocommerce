@@ -39,7 +39,6 @@ class Delivery_Type extends Base {
 					'description' => '',
 					'class'       => 'postnl-checkout-field',
 					'options'     => array(
-						''         => esc_html__( '- Choose Delivery Type -', 'postnl-for-woocommerce' ),
 						'standard' => esc_html__( 'Standard', 'postnl-for-woocommerce' ),
 						'evening'  => esc_html__( 'Evening', 'postnl-for-woocommerce' ),
 					),
@@ -47,6 +46,15 @@ class Delivery_Type extends Base {
 				),
 			)
 		);
+	}
+
+	/**
+	 * Check if this feature is enabled from the settings.
+	 *
+	 * @return bool
+	 */
+	public function is_enabled() {
+		return $this->settings->is_evening_delivery_enabled();
 	}
 
 	/**

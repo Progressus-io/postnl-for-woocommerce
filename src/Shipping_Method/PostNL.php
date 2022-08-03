@@ -59,6 +59,14 @@ class PostNL extends \WC_Shipping_Method {
 				POSTNL_WC_VERSION,
 				true
 			);
+
+			wp_localize_script(
+				'postnl-admin-settings',
+				'postnl_admin',
+				array(
+					'store_address' => wc_get_base_location(),
+				)
+			);
 		}
 	}
 
@@ -90,6 +98,15 @@ class PostNL extends \WC_Shipping_Method {
 				'type'              => 'text',
 				// translators: %1$s & %2$s is replaced with <a> tag.
 				'description'       => sprintf( __( 'Insert your PostNL production API-key. You can find your API-key on Mijn %1$sPostNL%2$s under "My Account".', 'postnl-for-woocommerce' ), '<a href="https://mijn.postnl.nl/c/BP2_Mod_Login.app" target="_blank">', '</a>' ),
+				'desc_tip'          => true,
+				'default'           => '',
+				'placeholder'       => '',
+				'custom_attributes' => array( 'maxlength' => '10' ),
+			),
+			'enable_logging'            => array(
+				'title'             => esc_html__( 'Enable Logging', 'postnl-for-woocommerce' ),
+				'type'              => 'checkbox',
+				'description'       => esc_html__( 'Log files can be used to diagnose problems.', 'postnl-for-woocommerce' ),
 				'desc_tip'          => true,
 				'default'           => '',
 				'placeholder'       => '',
@@ -232,6 +249,13 @@ class PostNL extends \WC_Shipping_Method {
 				'default'     => '',
 				'class'       => 'country-be',
 			),
+			'return_address_zip'        => array(
+				'title'       => esc_html__( 'Zipcode', 'postnl-for-woocommerce' ),
+				'type'        => 'text',
+				'description' => esc_html__( 'Enter Return Zipcode.', 'postnl-for-woocommerce' ),
+				'desc_tip'    => true,
+				'default'     => '',
+			),
 			'return_address_city'       => array(
 				'title'       => esc_html__( 'City', 'postnl-for-woocommerce' ),
 				'type'        => 'text',
@@ -239,36 +263,8 @@ class PostNL extends \WC_Shipping_Method {
 				'desc_tip'    => true,
 				'default'     => '',
 			),
-			'return_address_state'      => array(
-				'title'       => esc_html__( 'State', 'postnl-for-woocommerce' ),
-				'type'        => 'text',
-				'description' => esc_html__( 'Enter Return County.', 'postnl-for-woocommerce' ),
-				'desc_tip'    => true,
-				'default'     => '',
-			),
-			'return_address_zip'        => array(
-				'title'       => esc_html__( 'Postcode', 'postnl-for-woocommerce' ),
-				'type'        => 'text',
-				'description' => esc_html__( 'Enter Return Postcode.', 'postnl-for-woocommerce' ),
-				'desc_tip'    => true,
-				'default'     => '',
-			),
-			'return_phone'              => array(
-				'title'       => esc_html__( 'Phone Number', 'postnl-for-woocommerce' ),
-				'type'        => 'text',
-				'description' => esc_html__( 'Enter Phone Number.', 'postnl-for-woocommerce' ),
-				'desc_tip'    => true,
-				'default'     => '',
-			),
-			'return_email'              => array(
-				'title'       => esc_html__( 'Email', 'postnl-for-woocommerce' ),
-				'type'        => 'text',
-				'description' => esc_html__( 'Enter Email.', 'postnl-for-woocommerce' ),
-				'desc_tip'    => true,
-				'default'     => '',
-			),
 			'return_customer_code'      => array(
-				'title'       => esc_html__( 'Customer Code', 'postnl-for-woocommerce' ),
+				'title'       => esc_html__( 'Return Customer Code', 'postnl-for-woocommerce' ),
 				'type'        => 'text',
 				'description' => esc_html__( 'Enter return customer code.', 'postnl-for-woocommerce' ),
 				'desc_tip'    => true,
@@ -284,17 +280,9 @@ class PostNL extends \WC_Shipping_Method {
 
 			// Delivery Options Settings.
 			'delivery_options_title'    => array(
-				'title'       => esc_html__( 'Delivery Options Settings', 'postnl-for-woocommerce' ),
+				'title'       => esc_html__( 'Frontend Settings', 'postnl-for-woocommerce' ),
 				'type'        => 'title',
-				'description' => esc_html__( 'Please configure your delivery options parameters.', 'postnl-for-woocommerce' ),
-			),
-			'enable_delivery'           => array(
-				'title'       => __( 'Enable PostNL Delivery', 'postnl-for-woocommerce' ),
-				'type'        => 'checkbox',
-				'label'       => __( 'Enable', 'postnl-for-woocommerce' ),
-				'description' => __( 'Show PostNL shipping in your check-out.', 'postnl-for-woocommerce' ),
-				'default'     => 'yes',
-				'desc_tip'    => true,
+				'description' => esc_html__( 'Please configure your frontend options parameters.', 'postnl-for-woocommerce' ),
 			),
 			'enable_pickup_points'      => array(
 				'title'       => __( 'Enable PostNL Pick-up Points', 'postnl-for-woocommerce' ),
@@ -302,6 +290,7 @@ class PostNL extends \WC_Shipping_Method {
 				'label'       => __( 'Enable', 'postnl-for-woocommerce' ),
 				'description' => __( 'Show PostNL pick-up points in the checkout so that your customers can choose to get their orders delivered at a PostNL pick-up point.', 'postnl-for-woocommerce' ),
 				'desc_tip'    => true,
+				'class'       => 'country-nl country-be',
 			),
 			'enable_delivery_days'      => array(
 				'title'       => __( 'Enable Delivery Days', 'postnl-for-woocommerce' ),
@@ -309,6 +298,7 @@ class PostNL extends \WC_Shipping_Method {
 				'label'       => __( 'Enable', 'postnl-for-woocommerce' ),
 				'description' => __( 'Show delivery days in the checkout so that your customers can choose which day to receive their order.', 'postnl-for-woocommerce' ),
 				'desc_tip'    => true,
+				'class'       => 'country-nl',
 			),
 			'enable_evening_delivery'   => array(
 				'title'       => __( 'Enable Evening Delivery', 'postnl-for-woocommerce' ),
@@ -316,6 +306,7 @@ class PostNL extends \WC_Shipping_Method {
 				'label'       => __( 'Enable', 'postnl-for-woocommerce' ),
 				'description' => __( 'Enable evening delivery on the frontend.', 'postnl-for-woocommerce' ),
 				'desc_tip'    => true,
+				'class'       => 'country-nl',
 			),
 			'evening_delivery_fee'      => array(
 				'title'       => __( 'Evening Delivery Fee', 'postnl-for-woocommerce' ),
@@ -323,6 +314,7 @@ class PostNL extends \WC_Shipping_Method {
 				'description' => __( 'Fee for evening delivery option.', 'postnl-for-woocommerce' ),
 				'desc_tip'    => true,
 				'class'       => 'wc_input_price',
+				'class'       => 'country-nl',
 			),
 			'transit_time'             => array(
 				'title'       => esc_html__( 'Transit Time', 'postnl-for-woocommerce' ),
@@ -370,6 +362,14 @@ class PostNL extends \WC_Shipping_Method {
 			'dropoff_day_sun'           => array(
 				'type'  => 'checkbox',
 				'label' => __( 'Sunday', 'postnl-for-woocommerce' ),
+			),
+			'check_dutch_address'       => array(
+				'title'       => __( 'Check Dutch addresses', 'postnl-for-woocommerce' ),
+				'type'        => 'checkbox',
+				'label'       => __( 'Enable', 'postnl-for-woocommerce' ),
+				'description' => __( 'Based on zipcode and housenumber the address is checked.', 'postnl-for-woocommerce' ),
+				'desc_tip'    => true,
+				'default'     => 'yes',
 			),
 
 			// Shipping Outside Europe Settings.
@@ -431,14 +431,6 @@ class PostNL extends \WC_Shipping_Method {
 				),
 				'class'       => 'wc-enhanced-select',
 			),
-			'ask_position_a4'           => array(
-				'title'       => esc_html__( 'Ask for start position A4 format', 'postnl-for-woocommerce' ),
-				'type'        => 'checkbox',
-				'description' => esc_html__( 'When creating shipment labels, select which position on the A4 to start printing.', 'postnl-for-woocommerce' ),
-				'desc_tip'    => true,
-				'default'     => '',
-				'placeholder' => '',
-			),
 			'track_trace_email'         => array(
 				'title'       => esc_html__( 'Track & Trace Email', 'postnl-for-woocommerce' ),
 				'type'        => 'checkbox',
@@ -462,30 +454,6 @@ class PostNL extends \WC_Shipping_Method {
 				'desc_tip'    => true,
 				'default'     => '',
 				'placeholder' => '',
-			),
-
-			// Address Validation and Extra Settings.
-			'validation_extra_title'    => array(
-				'title'       => esc_html__( 'Address Validation & Extra Settings', 'postnl-for-woocommerce' ),
-				'type'        => 'title',
-				'description' => esc_html__( 'Please configure your address validation and extra option parameters.', 'postnl-for-woocommerce' ),
-			),
-			'check_dutch_address'       => array(
-				'title'       => __( 'Check Dutch addresses', 'postnl-for-woocommerce' ),
-				'type'        => 'checkbox',
-				'label'       => __( 'Enable', 'postnl-for-woocommerce' ),
-				'description' => __( 'Based on zipcode and housenumber the address is checked.', 'postnl-for-woocommerce' ),
-				'desc_tip'    => true,
-				'default'     => 'yes',
-			),
-			'enable_logging'            => array(
-				'title'             => esc_html__( 'Enable Logging', 'postnl-for-woocommerce' ),
-				'type'              => 'checkbox',
-				'description'       => esc_html__( 'Enable logging.', 'postnl-for-woocommerce' ),
-				'desc_tip'          => true,
-				'default'           => '',
-				'placeholder'       => '',
-				'custom_attributes' => array( 'maxlength' => '10' ),
 			),
 		);
 	}

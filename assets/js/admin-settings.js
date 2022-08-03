@@ -3,29 +3,17 @@
 	var postnl_admin_settings = {
 		// init Class
 		init: function() {
-			var mainform = jQuery( '#mainform' );
-			
-			mainform
-				.on( 'change', '#woocommerce_postnl_address_country', this.toggle_street_field );
-			
-			jQuery( '#woocommerce_postnl_address_country' ).trigger( 'change' );
+			this.display_street_field();
 		},
 
-		toggle_street_field: function( evt ){
-			evt.preventDefault();
-
-			var value 		= jQuery( this ).val();
-			var mainform 	= jQuery( this ).parents('#mainform');
-
+		display_street_field: function(){
+			var mainform 	= jQuery('#mainform');
 			mainform.find( '.country-nl, .country-be' ).closest( 'tr' ).hide();
-			if( 'NL' == value ){
 
+			if ( 'NL' == postnl_admin.store_address.country ) {
 				mainform.find( '.country-nl' ).closest( 'tr' ).show();
-
-			}else{
-				
+			} else {
 				mainform.find( '.country-be' ).closest( 'tr' ).show();
-
 			}
 
 		},

@@ -7,6 +7,8 @@
 
 namespace PostNLWooCommerce\Shipping_Method;
 
+use PostNLWooCommerce\Utils;
+
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
@@ -494,6 +496,20 @@ class Settings extends \WC_Settings_API {
 	}
 
 	/**
+	 * Get setting option value based on country.
+	 *
+	 * @param String $field Field name.
+	 *
+	 * @return String
+	 */
+	public function get_country_option( $field ) {
+		$base_country   = Utils::get_base_country();
+		$fields_country = array_keys( $this->filter_setting_fields( $base_country, true ) );
+
+		return in_array( $field, $fields_country, true ) ? $this->get_option( $field, '' ) : '';
+	}
+
+	/**
 	 * Get API Key from the settings.
 	 *
 	 * @return String
@@ -625,7 +641,7 @@ class Settings extends \WC_Settings_API {
 	 * @return String
 	 */
 	public function get_return_reply_number() {
-		return $this->get_option( 'return_replynumber', '' );
+		return $this->get_country_option( 'return_replynumber', '' );
 	}
 
 	/**
@@ -634,7 +650,7 @@ class Settings extends \WC_Settings_API {
 	 * @return String
 	 */
 	public function get_return_address() {
-		return $this->get_option( 'return_address', '' );
+		return $this->get_country_option( 'return_address', '' );
 	}
 
 	/**
@@ -643,7 +659,7 @@ class Settings extends \WC_Settings_API {
 	 * @return String
 	 */
 	public function get_return_streetnumber() {
-		return $this->get_option( 'return_address_no', '' );
+		return $this->get_country_option( 'return_address_no', '' );
 	}
 
 	/**
@@ -724,7 +740,7 @@ class Settings extends \WC_Settings_API {
 	 * @return String
 	 */
 	public function get_enable_delivery() {
-		return $this->get_option( 'enable_delivery', '' );
+		return $this->get_country_option( 'enable_delivery', '' );
 	}
 
 	/**
@@ -742,7 +758,7 @@ class Settings extends \WC_Settings_API {
 	 * @return String
 	 */
 	public function get_enable_pickup_points() {
-		return $this->get_option( 'enable_pickup_points', '' );
+		return $this->get_country_option( 'enable_pickup_points' );
 	}
 
 	/**
@@ -760,7 +776,7 @@ class Settings extends \WC_Settings_API {
 	 * @return String
 	 */
 	public function get_enable_delivery_days() {
-		return $this->get_option( 'enable_delivery_days', '' );
+		return $this->get_country_option( 'enable_delivery_days' );
 	}
 
 	/**
@@ -778,7 +794,7 @@ class Settings extends \WC_Settings_API {
 	 * @return String
 	 */
 	public function get_enable_evening_delivery() {
-		return $this->get_option( 'enable_evening_delivery', '' );
+		return $this->get_country_option( 'enable_evening_delivery' );
 	}
 
 	/**
@@ -796,7 +812,7 @@ class Settings extends \WC_Settings_API {
 	 * @return String
 	 */
 	public function get_evening_delivery_fee() {
-		return $this->get_option( 'evening_delivery_fee', '' );
+		return $this->get_country_option( 'evening_delivery_fee' );
 	}
 
 	/**

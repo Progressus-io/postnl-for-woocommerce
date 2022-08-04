@@ -208,6 +208,20 @@ class Settings extends \WC_Settings_API {
 				'for_country' => array( 'NL', 'BE' ),
 				'class'       => 'country-nl country-be',
 			),
+			'number_pickup_points'      => array(
+				'title'             => __( 'Number of Pickup Points', 'postnl-for-woocommerce' ),
+				'type'              => 'number',
+				'description'       => __( 'Number of pickup points displayed in the frontend. Maximum will be 20.', 'postnl-for-woocommerce' ),
+				'desc_tip'          => true,
+				'class'             => '',
+				'default'           => '10',
+				'custom_attributes' => array(
+					'min' => '1',
+					'max' => '20',
+				),
+				'for_country'       => array( 'NL', 'BE' ),
+				'class'             => 'country-nl country-be',
+			),
 			'enable_delivery_days'      => array(
 				'title'       => __( 'Enable Delivery Days', 'postnl-for-woocommerce' ),
 				'type'        => 'checkbox',
@@ -216,6 +230,20 @@ class Settings extends \WC_Settings_API {
 				'desc_tip'    => true,
 				'for_country' => array( 'NL' ),
 				'class'       => 'country-nl',
+			),
+			'number_delivery_days'      => array(
+				'title'             => __( 'Number of Delivery Days', 'postnl-for-woocommerce' ),
+				'type'              => 'number',
+				'description'       => __( 'Number of delivery days displayed in the frontend. Maximum will be 12.', 'postnl-for-woocommerce' ),
+				'desc_tip'          => true,
+				'class'             => '',
+				'default'           => '10',
+				'for_country'       => array( 'NL' ),
+				'custom_attributes' => array(
+					'min' => '1',
+					'max' => '12',
+				),
+				'class'             => 'country-nl',
 			),
 			'enable_evening_delivery'   => array(
 				'title'       => __( 'Enable Evening Delivery', 'postnl-for-woocommerce' ),

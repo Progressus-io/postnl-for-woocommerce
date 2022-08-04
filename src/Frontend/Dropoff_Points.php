@@ -46,7 +46,7 @@ class Dropoff_Points extends Base {
 					'type'        => 'select',
 					'label'       => __( 'Dropoff Points:', 'postnl-for-woocommerce' ),
 					'description' => '',
-					'class'       => 'postnl-checkout-field',
+					'class'       => 'postnl-checkout-field select2',
 					'options'     => array(
 						''         => esc_html__( '- Choose Dropoff Points -', 'postnl-for-woocommerce' ),
 						'point_1' => esc_html__( 'Point 1', 'postnl-for-woocommerce' ),

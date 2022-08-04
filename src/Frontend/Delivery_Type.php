@@ -37,7 +37,7 @@ class Delivery_Type extends Base {
 					'type'        => 'select',
 					'label'       => __( 'Delivery Type:', 'postnl-for-woocommerce' ),
 					'description' => '',
-					'class'       => 'postnl-checkout-field',
+					'class'       => 'postnl-checkout-field select2',
 					'options'     => array(
 						'standard' => esc_html__( 'Standard', 'postnl-for-woocommerce' ),
 						'evening'  => esc_html__( 'Evening', 'postnl-for-woocommerce' ),

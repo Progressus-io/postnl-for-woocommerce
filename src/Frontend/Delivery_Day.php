@@ -37,7 +37,7 @@ class Delivery_Day extends Base {
 				'type'        => 'select',
 				'label'       => __( 'Delivery Day:', 'postnl-for-woocommerce' ),
 				'description' => '',
-				'class'       => 'postnl-checkout-field',
+				'class'       => 'postnl-checkout-field select2',
 				'options'     => array(
 					'2022-08-01' => gmdate( 'F j Y', strtotime( '2022-08-01' ) ),
 					'2022-08-02' => gmdate( 'F j Y', strtotime( '2022-08-02' ) ),

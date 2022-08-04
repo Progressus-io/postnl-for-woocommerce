@@ -86,6 +86,20 @@ abstract class Base {
 		add_action( 'woocommerce_review_order_after_shipping', array( $this, 'display_fields' ) );
 		add_filter( 'woocommerce_checkout_posted_data', array( $this, 'validate_posted_data' ) );
 		add_action( 'woocommerce_checkout_update_order_meta', array( $this, 'save_data' ), 10, 2 );
+		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_scripts_styles' ) );
+	}
+
+	/**
+	 * Enqueue scripts and style.
+	 */
+	public function enqueue_scripts_styles() {
+		wp_enqueue_script(
+			'postnl-fe-checkout',
+			POSTNL_WC_PLUGIN_DIR_URL . '/assets/js/fe-checkout.js',
+			array( 'jquery' ),
+			POSTNL_WC_VERSION,
+			true
+		);
 	}
 
 	/**

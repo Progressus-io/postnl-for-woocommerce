@@ -35,12 +35,22 @@ class Utils {
 	}
 
 	/**
+	 * Get available country.
+	 *
+	 * @return array.
+	 */
+	public static function get_available_country() {
+		return array( 'NL', 'BE' );
+	}
+
+	/**
 	 * Get store base country.
 	 *
 	 * @return String.
 	 */
 	public static function get_base_country() {
-		return \WC()->countries->get_base_country();
+		$base_location = wc_get_base_location();
+		return $base_location['country'];
 	}
 
 	/**
@@ -49,7 +59,8 @@ class Utils {
 	 * @return String.
 	 */
 	public static function get_base_state() {
-		return \WC()->countries->get_base_state();
+		$base_location = wc_get_base_location();
+		return $base_location['state'];
 	}
 
 	/**

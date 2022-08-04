@@ -394,11 +394,11 @@ class Settings extends \WC_Settings_API {
 					return true;
 				}
 
-				if ( is_array( $field['for_country'] ) && in_array( $country, $field['for_country'], true ) ) {
+				if ( ! empty( $field['for_country'] ) && is_array( $field['for_country'] ) && in_array( $country, $field['for_country'], true ) ) {
 					return true;
 				}
 
-				if ( $field['for_country'] === $country ) {
+				if ( ! empty( $field['for_country'] ) && $field['for_country'] === $country ) {
 					return true;
 				}
 

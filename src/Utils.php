@@ -35,6 +35,24 @@ class Utils {
 	}
 
 	/**
+	 * Get store base country.
+	 *
+	 * @return String.
+	 */
+	public static function get_base_country() {
+		return \WC()->countries->get_base_country();
+	}
+
+	/**
+	 * Get store base state.
+	 *
+	 * @return String.
+	 */
+	public static function get_base_state() {
+		return \WC()->countries->get_base_state();
+	}
+
+	/**
 	 * Get field name without prefix.
 	 *
 	 * @param String $prefix Prefix of the field.

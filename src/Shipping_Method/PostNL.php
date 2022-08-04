@@ -42,34 +42,7 @@ class PostNL extends \WC_Shipping_Method {
 		$this->init_form_fields();
 		$this->init_settings();
 
-		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_style_script' ) );
 		add_action( 'woocommerce_update_options_shipping_' . $this->id, array( $this, 'process_admin_options' ) );
-	}
-
-	/**
-	 * Enqueue style and script for admin setting page.
-	 */
-	public function enqueue_style_script() {
-		$screen = get_current_screen();
-
-		if ( ! empty( $screen->id ) && 'woocommerce_page_wc-settings' === $screen->id && ! empty( $_GET['section'] ) && 'postnl' === $_GET['section'] ) {
-
-			wp_enqueue_script(
-				'postnl-admin-settings',
-				POSTNL_WC_PLUGIN_DIR_URL . '/assets/js/admin-settings.js',
-				array( 'jquery' ),
-				POSTNL_WC_VERSION,
-				true
-			);
-
-			wp_localize_script(
-				'postnl-admin-settings',
-				'postnl_admin',
-				array(
-					'store_address' => wc_get_base_location(),
-				)
-			);
-		}
 	}
 
 	/**

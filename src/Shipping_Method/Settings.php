@@ -502,11 +502,11 @@ class Settings extends \WC_Settings_API {
 	 *
 	 * @return String
 	 */
-	public function get_country_option( $field ) {
+	public function get_country_option( $field, $default_value = '' ) {
 		$base_country   = Utils::get_base_country();
 		$fields_country = array_keys( $this->filter_setting_fields( $base_country, true ) );
 
-		return in_array( $field, $fields_country, true ) ? $this->get_option( $field, '' ) : '';
+		return in_array( $field, $fields_country, true ) ? $this->get_option( $field, $default_value ) : '';
 	}
 
 	/**
@@ -515,7 +515,7 @@ class Settings extends \WC_Settings_API {
 	 * @return String
 	 */
 	public function get_api_key() {
-		return $this->get_option( 'api_keys', '' );
+		return $this->get_country_option( 'api_keys', '' );
 	}
 
 	/**
@@ -524,7 +524,7 @@ class Settings extends \WC_Settings_API {
 	 * @return String
 	 */
 	public function get_customer_num() {
-		return $this->get_option( 'customer_num', '' );
+		return $this->get_country_option( 'customer_num', '' );
 	}
 
 	/**
@@ -533,7 +533,7 @@ class Settings extends \WC_Settings_API {
 	 * @return String
 	 */
 	public function get_customer_code() {
-		return $this->get_option( 'customer_code', '' );
+		return $this->get_country_option( 'customer_code', '' );
 	}
 
 	/**
@@ -542,7 +542,7 @@ class Settings extends \WC_Settings_API {
 	 * @return String
 	 */
 	public function get_location_code() {
-		return $this->get_option( 'location_code', '' );
+		return $this->get_country_option( 'location_code', '' );
 	}
 
 	/**
@@ -551,7 +551,7 @@ class Settings extends \WC_Settings_API {
 	 * @return String
 	 */
 	public function get_company_name() {
-		return $this->get_option( 'address_company', '' );
+		return $this->get_country_option( 'address_company', '' );
 	}
 
 	/**
@@ -560,7 +560,7 @@ class Settings extends \WC_Settings_API {
 	 * @return String
 	 */
 	public function get_company_address() {
-		return $this->get_option( 'address_street', '' );
+		return $this->get_country_option( 'address_street', '' );
 	}
 
 	/**
@@ -569,7 +569,7 @@ class Settings extends \WC_Settings_API {
 	 * @return String
 	 */
 	public function get_company_housenumber() {
-		return $this->get_option( 'address_street_no', '' );
+		return $this->get_country_option( 'address_street_no', '' );
 	}
 
 	/**
@@ -578,7 +578,7 @@ class Settings extends \WC_Settings_API {
 	 * @return String
 	 */
 	public function get_company_housenumber_ext() {
-		return $this->get_option( 'address_street_ext', '' );
+		return $this->get_country_option( 'address_street_ext', '' );
 	}
 
 	/**
@@ -587,7 +587,7 @@ class Settings extends \WC_Settings_API {
 	 * @return String
 	 */
 	public function get_company_city() {
-		return $this->get_option( 'address_city', '' );
+		return $this->get_country_option( 'address_city', '' );
 	}
 
 	/**
@@ -596,7 +596,7 @@ class Settings extends \WC_Settings_API {
 	 * @return String
 	 */
 	public function get_company_state() {
-		return $this->get_option( 'address_state', '' );
+		return $this->get_country_option( 'address_state', '' );
 	}
 
 	/**
@@ -605,7 +605,7 @@ class Settings extends \WC_Settings_API {
 	 * @return String
 	 */
 	public function get_company_country() {
-		return $this->get_option( 'address_country', '' );
+		return $this->get_country_option( 'address_country', '' );
 	}
 
 	/**
@@ -614,7 +614,7 @@ class Settings extends \WC_Settings_API {
 	 * @return String
 	 */
 	public function get_company_zipcode() {
-		return $this->get_option( 'address_zip', '' );
+		return $this->get_country_option( 'address_zip', '' );
 	}
 
 	/**
@@ -623,7 +623,7 @@ class Settings extends \WC_Settings_API {
 	 * @return String
 	 */
 	public function get_return_address_default() {
-		return $this->get_option( 'return_address_default', '' );
+		return $this->get_country_option( 'return_address_default', '' );
 	}
 
 	/**
@@ -632,7 +632,7 @@ class Settings extends \WC_Settings_API {
 	 * @return String
 	 */
 	public function get_return_company_name() {
-		return $this->get_option( 'return_company', '' );
+		return $this->get_country_option( 'return_company', '' );
 	}
 
 	/**
@@ -668,7 +668,7 @@ class Settings extends \WC_Settings_API {
 	 * @return String
 	 */
 	public function get_return_city() {
-		return $this->get_option( 'return_address_city', '' );
+		return $this->get_country_option( 'return_address_city', '' );
 	}
 
 	/**
@@ -677,7 +677,7 @@ class Settings extends \WC_Settings_API {
 	 * @return String
 	 */
 	public function get_return_state() {
-		return $this->get_option( 'return_address_state', '' );
+		return $this->get_country_option( 'return_address_state', '' );
 	}
 
 	/**
@@ -686,7 +686,7 @@ class Settings extends \WC_Settings_API {
 	 * @return String
 	 */
 	public function get_return_zipcode() {
-		return $this->get_option( 'return_address_zip', '' );
+		return $this->get_country_option( 'return_address_zip', '' );
 	}
 
 	/**
@@ -695,7 +695,7 @@ class Settings extends \WC_Settings_API {
 	 * @return String
 	 */
 	public function get_return_phone() {
-		return $this->get_option( 'return_phone', '' );
+		return $this->get_country_option( 'return_phone', '' );
 	}
 
 	/**
@@ -704,7 +704,7 @@ class Settings extends \WC_Settings_API {
 	 * @return String
 	 */
 	public function get_return_email() {
-		return $this->get_option( 'return_email', '' );
+		return $this->get_country_option( 'return_email', '' );
 	}
 
 	/**
@@ -713,7 +713,7 @@ class Settings extends \WC_Settings_API {
 	 * @return String
 	 */
 	public function get_return_customer_code() {
-		return $this->get_option( 'return_customer_code', '' );
+		return $this->get_country_option( 'return_customer_code', '' );
 	}
 
 	/**
@@ -722,7 +722,7 @@ class Settings extends \WC_Settings_API {
 	 * @return String
 	 */
 	public function get_return_direct_print_label() {
-		return $this->get_option( 'return_direct_print_label', '' );
+		return $this->get_country_option( 'return_direct_print_label', '' );
 	}
 
 	/**
@@ -821,7 +821,7 @@ class Settings extends \WC_Settings_API {
 	 * @return String
 	 */
 	public function get_transit_time() {
-		return $this->get_option( 'transit_time', '' );
+		return $this->get_country_option( 'transit_time', '' );
 	}
 
 	/**
@@ -830,7 +830,7 @@ class Settings extends \WC_Settings_API {
 	 * @return String
 	 */
 	public function get_cut_off_time() {
-		return $this->get_option( 'cut_off_time', '' );
+		return $this->get_country_option( 'cut_off_time', '' );
 	}
 
 	/**
@@ -839,7 +839,7 @@ class Settings extends \WC_Settings_API {
 	 * @return String
 	 */
 	public function get_dropoff_monday() {
-		return $this->get_option( 'dropoff_day_mon', '' );
+		return $this->get_country_option( 'dropoff_day_mon', '' );
 	}
 
 	/**
@@ -857,7 +857,7 @@ class Settings extends \WC_Settings_API {
 	 * @return String
 	 */
 	public function get_dropoff_tuesday() {
-		return $this->get_option( 'dropoff_day_tue', '' );
+		return $this->get_country_option( 'dropoff_day_tue', '' );
 	}
 
 	/**
@@ -875,7 +875,7 @@ class Settings extends \WC_Settings_API {
 	 * @return String
 	 */
 	public function get_dropoff_wednesday() {
-		return $this->get_option( 'dropoff_day_wednesday', '' );
+		return $this->get_country_option( 'dropoff_day_wednesday', '' );
 	}
 
 	/**
@@ -893,7 +893,7 @@ class Settings extends \WC_Settings_API {
 	 * @return String
 	 */
 	public function get_dropoff_thursday() {
-		return $this->get_option( 'dropoff_day_thu', '' );
+		return $this->get_country_option( 'dropoff_day_thu', '' );
 	}
 
 	/**
@@ -911,7 +911,7 @@ class Settings extends \WC_Settings_API {
 	 * @return String
 	 */
 	public function get_dropoff_friday() {
-		return $this->get_option( 'dropoff_day_fri', '' );
+		return $this->get_country_option( 'dropoff_day_fri', '' );
 	}
 
 	/**
@@ -929,7 +929,7 @@ class Settings extends \WC_Settings_API {
 	 * @return String
 	 */
 	public function get_dropoff_saturday() {
-		return $this->get_option( 'dropoff_day_sat', '' );
+		return $this->get_country_option( 'dropoff_day_sat', '' );
 	}
 
 	/**
@@ -947,7 +947,7 @@ class Settings extends \WC_Settings_API {
 	 * @return String
 	 */
 	public function get_dropoff_sunday() {
-		return $this->get_option( 'dropoff_day_sun', '' );
+		return $this->get_country_option( 'dropoff_day_sun', '' );
 	}
 
 	/**
@@ -1004,7 +1004,7 @@ class Settings extends \WC_Settings_API {
 	 * @return String
 	 */
 	public function get_globalpack_barcode_type() {
-		return $this->get_option( 'globalpack_barcode_type', '' );
+		return $this->get_country_option( 'globalpack_barcode_type', '' );
 	}
 
 	/**
@@ -1013,7 +1013,7 @@ class Settings extends \WC_Settings_API {
 	 * @return String
 	 */
 	public function get_globalpack_customer_code() {
-		return $this->get_option( 'globalpack_customer_code', '' );
+		return $this->get_country_option( 'globalpack_customer_code', '' );
 	}
 
 	/**
@@ -1022,7 +1022,7 @@ class Settings extends \WC_Settings_API {
 	 * @return String
 	 */
 	public function get_hs_tariff_code() {
-		return $this->get_option( 'hs_tariff_code', '' );
+		return $this->get_country_option( 'hs_tariff_code', '' );
 	}
 
 	/**
@@ -1031,7 +1031,7 @@ class Settings extends \WC_Settings_API {
 	 * @return String
 	 */
 	public function get_country_origin() {
-		return $this->get_option( 'country_origin', '' );
+		return $this->get_country_option( 'country_origin', '' );
 	}
 
 	/**
@@ -1040,7 +1040,7 @@ class Settings extends \WC_Settings_API {
 	 * @return String
 	 */
 	public function get_label_format() {
-		return $this->get_option( 'label_format', '' );
+		return $this->get_country_option( 'label_format', '' );
 	}
 
 	/**
@@ -1049,7 +1049,7 @@ class Settings extends \WC_Settings_API {
 	 * @return String
 	 */
 	public function get_ask_position_a4() {
-		return $this->get_option( 'ask_position_a4', '' );
+		return $this->get_country_option( 'ask_position_a4', '' );
 	}
 
 	/**
@@ -1067,7 +1067,7 @@ class Settings extends \WC_Settings_API {
 	 * @return String
 	 */
 	public function get_track_trace_email() {
-		return $this->get_option( 'track_trace_email', '' );
+		return $this->get_country_option( 'track_trace_email', '' );
 	}
 
 	/**
@@ -1085,7 +1085,7 @@ class Settings extends \WC_Settings_API {
 	 * @return String
 	 */
 	public function get_woocommerce_email() {
-		return $this->get_option( 'woocommerce_email', '' );
+		return $this->get_country_option( 'woocommerce_email', '' );
 	}
 
 	/**
@@ -1103,7 +1103,7 @@ class Settings extends \WC_Settings_API {
 	 * @return String
 	 */
 	public function get_woocommerce_email_text() {
-		return $this->get_option( 'woocommerce_email_text', '' );
+		return $this->get_country_option( 'woocommerce_email_text', '' );
 	}
 
 	/**
@@ -1112,7 +1112,7 @@ class Settings extends \WC_Settings_API {
 	 * @return String
 	 */
 	public function get_check_dutch_address() {
-		return $this->get_option( 'check_dutch_address', '' );
+		return $this->get_country_option( 'check_dutch_address', '' );
 	}
 
 	/**
@@ -1130,7 +1130,7 @@ class Settings extends \WC_Settings_API {
 	 * @return String
 	 */
 	public function get_enable_logging() {
-		return $this->get_option( 'enable_logging', '' );
+		return $this->get_country_option( 'enable_logging', '' );
 	}
 
 	/**

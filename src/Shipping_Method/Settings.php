@@ -499,6 +499,7 @@ class Settings extends \WC_Settings_API {
 	 * Get setting option value based on country.
 	 *
 	 * @param String $field Field name.
+	 * @param String $default_value Default value if the field value is empty.
 	 *
 	 * @return String
 	 */

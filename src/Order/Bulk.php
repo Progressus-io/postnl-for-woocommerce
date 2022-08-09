@@ -109,7 +109,7 @@ class Bulk extends Base {
 			return array_filter(
 				$fields,
 				function( $field ) {
-					return ( $this->prefix . 'delivery_type' !== $field['id'] );
+					return ( ! empty( $field['show_in_bulk'] ) && true === $field['show_in_bulk'] );
 				}
 			);
 		}

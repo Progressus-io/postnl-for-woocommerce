@@ -143,7 +143,7 @@ class Single extends Base {
 			}
 
 			// Check nonce before proceed.
-			$nonce_result = check_ajax_referer( $this->nonce_key, Utils::remove_prefix_field( $this->prefix, $nonce_fields[0]['id'] ), false );
+			$nonce_result = check_ajax_referer( $this->nonce_key, $nonce_fields[0]['id'], false );
 			if ( false === $nonce_result ) {
 				throw new \Exception( esc_html__( 'Nonce is invalid!', 'postnl-for-woocommerce' ) );
 			}

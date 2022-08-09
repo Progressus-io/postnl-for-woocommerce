@@ -247,6 +247,24 @@ abstract class Base {
 	}
 
 	/**
+	 * Get frontend data from Order object.
+	 *
+	 * @param int $order_id ID of the order.
+	 *
+	 * @return array.
+	 */
+	public function get_data( $order_id ) {
+		$order = wc_get_order( $order_id );
+
+		if ( ! is_a( $order, 'WC_Order' ) ) {
+			return array();
+		}
+
+		$data = $order->get_meta( $this->meta_name );
+		return ! empty( $data ) && is_array( $data ) ? $data : array();
+	}
+
+	/**
 	 * Saving meta box in order admin page.
 	 *
 	 * @param  int   $order_id Order post ID.
@@ -258,6 +276,8 @@ abstract class Base {
 		if ( ! is_a( $order, 'WC_Order' ) ) {
 			return false;
 		}
+
+		$saved_data = $this->get_data( $order_id );
 
 		// Get array of nonce fields.
 		$nonce_fields = array_values( $this->get_nonce_fields() );
@@ -271,7 +291,7 @@ abstract class Base {
 
 			$post_value = ! empty( $meta_values[ $field['id'] ] ) ? sanitize_text_field( wp_unslash( $meta_values[ $field['id'] ] ) ) : '';
 
-			$saved_data [ $field['id'] ] = $post_value;
+			$saved_data['backend'][ $field['id'] ] = $post_value;
 		}
 
 		$order->update_meta_data( $this->meta_name, $saved_data );

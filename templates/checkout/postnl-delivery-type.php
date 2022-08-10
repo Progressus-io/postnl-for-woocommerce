@@ -15,7 +15,7 @@ if ( empty( $fields ) ) {
 
 foreach ( $fields as $field ) {
 	?>
-	<tr class="dhl-co-tr dhl-co-tr-fist">
+	<tr class="postnl-co-tr postnl-co-tr-fist">
 		<td colspan="2">
 		<?php
 			woocommerce_form_field( $field['id'], $field, $field['value'] );

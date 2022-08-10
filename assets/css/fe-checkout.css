@@ -1,0 +1,132 @@
+tr.postnl-co-tr-container > td {
+	padding:0px;
+}
+
+.postnl_checkout_container {
+	border-radius:5px;
+	margin:5px;
+	border:1px solid #f0f0f0;
+	overflow:hidden;
+}
+
+.postnl_checkout_tab_list {
+	margin:0px;
+	padding:0px;
+	list-style-type:none;
+	display:flex;
+	width:100%;
+	flex-direction:row;
+	flex-wrap:nowrap;
+}
+
+.postnl_checkout_tab_list > li {
+	flex-grow:1;
+	padding:0px;
+	margin:0px;
+}
+
+.postnl_checkout_tab_list > li .postnl_checkout_tab {
+	display:block;
+	text-align:center;
+	padding:10px;
+	line-height:1em;
+	font-size:1em;
+	font-weight:700;
+	cursor: pointer;
+}
+
+.postnl_checkout_tab_list > li.active .postnl_checkout_tab {
+	background-color:#ed8c00;
+	color:#fff;
+}
+
+.postnl_checkout_tab_list > li .postnl_checkout_tab i {
+	float:right;
+	font-style:normal;
+}
+
+.postnl_checkout_tab_list > li .postnl_checkout_tab:after {
+	content:"";
+	display:block;
+	clear:both;
+}
+
+.postnl_checkout_tab_list > li input.postnl_option {
+	display:none;
+}
+
+.postnl_content {
+	display:none;
+}
+
+.postnl_content.active {
+	display:block;
+}
+
+.postnl_content .postnl_list {
+	margin:0px;
+	padding:0px;
+	list-style-type:none;
+}
+
+.postnl_content .postnl_list > li {
+	padding:0px;
+	margin:0px;
+}
+
+.postnl_content .postnl_list .list_title {
+	background-color:#f0f0f0;
+	border-top:1px solid #d0d0d0;
+	border-bottom:1px solid #d0d0d0;
+	line-height:1em;
+	padding:4px 5px;
+}
+
+.postnl_content .postnl_list .list_title span {
+	font-size:1em;
+	font-weight:700;
+}
+
+.postnl_content .postnl_list .postnl_sub_list {
+	margin:0px;
+	padding:0px;
+	list-style-type:none;
+}
+
+.postnl_content .postnl_list .postnl_sub_list > li {
+	margin:0px;
+	padding:0px;
+}
+
+.postnl_content .postnl_list .postnl_sub_list > li.active {
+	background-color:#d1eeff;
+}
+
+.postnl_content .postnl_list .postnl_sub_list .postnl_sub_radio_label {
+	display:block;
+	padding:8px 6px;
+	margin:0px;
+	line-height:1em;
+	cursor: pointer;
+}
+
+.postnl_content .postnl_list .postnl_sub_list .postnl_sub_radio_label:after {
+	content:"";
+	display:block;
+	clear:both;
+}
+
+.postnl_content .postnl_list .postnl_sub_list .postnl_sub_radio {
+	margin-right:10px;
+	float:left;
+}
+
+.postnl_content .postnl_list .postnl_sub_list .postnl_sub_radio_label span {
+	display:block;
+	overflow:hidden;
+}
+
+.postnl_content .postnl_list .postnl_sub_list .postnl_sub_radio_label i {
+	float:right;
+	font-style:normal;
+}

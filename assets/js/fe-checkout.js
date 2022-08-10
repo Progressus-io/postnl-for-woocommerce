@@ -4,6 +4,33 @@
 		// init Class
 		init: function() {
 			jQuery('body').on( 'updated_checkout', this.use_select2 );
+			jQuery('body').on( 'updated_checkout', this.operate );
+		},
+
+		operate: function() {
+			var checkout_option = jQuery( '#postnl_checkout_option' );
+			var radio_tabs      = checkout_option.find( '.postnl_checkout_tab_list .postnl_option' );
+			var radio_options   = checkout_option.find( '.postnl_checkout_content_container .postnl_sub_radio' );
+
+			radio_tabs.on( 'change', function( evt ) {
+				var pri_container = jQuery( this ).closest( '#postnl_checkout_option' );
+				var ul_list       = jQuery( this ).closest( '.postnl_checkout_tab_list' );
+				var current_val   = jQuery( this ).val();
+
+				ul_list.children( 'li' ).removeClass( 'active' );
+
+				jQuery( this ).closest( 'li' ).addClass( 'active' );
+
+				pri_container.find( '.postnl_checkout_content_container .postnl_content' ).removeClass( 'active' );
+				pri_container.find( '#postnl_' + current_val + '_content' ).addClass( 'active' );
+			} );
+
+			radio_options.on( 'change', function() {
+				var ul_list       = jQuery( this ).closest( '.postnl_list' );
+				ul_list.find( 'ul.postnl_sub_list > li' ).removeClass( 'active' );
+
+				jQuery( this ).closest( 'li' ).addClass( 'active' );
+			} );
 		},
 
 		use_select2: function(){

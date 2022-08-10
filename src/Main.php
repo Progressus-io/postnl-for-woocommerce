@@ -140,9 +140,6 @@ class Main {
 		add_action( 'init', array( $this, 'init' ), 1 );
 		add_action( 'init', array( $this, 'load_textdomain' ) );
 
-		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_styles' ) );
-		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_scripts' ) );
-
 		add_filter( 'woocommerce_shipping_methods', array( $this, 'add_shipping_method' ) );
 
 		// Locate woocommerce template.
@@ -154,20 +151,6 @@ class Main {
 	 */
 	public function load_textdomain() {
 		load_plugin_textdomain( 'postnl-for-woocommerce', false, dirname( plugin_basename( __FILE__ ) ) . '/languages/' );
-	}
-
-	/**
-	 * Load or enqueue the css file.
-	 */
-	public function enqueue_styles() {
-
-	}
-
-	/**
-	 * Enqueue all scripts.
-	 */
-	public function enqueue_scripts() {
-		wp_enqueue_script( 'mc-customization-frontend', POSTNL_WC_PLUGIN_DIR_URL . '/assets/js/frontend.js', array( 'jquery' ), '1.0.0', true );
 	}
 
 	/**
@@ -225,6 +208,7 @@ class Main {
 	 * Get frontend class.
 	 */
 	public function get_frontend() {
+		new Frontend\Container();
 		new Frontend\Delivery_Type();
 		new Frontend\Delivery_Day();
 		new Frontend\Dropoff_Points();

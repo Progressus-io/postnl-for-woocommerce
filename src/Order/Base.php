@@ -7,6 +7,8 @@
 
 namespace PostNLWooCommerce\Order;
 
+use PostNLWooCommerce\Utils;
+
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
@@ -56,7 +58,7 @@ abstract class Base {
 	 * Init and hook in the integration.
 	 */
 	public function __construct() {
-		$this->meta_name = '_' . $this->prefix . 'data';
+		$this->meta_name = '_' . $this->prefix . 'order_metadata';
 		$this->init_hooks();
 	}
 
@@ -290,8 +292,9 @@ abstract class Base {
 			}
 
 			$post_value = ! empty( $meta_values[ $field['id'] ] ) ? sanitize_text_field( wp_unslash( $meta_values[ $field['id'] ] ) ) : '';
+			$post_field = Utils::remove_prefix_field( $this->prefix, $field['id'] );
 
-			$saved_data['backend'][ $field['id'] ] = $post_value;
+			$saved_data['backend'][ $post_field ] = $post_value;
 		}
 
 		$order->update_meta_data( $this->meta_name, $saved_data );

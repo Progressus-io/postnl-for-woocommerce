@@ -53,7 +53,7 @@ abstract class Base {
 	 */
 	public function __construct() {
 		$this->settings  = Settings::get_instance();
-		$this->meta_name = '_' . $this->prefix . 'data';
+		$this->meta_name = '_' . $this->prefix . 'order_metadata';
 		$this->set_template_file();
 		$this->init_hooks();
 	}

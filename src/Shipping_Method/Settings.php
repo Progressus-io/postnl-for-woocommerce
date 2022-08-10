@@ -181,14 +181,7 @@ class Settings extends \WC_Settings_API {
 			'return_customer_code'      => array(
 				'title'       => esc_html__( 'Return Customer Code', 'postnl-for-woocommerce' ),
 				'type'        => 'text',
-				'description' => esc_html__( 'Enter return customer code.', 'postnl-for-woocommerce' ),
-				'desc_tip'    => true,
-				'default'     => '',
-			),
-			'return_direct_print_label' => array(
-				'title'       => esc_html__( 'Print returnlabel directly with shippinglabel', 'postnl-for-woocommerce' ),
-				'type'        => 'checkbox',
-				'description' => esc_html__( 'When you create the shippinglabel, you can choose to directly create a return label. The returnlabel can then be inserted in the box of the shipment so it is easier for your customer to return (part of) the order.', 'postnl-for-woocommerce' ),
+				'description' => esc_html__( 'Be aware that the Return Customer Code differs from the regular Customer Code. You can find your Return customer code in Mijn PostNL.', 'postnl-for-woocommerce' ),
 				'desc_tip'    => true,
 				'default'     => '',
 			),

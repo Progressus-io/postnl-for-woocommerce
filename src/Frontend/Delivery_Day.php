@@ -59,6 +59,23 @@ class Delivery_Day extends Base {
 	}
 
 	/**
+	 * Adding a tab in the frontend checkout.
+	 *
+	 * @param array $tabs List of displayed tabs.
+	 *
+	 * @return array
+	 */
+	public function add_checkout_tab( $tabs ) {
+		$tabs[] = array(
+			'id'    => 'delivery_day',
+			'price' => '$ 10',
+			'name'  => esc_html__( 'Delivery Day', 'postnl-for-woocommerce' ),
+		);
+
+		return $tabs;
+	}
+
+	/**
 	 * Get the enabled dropoff days from the settings.
 	 *
 	 * @return array

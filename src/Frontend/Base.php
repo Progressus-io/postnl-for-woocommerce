@@ -87,6 +87,18 @@ abstract class Base {
 		add_filter( 'woocommerce_checkout_posted_data', array( $this, 'validate_posted_data' ) );
 		add_action( 'woocommerce_checkout_update_order_meta', array( $this, 'save_data' ), 10, 2 );
 		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_scripts_styles' ) );
+		add_filter( 'postnl_frontend_checkout_tab', array( $this, 'add_checkout_tab' ), 10, 1 );
+	}
+
+	/**
+	 * Adding a tab in the frontend checkout.
+	 *
+	 * @param array $tabs List of displayed tabs.
+	 *
+	 * @return array
+	 */
+	public function add_checkout_tab( $tabs ) {
+		return $tabs;
 	}
 
 	/**

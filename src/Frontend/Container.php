@@ -8,6 +8,7 @@
 namespace PostNLWooCommerce\Frontend;
 
 use PostNLWooCommerce\Shipping_Method\Settings;
+use PostNLWooCommerce\Rest_API\Checkout;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -72,11 +73,116 @@ class Container {
 	}
 
 	/**
+	 * Get enabled tabs.
+	 *
+	 * @return array
+	 */
+	public function get_available_tabs() {
+		return apply_filters( 'postnl_frontend_checkout_tab', array() );
+	}
+
+	/**
+	 * Get delivery option value from the API response.
+	 *
+	 * @param array $response PostNL API response.
+	 *
+	 * @return array.
+	 */
+	public function get_delivery_options( $response ) {
+		if ( empty( $response['DeliveryOptions'] ) ) {
+			return array();
+		}
+
+		$delivery_options = array();
+
+		foreach ( $response['DeliveryOptions'] as $delivery_option ) {
+			if ( empty( $delivery_option['DeliveryDate'] ) || empty( $delivery_option['Timeframe'] ) ) {
+				continue;
+			}
+
+			$options = array_map(
+				function( $timeframe ) {
+					return array(
+						'from' => $timeframe['From'],
+						'to'   => $timeframe['To'],
+						'type' => array_shift( $timeframe['Options'] ),
+					);
+				},
+				$delivery_option['Timeframe']
+			);
+
+			$timestamp = strtotime( $delivery_option['DeliveryDate'] );
+
+			$delivery_options[] = array(
+				'day'     => gmdate( 'l', $timestamp ),
+				'date'    => gmdate( 'Y-m-d', $timestamp ),
+				'options' => $options,
+			);
+		}
+
+		return $delivery_options;
+	}
+
+	/**
+	 * Get dropoff points value from the API response.
+	 *
+	 * @param array $response PostNL API response.
+	 *
+	 * @return array.
+	 */
+	public function get_dropoff_points( $response ) {
+		if ( empty( $response['PickupOptions'] ) ) {
+			return array();
+		}
+
+		$pickup_points = array_filter(
+			$response['PickupOptions'],
+			function ( $pickup_point ) {
+				return ( ! empty( $pickup_point['Option'] ) && 'Pickup' === $pickup_point['Option'] );
+			}
+		);
+		$pickup_point  = array_shift( $pickup_points );
+		$date          = ! empty( $pickup_point['PickupDate'] ) ? $pickup_point['PickupDate'] : '';
+
+		if ( empty( $pickup_point['Locations'] ) ) {
+			return array();
+		}
+
+		$dropoff_options = array();
+
+		foreach ( $pickup_point['Locations'] as $dropoff_option ) {
+			if ( empty( $dropoff_option['PartnerID'] ) || empty( $dropoff_option['PickupTime'] ) || empty( $dropoff_option['Distance'] ) || empty( $dropoff_option['Address'] ) ) {
+				continue;
+			}
+
+			$timestamp = strtotime( $date );
+			$company   = $dropoff_option['PartnerID']['CompanyName'];
+			$address   = implode( ', ', array_values( $dropoff_option['Address'] ) );
+
+			$dropoff_options[] = array(
+				'partner_id' => $dropoff_option['PartnerID'],
+				'time'       => $dropoff_option['PickupTime'],
+				'distance'   => $dropoff_option['Distance'],
+				'date'       => $date,
+				'company'    => $company,
+				'address'    => $address,
+			);
+		}
+
+		return $dropoff_options;
+	}
+
+	/**
 	 * Add delivery day fields.
 	 */
 	public function display_fields() {
+		$response = Checkout::send_request();
+		$response = json_decode( $response, true );
+
 		$template_args = array(
-			'fields' => array(),
+			'tabs'           => $this->get_available_tabs(),
+			'deliveries'     => $this->get_delivery_options( $response ),
+			'dropoff_points' => $this->get_dropoff_points( $response ),
 		);
 
 		wc_get_template( $this->template_file, $template_args, '', POSTNL_WC_PLUGIN_DIR_PATH . '/templates/' );

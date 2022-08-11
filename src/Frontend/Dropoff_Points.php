@@ -28,6 +28,23 @@ class Dropoff_Points extends Base {
 	}
 
 	/**
+	 * Adding a tab in the frontend checkout.
+	 *
+	 * @param array $tabs List of displayed tabs.
+	 *
+	 * @return array
+	 */
+	public function add_checkout_tab( $tabs ) {
+		$tabs[] = array(
+			'id'    => 'dropoff_points',
+			'price' => '$ 10',
+			'name'  => esc_html__( 'Dropoff Points', 'postnl-for-woocommerce' ),
+		);
+
+		return $tabs;
+	}
+
+	/**
 	 * Set the template filename.
 	 */
 	public function set_template_file() {

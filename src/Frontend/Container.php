@@ -156,11 +156,12 @@ class Container {
 			}
 
 			$timestamp = strtotime( $date );
-			$company   = $dropoff_option['PartnerID']['CompanyName'];
+			$company   = $dropoff_option['Address']['CompanyName'];
 			$address   = implode( ', ', array_values( $dropoff_option['Address'] ) );
 
 			$dropoff_options[] = array(
 				'partner_id' => $dropoff_option['PartnerID'],
+				'loc_code'   => $dropoff_option['LocationCode'],
 				'time'       => $dropoff_option['PickupTime'],
 				'distance'   => $dropoff_option['Distance'],
 				'date'       => $date,

@@ -16,19 +16,22 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @package PostNLWooCommerce\Rest_API
  */
-class Checkout {
+class Checkout extends Base {
+	/**
+	 * API Endpoint.
+	 *
+	 * @var string
+	 */
+	public $endpoint = '/shipment/v1/checkout';
+
 	/**
 	 * Send API request to PostNL Rest API.
 	 */
-	public static function send_request() {
-		$api_url      = 'https://api-sandbox.postnl.nl/shipment/v1/checkout';
+	public function send_request() {
+		$api_url      = esc_url( $this->get_api_url() );
 		$request_args = array(
 			'method'  => 'POST',
-			'headers' => array(
-				'apikey'       => 'x5Ki8rRTrfG1EJTnJL7s6qi2H8dQuJUy',
-				'accept'       => 'application/json',
-				'Content-Type' => 'application/json',
-			),
+			'headers' => $this->get_headers_args(),
 			'body'    => wp_json_encode(
 				array(
 					'OrderDate'        => '31-07-2022 23:00:00',

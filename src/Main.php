@@ -100,6 +100,9 @@ class Main {
 		$this->define( 'POSTNL_WC_PLUGIN_DIR_PATH', untrailingslashit( plugin_dir_path( POSTNL_WC_PLUGIN_FILE ) ) );
 		$this->define( 'POSTNL_WC_PLUGIN_DIR_URL', untrailingslashit( plugins_url( '/', POSTNL_WC_PLUGIN_FILE ) ) );
 
+		$this->define( 'POSTNL_WC_SANDBOX_API_URL', esc_url( 'https://api-sandbox.postnl.nl' ) );
+		$this->define( 'POSTNL_WC_PROD_API_URL', esc_url( 'https://api.postnl.nl' ) );
+
 		$this->define( 'POSTNL_WC_VERSION', $this->version );
 		$this->define( 'POSTNL_SETTINGS_ID', $this->settings_id );
 		$this->define( 'POSTNL_WC_LOG_DIR', $upload_dir['basedir'] . '/wc-logs/' );

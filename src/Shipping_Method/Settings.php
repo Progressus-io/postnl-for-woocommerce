@@ -77,7 +77,6 @@ class Settings extends \WC_Settings_API {
 				'desc_tip'          => true,
 				'default'           => '',
 				'placeholder'       => '',
-				'custom_attributes' => array( 'maxlength' => '10' ),
 			),
 			'enable_logging'            => array(
 				'title'             => esc_html__( 'Enable Logging', 'postnl-for-woocommerce' ),
@@ -86,7 +85,6 @@ class Settings extends \WC_Settings_API {
 				'desc_tip'          => true,
 				'default'           => '',
 				'placeholder'       => '',
-				'custom_attributes' => array( 'maxlength' => '10' ),
 			),
 			'customer_num'              => array(
 				'title'             => esc_html__( 'Customer Number', 'postnl-for-woocommerce' ),
@@ -95,7 +93,6 @@ class Settings extends \WC_Settings_API {
 				'desc_tip'          => true,
 				'default'           => '',
 				'placeholder'       => '11223344',
-				'custom_attributes' => array( 'maxlength' => '10' ),
 			),
 			'customer_code'             => array(
 				'title'             => esc_html__( 'Customer Code', 'postnl-for-woocommerce' ),
@@ -471,7 +468,7 @@ class Settings extends \WC_Settings_API {
 	 */
 	public function get_country_option( $field, $default_value = '' ) {
 		$base_country   = Utils::get_base_country();
-		$fields_country = array_keys( $this->filter_setting_fields( $base_country, true ) );
+		$fields_country = array_keys( $this->filter_setting_fields( $base_country, false ) );
 
 		return in_array( $field, $fields_country, true ) ? $this->get_option( $field, $default_value ) : '';
 	}
@@ -510,6 +507,24 @@ class Settings extends \WC_Settings_API {
 	 */
 	public function get_location_code() {
 		return $this->get_country_option( 'location_code', '' );
+	}
+
+	/**
+	 * Return true if sandbox mode is ticked.
+	 *
+	 * @return String
+	 */
+	public function get_sandbox() {
+		return 'yes';
+	}
+
+	/**
+	 * Return true if sandbox mode is ticked.
+	 *
+	 * @return Bool
+	 */
+	public function is_sandbox() {
+		return ( 'yes' === $this->get_sandbox() );
 	}
 
 	/**

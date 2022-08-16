@@ -34,6 +34,13 @@ class Base {
 	public $api_url;
 
 	/**
+	 * WC Cart data.
+	 *
+	 * @var Array
+	 */
+	public $post_data;
+
+	/**
 	 * PostnL API key value from the settings.
 	 *
 	 * @var string
@@ -56,9 +63,12 @@ class Base {
 
 	/**
 	 * Class constructor.
+	 *
+	 * @param array $post_data WC Cart post data.
 	 */
-	public function __construct() {
-		$this->settings = Settings::get_instance();
+	public function __construct( $post_data ) {
+		$this->settings  = Settings::get_instance();
+		$this->post_data = $post_data;
 
 		$this->check_api_mode();
 		$this->set_api_url();

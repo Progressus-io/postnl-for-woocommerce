@@ -177,7 +177,13 @@ class Container {
 	 * Add delivery day fields.
 	 */
 	public function display_fields() {
-		$api_call = new Checkout();
+		if ( empty( $_REQUEST['post_data'] ) ) {
+			return;
+		}
+
+		parse_str( $_REQUEST['post_data'], $post_data );
+
+		$api_call = new Checkout( $post_data );
 		$response = $api_call->send_request();
 		$response = json_decode( $response, true );
 

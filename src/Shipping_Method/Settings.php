@@ -681,6 +681,15 @@ class Settings extends \WC_Settings_API {
 	}
 
 	/**
+	 * Get number pickup points from the settings.
+	 *
+	 * @return Int
+	 */
+	public function get_number_pickup_points() {
+		return $this->get_country_option( 'number_pickup_points' );
+	}
+
+	/**
 	 * Get enable delivery days from the settings.
 	 *
 	 * @return String
@@ -696,6 +705,15 @@ class Settings extends \WC_Settings_API {
 	 */
 	public function is_delivery_days_enabled() {
 		return ( 'yes' === $this->get_enable_delivery_days() );
+	}
+
+	/**
+	 * Get number delivery days from the settings.
+	 *
+	 * @return Int
+	 */
+	public function get_number_delivery_days() {
+		return $this->get_country_option( 'number_delivery_days' );
 	}
 
 	/**

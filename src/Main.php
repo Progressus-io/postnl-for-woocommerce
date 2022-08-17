@@ -106,6 +106,7 @@ class Main {
 		$this->define( 'POSTNL_WC_VERSION', $this->version );
 		$this->define( 'POSTNL_SETTINGS_ID', $this->settings_id );
 		$this->define( 'POSTNL_WC_LOG_DIR', $upload_dir['basedir'] . '/wc-logs/' );
+		$this->define( 'POSTNL_UPLOADS_DIR', $upload_dir['basedir'] . '/postnl/' );
 	}
 
 	/**

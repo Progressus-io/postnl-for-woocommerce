@@ -8,6 +8,7 @@
 namespace PostNLWooCommerce\Order;
 
 use PostNLWooCommerce\Utils;
+use PostNLWooCommerce\Rest_API\Shipping;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -296,10 +297,42 @@ abstract class Base {
 
 			$saved_data['backend'][ $post_field ] = $post_value;
 		}
+		$label_post_data = array(
+			'order'      => $order,
+			'saved_data' => $saved_data,
+		);
+
+		$label_info          = $this->create_label( $label_post_data );
+		$saved_data['label'] = $label_info;
 
 		$order->update_meta_data( $this->meta_name, $saved_data );
 		$order->save();
 
 		return $saved_data;
+	}
+
+	/**
+	 * Create PostNL label for current order
+	 *
+	 * @param array $post_data Order post data.
+	 */
+	public function create_label( $post_data ) {
+		$order    = $post_data['order'];
+
+		$shipping = new Shipping( $post_data );
+		$response = $shipping->send_request();
+		$response = json_decode( $response, true );
+
+		$barcode  = $response['ResponseShipments'][0]['Barcode'];
+		$filename = 'postnl-' . $order->get_id() . '-' . $response['ResponseShipments'][0]['Barcode'] . '.pdf';
+		$filepath = trailingslashit( POSTNL_UPLOADS_DIR ) . $filename;
+
+		$test     = base64_decode( $response['ResponseShipments'][0]['Labels'][0]['Content'] );
+		$file_ret = file_put_contents( $filepath, $test );
+
+		return array(
+			'barcode'  => $barcode,
+			'filepath' => $filepath,
+		);
 	}
 }

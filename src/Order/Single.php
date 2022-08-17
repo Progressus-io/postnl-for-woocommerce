@@ -148,9 +148,7 @@ class Single extends Base {
 				throw new \Exception( esc_html__( 'Nonce is invalid!', 'postnl-for-woocommerce' ) );
 			}
 
-			if ( ! $order_id ) {
-				$order_id = ! empty( $_REQUEST['order_id'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['order_id'] ) ) : 0;
-			}
+			$order_id = ! empty( $_REQUEST['order_id'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['order_id'] ) ) : 0;
 
 			// Check if order id is really an ID from shop_order post type.
 			$order = wc_get_order( $order_id );

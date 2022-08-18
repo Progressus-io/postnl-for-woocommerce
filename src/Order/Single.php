@@ -74,15 +74,14 @@ class Single extends Base {
 	/**
 	 * Add value to meta box fields.
 	 *
-	 * @param WP_Post $post current post object.
+	 * @param WC_Order $order current order object.
 	 *
 	 * @return array
 	 */
-	public function add_meta_box_value( $post ) {
+	public function add_meta_box_value( $order ) {
 		$meta_fields = $this->meta_box_fields();
 
-		if ( ! empty( $post->ID ) ) {
-			$order      = wc_get_order( $post->ID );
+		if ( is_a( $order, 'WC_Order' ) ) {
 			$order_data = $order->get_meta( $this->meta_name );
 
 			foreach ( $meta_fields as $index => $field ) {
@@ -90,6 +89,11 @@ class Single extends Base {
 
 				if ( ! empty( $order_data['frontend'][ $field_name ] ) ) {
 					$meta_fields[ $index ]['value'] = $order_data['frontend'][ $field_name ];
+				}
+
+				if ( isset( $order_data['backend'][ $field_name ] ) ) {
+					$meta_fields[ $index ]['custom_attributes']['disabled'] = 'disabled';
+					$meta_fields[ $index ]['value']                         = $order_data['backend'][ $field_name ];
 				}
 			}
 		}
@@ -100,19 +104,39 @@ class Single extends Base {
 	/**
 	 * Additional fields of the meta box for child class.
 	 *
-	 * @param WP_Post $post current post object.
+	 * @param WP_Post|WC_Order $post_or_order_object current order object.
 	 */
-	public function meta_box_html( $post ) {
+	public function meta_box_html( $post_or_order_object ) {
+		if ( ! is_a( $post_or_order_object, 'WC_Order' ) && empty( $post_or_order_object->ID ) ) {
+			return;
+		}
+
+		$order      = ( is_a( $post_or_order_object, 'WP_Post' ) ) ? wc_get_order( $post_or_order_object->ID ) : $post_or_order_object;
+		$form_class = ( $this->have_backend_data( $order ) ) ? 'generated' : '';
 		?>
-		<div id="shipment-postnl-label-form">
-			<?php $this->fields_generator( $this->add_meta_box_value( $post ) ); ?>
+		<div id="shipment-postnl-label-form" class="<?php echo esc_attr( $form_class ); ?>">
+			<?php $this->fields_generator( $this->add_meta_box_value( $order ) ); ?>
 
 			<div class="button-container">
 				<button class="button button-primary button-save-form"><?php esc_html_e( 'Generate Label', 'postnl-for-woocommerce' ); ?></button>
+				<button class="button button-primary button-download-label"><?php esc_html_e( 'Download Label', 'postnl-for-woocommerce' ); ?></button>
 				<a class="button button-secondary delete-label" href="#"><?php esc_html_e( 'Delete Label', 'postnl-for-woocommerce' ); ?></a>
 			</div>
 		</div>
 		<?php
+	}
+
+	/**
+	 * Additional fields of the meta box for child class.
+	 *
+	 * @param WC_Order $order current order object.
+	 *
+	 * @return boolean
+	 */
+	public function have_backend_data( $order ) {
+		$order_data = $order->get_meta( $this->meta_name );
+
+		return ! empty( $order_data['backend'] );
 	}
 
 	/**

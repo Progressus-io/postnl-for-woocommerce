@@ -44,9 +44,14 @@
 
 			$.post( woocommerce_admin_meta_boxes.ajax_url, data, function( response ) {
 				label_form.unblock();
-				console.log( response );
-				if ( response.success === true ) {
-					alert( 'ok' );
+
+				if ( true === response.success ) {
+					label_form.addClass( 'generated' );
+
+					for (let field in response.data.backend ) {
+						console.log( field );
+						jQuery( '#postnl_' + field ).prop( 'disabled', true );
+					}
 				}
 			});
 

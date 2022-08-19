@@ -9,13 +9,13 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-if ( empty( $data ) ) {
+if ( empty( $data['delivery_options'] ) ) {
 	return;
 }
 ?>
 <div class="postnl_content" id="postnl_delivery_day_content">
 	<ul class="postnl_delivery_day_list postnl_list">
-		<?php foreach ( $data as $delivery ) { ?>
+		<?php foreach ( $data['delivery_options'] as $delivery ) { ?>
 			<?php
 			if ( empty( $delivery['options'] ) ) {
 				continue;
@@ -26,12 +26,25 @@ if ( empty( $data ) ) {
 				<ul class="postnl_sub_list">
 					<?php foreach ( $delivery['options'] as $option ) { ?>
 						<?php
-							$value      = $delivery['date'] . '-' . $option['type'];
+							$value      = $delivery['date'] . ':_:' . $option['from'] . '-' . $option['to'] . ':_:' . $option['price'];
 							$is_charged = ( empty( $option['price'] ) ) ? esc_html__( 'No charge', 'postnl-for-woocommerce' ) : wc_price( $option['price'] );
 						?>
-						<li class="<?php echo esc_attr( $option['type'] ); ?>">
-							<label class="postnl_sub_radio_label" for="postnl_delivery_day_<?php echo esc_attr( $value ); ?>">
-								<input type="radio" id="postnl_delivery_day_<?php echo esc_attr( $value ); ?>" name="postnl_delivery_day" class="postnl_sub_radio" value="<?php echo esc_attr( $value ); ?>" />
+						<li 
+							class="<?php echo esc_attr( $option['type'] ); ?>"
+							data-date="<?php echo esc_attr( $delivery['date'] ); ?>"
+							data-from="<?php echo esc_attr( $option['from'] ); ?>"
+							data-to="<?php echo esc_attr( $option['to'] ); ?>"
+							data-price="<?php echo esc_attr( $option['price'] ); ?>"
+							data-type="<?php echo esc_attr( $option['type'] ); ?>"
+						>
+							<label class="postnl_sub_radio_label" for="<?php echo esc_attr( $data['field_name'] ); ?>_<?php echo esc_attr( $value ); ?>">
+								<input 
+									type="radio" 
+									id="<?php echo esc_attr( $data['field_name'] ); ?>_<?php echo esc_attr( $value ); ?>" 
+									name="<?php echo esc_attr( $data['field_name'] ); ?>" 
+									class="postnl_sub_radio" 
+									value="<?php echo esc_attr( $value ); ?>"
+								/>
 								<i><?php echo wp_kses_post( $is_charged ); ?></i>
 								<span><?php echo esc_html( $option['from'] . ' - ' . $option['to'] ); ?></span>
 							</label>
@@ -41,4 +54,9 @@ if ( empty( $data ) ) {
 			</li>
 		<?php } ?>
 	</ul>
+	<input type="hidden" name="<?php echo esc_attr( $data['field_name'] ); ?>_date" id="<?php echo esc_attr( $data['field_name'] ); ?>_date" value="" />
+	<input type="hidden" name="<?php echo esc_attr( $data['field_name'] ); ?>_from" id="<?php echo esc_attr( $data['field_name'] ); ?>_from" value="" />
+	<input type="hidden" name="<?php echo esc_attr( $data['field_name'] ); ?>_to" id="<?php echo esc_attr( $data['field_name'] ); ?>_to" value="" />
+	<input type="hidden" name="<?php echo esc_attr( $data['field_name'] ); ?>_price" id="<?php echo esc_attr( $data['field_name'] ); ?>_price" value="" />
+	<input type="hidden" name="<?php echo esc_attr( $data['field_name'] ); ?>_type" id="<?php echo esc_attr( $data['field_name'] ); ?>_type" value="" />
 </div>

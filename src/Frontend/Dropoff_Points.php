@@ -114,17 +114,38 @@ class Dropoff_Points extends Base {
 			'postnl_frontend_dropoff_points_fields',
 			array(
 				array(
-					'id'          => $this->prefix . 'dropoff_points',
-					'type'        => 'select',
-					'label'       => __( 'Dropoff Points:', 'postnl-for-woocommerce' ),
-					'description' => '',
-					'class'       => 'postnl-checkout-field select2',
-					'options'     => array(
-						''         => esc_html__( '- Choose Dropoff Points -', 'postnl-for-woocommerce' ),
-						'point_1' => esc_html__( 'Point 1', 'postnl-for-woocommerce' ),
-						'point_2' => esc_html__( 'Point 2', 'postnl-for-woocommerce' ),
-					),
-					'error_text'  => esc_html__( 'Please choose the dropoff points!', 'postnl-for-woocommerce' ),
+					'id'         => $this->prefix . 'dropoff_points',
+					'error_text' => esc_html__( 'Please choose the dropoff points!', 'postnl-for-woocommerce' ),
+				),
+				array(
+					'id'      => $this->prefix . 'dropoff_points_company',
+					'primary' => false,
+					'hidden'  => true,
+				),
+				array(
+					'id'      => $this->prefix . 'dropoff_points_distance',
+					'primary' => false,
+					'hidden'  => true,
+				),
+				array(
+					'id'      => $this->prefix . 'dropoff_points_address',
+					'primary' => false,
+					'hidden'  => true,
+				),
+				array(
+					'id'      => $this->prefix . 'dropoff_points_partner_id',
+					'primary' => false,
+					'hidden'  => true,
+				),
+				array(
+					'id'      => $this->prefix . 'dropoff_points_date',
+					'primary' => false,
+					'hidden'  => true,
+				),
+				array(
+					'id'      => $this->prefix . 'dropoff_points_time',
+					'primary' => false,
+					'hidden'  => true,
 				),
 			)
 		);
@@ -140,7 +161,12 @@ class Dropoff_Points extends Base {
 	 */
 	public function validate_fields( $data, $posted_data ) {
 		foreach ( $this->get_fields() as $field ) {
-			$data[ $field['id'] ] = 'test';
+			if ( empty( $posted_data[ $field['id'] ] ) && ! empty( $field['error_text'] ) ) {
+				wc_add_notice( $field['error_text'], 'error' );
+				return $data;
+			}
+
+			$data[ $field['id'] ] = sanitize_text_field( wp_unslash( $posted_data[ $field['id'] ] ) );
 		}
 
 		return $data;

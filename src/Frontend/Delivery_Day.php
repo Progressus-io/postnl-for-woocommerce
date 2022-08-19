@@ -33,16 +33,34 @@ class Delivery_Day extends Base {
 	public function get_fields() {
 		$fields = array(
 			array(
-				'id'          => $this->prefix . 'delivery_day',
-				'type'        => 'select',
-				'label'       => __( 'Delivery Day:', 'postnl-for-woocommerce' ),
-				'description' => '',
-				'class'       => 'postnl-checkout-field select2',
-				'options'     => array(
-					'2022-08-01' => gmdate( 'F j Y', strtotime( '2022-08-01' ) ),
-					'2022-08-02' => gmdate( 'F j Y', strtotime( '2022-08-02' ) ),
-				),
-				'error_text'  => esc_html__( 'Please choose the delivery day!', 'postnl-for-woocommerce' ),
+				'id'         => $this->prefix . 'delivery_day',
+				'primary'    => true,
+				'error_text' => esc_html__( 'Please choose the delivery day!', 'postnl-for-woocommerce' ),
+			),
+			array(
+				'id'      => $this->prefix . 'delivery_day_date',
+				'primary' => false,
+				'hidden'  => true,
+			),
+			array(
+				'id'      => $this->prefix . 'delivery_day_from',
+				'primary' => false,
+				'hidden'  => true,
+			),
+			array(
+				'id'      => $this->prefix . 'delivery_day_to',
+				'primary' => false,
+				'hidden'  => true,
+			),
+			array(
+				'id'      => $this->prefix . 'delivery_day_price',
+				'primary' => false,
+				'hidden'  => true,
+			),
+			array(
+				'id'      => $this->prefix . 'delivery_day_type',
+				'primary' => false,
+				'hidden'  => true,
 			),
 		);
 
@@ -94,7 +112,10 @@ class Delivery_Day extends Base {
 
 		$evening_fee = $this->settings->get_evening_delivery_fee();
 
-		$delivery_options = array();
+		$fields      = $this->get_fields();
+		$return_data = array(
+			'field_name' => $fields['0']['id'],
+		);
 
 		foreach ( $response['DeliveryOptions'] as $delivery_option ) {
 			if ( empty( $delivery_option['DeliveryDate'] ) || empty( $delivery_option['Timeframe'] ) ) {
@@ -118,14 +139,14 @@ class Delivery_Day extends Base {
 
 			$timestamp = strtotime( $delivery_option['DeliveryDate'] );
 
-			$delivery_options[] = array(
+			$return_data['delivery_options'][] = array(
 				'day'     => gmdate( 'l', $timestamp ),
 				'date'    => gmdate( 'Y-m-d', $timestamp ),
 				'options' => $options,
 			);
 		}
 
-		return $delivery_options;
+		return $return_data;
 	}
 
 	/**
@@ -138,7 +159,7 @@ class Delivery_Day extends Base {
 	 */
 	public function validate_fields( $data, $posted_data ) {
 		foreach ( $this->get_fields() as $field ) {
-			if ( empty( $posted_data[ $field['id'] ] ) ) {
+			if ( empty( $posted_data[ $field['id'] ] ) && ! empty( $field['error_text'] ) ) {
 				wc_add_notice( $field['error_text'], 'error' );
 				return $data;
 			}

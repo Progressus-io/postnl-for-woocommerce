@@ -26,10 +26,17 @@
 			} );
 
 			radio_options.on( 'change', function() {
-				var ul_list       = jQuery( this ).closest( '.postnl_list' );
+				var ul_list    = jQuery( this ).closest( '.postnl_list' );
+				var field_name = jQuery( this ).attr( 'name' );
 				ul_list.find( 'ul.postnl_sub_list > li' ).removeClass( 'active' );
 
-				jQuery( this ).closest( 'li' ).addClass( 'active' );
+				var closest_li = jQuery( this ).closest( 'li' );
+				closest_li.addClass( 'active' );
+				var dropoff_data = closest_li.data();
+
+				for ( let name in dropoff_data ) {
+					jQuery( '#' + field_name + '_' + name ).val( dropoff_data[ name ] );
+				}
 			} );
 
 			checkout_option.find( '.postnl_checkout_tab_list .active .postnl_option' ).trigger( 'click' );

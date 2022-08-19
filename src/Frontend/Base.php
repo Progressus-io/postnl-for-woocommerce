@@ -83,43 +83,38 @@ abstract class Base {
 			return;
 		}
 
-		add_action( 'woocommerce_review_order_after_shipping', array( $this, 'display_fields' ) );
 		add_filter( 'woocommerce_checkout_posted_data', array( $this, 'validate_posted_data' ) );
 		add_action( 'woocommerce_checkout_update_order_meta', array( $this, 'save_data' ), 10, 2 );
-		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_scripts_styles' ) );
-		add_filter( 'postnl_frontend_checkout_tab', array( $this, 'add_checkout_tab' ), 10, 1 );
+		add_filter( 'postnl_frontend_checkout_tab', array( $this, 'add_checkout_tab' ), 10, 2 );
+		add_action( 'postnl_checkout_content', array( $this, 'display_content' ), 10, 2 );
 	}
 
 	/**
 	 * Adding a tab in the frontend checkout.
 	 *
 	 * @param array $tabs List of displayed tabs.
+	 * @param array $response Response from PostNL Checkout Rest API.
 	 *
 	 * @return array
 	 */
-	public function add_checkout_tab( $tabs ) {
-		return $tabs;
-	}
+	abstract public function add_checkout_tab( $tabs, $response );
 
 	/**
-	 * Enqueue scripts and style.
+	 * Adding a content in the frontend checkout.
+	 *
+	 * @param array $response Response from PostNL Checkout Rest API.
 	 */
-	public function enqueue_scripts_styles() {
-		wp_enqueue_script(
-			'postnl-fe-checkout',
-			POSTNL_WC_PLUGIN_DIR_URL . '/assets/js/fe-checkout.js',
-			array( 'jquery' ),
-			POSTNL_WC_VERSION,
-			true
-		);
-	}
+	abstract public function get_content_data( $response );
 
 	/**
-	 * Add delivery day fields.
+	 * Adding a content in the frontend checkout.
+	 *
+	 * @param array $response Response from PostNL Checkout Rest API.
+	 * @param array $post_data Post data on checkout page.
 	 */
-	public function display_fields() {
+	public function display_content( $response, $post_data ) {
 		$template_args = array(
-			'fields' => $this->get_fields_with_value(),
+			'data' => $this->get_content_data( $response ),
 		);
 
 		wc_get_template( $this->template_file, $template_args, '', POSTNL_WC_PLUGIN_DIR_PATH . '/templates/' );

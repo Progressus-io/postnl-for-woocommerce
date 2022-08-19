@@ -31,10 +31,15 @@ class Dropoff_Points extends Base {
 	 * Adding a tab in the frontend checkout.
 	 *
 	 * @param array $tabs List of displayed tabs.
+	 * @param array $response Response from PostNL Checkout Rest API.
 	 *
 	 * @return array
 	 */
-	public function add_checkout_tab( $tabs ) {
+	public function add_checkout_tab( $tabs, $response ) {
+		if ( empty( $response['PickupOptions'] ) ) {
+			return $tabs;
+		}
+
 		$tabs[] = array(
 			'id'    => 'dropoff_points',
 			'price' => '$ 10',
@@ -42,6 +47,56 @@ class Dropoff_Points extends Base {
 		);
 
 		return $tabs;
+	}
+
+	/**
+	 * Get dropoff points value from the API response.
+	 *
+	 * @param array $response PostNL API response.
+	 *
+	 * @return array.
+	 */
+	public function get_content_data( $response ) {
+		if ( empty( $response['PickupOptions'] ) ) {
+			return array();
+		}
+
+		$pickup_points = array_filter(
+			$response['PickupOptions'],
+			function ( $pickup_point ) {
+				return ( ! empty( $pickup_point['Option'] ) && 'Pickup' === $pickup_point['Option'] );
+			}
+		);
+		$pickup_point  = array_shift( $pickup_points );
+		$date          = ! empty( $pickup_point['PickupDate'] ) ? $pickup_point['PickupDate'] : '';
+
+		if ( empty( $pickup_point['Locations'] ) ) {
+			return array();
+		}
+
+		$dropoff_options = array();
+
+		foreach ( $pickup_point['Locations'] as $dropoff_option ) {
+			if ( empty( $dropoff_option['PartnerID'] ) || empty( $dropoff_option['PickupTime'] ) || empty( $dropoff_option['Distance'] ) || empty( $dropoff_option['Address'] ) ) {
+				continue;
+			}
+
+			$timestamp = strtotime( $date );
+			$company   = $dropoff_option['Address']['CompanyName'];
+			$address   = implode( ', ', array_values( $dropoff_option['Address'] ) );
+
+			$dropoff_options[] = array(
+				'partner_id' => $dropoff_option['PartnerID'],
+				'loc_code'   => $dropoff_option['LocationCode'],
+				'time'       => $dropoff_option['PickupTime'],
+				'distance'   => $dropoff_option['Distance'],
+				'date'       => $date,
+				'company'    => $company,
+				'address'    => $address,
+			);
+		}
+
+		return $dropoff_options;
 	}
 
 	/**

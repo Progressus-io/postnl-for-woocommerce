@@ -31,6 +31,8 @@
 
 				jQuery( this ).closest( 'li' ).addClass( 'active' );
 			} );
+
+			checkout_option.find( '.postnl_checkout_tab_list .active .postnl_option' ).trigger( 'click' );
 		},
 
 		use_select2: function(){

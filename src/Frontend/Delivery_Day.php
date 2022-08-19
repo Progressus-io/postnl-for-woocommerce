@@ -62,10 +62,15 @@ class Delivery_Day extends Base {
 	 * Adding a tab in the frontend checkout.
 	 *
 	 * @param array $tabs List of displayed tabs.
+	 * @param array $response Response from PostNL Checkout Rest API.
 	 *
 	 * @return array
 	 */
-	public function add_checkout_tab( $tabs ) {
+	public function add_checkout_tab( $tabs, $response ) {
+		if ( empty( $response['DeliveryOptions'] ) ) {
+			return $tabs;
+		}
+
 		$tabs[] = array(
 			'id'    => 'delivery_day',
 			'price' => '$ 10',
@@ -76,20 +81,45 @@ class Delivery_Day extends Base {
 	}
 
 	/**
-	 * Get the enabled dropoff days from the settings.
+	 * Get delivery option value from the API response.
 	 *
-	 * @return array
+	 * @param array $response PostNL API response.
+	 *
+	 * @return array.
 	 */
-	public function get_dropoff_days() {
-		$dropoff_days = $this->settings->get_dropoff_days();
+	public function get_content_data( $response ) {
+		if ( empty( $response['DeliveryOptions'] ) ) {
+			return array();
+		}
 
-		return array_filter(
-			Utils::days_of_week(),
-			function( $key ) use ( $dropoff_days ) {
-				return in_array( $key, $dropoff_days, true );
-			},
-			ARRAY_FILTER_USE_KEY
-		);
+		$delivery_options = array();
+
+		foreach ( $response['DeliveryOptions'] as $delivery_option ) {
+			if ( empty( $delivery_option['DeliveryDate'] ) || empty( $delivery_option['Timeframe'] ) ) {
+				continue;
+			}
+
+			$options = array_map(
+				function( $timeframe ) {
+					return array(
+						'from' => $timeframe['From'],
+						'to'   => $timeframe['To'],
+						'type' => array_shift( $timeframe['Options'] ),
+					);
+				},
+				$delivery_option['Timeframe']
+			);
+
+			$timestamp = strtotime( $delivery_option['DeliveryDate'] );
+
+			$delivery_options[] = array(
+				'day'     => gmdate( 'l', $timestamp ),
+				'date'    => gmdate( 'Y-m-d', $timestamp ),
+				'options' => $options,
+			);
+		}
+
+		return $delivery_options;
 	}
 
 	/**

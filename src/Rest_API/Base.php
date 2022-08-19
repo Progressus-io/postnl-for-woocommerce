@@ -8,6 +8,7 @@
 namespace PostNLWooCommerce\Rest_API;
 
 use PostNLWooCommerce\Shipping_Method\Settings;
+use PostNLWooCommerce\Utils;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -68,7 +69,7 @@ class Base {
 	 */
 	public function __construct( $post_data ) {
 		$this->settings  = Settings::get_instance();
-		$this->post_data = $post_data;
+		$this->post_data = Utils::set_post_data_address( $post_data );
 
 		$this->check_api_mode();
 		$this->set_api_url();

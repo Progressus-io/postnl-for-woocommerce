@@ -75,122 +75,53 @@ class Container {
 	/**
 	 * Get enabled tabs.
 	 *
+	 * @param array $response Response from PostNL Checkout Rest API.
+	 *
 	 * @return array
 	 */
-	public function get_available_tabs() {
-		return apply_filters( 'postnl_frontend_checkout_tab', array() );
+	public function get_available_tabs( $response ) {
+		return apply_filters( 'postnl_frontend_checkout_tab', array(), $response );
 	}
 
 	/**
-	 * Get delivery option value from the API response.
+	 * Get data from PostNL Checkout Rest API.
 	 *
-	 * @param array $response PostNL API response.
-	 *
-	 * @return array.
+	 * @return array
 	 */
-	public function get_delivery_options( $response ) {
-		if ( empty( $response['DeliveryOptions'] ) ) {
+	public function get_checkout_data() {
+		if ( empty( $_REQUEST['post_data'] ) ) {
 			return array();
 		}
 
-		$delivery_options = array();
+		$post_data = array();
 
-		foreach ( $response['DeliveryOptions'] as $delivery_option ) {
-			if ( empty( $delivery_option['DeliveryDate'] ) || empty( $delivery_option['Timeframe'] ) ) {
-				continue;
-			}
-
-			$options = array_map(
-				function( $timeframe ) {
-					return array(
-						'from' => $timeframe['From'],
-						'to'   => $timeframe['To'],
-						'type' => array_shift( $timeframe['Options'] ),
-					);
-				},
-				$delivery_option['Timeframe']
-			);
-
-			$timestamp = strtotime( $delivery_option['DeliveryDate'] );
-
-			$delivery_options[] = array(
-				'day'     => gmdate( 'l', $timestamp ),
-				'date'    => gmdate( 'Y-m-d', $timestamp ),
-				'options' => $options,
-			);
+		if ( isset( $_REQUEST['post_data'] ) ) {
+			parse_str( sanitize_text_field( wp_unslash( $_REQUEST['post_data'] ) ), $post_data );
 		}
 
-		return $delivery_options;
-	}
+		$api_call = new Checkout( $post_data );
+		$response = $api_call->send_request();
 
-	/**
-	 * Get dropoff points value from the API response.
-	 *
-	 * @param array $response PostNL API response.
-	 *
-	 * @return array.
-	 */
-	public function get_dropoff_points( $response ) {
-		if ( empty( $response['PickupOptions'] ) ) {
-			return array();
-		}
-
-		$pickup_points = array_filter(
-			$response['PickupOptions'],
-			function ( $pickup_point ) {
-				return ( ! empty( $pickup_point['Option'] ) && 'Pickup' === $pickup_point['Option'] );
-			}
+		return array(
+			'response'  => json_decode( $response, true ),
+			'post_data' => $post_data,
 		);
-		$pickup_point  = array_shift( $pickup_points );
-		$date          = ! empty( $pickup_point['PickupDate'] ) ? $pickup_point['PickupDate'] : '';
-
-		if ( empty( $pickup_point['Locations'] ) ) {
-			return array();
-		}
-
-		$dropoff_options = array();
-
-		foreach ( $pickup_point['Locations'] as $dropoff_option ) {
-			if ( empty( $dropoff_option['PartnerID'] ) || empty( $dropoff_option['PickupTime'] ) || empty( $dropoff_option['Distance'] ) || empty( $dropoff_option['Address'] ) ) {
-				continue;
-			}
-
-			$timestamp = strtotime( $date );
-			$company   = $dropoff_option['Address']['CompanyName'];
-			$address   = implode( ', ', array_values( $dropoff_option['Address'] ) );
-
-			$dropoff_options[] = array(
-				'partner_id' => $dropoff_option['PartnerID'],
-				'loc_code'   => $dropoff_option['LocationCode'],
-				'time'       => $dropoff_option['PickupTime'],
-				'distance'   => $dropoff_option['Distance'],
-				'date'       => $date,
-				'company'    => $company,
-				'address'    => $address,
-			);
-		}
-
-		return $dropoff_options;
 	}
 
 	/**
 	 * Add delivery day fields.
 	 */
 	public function display_fields() {
-		if ( empty( $_REQUEST['post_data'] ) ) {
+		$checkout_data = $this->get_checkout_data();
+
+		if ( empty( $checkout_data['response'] ) ) {
 			return;
 		}
 
-		parse_str( $_REQUEST['post_data'], $post_data );
-
-		$api_call = new Checkout( $post_data );
-		$response = $api_call->send_request();
-		$response = json_decode( $response, true );
-
 		$template_args = array(
-			'tabs'           => $this->get_available_tabs(),
-			'deliveries'     => $this->get_delivery_options( $response ),
-			'dropoff_points' => $this->get_dropoff_points( $response ),
+			'tabs'      => $this->get_available_tabs( $checkout_data['response'] ),
+			'response'  => $checkout_data['response'],
+			'post_data' => $checkout_data['post_data'],
 		);
 
 		wc_get_template( $this->template_file, $template_args, '', POSTNL_WC_PLUGIN_DIR_PATH . '/templates/' );

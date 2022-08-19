@@ -33,65 +33,7 @@ if ( empty( $tabs ) ) {
 				</ul>
 			</div>
 			<div class="postnl_checkout_content_container">
-				<?php if ( ! empty( $deliveries ) ) { ?>
-				<div class="postnl_content active" id="postnl_delivery_day_content">
-					<ul class="postnl_delivery_day_list postnl_list">
-						<?php foreach ( $deliveries as $delivery ) { ?>
-							<?php
-							if ( empty( $delivery['options'] ) ) {
-								continue;
-							}
-							?>
-							<li>
-								<div class="list_title"><span><?php echo esc_html( $delivery['date'] . ' ' . $delivery['day'] ); ?></span></div>
-								<ul class="postnl_sub_list">
-									<?php foreach ( $delivery['options'] as $option ) { ?>
-										<?php
-											$value = $delivery['date'] . '-' . $option['type'];
-											$is_charged = ( 'Evening' !== $option['type'] ) ? esc_html__( 'No charge', 'postnl-for-woocommerce' ) : '$ 5';
-										?>
-										<li class="<?php echo esc_attr( $option['type'] ); ?>">
-											<label class="postnl_sub_radio_label" for="postnl_delivery_day_<?php echo esc_attr( $value ); ?>">
-												<input type="radio" id="postnl_delivery_day_<?php echo esc_attr( $value ); ?>" name="postnl_delivery_day" class="postnl_sub_radio" value="<?php echo esc_attr( $value ); ?>" />
-												<i><?php echo esc_html( $is_charged ); ?></i>
-												<span><?php echo esc_html( $option['from'] . ' - ' . $option['to'] ); ?></span>
-											</label>
-										</li>
-									<?php } ?>
-								</ul>
-							</li>
-						<?php } ?>
-					</ul>
-				</div>
-				<?php } ?>
-
-				<?php if ( ! empty( $dropoff_points ) ) { ?>
-				<div class="postnl_content" id="postnl_dropoff_points_content">
-					<ul class="postnl_dropoff_points_list postnl_list">
-						<?php foreach ( $dropoff_points as $point ) { ?>
-							<?php
-							$value    = $point['partner_id'] . '-' . $point['loc_code'];
-							$radio_id = sanitize_title( $point['partner_id'] . '-' . $point['loc_code'] );
-							?>
-						<li>
-							<div class="list_title"><span><?php echo esc_html( $point['company'] . ' ' . $point['distance'] ); ?></span></div>
-							<ul class="postnl_sub_list">
-								<li>
-									<label class="postnl_sub_radio_label" for="postnl_dropoff_points_<?php echo esc_attr( $radio_id ); ?>">
-										<input type="radio" id="postnl_dropoff_points_<?php echo esc_attr( $radio_id ); ?>" name="postnl_dropoff_points" class="postnl_sub_radio" value="<?php echo esc_attr( $value ); ?>" />
-										<i>Vanaf <?php echo esc_html( $point['time'] ); ?><br /><?php echo esc_html( $point['date'] ); ?></i>
-										<span>
-											<?php echo esc_html( $point['address'] ); ?><br />
-											<?php echo esc_html( $point['partner_id'] ); ?>
-										</span>
-									</label>
-								</li>
-							</ul>
-						</li>
-						<?php } ?>
-					</ul>
-				</div>
-				<?php } ?>
+				<?php do_action( 'postnl_checkout_content', $response, $post_data ); ?>
 			</div>
 		</div>
 	</td>

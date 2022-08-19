@@ -213,7 +213,6 @@ class Main {
 	 */
 	public function get_frontend() {
 		new Frontend\Container();
-		new Frontend\Delivery_Type();
 		new Frontend\Delivery_Day();
 		new Frontend\Dropoff_Points();
 	}

@@ -74,4 +74,23 @@ class Utils {
 	public static function remove_prefix_field( $prefix, $field_name ) {
 		return str_replace( $prefix, '', $field_name );
 	}
+
+	/**
+	 * Set shipping address based on post data from checkout page.
+	 *
+	 * @param array $post_data Post data from checkout page.
+	 *
+	 * @return array
+	 */
+	public static function set_post_data_address( $post_data ) {
+		if ( empty( $post_data['ship_to_different_address'] ) ) {
+			$post_data['shipping_address_1'] = $post_data['billing_address_1'];
+			$post_data['shipping_address_2'] = $post_data['billing_address_2'];
+			$post_data['shipping_city']      = $post_data['billing_city'];
+			$post_data['shipping_country']   = $post_data['billing_country'];
+			$post_data['shipping_postcode']  = $post_data['billing_postcode'];
+		}
+
+		return $post_data;
+	}
 }

@@ -27,12 +27,12 @@ if ( empty( $data ) ) {
 					<?php foreach ( $delivery['options'] as $option ) { ?>
 						<?php
 							$value      = $delivery['date'] . '-' . $option['type'];
-							$is_charged = ( 'Evening' !== $option['type'] ) ? esc_html__( 'No charge', 'postnl-for-woocommerce' ) : '$ 5';
+							$is_charged = ( empty( $option['price'] ) ) ? esc_html__( 'No charge', 'postnl-for-woocommerce' ) : wc_price( $option['price'] );
 						?>
 						<li class="<?php echo esc_attr( $option['type'] ); ?>">
 							<label class="postnl_sub_radio_label" for="postnl_delivery_day_<?php echo esc_attr( $value ); ?>">
 								<input type="radio" id="postnl_delivery_day_<?php echo esc_attr( $value ); ?>" name="postnl_delivery_day" class="postnl_sub_radio" value="<?php echo esc_attr( $value ); ?>" />
-								<i><?php echo esc_html( $is_charged ); ?></i>
+								<i><?php echo wp_kses_post( $is_charged ); ?></i>
 								<span><?php echo esc_html( $option['from'] . ' - ' . $option['to'] ); ?></span>
 							</label>
 						</li>

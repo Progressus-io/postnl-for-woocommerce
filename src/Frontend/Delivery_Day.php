@@ -92,6 +92,8 @@ class Delivery_Day extends Base {
 			return array();
 		}
 
+		$evening_fee = $this->settings->get_evening_delivery_fee();
+
 		$delivery_options = array();
 
 		foreach ( $response['DeliveryOptions'] as $delivery_option ) {
@@ -100,11 +102,15 @@ class Delivery_Day extends Base {
 			}
 
 			$options = array_map(
-				function( $timeframe ) {
+				function( $timeframe ) use ( $evening_fee ) {
+					$type  = array_shift( $timeframe['Options'] );
+					$price = ( 'Evening' === $type ) ? $evening_fee : 0;
+
 					return array(
-						'from' => $timeframe['From'],
-						'to'   => $timeframe['To'],
-						'type' => array_shift( $timeframe['Options'] ),
+						'from'  => $timeframe['From'],
+						'to'    => $timeframe['To'],
+						'type'  => $type,
+						'price' => $price,
 					);
 				},
 				$delivery_option['Timeframe']

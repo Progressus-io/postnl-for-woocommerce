@@ -126,6 +126,11 @@ tr.postnl-co-tr-container > td {
 	overflow:hidden;
 }
 
+.postnl_content .postnl_list .postnl_sub_list .postnl_sub_radio_label span.amount,
+.postnl_content .postnl_list .postnl_sub_list .postnl_sub_radio_label span.amount * {
+	display:inline;
+}
+
 .postnl_content .postnl_list .postnl_sub_list .postnl_sub_radio_label i {
 	float:right;
 	font-style:normal;

@@ -21,6 +21,13 @@ if ( ! defined( 'ABSPATH' ) ) {
 class Delivery_Day extends Base {
 
 	/**
+	 * Set the primary field name.
+	 */
+	public function set_primary_field_name() {
+		$this->primary_field = 'delivery_day';
+	}
+
+	/**
 	 * Set the template filename.
 	 */
 	public function set_template_file() {
@@ -33,32 +40,32 @@ class Delivery_Day extends Base {
 	public function get_fields() {
 		$fields = array(
 			array(
-				'id'         => $this->prefix . 'delivery_day',
+				'id'         => $this->prefix . $this->primary_field,
 				'primary'    => true,
 				'error_text' => esc_html__( 'Please choose the delivery day!', 'postnl-for-woocommerce' ),
 			),
 			array(
-				'id'      => $this->prefix . 'delivery_day_date',
+				'id'      => $this->prefix . $this->primary_field . '_date',
 				'primary' => false,
 				'hidden'  => true,
 			),
 			array(
-				'id'      => $this->prefix . 'delivery_day_from',
+				'id'      => $this->prefix . $this->primary_field . '_from',
 				'primary' => false,
 				'hidden'  => true,
 			),
 			array(
-				'id'      => $this->prefix . 'delivery_day_to',
+				'id'      => $this->prefix . $this->primary_field . '_to',
 				'primary' => false,
 				'hidden'  => true,
 			),
 			array(
-				'id'      => $this->prefix . 'delivery_day_price',
+				'id'      => $this->prefix . $this->primary_field . '_price',
 				'primary' => false,
 				'hidden'  => true,
 			),
 			array(
-				'id'      => $this->prefix . 'delivery_day_type',
+				'id'      => $this->prefix . $this->primary_field . '_type',
 				'primary' => false,
 				'hidden'  => true,
 			),
@@ -90,7 +97,7 @@ class Delivery_Day extends Base {
 		}
 
 		$tabs[] = array(
-			'id'    => 'delivery_day',
+			'id'    => $this->primary_field,
 			'price' => '$ 10',
 			'name'  => esc_html__( 'Delivery Day', 'postnl-for-woocommerce' ),
 		);

@@ -19,6 +19,13 @@ if ( ! defined( 'ABSPATH' ) ) {
 class Dropoff_Points extends Base {
 
 	/**
+	 * Set the primary field name.
+	 */
+	public function set_primary_field_name() {
+		$this->primary_field = 'dropoff_points';
+	}
+
+	/**
 	 * Check if this feature is enabled from the settings.
 	 *
 	 * @return bool
@@ -41,7 +48,7 @@ class Dropoff_Points extends Base {
 		}
 
 		$tabs[] = array(
-			'id'    => 'dropoff_points',
+			'id'    => $this->primary_field,
 			'price' => '$ 10',
 			'name'  => esc_html__( 'Dropoff Points', 'postnl-for-woocommerce' ),
 		);
@@ -74,7 +81,10 @@ class Dropoff_Points extends Base {
 			return array();
 		}
 
-		$dropoff_options = array();
+		$fields      = $this->get_fields();
+		$return_data = array(
+			'field_name' => $fields['0']['id'],
+		);
 
 		foreach ( $pickup_point['Locations'] as $dropoff_option ) {
 			if ( empty( $dropoff_option['PartnerID'] ) || empty( $dropoff_option['PickupTime'] ) || empty( $dropoff_option['Distance'] ) || empty( $dropoff_option['Address'] ) ) {
@@ -85,7 +95,7 @@ class Dropoff_Points extends Base {
 			$company   = $dropoff_option['Address']['CompanyName'];
 			$address   = implode( ', ', array_values( $dropoff_option['Address'] ) );
 
-			$dropoff_options[] = array(
+			$return_data['dropoff_options'][] = array(
 				'partner_id' => $dropoff_option['PartnerID'],
 				'loc_code'   => $dropoff_option['LocationCode'],
 				'time'       => $dropoff_option['PickupTime'],
@@ -96,7 +106,7 @@ class Dropoff_Points extends Base {
 			);
 		}
 
-		return $dropoff_options;
+		return $return_data;
 	}
 
 	/**
@@ -114,36 +124,36 @@ class Dropoff_Points extends Base {
 			'postnl_frontend_dropoff_points_fields',
 			array(
 				array(
-					'id'         => $this->prefix . 'dropoff_points',
+					'id'         => $this->prefix . $this->primary_field,
 					'error_text' => esc_html__( 'Please choose the dropoff points!', 'postnl-for-woocommerce' ),
 				),
 				array(
-					'id'      => $this->prefix . 'dropoff_points_company',
+					'id'      => $this->prefix . $this->primary_field . '_company',
 					'primary' => false,
 					'hidden'  => true,
 				),
 				array(
-					'id'      => $this->prefix . 'dropoff_points_distance',
+					'id'      => $this->prefix . $this->primary_field . '_distance',
 					'primary' => false,
 					'hidden'  => true,
 				),
 				array(
-					'id'      => $this->prefix . 'dropoff_points_address',
+					'id'      => $this->prefix . $this->primary_field . '_address',
 					'primary' => false,
 					'hidden'  => true,
 				),
 				array(
-					'id'      => $this->prefix . 'dropoff_points_partner_id',
+					'id'      => $this->prefix . $this->primary_field . '_id',
 					'primary' => false,
 					'hidden'  => true,
 				),
 				array(
-					'id'      => $this->prefix . 'dropoff_points_date',
+					'id'      => $this->prefix . $this->primary_field . '_date',
 					'primary' => false,
 					'hidden'  => true,
 				),
 				array(
-					'id'      => $this->prefix . 'dropoff_points_time',
+					'id'      => $this->prefix . $this->primary_field . '_time',
 					'primary' => false,
 					'hidden'  => true,
 				),

@@ -9,13 +9,13 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-if ( empty( $data ) ) {
+if ( empty( $data['dropoff_options'] ) ) {
 	return;
 }
 ?>
 <div class="postnl_content" id="postnl_dropoff_points_content">
 	<ul class="postnl_dropoff_points_list postnl_list">
-		<?php foreach ( $data as $point ) { ?>
+		<?php foreach ( $data['dropoff_options'] as $point ) { ?>
 			<?php
 			$value    = $point['partner_id'] . '-' . $point['loc_code'];
 			$radio_id = sanitize_title( $point['partner_id'] . '-' . $point['loc_code'] );
@@ -31,11 +31,11 @@ if ( empty( $data ) ) {
 					data-date="<?php echo esc_attr( $point['date'] ); ?>"
 					data-time="<?php echo esc_attr( $point['time'] ); ?>"
 				>
-					<label class="postnl_sub_radio_label" for="postnl_dropoff_points_<?php echo esc_attr( $radio_id ); ?>">
+					<label class="postnl_sub_radio_label" for="<?php echo esc_attr( $data['field_name'] ); ?>_<?php echo esc_attr( $radio_id ); ?>">
 						<input 
 							type="radio" 
-							id="postnl_dropoff_points_<?php echo esc_attr( $radio_id ); ?>" 
-							name="postnl_dropoff_points" 
+							id="<?php echo esc_attr( $data['field_name'] ); ?>_<?php echo esc_attr( $radio_id ); ?>" 
+							name="<?php echo esc_attr( $data['field_name'] ); ?>" 
 							class="postnl_sub_radio" 
 							value="<?php echo esc_attr( $value ); ?>" 
 						/>
@@ -50,10 +50,10 @@ if ( empty( $data ) ) {
 		</li>
 		<?php } ?>
 	</ul>
-	<input type="hidden" name="postnl_dropoff_points_company" id="postnl_dropoff_points_company" value="" />
-	<input type="hidden" name="postnl_dropoff_points_distance" id="postnl_dropoff_points_distance" value="" />
-	<input type="hidden" name="postnl_dropoff_points_address" id="postnl_dropoff_points_address" value="" />
-	<input type="hidden" name="postnl_dropoff_points_partner_id" id="postnl_dropoff_points_partner_id" value="" />
-	<input type="hidden" name="postnl_dropoff_points_date" id="postnl_dropoff_points_date" value="" />
-	<input type="hidden" name="postnl_dropoff_points_time" id="postnl_dropoff_points_time" value="" />
+	<input type="hidden" name="<?php echo esc_attr( $data['field_name'] ); ?>_company" id="<?php echo esc_attr( $data['field_name'] ); ?>_company" value="" />
+	<input type="hidden" name="<?php echo esc_attr( $data['field_name'] ); ?>_distance" id="<?php echo esc_attr( $data['field_name'] ); ?>_distance" value="" />
+	<input type="hidden" name="<?php echo esc_attr( $data['field_name'] ); ?>_address" id="<?php echo esc_attr( $data['field_name'] ); ?>_address" value="" />
+	<input type="hidden" name="<?php echo esc_attr( $data['field_name'] ); ?>_partner_id" id="<?php echo esc_attr( $data['field_name'] ); ?>_partner_id" value="" />
+	<input type="hidden" name="<?php echo esc_attr( $data['field_name'] ); ?>_date" id="<?php echo esc_attr( $data['field_name'] ); ?>_date" value="" />
+	<input type="hidden" name="<?php echo esc_attr( $data['field_name'] ); ?>_time" id="<?php echo esc_attr( $data['field_name'] ); ?>_time" value="" />
 </div>

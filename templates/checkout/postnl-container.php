@@ -22,10 +22,10 @@ if ( empty( $tabs ) ) {
 						<?php $active_class = ( 0 === $index ) ? 'active' : ''; ?>
 
 						<li class="<?php echo esc_attr( $active_class ); ?>">
-							<label for="postnl_<?php echo esc_attr( $field_tab['id'] ); ?>" class="postnl_checkout_tab">
+							<label for="postnl_option_<?php echo esc_attr( $field_tab['id'] ); ?>" class="postnl_checkout_tab">
 								<span><?php echo esc_html( $field_tab['name'] ); ?></span>
 								<i><?php echo esc_html( $field_tab['price'] ); ?></i>
-								<input type="radio" name="postnl_option" id="postnl_<?php echo esc_attr( $field_tab['id'] ); ?>" class="postnl_option" value="<?php echo esc_attr( $field_tab['id'] ); ?>" />
+								<input type="radio" name="postnl_option" id="postnl_option_<?php echo esc_attr( $field_tab['id'] ); ?>" class="postnl_option" value="<?php echo esc_attr( $field_tab['id'] ); ?>" />
 							</label>
 						</li>
 					<?php } ?>

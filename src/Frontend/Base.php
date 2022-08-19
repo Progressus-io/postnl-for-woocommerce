@@ -42,6 +42,13 @@ abstract class Base {
 	protected $prefix = POSTNL_SETTINGS_ID . '_';
 
 	/**
+	 * Primary field name.
+	 *
+	 * @var primary_field
+	 */
+	protected $primary_field;
+
+	/**
 	 * Prefix for meta box fields.
 	 *
 	 * @var meta_name
@@ -55,8 +62,14 @@ abstract class Base {
 		$this->settings  = Settings::get_instance();
 		$this->meta_name = '_' . $this->prefix . 'order_metadata';
 		$this->set_template_file();
+		$this->set_primary_field_name();
 		$this->init_hooks();
 	}
+
+	/**
+	 * Need to set the primary field name;
+	 */
+	abstract public function set_primary_field_name();
 
 	/**
 	 * Need to set the template file name;
@@ -160,6 +173,10 @@ abstract class Base {
 			return $data;
 		}
 
+		if ( ! $this->check_selected_option( $_POST ) ) {
+			return $data;
+		}
+
 		$data = $this->validate_fields( $data, $_POST );
 
 		return $data;
@@ -174,6 +191,21 @@ abstract class Base {
 	 * @return array
 	 */
 	abstract public function validate_fields( $data, $posted_data );
+
+	/**
+	 * Check the selected options.
+	 *
+	 * @param array $posted_data Array of global _POST data.
+	 *
+	 * @return boolean
+	 */
+	public function check_selected_option( $posted_data ) {
+		if ( empty( $posted_data['postnl_option'] ) ) {
+			return false;
+		}
+
+		return ( $posted_data['postnl_option'] === $this->primary_field );
+	}
 
 	/**
 	 * Get frontend data from Order object.

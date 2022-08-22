@@ -7,6 +7,8 @@
 
 namespace PostNLWooCommerce\Rest_API;
 
+use PostNLWooCommerce\Utils;
+
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
@@ -23,6 +25,15 @@ class Checkout extends Base {
 	 * @var string
 	 */
 	public $endpoint = '/shipment/v1/checkout';
+
+	/**
+	 * Method to process external data to be accepted post data variable within class.
+	 *
+	 * @param array $post_data External post data.
+	 */
+	public function set_post_data( $post_data ) {
+		$this->post_data = Utils::set_post_data_address( $post_data );
+	}
 
 	/**
 	 * Send API request to PostNL Rest API.

@@ -49,7 +49,6 @@
 					label_form.addClass( 'generated' );
 
 					for (let field in response.data.backend ) {
-						console.log( field );
 						jQuery( '#postnl_' + field ).prop( 'disabled', true );
 					}
 				}
@@ -60,28 +59,45 @@
 
 		// Delete a tracking item
 		delete_label: function() {
-
-			var tracking_id = $( this ).attr( 'rel' );
-
-			$( '#tracking-item-' + tracking_id ).block({
+			var label_form = jQuery( '#shipment-postnl-label-form' );
+			label_form.block( {
 				message: null,
 				overlayCSS: {
 					background: '#fff',
 					opacity: 0.6
 				}
-			});
+			} );
 
+			
 			var data = {
-				action:      'wc_shipment_tracking_delete_item',
-				order_id:    woocommerce_admin_meta_boxes.post_id,
-				tracking_id: tracking_id,
-				security:    $( '#wc_shipment_tracking_delete_nonce' ).val()
+				action:   'postnl_order_delete_data',
+				order_id: woocommerce_admin_meta_boxes.post_id,
 			};
 
+			for ( var i = 0; i < postnl_admin_order_obj.fields.length; i++ ) {
+				var field_name = postnl_admin_order_obj.fields[ i ];
+				var maybe_field = label_form.find( '#' + postnl_admin_order_obj.fields[ i ] );
+
+				if ( ! maybe_field.is( ':input' ) ) {
+					continue;
+				}
+				
+				if ( 'checkbox' === maybe_field.prop( 'type' ) ) {
+					data[ field_name ] = maybe_field.is( ':checked' ) ? maybe_field.val() : '';
+				} else {
+					data[ field_name ] = maybe_field.val();
+				}
+			}
+
 			$.post( woocommerce_admin_meta_boxes.ajax_url, data, function( response ) {
-				$( '#tracking-item-' + tracking_id ).unblock();
-				if ( response != '-1' ) {
-					$( '#tracking-item-' + tracking_id ).remove();
+				label_form.unblock();
+
+				if ( true === response.success ) {
+					label_form.removeClass( 'generated' );
+
+					for ( var i = 0; i < postnl_admin_order_obj.fields.length; i++ ) {
+						label_form.find( '#' + postnl_admin_order_obj.fields[ i ] ).removeAttr( 'disabled' );
+					}
 				}
 			});
 

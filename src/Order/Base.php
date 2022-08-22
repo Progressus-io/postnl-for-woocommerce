@@ -297,6 +297,7 @@ abstract class Base {
 
 			$saved_data['backend'][ $post_field ] = $post_value;
 		}
+
 		$label_post_data = array(
 			'order'      => $order,
 			'saved_data' => $saved_data,
@@ -312,9 +313,38 @@ abstract class Base {
 	}
 
 	/**
+	 * Delete meta data in order admin page.
+	 *
+	 * @param  int $order_id Order post ID.
+	 *
+	 * @throws \Exception Throw error for invalid order.
+	 */
+	public function delete_meta_value( $order_id ) {
+		$order = wc_get_order( $order_id );
+
+		if ( ! is_a( $order, 'WC_Order' ) ) {
+			throw new \Exception( esc_html__( 'Order does not exists!', 'postnl-for-woocommerce' ) );
+		}
+
+		$saved_data = $this->get_data( $order_id );
+
+		// Delete label file.
+		$this->delete_label( $saved_data );
+		unset( $saved_data['backend'] );
+		unset( $saved_data['label'] );
+
+		$order->update_meta_data( $this->meta_name, $saved_data );
+		$order->save();
+
+		return $saved_data;
+	}
+
+	/**
 	 * Create PostNL label for current order
 	 *
 	 * @param array $post_data Order post data.
+	 *
+	 * @return array
 	 */
 	public function create_label( $post_data ) {
 		$order    = $post_data['order'];
@@ -334,5 +364,20 @@ abstract class Base {
 			'barcode'  => $barcode,
 			'filepath' => $filepath,
 		);
+	}
+
+	/**
+	 * Delete PostNL label for current order
+	 *
+	 * @param array $saved_data Order saved meta data.
+	 *
+	 * @return array
+	 */
+	public function delete_label( $saved_data ) {
+		if ( empty( $saved_data['label']['filepath'] ) ) {
+			return false;
+		}
+
+		return unlink( $saved_data['label']['filepath'] );
 	}
 }

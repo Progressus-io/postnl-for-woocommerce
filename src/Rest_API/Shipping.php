@@ -96,49 +96,19 @@ class Shipping extends Base {
 			'headers' => $this->get_headers_args(),
 			'body'    => wp_json_encode(
 				array(
-					'Customer'  => array(
-						'Address'            => array(
-							'AddressType' => '02',
-							'City'        => 'Hoofddorp',
-							'CompanyName' => 'PostNL',
-							'Countrycode' => 'NL',
-							'HouseNr'     => '42',
-							'Street'      => 'Siriusdreef',
-							'Zipcode'     => '2132WT',
-						),
-						'CollectionLocation' => '1234506',
-						'ContactPerson'      => 'Janssen',
-						'CustomerCode'       => 'DEVC',
-						'CustomerNumber'     => '11223344',
-						'Email'              => 'email@company.com',
-						'Name'               => 'Janssen',
-					),
-					'Message'   => array(
+					'Customer'  => $this->get_customer_info(),
+					/*'Message'   => array(
 						'MessageID'        => '36209c3d-14d2-478f-85de-abccd84fa790',
 						'MessageTimeStamp' => '28-04-2020 14:21:08',
 						'Printertype'      => 'GraphicFile|PDF',
-					),
+					),*/
 					'Shipments' => array(
 						array(
 							'Addresses'           => array(
-								array(
-									'AddressType' => '01',
-									'City'        => 'Utrecht',
-									'Countrycode' => 'NL',
-									'FirstName'   => 'Peter',
-									'HouseNr'     => '9',
-									'HouseNrExt'  => 'a bis',
-									'Name'        => 'de Ruiter',
-									'Street'      => 'Bilderdijkstraat',
-									'Zipcode'     => '3532VA',
-								),
+								$this->get_shipment_address(),
 							),
 							'Contacts'            => array(
-								array(
-									'ContactType' => '01',
-									'Email'       => 'receiver@email.com',
-									'SMSNr'       => '+31612345678',
-								),
+								$this->get_shipment_contact(),
 							),
 							'Dimension'           => array(
 								'Weight' => '4300',
@@ -157,22 +127,74 @@ class Shipping extends Base {
 	}
 
 	/**
-	 * Get shipping address info from the WC Cart data.
+	 * Get customer info from post data.
 	 *
-	 * @return array
+	 * @return array Customer info array.
 	 */
-	public function get_shipping_address() {
-		$address = array(
-			'AddressType' => '01',
+	public function get_customer_info() {
+		$blog_info = get_bloginfo();
+
+		return array(
+			'Address'            => $this->get_customer_address(),
+			'CollectionLocation' => $this->settings->get_location_code(),
+			'ContactPerson'      => get_bloginfo( 'name' ),
+			'CustomerCode'       => $this->settings->get_customer_code(),
+			'CustomerNumber'     => $this->settings->get_customer_num(),
+			'Email'              => get_bloginfo( 'admin_email' ),
+			'Name'               => get_bloginfo( 'name' ),
 		);
+	}
 
-		$address['Street']      = ( ! empty( $this->post_data['shipping_address_1'] ) ) ? $this->post_data['shipping_address_1'] : '';
-		$address['HouseNr']     = ( ! empty( $this->post_data['shipping_address_2'] ) ) ? $this->post_data['shipping_address_2'] : '';
-		$address['HouseNrExt']  = '';
-		$address['Zipcode']     = ( ! empty( $this->post_data['shipping_postcode'] ) ) ? $this->post_data['shipping_postcode'] : '';
-		$address['City']        = ( ! empty( $this->post_data['shipping_city'] ) ) ? $this->post_data['shipping_city'] : '';
-		$address['CountryCode'] = ( ! empty( $this->post_data['shipping_country'] ) ) ? $this->post_data['shipping_country'] : '';
+	/**
+	 * Get customer address data from post data.
+	 *
+	 * @return array Customer address array.
+	 */
+	public function get_customer_address() {
+		return array(
+			'AddressType' => '02',
+			'City'        => WC()->countries->get_base_city(),
+			'CompanyName' => get_bloginfo( 'name' ),
+			'Countrycode' => WC()->countries->get_base_country(),
+			'HouseNr'     => WC()->countries->get_base_address_2(),
+			'Street'      => WC()->countries->get_base_address(),
+			'Zipcode'     => WC()->countries->get_base_postcode(),
+		);
+	}
 
-		return $address;
+	/**
+	 * Get shipment address data from post data.
+	 *
+	 * @return array Shipment address array.
+	 */
+	public function get_shipment_address() {
+		$order = $this->post_data['order'];
+
+		return array(
+			'AddressType' => '01',
+			'City'        => $order->get_shipping_city(),
+			'Countrycode' => $order->get_shipping_country(),
+			'FirstName'   => $order->get_shipping_first_name(),
+			'HouseNr'     => $order->get_shipping_address_2(),
+			'HouseNrExt'  => '',
+			'Name'        => $order->get_shipping_last_name(),
+			'Street'      => $order->get_shipping_address_1(),
+			'Zipcode'     => $order->get_shipping_postcode(),
+		);
+	}
+
+	/**
+	 * Get shipment contact data from post data.
+	 *
+	 * @return array Shipment contact array.
+	 */
+	public function get_shipment_contact() {
+		$order = $this->post_data['order'];
+
+		return array(
+			'ContactType' => '01',
+			'Email'       => $order->get_billing_email(),
+			'SMSNr'       => $order->get_billing_phone(),
+		);
 	}
 }

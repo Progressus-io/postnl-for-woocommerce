@@ -8,7 +8,6 @@
 namespace PostNLWooCommerce\Rest_API;
 
 use PostNLWooCommerce\Shipping_Method\Settings;
-use PostNLWooCommerce\Utils;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -68,11 +67,20 @@ class Base {
 	 * @param array $post_data WC Cart post data.
 	 */
 	public function __construct( $post_data ) {
-		$this->settings  = Settings::get_instance();
-		$this->post_data = Utils::set_post_data_address( $post_data );
+		$this->settings = Settings::get_instance();
 
+		$this->set_post_data( $post_data );
 		$this->check_api_mode();
 		$this->set_api_url();
+	}
+
+	/**
+	 * Method to process external data to be accepted post data variable within class.
+	 *
+	 * @param array $post_data External post data.
+	 */
+	public function set_post_data( $post_data ) {
+		$this->post_data = $post_data;
 	}
 
 	/**

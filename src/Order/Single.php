@@ -7,6 +7,7 @@
 
 namespace PostNLWooCommerce\Order;
 
+use Automattic\WooCommerce\Internal\DataStores\Orders\CustomOrdersTableController;
 use PostNLWooCommerce\Utils;
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -29,6 +30,9 @@ class Single extends Base {
 
 		add_action( 'wp_ajax_postnl_order_save_form', array( $this, 'save_meta_box_ajax' ) );
 		add_action( 'wp_ajax_nopriv_postnl_order_save_form', array( $this, 'save_meta_box_ajax' ) );
+
+		add_action( 'wp_ajax_postnl_order_delete_data', array( $this, 'delete_meta_data_ajax' ) );
+		add_action( 'wp_ajax_nopriv_postnl_order_delete_data', array( $this, 'delete_meta_data_ajax' ) );
 	}
 
 	/**
@@ -67,8 +71,12 @@ class Single extends Base {
 	 * Adding meta box in order admin page.
 	 */
 	public function add_meta_box() {
+		$screen = wc_get_container()->get( CustomOrdersTableController::class )->custom_orders_table_usage_is_enabled()
+		? wc_get_page_screen_id( 'shop-order' )
+		: 'shop_order';
+
 		// translators: %s will be replaced by service name.
-		add_meta_box( 'woocommerce-shipment-postnl-label', sprintf( __( '%s Label & Tracking', 'postnl-for-woocommerce' ), $this->service ), array( $this, 'meta_box_html' ), 'shop_order', 'side', 'high' );
+		add_meta_box( 'woocommerce-shipment-postnl-label', sprintf( __( '%s Label & Tracking', 'postnl-for-woocommerce' ), $this->service ), array( $this, 'meta_box_html' ), $screen, 'side', 'high' );
 	}
 
 	/**
@@ -181,6 +189,43 @@ class Single extends Base {
 			}
 
 			$saved_data = $this->save_meta_value( $order_id, $_REQUEST );
+			wp_send_json_success( $saved_data );
+		} catch ( \Exception $e ) {
+			wp_send_json_error(
+				array( 'message' => $e->getMessage() ),
+			);
+		}
+	}
+
+	/**
+	 * Delete meta data in order admin page using ajax.
+	 *
+	 * @throws \Exception Throw error for invalid nonce.
+	 */
+	public function delete_meta_data_ajax() {
+		try {
+			// Get array of nonce fields.
+			$nonce_fields = array_values( $this->get_nonce_fields() );
+
+			if ( empty( $nonce_fields ) ) {
+				throw new \Exception( esc_html__( 'Cannot find nonce field!', 'postnl-for-woocommerce' ) );
+			}
+
+			// Check nonce before proceed.
+			$nonce_result = check_ajax_referer( $this->nonce_key, $nonce_fields[0]['id'], false );
+			if ( false === $nonce_result ) {
+				throw new \Exception( esc_html__( 'Nonce is invalid!', 'postnl-for-woocommerce' ) );
+			}
+
+			$order_id = ! empty( $_REQUEST['order_id'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['order_id'] ) ) : 0;
+
+			// Check if order id is really an ID from shop_order post type.
+			$order = wc_get_order( $order_id );
+			if ( ! is_a( $order, 'WC_Order' ) ) {
+				throw new \Exception( esc_html__( 'Order does not exists!', 'postnl-for-woocommerce' ) );
+			}
+
+			$saved_data = $this->delete_meta_value( $order_id );
 			wp_send_json_success( $saved_data );
 		} catch ( \Exception $e ) {
 			wp_send_json_error(

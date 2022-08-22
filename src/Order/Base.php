@@ -380,4 +380,87 @@ abstract class Base {
 
 		return unlink( $saved_data['label']['filepath'] );
 	}
+
+	/**
+	 * Generate download label url
+	 *
+	 * @param int $order_id ID of the order post.
+	 *
+	 * @return String.
+	 */
+	public function get_download_label_url( $order_id ) {
+		$download_url = add_query_arg(
+			array(
+				'postnl_label_order_id' => $order_id,
+				'postnl_label_nonce'    => wp_create_nonce( 'postnl_download_label_nonce' ),
+			),
+			home_url()
+		);
+
+		return $download_url;
+	}
+
+	/**
+	 * Get label file.
+	 *
+	 * @since   1.0.0
+	 * @return  void
+	 */
+	public function get_label_file() {
+		if ( empty( $_GET['postnl_label_nonce'] ) ) {
+			return;
+		}
+
+		// Check nonce before proceed.
+		$nonce_result = check_ajax_referer( 'postnl_download_label_nonce', sanitize_text_field( wp_unslash( $_GET['postnl_label_nonce'] ) ), false );
+
+		if ( false === $nonce_result ) {
+			return;
+		}
+
+		if ( empty( $_GET['postnl_label_order_id'] ) ) {
+			return;
+		}
+
+		$order_id = sanitize_text_field( wp_unslash( $_GET['postnl_label_order_id'] ) );
+
+		if ( ! ( current_user_can( 'manage_woocommerce' ) || current_user_can( 'view_order', $order_id ) ) ) {
+			return;
+		}
+
+		$saved_data = $this->get_data( $order_id );
+
+		$this->download_label( $saved_data['label']['filepath'] );
+	}
+
+	/**
+	 * Downloads the generated label file
+	 *
+	 * @param string $file_path File path to the label.
+	 *
+	 * @return boolean|void
+	 */
+	protected function download_label( $file_path ) {
+		if ( ! empty( $file_path ) && is_string( $file_path ) && file_exists( $file_path ) ) {
+			// Check if buffer exists, then flush any buffered output to prevent it from being included in the file's content.
+			if ( ob_get_contents() ) {
+				ob_clean();
+			}
+
+			$filename = basename( $file_path );
+
+			header( 'Content-Description: File Transfer' );
+			header( 'Content-Type: application/octet-stream' );
+			header( 'Content-Disposition: attachment; filename="' . $filename . '"' );
+			header( 'Expires: 0' );
+			header( 'Cache-Control: must-revalidate' );
+			header( 'Pragma: public' );
+			header( 'Content-Length: ' . filesize( $file_path ) );
+
+			readfile( $file_path );
+			exit;
+		} else {
+			return false;
+		}
+	}
 }

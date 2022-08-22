@@ -33,6 +33,8 @@ class Single extends Base {
 
 		add_action( 'wp_ajax_postnl_order_delete_data', array( $this, 'delete_meta_data_ajax' ) );
 		add_action( 'wp_ajax_nopriv_postnl_order_delete_data', array( $this, 'delete_meta_data_ajax' ) );
+
+		add_action( 'init', array( $this, 'get_label_file' ), 10 );
 	}
 
 	/**
@@ -127,7 +129,7 @@ class Single extends Base {
 
 			<div class="button-container">
 				<button class="button button-primary button-save-form"><?php esc_html_e( 'Generate Label', 'postnl-for-woocommerce' ); ?></button>
-				<button class="button button-primary button-download-label"><?php esc_html_e( 'Download Label', 'postnl-for-woocommerce' ); ?></button>
+				<a href="<?php echo esc_url( $this->get_download_label_url( $order->get_id() ) ); ?>" class="button button-primary button-download-label"><?php esc_html_e( 'Download Label', 'postnl-for-woocommerce' ); ?></a>
 				<a class="button button-secondary delete-label" href="#"><?php esc_html_e( 'Delete Label', 'postnl-for-woocommerce' ); ?></a>
 			</div>
 		</div>

@@ -134,8 +134,8 @@ class Delivery_Day extends Base {
 					$price = ( 'Evening' === $type ) ? $evening_fee : 0;
 
 					return array(
-						'from'  => $timeframe['From'],
-						'to'    => $timeframe['To'],
+						'from'  => Utils::get_hour_min( $timeframe['From'] ),
+						'to'    => Utils::get_hour_min( $timeframe['To'] ),
 						'type'  => $type,
 						'price' => $price,
 					);

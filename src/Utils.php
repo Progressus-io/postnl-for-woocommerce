@@ -93,4 +93,25 @@ class Utils {
 
 		return $post_data;
 	}
+
+	/**
+	 * Change time string to only display hour and minutes.
+	 *
+	 * @param String $time_string Time string example ( 23:33:00 ).
+	 *
+	 * @return String
+	 */
+	public static function get_hour_min( $time_string ) {
+		$exp_time = explode( ':', $time_string );
+
+		if ( empty( $exp_time ) ) {
+			return $time_string;
+		}
+
+		if ( 2 > count( $exp_time ) ) {
+			return $time_string;
+		}
+
+		return $exp_time[0] . ':' . $exp_time[1];
+	}
 }

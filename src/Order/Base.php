@@ -414,10 +414,6 @@ abstract class Base {
 		// Check nonce before proceed.
 		$nonce_result = check_ajax_referer( 'postnl_download_label_nonce', sanitize_text_field( wp_unslash( $_GET['postnl_label_nonce'] ) ), false );
 
-		if ( false === $nonce_result ) {
-			return;
-		}
-
 		if ( empty( $_GET['postnl_label_order_id'] ) ) {
 			return;
 		}

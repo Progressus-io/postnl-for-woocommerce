@@ -18,7 +18,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @package PostNLWooCommerce\Shipping_Method
  */
-class PostNL extends \WC_Shipping_Method {
+class PostNL extends \WC_Shipping_Flat_Rate {
 	/**
 	 * Init and hook in the integration.
 	 *
@@ -31,14 +31,22 @@ class PostNL extends \WC_Shipping_Method {
 
 		// translators: %1$s & %2$s is replaced with <a> tag.
 		$this->method_description = sprintf( __( 'Below you will find all functions for controlling, preparing and processing your shipment with PostNL. Prerequisite is a valid PostNL business customer contract. If you are not yet a PostNL business customer, you can request a quote %1$shere%2$s.', 'postnl-for-woocommerce' ), '<a href="https://mijnpostnlzakelijk.postnl.nl/s/become-a-customer?language=nl_NL#/" target="_blank">', '</a>' );
-
+		$this->supports           = array(
+			'shipping-zones',
+			'instance-settings',
+			'instance-settings-modal',
+			'settings',
+		);
 		$this->init();
+		$this->postnl_init();
 	}
 
 	/**
 	 * Shipping method initialization.
 	 */
-	public function init() {
+	public function postnl_init() {
+		$this->instance_form_fields['title']['default'] = $this->method_title;
+		$this->title = ( 'Flat rate' === $this->get_option( 'title' ) ) ? $this->method_title : $this->get_option( 'title' );
 		$this->init_form_fields();
 		$this->init_settings();
 

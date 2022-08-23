@@ -99,6 +99,12 @@ class Container {
 			parse_str( sanitize_text_field( wp_unslash( $_REQUEST['post_data'] ) ), $post_data );
 		}
 
+		foreach ( $post_data as $post_key => $post_value ) {
+			if ( false !== strpos( $post_key, 'shipping_method' ) && false === strpos( $post_value, POSTNL_SETTINGS_ID ) ) {
+				return array();
+			}
+		}
+
 		$api_call = new Checkout( $post_data );
 		$response = $api_call->send_request();
 

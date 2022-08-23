@@ -97,9 +97,8 @@ class Delivery_Day extends Base {
 		}
 
 		$tabs[] = array(
-			'id'    => $this->primary_field,
-			'price' => '$ 10',
-			'name'  => esc_html__( 'Delivery Day', 'postnl-for-woocommerce' ),
+			'id'   => $this->primary_field,
+			'name' => esc_html__( 'Delivery Day', 'postnl-for-woocommerce' ),
 		);
 
 		return $tabs;

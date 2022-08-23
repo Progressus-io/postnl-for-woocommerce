@@ -48,9 +48,8 @@ class Dropoff_Points extends Base {
 		}
 
 		$tabs[] = array(
-			'id'    => $this->primary_field,
-			'price' => '$ 10',
-			'name'  => esc_html__( 'Dropoff Points', 'postnl-for-woocommerce' ),
+			'id'   => $this->primary_field,
+			'name' => esc_html__( 'Dropoff Points', 'postnl-for-woocommerce' ),
 		);
 
 		return $tabs;

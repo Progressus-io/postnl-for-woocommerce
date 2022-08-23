@@ -97,11 +97,12 @@ class Shipping extends Base {
 			'body'    => wp_json_encode(
 				array(
 					'Customer'  => $this->get_customer_info(),
-					/*'Message'   => array(
+					/** Hardcoded */
+					'Message'   => array(
 						'MessageID'        => '36209c3d-14d2-478f-85de-abccd84fa790',
 						'MessageTimeStamp' => '28-04-2020 14:21:08',
 						'Printertype'      => 'GraphicFile|PDF',
-					),*/
+					),
 					'Shipments' => array(
 						array(
 							'Addresses'           => array(
@@ -110,6 +111,7 @@ class Shipping extends Base {
 							'Contacts'            => array(
 								$this->get_shipment_contact(),
 							),
+							/** Hardcoded */
 							'Dimension'           => array(
 								'Weight' => '4300',
 							),

@@ -54,19 +54,21 @@ class Checkout extends Base {
 					'Days'             => $this->settings->get_number_delivery_days(),
 					'Addresses'        => array(
 						$this->get_shipping_address(),
-						array(
-							'AddressType' => '02',
-							'CountryCode' => 'NL',
-						),
+						$this->get_shipper_address(),
 					),
 				)
 			),
 		);
 
-		$response = wp_remote_request( $api_url, $request_args );
-		$body     = wp_remote_retrieve_body( $response );
+		for ( $i = 1; $i <= 5; $i++ ) {
+			$response = wp_remote_request( $api_url, $request_args );
 
-		return $body;
+			if ( ! is_wp_error( $response ) ) {
+				break;
+			}
+		}
+
+		return wp_remote_retrieve_body( $response );
 	}
 
 	/**
@@ -201,6 +203,24 @@ class Checkout extends Base {
 		$address['Zipcode']     = ( ! empty( $this->post_data['shipping_postcode'] ) ) ? $this->post_data['shipping_postcode'] : '';
 		$address['City']        = ( ! empty( $this->post_data['shipping_city'] ) ) ? $this->post_data['shipping_city'] : '';
 		$address['CountryCode'] = ( ! empty( $this->post_data['shipping_country'] ) ) ? $this->post_data['shipping_country'] : '';
+
+		return $address;
+	}
+
+	/**
+	 * Get shipper address info from the WC Cart data.
+	 *
+	 * @return array
+	 */
+	public function get_shipper_address() {
+		$address = array(
+			'AddressType' => '02',
+			'City'        => WC()->countries->get_base_city(),
+			'Countrycode' => WC()->countries->get_base_country(),
+			'HouseNr'     => WC()->countries->get_base_address_2(),
+			'Street'      => WC()->countries->get_base_address(),
+			'Zipcode'     => WC()->countries->get_base_postcode(),
+		);
 
 		return $address;
 	}

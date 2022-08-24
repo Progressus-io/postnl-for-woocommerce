@@ -108,20 +108,17 @@ class Delivery_Day extends Base {
 	 * Get delivery option value from the API response.
 	 *
 	 * @param array $response PostNL API response.
+	 * @param array $post_data Post data on checkout page.
 	 *
 	 * @return array.
 	 */
-	public function get_content_data( $response ) {
+	public function get_content_data( $response, $post_data ) {
 		if ( empty( $response['DeliveryOptions'] ) ) {
 			return array();
 		}
 
 		$evening_fee = $this->settings->get_evening_delivery_fee();
-
-		$fields      = $this->get_fields();
-		$return_data = array(
-			'field_name' => $fields['0']['id'],
-		);
+		$return_data = $this->get_init_content_data( $post_data );
 
 		foreach ( $response['DeliveryOptions'] as $delivery_option ) {
 			if ( empty( $delivery_option['DeliveryDate'] ) || empty( $delivery_option['Timeframe'] ) ) {

@@ -17,8 +17,9 @@ if ( empty( $data['dropoff_options'] ) ) {
 	<ul class="postnl_dropoff_points_list postnl_list">
 		<?php foreach ( $data['dropoff_options'] as $point ) { ?>
 			<?php
-			$value    = $point['partner_id'] . '-' . $point['loc_code'];
-			$radio_id = sanitize_title( $point['partner_id'] . '-' . $point['loc_code'] );
+			$value      = sanitize_title( $point['partner_id'] . '-' . $point['loc_code'] );
+			$radio_id   = sanitize_title( $point['partner_id'] . '-' . $point['loc_code'] );
+			$is_checked = ( $value === $data['value'] ) ? 'checked="checked"' : '';
 			?>
 		<li>
 			<div class="list_title"><span><?php echo esc_html( $point['company'] . ' ' . $point['distance'] ); ?></span></div>
@@ -38,7 +39,8 @@ if ( empty( $data['dropoff_options'] ) ) {
 							id="<?php echo esc_attr( $data['field_name'] ); ?>_<?php echo esc_attr( $radio_id ); ?>" 
 							name="<?php echo esc_attr( $data['field_name'] ); ?>" 
 							class="postnl_sub_radio" 
-							value="<?php echo esc_attr( $value ); ?>" 
+							value="<?php echo esc_attr( $value ); ?>"
+							<?php echo esc_html( $is_checked ); ?>
 						/>
 						<i>Vanaf <?php echo esc_html( $point['time'] ); ?><br /><?php echo esc_html( $point['date'] ); ?></i>
 						<span>

@@ -11,6 +11,9 @@
 			var checkout_option = jQuery( '#postnl_checkout_option' );
 			var radio_tabs      = checkout_option.find( '.postnl_checkout_tab_list .postnl_option' );
 			var radio_options   = checkout_option.find( '.postnl_checkout_content_container .postnl_sub_radio' );
+			var tab_value       = checkout_option.find( '.postnl_checkout_tab_list input.postnl_option:checked' ).val();
+
+			checkout_option.find( '#postnl_' + tab_value + '_content' ).addClass( 'active' );
 
 			radio_tabs.on( 'change', function( evt ) {
 				var pri_container = jQuery( this ).closest( '#postnl_checkout_option' );

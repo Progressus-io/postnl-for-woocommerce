@@ -59,20 +59,17 @@ class Dropoff_Points extends Base {
 	 * Get dropoff points value from the API response.
 	 *
 	 * @param array $response PostNL API response.
+	 * @param array $post_data Post data on checkout page.
 	 *
 	 * @return array.
 	 */
-	public function get_content_data( $response ) {
+	public function get_content_data( $response, $post_data ) {
 		if ( empty( $response['PickupOptions'] ) ) {
 			return array();
 		}
 
 		$pickup_points = $response['PickupOptions'];
-
-		$fields      = $this->get_fields();
-		$return_data = array(
-			'field_name' => $fields['0']['id'],
-		);
+		$return_data   = $this->get_init_content_data( $post_data );
 
 		foreach ( $pickup_points as $pickup_point ) {
 			$date = ! empty( $pickup_point['PickupDate'] ) ? $pickup_point['PickupDate'] : '';

@@ -116,8 +116,9 @@ abstract class Base {
 	 * Adding a content in the frontend checkout.
 	 *
 	 * @param array $response Response from PostNL Checkout Rest API.
+	 * @param array $post_data Post data on checkout page.
 	 */
-	abstract public function get_content_data( $response );
+	abstract public function get_content_data( $response, $post_data );
 
 	/**
 	 * Adding a content in the frontend checkout.
@@ -127,7 +128,7 @@ abstract class Base {
 	 */
 	public function display_content( $response, $post_data ) {
 		$template_args = array(
-			'data' => $this->get_content_data( $response ),
+			'data' => $this->get_content_data( $response, $post_data ),
 		);
 
 		wc_get_template( $this->template_file, $template_args, '', POSTNL_WC_PLUGIN_DIR_PATH . '/templates/' );
@@ -205,6 +206,44 @@ abstract class Base {
 		}
 
 		return ( $posted_data['postnl_option'] === $this->primary_field );
+	}
+
+	/**
+	 * Get primary field value.
+	 *
+	 * @param array $post_data Array of global _POST data.
+	 *
+	 * @return mixed
+	 */
+	public function get_primary_field_value( $post_data ) {
+		$fields = $this->get_fields();
+
+		if ( empty( $post_data['postnl_option'] ) ) {
+			return '';
+		}
+
+		if ( $this->primary_field !== $post_data['postnl_option'] ) {
+			return '';
+		}
+
+		return ( ! empty( $post_data[ $fields['0']['id'] ] ) ) ? $post_data[ $fields['0']['id'] ] : '';
+	}
+
+	/**
+	 * Get content data initiation.
+	 *
+	 * @param array $post_data Array of global _POST data.
+	 *
+	 * @return array
+	 */
+	public function get_init_content_data( $post_data ) {
+		$fields = $this->get_fields();
+		$value  = $this->get_primary_field_value( $post_data );
+
+		return array(
+			'field_name' => $fields['0']['id'],
+			'value'      => $value,
+		);
 	}
 
 	/**

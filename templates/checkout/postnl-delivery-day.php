@@ -26,8 +26,9 @@ if ( empty( $data['delivery_options'] ) ) {
 				<ul class="postnl_sub_list">
 					<?php foreach ( $delivery['options'] as $option ) { ?>
 						<?php
-							$value      = $delivery['date'] . ':_:' . $option['from'] . '-' . $option['to'] . ':_:' . $option['price'];
+							$value      = sanitize_title( $delivery['date'] . '_' . $option['from'] . '-' . $option['to'] . '_' . $option['price'] );
 							$is_charged = ( empty( $option['price'] ) ) ? esc_html__( 'No charge', 'postnl-for-woocommerce' ) : wc_price( $option['price'] );
+							$is_checked = ( $value === $data['value'] ) ? 'checked="checked"' : '';
 						?>
 						<li 
 							class="<?php echo esc_attr( $option['type'] ); ?>"
@@ -44,6 +45,7 @@ if ( empty( $data['delivery_options'] ) ) {
 									name="<?php echo esc_attr( $data['field_name'] ); ?>" 
 									class="postnl_sub_radio" 
 									value="<?php echo esc_attr( $value ); ?>"
+									<?php echo esc_html( $is_checked ); ?>
 								/>
 								<i><?php echo wp_kses_post( $is_charged ); ?></i>
 								<span><?php echo esc_html( $option['from'] . ' - ' . $option['to'] ); ?></span>

@@ -28,6 +28,13 @@ class Container {
 	public $template_file;
 
 	/**
+	 * Tab field name.
+	 *
+	 * @var tab_field
+	 */
+	protected $tab_field = POSTNL_SETTINGS_ID . '_option';
+
+	/**
 	 * Init and hook in the integration.
 	 */
 	public function __construct() {
@@ -40,6 +47,7 @@ class Container {
 	 */
 	public function init_hooks() {
 		add_action( 'woocommerce_review_order_after_shipping', array( $this, 'display_fields' ) );
+		add_action( 'woocommerce_cart_calculate_fees', array( $this, 'add_cart_fees' ), 10, 1 );
 		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_scripts_styles' ) );
 	}
 
@@ -84,11 +92,22 @@ class Container {
 	}
 
 	/**
-	 * Get data from PostNL Checkout Rest API.
+	 * Get tab field value.
+	 *
+	 * @param array $post_data Array of global _POST data.
+	 *
+	 * @return String
+	 */
+	public function get_tab_field_value( $post_data ) {
+		return ( ! empty( $post_data[ $this->tab_field ] ) ) ? $post_data[ $this->tab_field ] : '';
+	}
+
+	/**
+	 * Get checkout $_POST['post_data'].
 	 *
 	 * @return array
 	 */
-	public function get_checkout_data() {
+	public function get_checkout_post_data() {
 		if ( empty( $_REQUEST['post_data'] ) ) {
 			return array();
 		}
@@ -97,6 +116,21 @@ class Container {
 
 		if ( isset( $_REQUEST['post_data'] ) ) {
 			parse_str( sanitize_text_field( wp_unslash( $_REQUEST['post_data'] ) ), $post_data );
+		}
+
+		return $post_data;
+	}
+
+	/**
+	 * Get data from PostNL Checkout Rest API.
+	 *
+	 * @return array
+	 */
+	public function get_checkout_data() {
+		$post_data = $this->get_checkout_post_data();
+
+		if ( empty( $post_data ) ) {
+			return array();
 		}
 
 		foreach ( $post_data as $post_key => $post_value ) {
@@ -128,8 +162,31 @@ class Container {
 			'tabs'      => $this->get_available_tabs( $checkout_data['response'] ),
 			'response'  => $checkout_data['response'],
 			'post_data' => $checkout_data['post_data'],
+			'fields'    => array(
+				array(
+					'name'  => $this->tab_field,
+					'value' => $this->get_tab_field_value( $checkout_data['post_data'] ),
+				),
+			),
 		);
 
 		wc_get_template( $this->template_file, $template_args, '', POSTNL_WC_PLUGIN_DIR_PATH . '/templates/' );
+	}
+
+	/**
+	 * Add cart fees.
+	 *
+	 * @param WC_Cart $cart Cart object.
+	 */
+	public function add_cart_fees( $cart ) {
+		$post_data = $this->get_checkout_post_data();
+
+		if ( empty( $post_data ) ) {
+			return;
+		}
+
+		if ( ! empty( $post_data['postnl_delivery_day_price'] ) ) {
+			$cart->add_fee( __( 'PostNL Evening Fee', 'dhl-for-woocommerce' ), wc_format_decimal( $post_data['postnl_delivery_day_price'] ) );
+		}
 	}
 }

@@ -12,6 +12,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 if ( empty( $tabs ) ) {
 	return;
 }
+
+$field = array_shift( $fields );
 ?>
 <tr class="postnl-co-tr postnl-co-tr-container">
 	<td colspan="2">
@@ -19,12 +21,23 @@ if ( empty( $tabs ) ) {
 			<div class="postnl_checkout_tab_container">
 				<ul class="postnl_checkout_tab_list">
 					<?php foreach ( $tabs as $index => $field_tab ) { ?>
-						<?php $active_class = ( 0 === $index ) ? 'active' : ''; ?>
+						<?php
+							$is_checked      = ( $field['value'] === $field_tab['id'] ) || ( empty( $field['value'] ) && 0 === $index );
+							$active_class    = ( $is_checked ) ? 'active' : '';
+							$display_checked = ( $is_checked ) ? 'checked="checked"' : '';
+						?>
 
 						<li class="<?php echo esc_attr( $active_class ); ?>">
-							<label for="postnl_option_<?php echo esc_attr( $field_tab['id'] ); ?>" class="postnl_checkout_tab">
+							<label for="<?php echo esc_attr( $field['name'] . '_' . $field_tab['id'] ); ?>" class="postnl_checkout_tab">
 								<span><?php echo esc_html( $field_tab['name'] ); ?></span>
-								<input type="radio" name="postnl_option" id="postnl_option_<?php echo esc_attr( $field_tab['id'] ); ?>" class="postnl_option" value="<?php echo esc_attr( $field_tab['id'] ); ?>" />
+								<input 
+									type="radio" 
+									name="<?php echo esc_attr( $field['name'] ); ?>" 
+									id="<?php echo esc_attr( $field['name'] . '_' . $field_tab['id'] ); ?>" 
+									class="postnl_option" 
+									value="<?php echo esc_attr( $field_tab['id'] ); ?>" 
+									<?php echo esc_html( $display_checked ); ?>
+									/>
 							</label>
 						</li>
 					<?php } ?>

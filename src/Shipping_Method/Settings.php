@@ -522,6 +522,20 @@ class Settings extends \WC_Settings_API {
 	}
 
 	/**
+	 * Get location code from the settings.
+	 *
+	 * @return String
+	 */
+	public function get_location_code() {
+		/*
+		Temporarily hardcoded.
+		return $this->get_country_option( 'location_code', '' );
+		*/
+
+		return '1234506';
+	}
+
+	/**
 	 * Return true if sandbox mode is ticked.
 	 *
 	 * @return String

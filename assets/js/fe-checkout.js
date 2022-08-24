@@ -40,6 +40,8 @@
 				for ( let name in dropoff_data ) {
 					jQuery( '#' + field_name + '_' + name ).val( dropoff_data[ name ] );
 				}
+
+				jQuery('body').trigger('update_checkout');
 			} );
 
 			checkout_option.find( '.postnl_checkout_tab_list .active .postnl_option' ).trigger( 'click' );

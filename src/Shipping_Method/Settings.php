@@ -103,15 +103,6 @@ class Settings extends \WC_Settings_API {
 				'placeholder'       => 'DEVC',
 				'custom_attributes' => array( 'maxlength' => '10' ),
 			),
-			'location_code'             => array(
-				'title'             => esc_html__( 'Location Code', 'postnl-for-woocommerce' ),
-				'type'              => 'text',
-				'description'       => esc_html__( 'e.g. "123456"', 'postnl-for-woocommerce' ),
-				'desc_tip'          => true,
-				'default'           => '',
-				'placeholder'       => '123456',
-				'custom_attributes' => array( 'maxlength' => '10' ),
-			),
 
 			// Return Settings.
 			'return_settings_title'               => array(
@@ -498,15 +489,6 @@ class Settings extends \WC_Settings_API {
 	 */
 	public function get_customer_code() {
 		return $this->get_country_option( 'customer_code', '' );
-	}
-
-	/**
-	 * Get location code from the settings.
-	 *
-	 * @return String
-	 */
-	public function get_location_code() {
-		return $this->get_country_option( 'location_code', '' );
 	}
 
 	/**

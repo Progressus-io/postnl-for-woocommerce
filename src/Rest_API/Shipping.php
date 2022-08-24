@@ -138,7 +138,8 @@ class Shipping extends Base {
 
 		return array(
 			'Address'            => $this->get_customer_address(),
-			'CollectionLocation' => $this->settings->get_location_code(),
+			/* Harcoded. */
+			'CollectionLocation' => '1234506',
 			'ContactPerson'      => get_bloginfo( 'name' ),
 			'CustomerCode'       => $this->settings->get_customer_code(),
 			'CustomerNumber'     => $this->settings->get_customer_num(),

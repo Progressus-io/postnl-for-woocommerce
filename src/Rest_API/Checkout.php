@@ -50,6 +50,7 @@ class Checkout extends Base {
 					'CutOffTimes'      => $this->get_cutoff_times(),
 					'HolidaySorting'   => true,
 					'Options'          => $this->get_checkout_options(),
+					/* Temporarily hardcoded in Settings::get_number_pickup_points(). */
 					'Locations'        => $this->settings->get_number_pickup_points(),
 					'Days'             => $this->settings->get_number_delivery_days(),
 					'Addresses'        => array(

@@ -216,6 +216,9 @@ class Settings extends \WC_Settings_API {
 				'for_country' => array( 'NL', 'BE' ),
 				'class'       => 'country-nl country-be',
 			),
+
+			/*
+			Temporarily commented out.
 			'number_pickup_points'      => array(
 				'title'             => __( 'Number of Pickup Points', 'postnl-for-woocommerce' ),
 				'type'              => 'number',
@@ -230,6 +233,7 @@ class Settings extends \WC_Settings_API {
 				'for_country'       => array( 'NL', 'BE' ),
 				'class'             => 'country-nl country-be',
 			),
+			*/
 			'enable_delivery_days'      => array(
 				'title'       => __( 'Enable Delivery Days', 'postnl-for-woocommerce' ),
 				'type'        => 'checkbox',
@@ -694,7 +698,12 @@ class Settings extends \WC_Settings_API {
 	 * @return Int
 	 */
 	public function get_number_pickup_points() {
+		/*
+		Temporarily hardcoded.
 		return $this->get_country_option( 'number_pickup_points' );
+		*/
+
+		return 3;
 	}
 
 	/**

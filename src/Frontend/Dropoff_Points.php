@@ -67,42 +67,41 @@ class Dropoff_Points extends Base {
 			return array();
 		}
 
-		$pickup_points = array_filter(
-			$response['PickupOptions'],
-			function ( $pickup_point ) {
-				return ( ! empty( $pickup_point['Option'] ) && 'Pickup' === $pickup_point['Option'] );
-			}
-		);
-		$pickup_point  = array_shift( $pickup_points );
-		$date          = ! empty( $pickup_point['PickupDate'] ) ? $pickup_point['PickupDate'] : '';
-
-		if ( empty( $pickup_point['Locations'] ) ) {
-			return array();
-		}
+		$pickup_points = $response['PickupOptions'];
 
 		$fields      = $this->get_fields();
 		$return_data = array(
 			'field_name' => $fields['0']['id'],
 		);
 
-		foreach ( $pickup_point['Locations'] as $dropoff_option ) {
-			if ( empty( $dropoff_option['PartnerID'] ) || empty( $dropoff_option['PickupTime'] ) || empty( $dropoff_option['Distance'] ) || empty( $dropoff_option['Address'] ) ) {
+		foreach ( $pickup_points as $pickup_point ) {
+			$date = ! empty( $pickup_point['PickupDate'] ) ? $pickup_point['PickupDate'] : '';
+			$type = ! empty( $pickup_point['Option'] ) ? $pickup_point['Option'] : '';
+
+			if ( empty( $pickup_point['Locations'] ) ) {
 				continue;
 			}
 
-			$timestamp = strtotime( $date );
-			$company   = $dropoff_option['Address']['CompanyName'];
-			$address   = implode( ', ', array_values( $dropoff_option['Address'] ) );
+			foreach ( $pickup_point['Locations'] as $dropoff_option ) {
+				if ( empty( $dropoff_option['PartnerID'] ) || empty( $dropoff_option['PickupTime'] ) || empty( $dropoff_option['Distance'] ) || empty( $dropoff_option['Address'] ) ) {
+					continue;
+				}
 
-			$return_data['dropoff_options'][] = array(
-				'partner_id' => $dropoff_option['PartnerID'],
-				'loc_code'   => $dropoff_option['LocationCode'],
-				'time'       => $dropoff_option['PickupTime'],
-				'distance'   => $dropoff_option['Distance'],
-				'date'       => $date,
-				'company'    => $company,
-				'address'    => $address,
-			);
+				$timestamp = strtotime( $date );
+				$company   = $dropoff_option['Address']['CompanyName'];
+				$address   = implode( ', ', array_values( $dropoff_option['Address'] ) );
+
+				$return_data['dropoff_options'][] = array(
+					'partner_id' => $dropoff_option['PartnerID'],
+					'loc_code'   => $dropoff_option['LocationCode'],
+					'time'       => $dropoff_option['PickupTime'],
+					'distance'   => $dropoff_option['Distance'],
+					'date'       => $date,
+					'company'    => $company,
+					'address'    => $address,
+					'type'       => $type,
+				);
+			}
 		}
 
 		return $return_data;
@@ -153,6 +152,11 @@ class Dropoff_Points extends Base {
 				),
 				array(
 					'id'      => $this->prefix . $this->primary_field . '_time',
+					'primary' => false,
+					'hidden'  => true,
+				),
+				array(
+					'id'      => $this->prefix . $this->primary_field . '_type',
 					'primary' => false,
 					'hidden'  => true,
 				),

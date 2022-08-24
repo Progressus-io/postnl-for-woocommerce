@@ -30,6 +30,7 @@ if ( empty( $data['dropoff_options'] ) ) {
 					data-partner_id="<?php echo esc_attr( $point['partner_id'] ); ?>"
 					data-date="<?php echo esc_attr( $point['date'] ); ?>"
 					data-time="<?php echo esc_attr( $point['time'] ); ?>"
+					data-type="<?php echo esc_attr( $point['type'] ); ?>"
 				>
 					<label class="postnl_sub_radio_label" for="<?php echo esc_attr( $data['field_name'] ); ?>_<?php echo esc_attr( $radio_id ); ?>">
 						<input 
@@ -56,4 +57,5 @@ if ( empty( $data['dropoff_options'] ) ) {
 	<input type="hidden" name="<?php echo esc_attr( $data['field_name'] ); ?>_partner_id" id="<?php echo esc_attr( $data['field_name'] ); ?>_partner_id" value="" />
 	<input type="hidden" name="<?php echo esc_attr( $data['field_name'] ); ?>_date" id="<?php echo esc_attr( $data['field_name'] ); ?>_date" value="" />
 	<input type="hidden" name="<?php echo esc_attr( $data['field_name'] ); ?>_time" id="<?php echo esc_attr( $data['field_name'] ); ?>_time" value="" />
+	<input type="hidden" name="<?php echo esc_attr( $data['field_name'] ); ?>_type" id="<?php echo esc_attr( $data['field_name'] ); ?>_type" value="" />
 </div>

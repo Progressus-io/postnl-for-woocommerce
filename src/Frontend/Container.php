@@ -127,25 +127,32 @@ class Container {
 	 * @return array
 	 */
 	public function get_checkout_data() {
-		$post_data = $this->get_checkout_post_data();
+		try {
+			$post_data = $this->get_checkout_post_data();
 
-		if ( empty( $post_data ) ) {
-			return array();
-		}
-
-		foreach ( $post_data as $post_key => $post_value ) {
-			if ( false !== strpos( $post_key, 'shipping_method' ) && false === strpos( $post_value, POSTNL_SETTINGS_ID ) ) {
+			if ( empty( $post_data ) ) {
 				return array();
 			}
+
+			foreach ( $post_data as $post_key => $post_value ) {
+				if ( false !== strpos( $post_key, 'shipping_method' ) && false === strpos( $post_value, POSTNL_SETTINGS_ID ) ) {
+					return array();
+				}
+			}
+
+			$api_call = new Checkout( $post_data );
+			$response = $api_call->send_request();
+
+			return array(
+				'response'  => json_decode( $response, true ),
+				'post_data' => $post_data,
+			);
+		} catch ( \Exception $e ) {
+			return array(
+				'response' => array(),
+				'error'    => $e->getMessage(),
+			);
 		}
-
-		$api_call = new Checkout( $post_data );
-		$response = $api_call->send_request();
-
-		return array(
-			'response'  => json_decode( $response, true ),
-			'post_data' => $post_data,
-		);
 	}
 
 	/**

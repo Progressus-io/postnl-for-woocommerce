@@ -36,40 +36,23 @@ class Checkout extends Base {
 	}
 
 	/**
-	 * Send API request to PostNL Rest API.
+	 * Function for composing API request.
 	 */
-	public function send_request() {
-		$api_url      = esc_url( $this->get_api_url() );
-		$request_args = array(
-			'method'  => 'POST',
-			'headers' => $this->get_headers_args(),
-			'body'    => wp_json_encode(
-				array(
-					'OrderDate'        => $this->get_current_time(),
-					'ShippingDuration' => $this->settings->get_transit_time(),
-					'CutOffTimes'      => $this->get_cutoff_times(),
-					'HolidaySorting'   => true,
-					'Options'          => $this->get_checkout_options(),
-					/* Temporarily hardcoded in Settings::get_number_pickup_points(). */
-					'Locations'        => $this->settings->get_number_pickup_points(),
-					'Days'             => $this->settings->get_number_delivery_days(),
-					'Addresses'        => array(
-						$this->get_shipping_address(),
-						$this->get_shipper_address(),
-					),
-				)
+	public function compose_body_request() {
+		return array(
+			'OrderDate'        => $this->get_current_time(),
+			'ShippingDuration' => $this->settings->get_transit_time(),
+			'CutOffTimes'      => $this->get_cutoff_times(),
+			'HolidaySorting'   => true,
+			'Options'          => $this->get_checkout_options(),
+			/* Temporarily hardcoded in Settings::get_number_pickup_points(). */
+			'Locations'        => $this->settings->get_number_pickup_points(),
+			'Days'             => $this->settings->get_number_delivery_days(),
+			'Addresses'        => array(
+				$this->get_shipping_address(),
+				$this->get_shipper_address(),
 			),
 		);
-
-		for ( $i = 1; $i <= 5; $i++ ) {
-			$response = wp_remote_request( $api_url, $request_args );
-
-			if ( ! is_wp_error( $response ) ) {
-				break;
-			}
-		}
-
-		return wp_remote_retrieve_body( $response );
 	}
 
 	/**

@@ -56,13 +56,17 @@ class Bulk extends Base {
 			return $redirect;
 		}
 
-		if ( ! empty( $object_ids ) ) {
-			foreach ( $object_ids as $order_id ) {
-				$this->save_meta_value( $order_id, $_REQUEST );
+		try {
+			if ( ! empty( $object_ids ) ) {
+				foreach ( $object_ids as $order_id ) {
+					$this->save_meta_value( $order_id, $_REQUEST );
+				}
 			}
-		}
 
-		return $redirect;
+			return $redirect;
+		} catch ( \Exception $e ) {
+			return $redirect;
+		}
 	}
 
 	/**

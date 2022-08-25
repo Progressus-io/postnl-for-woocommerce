@@ -8,6 +8,7 @@
 namespace PostNLWooCommerce\Rest_API;
 
 use PostNLWooCommerce\Shipping_Method\Settings;
+use PostNLWooCommerce\Main;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -32,6 +33,13 @@ class Base {
 	 * @var string
 	 */
 	public $api_url;
+
+	/**
+	 * PostnL Logger.
+	 *
+	 * @var Logger
+	 */
+	public $logger;
 
 	/**
 	 * WC Cart data.
@@ -68,6 +76,7 @@ class Base {
 	 */
 	public function __construct( $post_data ) {
 		$this->settings = Settings::get_instance();
+		$this->logger   = Main::get_logger();
 
 		$this->set_post_data( $post_data );
 		$this->check_api_mode();
@@ -142,5 +151,56 @@ class Base {
 			'accept'       => 'application/json',
 			'Content-Type' => 'application/json',
 		);
+	}
+
+	/**
+	 * Function for composing API request.
+	 */
+	public function compose_body_request() {
+		return array();
+	}
+
+	/**
+	 * Send API request to PostNL Rest API.
+	 *
+	 * @throws \Exception Throw error if response has WP_Error.
+	 */
+	public function send_request() {
+		$api_url      = esc_url( $this->get_api_url() );
+		$request_args = array(
+			'method'  => 'POST',
+			'headers' => $this->get_headers_args(),
+			'body'    => wp_json_encode( $this->compose_body_request() ),
+		);
+
+		$this->logger->write( sprintf( 'Begin send request to %1$s', $api_url ) );
+		$this->logger->write( 'API Request:' );
+		$this->logger->write( print_r( $request_args, true ) );
+
+		for ( $i = 1; $i <= 5; $i++ ) {
+			$response = wp_remote_request( $api_url, $request_args );
+
+			if ( ! is_wp_error( $response ) ) {
+				$this->logger->write( sprintf( 'Get response after %1$d attempts.', $i ) );
+
+				break;
+			}
+		}
+
+		if ( is_wp_error( $response ) ) {
+			$this->logger->write( 'Get WP Error response:' );
+			$this->logger->write( print_r( $response, true ) );
+
+			throw new \Exception( $response->get_error_message() );
+		}
+
+		$body_response   = wp_remote_retrieve_body( $response );
+		$header_response = wp_remote_retrieve_headers( $response );
+
+		$this->logger->write( 'API Successful response:' );
+		$this->logger->write( print_r( $header_response, true ) );
+		$this->logger->write( print_r( $body_response, true ) );
+
+		return $body_response;
 	}
 }

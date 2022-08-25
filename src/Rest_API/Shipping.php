@@ -25,107 +25,88 @@ class Shipping extends Base {
 	public $endpoint = '/v1/shipment?confirm=true';
 
 	/**
-	 * Send API request to PostNL Rest API.
+	 * Function for composing API request.
 	 */
-	public function send_request() {
-		$api_url = esc_url( $this->get_api_url() );
-
+	public function compose_body_request() {
 		/*
-		$request_args = array(
-			'method'  => 'POST',
-			'headers' => $this->get_headers_args(),
-			'body'    => wp_json_encode(
+		Example body request.
+		array(
+			'Customer'  => array(
+				'Address'            => array(
+					'AddressType' => '02',
+					'City'        => 'Hoofddorp',
+					'CompanyName' => 'PostNL',
+					'Countrycode' => 'NL',
+					'HouseNr'     => '42',
+					'Street'      => 'Siriusdreef',
+					'Zipcode'     => '2132WT',
+				),
+				'CollectionLocation' => '1234506',
+				'ContactPerson'      => 'Janssen',
+				'CustomerCode'       => 'DEVC',
+				'CustomerNumber'     => '11223344',
+				'Email'              => 'email@company.com',
+				'Name'               => 'Janssen',
+			),
+			'Message'   => array(
+				'MessageID'        => '36209c3d-14d2-478f-85de-abccd84fa790',
+				'MessageTimeStamp' => '28-04-2020 14:21:08',
+				'Printertype'      => 'GraphicFile|PDF',
+			),
+			'Shipments' => array(
 				array(
-					'Customer'  => array(
-						'Address'            => array(
-							'AddressType' => '02',
-							'City'        => 'Hoofddorp',
-							'CompanyName' => 'PostNL',
+					'Addresses'           => array(
+						array(
+							'AddressType' => '01',
+							'City'        => 'Utrecht',
 							'Countrycode' => 'NL',
-							'HouseNr'     => '42',
-							'Street'      => 'Siriusdreef',
-							'Zipcode'     => '2132WT',
+							'FirstName'   => 'Peter',
+							'HouseNr'     => '9',
+							'HouseNrExt'  => 'a bis',
+							'Name'        => 'de Ruiter',
+							'Street'      => 'Bilderdijkstraat',
+							'Zipcode'     => '3532VA',
 						),
-						'CollectionLocation' => '1234506',
-						'ContactPerson'      => 'Janssen',
-						'CustomerCode'       => 'DEVC',
-						'CustomerNumber'     => '11223344',
-						'Email'              => 'email@company.com',
-						'Name'               => 'Janssen',
 					),
-					'Message'   => array(
-						'MessageID'        => '36209c3d-14d2-478f-85de-abccd84fa790',
-						'MessageTimeStamp' => '28-04-2020 14:21:08',
-						'Printertype'      => 'GraphicFile|PDF',
-					),
-					'Shipments' => array(
+					'Contacts'            => array(
 						array(
-							'Addresses'           => array(
-								array(
-									'AddressType' => '01',
-									'City'        => 'Utrecht',
-									'Countrycode' => 'NL',
-									'FirstName'   => 'Peter',
-									'HouseNr'     => '9',
-									'HouseNrExt'  => 'a bis',
-									'Name'        => 'de Ruiter',
-									'Street'      => 'Bilderdijkstraat',
-									'Zipcode'     => '3532VA',
-								),
-							),
-							'Contacts'            => array(
-								array(
-									'ContactType' => '01',
-									'Email'       => 'receiver@email.com',
-									'SMSNr'       => '+31612345678',
-								),
-							),
-							'Dimension'           => array(
-								'Weight' => '4300',
-							),
-							'ProductCodeDelivery' => '3085',
+							'ContactType' => '01',
+							'Email'       => 'receiver@email.com',
+							'SMSNr'       => '+31612345678',
 						),
 					),
-				)
+					'Dimension'           => array(
+						'Weight' => '4300',
+					),
+					'ProductCodeDelivery' => '3085',
+				),
 			),
-		);
+		)
 		*/
-
-		$request_args = array(
-			'method'  => 'POST',
-			'headers' => $this->get_headers_args(),
-			'body'    => wp_json_encode(
+		return array(
+			'Customer'  => $this->get_customer_info(),
+			/** Hardcoded */
+			'Message'   => array(
+				'MessageID'        => '36209c3d-14d2-478f-85de-abccd84fa790',
+				'MessageTimeStamp' => '28-04-2020 14:21:08',
+				'Printertype'      => 'GraphicFile|PDF',
+			),
+			'Shipments' => array(
 				array(
-					'Customer'  => $this->get_customer_info(),
+					'Addresses'           => array(
+						$this->get_shipment_address(),
+					),
+					'Contacts'            => array(
+						$this->get_shipment_contact(),
+					),
 					/** Hardcoded */
-					'Message'   => array(
-						'MessageID'        => '36209c3d-14d2-478f-85de-abccd84fa790',
-						'MessageTimeStamp' => '28-04-2020 14:21:08',
-						'Printertype'      => 'GraphicFile|PDF',
+					'Dimension'           => array(
+						'Weight' => '4300',
 					),
-					'Shipments' => array(
-						array(
-							'Addresses'           => array(
-								$this->get_shipment_address(),
-							),
-							'Contacts'            => array(
-								$this->get_shipment_contact(),
-							),
-							/** Hardcoded */
-							'Dimension'           => array(
-								'Weight' => '4300',
-							),
-							'ProductCodeDelivery' => '3085',
-						),
-					),
-				)
+					'ProductCodeDelivery' => '3085',
+				),
 			),
 		);
-
-		$response = wp_remote_request( $api_url, $request_args );
-		$body     = wp_remote_retrieve_body( $response );
-
-		return $body;
 	}
 
 	/**

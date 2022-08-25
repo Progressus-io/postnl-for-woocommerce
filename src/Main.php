@@ -307,4 +307,12 @@ class Main {
 		// Return what we found.
 		return $template;
 	}
+
+	/**
+	 * Get logger object.
+	 */
+	public static function get_logger() {
+		$settings = Shipping_Method\Settings::get_instance();
+		return new Logger( $settings->is_logging_enabled() );
+	}
 }

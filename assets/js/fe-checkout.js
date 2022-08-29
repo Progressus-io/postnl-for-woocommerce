@@ -15,6 +15,15 @@
 
 			checkout_option.find( '#postnl_' + tab_value + '_content' ).addClass( 'active' );
 
+			var field_name = 'postnl_' + tab_value;
+			var closest_li = jQuery( 'input[name=' + field_name + ']:checked' ).closest( 'li' );
+			closest_li.addClass( 'active' );
+			var dropoff_data = closest_li.data();
+
+			for ( let name in dropoff_data ) {
+				jQuery( '#' + field_name + '_' + name ).val( dropoff_data[ name ] );
+			}
+
 			radio_tabs.on( 'change', function( evt ) {
 				var pri_container = jQuery( this ).closest( '#postnl_checkout_option' );
 				var ul_list       = jQuery( this ).closest( '.postnl_checkout_tab_list' );

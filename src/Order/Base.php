@@ -90,7 +90,7 @@ abstract class Base {
 			'postnl_order_meta_box_fields',
 			array(
 				array(
-					'id'                => $this->prefix . 'delivery_type',
+					'id'                => $this->prefix . 'delivery_day_type',
 					'type'              => 'text',
 					'label'             => __( 'Delivery Type:', 'postnl-for-woocommerce' ),
 					'description'       => '',

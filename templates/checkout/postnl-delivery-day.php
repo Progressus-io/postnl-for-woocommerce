@@ -29,9 +29,10 @@ if ( empty( $data['delivery_options'] ) ) {
 							$value      = sanitize_title( $delivery['date'] . '_' . $option['from'] . '-' . $option['to'] . '_' . $option['price'] );
 							$is_charged = ( empty( $option['price'] ) ) ? esc_html__( 'No charge', 'postnl-for-woocommerce' ) : wc_price( $option['price'] );
 							$is_checked = ( $value === $data['value'] ) ? 'checked="checked"' : '';
+							$is_active  = ( $value === $data['value'] ) ? 'active' : '';
 						?>
 						<li 
-							class="<?php echo esc_attr( $option['type'] ); ?>"
+							class="<?php echo esc_attr( $option['type'] . ' ' . $is_active ); ?>"
 							data-date="<?php echo esc_attr( $delivery['date'] ); ?>"
 							data-from="<?php echo esc_attr( $option['from'] ); ?>"
 							data-to="<?php echo esc_attr( $option['to'] ); ?>"

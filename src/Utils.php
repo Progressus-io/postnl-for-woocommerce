@@ -114,4 +114,15 @@ class Utils {
 
 		return $exp_time[0] . ':' . $exp_time[1];
 	}
+
+	/**
+	 * Convert the weight based on the weight unit.
+	 *
+	 * @param Float $weight Weight of the thing.
+	 *
+	 * @return Float in gram.
+	 */
+	public static function maybe_convert_weight( $weight ) {
+		return wc_get_weight( $weight, 'g' );
+	}
 }

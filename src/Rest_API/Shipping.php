@@ -11,6 +11,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+use PostNLWooCommerce\Utils;
+
 /**
  * Class Shipping
  *
@@ -88,7 +90,7 @@ class Shipping extends Base {
 			/** Hardcoded */
 			'Message'   => array(
 				'MessageID'        => '36209c3d-14d2-478f-85de-abccd84fa790',
-				'MessageTimeStamp' => '28-04-2020 14:21:08',
+				'MessageTimeStamp' => gmdate( 'd-m-Y H:i:s' ),
 				'Printertype'      => 'GraphicFile|PDF',
 			),
 			'Shipments' => array(
@@ -99,11 +101,10 @@ class Shipping extends Base {
 					'Contacts'            => array(
 						$this->get_shipment_contact(),
 					),
-					/** Hardcoded */
 					'Dimension'           => array(
-						'Weight' => '4300',
+						'Weight' => $this->api_args['order_details']['total_weight'],
 					),
-					'ProductCodeDelivery' => '3085',
+					'ProductCodeDelivery' => $this->get_product_code(),
 				),
 			),
 		);
@@ -120,12 +121,12 @@ class Shipping extends Base {
 		return array(
 			'Address'            => $this->get_customer_address(),
 			/* Temporarily hardcoded in Settings::get_location_code(). */
-			'CollectionLocation' => $this->settings->get_location_code(),
-			'ContactPerson'      => get_bloginfo( 'name' ),
-			'CustomerCode'       => $this->settings->get_customer_code(),
-			'CustomerNumber'     => $this->settings->get_customer_num(),
-			'Email'              => get_bloginfo( 'admin_email' ),
-			'Name'               => get_bloginfo( 'name' ),
+			'CollectionLocation' => $this->api_args['settings']['location_code'],
+			'CustomerCode'       => $this->api_args['settings']['customer_code'],
+			'CustomerNumber'     => $this->api_args['settings']['customer_num'],
+			'ContactPerson'      => $this->api_args['store_address']['company'],
+			'Email'              => $this->api_args['store_address']['email'],
+			'Name'               => $this->api_args['store_address']['company'],
 		);
 	}
 
@@ -137,12 +138,12 @@ class Shipping extends Base {
 	public function get_customer_address() {
 		return array(
 			'AddressType' => '02',
-			'City'        => WC()->countries->get_base_city(),
-			'CompanyName' => get_bloginfo( 'name' ),
-			'Countrycode' => WC()->countries->get_base_country(),
-			'HouseNr'     => WC()->countries->get_base_address_2(),
-			'Street'      => WC()->countries->get_base_address(),
-			'Zipcode'     => WC()->countries->get_base_postcode(),
+			'City'        => $this->api_args['store_address']['city'],
+			'CompanyName' => $this->api_args['store_address']['company'],
+			'Countrycode' => $this->api_args['store_address']['country'],
+			'HouseNr'     => $this->api_args['store_address']['address_2'],
+			'Street'      => $this->api_args['store_address']['address_1'],
+			'Zipcode'     => $this->api_args['store_address']['postcode'],
 		);
 	}
 
@@ -152,18 +153,16 @@ class Shipping extends Base {
 	 * @return array Shipment address array.
 	 */
 	public function get_shipment_address() {
-		$order = $this->post_data['order'];
-
 		return array(
 			'AddressType' => '01',
-			'City'        => $order->get_shipping_city(),
-			'Countrycode' => $order->get_shipping_country(),
-			'FirstName'   => $order->get_shipping_first_name(),
-			'HouseNr'     => $order->get_shipping_address_2(),
+			'City'        => $this->api_args['shipping_address']['city'],
+			'Countrycode' => $this->api_args['shipping_address']['country'],
+			'FirstName'   => $this->api_args['shipping_address']['first_name'],
+			'HouseNr'     => $this->api_args['shipping_address']['address_2'],
 			'HouseNrExt'  => '',
-			'Name'        => $order->get_shipping_last_name(),
-			'Street'      => $order->get_shipping_address_1(),
-			'Zipcode'     => $order->get_shipping_postcode(),
+			'Name'        => $this->api_args['shipping_address']['last_name'],
+			'Street'      => $this->api_args['shipping_address']['address_1'],
+			'Zipcode'     => $this->api_args['shipping_address']['postcode'],
 		);
 	}
 
@@ -173,12 +172,70 @@ class Shipping extends Base {
 	 * @return array Shipment contact array.
 	 */
 	public function get_shipment_contact() {
-		$order = $this->post_data['order'];
-
 		return array(
 			'ContactType' => '01',
-			'Email'       => $order->get_billing_email(),
-			'SMSNr'       => $order->get_billing_phone(),
+			'Email'       => $this->api_args['billing_address']['email'],
+			'SMSNr'       => $this->api_args['billing_address']['phone'],
 		);
+	}
+
+	/**
+	 * Get product code from api args.
+	 *
+	 * @return String.
+	 */
+	public function get_product_code() {
+		$checked_features = array_filter(
+			$this->api_args['backend_data'],
+			function( $value ) {
+				return ( 'yes' === $value );
+			}
+		);
+
+		$features = array_keys( $checked_features );
+
+		$product_code = '3085';
+
+		if ( in_array( 'only_home_address', $features, true ) ) {
+			$product_code = '3385';
+		}
+
+		if ( in_array( 'return_no_answer', $features, true ) ) {
+			$product_code = '3090';
+		}
+
+		if ( in_array( 'return_no_answer', $features, true ) && in_array( 'only_home_address', $features, true ) ) {
+			$product_code = '3390';
+		}
+
+		if ( in_array( 'insured_shipping', $features, true ) ) {
+			$product_code = '3087';
+		}
+
+		if ( in_array( 'insured_shipping', $features, true ) && in_array( 'return_no_answer', $features, true ) ) {
+			$product_code = '3094';
+		}
+
+		if ( in_array( 'signature_on_delivery', $features, true ) ) {
+			$product_code = '3189';
+		}
+
+		if ( in_array( 'signature_on_delivery', $features, true ) && in_array( 'only_home_address', $features, true ) ) {
+			$product_code = '3089';
+		}
+
+		if ( in_array( 'signature_on_delivery', $features, true ) && in_array( 'only_home_address', $features, true ) && in_array( 'return_no_answer', $features, true ) ) {
+			$product_code = '3096';
+		}
+
+		if ( in_array( 'signature_on_delivery', $features, true ) && in_array( 'return_no_answer', $features, true ) ) {
+			$product_code = '3389';
+		}
+
+		if ( in_array( 'letterbox', $features, true ) ) {
+			$product_code = '2928';
+		}
+
+		return $product_code;
 	}
 }

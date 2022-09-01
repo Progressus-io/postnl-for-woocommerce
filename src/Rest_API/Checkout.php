@@ -27,27 +27,18 @@ class Checkout extends Base {
 	public $endpoint = '/shipment/v1/checkout';
 
 	/**
-	 * Method to process external data to be accepted post data variable within class.
-	 *
-	 * @param array $post_data External post data.
-	 */
-	public function set_post_data( $post_data ) {
-		$this->post_data = Utils::set_post_data_address( $post_data );
-	}
-
-	/**
 	 * Function for composing API request.
 	 */
 	public function compose_body_request() {
 		return array(
-			'OrderDate'        => $this->get_current_time(),
-			'ShippingDuration' => $this->settings->get_transit_time(),
+			'OrderDate'        => $this->api_args['current_time'],
+			'ShippingDuration' => $this->api_args['settings']['transit_time'],
 			'CutOffTimes'      => $this->get_cutoff_times(),
 			'HolidaySorting'   => true,
 			'Options'          => $this->get_checkout_options(),
 			/* Temporarily hardcoded in Settings::get_number_pickup_points(). */
-			'Locations'        => $this->settings->get_number_pickup_points(),
-			'Days'             => $this->settings->get_number_delivery_days(),
+			'Locations'        => $this->api_args['settings']['number_pickup_points'],
+			'Days'             => $this->api_args['settings']['number_delivery_days'],
 			'Addresses'        => array(
 				$this->get_shipping_address(),
 				$this->get_shipper_address(),
@@ -58,20 +49,11 @@ class Checkout extends Base {
 	/**
 	 * Get cutoff times value from the settings.
 	 *
-	 * @return String
-	 */
-	public function get_current_time() {
-		return gmdate( 'd-m-Y H:i:s' );
-	}
-
-	/**
-	 * Get cutoff times value from the settings.
-	 *
 	 * @return array
 	 */
 	public function get_cutoff_times() {
-		$cutoff_time  = $this->settings->get_cut_off_time();
-		$dropoff_days = $this->settings->get_dropoff_days();
+		$cutoff_time  = $this->api_args['settings']['cut_off_time'];
+		$dropoff_days = $this->api_args['settings']['dropoff_days'];
 		$cutoff       = array();
 
 		if ( empty( $dropoff_days ) ) {
@@ -156,15 +138,15 @@ class Checkout extends Base {
 	public function get_checkout_options() {
 		$options = array();
 
-		if ( $this->settings->is_pickup_points_enabled() ) {
+		if ( $this->api_args['settings']['pickup_points_enabled'] ) {
 			$options[] = 'Pickup';
 		}
 
-		if ( $this->settings->is_delivery_days_enabled() ) {
+		if ( $this->api_args['settings']['delivery_days_enabled'] ) {
 			$options[] = 'Daytime';
 		}
 
-		if ( $this->settings->is_evening_delivery_enabled() ) {
+		if ( $this->api_args['settings']['evening_delivery_enabled'] ) {
 			$options[] = 'Evening';
 		}
 
@@ -181,12 +163,12 @@ class Checkout extends Base {
 			'AddressType' => '01',
 		);
 
-		$address['Street']      = ( ! empty( $this->post_data['shipping_address_1'] ) ) ? $this->post_data['shipping_address_1'] : '';
-		$address['HouseNr']     = ( ! empty( $this->post_data['shipping_address_2'] ) ) ? $this->post_data['shipping_address_2'] : '';
+		$address['Street']      = $this->api_args['shipping_address']['address_1'];
+		$address['HouseNr']     = $this->api_args['shipping_address']['address_2'];
 		$address['HouseNrExt']  = '';
-		$address['Zipcode']     = ( ! empty( $this->post_data['shipping_postcode'] ) ) ? $this->post_data['shipping_postcode'] : '';
-		$address['City']        = ( ! empty( $this->post_data['shipping_city'] ) ) ? $this->post_data['shipping_city'] : '';
-		$address['CountryCode'] = ( ! empty( $this->post_data['shipping_country'] ) ) ? $this->post_data['shipping_country'] : '';
+		$address['Zipcode']     = $this->api_args['shipping_address']['postcode'];
+		$address['City']        = $this->api_args['shipping_address']['city'];
+		$address['CountryCode'] = $this->api_args['shipping_address']['country'];
 
 		return $address;
 	}
@@ -199,11 +181,11 @@ class Checkout extends Base {
 	public function get_shipper_address() {
 		$address = array(
 			'AddressType' => '02',
-			'City'        => WC()->countries->get_base_city(),
-			'Countrycode' => WC()->countries->get_base_country(),
-			'HouseNr'     => WC()->countries->get_base_address_2(),
-			'Street'      => WC()->countries->get_base_address(),
-			'Zipcode'     => WC()->countries->get_base_postcode(),
+			'City'        => $this->api_args['store_address']['city'],
+			'Countrycode' => $this->api_args['store_address']['country'],
+			'HouseNr'     => $this->api_args['store_address']['address_2'],
+			'Street'      => $this->api_args['store_address']['address_1'],
+			'Zipcode'     => $this->api_args['store_address']['postcode'],
 		);
 
 		return $address;

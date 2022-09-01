@@ -9,6 +9,7 @@ namespace PostNLWooCommerce\Frontend;
 
 use PostNLWooCommerce\Shipping_Method\Settings;
 use PostNLWooCommerce\Rest_API\Checkout;
+use PostNLWooCommerce\Utils;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -20,6 +21,13 @@ if ( ! defined( 'ABSPATH' ) ) {
  * @package PostNLWooCommerce\Frontend
  */
 class Container {
+	/**
+	 * Settings class instance.
+	 *
+	 * @var PostNLWooCommerce\Shipping_Method\Settings
+	 */
+	protected $settings;
+
 	/**
 	 * Template file name.
 	 *
@@ -38,6 +46,8 @@ class Container {
 	 * Init and hook in the integration.
 	 */
 	public function __construct() {
+		$this->settings = Settings::get_instance();
+
 		$this->set_template_file();
 		$this->init_hooks();
 	}
@@ -103,6 +113,69 @@ class Container {
 	}
 
 	/**
+	 * Get cutoff times value from the settings.
+	 *
+	 * @return String
+	 */
+	public function get_current_time() {
+		return gmdate( 'd-m-Y H:i:s' );
+	}
+
+	/**
+	 * Compose label args.
+	 *
+	 * @param Array $post_data Saved post data and order data.
+	 *
+	 * @return Array
+	 */
+	public function get_api_args( $post_data ) {
+		$args      = array();
+		$post_data = Utils::set_post_data_address( $post_data );
+
+		$args['current_time'] = $this->get_current_time();
+
+		$args['shipping_address'] = array(
+			'first_name' => ( ! empty( $post_data['shipping_first_name'] ) ) ? $post_data['shipping_first_name'] : '',
+			'last_name'  => ( ! empty( $post_data['shipping_last_name'] ) ) ? $post_data['shipping_last_name'] : '',
+			'company'    => ( ! empty( $post_data['shipping_company'] ) ) ? $post_data['shipping_company'] : '',
+			'address_1'  => ( ! empty( $post_data['shipping_address_1'] ) ) ? $post_data['shipping_address_1'] : '',
+			'address_2'  => ( ! empty( $post_data['shipping_address_2'] ) ) ? $post_data['shipping_address_2'] : '',
+			'city'       => ( ! empty( $post_data['shipping_city'] ) ) ? $post_data['shipping_city'] : '',
+			'state'      => ( ! empty( $post_data['shipping_state'] ) ) ? $post_data['shipping_state'] : '',
+			'country'    => ( ! empty( $post_data['shipping_country'] ) ) ? $post_data['shipping_country'] : '',
+			'postcode'   => ( ! empty( $post_data['shipping_postcode'] ) ) ? $post_data['shipping_postcode'] : '',
+		);
+
+		$args['store_address'] = array(
+			'company'   => get_bloginfo( 'name' ),
+			'email'     => get_bloginfo( 'admin_email' ),
+			'address_1' => WC()->countries->get_base_address(),
+			'address_2' => WC()->countries->get_base_address_2(),
+			'city'      => WC()->countries->get_base_city(),
+			'state'     => WC()->countries->get_base_state(),
+			'country'   => WC()->countries->get_base_country(),
+			'postcode'  => WC()->countries->get_base_postcode(),
+		);
+
+		$args['settings'] = array(
+			'location_code'            => $this->settings->get_location_code(),
+			'customer_code'            => $this->settings->get_customer_code(),
+			'customer_num'             => $this->settings->get_customer_num(),
+			'cut_off_time'             => $this->settings->get_cut_off_time(),
+			'dropoff_days'             => $this->settings->get_dropoff_days(),
+			'pickup_points_enabled'    => $this->settings->is_pickup_points_enabled(),
+			'delivery_days_enabled'    => $this->settings->is_delivery_days_enabled(),
+			'evening_delivery_enabled' => $this->settings->is_evening_delivery_enabled(),
+			'transit_time'             => $this->settings->get_transit_time(),
+			/* Temporarily hardcoded in Settings::get_number_pickup_points(). */
+			'number_pickup_points'     => $this->settings->get_number_pickup_points(),
+			'number_delivery_days'     => $this->settings->get_number_delivery_days(),
+		);
+
+		return $args;
+	}
+
+	/**
 	 * Get checkout $_POST['post_data'].
 	 *
 	 * @return array
@@ -140,7 +213,8 @@ class Container {
 				}
 			}
 
-			$api_call = new Checkout( $post_data );
+			$api_args = $this->get_api_args( $post_data );
+			$api_call = new Checkout( $api_args );
 			$response = $api_call->send_request();
 
 			return array(

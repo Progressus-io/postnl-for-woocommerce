@@ -42,11 +42,11 @@ class Base {
 	public $logger;
 
 	/**
-	 * WC Cart data.
+	 * API arguments.
 	 *
 	 * @var Array
 	 */
-	public $post_data;
+	public $api_args;
 
 	/**
 	 * PostnL API key value from the settings.
@@ -72,24 +72,24 @@ class Base {
 	/**
 	 * Class constructor.
 	 *
-	 * @param array $post_data WC Cart post data.
+	 * @param array $api_args Set of API arguments.
 	 */
-	public function __construct( $post_data ) {
+	public function __construct( $api_args ) {
 		$this->settings = Settings::get_instance();
 		$this->logger   = Main::get_logger();
 
-		$this->set_post_data( $post_data );
+		$this->set_api_args( $api_args );
 		$this->check_api_mode();
 		$this->set_api_url();
 	}
 
 	/**
-	 * Method to process external data to be accepted post data variable within class.
+	 * Method to set API arguments as a class property.
 	 *
-	 * @param array $post_data External post data.
+	 * @param array $api_args Set of API arguments.
 	 */
-	public function set_post_data( $post_data ) {
-		$this->post_data = $post_data;
+	public function set_api_args( $api_args ) {
+		$this->api_args = $api_args;
 	}
 
 	/**

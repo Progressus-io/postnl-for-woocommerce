@@ -49,6 +49,13 @@ class Base {
 	public $api_args;
 
 	/**
+	 * Item Info.
+	 *
+	 * @var Array
+	 */
+	public $item_info;
+
+	/**
 	 * PostnL API key value from the settings.
 	 *
 	 * @var string
@@ -72,13 +79,13 @@ class Base {
 	/**
 	 * Class constructor.
 	 *
-	 * @param array $api_args Set of API arguments.
+	 * @param Item_Info $item_info Set of Item_Info.
 	 */
-	public function __construct( $api_args ) {
+	public function __construct( $item_info ) {
 		$this->settings = Settings::get_instance();
 		$this->logger   = Main::get_logger();
 
-		$this->set_api_args( $api_args );
+		$this->set_item_info( $item_info );
 		$this->check_api_mode();
 		$this->set_api_url();
 	}
@@ -90,6 +97,15 @@ class Base {
 	 */
 	public function set_api_args( $api_args ) {
 		$this->api_args = $api_args;
+	}
+
+	/**
+	 * Method to set API args to an item info.
+	 *
+	 * @param array $api_args Set of API arguments.
+	 */
+	public function set_item_info( $api_args ) {
+		$this->item_info = $api_args;
 	}
 
 	/**

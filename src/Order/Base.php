@@ -270,104 +270,6 @@ abstract class Base {
 	}
 
 	/**
-	 * Compose label args.
-	 *
-	 * @param Array $post_data Saved post data and order data.
-	 *
-	 * @return Array
-	 */
-	public function get_api_args( $post_data ) {
-		$args = array();
-
-		if ( ! is_a( $post_data['order'], 'WC_Order' ) ) {
-			return $args;
-		}
-
-		$order      = $post_data['order'];
-		$saved_data = $post_data['saved_data'];
-
-		$args['order_details'] = array(
-			'order_id'     => $order->get_id(),
-			'total_weight' => $this->calculate_order_weight( $order ),
-		);
-
-		$args['billing_address'] = array(
-			'first_name' => $order->get_billing_first_name(),
-			'last_name'  => $order->get_billing_last_name(),
-			'company'    => $order->get_billing_company(),
-			'email'      => $order->get_billing_email(),
-			'phone'      => $order->get_billing_phone(),
-			'address_1'  => $order->get_billing_address_1(),
-			'address_2'  => $order->get_billing_address_2(),
-			'city'       => $order->get_billing_city(),
-			'state'      => $order->get_billing_state(),
-			'country'    => $order->get_billing_country(),
-			'postcode'   => $order->get_billing_postcode(),
-		);
-
-		$args['shipping_address'] = array(
-			'first_name' => $order->get_shipping_first_name(),
-			'last_name'  => $order->get_shipping_last_name(),
-			'company'    => $order->get_shipping_company(),
-			'address_1'  => $order->get_shipping_address_1(),
-			'address_2'  => $order->get_shipping_address_2(),
-			'city'       => $order->get_shipping_city(),
-			'state'      => $order->get_shipping_state(),
-			'country'    => $order->get_shipping_country(),
-			'postcode'   => $order->get_shipping_postcode(),
-		);
-
-		$args['store_address'] = array(
-			'company'   => get_bloginfo( 'name' ),
-			'email'     => get_bloginfo( 'admin_email' ),
-			'address_1' => WC()->countries->get_base_address(),
-			'address_2' => WC()->countries->get_base_address_2(),
-			'city'      => WC()->countries->get_base_city(),
-			'state'     => WC()->countries->get_base_state(),
-			'country'   => WC()->countries->get_base_country(),
-			'postcode'  => WC()->countries->get_base_postcode(),
-		);
-
-		$args['backend_data']  = $saved_data['backend'];
-		$args['frontend_data'] = array(
-			'delivery_day'   => array(
-				'value' => $saved_data['frontend']['delivery_day'] ?? '',
-				'date'  => $saved_data['frontend']['delivery_day_date'] ?? '',
-				'from'  => $saved_data['frontend']['delivery_day_from'] ?? '',
-				'to'    => $saved_data['frontend']['delivery_day_to'] ?? '',
-				'price' => $saved_data['frontend']['delivery_day_price'] ?? '',
-				'type'  => $saved_data['frontend']['delivery_day_type'] ?? '',
-			),
-			'dropoff_points' => array(
-				'value'    => $saved_data['frontend']['dropoff_points'] ?? '',
-				'company'  => $saved_data['frontend']['dropoff_points_company'] ?? '',
-				'distance' => $saved_data['frontend']['dropoff_points_distance'] ?? '',
-				'address'  => $saved_data['frontend']['dropoff_points_address'] ?? '',
-				'id'       => $saved_data['frontend']['dropoff_points_id'] ?? '',
-				'date'     => $saved_data['frontend']['dropoff_points_date'] ?? '',
-				'time'     => $saved_data['frontend']['dropoff_points_time'] ?? '',
-			),
-		);
-
-		$args['settings'] = array(
-			'location_code'            => $this->settings->get_location_code(),
-			'customer_code'            => $this->settings->get_customer_code(),
-			'customer_num'             => $this->settings->get_customer_num(),
-			'cut_off_time'             => $this->settings->get_cut_off_time(),
-			'dropoff_days'             => $this->settings->get_dropoff_days(),
-			'pickup_point_enabled'     => $this->settings->is_pickup_points_enabled(),
-			'delivery_days_enabled'    => $this->settings->is_delivery_days_enabled(),
-			'evening_delivery_enabled' => $this->settings->is_evening_delivery_enabled(),
-			'transit_time'             => $this->settings->get_transit_time(),
-			/* Temporarily hardcoded in Settings::get_number_pickup_points(). */
-			'number_pickup_points'     => $this->settings->get_number_pickup_points(),
-			'number_delivery_days'     => $this->settings->get_number_delivery_days(),
-		);
-
-		return $args;
-	}
-
-	/**
 	 * Saving meta box in order admin page.
 	 *
 	 * @param  int   $order_id Order post ID.
@@ -448,11 +350,11 @@ abstract class Base {
 	 */
 	public function create_label( $post_data ) {
 		$order    = $post_data['order'];
-		$api_args = $this->get_api_args( $post_data );
 
-		$shipping = new Shipping( $api_args );
-		$response = $shipping->send_request();
-		$response = json_decode( $response, true );
+		$item_info = new Shipping\Item_Info( $post_data );
+		$shipping  = new Shipping\Client( $item_info );
+		$response  = $shipping->send_request();
+		$response  = json_decode( $response, true );
 
 		$barcode  = $response['ResponseShipments'][0]['Barcode'];
 		$filename = 'postnl-' . $order->get_id() . '-' . $response['ResponseShipments'][0]['Barcode'] . '.pdf';
@@ -559,45 +461,5 @@ abstract class Base {
 		} else {
 			return false;
 		}
-	}
-
-	/**
-	 * Calculate total weight in one order.
-	 *
-	 * @param WC_Order $order Order object.
-	 *
-	 * @return Float Total weight.
-	 */
-	protected function calculate_order_weight( $order ) {
-		$total_weight = 0;
-
-		if ( ! is_a( $order, 'WC_Order' ) ) {
-			return apply_filters( 'postnl_order_weight', $total_weight, $order );
-		}
-
-		$ordered_items = $order->get_items();
-
-		if ( empty( $ordered_items ) || ! is_array( $ordered_items ) ) {
-			return apply_filters( 'postnl_order_weight', $total_weight, $order );
-		}
-
-		foreach ( $ordered_items as $key => $item ) {
-			$product = $item->get_product();
-
-			if ( ! is_a( $product, 'WC_Product' ) || $product->is_virtual() ) {
-				continue;
-			}
-
-			$product_weight = $product->get_weight();
-			$quantity       = $item->get_quantity();
-
-			if ( $product_weight ) {
-				$total_weight += ( $quantity * $product_weight );
-			}
-		}
-
-		$total_weight = Utils::maybe_convert_weight( $total_weight );
-
-		return apply_filters( 'postnl_order_weight', $total_weight, $order );
 	}
 }

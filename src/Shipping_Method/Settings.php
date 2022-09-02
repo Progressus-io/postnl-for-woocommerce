@@ -393,8 +393,8 @@ class Settings extends \WC_Settings_API {
 				'desc_tip'    => true,
 				'options'     => array(
 					''   => esc_html__( 'Option', 'postnl-for-woocommerce' ),
-					'A6' => 'A6',
-					'A4' => 'A4',
+					'Label (A6)'             => 'A6',
+					'Commercialinvoice (A4)' => 'A4',
 				),
 				'class'       => 'wc-enhanced-select',
 			),

@@ -331,6 +331,7 @@ abstract class Base {
 		$args['backend_data']  = $saved_data['backend'];
 		$args['frontend_data'] = array(
 			'delivery_day'   => array(
+				'value' => $saved_data['frontend']['delivery_day'] ?? '',
 				'date'  => $saved_data['frontend']['delivery_day_date'] ?? '',
 				'from'  => $saved_data['frontend']['delivery_day_from'] ?? '',
 				'to'    => $saved_data['frontend']['delivery_day_to'] ?? '',

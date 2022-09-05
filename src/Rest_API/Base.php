@@ -219,4 +219,30 @@ class Base {
 
 		return $body_response;
 	}
+
+	/**
+	 * Check if the response value has error or not.
+	 *
+	 * @param Mixed $response response value from the API call.
+	 *
+	 * @throws \Exception Error when response has error.
+	 */
+	public function check_response_error( $response ) {
+
+		if ( ! is_array( $response ) ) {
+			$response = json_decode( $response, true );
+		}
+
+		if ( ! empty( $response['fault'] ) ) {
+			$error_text = ! empty( $response['fault']['faultstring'] ) ? $response['fault']['faultstring'] : esc_html__( 'Unknown error!', 'postnl-for-woocommerce' );
+			throw new \Exception( $error_text );
+		}
+
+		if ( ! empty( $response['Errors'] ) ) {
+			$first_error = array_shift( $response['Errors'] );
+			$error_text  = ! empty( $first_error['Description'] ) ? $first_error['Description'] : esc_html__( 'Unknown error!', 'postnl-for-woocommerce' );
+
+			throw new \Exception( $error_text );
+		}
+	}
 }

@@ -358,17 +358,7 @@ abstract class Base {
 		$response  = $shipping->send_request();
 		$response  = json_decode( $response, true );
 
-		if ( ! empty( $response['fault'] ) ) {
-			$error_text = ! empty( $response['fault']['faultstring'] ) ? $response['fault']['faultstring'] : esc_html__( 'Unknown error!', 'postnl-for-woocommerce' );
-			throw new \Exception( $error_text );
-		}
-
-		if ( ! empty( $response['Errors'] ) ) {
-			$first_error = array_shift( $response['Errors'] );
-			$error_text  = ! empty( $first_error['Description'] ) ? $first_error['Description'] : esc_html__( 'Unknown error!', 'postnl-for-woocommerce' );
-
-			throw new \Exception( $error_text );
-		}
+		$shipping->check_response_error( $response );
 
 		$barcode  = $response['ResponseShipments'][0]['Barcode'];
 		$filename = 'postnl-' . $order->get_id() . '-' . $response['ResponseShipments'][0]['Barcode'] . '.pdf';

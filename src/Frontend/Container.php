@@ -209,7 +209,7 @@ class Container {
 			return;
 		}
 
-		if ( ! empty( $post_data['postnl_delivery_day_price'] ) ) {
+		if ( ! empty( $post_data['postnl_delivery_day_price'] ) && 'delivery_day' === $post_data['postnl_option'] ) {
 			$cart->add_fee( __( 'PostNL Evening Fee', 'dhl-for-woocommerce' ), wc_format_decimal( $post_data['postnl_delivery_day_price'] ) );
 		}
 	}

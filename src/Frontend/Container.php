@@ -59,6 +59,7 @@ class Container {
 		add_action( 'woocommerce_review_order_after_shipping', array( $this, 'display_fields' ) );
 		add_action( 'woocommerce_cart_calculate_fees', array( $this, 'add_cart_fees' ), 10, 1 );
 		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_scripts_styles' ) );
+		add_filter( 'woocommerce_shipping_' . POSTNL_SETTINGS_ID . '_is_available', array( $this, 'is_shipping_method_available' ), 10, 2 );
 	}
 
 	/**
@@ -212,5 +213,21 @@ class Container {
 		if ( ! empty( $post_data['postnl_delivery_day_price'] ) && 'delivery_day' === $post_data['postnl_option'] ) {
 			$cart->add_fee( __( 'PostNL Evening Fee', 'dhl-for-woocommerce' ), wc_format_decimal( $post_data['postnl_delivery_day_price'] ) );
 		}
+	}
+
+	/**
+	 * Check if the shipping method is available for the shipping country.
+	 *
+	 * @param Boolean $available Default value for shipping method availability.
+	 * @param Array   $package   Current package in the cart.
+	 *
+	 * @return Boolean.
+	 */
+	public function is_shipping_method_available( $available, $package ) {
+		if ( ! empty( $package['destination']['country'] ) && 'BE' !== $package['destination']['country'] && 'BE' === WC()->countries->get_base_country() ) {
+			return false;
+		}
+
+		return $available;
 	}
 }

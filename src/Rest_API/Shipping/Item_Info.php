@@ -292,11 +292,26 @@ class Item_Info extends Base_Info {
 	}
 
 	/**
+	 * Get selected shipping features.
+	 *
+	 * @return String
+	 */
+	public function get_selected_shipping_features() {
+		foreach ( $this->api_args['frontend_data'] as $parent_name => $parent_data ) {
+			foreach ( $parent_data as $data_key => $data_value ) {
+				if ( ! empty( $data_value ) ) {
+					return $parent_name;
+				}
+			}
+		}
+	}
+
+	/**
 	 * Get selected features in the order admin.
 	 *
 	 * @return Array
 	 */
-	public function get_selected_features() {
+	public function get_selected_label_features() {
 		return array_filter(
 			$this->api_args['backend_data'],
 			function( $value ) {
@@ -311,50 +326,27 @@ class Item_Info extends Base_Info {
 	 * @return String.
 	 */
 	public function get_product_code() {
-		$checked_features = $this->get_selected_features();
+		$checked_features = $this->get_selected_label_features();
+		$shipping_feature = $this->get_selected_shipping_features();
+		$from_country     = $this->api_args['store_address']['country'];
+		$to_country       = $this->api_args['shipping_address']['country'];
 
 		$features = array_keys( $checked_features );
 
-		$product_code = '3085';
+		$product_code = '';
 
-		if ( in_array( 'only_home_address', $features, true ) ) {
-			$product_code = '3385';
-		}
-
-		if ( in_array( 'return_no_answer', $features, true ) ) {
-			$product_code = '3090';
-		}
-
-		if ( in_array( 'return_no_answer', $features, true ) && in_array( 'only_home_address', $features, true ) ) {
-			$product_code = '3390';
-		}
-
-		if ( in_array( 'insured_shipping', $features, true ) ) {
-			$product_code = '3087';
-		}
-
-		if ( in_array( 'insured_shipping', $features, true ) && in_array( 'return_no_answer', $features, true ) ) {
-			$product_code = '3094';
-		}
-
-		if ( in_array( 'signature_on_delivery', $features, true ) ) {
-			$product_code = '3189';
-		}
-
-		if ( in_array( 'signature_on_delivery', $features, true ) && in_array( 'only_home_address', $features, true ) ) {
-			$product_code = '3089';
-		}
-
-		if ( in_array( 'signature_on_delivery', $features, true ) && in_array( 'only_home_address', $features, true ) && in_array( 'return_no_answer', $features, true ) ) {
-			$product_code = '3096';
-		}
-
-		if ( in_array( 'signature_on_delivery', $features, true ) && in_array( 'return_no_answer', $features, true ) ) {
-			$product_code = '3389';
-		}
-
-		if ( in_array( 'letterbox', $features, true ) ) {
-			$product_code = '2928';
+		if ( 'NL' === $from_country ) {
+			if ( 'NL' === $to_country ) {
+				$product_code = $this->get_product_code_nl_to_nl( $features, $shipping_feature );
+			} elseif ( 'BE' === $to_country ) {
+				$product_code = $this->get_product_code_nl_to_be( $features, $shipping_feature );
+			} elseif ( in_array( $to_country, WC()->countries->get_european_union_countries(), true ) ) {
+				$product_code = $this->get_product_code_nl_to_eu();
+			} else {
+				$product_code = $this->get_product_code_nl_to_world();
+			}
+		} elseif ( 'BE' === $from_country && 'BE' === $to_country ) {
+			$product_code = $this->get_product_code_be_to_be( $features, $shipping_feature );
 		}
 
 		return $product_code;
@@ -363,13 +355,12 @@ class Item_Info extends Base_Info {
 	/**
 	 * Get product code that based on NL.
 	 *
-	 * @return String
+	 * @param Array  $features List of checked features in the backend.
+	 * @param String $shipping_feature The selected feature in the checkout.
+	 *
+	 * @return String 4 Digit product code.
 	 */
-	public function get_product_code_nl() {
-		$checked_features = $this->get_selected_features();
-
-		$features = array_keys( $checked_features );
-
+	public function get_product_code_nl_to_nl( $features, $shipping_feature ) {
 		$product_code = '3085';
 
 		if ( in_array( 'only_home_address', $features, true ) ) {
@@ -412,6 +403,102 @@ class Item_Info extends Base_Info {
 			$product_code = '2928';
 		}
 
+		if ( 'dropoff_points' === $shipping_feature ) {
+			if ( in_array( 'signature_on_delivery', $features, true ) ) {
+				$product_code = '3533';
+			}
+
+			if ( in_array( 'insured_shipping', $features, true ) ) {
+				$product_code = '3534';
+			}
+		}
+
 		return $product_code;
+	}
+
+	/**
+	 * Get product code that based on NL.
+	 *
+	 * @param Array  $features List of checked features in the backend.
+	 * @param String $shipping_feature The selected feature in the checkout.
+	 *
+	 * @return String 4 Digit product code.
+	 */
+	public function get_product_code_nl_to_be( $features, $shipping_feature ) {
+		$product_code = '4946';
+
+		if ( in_array( 'only_home_address', $features, true ) ) {
+			$product_code = '4941';
+		}
+
+		if ( in_array( 'insured_shipping', $features, true ) ) {
+			$product_code = '4914';
+		}
+
+		if ( in_array( 'signature_on_delivery', $features, true ) ) {
+			$product_code = '4912';
+		}
+
+		if ( 'dropoff_points' === $shipping_feature ) {
+			$product_code = '4936';
+		}
+
+		return $product_code;
+	}
+
+	/**
+	 * Get product code that based on NL.
+	 *
+	 * @param Array  $features List of checked features in the backend.
+	 * @param String $shipping_feature The selected feature in the checkout.
+	 *
+	 * @return String 4 Digit product code.
+	 */
+	public function get_product_code_be_to_be( $features, $shipping_feature ) {
+		$product_code = '4961';
+
+		if ( in_array( 'only_home_address', $features, true ) ) {
+			$product_code = '4960';
+		}
+
+		if ( in_array( 'signature_on_delivery', $features, true ) ) {
+			$product_code = '4963';
+		}
+
+		if ( in_array( 'signature_on_delivery', $features, true ) && in_array( 'only_home_address', $features, true ) ) {
+			$product_code = '4962';
+		}
+
+		if ( in_array( 'insured_shipping', $features, true ) && in_array( 'only_home_address', $features, true ) ) {
+			$product_code = '4965';
+		}
+
+		if ( 'dropoff_points' === $shipping_feature ) {
+			$product_code = '4880';
+
+			if ( in_array( 'insured_shipping', $features, true ) ) {
+				$product_code = '4878';
+			}
+		}
+
+		return $product_code;
+	}
+
+	/**
+	 * Get product code that based on NL.
+	 *
+	 * @return String 4 Digit product code.
+	 */
+	public function get_product_code_nl_to_eu() {
+		return '4944';
+	}
+
+	/**
+	 * Get product code that based on NL.
+	 *
+	 * @return String 4 Digit product code.
+	 */
+	public function get_product_code_nl_to_world() {
+		return '4945';
 	}
 }

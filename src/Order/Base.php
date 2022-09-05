@@ -358,7 +358,9 @@ abstract class Base {
 		$response  = $shipping->send_request();
 		$response  = json_decode( $response, true );
 
+		// Check any errors.
 		$shipping->check_response_error( $response );
+		$this->check_label_and_barcode( $response );
 
 		$barcode  = $response['ResponseShipments'][0]['Barcode'];
 		$filename = 'postnl-' . $order->get_id() . '-' . $response['ResponseShipments'][0]['Barcode'] . '.pdf';
@@ -371,6 +373,27 @@ abstract class Base {
 			'barcode'  => $barcode,
 			'filepath' => $filepath,
 		);
+	}
+
+	/**
+	 * Make sure the barcode and label content is exists before printing.
+	 *
+	 * @param Array $response Response from API Call.
+	 *
+	 * @throws \Exception Error when barcode or label content is missing.
+	 */
+	public function check_label_and_barcode( $response ) {
+		if ( empty( $response['ResponseShipments'][0]['Barcode'] ) ) {
+			throw new \Exception(
+				esc_html__( 'Cannot create the label. Barcode data is missing', 'postnl-for-woocommerce' )
+			);
+		}
+
+		if ( empty( $response['ResponseShipments'][0]['Labels'][0]['Content'] ) ) {
+			throw new \Exception(
+				esc_html__( 'Cannot create the label. Label content is missing', 'postnl-for-woocommerce' )
+			);
+		}
 	}
 
 	/**

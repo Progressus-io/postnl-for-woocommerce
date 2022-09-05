@@ -172,6 +172,10 @@ class Container {
 	public function display_fields() {
 		$checkout_data = $this->get_checkout_data();
 
+		if ( ! empty( $checkout_data['error'] ) ) {
+			wc_add_notice( $checkout_data['error'], 'error' );
+		}
+
 		if ( empty( $checkout_data['response'] ) ) {
 			return;
 		}

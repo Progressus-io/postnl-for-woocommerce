@@ -83,11 +83,11 @@ class Item_Info extends Base_Info {
 	 *
 	 * @param Array $post_data Data from post variable in checkout page.
 	 *
-	 * @throws Exception When order ID doesnt exists.
+	 * @throws \Exception When order ID doesnt exists.
 	 */
 	public function convert_data_to_args( $post_data ) {
 		if ( ! is_a( $post_data['order'], 'WC_Order' ) ) {
-			throw new Exception(
+			throw new \Exception(
 				__( 'Order ID does not exists!', 'postnl-for-woocommerce' )
 			);
 		}
@@ -191,13 +191,13 @@ class Item_Info extends Base_Info {
 			'email'             => array(
 				'validate' => function( $value ) {
 					if ( empty( $value ) ) {
-						throw new Exception(
+						throw new \Exception(
 							__( 'Store email is empty!', 'postnl-for-woocommerce' )
 						);
 					}
 
 					if ( ! is_email( $value ) ) {
-						throw new Exception(
+						throw new \Exception(
 							__( 'Wrong format for store email!', 'postnl-for-woocommerce' )
 						);
 					}
@@ -221,7 +221,7 @@ class Item_Info extends Base_Info {
 				'error'    => __( 'Product code is empty!', 'postnl-for-woocommerce' ),
 				'validate' => function( $value ) {
 					if ( ! is_numeric( $value ) && 4 !== strlen( $value ) ) {
-						throw new Exception(
+						throw new \Exception(
 							__( 'Wrong format for product code!', 'postnl-for-woocommerce' )
 						);
 					}
@@ -239,7 +239,7 @@ class Item_Info extends Base_Info {
 			'email'        => array(
 				'validate' => function( $value ) {
 					if ( ! is_email( $value ) ) {
-						throw new Exception(
+						throw new \Exception(
 							__( 'Customer email is not valid!', 'postnl-for-woocommerce' )
 						);
 					}

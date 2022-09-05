@@ -120,7 +120,7 @@ abstract class Base_Info {
 				'error'    => __( 'Shipping "First Name" is empty!', 'postnl-for-woocommerce' ),
 				'validate' => function( $name ) use ( $self ) {
 					if ( empty( $name ) ) {
-						throw new Exception(
+						throw new \Exception(
 							__( 'Shipping "First Name" is empty!', 'postnl-for-woocommerce' )
 						);
 					}
@@ -142,7 +142,7 @@ abstract class Base_Info {
 				'error'    => __( 'Base "Address 1" is empty!', 'postnl-for-woocommerce' ),
 				'validate' => function( $name ) use ( $self ) {
 					if ( empty( $name ) ) {
-						throw new Exception(
+						throw new \Exception(
 							__( 'Base "Address 1" is empty!', 'postnl-for-woocommerce' )
 						);
 					}
@@ -190,7 +190,7 @@ abstract class Base_Info {
 				'error'    => __( 'Base "Address 1" is empty!', 'postnl-for-woocommerce' ),
 				'validate' => function( $name ) use ( $self ) {
 					if ( empty( $name ) ) {
-						throw new Exception(
+						throw new \Exception(
 							__( 'Base "Address 1" is empty!', 'postnl-for-woocommerce' )
 						);
 					}

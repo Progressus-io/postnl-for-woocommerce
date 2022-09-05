@@ -179,7 +179,7 @@ class Utils {
 						? sprintf( __( 'Please specify a "%s" argument', 'postnl-for-woocommerce' ), $key )
 						: $s_scheme['error'];
 
-					throw new Exception( $message );
+					throw new \Exception( $message );
 				}
 				// If a default value is specified, use that as the value.
 				$value = $s_scheme['default'];

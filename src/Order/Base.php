@@ -347,14 +347,28 @@ abstract class Base {
 	 * @param array $post_data Order post data.
 	 *
 	 * @return array
+	 *
+	 * @throws \Exception Error when response has an error.
 	 */
 	public function create_label( $post_data ) {
-		$order    = $post_data['order'];
+		$order = $post_data['order'];
 
 		$item_info = new Shipping\Item_Info( $post_data );
 		$shipping  = new Shipping\Client( $item_info );
 		$response  = $shipping->send_request();
 		$response  = json_decode( $response, true );
+
+		if ( ! empty( $response['fault'] ) ) {
+			$error_text = ! empty( $response['fault']['faultstring'] ) ? $response['fault']['faultstring'] : esc_html__( 'Unknown error!', 'postnl-for-woocommerce' );
+			throw new \Exception( $error_text );
+		}
+
+		if ( ! empty( $response['Errors'] ) ) {
+			$first_error = array_shift( $response['Errors'] );
+			$error_text  = ! empty( $first_error['Description'] ) ? $first_error['Description'] : esc_html__( 'Unknown error!', 'postnl-for-woocommerce' );
+
+			throw new \Exception( $error_text );
+		}
 
 		$barcode  = $response['ResponseShipments'][0]['Barcode'];
 		$filename = 'postnl-' . $order->get_id() . '-' . $response['ResponseShipments'][0]['Barcode'] . '.pdf';

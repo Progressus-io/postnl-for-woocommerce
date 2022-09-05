@@ -13,6 +13,8 @@
 		// When a user enters a new tracking item
 		save_form: function () {
 			var label_form = jQuery( '#shipment-postnl-label-form' );
+			var error_cont = label_form.find( '#shipment-postnl-error-text' );
+
 			label_form.block( {
 				message: null,
 				overlayCSS: {
@@ -21,6 +23,7 @@
 				}
 			} );
 
+			error_cont.empty();
 			
 			var data = {
 				action:   'postnl_order_save_form',
@@ -51,6 +54,9 @@
 					for (let field in response.data.backend ) {
 						jQuery( '#postnl_' + field ).prop( 'disabled', true );
 					}
+				} else {
+					var error_text = response.data.hasOwnProperty( 'message' ) ? response.data.message : 'Unknown error!';
+					error_cont.html( error_text );
 				}
 			});
 
@@ -60,6 +66,7 @@
 		// Delete a tracking item
 		delete_label: function() {
 			var label_form = jQuery( '#shipment-postnl-label-form' );
+			var error_cont = label_form.find( '#shipment-postnl-error-text' );
 			label_form.block( {
 				message: null,
 				overlayCSS: {
@@ -68,6 +75,7 @@
 				}
 			} );
 
+			error_cont.empty();
 			
 			var data = {
 				action:   'postnl_order_delete_data',
@@ -98,6 +106,9 @@
 					for ( var i = 0; i < postnl_admin_order_obj.fields.length; i++ ) {
 						label_form.find( '#' + postnl_admin_order_obj.fields[ i ] ).removeAttr( 'disabled' );
 					}
+				} else {
+					var error_text = response.data.hasOwnProperty( 'message' ) ? response.data.message : 'Unknown error!';
+					error_cont.html( error_text );
 				}
 			});
 

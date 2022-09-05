@@ -59,7 +59,7 @@ class Item_Info extends Base_Info {
 	/**
 	 * Parses the arguments and sets the instance's properties.
 	 *
-	 * @throws Exception If some data in $args did not pass validation.
+	 * @throws \Exception If some data in $args did not pass validation.
 	 */
 	protected function parse_args() {
 
@@ -126,7 +126,7 @@ class Item_Info extends Base_Info {
 				'validate' => function( $time ) {
 					$result = preg_match( '/^(?:2[0-4]|[01][1-9]|10):([0-5][0-9])$/', $time );
 					if ( 1 !== $result ) {
-						throw new Exception(
+						throw new \Exception(
 							__( 'Wrong format for cut off time!', 'postnl-for-woocommerce' )
 						);
 					}
@@ -185,7 +185,7 @@ class Item_Info extends Base_Info {
 				'default'  => 10,
 				'validate' => function( $value ) {
 					if ( ! is_numeric( $value ) ) {
-						throw new Exception(
+						throw new \Exception(
 							__( 'Locations value is not a number!', 'postnl-for-woocommerce' )
 						);
 					}
@@ -199,7 +199,7 @@ class Item_Info extends Base_Info {
 				'default'  => 10,
 				'validate' => function( $value ) {
 					if ( ! is_numeric( $value ) ) {
-						throw new Exception(
+						throw new \Exception(
 							__( 'Days value is not a number!', 'postnl-for-woocommerce' )
 						);
 					}

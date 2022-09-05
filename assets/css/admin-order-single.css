@@ -21,3 +21,9 @@
 #shipment-postnl-label-form.generated .delete-label {
 	display:inline-block;
 }
+
+#shipment-postnl-label-form #shipment-postnl-error-text {
+	margin-top:15px;
+	color:#ff0000;
+	font-weight:700;
+}

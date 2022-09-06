@@ -148,7 +148,7 @@ class Utils {
 	 *
 	 * @return array The parsed arguments.
 	 *
-	 * @throws Exception If an argument does not exist in $args and has no `default` in the $scheme.
+	 * @throws \Exception If an argument does not exist in $args and has no `default` in the $scheme.
 	 */
 	public static function parse_args( $args, $scheme ) {
 		$final_args = array();

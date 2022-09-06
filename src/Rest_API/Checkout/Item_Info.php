@@ -197,13 +197,6 @@ class Item_Info extends Base_Info {
 			'number_delivery_days'     => array(
 				'rename'   => 'days',
 				'default'  => 10,
-				'validate' => function( $value ) {
-					if ( ! is_numeric( $value ) ) {
-						throw new \Exception(
-							__( 'Days value is not a number!', 'postnl-for-woocommerce' )
-						);
-					}
-				},
 				'sanitize' => function( $value ) {
 					return intval( $value );
 				},

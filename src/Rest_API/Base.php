@@ -244,5 +244,12 @@ class Base {
 
 			throw new \Exception( $error_text );
 		}
+
+		if ( ! empty( $response['Error'] ) ) {
+			$first_error = $response['Error'];
+			$error_text  = ! empty( $first_error['ErrorMessage'] ) ? $first_error['ErrorMessage'] : esc_html__( 'Unknown error!', 'postnl-for-woocommerce' );
+
+			throw new \Exception( $error_text );
+		}
 	}
 }

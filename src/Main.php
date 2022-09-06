@@ -70,7 +70,7 @@ class Main {
 	 * Construct the plugin.
 	 */
 	public function __construct() {
-		add_action( 'init', array( $this, 'load_plugin' ), 0 );
+		add_action( 'init', array( $this, 'load_plugin' ), 1 );
 	}
 
 	/**
@@ -113,18 +113,16 @@ class Main {
 	 * Determine which plugin to load.
 	 */
 	public function load_plugin() {
-		// Checks if WooCommerce is installed.
-		if ( ! class_exists( 'WooCommerce' ) ) {
-			// Throw an admin error informing the user this plugin needs WooCommerce to function.
-			add_action( 'admin_notices', array( $this, 'notice_wc_required' ) );
-		} elseif ( ! in_array( Utils::get_base_country(), Utils::get_available_country(), true ) ) {
-			// Throw an admin error informing the user this plugin needs WooCommerce to function.
-			add_action( 'admin_notices', array( $this, 'notice_nl_be_required' ) );
-		} else {
+		// Throw an admin error informing the user this plugin needs WooCommerce to function.
+		add_action( 'admin_notices', array( $this, 'notice_wc_required' ) );
+
+		// Throw an admin error informing the user this plugin needs country settings to be NL and BE.
+		add_action( 'admin_notices', array( $this, 'notice_nl_be_required' ) );
+
+		if ( class_exists( 'WooCommerce' ) && in_array( Utils::get_base_country(), Utils::get_available_country(), true ) ) {
 			$this->define_constants();
 			$this->init_hooks();
 		}
-
 	}
 
 	/**
@@ -141,7 +139,7 @@ class Main {
 	 * Collection of hooks.
 	 */
 	public function init_hooks() {
-		add_action( 'init', array( $this, 'init' ), 1 );
+		add_action( 'init', array( $this, 'init' ), 5 );
 		add_action( 'init', array( $this, 'load_textdomain' ) );
 
 		add_filter( 'woocommerce_shipping_methods', array( $this, 'add_shipping_method' ) );
@@ -246,22 +244,26 @@ class Main {
 	 * Admin error notifying user that WC is required.
 	 */
 	public function notice_wc_required() {
-		?>
-		<div class="error">
-			<p><?php esc_html_e( 'PostNL plugin requires WooCommerce to be installed and activated!', 'postnl-for-woocommerce' ); ?></p>
-		</div>
-		<?php
+		if ( ! class_exists( 'WooCommerce' ) ) {
+			?>
+			<div class="error">
+				<p><?php esc_html_e( 'PostNL plugin requires WooCommerce to be installed and activated!', 'postnl-for-woocommerce' ); ?></p>
+			</div>
+			<?php
+		}
 	}
 
 	/**
 	 * Admin error notifying user that Country must be using Netherlands or Belgium.
 	 */
 	public function notice_nl_be_required() {
-		?>
-		<div class="error">
-			<p><?php esc_html_e( 'PostNL plugin requires store country to be Netherlands (NL) or Belgium (BE)!', 'postnl-for-woocommerce' ); ?></p>
-		</div>
-		<?php
+		if ( ! in_array( Utils::get_base_country(), Utils::get_available_country(), true ) ) {
+			?>
+			<div class="error">
+				<p><?php esc_html_e( 'PostNL plugin requires store country to be Netherlands (NL) or Belgium (BE)!', 'postnl-for-woocommerce' ); ?></p>
+			</div>
+			<?php
+		}
 	}
 
 	/**

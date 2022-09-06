@@ -45,5 +45,4 @@ require_once 'vendor/autoload.php';
 function postnl() {
 	return Main::instance();
 }
-
-postnl();
+add_action( 'plugins_loaded', 'PostNLWooCommerce\postnl' );

@@ -26,7 +26,6 @@ class Single extends Base {
 	public function init_hooks() {
 		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_order_single_css_script' ) );
 		add_action( 'add_meta_boxes', array( $this, 'add_meta_box' ), 20 );
-		add_action( 'woocommerce_process_shop_order_meta', array( $this, 'save_meta_box' ), 0, 2 );
 
 		add_action( 'wp_ajax_postnl_order_save_form', array( $this, 'save_meta_box_ajax' ) );
 		add_action( 'wp_ajax_nopriv_postnl_order_save_form', array( $this, 'save_meta_box_ajax' ) );
@@ -148,19 +147,6 @@ class Single extends Base {
 		$order_data = $order->get_meta( $this->meta_name );
 
 		return ! empty( $order_data['backend'] );
-	}
-
-	/**
-	 * Saving meta box in order admin page.
-	 *
-	 * @param  int     $order_id Order post ID.
-	 * @param  WP_Post $post Order post object.
-	 * @throws \Exception Throw error for invalid nonce.
-	 */
-	public function save_meta_box( $order_id, $post = null ) {
-		$saved_data = $this->save_meta_value( $order_id, $_REQUEST );
-
-		return $saved_data;
 	}
 
 	/**

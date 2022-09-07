@@ -286,7 +286,47 @@ abstract class Base {
 			}
 		}
 
+		$optional_fee_exists = false;
+		$evening_fee         = self::evening_fee_data();
+
+		foreach ( $order->get_fees() as $item_fee ) {
+			$fee_name = $item_fee->get_name();
+
+			if ( $item_fee->get_name() === $evening_fee['fee_name'] ) {
+				$optional_fee_exists = true;
+			}
+		}
+
+		if ( false === $optional_fee_exists ) {
+			$item_fee = new \WC_Order_Item_Fee();
+
+			$item_fee->set_name( $evening_fee['fee_name'] );
+			$item_fee->set_amount( $evening_fee['fee_price'] );
+			$item_fee->set_tax_class( '' );
+			$item_fee->set_tax_status( 'taxable' );
+			$item_fee->set_total( $evening_fee['fee_price'] );
+
+			$order->add_item( $item_fee );
+
+			$order->calculate_totals();
+		}
+
 		$order->update_meta_data( $this->meta_name, $data );
 		$order->save();
+	}
+
+	/**
+	 * Get evening fee data.
+	 *
+	 * @return Array
+	 */
+	public static function evening_fee_data() {
+		$settings    = Settings::get_instance();
+		$evening_fee = $settings->get_evening_delivery_fee();
+
+		return array(
+			'fee_name'  => esc_html__( 'PostNL Evening Fee', 'postnl-for-woocommerce' ),
+			'fee_price' => floatval( $evening_fee ),
+		);
 	}
 }

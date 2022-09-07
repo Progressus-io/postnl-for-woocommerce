@@ -111,6 +111,66 @@ class Single extends Base {
 	}
 
 	/**
+	 * Get dropoff points information.
+	 *
+	 * @param WC_Order $order Order object.
+	 *
+	 * @return Array.
+	 */
+	public function get_dropoff_points_info( $order ) {
+		if ( ! is_a( $order, 'WC_Order' ) ) {
+			return array();
+		}
+
+		$order_data = $order->get_meta( $this->meta_name );
+
+		if ( ! empty( $order_data['frontend'] ) ) {
+			$dropoff_value = array();
+
+			foreach ( $order_data['frontend'] as $key => $value ) {
+				if ( false !== strpos( $key, 'dropoff_points_' ) ) {
+					$dropoff_value[ $key ] = $value;
+				}
+			}
+
+			return $dropoff_value;
+		}
+	}
+
+	/**
+	 * Generate the dropoff points html information.
+	 *
+	 * @param Array $infos Dropoff points informations.
+	 */
+	public function generate_dropoff_points_html( $infos ) {
+		$filtered_infos = array_filter(
+			$infos,
+			function ( $info ) {
+				$displayed_info = array(
+					'dropoff_points_company',
+					'dropoff_points_address',
+				);
+
+				return in_array( $info, $displayed_info, true );
+			},
+			ARRAY_FILTER_USE_KEY
+		);
+
+		if ( empty( $filtered_infos ) ) {
+			return;
+		}
+		?>
+		<label for="postnl_dropoff_points"><?php esc_html_e( 'Dropoff Points:', 'postnl-for-woocommerce' ); ?></label>
+		<?php
+		foreach ( $filtered_infos as $info_idx => $info_val ) {
+			?>
+			<div class="postnl-info <?php echo esc_attr( $info_idx ); ?>">
+				<?php echo esc_html( $info_val ); ?>
+			</div>
+			<?php
+		}
+	}
+	/**
 	 * Additional fields of the meta box for child class.
 	 *
 	 * @param WP_Post|WC_Order $post_or_order_object current order object.
@@ -120,10 +180,14 @@ class Single extends Base {
 			return;
 		}
 
-		$order      = ( is_a( $post_or_order_object, 'WP_Post' ) ) ? wc_get_order( $post_or_order_object->ID ) : $post_or_order_object;
-		$form_class = ( $this->have_backend_data( $order ) ) ? 'generated' : '';
+		$order        = ( is_a( $post_or_order_object, 'WP_Post' ) ) ? wc_get_order( $post_or_order_object->ID ) : $post_or_order_object;
+		$form_class   = ( $this->have_backend_data( $order ) ) ? 'generated' : '';
+		$dropoff_info = $this->get_dropoff_points_info( $order );
 		?>
 		<div id="shipment-postnl-label-form" class="<?php echo esc_attr( $form_class ); ?>">
+			<div class="postnl-info-container dropoff-points-info">
+				<?php $this->generate_dropoff_points_html( $dropoff_info ); ?>
+			</div>
 			<?php $this->fields_generator( $this->add_meta_box_value( $order ) ); ?>
 
 			<div class="button-container">

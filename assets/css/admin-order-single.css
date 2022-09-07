@@ -1,3 +1,7 @@
+#shipment-postnl-label-form label {
+	font-weight:700;
+}
+
 #shipment-postnl-label-form .form-field input.short {
 	width:50px;
 }

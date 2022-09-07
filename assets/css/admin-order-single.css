@@ -2,6 +2,10 @@
 	font-weight:700;
 }
 
+#shipment-postnl-label-form .postnl-info-container .postnl-info {
+	margin-bottom:3px;
+}
+
 #shipment-postnl-label-form .form-field input.short {
 	width:50px;
 }

@@ -149,6 +149,8 @@ class Single extends Base {
 				$displayed_info = array(
 					'dropoff_points_company',
 					'dropoff_points_address',
+					'dropoff_points_date',
+					'dropoff_points_time',
 				);
 
 				return in_array( $info, $displayed_info, true );
@@ -163,9 +165,22 @@ class Single extends Base {
 		<label for="postnl_dropoff_points"><?php esc_html_e( 'Dropoff Points:', 'postnl-for-woocommerce' ); ?></label>
 		<?php
 		foreach ( $filtered_infos as $info_idx => $info_val ) {
+			switch ( $info_idx ) {
+				case 'dropoff_points_date':
+					$additional_text = esc_html__( 'Date:', 'postnl-for-woocommerce' );
+					break;
+
+				case 'dropoff_points_time':
+					$additional_text = esc_html__( 'Time:', 'postnl-for-woocommerce' );
+					break;
+
+				default:
+					$additional_text = '';
+					break;
+			}
 			?>
 			<div class="postnl-info <?php echo esc_attr( $info_idx ); ?>">
-				<?php echo esc_html( $info_val ); ?>
+				<?php echo esc_html( $additional_text . ' ' . $info_val ); ?>
 			</div>
 			<?php
 		}

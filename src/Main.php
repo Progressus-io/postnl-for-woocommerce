@@ -32,6 +32,13 @@ class Main {
 	public $settings_id = 'postnl';
 
 	/**
+	 * The name of this plugin service.
+	 *
+	 * @var service_name
+	 */
+	public $service_name = 'PostNL';
+
+	/**
 	 * Shipping Product.
 	 *
 	 * @var PostNLWooCommerce\Product\PostNL
@@ -105,6 +112,7 @@ class Main {
 
 		$this->define( 'POSTNL_WC_VERSION', $this->version );
 		$this->define( 'POSTNL_SETTINGS_ID', $this->settings_id );
+		$this->define( 'POSTNL_SERVICE_NAME', $this->service_name );
 		$this->define( 'POSTNL_WC_LOG_DIR', $upload_dir['basedir'] . '/wc-logs/' );
 		$this->define( 'POSTNL_UPLOADS_DIR', $upload_dir['basedir'] . '/postnl/' );
 	}

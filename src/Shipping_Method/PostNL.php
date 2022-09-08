@@ -27,7 +27,7 @@ class PostNL extends \WC_Shipping_Flat_Rate {
 	public function __construct( $instance_id = 0 ) {
 		$this->id           = POSTNL_SETTINGS_ID;
 		$this->instance_id  = absint( $instance_id );
-		$this->method_title = __( 'PostNL', 'postnl-for-woocommerce' );
+		$this->method_title = POSTNL_SERVICE_NAME;
 
 		// translators: %1$s & %2$s is replaced with <a> tag.
 		$this->method_description = sprintf( __( 'Below you will find all functions for controlling, preparing and processing your shipment with PostNL. Prerequisite is a valid PostNL business customer contract. If you are not yet a PostNL business customer, you can request a quote %1$shere%2$s.', 'postnl-for-woocommerce' ), '<a href="https://mijnpostnlzakelijk.postnl.nl/s/become-a-customer?language=nl_NL#/" target="_blank">', '</a>' );
@@ -37,7 +37,7 @@ class PostNL extends \WC_Shipping_Flat_Rate {
 			'instance-settings-modal',
 			'settings',
 		);
-		$this->init();
+
 		$this->postnl_init();
 	}
 
@@ -45,12 +45,24 @@ class PostNL extends \WC_Shipping_Flat_Rate {
 	 * Shipping method initialization.
 	 */
 	public function postnl_init() {
-		$this->instance_form_fields['title']['default'] = $this->method_title;
-		$this->title = ( 'Flat rate' === $this->get_option( 'title' ) ) ? $this->method_title : $this->get_option( 'title' );
+		$this->init();
 		$this->init_form_fields();
 		$this->init_settings();
 
+		add_filter( 'woocommerce_shipping_instance_form_fields_' . $this->id, array( $this, 'change_title_default' ), 10, 1 );
 		add_action( 'woocommerce_update_options_shipping_' . $this->id, array( $this, 'process_admin_options' ) );
+	}
+
+	/**
+	 * Manipulate the title default.
+	 *
+	 * @param Array $form_fields List of instance form fields.
+	 *
+	 * @return Array
+	 */
+	public function change_title_default( $form_fields ) {
+		$form_fields['title']['default'] = $this->method_title;
+		return $form_fields;
 	}
 
 	/**

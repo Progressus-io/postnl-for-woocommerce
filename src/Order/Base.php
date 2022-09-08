@@ -40,7 +40,7 @@ abstract class Base {
 	 *
 	 * @var service
 	 */
-	protected $service = 'PostNL';
+	protected $service = POSTNL_SERVICE_NAME;
 
 	/**
 	 * Prefix for meta box fields.

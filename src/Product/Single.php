@@ -29,7 +29,7 @@ class Single {
 	 *
 	 * @var service
 	 */
-	protected $service = 'PostNL';
+	protected $service = POSTNL_SERVICE_NAME;
 
 	/**
 	 * Init and hook in the integration.
@@ -95,12 +95,12 @@ class Single {
 
 		// Country of origin.
 		if ( isset( $_POST['_postnl_country_origin'] ) ) {
-			$product->update_meta_data( '_postnl_country_origin', sanitize_text_field( $_POST['_postnl_country_origin'] ) );
+			$product->update_meta_data( '_postnl_country_origin', sanitize_text_field( wp_unslash( $_POST['_postnl_country_origin'] ) ) );
 		}
 
 		// HS code value.
 		if ( isset( $_POST['_postnl_hs_tariff_code'] ) ) {
-			$product->update_meta_data( '_postnl_hs_tariff_code', sanitize_text_field( $_POST['_postnl_hs_tariff_code'] ) );
+			$product->update_meta_data( '_postnl_hs_tariff_code', sanitize_text_field( wp_unslash( $_POST['_postnl_hs_tariff_code'] ) ) );
 		}
 
 		$product->save();

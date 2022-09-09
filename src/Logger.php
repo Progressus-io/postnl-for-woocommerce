@@ -46,20 +46,67 @@ class Logger {
 	/**
 	 * Write the message to log.
 	 *
-	 * @param String $message Message to be written in log.
+	 * @param Mixed $message Message to be written in log.
 	 */
 	public function write( $message ) {
-
 		// Check if enabled.
-		if ( $this->is_enabled() ) {
-
-			// Logger object.
-			$wc_logger = new \WC_Logger();
-
-			// Add to logger.
-			$wc_logger->add( 'PostNLWooCommerce', $message );
+		if ( ! $this->is_enabled() ) {
+			return;
 		}
 
+		$message = apply_filters( 'postnl_logger_write_message', $message );
+		$message = $this->check_pdf_content( $message );
+
+		if ( is_array( $message ) || is_object( $message ) ) {
+			$message = print_r( $message, true );
+		}
+
+		// Logger object.
+		$wc_logger = new \WC_Logger();
+
+		// Add to logger.
+		$wc_logger->add( 'PostNLWooCommerce', $message );
+	}
+
+	/**
+	 * Check if the content has PDF binary value.
+	 *
+	 * @param Mixed $message Message to be written in log.
+	 *
+	 * @return Mixed.
+	 */
+	public function check_pdf_content( $message ) {
+		if ( ! Utils::is_json( $message ) ) {
+			return $message;
+		}
+
+		$message = json_decode( $message, true );
+
+		if ( ! empty( $message['ResponseShipments'] ) ) {
+			foreach ( $message['ResponseShipments'] as $shipment_idx => $shipment_contents ) {
+				if ( empty( $shipment_contents['Labels'] ) ) {
+					return $message;
+				}
+
+				foreach ( $shipment_contents['Labels'] as $label_idx => $label_contents ) {
+					if ( empty( $label_contents['Content'] ) ) {
+						continue;
+					}
+
+					if ( empty( $label_contents['OutputType'] ) ) {
+						continue;
+					}
+
+					if ( 'PDF' !== $label_contents['OutputType'] ) {
+						continue;
+					}
+
+					$message['ResponseShipments'][ $shipment_idx ]['Labels'][ $label_idx ]['Content'] = '[PDF data]';
+				}
+			}
+		}
+
+		return $message;
 	}
 
 	/**

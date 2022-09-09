@@ -191,7 +191,7 @@ class Base {
 
 		$this->logger->write( sprintf( 'Begin send request to %1$s', $api_url ) );
 		$this->logger->write( 'API Request:' );
-		$this->logger->write( print_r( $request_args, true ) );
+		$this->logger->write( $request_args );
 
 		for ( $i = 1; $i <= 5; $i++ ) {
 			$response = wp_remote_request( $api_url, $request_args );
@@ -205,7 +205,7 @@ class Base {
 
 		if ( is_wp_error( $response ) ) {
 			$this->logger->write( 'Get WP Error response:' );
-			$this->logger->write( print_r( $response, true ) );
+			$this->logger->write( $response );
 
 			throw new \Exception( $response->get_error_message() );
 		}
@@ -214,8 +214,8 @@ class Base {
 		$header_response = wp_remote_retrieve_headers( $response );
 
 		$this->logger->write( 'API Successful response:' );
-		$this->logger->write( print_r( $header_response, true ) );
-		$this->logger->write( print_r( $body_response, true ) );
+		$this->logger->write( $header_response );
+		$this->logger->write( $body_response );
 
 		return $body_response;
 	}

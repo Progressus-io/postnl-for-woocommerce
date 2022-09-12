@@ -356,10 +356,8 @@ abstract class Base {
 		$item_info = new Shipping\Item_Info( $post_data );
 		$shipping  = new Shipping\Client( $item_info );
 		$response  = $shipping->send_request();
-		$response  = json_decode( $response, true );
 
 		// Check any errors.
-		$shipping->check_response_error( $response );
 		$this->check_label_and_barcode( $response );
 
 		$barcode  = $response['ResponseShipments'][0]['Barcode'];

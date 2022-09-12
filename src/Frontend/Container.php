@@ -155,10 +155,8 @@ class Container {
 			$api_call  = new Checkout\Client( $item_info );
 			$response  = $api_call->send_request();
 
-			$api_call->check_response_error( $response );
-
 			return array(
-				'response'  => json_decode( $response, true ),
+				'response'  => $response,
 				'post_data' => $post_data,
 			);
 		} catch ( \Exception $e ) {

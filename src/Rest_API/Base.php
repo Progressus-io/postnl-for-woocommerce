@@ -217,7 +217,9 @@ class Base {
 		$this->logger->write( $header_response );
 		$this->logger->write( $body_response );
 
-		return $body_response;
+		$this->check_response_error( $body_response );
+
+		return json_decode( $body_response, true );
 	}
 
 	/**

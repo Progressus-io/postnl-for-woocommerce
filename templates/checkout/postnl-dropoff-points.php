@@ -12,6 +12,54 @@ if ( ! defined( 'ABSPATH' ) ) {
 if ( empty( $data['dropoff_options'] ) ) {
 	return;
 }
+
+/**
+ * Function to generate data html in <li>.
+ *
+ * @param Array $dropoff_point Dropoff point value.
+ */
+function postnl_generate_data_li( $dropoff_point ) {
+
+	foreach ( $dropoff_point as $key => $value ) {
+		if ( is_array( $value ) ) {
+
+			foreach ( $value as $k => $val ) {
+				?>
+				data-<?php echo esc_html( $key . '_' . $k ); ?>="<?php echo esc_attr( $val ); ?>"
+				<?php
+			}
+			continue;
+		}
+
+		?>
+		data-<?php echo esc_html( $key ); ?>="<?php echo esc_attr( $value ); ?>"
+		<?php
+	}
+}
+
+/**
+ * Function to generate hidden input.
+ *
+ * @param Array  $dropoff_point Dropoff point value.
+ * @param String $field_name Field name.
+ */
+function postnl_generate_hidden_input( $dropoff_point, $field_name ) {
+	foreach ( $dropoff_point as $key => $value ) {
+		if ( is_array( $value ) ) {
+
+			foreach ( $value as $k => $val ) {
+				?>
+				<input type="hidden" name="<?php echo esc_attr( $field_name . '_' . $key . '_' . $k ); ?>" id="<?php echo esc_attr( $field_name . '_' . $key . '_' . $k ); ?>" value="" />
+				<?php
+			}
+			continue;
+		}
+
+		?>
+		<input type="hidden" name="<?php echo esc_attr( $field_name . '_' . $key ); ?>" id="<?php echo esc_attr( $field_name . '_' . $key ); ?>" value="" />
+		<?php
+	}
+}
 ?>
 <div class="postnl_content" id="postnl_dropoff_points_content">
 	<ul class="postnl_dropoff_points_list postnl_list">
@@ -19,19 +67,16 @@ if ( empty( $data['dropoff_options'] ) ) {
 			<?php
 			$value      = sanitize_title( $point['partner_id'] . '-' . $point['loc_code'] );
 			$radio_id   = sanitize_title( $point['partner_id'] . '-' . $point['loc_code'] );
+			$address    = implode( ', ', array_values( $point['address'] ) );
 			$is_checked = ( $value === $data['value'] ) ? 'checked="checked"' : '';
+
+			$point_key  = $point;
 			?>
 		<li>
 			<div class="list_title"><span><?php echo esc_html( $point['company'] . ' ' . $point['distance'] ); ?></span></div>
 			<ul class="postnl_sub_list">
 				<li
-					data-address="<?php echo esc_attr( $point['address'] ); ?>"
-					data-company="<?php echo esc_attr( $point['company'] ); ?>"
-					data-distance="<?php echo esc_attr( $point['distance'] ); ?>"
-					data-partner_id="<?php echo esc_attr( $point['partner_id'] ); ?>"
-					data-date="<?php echo esc_attr( $point['date'] ); ?>"
-					data-time="<?php echo esc_attr( $point['time'] ); ?>"
-					data-type="<?php echo esc_attr( $point['type'] ); ?>"
+					<?php postnl_generate_data_li( $point ); ?>
 				>
 					<label class="postnl_sub_radio_label" for="<?php echo esc_attr( $data['field_name'] ); ?>_<?php echo esc_attr( $radio_id ); ?>">
 						<input 
@@ -44,7 +89,7 @@ if ( empty( $data['dropoff_options'] ) ) {
 						/>
 						<i>Vanaf <?php echo esc_html( $point['time'] ); ?><br /><?php echo esc_html( $point['date'] ); ?></i>
 						<span>
-							<?php echo esc_html( $point['address'] ); ?><br />
+							<?php echo esc_html( $address ); ?><br />
 							<?php echo esc_html( $point['partner_id'] ); ?>
 						</span>
 					</label>
@@ -53,11 +98,5 @@ if ( empty( $data['dropoff_options'] ) ) {
 		</li>
 		<?php } ?>
 	</ul>
-	<input type="hidden" name="<?php echo esc_attr( $data['field_name'] ); ?>_company" id="<?php echo esc_attr( $data['field_name'] ); ?>_company" value="" />
-	<input type="hidden" name="<?php echo esc_attr( $data['field_name'] ); ?>_distance" id="<?php echo esc_attr( $data['field_name'] ); ?>_distance" value="" />
-	<input type="hidden" name="<?php echo esc_attr( $data['field_name'] ); ?>_address" id="<?php echo esc_attr( $data['field_name'] ); ?>_address" value="" />
-	<input type="hidden" name="<?php echo esc_attr( $data['field_name'] ); ?>_partner_id" id="<?php echo esc_attr( $data['field_name'] ); ?>_partner_id" value="" />
-	<input type="hidden" name="<?php echo esc_attr( $data['field_name'] ); ?>_date" id="<?php echo esc_attr( $data['field_name'] ); ?>_date" value="" />
-	<input type="hidden" name="<?php echo esc_attr( $data['field_name'] ); ?>_time" id="<?php echo esc_attr( $data['field_name'] ); ?>_time" value="" />
-	<input type="hidden" name="<?php echo esc_attr( $data['field_name'] ); ?>_type" id="<?php echo esc_attr( $data['field_name'] ); ?>_type" value="" />
+	<?php postnl_generate_hidden_input( $point_key, $data['field_name'] ); ?>
 </div>

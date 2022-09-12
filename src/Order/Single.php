@@ -147,8 +147,6 @@ class Single extends Base {
 			$infos,
 			function ( $info ) {
 				$displayed_info = array(
-					'dropoff_points_company',
-					'dropoff_points_address',
 					'dropoff_points_date',
 					'dropoff_points_time',
 				);
@@ -157,6 +155,19 @@ class Single extends Base {
 			},
 			ARRAY_FILTER_USE_KEY
 		);
+
+		$address_info = array_filter(
+			$infos,
+			function ( $info ) {
+				return false !== strpos( $info, '_address_' );
+			},
+			ARRAY_FILTER_USE_KEY
+		);
+
+		if ( ! empty( $address_info ) ) {
+			$filtered_infos['address'] = implode( ', ', $address_info );
+			ksort( $filtered_infos );
+		}
 
 		if ( empty( $filtered_infos ) ) {
 			return;

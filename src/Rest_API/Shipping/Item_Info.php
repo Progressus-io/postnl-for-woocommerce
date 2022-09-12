@@ -64,6 +64,13 @@ class Item_Info extends Base_Info {
 	public $receiver;
 
 	/**
+	 * Pickup points data of the item info.
+	 *
+	 * @var receiver
+	 */
+	public $pickup_points;
+
+	/**
 	 * Parses the arguments and sets the instance's properties.
 	 *
 	 * @throws Exception If some data in $args did not pass validation.
@@ -71,11 +78,13 @@ class Item_Info extends Base_Info {
 	protected function parse_args() {
 		$customer_info = $this->api_args['settings'] + $this->api_args['store_address'];
 		$shipment      = $this->api_args['billing_address'] + $this->api_args['order_details'];
+		$pickup_data   = array_merge( $this->api_args['frontend_data']['dropoff_points'], $this->api_args['backend_data'] );
 
-		$this->shipment = Utils::parse_args( $shipment, $this->get_shipment_info_schema() );
-		$this->receiver = Utils::parse_args( $this->api_args['shipping_address'], $this->get_receiver_info_schema() );
-		$this->customer = Utils::parse_args( $customer_info, $this->get_customer_info_schema() );
-		$this->shipper  = Utils::parse_args( $this->api_args['store_address'], $this->get_store_info_schema() );
+		$this->shipment      = Utils::parse_args( $shipment, $this->get_shipment_info_schema() );
+		$this->receiver      = Utils::parse_args( $this->api_args['shipping_address'], $this->get_receiver_info_schema() );
+		$this->customer      = Utils::parse_args( $customer_info, $this->get_customer_info_schema() );
+		$this->shipper       = Utils::parse_args( $this->api_args['store_address'], $this->get_store_info_schema() );
+		$this->pickup_points = Utils::parse_args( $pickup_data, $this->get_pickup_points_info_schema() );
 	}
 
 	/**
@@ -142,13 +151,17 @@ class Item_Info extends Base_Info {
 				'type'  => $saved_data['frontend']['delivery_day_type'] ?? '',
 			),
 			'dropoff_points' => array(
-				'value'    => $saved_data['frontend']['dropoff_points'] ?? '',
-				'company'  => $saved_data['frontend']['dropoff_points_company'] ?? '',
-				'distance' => $saved_data['frontend']['dropoff_points_distance'] ?? '',
-				'address'  => $saved_data['frontend']['dropoff_points_address'] ?? '',
-				'id'       => $saved_data['frontend']['dropoff_points_id'] ?? '',
-				'date'     => $saved_data['frontend']['dropoff_points_date'] ?? '',
-				'time'     => $saved_data['frontend']['dropoff_points_time'] ?? '',
+				'value'      => $saved_data['frontend']['dropoff_points'] ?? '',
+				'company'    => $saved_data['frontend']['dropoff_points_address_company'] ?? '',
+				'distance'   => $saved_data['frontend']['dropoff_points_distance'] ?? '',
+				'address_1'  => $saved_data['frontend']['dropoff_points_address_address_1'] ?? '',
+				'address_2'  => $saved_data['frontend']['dropoff_points_address_address_2'] ?? '',
+				'city'       => $saved_data['frontend']['dropoff_points_address_city'] ?? '',
+				'postcode'   => $saved_data['frontend']['dropoff_points_address_postcode'] ?? '',
+				'country'    => $saved_data['frontend']['dropoff_points_address_country'] ?? '',
+				'partner_id' => $saved_data['frontend']['dropoff_points_parther_id'] ?? '',
+				'date'       => $saved_data['frontend']['dropoff_points_date'] ?? '',
+				'time'       => $saved_data['frontend']['dropoff_points_time'] ?? '',
 			),
 		);
 
@@ -156,6 +169,24 @@ class Item_Info extends Base_Info {
 			'order_id'     => $order->get_id(),
 			'total_weight' => $this->calculate_order_weight( $order ),
 		);
+	}
+
+	/**
+	 * Is pickup point being selected or not.
+	 *
+	 * @return Boolean
+	 */
+	public function is_dropoff_points() {
+		return ! empty( $this->api_args['frontend_data']['dropoff_points']['value'] );
+	}
+
+	/**
+	 * Is pickup point being selected or not.
+	 *
+	 * @return Boolean
+	 */
+	public function is_delivery_day() {
+		return ! empty( $this->api_args['frontend_data']['delivery_day']['value'] );
 	}
 
 	/**
@@ -247,6 +278,80 @@ class Item_Info extends Base_Info {
 			),
 			'phone'        => array(
 				'default' => '',
+			),
+		);
+	}
+
+	/**
+	 * Retrieves the args scheme to use with for parsing pickup points info.
+	 *
+	 * @return array
+	 */
+	protected function get_pickup_points_info_schema() {
+		// Closures in PHP 5.3 do not inherit class context
+		// So we need to copy $this into a lexical variable and pass it to closures manually.
+		$self = $this;
+
+		return array(
+			'insured_shipping' => array(
+				'default'  => false,
+				'sanitize' => function( $picked ) use ( $self ) {
+					return ( 'yes' === $picked );
+				},
+			),
+			'company'          => array(
+				'validate' => function( $company ) use ( $self ) {
+					if ( empty( $company ) && $self->is_dropoff_points() ) {
+						throw new \Exception(
+							__( 'Pickup "Company name" is empty!', 'postnl-for-woocommerce' )
+						);
+					}
+				},
+			),
+			'address_1'        => array(
+				'validate' => function( $address ) use ( $self ) {
+					if ( empty( $address ) && $self->is_dropoff_points() ) {
+						throw new \Exception(
+							__( 'Pickup "Address 1" is empty!', 'postnl-for-woocommerce' )
+						);
+					}
+				},
+				'sanitize' => function( $address ) use ( $self ) {
+					return $self->string_length_sanitization( $address, 50 );
+				},
+			),
+			'address_2'        => array(
+				'default' => '',
+			),
+			'city'             => array(
+				'validate' => function( $city ) use ( $self ) {
+					if ( empty( $city ) && $self->is_dropoff_points() ) {
+						throw new \Exception(
+							__( 'Pickup Point "City" is empty!', 'postnl-for-woocommerce' )
+						);
+					}
+				},
+			),
+			'postcode'         => array(
+				'validate' => function( $postcode ) use ( $self ) {
+					if ( empty( $postcode ) && $self->is_dropoff_points() ) {
+						throw new \Exception(
+							__( 'Pickup Point "Postcode" is empty!', 'postnl-for-woocommerce' )
+						);
+					}
+				},
+			),
+			'state'            => array(
+				'default' => '',
+			),
+			'country'          => array(
+				'validate' => function( $country ) use ( $self ) {
+					if ( empty( $country ) && $self->is_dropoff_points() ) {
+						throw new \Exception(
+							__( 'Pickup Point "Country" is empty!', 'postnl-for-woocommerce' )
+						);
+					}
+				},
 			),
 		);
 	}

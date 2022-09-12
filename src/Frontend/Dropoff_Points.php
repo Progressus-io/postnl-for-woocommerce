@@ -85,8 +85,6 @@ class Dropoff_Points extends Base {
 				}
 
 				$timestamp = strtotime( $date );
-				$company   = $dropoff_option['Address']['CompanyName'];
-				$address   = implode( ', ', array_values( $dropoff_option['Address'] ) );
 
 				$return_data['dropoff_options'][] = array(
 					'partner_id' => $dropoff_option['PartnerID'],
@@ -94,8 +92,14 @@ class Dropoff_Points extends Base {
 					'time'       => $dropoff_option['PickupTime'],
 					'distance'   => $dropoff_option['Distance'],
 					'date'       => $date,
-					'company'    => $company,
-					'address'    => $address,
+					'address'    => array(
+						'company'   => $dropoff_option['Address']['CompanyName'],
+						'address_1' => $dropoff_option['Address']['Street'],
+						'address_2' => $dropoff_option['Address']['HouseNr'],
+						'postcode'  => $dropoff_option['Address']['Zipcode'],
+						'city'      => $dropoff_option['Address']['City'],
+						'country'   => $dropoff_option['Address']['Countrycode'],
+					),
 					'type'       => $type,
 				);
 			}
@@ -123,7 +127,7 @@ class Dropoff_Points extends Base {
 					'error_text' => esc_html__( 'Please choose the dropoff points!', 'postnl-for-woocommerce' ),
 				),
 				array(
-					'id'      => $this->prefix . $this->primary_field . '_company',
+					'id'      => $this->prefix . $this->primary_field . '_address_company',
 					'primary' => false,
 					'hidden'  => true,
 				),
@@ -133,12 +137,32 @@ class Dropoff_Points extends Base {
 					'hidden'  => true,
 				),
 				array(
-					'id'      => $this->prefix . $this->primary_field . '_address',
+					'id'      => $this->prefix . $this->primary_field . '_address_address_1',
 					'primary' => false,
 					'hidden'  => true,
 				),
 				array(
-					'id'      => $this->prefix . $this->primary_field . '_id',
+					'id'      => $this->prefix . $this->primary_field . '_address_address_2',
+					'primary' => false,
+					'hidden'  => true,
+				),
+				array(
+					'id'      => $this->prefix . $this->primary_field . '_address_city',
+					'primary' => false,
+					'hidden'  => true,
+				),
+				array(
+					'id'      => $this->prefix . $this->primary_field . '_address_postcode',
+					'primary' => false,
+					'hidden'  => true,
+				),
+				array(
+					'id'      => $this->prefix . $this->primary_field . '_address_country',
+					'primary' => false,
+					'hidden'  => true,
+				),
+				array(
+					'id'      => $this->prefix . $this->primary_field . '_partner_id',
 					'primary' => false,
 					'hidden'  => true,
 				),

@@ -286,18 +286,24 @@ abstract class Base {
 			}
 		}
 
-		$optional_fee_exists = false;
-		$evening_fee         = self::evening_fee_data();
+		$add_optional_fee = true;
+		$evening_fee      = self::evening_fee_data();
 
 		foreach ( $order->get_fees() as $item_fee ) {
 			$fee_name = $item_fee->get_name();
 
 			if ( $item_fee->get_name() === $evening_fee['fee_name'] ) {
-				$optional_fee_exists = true;
+				$add_optional_fee = false;
 			}
 		}
 
-		if ( false === $optional_fee_exists ) {
+		if ( empty( $data['frontend'][ $evening_fee['condition']['key'] ] ) ) {
+			$add_optional_fee = false;
+		} elseif ( $data['frontend'][ $evening_fee['condition']['key'] ] !== $evening_fee['condition']['value'] ) {
+			$add_optional_fee = false;
+		}
+
+		if ( true === $add_optional_fee ) {
 			$item_fee = new \WC_Order_Item_Fee();
 
 			$item_fee->set_name( $evening_fee['fee_name'] );
@@ -327,6 +333,10 @@ abstract class Base {
 		return array(
 			'fee_name'  => esc_html__( 'PostNL Evening Fee', 'postnl-for-woocommerce' ),
 			'fee_price' => floatval( $evening_fee ),
+			'condition' => array(
+				'key'   => 'delivery_day_type',
+				'value' => 'Evening',
+			),
 		);
 	}
 }

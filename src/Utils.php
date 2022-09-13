@@ -224,6 +224,23 @@ class Utils {
 	}
 
 	/**
+	 * Get shipping zone base on the shipping country.
+	 *
+	 * @param String $to_country 2 digit country code.
+	 *
+	 * @return String
+	 */
+	public static function get_shipping_zone( $to_country ) {
+		if ( 'NL' === $to_country || 'BE' === $to_country ) {
+			return $to_country;
+		} elseif ( in_array( $to_country, WC()->countries->get_european_union_countries(), true ) ) {
+			return 'EU';
+		}
+
+		return 'ROW';
+	}
+
+	/**
 	 * Check if the string is JSON or not.
 	 *
 	 * @param Mixed $value String or value that will be validated.

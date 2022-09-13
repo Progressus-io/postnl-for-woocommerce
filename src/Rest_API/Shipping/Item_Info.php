@@ -10,6 +10,7 @@ namespace PostNLWooCommerce\Rest_API\Shipping;
 use PostNLWooCommerce\Rest_API\Base_Info;
 use PostNLWooCommerce\Shipping_Method\Settings;
 use PostNLWooCommerce\Utils;
+use PostNLWooCommerce\Helper\Mapping;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -566,80 +567,6 @@ class Item_Info extends Base_Info {
 	}
 
 	/**
-	 * Product code mapping.
-	 *
-	 * @return Array
-	 */
-	public function product_code_map() {
-		return array(
-			'NL' => array(
-				'NL'  => array(
-					'delivery_day'  => array(
-						'3085' => array(),
-						'3385' => array( 'only_home_address' ),
-						'3090' => array( 'return_no_answer' ),
-						'3087' => array( 'insured_shipping' ),
-						'3189' => array( 'signature_on_delivery' ),
-						'2928' => array( 'letterbox' ),
-						'3390' => array( 'return_no_answer', 'only_home_address' ),
-						'3094' => array( 'insured_shipping', 'return_no_answer' ),
-						'3089' => array( 'signature_on_delivery', 'only_home_address' ),
-						'3389' => array( 'signature_on_delivery', 'return_no_answer' ),
-						'3096' => array( 'signature_on_delivery', 'only_home_address', 'return_no_answer' ),
-					),
-					'pickup_points' => array(
-						'3085' => array(),
-						'3533' => array( 'signature_on_delivery' ),
-						'3534' => array( 'insured_shipping' ),
-					),
-				),
-				'BE'  => array(
-					'delivery_day'  => array(
-						'4946' => array(),
-						'4941' => array( 'only_home_address' ),
-						'4912' => array( 'signature_on_delivery' ),
-						'4914' => array( 'insured_shipping' ),
-					),
-					'pickup_points' => array(
-						'4936' => array(),
-					),
-				),
-				'EU'  => array(
-					'delivery_day'  => array(
-						'4944' => array(),
-					),
-					'pickup_points' => array(
-						'4944' => array(),
-					),
-				),
-				'ROW' => array(
-					'delivery_day'  => array(
-						'4945' => array(),
-					),
-					'pickup_points' => array(
-						'4945' => array(),
-					),
-				),
-			),
-			'BE' => array(
-				'BE' => array(
-					'delivery_day'  => array(
-						'4961' => array(),
-						'4960' => array( 'only_home_address' ),
-						'4963' => array( 'signature_on_delivery' ),
-						'4962' => array( 'signature_on_delivery', 'only_home_address' ),
-						'4965' => array( 'insured_shipping', 'only_home_address' ),
-					),
-					'pickup_points' => array(
-						'4880' => array(),
-						'4878' => array( 'insured_shipping' ),
-					),
-				),
-			),
-		);
-	}
-
-	/**
 	 * Get product code from api args.
 	 *
 	 * @return String.
@@ -651,17 +578,10 @@ class Item_Info extends Base_Info {
 		$to_country       = $this->api_args['shipping_address']['country'];
 
 		$features = array_keys( $checked_features );
-		$code_map = $this->product_code_map();
+		$code_map = Mapping::product_code();
 
 		$product_code = '';
-
-		if ( 'NL' === $to_country || 'BE' === $to_country ) {
-			$destination = $to_country;
-		} elseif ( in_array( $to_country, WC()->countries->get_european_union_countries(), true ) ) {
-			$destination = 'EU';
-		} else {
-			$destination = 'ROW';
-		}
+		$destination  = Utils::get_shipping_zone( $to_country );
 
 		if ( empty( $code_map[ $from_country ][ $destination ][ $shipping_feature ] ) ) {
 			return $product_code;

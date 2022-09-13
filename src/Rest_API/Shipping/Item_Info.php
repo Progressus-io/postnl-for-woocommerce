@@ -472,15 +472,12 @@ class Item_Info extends Base_Info {
 			),
 			'num_labels'            => array(
 				'default'  => '1',
-				'validate' => function( $num ) use ( $self ) {
-					if ( ! is_numeric( $num ) ) {
-						throw new \Exception(
-							__( 'Number of labels need to be a number!', 'postnl-for-woocommerce' )
-						);
-					}
-				},
 				'sanitize' => function( $num ) use ( $self ) {
 					$abs_number = abs( $num );
+					if ( empty( $abs_number ) ) {
+						return 1;
+					}
+
 					return ( 10 >= $abs_number ) ? $abs_number : 10;
 				},
 			),
@@ -577,7 +574,7 @@ class Item_Info extends Base_Info {
 		return array(
 			'NL' => array(
 				'NL'  => array(
-					'delivery_day'   => array(
+					'delivery_day'  => array(
 						'3085' => array(),
 						'3385' => array( 'only_home_address' ),
 						'3090' => array( 'return_no_answer' ),
@@ -597,7 +594,7 @@ class Item_Info extends Base_Info {
 					),
 				),
 				'BE'  => array(
-					'delivery_day'   => array(
+					'delivery_day'  => array(
 						'4946' => array(),
 						'4941' => array( 'only_home_address' ),
 						'4912' => array( 'signature_on_delivery' ),
@@ -608,7 +605,7 @@ class Item_Info extends Base_Info {
 					),
 				),
 				'EU'  => array(
-					'delivery_day'   => array(
+					'delivery_day'  => array(
 						'4944' => array(),
 					),
 					'pickup_points' => array(
@@ -616,7 +613,7 @@ class Item_Info extends Base_Info {
 					),
 				),
 				'ROW' => array(
-					'delivery_day'   => array(
+					'delivery_day'  => array(
 						'4945' => array(),
 					),
 					'pickup_points' => array(
@@ -626,7 +623,7 @@ class Item_Info extends Base_Info {
 			),
 			'BE' => array(
 				'BE' => array(
-					'delivery_day'   => array(
+					'delivery_day'  => array(
 						'4961' => array(),
 						'4960' => array( 'only_home_address' ),
 						'4963' => array( 'signature_on_delivery' ),

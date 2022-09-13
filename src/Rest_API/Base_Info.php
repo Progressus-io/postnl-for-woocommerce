@@ -139,11 +139,11 @@ abstract class Base_Info {
 				'default' => '',
 			),
 			'address_1'  => array(
-				'error'    => __( 'Base "Address 1" is empty!', 'postnl-for-woocommerce' ),
+				'error'    => __( 'Shipping "Address 1" is empty!', 'postnl-for-woocommerce' ),
 				'validate' => function( $name ) use ( $self ) {
 					if ( empty( $name ) ) {
 						throw new \Exception(
-							__( 'Base "Address 1" is empty!', 'postnl-for-woocommerce' )
+							__( 'Shipping "Address 1" is empty!', 'postnl-for-woocommerce' )
 						);
 					}
 				},
@@ -155,16 +155,16 @@ abstract class Base_Info {
 				'default' => '',
 			),
 			'city'       => array(
-				'error' => __( 'Base "City" is empty!', 'postnl-for-woocommerce' ),
+				'error' => __( 'Shipping "City" is empty!', 'postnl-for-woocommerce' ),
 			),
 			'postcode'   => array(
-				'error' => __( 'Base "Postcode" is empty!', 'postnl-for-woocommerce' ),
+				'error' => __( 'Shipping "Postcode" is empty!', 'postnl-for-woocommerce' ),
 			),
 			'state'      => array(
 				'default' => '',
 			),
 			'country'    => array(
-				'error' => __( 'Base "Country" is empty!', 'postnl-for-woocommerce' ),
+				'error' => __( 'Shipping "Country" is empty!', 'postnl-for-woocommerce' ),
 			),
 		);
 	}

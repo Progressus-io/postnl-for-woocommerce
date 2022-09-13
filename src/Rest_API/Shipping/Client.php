@@ -81,16 +81,23 @@ class Client extends Base {
 			'ProductCodeDelivery' => $this->item_info->shipment['product_code'],
 		);
 
-		if ( $this->item_info->is_dropoff_points() && $this->item_info->pickup_points['insured_shipping'] ) {
+		if ( $this->item_info->backend_data['insured_shipping'] ) {
 			$shipment['Amounts'][] = array(
 				'AmountType' => '02',
-				'Value'      => '10',
+				'Value'      => $this->get_insurance_value(),
 			);
 		}
 
 		$shipments[] = $shipment;
 
 		return $shipments;
+	}
+
+	/**
+	 * Get insurance value.
+	 */
+	public function get_insurance_value() {
+		return 10;
 	}
 
 	/**
@@ -111,7 +118,7 @@ class Client extends Base {
 			'Zipcode'     => $this->item_info->receiver['postcode'],
 		);
 
-		if ( $this->item_info->is_dropoff_points() ) {
+		if ( $this->item_info->is_pickup_points() ) {
 			$addresses[] = array(
 				'AddressType' => '09',
 				'CompanyName' => $this->item_info->pickup_points['company'],

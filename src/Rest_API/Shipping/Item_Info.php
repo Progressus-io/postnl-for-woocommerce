@@ -66,9 +66,23 @@ class Item_Info extends Base_Info {
 	/**
 	 * Pickup points data of the item info.
 	 *
-	 * @var receiver
+	 * @var pickup_points
 	 */
 	public $pickup_points;
+
+	/**
+	 * Delivery day data of the item info.
+	 *
+	 * @var delivery_day
+	 */
+	public $delivery_day;
+
+	/**
+	 * Saved data from database.
+	 *
+	 * @var backend_data
+	 */
+	public $backend_data;
 
 	/**
 	 * Parses the arguments and sets the instance's properties.
@@ -78,13 +92,14 @@ class Item_Info extends Base_Info {
 	protected function parse_args() {
 		$customer_info = $this->api_args['settings'] + $this->api_args['store_address'];
 		$shipment      = $this->api_args['billing_address'] + $this->api_args['order_details'];
-		$pickup_data   = array_merge( $this->api_args['frontend_data']['dropoff_points'], $this->api_args['backend_data'] );
 
 		$this->shipment      = Utils::parse_args( $shipment, $this->get_shipment_info_schema() );
 		$this->receiver      = Utils::parse_args( $this->api_args['shipping_address'], $this->get_receiver_info_schema() );
 		$this->customer      = Utils::parse_args( $customer_info, $this->get_customer_info_schema() );
 		$this->shipper       = Utils::parse_args( $this->api_args['store_address'], $this->get_store_info_schema() );
-		$this->pickup_points = Utils::parse_args( $pickup_data, $this->get_pickup_points_info_schema() );
+		$this->pickup_points = Utils::parse_args( $this->api_args['frontend_data']['pickup_points'], $this->get_pickup_points_info_schema() );
+		$this->delivery_day  = Utils::parse_args( $this->api_args['frontend_data']['delivery_day'], $this->get_delivery_day_info_schema() );
+		$this->backend_data  = Utils::parse_args( $this->api_args['backend_data'], $this->get_backend_data_info_schema() );
 	}
 
 	/**
@@ -142,7 +157,7 @@ class Item_Info extends Base_Info {
 		);
 
 		$this->api_args['frontend_data'] = array(
-			'delivery_day'   => array(
+			'delivery_day'  => array(
 				'value' => $saved_data['frontend']['delivery_day'] ?? '',
 				'date'  => $saved_data['frontend']['delivery_day_date'] ?? '',
 				'from'  => $saved_data['frontend']['delivery_day_from'] ?? '',
@@ -150,7 +165,7 @@ class Item_Info extends Base_Info {
 				'price' => $saved_data['frontend']['delivery_day_price'] ?? '',
 				'type'  => $saved_data['frontend']['delivery_day_type'] ?? '',
 			),
-			'dropoff_points' => array(
+			'pickup_points' => array(
 				'value'      => $saved_data['frontend']['dropoff_points'] ?? '',
 				'company'    => $saved_data['frontend']['dropoff_points_address_company'] ?? '',
 				'distance'   => $saved_data['frontend']['dropoff_points_distance'] ?? '',
@@ -176,8 +191,8 @@ class Item_Info extends Base_Info {
 	 *
 	 * @return Boolean
 	 */
-	public function is_dropoff_points() {
-		return ! empty( $this->api_args['frontend_data']['dropoff_points']['value'] );
+	public function is_pickup_points() {
+		return ! empty( $this->api_args['frontend_data']['pickup_points']['value'] );
 	}
 
 	/**
@@ -287,21 +302,79 @@ class Item_Info extends Base_Info {
 	 *
 	 * @return array
 	 */
+	protected function get_delivery_day_info_schema() {
+		// Closures in PHP 5.3 do not inherit class context
+		// So we need to copy $this into a lexical variable and pass it to closures manually.
+		$self = $this;
+
+		return array(
+			'date'  => array(
+				'default'  => '',
+				'validate' => function( $date ) use ( $self ) {
+					if ( empty( $date ) && $self->is_delivery_day() ) {
+						throw new \Exception(
+							__( 'Delivery day "Date" is empty!', 'postnl-for-woocommerce' )
+						);
+					}
+				},
+			),
+			'from'  => array(
+				'default'  => '',
+				'validate' => function( $hour ) use ( $self ) {
+					if ( empty( $hour ) && $self->is_delivery_day() ) {
+						throw new \Exception(
+							__( 'Delivery day "From" is empty!', 'postnl-for-woocommerce' )
+						);
+					}
+				},
+			),
+			'to'    => array(
+				'default'  => '',
+				'validate' => function( $hour ) use ( $self ) {
+					if ( empty( $hour ) && $self->is_delivery_day() ) {
+						throw new \Exception(
+							__( 'Delivery day "To" is empty!', 'postnl-for-woocommerce' )
+						);
+					}
+				},
+			),
+			'price' => array(
+				'default'  => '',
+				'validate' => function( $price ) use ( $self ) {
+					if ( empty( $price ) && $self->is_delivery_day() ) {
+						throw new \Exception(
+							__( 'Delivery day "Price" is empty!', 'postnl-for-woocommerce' )
+						);
+					}
+				},
+			),
+			'type'            => array(
+				'default'  => '',
+				'validate' => function( $type ) use ( $self ) {
+					if ( empty( $type ) && $self->is_delivery_day() ) {
+						throw new \Exception(
+							__( 'Delivery day "Type" is empty!', 'postnl-for-woocommerce' )
+						);
+					}
+				},
+			),
+		);
+	}
+
+	/**
+	 * Retrieves the args scheme to use with for parsing pickup points info.
+	 *
+	 * @return array
+	 */
 	protected function get_pickup_points_info_schema() {
 		// Closures in PHP 5.3 do not inherit class context
 		// So we need to copy $this into a lexical variable and pass it to closures manually.
 		$self = $this;
 
 		return array(
-			'insured_shipping' => array(
-				'default'  => false,
-				'sanitize' => function( $picked ) use ( $self ) {
-					return ( 'yes' === $picked );
-				},
-			),
 			'company'          => array(
 				'validate' => function( $company ) use ( $self ) {
-					if ( empty( $company ) && $self->is_dropoff_points() ) {
+					if ( empty( $company ) && $self->is_pickup_points() ) {
 						throw new \Exception(
 							__( 'Pickup "Company name" is empty!', 'postnl-for-woocommerce' )
 						);
@@ -310,7 +383,7 @@ class Item_Info extends Base_Info {
 			),
 			'address_1'        => array(
 				'validate' => function( $address ) use ( $self ) {
-					if ( empty( $address ) && $self->is_dropoff_points() ) {
+					if ( empty( $address ) && $self->is_pickup_points() ) {
 						throw new \Exception(
 							__( 'Pickup "Address 1" is empty!', 'postnl-for-woocommerce' )
 						);
@@ -325,7 +398,7 @@ class Item_Info extends Base_Info {
 			),
 			'city'             => array(
 				'validate' => function( $city ) use ( $self ) {
-					if ( empty( $city ) && $self->is_dropoff_points() ) {
+					if ( empty( $city ) && $self->is_pickup_points() ) {
 						throw new \Exception(
 							__( 'Pickup Point "City" is empty!', 'postnl-for-woocommerce' )
 						);
@@ -334,7 +407,7 @@ class Item_Info extends Base_Info {
 			),
 			'postcode'         => array(
 				'validate' => function( $postcode ) use ( $self ) {
-					if ( empty( $postcode ) && $self->is_dropoff_points() ) {
+					if ( empty( $postcode ) && $self->is_pickup_points() ) {
 						throw new \Exception(
 							__( 'Pickup Point "Postcode" is empty!', 'postnl-for-woocommerce' )
 						);
@@ -346,11 +419,81 @@ class Item_Info extends Base_Info {
 			),
 			'country'          => array(
 				'validate' => function( $country ) use ( $self ) {
-					if ( empty( $country ) && $self->is_dropoff_points() ) {
+					if ( empty( $country ) && $self->is_pickup_points() ) {
 						throw new \Exception(
 							__( 'Pickup Point "Country" is empty!', 'postnl-for-woocommerce' )
 						);
 					}
+				},
+			),
+		);
+	}
+
+	/**
+	 * Retrieves the args scheme to use with for parsing data from database.
+	 *
+	 * @return array
+	 */
+	protected function get_backend_data_info_schema() {
+		// Closures in PHP 5.3 do not inherit class context
+		// So we need to copy $this into a lexical variable and pass it to closures manually.
+		$self = $this;
+
+		return array(
+			'delivery_type'         => array(
+				'default'  => 'Standard',
+				'sanitize' => function( $type ) {
+					return ( 'Evening' === $type ) ? 'Evening' : 'Standard';
+				},
+			),
+			'insured_shipping'      => array(
+				'default'  => false,
+				'sanitize' => function( $picked ) {
+					return ( 'yes' === $picked );
+				},
+			),
+			'return_no_answer'      => array(
+				'default'  => false,
+				'sanitize' => function( $picked ) {
+					return ( 'yes' === $picked );
+				},
+			),
+			'signature_on_delivery' => array(
+				'default'  => false,
+				'sanitize' => function( $picked ) {
+					return ( 'yes' === $picked );
+				},
+			),
+			'only_home_address'     => array(
+				'default'  => false,
+				'sanitize' => function( $picked ) {
+					return ( 'yes' === $picked );
+				},
+			),
+			'num_labels'            => array(
+				'default'  => '1',
+				'validate' => function( $num ) use ( $self ) {
+					if ( ! is_numeric( $num ) ) {
+						throw new \Exception(
+							__( 'Number of labels need to be a number!', 'postnl-for-woocommerce' )
+						);
+					}
+				},
+				'sanitize' => function( $num ) use ( $self ) {
+					$abs_number = abs( $num );
+					return ( 10 >= $abs_number ) ? $abs_number : 10;
+				},
+			),
+			'create_return_label'   => array(
+				'default'  => false,
+				'sanitize' => function( $picked ) {
+					return ( 'yes' === $picked );
+				},
+			),
+			'letterbox'             => array(
+				'default'  => false,
+				'sanitize' => function( $picked ) {
+					return ( 'yes' === $picked );
 				},
 			),
 		);
@@ -447,7 +590,7 @@ class Item_Info extends Base_Info {
 						'3389' => array( 'signature_on_delivery', 'return_no_answer' ),
 						'3096' => array( 'signature_on_delivery', 'only_home_address', 'return_no_answer' ),
 					),
-					'dropoff_points' => array(
+					'pickup_points' => array(
 						'3085' => array(),
 						'3533' => array( 'signature_on_delivery' ),
 						'3534' => array( 'insured_shipping' ),
@@ -460,7 +603,7 @@ class Item_Info extends Base_Info {
 						'4912' => array( 'signature_on_delivery' ),
 						'4914' => array( 'insured_shipping' ),
 					),
-					'dropoff_points' => array(
+					'pickup_points' => array(
 						'4936' => array(),
 					),
 				),
@@ -468,7 +611,7 @@ class Item_Info extends Base_Info {
 					'delivery_day'   => array(
 						'4944' => array(),
 					),
-					'dropoff_points' => array(
+					'pickup_points' => array(
 						'4944' => array(),
 					),
 				),
@@ -476,7 +619,7 @@ class Item_Info extends Base_Info {
 					'delivery_day'   => array(
 						'4945' => array(),
 					),
-					'dropoff_points' => array(
+					'pickup_points' => array(
 						'4945' => array(),
 					),
 				),
@@ -490,7 +633,7 @@ class Item_Info extends Base_Info {
 						'4962' => array( 'signature_on_delivery', 'only_home_address' ),
 						'4965' => array( 'insured_shipping', 'only_home_address' ),
 					),
-					'dropoff_points' => array(
+					'pickup_points' => array(
 						'4880' => array(),
 						'4878' => array( 'insured_shipping' ),
 					),

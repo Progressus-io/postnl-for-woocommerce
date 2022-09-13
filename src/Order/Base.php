@@ -92,15 +92,8 @@ abstract class Base {
 			'postnl_order_meta_box_fields',
 			array(
 				array(
-					'id'                => $this->prefix . 'delivery_day_type',
-					'type'              => 'text',
-					'label'             => __( 'Delivery Type:', 'postnl-for-woocommerce' ),
-					'description'       => '',
-					'class'             => 'long',
-					'value'             => 'Standard',
-					'custom_attributes' => array( 'readonly' => 'readonly' ),
-					'show_in_bulk'      => false,
-					'container'         => true,
+					'id'   => $this->prefix . 'break_1',
+					'type' => 'break',
 				),
 				array(
 					'id'           => $this->prefix . 'insured_shipping',
@@ -111,10 +104,6 @@ abstract class Base {
 					'value'        => '',
 					'show_in_bulk' => true,
 					'container'    => true,
-				),
-				array(
-					'id'   => $this->prefix . 'break_1',
-					'type' => 'break',
 				),
 				array(
 					'id'           => $this->prefix . 'return_no_answer',
@@ -147,6 +136,20 @@ abstract class Base {
 					'container'    => true,
 				),
 				array(
+					'id'           => $this->prefix . 'letterbox',
+					'type'         => 'checkbox',
+					'label'        => __( 'Letterbox: ', 'postnl-for-woocommerce' ),
+					'placeholder'  => '',
+					'description'  => '',
+					'value'        => '',
+					'show_in_bulk' => true,
+					'container'    => true,
+				),
+				array(
+					'id'   => $this->prefix . 'break_2',
+					'type' => 'break',
+				),
+				array(
 					'id'                => $this->prefix . 'num_labels',
 					'type'              => 'number',
 					'label'             => __( 'Number of Labels: ', 'postnl-for-woocommerce' ),
@@ -166,16 +169,6 @@ abstract class Base {
 					'id'           => $this->prefix . 'create_return_label',
 					'type'         => 'checkbox',
 					'label'        => __( 'Create Return Label: ', 'postnl-for-woocommerce' ),
-					'placeholder'  => '',
-					'description'  => '',
-					'value'        => '',
-					'show_in_bulk' => true,
-					'container'    => true,
-				),
-				array(
-					'id'           => $this->prefix . 'letterbox',
-					'type'         => 'checkbox',
-					'label'        => __( 'Letterbox: ', 'postnl-for-woocommerce' ),
 					'placeholder'  => '',
 					'description'  => '',
 					'value'        => '',

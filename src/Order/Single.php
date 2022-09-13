@@ -9,6 +9,7 @@ namespace PostNLWooCommerce\Order;
 
 use Automattic\WooCommerce\Internal\DataStores\Orders\CustomOrdersTableController;
 use PostNLWooCommerce\Utils;
+use PostNLWooCommerce\Helper\Mapping;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -111,13 +112,14 @@ class Single extends Base {
 	}
 
 	/**
-	 * Get dropoff points information.
+	 * Get order information from frontend data.
 	 *
 	 * @param WC_Order $order Order object.
+	 * @param String   $needle String that will be used to search the frontend value.
 	 *
 	 * @return Array.
 	 */
-	public function get_dropoff_points_info( $order ) {
+	public function get_order_frontend_info( $order, $needle ) {
 		if ( ! is_a( $order, 'WC_Order' ) ) {
 			return array();
 		}
@@ -125,16 +127,96 @@ class Single extends Base {
 		$order_data = $order->get_meta( $this->meta_name );
 
 		if ( ! empty( $order_data['frontend'] ) ) {
-			$dropoff_value = array();
+			$info_value = array();
 
 			foreach ( $order_data['frontend'] as $key => $value ) {
-				if ( false !== strpos( $key, 'dropoff_points_' ) ) {
-					$dropoff_value[ $key ] = $value;
+				if ( false !== strpos( $key, $needle ) ) {
+					$info_value[ $key ] = $value;
 				}
 			}
 
-			return $dropoff_value;
+			return $info_value;
 		}
+
+		return array();
+	}
+
+	/**
+	 * Get dropoff points information.
+	 *
+	 * @param WC_Order $order Order object.
+	 *
+	 * @return Array.
+	 */
+	public function get_pickup_points_info( $order ) {
+		return $this->get_order_frontend_info( $order, 'dropoff_points_' );
+	}
+
+	/**
+	 * Get delivery day information.
+	 *
+	 * @param WC_Order $order Order object.
+	 *
+	 * @return Array.
+	 */
+	public function get_delivery_day_info( $order ) {
+		return $this->get_order_frontend_info( $order, 'delivery_day_' );
+	}
+
+	/**
+	 * Get delivery type string.
+	 *
+	 * @param WC_Order $order Order object.
+	 *
+	 * @return String.
+	 */
+	public function get_delivery_type( $order ) {
+		$from_country      = Utils::get_base_country();
+		$to_country        = $order->get_shipping_country();
+		$delivery_type_map = Mapping::delivery_type();
+		$filtered_frontend = $this->get_order_frontend_info( $order, '_type' );
+		$destination       = Utils::get_shipping_zone( $to_country );
+
+		if ( ! is_array( $delivery_type_map[ $from_country ][ $destination ] ) ) {
+			return ! empty( $delivery_type_map[ $from_country ][ $destination ] ) ? $delivery_type_map[ $from_country ][ $destination ] : '';
+		}
+
+		if ( empty( $filtered_frontend ) ) {
+			return '';
+		}
+
+		foreach ( $filtered_frontend as $frontend_key => $frontend_value ) {
+			if ( ! empty( $delivery_type_map[ $from_country ][ $destination ][ $frontend_key ][ $frontend_value ] ) ) {
+				return $delivery_type_map[ $from_country ][ $destination ][ $frontend_key ][ $frontend_value ];
+			}
+		}
+
+		return '';
+	}
+
+	/**
+	 * Generate the dropoff points html information.
+	 *
+	 * @param WC_Order $order Order object.
+	 */
+	public function generate_delivery_type_html( $order ) {
+		if ( ! is_a( $order, 'WC_Order' ) ) {
+			return;
+		}
+
+		$delivery_type = $this->get_delivery_type( $order );
+
+		if ( empty( $delivery_type ) ) {
+			return;
+		}
+		?>
+			<div class="postnl-info-container delivery-type-info">
+				<label for="postnl_delivery_type"><?php esc_html_e( 'Delivery Type:', 'postnl-for-woocommerce' ); ?></label>
+				<div class="postnl-info delivery-type">
+					<?php echo esc_html( $delivery_type ); ?>
+				</div>
+			</div>
+		<?php
 	}
 
 	/**
@@ -142,7 +224,44 @@ class Single extends Base {
 	 *
 	 * @param Array $infos Dropoff points informations.
 	 */
-	public function generate_dropoff_points_html( $infos ) {
+	public function generate_delivery_date_html( $infos ) {
+		$filtered_infos = array_filter(
+			$infos,
+			function ( $info ) {
+				$displayed_info = array(
+					'delivery_day_date',
+				);
+
+				return in_array( $info, $displayed_info, true );
+			},
+			ARRAY_FILTER_USE_KEY
+		);
+
+		if ( empty( $filtered_infos ) ) {
+			return;
+		}
+		?>
+			<div class="postnl-info-container delivery-date-info">
+				<label for="postnl_pickup_points"><?php esc_html_e( 'Delivery Date:', 'postnl-for-woocommerce' ); ?></label>
+				<?php
+				foreach ( $filtered_infos as $info_idx => $info_val ) {
+					?>
+					<div class="postnl-info <?php echo esc_attr( $info_idx ); ?>">
+						<?php echo esc_html( $info_val ); ?>
+					</div>
+					<?php
+				}
+				?>
+			</div>
+		<?php
+	}
+
+	/**
+	 * Generate the dropoff points html information.
+	 *
+	 * @param Array $infos Dropoff points informations.
+	 */
+	public function generate_pickup_points_html( $infos ) {
 		$filtered_infos = array_filter(
 			$infos,
 			function ( $info ) {
@@ -173,28 +292,32 @@ class Single extends Base {
 			return;
 		}
 		?>
-		<label for="postnl_dropoff_points"><?php esc_html_e( 'Dropoff Points:', 'postnl-for-woocommerce' ); ?></label>
-		<?php
-		foreach ( $filtered_infos as $info_idx => $info_val ) {
-			switch ( $info_idx ) {
-				case 'dropoff_points_date':
-					$additional_text = esc_html__( 'Date:', 'postnl-for-woocommerce' );
-					break;
+		<div class="postnl-info-container pickup-points-info">
+			<label for="postnl_pickup_points"><?php esc_html_e( 'Pickup Address:', 'postnl-for-woocommerce' ); ?></label>
+			<?php
+			foreach ( $filtered_infos as $info_idx => $info_val ) {
+				switch ( $info_idx ) {
+					case 'dropoff_points_date':
+						$additional_text = esc_html__( 'Date:', 'postnl-for-woocommerce' );
+						break;
 
-				case 'dropoff_points_time':
-					$additional_text = esc_html__( 'Time:', 'postnl-for-woocommerce' );
-					break;
+					case 'dropoff_points_time':
+						$additional_text = esc_html__( 'Time:', 'postnl-for-woocommerce' );
+						break;
 
-				default:
-					$additional_text = '';
-					break;
+					default:
+						$additional_text = '';
+						break;
+				}
+				?>
+				<div class="postnl-info <?php echo esc_attr( $info_idx ); ?>">
+					<?php echo esc_html( $additional_text . ' ' . $info_val ); ?>
+				</div>
+				<?php
 			}
 			?>
-			<div class="postnl-info <?php echo esc_attr( $info_idx ); ?>">
-				<?php echo esc_html( $additional_text . ' ' . $info_val ); ?>
-			</div>
-			<?php
-		}
+		</div>
+		<?php
 	}
 	/**
 	 * Additional fields of the meta box for child class.
@@ -206,14 +329,15 @@ class Single extends Base {
 			return;
 		}
 
-		$order        = ( is_a( $post_or_order_object, 'WP_Post' ) ) ? wc_get_order( $post_or_order_object->ID ) : $post_or_order_object;
-		$form_class   = ( $this->have_backend_data( $order ) ) ? 'generated' : '';
-		$dropoff_info = $this->get_dropoff_points_info( $order );
+		$order         = ( is_a( $post_or_order_object, 'WP_Post' ) ) ? wc_get_order( $post_or_order_object->ID ) : $post_or_order_object;
+		$form_class    = ( $this->have_backend_data( $order ) ) ? 'generated' : '';
+		$pickup_info   = $this->get_pickup_points_info( $order );
+		$delivery_info = $this->get_delivery_day_info( $order );
 		?>
 		<div id="shipment-postnl-label-form" class="<?php echo esc_attr( $form_class ); ?>">
-			<div class="postnl-info-container dropoff-points-info">
-				<?php $this->generate_dropoff_points_html( $dropoff_info ); ?>
-			</div>
+			<?php $this->generate_delivery_type_html( $order ); ?>
+			<?php $this->generate_delivery_date_html( $delivery_info ); ?>
+			<?php $this->generate_pickup_points_html( $pickup_info ); ?>
 			<?php $this->fields_generator( $this->add_meta_box_value( $order ) ); ?>
 
 			<div class="button-container">

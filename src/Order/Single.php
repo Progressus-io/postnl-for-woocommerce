@@ -112,6 +112,31 @@ class Single extends Base {
 	}
 
 	/**
+	 * Filter the fields to display the available fields only.
+	 *
+	 * @param Array $meta_fields Order meta fields.
+	 * @param Array $available_options Available fields based on the countries and chosen option in checkout page.
+	 *
+	 * @return array
+	 */
+	public function filter_available_fields( $meta_fields, $available_options ) {
+		$meta_fields = array_filter(
+			$meta_fields,
+			function( $field ) use ( $available_options ) {
+				$field_name = Utils::remove_prefix_field( $this->prefix, $field['id'] );
+
+				if ( 'break' === $field['type'] || 'hidden' === $field['type'] ) {
+					return true;
+				}
+
+				return in_array( $field_name, $available_options, true );
+			}
+		);
+
+		return $meta_fields;
+	}
+
+	/**
 	 * Get order information from frontend data.
 	 *
 	 * @param WC_Order $order Order object.
@@ -329,16 +354,19 @@ class Single extends Base {
 			return;
 		}
 
-		$order         = ( is_a( $post_or_order_object, 'WP_Post' ) ) ? wc_get_order( $post_or_order_object->ID ) : $post_or_order_object;
-		$form_class    = ( $this->have_backend_data( $order ) ) ? 'generated' : '';
-		$pickup_info   = $this->get_pickup_points_info( $order );
-		$delivery_info = $this->get_delivery_day_info( $order );
+		$order             = ( is_a( $post_or_order_object, 'WP_Post' ) ) ? wc_get_order( $post_or_order_object->ID ) : $post_or_order_object;
+		$form_class        = ( $this->have_backend_data( $order ) ) ? 'generated' : '';
+		$pickup_info       = $this->get_pickup_points_info( $order );
+		$delivery_info     = $this->get_delivery_day_info( $order );
+		$fields_with_value = $this->add_meta_box_value( $order );
+		$available_options = $this->get_available_options( $order );
+		$available_fields  = $this->filter_available_fields( $fields_with_value, $available_options );
 		?>
 		<div id="shipment-postnl-label-form" class="<?php echo esc_attr( $form_class ); ?>">
 			<?php $this->generate_delivery_type_html( $order ); ?>
 			<?php $this->generate_delivery_date_html( $delivery_info ); ?>
 			<?php $this->generate_pickup_points_html( $pickup_info ); ?>
-			<?php $this->fields_generator( $this->add_meta_box_value( $order ) ); ?>
+			<?php $this->fields_generator( $available_fields ); ?>
 
 			<div class="button-container">
 				<button class="button button-primary button-save-form"><?php esc_html_e( 'Generate Label', 'postnl-for-woocommerce' ); ?></button>

@@ -64,6 +64,21 @@ class Utils {
 	}
 
 	/**
+	 * Convert the key if it's different.
+	 *
+	 * @param String $key Key of the data.
+	 *
+	 * @return String.
+	 */
+	public static function convert_data_key( $key ) {
+		$keys = array(
+			'dropoff_points' => 'pickup_points',
+		);
+
+		return ! empty( $keys[ $key ] ) ? $keys[ $key ] : $key;
+	}
+
+	/**
 	 * Get field name without prefix.
 	 *
 	 * @param String $prefix Prefix of the field.

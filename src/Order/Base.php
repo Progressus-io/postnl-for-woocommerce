@@ -10,6 +10,7 @@ namespace PostNLWooCommerce\Order;
 use PostNLWooCommerce\Utils;
 use PostNLWooCommerce\Rest_API\Shipping;
 use PostNLWooCommerce\Shipping_Method\Settings;
+use PostNLWooCommerce\Helper\Mapping;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -242,6 +243,46 @@ abstract class Base {
 				<?php
 			}
 		}
+	}
+
+	/**
+	 * Get available option based on the countries and chosen option in the frontend checkout.
+	 *
+	 * @param WC_Order $order Order object.
+	 *
+	 * @return Array.
+	 */
+	public function get_available_options( $order ) {
+		if ( ! is_a( $order, 'WC_Order' ) ) {
+			return array();
+		}
+
+		$product_map  = Mapping::product_code();
+		$from_country = Utils::get_base_country();
+		$to_country   = $order->get_shipping_country();
+		$saved_data   = $this->get_data( $order->get_id() );
+
+		if ( empty( $saved_data['frontend'] ) ) {
+			return array();
+		}
+
+		$selected_option   = '';
+		$available_options = array();
+
+		foreach ( $saved_data['frontend'] as $key => $value ) {
+			$converted_key = Utils::convert_data_key( $key );
+
+			if ( ! empty( $product_map[ $from_country ][ $to_country ][ $converted_key ] ) ) {
+				$selected_option = $converted_key;
+				break;
+			}
+		}
+
+		foreach ( $product_map[ $from_country ][ $to_country ][ $selected_option ] as $product_code => $sub_options ) {
+			$available_options = array_merge( $available_options, $sub_options );
+		}
+
+		return $available_options;
 	}
 
 	/**

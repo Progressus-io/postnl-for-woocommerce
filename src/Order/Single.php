@@ -125,7 +125,7 @@ class Single extends Base {
 			function( $field ) use ( $available_options ) {
 				$field_name = Utils::remove_prefix_field( $this->prefix, $field['id'] );
 
-				if ( 'break' === $field['type'] || 'hidden' === $field['type'] ) {
+				if ( false === $field['option_feat'] ) {
 					return true;
 				}
 

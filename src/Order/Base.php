@@ -93,8 +93,9 @@ abstract class Base {
 			'postnl_order_meta_box_fields',
 			array(
 				array(
-					'id'   => $this->prefix . 'break_1',
-					'type' => 'break',
+					'id'          => $this->prefix . 'break_1',
+					'option_feat' => false,
+					'type'        => 'break',
 				),
 				array(
 					'id'           => $this->prefix . 'insured_shipping',
@@ -104,6 +105,7 @@ abstract class Base {
 					'description'  => '',
 					'value'        => '',
 					'show_in_bulk' => true,
+					'option_feat'  => true,
 					'container'    => true,
 				),
 				array(
@@ -114,6 +116,7 @@ abstract class Base {
 					'description'  => '',
 					'value'        => '',
 					'show_in_bulk' => true,
+					'option_feat'  => true,
 					'container'    => true,
 				),
 				array(
@@ -124,6 +127,7 @@ abstract class Base {
 					'description'  => '',
 					'value'        => '',
 					'show_in_bulk' => true,
+					'option_feat'  => true,
 					'container'    => true,
 				),
 				array(
@@ -134,6 +138,7 @@ abstract class Base {
 					'description'  => '',
 					'value'        => '',
 					'show_in_bulk' => true,
+					'option_feat'  => true,
 					'container'    => true,
 				),
 				array(
@@ -144,11 +149,13 @@ abstract class Base {
 					'description'  => '',
 					'value'        => '',
 					'show_in_bulk' => true,
+					'option_feat'  => true,
 					'container'    => true,
 				),
 				array(
-					'id'   => $this->prefix . 'break_2',
-					'type' => 'break',
+					'id'          => $this->prefix . 'break_2',
+					'option_feat' => false,
+					'type'        => 'break',
 				),
 				array(
 					'id'                => $this->prefix . 'num_labels',
@@ -164,6 +171,7 @@ abstract class Base {
 							'min'  => '0',
 						),
 					'show_in_bulk'      => true,
+					'option_feat'       => false,
 					'container'         => true,
 				),
 				array(
@@ -174,6 +182,7 @@ abstract class Base {
 					'description'  => '',
 					'value'        => '',
 					'show_in_bulk' => true,
+					'option_feat'  => false,
 					'container'    => true,
 				),
 				array(
@@ -182,6 +191,7 @@ abstract class Base {
 					'nonce'        => true,
 					'value'        => wp_create_nonce( $this->nonce_key ),
 					'show_in_bulk' => true,
+					'option_feat'  => false,
 					'container'    => true,
 				),
 			)

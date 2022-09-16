@@ -145,6 +145,12 @@ class Container {
 				return array();
 			}
 
+			$post_data = Utils::set_post_data_address( $post_data );
+
+			if ( ! in_array( $post_data['shipping_country'], Utils::get_available_country(), true ) ) {
+				return array();
+			}
+
 			foreach ( $post_data as $post_key => $post_value ) {
 				if ( false !== strpos( $post_key, 'shipping_method' ) && false === strpos( $post_value, POSTNL_SETTINGS_ID ) ) {
 					return array();

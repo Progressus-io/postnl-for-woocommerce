@@ -32,6 +32,20 @@ class Single {
 	protected $service = POSTNL_SERVICE_NAME;
 
 	/**
+	 * Origin field name.
+	 *
+	 * @var origin_field
+	 */
+	const ORIGIN_FIELD = '_postnl_country_origin';
+
+	/**
+	 * HS Tariff Code field name.
+	 *
+	 * @var hs_code_field
+	 */
+	const HS_CODE_FIELD = '_postnl_hs_tariff_code';
+
+	/**
 	 * Init and hook in the integration.
 	 */
 	public function __construct() {
@@ -56,7 +70,7 @@ class Single {
 
 		woocommerce_wp_select(
 			array(
-				'id'          => '_postnl_country_origin',
+				'id'          => self::ORIGIN_FIELD,
 				// translators: %s will be replaced by service name.
 				'label'       => sprintf( esc_html__( 'Country of Origin (%s)', 'postnl-for-woocommerce' ), $this->service ),
 				'description' => esc_html__( 'Country of Origin.', 'postnl-for-woocommerce' ),
@@ -70,7 +84,7 @@ class Single {
 
 		woocommerce_wp_text_input(
 			array(
-				'id'          => '_postnl_hs_tariff_code',
+				'id'          => self::HS_CODE_FIELD,
 				// translators: %s will be replaced by service name.
 				'label'       => sprintf( esc_html__( 'HS Tariff Code (%s)', 'postnl-for-woocommerce' ), $this->service ),
 				'description' => esc_html__( 'HS Tariff Code is a number assigned to every possible commodity that can be imported or exported from any country.', 'postnl-for-woocommerce' ),
@@ -94,13 +108,13 @@ class Single {
 		}
 
 		// Country of origin.
-		if ( isset( $_POST['_postnl_country_origin'] ) ) {
-			$product->update_meta_data( '_postnl_country_origin', sanitize_text_field( wp_unslash( $_POST['_postnl_country_origin'] ) ) );
+		if ( isset( $_POST[ self::ORIGIN_FIELD ] ) ) {
+			$product->update_meta_data( self::ORIGIN_FIELD, sanitize_text_field( wp_unslash( $_POST[ self::ORIGIN_FIELD ] ) ) );
 		}
 
 		// HS code value.
-		if ( isset( $_POST['_postnl_hs_tariff_code'] ) ) {
-			$product->update_meta_data( '_postnl_hs_tariff_code', sanitize_text_field( wp_unslash( $_POST['_postnl_hs_tariff_code'] ) ) );
+		if ( isset( $_POST[ self::HS_CODE_FIELD ] ) ) {
+			$product->update_meta_data( self::HS_CODE_FIELD, sanitize_text_field( wp_unslash( $_POST[ self::HS_CODE_FIELD ] ) ) );
 		}
 
 		$product->save();

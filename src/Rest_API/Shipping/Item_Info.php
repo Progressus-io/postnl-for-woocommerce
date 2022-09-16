@@ -11,6 +11,7 @@ use PostNLWooCommerce\Rest_API\Base_Info;
 use PostNLWooCommerce\Shipping_Method\Settings;
 use PostNLWooCommerce\Utils;
 use PostNLWooCommerce\Helper\Mapping;
+use PostNLWooCommerce\Product\Single;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -51,6 +52,13 @@ class Item_Info extends Base_Info {
 	public $customer;
 
 	/**
+	 * Order item data of the item info.
+	 *
+	 * @var contents
+	 */
+	public $contents = array();
+
+	/**
 	 * Shipper data of the item info.
 	 *
 	 * @var shipper
@@ -86,11 +94,20 @@ class Item_Info extends Base_Info {
 	public $backend_data;
 
 	/**
+	 * Weight UOM that set in WooCommerce settings.
+	 *
+	 * @var weight_uom
+	 */
+	public $weight_uom;
+
+	/**
 	 * Parses the arguments and sets the instance's properties.
 	 *
 	 * @throws Exception If some data in $args did not pass validation.
 	 */
 	protected function parse_args() {
+		$this->weight_uom = Utils::get_uom();
+
 		$customer_info = $this->api_args['settings'] + $this->api_args['store_address'];
 		$shipment      = $this->api_args['billing_address'] + $this->api_args['order_details'];
 
@@ -101,6 +118,12 @@ class Item_Info extends Base_Info {
 		$this->pickup_points = Utils::parse_args( $this->api_args['frontend_data']['pickup_points'], $this->get_pickup_points_info_schema() );
 		$this->delivery_day  = Utils::parse_args( $this->api_args['frontend_data']['delivery_day'], $this->get_delivery_day_info_schema() );
 		$this->backend_data  = Utils::parse_args( $this->api_args['backend_data'], $this->get_backend_data_info_schema() );
+
+		if ( ! empty( $this->api_args['order_details']['contents'] ) ) {
+			foreach ( $this->api_args['order_details']['contents'] as $item_info ) {
+				$this->contents[] = Utils::parse_args( $item_info, $this->get_content_item_info_schema() );
+			}
+		}
 	}
 
 	/**
@@ -183,8 +206,33 @@ class Item_Info extends Base_Info {
 
 		$this->api_args['order_details'] = array(
 			'order_id'     => $order->get_id(),
+			'currency'     => $order->get_currency(),
 			'total_weight' => $this->calculate_order_weight( $order ),
 		);
+
+		foreach ( $order->get_items() as $item_id => $item ) {
+			$product = $item->get_product();
+
+			if ( $product->is_virtual() ) {
+				continue;
+			}
+
+			$hs_code = ! empty( $product->get_meta( Single::HS_CODE_FIELD ) ) ? $product->get_meta( Single::HS_CODE_FIELD ) : $this->settings->get_hs_tariff_code();
+			$origin  = ! empty( $product->get_meta( Single::ORIGIN_FIELD ) ) ? $product->get_meta( Single::ORIGIN_FIELD ) : $this->settings->get_country_origin();
+
+			$content = array(
+				'product_id'       => $product->get_id(),
+				'qty'              => $item->get_quantity(),
+				'sku'              => $product->get_sku(),
+				'item_value'       => $item->get_subtotal(),
+				'item_description' => $product->get_name(),
+				'item_weight'      => $product->get_weight(),
+				'hs_code'          => $hs_code,
+				'origin'           => $origin,
+			);
+
+			$this->api_args['order_details']['contents'][] = $content;
+		}
 	}
 
 	/**
@@ -209,7 +257,30 @@ class Item_Info extends Base_Info {
 	 * Set extra API args.
 	 */
 	public function set_extra_data_to_api_args() {
+		$this->set_order_product_code();
+		$this->set_rest_of_world_args();
+	}
+
+	/**
+	 * Set product code in the order details.
+	 */
+	public function set_order_product_code() {
 		$this->api_args['order_details']['product_code'] = $this->get_product_code();
+	}
+
+	/**
+	 * Change or set the args value for rest of the world.
+	 */
+	public function set_rest_of_world_args() {
+		$to_country  = $this->api_args['shipping_address']['country'];
+		$destination = Utils::get_shipping_zone( $to_country );
+
+		if ( 'ROW' !== $destination ) {
+			return;
+		}
+
+		$this->api_args['settings']['customer_code'] = $this->settings->get_globalpack_customer_code();
+		$this->api_args['settings']['barcode_type']  = $this->settings->get_globalpack_barcode_type();
 	}
 
 	/**
@@ -223,19 +294,22 @@ class Item_Info extends Base_Info {
 		$self = $this;
 
 		return array(
-			'location_code'            => array(
+			'location_code' => array(
 				'error' => __( 'Location Code is empty!', 'postnl-for-woocommerce' ),
 			),
-			'customer_code'            => array(
+			'customer_code' => array(
 				'error' => __( 'Customer Code is empty!', 'postnl-for-woocommerce' ),
 			),
-			'customer_num'             => array(
+			'customer_num'  => array(
 				'error' => __( 'Customer Number is empty!', 'postnl-for-woocommerce' ),
 			),
-			'company'             => array(
+			'barcode_type'  => array(
 				'default' => '',
 			),
-			'email'             => array(
+			'company'       => array(
+				'default' => '',
+			),
+			'email'         => array(
 				'validate' => function( $value ) {
 					if ( empty( $value ) ) {
 						throw new \Exception(
@@ -264,6 +338,9 @@ class Item_Info extends Base_Info {
 		$self = $this;
 
 		return array(
+			'order_id'     => array(
+				'error' => __( 'Order ID is empty!', 'postnl-for-woocommerce' ),
+			),
 			'product_code' => array(
 				'error'    => __( 'Product code is empty!', 'postnl-for-woocommerce' ),
 				'validate' => function( $value ) {
@@ -288,6 +365,15 @@ class Item_Info extends Base_Info {
 					if ( ! is_email( $value ) ) {
 						throw new \Exception(
 							__( 'Customer email is not valid!', 'postnl-for-woocommerce' )
+						);
+					}
+				},
+			),
+			'currency'     => array(
+				'validate' => function( $value ) {
+					if ( ! Utils::check_available_currency( $value ) ) {
+						throw new \Exception(
+							__( 'Currency is not available!', 'postnl-for-woocommerce' )
 						);
 					}
 				},
@@ -498,6 +584,80 @@ class Item_Info extends Base_Info {
 	}
 
 	/**
+	 * Retrieves the args scheme to use with parser for parsing order content item info.
+	 *
+	 * @since [*next-version*]
+	 *
+	 * @return array
+	 */
+	protected function get_content_item_info_schema() {
+		// Closures in PHP 5.3 do not inherit class context.
+		// So we need to copy $this into a lexical variable and pass it to closures manually.
+		$self = $this;
+
+		return array(
+			'hs_code'          => array(
+				'default'  => '',
+				'validate' => function( $hs_code ) {
+					$length = is_string( $hs_code ) ? strlen( $hs_code ) : 0;
+
+					if ( empty( $length ) ) {
+						return;
+					}
+
+					if ( $length < 6 || $length > 20 ) {
+						throw new \Exception(
+							__( 'Item HS Code must be between 6 and 20 characters long', 'postnl-for-woocommerce' )
+						);
+					}
+				},
+			),
+			'item_description' => array(
+				'rename'   => 'description',
+				'default'  => '',
+				'sanitize' => function( $description ) use ( $self ) {
+					return $self->string_length_sanitization( $description, 35 );
+				},
+			),
+			'product_id'       => array(
+				'error' => __( 'Item "Product ID" is empty!', 'postnl-for-woocommerce' ),
+			),
+			'sku'              => array(
+				'error' => __( 'Item "Product SKU" is empty!', 'postnl-for-woocommerce' ),
+			),
+			'item_value'       => array(
+				'rename'   => 'value',
+				'default'  => 0,
+				'sanitize' => function( $value ) use ( $self ) {
+					return $self->float_round_sanitization( $value, 2 );
+				},
+			),
+			'origin'           => array(
+				'default' => Utils::get_base_country(),
+			),
+			'qty'              => array(
+				'validate' => function( $qty ) {
+
+					if ( ! is_numeric( $qty ) || $qty < 1 ) {
+						throw new \Exception(
+							__( 'Item quantity must be more than 1', 'postnl-for-woocommerce' )
+						);
+					}
+				},
+			),
+			'item_weight'      => array(
+				'rename'   => 'weight',
+				'sanitize' => function ( $weight ) use ( $self ) {
+
+					$weight = $self->maybe_convert_to_grams( $weight, $self->weight_uom );
+					$weight = ( $weight > 1 ) ? $weight : 1;
+					return $weight;
+				},
+			),
+		);
+	}
+
+	/**
 	 * Calculate total weight in one order.
 	 *
 	 * @param WC_Order $order Order object.
@@ -550,6 +710,8 @@ class Item_Info extends Base_Info {
 				}
 			}
 		}
+
+		return array_key_first( $this->api_args['frontend_data'] );
 	}
 
 	/**

@@ -373,10 +373,11 @@ class Settings extends \WC_Settings_API {
 			),
 			'country_origin'            => array(
 				'title'       => esc_html__( 'Default Country of Origin', 'postnl-for-woocommerce' ),
-				'type'        => 'text',
+				'type'        => 'select',
 				'description' => esc_html__( 'Default country of origin if none is set in the product.', 'postnl-for-woocommerce' ),
 				'desc_tip'    => true,
-				'default'     => '',
+				'default'     => Utils::get_base_country(),
+				'options'     => WC()->countries->get_countries(),
 				'placeholder' => '',
 			),
 

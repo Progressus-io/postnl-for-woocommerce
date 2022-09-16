@@ -94,6 +94,25 @@ class Utils {
 	}
 
 	/**
+	 * Get Unit of Measurement value that is used in PostNL REST API.
+	 *
+	 * @return String.
+	 */
+	public static function used_api_uom() {
+		// API use Grams.
+		return 'g';
+	}
+
+	/**
+	 * Get Unit of Measurement value from WooCommerce settings.
+	 *
+	 * @return String.
+	 */
+	public static function get_uom() {
+		return get_option( 'woocommerce_weight_unit' );
+	}
+
+	/**
 	 * Get store base state.
 	 *
 	 * @return String.

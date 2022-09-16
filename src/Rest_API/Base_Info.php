@@ -231,6 +231,18 @@ abstract class Base_Info {
 	}
 
 	/**
+	 * Converts a given weight into grams, if necessary.
+	 *
+	 * @param float  $weight The weight amount.
+	 * @param string $uom The unit of measurement of the $weight parameter.
+	 *
+	 * @return float The potentially converted weight.
+	 */
+	protected function maybe_convert_to_grams( $weight, $uom ) {
+		return round( wc_get_weight( $weight, Utils::used_api_uom(), $uom ) );
+	}
+
+	/**
 	 * Get cutoff times value from the settings.
 	 *
 	 * @return String

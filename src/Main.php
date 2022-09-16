@@ -127,7 +127,10 @@ class Main {
 		// Throw an admin error informing the user this plugin needs country settings to be NL and BE.
 		add_action( 'admin_notices', array( $this, 'notice_nl_be_required' ) );
 
-		if ( class_exists( 'WooCommerce' ) && in_array( Utils::get_base_country(), Utils::get_available_country(), true ) ) {
+		// Throw an admin error informing the user this plugin needs currency settings to be EUR, USD, GBP, CNY.
+		add_action( 'admin_notices', array( $this, 'notice_currency_required' ) );
+
+		if ( class_exists( 'WooCommerce' ) && Utils::use_available_currency() && Utils::use_available_country() ) {
 			$this->define_constants();
 			$this->init_hooks();
 		}
@@ -265,10 +268,23 @@ class Main {
 	 * Admin error notifying user that Country must be using Netherlands or Belgium.
 	 */
 	public function notice_nl_be_required() {
-		if ( ! in_array( Utils::get_base_country(), Utils::get_available_country(), true ) ) {
+		if ( ! Utils::use_available_country() ) {
 			?>
 			<div class="error">
 				<p><?php esc_html_e( 'PostNL plugin requires store country to be Netherlands (NL) or Belgium (BE)!', 'postnl-for-woocommerce' ); ?></p>
+			</div>
+			<?php
+		}
+	}
+
+	/**
+	 * Admin error notifying user that currency must be using EUR, GBP, USD, and CNY.
+	 */
+	public function notice_currency_required() {
+		if ( ! Utils::use_available_currency() ) {
+			?>
+			<div class="error">
+				<p><?php esc_html_e( 'PostNL plugin requires store currency to be EUR, USD, GBP or CNY!', 'postnl-for-woocommerce' ); ?></p>
 			</div>
 			<?php
 		}

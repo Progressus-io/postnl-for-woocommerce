@@ -294,22 +294,22 @@ class Item_Info extends Base_Info {
 		$self = $this;
 
 		return array(
-			'location_code' => array(
+			'location_code'        => array(
 				'error' => __( 'Location Code is empty!', 'postnl-for-woocommerce' ),
 			),
-			'customer_code' => array(
+			'customer_code'        => array(
 				'error' => __( 'Customer Code is empty!', 'postnl-for-woocommerce' ),
 			),
-			'customer_num'  => array(
+			'customer_num'         => array(
 				'error' => __( 'Customer Number is empty!', 'postnl-for-woocommerce' ),
 			),
-			'barcode_type'  => array(
+			'barcode_type'         => array(
 				'default' => '',
 			),
-			'company'       => array(
+			'company'              => array(
 				'default' => '',
 			),
-			'email'         => array(
+			'email'                => array(
 				'validate' => function( $value ) {
 					if ( empty( $value ) ) {
 						throw new \Exception(
@@ -323,6 +323,21 @@ class Item_Info extends Base_Info {
 						);
 					}
 				},
+			),
+			'return_company'       => array(
+				'default' => '',
+			),
+			'return_replynumber'   => array(
+				'default' => '',
+			),
+			'return_address_city'  => array(
+				'default' => '',
+			),
+			'return_address_zip'   => array(
+				'default' => '',
+			),
+			'return_customer_code' => array(
+				'default' => '',
 			),
 		);
 	}

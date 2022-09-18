@@ -96,6 +96,11 @@ abstract class Base_Info {
 			/* Temporarily hardcoded in Settings::get_number_pickup_points(). */
 			'number_pickup_points'     => $this->settings->get_number_pickup_points(),
 			'number_delivery_days'     => $this->settings->get_number_delivery_days(),
+			'return_company'           => $this->settings->get_return_company_name(),
+			'return_replynumber'       => $this->settings->get_return_reply_number(),
+			'return_address_city'      => $this->settings->get_return_city(),
+			'return_address_zip'       => $this->settings->get_return_zipcode(),
+			'return_customer_code'     => $this->settings->get_return_customer_code(),
 		);
 	}
 

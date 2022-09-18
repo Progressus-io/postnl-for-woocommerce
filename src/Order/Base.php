@@ -199,63 +199,6 @@ abstract class Base {
 	}
 
 	/**
-	 * Generating meta box fields.
-	 *
-	 * @param array $fields list of fields.
-	 */
-	public function fields_generator( $fields ) {
-		foreach ( $fields as $field ) {
-			if ( empty( $field['id'] ) ) {
-				continue;
-			}
-
-			if ( ! empty( $field['container'] ) && true === $field['container'] ) {
-				?>
-				<div class="shipment-postnl-row-container shipment-<?php echo esc_attr( $field['id'] ); ?>">
-				<?php
-			}
-
-			switch ( $field['type'] ) {
-				case 'select':
-					woocommerce_wp_select( $field );
-					break;
-
-				case 'checkbox':
-					woocommerce_wp_checkbox( $field );
-					break;
-
-				case 'hidden':
-					woocommerce_wp_hidden_input( $field );
-					break;
-
-				case 'radio':
-					woocommerce_wp_radio( $field );
-					break;
-
-				case 'textarea':
-					woocommerce_wp_textarea_input( $field );
-					break;
-
-				case 'break':
-					echo '<div class="postnl-break-line ' . esc_attr( $field['id'] ) . '"><hr id="' . esc_attr( $field['id'] ) . '" /></div>';
-					break;
-
-				case 'text':
-				case 'number':
-				default:
-					woocommerce_wp_text_input( $field );
-					break;
-			}
-
-			if ( ! empty( $field['container'] ) && true === $field['container'] ) {
-				?>
-				</div>
-				<?php
-			}
-		}
-	}
-
-	/**
 	 * Get available option based on the countries and chosen option in the frontend checkout.
 	 *
 	 * @param WC_Order $order Order object.

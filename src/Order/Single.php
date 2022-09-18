@@ -366,7 +366,7 @@ class Single extends Base {
 			<?php $this->generate_delivery_type_html( $order ); ?>
 			<?php $this->generate_delivery_date_html( $delivery_info ); ?>
 			<?php $this->generate_pickup_points_html( $pickup_info ); ?>
-			<?php $this->fields_generator( $available_fields ); ?>
+			<?php Utils::fields_generator( $available_fields ); ?>
 
 			<div class="button-container">
 				<button class="button button-primary button-save-form"><?php esc_html_e( 'Generate Label', 'postnl-for-woocommerce' ); ?></button>

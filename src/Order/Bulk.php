@@ -7,6 +7,8 @@
 
 namespace PostNLWooCommerce\Order;
 
+use PostNLWooCommerce\Utils;
+
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
@@ -136,7 +138,7 @@ class Bulk extends Base {
 			?>
 			<div id="postnl-create-label-modal" style="display:none;">
 				<div id="postnl-action-create-label">
-					<?php $this->fields_generator( $this->meta_box_fields() ); ?>
+					<?php Utils::fields_generator( $this->meta_box_fields() ); ?>
 
 					<br>
 					<button type="button" class="button button-primary" id="postnl_create_label_proceed"><?php esc_html_e( 'Submit', 'postnl-for-woocommerce' ); ?></button>

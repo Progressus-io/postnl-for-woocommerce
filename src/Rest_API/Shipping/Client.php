@@ -82,11 +82,14 @@ class Client extends Base {
 			),
 			'Customs'             => $this->get_customs(),
 			'ProductCodeDelivery' => $this->item_info->shipment['product_code'],
+			// hardcoded.
+			'ReturnBarcode'       => '3SRETR12345678',
 		);
 
 		if ( $this->item_info->backend_data['insured_shipping'] ) {
 			$shipment['Amounts'][] = array(
 				'AmountType' => '02',
+				'Currency'   => $this->item_info->shipment['currency'],
 				'Value'      => $this->get_insurance_value(),
 			);
 		}
@@ -134,6 +137,7 @@ class Client extends Base {
 			'Invoice'                => true,
 			'InvoiceNr'              => $this->item_info->shipment['order_id'],
 			'License'                => false,
+			// Hardcoded.
 			'TransactionCode'        => '11',
 			'TransactionDescription' => 'Sale of goods',
 			'Content'                => $this->get_custom_contents(),
@@ -193,6 +197,18 @@ class Client extends Base {
 				'HouseNrExt'  => '',
 				'Street'      => $this->item_info->pickup_points['address_1'],
 				'Zipcode'     => $this->item_info->pickup_points['postcode'],
+			);
+		}
+
+		if ( $this->item_info->backend_data['create_return_label'] ) {
+			$addresses[] = array(
+				'AddressType' => '08',
+				'City'        => $this->item_info->customer['return_address_city'],
+				'CompanyName' => $this->item_info->customer['return_company'],
+				'Countrycode' => $this->item_info->shipper['country'],
+				'HouseNr'     => $this->item_info->customer['return_address_2'],
+				'Street'      => $this->item_info->customer['return_address_1'],
+				'Zipcode'     => $this->item_info->customer['return_address_zip'],
 			);
 		}
 

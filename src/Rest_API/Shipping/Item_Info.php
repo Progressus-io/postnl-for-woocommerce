@@ -327,8 +327,25 @@ class Item_Info extends Base_Info {
 			'return_company'       => array(
 				'default' => '',
 			),
-			'return_replynumber'   => array(
-				'default' => '',
+			'return_address_1'     => array(
+				'default'  => '',
+				'sanitize' => function( $value ) use ( $self ) {
+					if ( 'NL' === $self->api_args['store_address']['country'] ) {
+						return 'Antwoordnummer';
+					}
+
+					return $self->string_length_sanitization( $value, 95 );
+				},
+			),
+			'return_address_2'     => array(
+				'default'  => '',
+				'sanitize' => function( $value ) use ( $self ) {
+					if ( 'NL' === $self->api_args['store_address']['country'] ) {
+						$value = $self->api_args['settings']['return_replynumber'];
+					}
+
+					return $self->string_length_sanitization( $value, 35 );
+				},
 			),
 			'return_address_city'  => array(
 				'default' => '',

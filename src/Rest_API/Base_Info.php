@@ -98,9 +98,14 @@ abstract class Base_Info {
 			'number_delivery_days'     => $this->settings->get_number_delivery_days(),
 			'return_company'           => $this->settings->get_return_company_name(),
 			'return_replynumber'       => $this->settings->get_return_reply_number(),
+			'return_address_1'         => $this->settings->get_return_address(),
+			'return_address_2'         => $this->settings->get_return_streetnumber(),
 			'return_address_city'      => $this->settings->get_return_city(),
 			'return_address_zip'       => $this->settings->get_return_zipcode(),
 			'return_customer_code'     => $this->settings->get_return_customer_code(),
+			'track_trace_enable'       => $this->settings->is_track_trace_email_enabled(),
+			'woocommerce_email'        => $this->settings->is_woocommerce_email_enabled(),
+			'woocommerce_email_text'   => $this->settings->get_woocommerce_email_text(),
 		);
 	}
 

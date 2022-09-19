@@ -399,14 +399,6 @@ class Settings extends \WC_Settings_API {
 				),
 				'class'       => 'wc-enhanced-select',
 			),
-			'track_trace_email'         => array(
-				'title'       => esc_html__( 'Track & Trace Email', 'postnl-for-woocommerce' ),
-				'type'        => 'checkbox',
-				'description' => esc_html__( 'Enable PostNL tracking email.', 'postnl-for-woocommerce' ),
-				'desc_tip'    => true,
-				'default'     => '',
-				'placeholder' => '',
-			),
 			'woocommerce_email'         => array(
 				'title'       => esc_html__( 'WooCommerce Email', 'postnl-for-woocommerce' ),
 				'type'        => 'checkbox',
@@ -1019,24 +1011,6 @@ class Settings extends \WC_Settings_API {
 	 */
 	public function is_ask_position_a4_enabled() {
 		return ( 'yes' === $this->get_ask_position_a4() );
-	}
-
-	/**
-	 * Get track trace email from the settings.
-	 *
-	 * @return String
-	 */
-	public function get_track_trace_email() {
-		return $this->get_country_option( 'track_trace_email', '' );
-	}
-
-	/**
-	 * Return true if track trace email field is ticked.
-	 *
-	 * @return Bool
-	 */
-	public function is_track_trace_email_enabled() {
-		return ( 'yes' === $this->get_track_trace_email() );
 	}
 
 	/**

@@ -66,10 +66,8 @@ class Client extends Base {
 	public function get_shipments() {
 		$shipments = array();
 
-		$barcode  = $this->generate_barcode();
 		$shipment = array(
 			'Addresses'           => $this->get_shipment_addresses(),
-			'Barcode'             => $barcode,
 			'Contacts'            => array(
 				array(
 					'ContactType' => '01',

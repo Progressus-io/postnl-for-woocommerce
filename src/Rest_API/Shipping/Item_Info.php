@@ -592,6 +592,9 @@ class Item_Info extends Base_Info {
 			'num_labels'            => array(
 				'default'  => '1',
 				'sanitize' => function( $num ) use ( $self ) {
+					// Hardcoded for now.
+					return 1;
+
 					$abs_number = abs( intval( $num ) );
 					if ( empty( $abs_number ) ) {
 						return 1;

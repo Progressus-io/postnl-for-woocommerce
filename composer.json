@@ -2,6 +2,7 @@
   "name": "postnl/postnl-for-woocommerce",
   "license": "GPL-3.0",
   "require": {
+	"clegginabox/pdf-merger": "dev-master"
   },
   "autoload": {
     "psr-4": {

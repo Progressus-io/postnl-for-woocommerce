@@ -265,7 +265,8 @@ class Item_Info extends Base_Info {
 	 * Set product code in the order details.
 	 */
 	public function set_order_product_code() {
-		$this->api_args['order_details']['product_code'] = $this->get_product_code();
+		$this->api_args['order_details']['product_code']    = $this->get_product_code();
+		$this->api_args['order_details']['product_options'] = $this->get_product_options();
 	}
 
 	/**
@@ -370,10 +371,10 @@ class Item_Info extends Base_Info {
 		$self = $this;
 
 		return array(
-			'order_id'     => array(
+			'order_id'        => array(
 				'error' => __( 'Order ID is empty!', 'postnl-for-woocommerce' ),
 			),
-			'product_code' => array(
+			'product_code'    => array(
 				'error'    => __( 'Product code is empty!', 'postnl-for-woocommerce' ),
 				'validate' => function( $value ) {
 					if ( ! is_numeric( $value ) && 4 !== strlen( $value ) ) {
@@ -386,13 +387,25 @@ class Item_Info extends Base_Info {
 					return $self->string_length_sanitization( $value, 4 );
 				},
 			),
-			'total_weight' => array(
+			'product_options' => array(
+				'default'  => array(
+					'characteristic' => '',
+					'option'         => '',
+				),
+				'sanitize' => function ( $value ) use ( $self ) {
+					return array(
+						'characteristic' => ! empty( $value['characteristic'] ) ? $self->string_length_sanitization( $value['characteristic'], 3 ) : '',
+						'option'         => ! empty( $value['option'] ) ? $self->string_length_sanitization( $value['option'], 3 ) : '',
+					);
+				},
+			),
+			'total_weight'    => array(
 				'error'    => __( 'Total weight is empty!', 'postnl-for-woocommerce' ),
 				'sanitize' => function( $value ) use ( $self ) {
 					return $self->float_round_sanitization( $value, 2 );
 				},
 			),
-			'email'        => array(
+			'email'           => array(
 				'validate' => function( $value ) {
 					if ( ! is_email( $value ) ) {
 						throw new \Exception(
@@ -436,6 +449,12 @@ class Item_Info extends Base_Info {
 						);
 					}
 				},
+				'sanitize' => function( $value ) {
+					$timestamp = strtotime( $value );
+					$date      = gmdate( 'd-m-Y', $timestamp );
+
+					return $date;
+				},
 			),
 			'from'  => array(
 				'default'  => '',
@@ -445,6 +464,9 @@ class Item_Info extends Base_Info {
 							__( 'Delivery day "From" is empty!', 'postnl-for-woocommerce' )
 						);
 					}
+				},
+				'sanitize' => function( $value ) {
+					return $value . ':00';
 				},
 			),
 			'to'    => array(
@@ -456,16 +478,12 @@ class Item_Info extends Base_Info {
 						);
 					}
 				},
+				'sanitize' => function( $value ) {
+					return $value . ':00';
+				},
 			),
 			'price' => array(
-				'default'  => '',
-				'validate' => function( $price ) use ( $self ) {
-					if ( empty( $price ) && $self->is_delivery_day() ) {
-						throw new \Exception(
-							__( 'Delivery day "Price" is empty!', 'postnl-for-woocommerce' )
-						);
-					}
-				},
+				'default' => '',
 			),
 			'type'            => array(
 				'default'  => '',
@@ -803,5 +821,37 @@ class Item_Info extends Base_Info {
 		}
 
 		return $product_code;
+	}
+
+	/**
+	 * Get product options from api args.
+	 *
+	 * @return String.
+	 */
+	public function get_product_options() {
+		$option_map   = Mapping::product_options();
+		$from_country = $this->api_args['store_address']['country'];
+		$to_country   = $this->api_args['shipping_address']['country'];
+		$destination  = Utils::get_shipping_zone( $to_country );
+
+		foreach ( $this->api_args as $arg_keys => $arg_data ) {
+			if ( empty( $option_map[ $from_country ][ $destination ][ $arg_keys ] ) ) {
+				continue;
+			}
+
+			foreach ( $arg_data as $index => $data ) {
+				if ( empty( $option_map[ $from_country ][ $destination ][ $arg_keys ][ $index ] ) ) {
+					continue;
+				}
+
+				foreach ( $data as $idx => $val ) {
+					if ( ! empty( $option_map[ $from_country ][ $destination ][ $arg_keys ][ $index ][ $idx ][ $val ] ) ) {
+						return $option_map[ $from_country ][ $destination ][ $arg_keys ][ $index ][ $idx ][ $val ];
+					}
+				}
+			}
+		}
+
+		return array();
 	}
 }

@@ -80,9 +80,25 @@ class Client extends Base {
 			),
 			'Customs'             => $this->get_customs(),
 			'ProductCodeDelivery' => $this->item_info->shipment['product_code'],
-			// hardcoded.
-			'ReturnBarcode'       => '3SRETR12345678',
 		);
+
+		if ( $this->item_info->is_delivery_day() ) {
+			$shipment['DeliveryDate'] = $this->item_info->delivery_day['date'] . ' ' . $this->item_info->delivery_day['from'];
+		}
+
+		if ( ! empty( $this->item_info->shipment['product_options']['characteristic'] ) ) {
+			$shipment['ProductOptions'] = array(
+				array(
+					'Characteristic' => $this->item_info->shipment['product_options']['characteristic'],
+					'Option'         => $this->item_info->shipment['product_options']['option'],
+				),
+			);
+		}
+
+		if ( $this->item_info->backend_data['create_return_label'] ) {
+			// hardcoded.
+			$shipment['ReturnBarcode'] = '3SRETR12345678';
+		}
 
 		if ( $this->item_info->backend_data['insured_shipping'] ) {
 			$shipment['Amounts'][] = array(

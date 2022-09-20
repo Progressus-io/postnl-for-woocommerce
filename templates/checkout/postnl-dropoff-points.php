@@ -89,7 +89,7 @@ function postnl_generate_hidden_input( $dropoff_point, $field_name ) {
 							value="<?php echo esc_attr( $value ); ?>"
 							<?php echo esc_html( $is_checked ); ?>
 						/>
-						<i>Vanaf <?php echo esc_html( $point['time'] ); ?><br /><?php echo esc_html( $point['date'] ); ?></i>
+						<i><?php esc_html_e( 'Vanaf', 'postnl-for-woocommerce' ); ?> <?php echo esc_html( $point['time'] ); ?><br /><?php echo esc_html( $point['date'] ); ?></i>
 						<span>
 							<?php echo esc_html( $address ); ?><br />
 							<?php echo esc_html( $point['partner_id'] ); ?>

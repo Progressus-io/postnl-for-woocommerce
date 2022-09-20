@@ -257,6 +257,49 @@ abstract class Base {
 	}
 
 	/**
+	 * Init order object for meta box.
+	 *
+	 * @param WP_POST|WC_Order $metabox_object Either WP_Post or WC_Order object.
+	 */
+	public function init_order_object( $metabox_object ) {
+		if ( is_a( $metabox_object, 'WP_Post' ) ) {
+			return wc_get_order( $metabox_object->ID );
+		}
+
+		if ( is_a( $metabox_object, 'WC_Order' ) ) {
+			return $metabox_object;
+		}
+
+		return false;
+	}
+
+	/**
+	 * Check if the current order is using PostNL shipping method.
+	 *
+	 * @param WC_Order $order Order object.
+	 */
+	public function is_postnl_shipping_method( $order ) {
+
+		if ( ! is_a( $order, 'WC_Order' ) ) {
+			return false;
+		}
+
+		$shipping_methods = $order->get_shipping_methods();
+
+		if ( empty( $shipping_methods ) ) {
+			return false;
+		}
+
+		foreach ( $shipping_methods as $shipping_item ) {
+			if ( POSTNL_SETTINGS_ID === $shipping_item->get_method_id() ) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	/**
 	 * Saving meta box in order admin page.
 	 *
 	 * @param  int   $order_id Order post ID.

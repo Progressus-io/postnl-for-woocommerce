@@ -26,7 +26,7 @@ class Single extends Base {
 	 */
 	public function init_hooks() {
 		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_order_single_css_script' ) );
-		add_action( 'add_meta_boxes', array( $this, 'add_meta_box' ), 20 );
+		add_action( 'add_meta_boxes', array( $this, 'add_meta_box' ), 20, 2 );
 
 		add_action( 'wp_ajax_postnl_order_save_form', array( $this, 'save_meta_box_ajax' ) );
 		add_action( 'wp_ajax_nopriv_postnl_order_save_form', array( $this, 'save_meta_box_ajax' ) );
@@ -71,8 +71,17 @@ class Single extends Base {
 
 	/**
 	 * Adding meta box in order admin page.
+	 *
+	 * @param String           $post_type Post type for current admin page.
+	 * @param WP_POST|WC_Order $post_or_order_object Either WP_Post or WC_Order object.
 	 */
-	public function add_meta_box() {
+	public function add_meta_box( $post_type, $post_or_order_object ) {
+		$order = $this->init_order_object( $post_or_order_object );
+
+		if ( ! is_a( $order, 'WC_Order' ) || ! $this->is_postnl_shipping_method( $order ) ) {
+			return;
+		}
+
 		$screen = wc_get_container()->get( CustomOrdersTableController::class )->custom_orders_table_usage_is_enabled()
 		? wc_get_page_screen_id( 'shop-order' )
 		: 'shop_order';
@@ -350,11 +359,11 @@ class Single extends Base {
 	 * @param WP_Post|WC_Order $post_or_order_object current order object.
 	 */
 	public function meta_box_html( $post_or_order_object ) {
-		if ( ! is_a( $post_or_order_object, 'WC_Order' ) && empty( $post_or_order_object->ID ) ) {
+		$order = $this->init_order_object( $post_or_order_object );
+		if ( ! is_a( $order, 'WC_Order' ) ) {
 			return;
 		}
 
-		$order             = ( is_a( $post_or_order_object, 'WP_Post' ) ) ? wc_get_order( $post_or_order_object->ID ) : $post_or_order_object;
 		$form_class        = ( $this->have_backend_data( $order ) ) ? 'generated' : '';
 		$pickup_info       = $this->get_pickup_points_info( $order );
 		$delivery_info     = $this->get_delivery_day_info( $order );

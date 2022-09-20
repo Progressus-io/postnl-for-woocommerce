@@ -28,6 +28,7 @@ tr.postnl-co-tr-container > td {
 .postnl_checkout_tab_list > li .postnl_checkout_tab {
 	display:block;
 	text-align:center;
+	margin:0px;
 	padding:10px;
 	line-height:1em;
 	font-size:1em;
@@ -79,12 +80,27 @@ tr.postnl-co-tr-container > td {
 	border-top:1px solid #d0d0d0;
 	border-bottom:1px solid #d0d0d0;
 	line-height:1em;
-	padding:4px 5px;
+	padding:8px 6px;
+}
+
+.postnl_content .postnl_list .list_title:after {
+	content:"";
+	display:block;
+	clear:both;
 }
 
 .postnl_content .postnl_list .list_title span {
 	font-size:1em;
 	font-weight:700;
+}
+
+.postnl_content .postnl_list .list_title span.company {
+	float:left;
+}
+
+.postnl_content .postnl_list .list_title span.distance {
+	float:right;
+	font-weight:400;
 }
 
 .postnl_content .postnl_list .postnl_sub_list {
@@ -104,9 +120,9 @@ tr.postnl-co-tr-container > td {
 
 .postnl_content .postnl_list .postnl_sub_list .postnl_sub_radio_label {
 	display:block;
-	padding:8px 6px;
+	padding:13px 7px;
 	margin:0px;
-	line-height:1em;
+	line-height:1.2em;
 	cursor: pointer;
 }
 

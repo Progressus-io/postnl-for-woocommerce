@@ -201,6 +201,18 @@ class Utils {
 	}
 
 	/**
+	 * Convert the distance to KM if needs be.
+	 *
+	 * @param Float $distance distance in meter.
+	 *
+	 * @return String.
+	 */
+	public static function maybe_convert_km( $distance ) {
+		$distance = intval( $distance );
+		return ( 999 < $distance ) ? round( ( $distance / 1000 ), 2 ) . ' KM' : $distance . ' M';
+	}
+
+	/**
 	 * Convert the weight based on the weight unit.
 	 *
 	 * @param Float $weight Weight of the thing.

@@ -13,6 +13,8 @@ if ( empty( $data['dropoff_options'] ) ) {
 	return;
 }
 
+use PostNLWooCommerce\Utils;
+
 /**
  * Function to generate data html in <li>.
  *
@@ -73,7 +75,7 @@ function postnl_generate_hidden_input( $dropoff_point, $field_name ) {
 			$point_key  = $point;
 			?>
 		<li>
-			<div class="list_title"><span><?php echo esc_html( $point['address']['company'] . ' ' . $point['distance'] ); ?></span></div>
+			<div class="list_title"><span class="company"><?php echo esc_html( $point['address']['company'] ); ?></span><span class="distance"><?php echo esc_html( Utils::maybe_convert_km( $point['distance'] ) ); ?></span></div>
 			<ul class="postnl_sub_list">
 				<li
 					<?php postnl_generate_data_li( $point ); ?>

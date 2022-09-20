@@ -7,6 +7,7 @@ tr.postnl-co-tr-container > td {
 	margin:5px;
 	border:1px solid #f0f0f0;
 	overflow:hidden;
+	font-size:14px;
 }
 
 .postnl_checkout_tab_list {

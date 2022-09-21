@@ -93,7 +93,7 @@ function postnl_generate_hidden_input( $dropoff_point, $field_name ) {
 			$value      = sanitize_title( $point['partner_id'] . '-' . $point['loc_code'] );
 			$radio_id   = sanitize_title( $point['partner_id'] . '-' . $point['loc_code'] );
 
-			$address    = implode( ', ', array_values( postnl_generate_pickup_address( $point['address'] ) ) );
+			$address    = implode( ' ', array_values( postnl_generate_pickup_address( $point['address'] ) ) );
 			$is_checked = ( $value === $data['value'] ) ? 'checked="checked"' : '';
 
 			$point_key  = $point;

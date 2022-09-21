@@ -8,6 +8,7 @@
 namespace PostNLWooCommerce\Order;
 
 use PostNLWooCommerce\Utils;
+use PostNLWooCommerce\Rest_API\Barcode;
 use PostNLWooCommerce\Rest_API\Shipping;
 use PostNLWooCommerce\Shipping_Method\Settings;
 use PostNLWooCommerce\Helper\Mapping;
@@ -427,6 +428,36 @@ abstract class Base {
 			'barcode'  => $barcode,
 			'filepath' => $filepath,
 		);
+	}
+
+	/**
+	 * Create PostNL barcode for current order
+	 *
+	 * @param WC_Order $order Order object.
+	 *
+	 * @return array
+	 *
+	 * @throws \Exception Error when response does not have Barcode value.
+	 */
+	public function create_barcode( $order ) {
+		$destination = Utils::get_shipping_zone( $order->get_shipping_country() );
+		$data        = array(
+			// ROW = Rest of the World ( outside Europe ).
+			'type'  => ( 'ROW' !== $destination ) ? '3S' : 'S10',
+			'serie' => '000000000-999999999',
+		);
+
+		$item_info = new Barcode\Item_Info( $data );
+		$barcode   = new Barcode\Client( $item_info );
+		$response  = $barcode->send_request();
+
+		if ( empty( $response['Barcode'] ) ) {
+			throw new \Exception(
+				esc_html__( 'Cannot create the barcode.', 'postnl-for-woocommerce' )
+			);
+		}
+
+		return $response['Barcode'];
 	}
 
 	/**

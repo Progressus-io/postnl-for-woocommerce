@@ -40,6 +40,29 @@ function postnl_generate_data_li( $dropoff_point ) {
 }
 
 /**
+ * Function to generate pickup address.
+ *
+ * @param Array $address Pickup address value.
+ */
+function postnl_generate_pickup_address( $address ) {
+	if ( empty( $address ) ) {
+		return array();
+	}
+
+	$return = array();
+	foreach ( $address as $key => $value ) {
+		$excluded_info = array( 'company', 'country', 'postcode' );
+		if ( in_array( $key, $excluded_info, true ) ) {
+			continue;
+		}
+
+		$return[ $key ] = esc_html( $value );
+	}
+
+	return $return;
+}
+
+/**
  * Function to generate hidden input.
  *
  * @param Array  $dropoff_point Dropoff point value.
@@ -69,7 +92,8 @@ function postnl_generate_hidden_input( $dropoff_point, $field_name ) {
 			<?php
 			$value      = sanitize_title( $point['partner_id'] . '-' . $point['loc_code'] );
 			$radio_id   = sanitize_title( $point['partner_id'] . '-' . $point['loc_code'] );
-			$address    = implode( ', ', array_values( $point['address'] ) );
+
+			$address    = implode( ', ', array_values( postnl_generate_pickup_address( $point['address'] ) ) );
 			$is_checked = ( $value === $data['value'] ) ? 'checked="checked"' : '';
 
 			$point_key  = $point;
@@ -91,8 +115,7 @@ function postnl_generate_hidden_input( $dropoff_point, $field_name ) {
 						/>
 						<i><?php esc_html_e( 'Vanaf', 'postnl-for-woocommerce' ); ?> <?php echo esc_html( $point['time'] ); ?><br /><?php echo esc_html( $point['date'] ); ?></i>
 						<span>
-							<?php echo esc_html( $address ); ?><br />
-							<?php echo esc_html( $point['partner_id'] ); ?>
+							<?php echo esc_html( $address ); ?>
 						</span>
 					</label>
 				</li>

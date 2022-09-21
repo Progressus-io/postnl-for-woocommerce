@@ -209,7 +209,7 @@ class Utils {
 	 */
 	public static function maybe_convert_km( $distance ) {
 		$distance = intval( $distance );
-		return ( 999 < $distance ) ? round( ( $distance / 1000 ), 2 ) . ' KM' : $distance . ' M';
+		return ( 999 < $distance ) ? round( ( $distance / 1000 ), 2 ) . ' km' : $distance . ' m';
 	}
 
 	/**

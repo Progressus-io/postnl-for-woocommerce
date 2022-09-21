@@ -331,9 +331,11 @@ abstract class Base {
 			$saved_data['backend'][ $post_field ] = $post_value;
 		}
 
+		$barcode         = $this->create_barcode( $order );
 		$label_post_data = array(
 			'order'      => $order,
 			'saved_data' => $saved_data,
+			'barcode'    => $barcode,
 		);
 
 		$label_info          = $this->create_label( $label_post_data );

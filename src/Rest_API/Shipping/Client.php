@@ -79,6 +79,7 @@ class Client extends Base {
 
 		$shipment = array(
 			'Addresses'           => $this->get_shipment_addresses(),
+			'Barcode'             => $this->item_info->shipment['barcode'],
 			'Contacts'            => array(
 				array(
 					'ContactType' => '01',
@@ -125,22 +126,13 @@ class Client extends Base {
 					'GroupType'     => '03',
 					'GroupCount'    => $this->item_info->backend_data['num_labels'],
 					'GroupSequence' => $i,
-					'MainBarcode'   => $barcode,
+					'MainBarcode'   => $this->item_info->shipment['barcode'],
 				);
 			}
 			$shipments[] = $shipment;
 		}
 
 		return $shipments;
-	}
-
-	/**
-	 * Generate barcode.
-	 *
-	 * @return String
-	 */
-	public function generate_barcode() {
-		return '3S' . $this->item_info->customer['customer_code'] . random_int( 100000000, 999999999 );
 	}
 
 	/**

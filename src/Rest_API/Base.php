@@ -203,12 +203,15 @@ class Base {
 	 * @throws \Exception Throw error if response has WP_Error.
 	 */
 	public function send_request() {
-		$api_url      = esc_url( $this->get_api_url() );
+		$api_url      = $this->get_api_url();
 		$request_args = array(
 			'method'  => $this->method,
 			'headers' => $this->get_headers_args(),
-			'body'    => wp_json_encode( $this->compose_body_request() ),
 		);
+
+		if ( ! empty( $this->compose_body_request() ) && is_array( $this->compose_body_request() ) ) {
+			$request_args['body'] = wp_json_encode( $this->compose_body_request() );
+		}
 
 		$this->logger->write( sprintf( 'Begin send request to %1$s', $api_url ) );
 		$this->logger->write( 'API Request:' );

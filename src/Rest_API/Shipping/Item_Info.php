@@ -142,6 +142,7 @@ class Item_Info extends Base_Info {
 
 		$order      = $post_data['order'];
 		$saved_data = $post_data['saved_data'];
+		$barcode    = $post_data['barcode'];
 
 		$this->api_args['billing_address'] = array(
 			'first_name' => $order->get_billing_first_name(),
@@ -206,6 +207,7 @@ class Item_Info extends Base_Info {
 
 		$this->api_args['order_details'] = array(
 			'order_id'     => $order->get_id(),
+			'barcode'      => $barcode,
 			'currency'     => $order->get_currency(),
 			'total_weight' => $this->calculate_order_weight( $order ),
 		);
@@ -373,6 +375,9 @@ class Item_Info extends Base_Info {
 		return array(
 			'order_id'        => array(
 				'error' => __( 'Order ID is empty!', 'postnl-for-woocommerce' ),
+			),
+			'barcode'         => array(
+				'error' => __( 'Barcode is empty!', 'postnl-for-woocommerce' ),
 			),
 			'product_code'    => array(
 				'error'    => __( 'Product code is empty!', 'postnl-for-woocommerce' ),

@@ -259,6 +259,24 @@ class Utils {
 	}
 
 	/**
+	 * Get the available barcode type.
+	 *
+	 * @return String
+	 */
+	public static function get_available_barcode_type() {
+		return array(
+			'3S',
+			'2S',
+			'CC',
+			'CP',
+			'CD',
+			'CF',
+			'LA',
+			'S10',
+		);
+	}
+
+	/**
 	 * Parsers a given array of arguments using a specific scheme.
 	 *
 	 * The scheme is a `key => array` associative array, where the `key` represents the argument key and the `array`

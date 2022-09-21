@@ -239,7 +239,7 @@ abstract class Base {
 	}
 
 	/**
-	 * Get frontend data from Order object.
+	 * Get saved data from Order object.
 	 *
 	 * @param int $order_id ID of the order.
 	 *
@@ -342,6 +342,32 @@ abstract class Base {
 		$order->save();
 
 		return $saved_data;
+	}
+
+	/**
+	 * Get frontend data from Order object.
+	 *
+	 * @param int $order_id ID of the order.
+	 *
+	 * @return array.
+	 */
+	public function get_frontend_data( $order_id ) {
+		$saved_data = $this->get_data( $order_id );
+
+		return ! empty( $saved_data['frontend'] ) ? $saved_data['frontend'] : array();
+	}
+
+	/**
+	 * Get backend data from Order object.
+	 *
+	 * @param int $order_id ID of the order.
+	 *
+	 * @return array.
+	 */
+	public function get_backend_data( $order_id ) {
+		$saved_data = $this->get_data( $order_id );
+
+		return ! empty( $saved_data['backend'] ) ? $saved_data['backend'] : array();
 	}
 
 	/**
@@ -516,5 +542,54 @@ abstract class Base {
 		} else {
 			return false;
 		}
+	}
+
+	/**
+	 * Get tracking note for the order.
+	 *
+	 * @param Int $order_id ID of the order object.
+	 *
+	 * @return String
+	 */
+	protected function get_tracking_note( $order_id ) {
+
+		if ( ! empty( $this->settings->get_woocommerce_email_text() ) ) {
+			$tracking_note = $this->settings->get_woocommerce_email_text();
+		} else {
+			// translators: %s the current service.
+			$tracking_note = sprintf( __( '%s Tracking Number: {tracking-link}', 'postnl-for-woocommerce' ), $this->service );
+		}
+
+		$tracking_link = $this->get_tracking_link( $order_id );
+
+		if ( empty( $tracking_link ) ) {
+			return '';
+		}
+
+		$tracking_note_new = str_replace( '{tracking-link}', $tracking_link, $tracking_note, $count );
+
+		if ( 0 === $count ) {
+			$tracking_note_new = $tracking_note . ' ' . $tracking_link;
+		}
+
+		return $tracking_note_new;
+	}
+
+	/**
+	 * Get tracking url for the order.
+	 *
+	 * @param Int $order_id ID of the order object.
+	 */
+	protected function get_tracking_link( $order_id ) {
+		$saved_data = $this->get_data( $order_id );
+		$order      = wc_get_order( $order_id );
+
+		if ( empty( $saved_data['label']['barcode'] ) || ! is_a( $order, 'WC_Order' ) ) {
+			return '';
+		}
+
+		$tracking_url = Utils::generate_tracking_url( $saved_data['label']['barcode'], $order->get_shipping_country() );
+
+		return sprintf( '<a href="%1$s" target="_blank">%2$s</a>', $tracking_url, $saved_data['label']['barcode'] );
 	}
 }

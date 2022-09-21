@@ -224,6 +224,41 @@ class Utils {
 	}
 
 	/**
+	 * Generate PostNL tracking URL.
+	 *
+	 * @param String $barcode Generated barcode when creating the label.
+	 * @param String $destination Two digits ISO country code.
+	 * @param String $postcode Destination postcode (optional).
+	 *
+	 * @return String
+	 */
+	public static function generate_tracking_url( $barcode, $destination, $postcode = '' ) {
+		$url      = 'https://postnl.nl/tracktrace/';
+		$url_args = array_filter(
+			array(
+				'B' => $barcode,
+				'P' => $postcode,
+				'D' => $destination,
+				'T' => 'C',
+			),
+			function( $arg ) {
+				return ! empty( $arg );
+			}
+		);
+
+		return add_query_arg( $url_args, $url );
+	}
+
+	/**
+	 * Get the type of tracking note to be saved in the order.
+	 *
+	 * @return String
+	 */
+	public static function get_tracking_note_type() {
+		return 'customer';
+	}
+
+	/**
 	 * Parsers a given array of arguments using a specific scheme.
 	 *
 	 * The scheme is a `key => array` associative array, where the `key` represents the argument key and the `array`

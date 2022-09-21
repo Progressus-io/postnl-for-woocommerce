@@ -62,6 +62,12 @@ class Bulk extends Base {
 			if ( ! empty( $object_ids ) ) {
 				foreach ( $object_ids as $order_id ) {
 					$this->save_meta_value( $order_id, $_REQUEST );
+					$tracking_note = $this->get_tracking_note( $order_id );
+
+					if ( $this->settings->is_woocommerce_email_enabled() && ! empty( $tracking_note ) ) {
+						$order = wc_get_order( $order_id );
+						$order->add_order_note( $tracking_note, 1 );
+					}
 				}
 			}
 

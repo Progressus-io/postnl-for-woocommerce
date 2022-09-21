@@ -428,8 +428,21 @@ class Single extends Base {
 				throw new \Exception( esc_html__( 'Order does not exists!', 'postnl-for-woocommerce' ) );
 			}
 
-			$saved_data = $this->save_meta_value( $order_id, $_REQUEST );
-			wp_send_json_success( $saved_data );
+			$saved_data    = $this->save_meta_value( $order_id, $_REQUEST );
+			$return_data   = $saved_data;
+			$tracking_note = $this->get_tracking_note( $order_id );
+
+			if ( $this->settings->is_woocommerce_email_enabled() && ! empty( $tracking_note ) ) {
+				$return_data = array_merge(
+					$saved_data,
+					array(
+						'tracking_note' => $tracking_note,
+						'note_type'     => Utils::get_tracking_note_type(),
+					)
+				);
+			}
+
+			wp_send_json_success( $return_data );
 		} catch ( \Exception $e ) {
 			wp_send_json_error(
 				array( 'message' => $e->getMessage() ),

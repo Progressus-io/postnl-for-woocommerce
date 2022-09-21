@@ -413,7 +413,7 @@ class Settings extends \WC_Settings_API {
 				'description' => esc_html__( 'Text added for tracking note email.', 'postnl-for-woocommerce' ),
 				'desc_tip'    => true,
 				'default'     => '',
-				'placeholder' => '',
+				'placeholder' => esc_html__( 'Tracking Number: {tracking-link}', 'postnl-for-woocommerce' ),
 			),
 		);
 	}

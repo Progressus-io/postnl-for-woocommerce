@@ -25,7 +25,18 @@ class Client extends Base {
 	 *
 	 * @var string
 	 */
-	public $endpoint = '/v1/shipment?confirm=true';
+	public $endpoint = '/v1/shipment';
+
+	/**
+	 * Function for composing API request in the URL for GET request.
+	 *
+	 * @return Array.
+	 */
+	public function compose_url_params() {
+		return array(
+			'confirm' => 'true',
+		);
+	}
 
 	/**
 	 * Function for composing API request.

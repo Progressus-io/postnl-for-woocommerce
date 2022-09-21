@@ -35,6 +35,13 @@ class Base {
 	public $api_url;
 
 	/**
+	 * PostnL API Method.
+	 *
+	 * @var string
+	 */
+	public $method = 'POST';
+
+	/**
 	 * PostnL Logger.
 	 *
 	 * @var Logger
@@ -121,6 +128,13 @@ class Base {
 	public function set_api_url() {
 		$this->api_url  = ( true === $this->is_sandbox ) ? POSTNL_WC_SANDBOX_API_URL : POSTNL_WC_PROD_API_URL;
 		$this->api_url .= $this->endpoint;
+
+		if ( ! empty( $this->compose_url_params() ) && is_array( $this->compose_url_params() ) ) {
+			$this->api_url = add_query_arg(
+				$this->compose_url_params(),
+				$this->api_url
+			);
+		}
 	}
 
 	/**
@@ -170,6 +184,13 @@ class Base {
 	}
 
 	/**
+	 * Function for composing API parameter in the URL for GET request.
+	 */
+	public function compose_url_params() {
+		return array();
+	}
+
+	/**
 	 * Function for composing API request.
 	 */
 	public function compose_body_request() {
@@ -184,7 +205,7 @@ class Base {
 	public function send_request() {
 		$api_url      = esc_url( $this->get_api_url() );
 		$request_args = array(
-			'method'  => 'POST',
+			'method'  => $this->method,
 			'headers' => $this->get_headers_args(),
 			'body'    => wp_json_encode( $this->compose_body_request() ),
 		);

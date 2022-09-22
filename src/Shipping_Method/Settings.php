@@ -827,7 +827,7 @@ class Settings extends \WC_Settings_API {
 	 * @return String
 	 */
 	public function get_dropoff_wednesday() {
-		return $this->get_country_option( 'dropoff_day_wednesday', '' );
+		return $this->get_country_option( 'dropoff_day_wed', '' );
 	}
 
 	/**

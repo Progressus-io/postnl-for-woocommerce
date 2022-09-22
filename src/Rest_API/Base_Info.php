@@ -89,6 +89,7 @@ abstract class Base_Info {
 			'customer_num'             => $this->settings->get_customer_num(),
 			'cut_off_time'             => $this->settings->get_cut_off_time(),
 			'dropoff_days'             => $this->settings->get_dropoff_days(),
+			'excluded_dropoff_days'    => $this->settings->get_excluded_dropoff_days(),
 			'pickup_points_enabled'    => $this->settings->is_pickup_points_enabled(),
 			'delivery_days_enabled'    => $this->settings->is_delivery_days_enabled(),
 			'evening_delivery_enabled' => $this->settings->is_evening_delivery_enabled(),

@@ -951,6 +951,18 @@ class Settings extends \WC_Settings_API {
 	}
 
 	/**
+	 * Get excluded dropoff days from the settings.
+	 *
+	 * @return Array
+	 */
+	public function get_excluded_dropoff_days() {
+		$completed_days = array_keys( Utils::days_of_week() );
+		$dropoff_days   = $this->get_dropoff_days();
+
+		return array_diff( $completed_days, $dropoff_days );
+	}
+
+	/**
 	 * Get globalpack type barcode from the settings.
 	 *
 	 * @return String

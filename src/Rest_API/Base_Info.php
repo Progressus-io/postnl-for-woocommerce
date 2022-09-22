@@ -89,6 +89,7 @@ abstract class Base_Info {
 			'customer_num'             => $this->settings->get_customer_num(),
 			'cut_off_time'             => $this->settings->get_cut_off_time(),
 			'dropoff_days'             => $this->settings->get_dropoff_days(),
+			'excluded_dropoff_days'    => $this->settings->get_excluded_dropoff_days(),
 			'pickup_points_enabled'    => $this->settings->is_pickup_points_enabled(),
 			'delivery_days_enabled'    => $this->settings->is_delivery_days_enabled(),
 			'evening_delivery_enabled' => $this->settings->is_evening_delivery_enabled(),
@@ -96,6 +97,15 @@ abstract class Base_Info {
 			/* Temporarily hardcoded in Settings::get_number_pickup_points(). */
 			'number_pickup_points'     => $this->settings->get_number_pickup_points(),
 			'number_delivery_days'     => $this->settings->get_number_delivery_days(),
+			'return_company'           => $this->settings->get_return_company_name(),
+			'return_replynumber'       => $this->settings->get_return_reply_number(),
+			'return_address_1'         => $this->settings->get_return_address(),
+			'return_address_2'         => $this->settings->get_return_streetnumber(),
+			'return_address_city'      => $this->settings->get_return_city(),
+			'return_address_zip'       => $this->settings->get_return_zipcode(),
+			'return_customer_code'     => $this->settings->get_return_customer_code(),
+			'woocommerce_email'        => $this->settings->is_woocommerce_email_enabled(),
+			'woocommerce_email_text'   => $this->settings->get_woocommerce_email_text(),
 		);
 	}
 
@@ -228,6 +238,18 @@ abstract class Base_Info {
 	protected function float_round_sanitization( $float, $numcomma ) {
 		$float = floatval( $float );
 		return round( $float, $numcomma );
+	}
+
+	/**
+	 * Converts a given weight into grams, if necessary.
+	 *
+	 * @param float  $weight The weight amount.
+	 * @param string $uom The unit of measurement of the $weight parameter.
+	 *
+	 * @return float The potentially converted weight.
+	 */
+	protected function maybe_convert_to_grams( $weight, $uom ) {
+		return round( wc_get_weight( $weight, Utils::used_api_uom(), $uom ) );
 	}
 
 	/**

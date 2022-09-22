@@ -68,20 +68,25 @@ class Client extends Base {
 	 * @return array
 	 */
 	public function get_cutoff_times() {
-		$cutoff_time  = $this->item_info->body['cut_off_time'];
-		$dropoff_days = $this->item_info->body['dropoff_days'];
-		$cutoff       = array();
-
-		if ( empty( $dropoff_days ) ) {
-			return $cutoff;
-		}
-
-		foreach ( $dropoff_days as $day ) {
-			$cutoff[] = array(
-				'Day'       => $day,
+		$cutoff_time       = $this->item_info->body['cut_off_time'];
+		$excl_dropoff_days = $this->item_info->body['excluded_dropoff_days'];
+		$cutoff            = array(
+			array(
+				'Day'       => '00',
 				'Available' => true,
 				'Type'      => 'Regular',
 				'Time'      => $cutoff_time,
+			),
+		);
+
+		if ( empty( $excl_dropoff_days ) ) {
+			return $cutoff;
+		}
+
+		foreach ( $excl_dropoff_days as $day ) {
+			$cutoff[] = array(
+				'Day'       => $day,
+				'Available' => false,
 			);
 		}
 

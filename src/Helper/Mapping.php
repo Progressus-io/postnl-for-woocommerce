@@ -124,4 +124,28 @@ class Mapping {
 			),
 		);
 	}
+
+	/**
+	 * Product options mapping.
+	 *
+	 * @return Array
+	 */
+	public static function product_options() {
+		return array(
+			'NL' => array(
+				'NL' => array(
+					'frontend_data' => array(
+						'delivery_day' => array(
+							'type' => array(
+								'Evening' => array(
+									'characteristic' => '118',
+									'option'         => '006',
+								),
+							),
+						),
+					),
+				),
+			),
+		);
+	}
 }

@@ -373,10 +373,11 @@ class Settings extends \WC_Settings_API {
 			),
 			'country_origin'            => array(
 				'title'       => esc_html__( 'Default Country of Origin', 'postnl-for-woocommerce' ),
-				'type'        => 'text',
+				'type'        => 'select',
 				'description' => esc_html__( 'Default country of origin if none is set in the product.', 'postnl-for-woocommerce' ),
 				'desc_tip'    => true,
-				'default'     => '',
+				'default'     => Utils::get_base_country(),
+				'options'     => WC()->countries->get_countries(),
 				'placeholder' => '',
 			),
 
@@ -398,14 +399,6 @@ class Settings extends \WC_Settings_API {
 				),
 				'class'       => 'wc-enhanced-select',
 			),
-			'track_trace_email'         => array(
-				'title'       => esc_html__( 'Track & Trace Email', 'postnl-for-woocommerce' ),
-				'type'        => 'checkbox',
-				'description' => esc_html__( 'Enable PostNL tracking email.', 'postnl-for-woocommerce' ),
-				'desc_tip'    => true,
-				'default'     => '',
-				'placeholder' => '',
-			),
 			'woocommerce_email'         => array(
 				'title'       => esc_html__( 'WooCommerce Email', 'postnl-for-woocommerce' ),
 				'type'        => 'checkbox',
@@ -420,7 +413,7 @@ class Settings extends \WC_Settings_API {
 				'description' => esc_html__( 'Text added for tracking note email.', 'postnl-for-woocommerce' ),
 				'desc_tip'    => true,
 				'default'     => '',
-				'placeholder' => '',
+				'placeholder' => esc_html__( 'Tracking Number: {tracking-link}', 'postnl-for-woocommerce' ),
 			),
 		);
 	}
@@ -834,7 +827,7 @@ class Settings extends \WC_Settings_API {
 	 * @return String
 	 */
 	public function get_dropoff_wednesday() {
-		return $this->get_country_option( 'dropoff_day_wednesday', '' );
+		return $this->get_country_option( 'dropoff_day_wed', '' );
 	}
 
 	/**
@@ -958,6 +951,18 @@ class Settings extends \WC_Settings_API {
 	}
 
 	/**
+	 * Get excluded dropoff days from the settings.
+	 *
+	 * @return Array
+	 */
+	public function get_excluded_dropoff_days() {
+		$completed_days = array_keys( Utils::days_of_week() );
+		$dropoff_days   = $this->get_dropoff_days();
+
+		return array_diff( $completed_days, $dropoff_days );
+	}
+
+	/**
 	 * Get globalpack type barcode from the settings.
 	 *
 	 * @return String
@@ -1018,24 +1023,6 @@ class Settings extends \WC_Settings_API {
 	 */
 	public function is_ask_position_a4_enabled() {
 		return ( 'yes' === $this->get_ask_position_a4() );
-	}
-
-	/**
-	 * Get track trace email from the settings.
-	 *
-	 * @return String
-	 */
-	public function get_track_trace_email() {
-		return $this->get_country_option( 'track_trace_email', '' );
-	}
-
-	/**
-	 * Return true if track trace email field is ticked.
-	 *
-	 * @return Bool
-	 */
-	public function is_track_trace_email_enabled() {
-		return ( 'yes' === $this->get_track_trace_email() );
 	}
 
 	/**

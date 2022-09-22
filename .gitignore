@@ -51,5 +51,7 @@ Thumbs.db
 *.mov
 *.wmv
 
+composer.lock
+
 # Customize PHPCS
 phpcs.xml

@@ -25,7 +25,18 @@ class Client extends Base {
 	 *
 	 * @var string
 	 */
-	public $endpoint = '/v1/shipment?confirm=true';
+	public $endpoint = '/v1/shipment';
+
+	/**
+	 * Function for composing API request in the URL for GET request.
+	 *
+	 * @return Array.
+	 */
+	public function compose_url_params() {
+		return array(
+			'confirm' => 'true',
+		);
+	}
 
 	/**
 	 * Function for composing API request.
@@ -66,10 +77,9 @@ class Client extends Base {
 	public function get_shipments() {
 		$shipments = array();
 
-		$barcode  = $this->generate_barcode();
 		$shipment = array(
 			'Addresses'           => $this->get_shipment_addresses(),
-			'Barcode'             => $barcode,
+			'Barcode'             => $this->item_info->shipment['barcode'],
 			'Contacts'            => array(
 				array(
 					'ContactType' => '01',
@@ -80,12 +90,32 @@ class Client extends Base {
 			'Dimension'           => array(
 				'Weight' => $this->item_info->shipment['total_weight'],
 			),
+			'Customs'             => $this->get_customs(),
 			'ProductCodeDelivery' => $this->item_info->shipment['product_code'],
 		);
+
+		if ( $this->item_info->is_delivery_day() ) {
+			$shipment['DeliveryDate'] = $this->item_info->delivery_day['date'] . ' ' . $this->item_info->delivery_day['from'];
+		}
+
+		if ( ! empty( $this->item_info->shipment['product_options']['characteristic'] ) ) {
+			$shipment['ProductOptions'] = array(
+				array(
+					'Characteristic' => $this->item_info->shipment['product_options']['characteristic'],
+					'Option'         => $this->item_info->shipment['product_options']['option'],
+				),
+			);
+		}
+
+		if ( $this->item_info->backend_data['create_return_label'] ) {
+			// hardcoded.
+			$shipment['ReturnBarcode'] = '3SRETR12345678';
+		}
 
 		if ( $this->item_info->backend_data['insured_shipping'] ) {
 			$shipment['Amounts'][] = array(
 				'AmountType' => '02',
+				'Currency'   => $this->item_info->shipment['currency'],
 				'Value'      => $this->get_insurance_value(),
 			);
 		}
@@ -96,7 +126,7 @@ class Client extends Base {
 					'GroupType'     => '03',
 					'GroupCount'    => $this->item_info->backend_data['num_labels'],
 					'GroupSequence' => $i,
-					'MainBarcode'   => $barcode,
+					'MainBarcode'   => $this->item_info->shipment['barcode'],
 				);
 			}
 			$shipments[] = $shipment;
@@ -106,19 +136,54 @@ class Client extends Base {
 	}
 
 	/**
-	 * Generate barcode.
-	 *
-	 * @return String
-	 */
-	public function generate_barcode() {
-		return '3S' . $this->item_info->customer['customer_code'] . random_int( 100000000, 999999999 );
-	}
-
-	/**
 	 * Get insurance value.
 	 */
 	public function get_insurance_value() {
 		return 10;
+	}
+
+	/**
+	 * Create a customs segment in API request.
+	 *
+	 * @return Array.
+	 */
+	public function get_customs() {
+		return array(
+			'Certificate'            => false,
+			'Currency'               => $this->item_info->shipment['currency'],
+			'Invoice'                => true,
+			'InvoiceNr'              => $this->item_info->shipment['order_id'],
+			'License'                => false,
+			// Hardcoded.
+			'TransactionCode'        => '11',
+			'TransactionDescription' => 'Sale of goods',
+			'Content'                => $this->get_custom_contents(),
+		);
+	}
+
+	/**
+	 * Create a custom contents segment in API request.
+	 *
+	 * @return Array.
+	 */
+	public function get_custom_contents() {
+		if ( empty( $this->item_info->contents ) ) {
+			return array();
+		}
+
+		$contents = array();
+		foreach ( $this->item_info->contents  as $item ) {
+			$contents[] = array(
+				'Description'     => $item['description'],
+				'Quantity'        => $item['qty'],
+				'Weight'          => $item['weight'],
+				'Value'           => $item['value'],
+				'HSTariffNr'      => $item['hs_code'],
+				'CountryOfOrigin' => $item['origin'],
+			);
+		}
+
+		return $contents;
 	}
 
 	/**
@@ -149,6 +214,18 @@ class Client extends Base {
 				'HouseNrExt'  => '',
 				'Street'      => $this->item_info->pickup_points['address_1'],
 				'Zipcode'     => $this->item_info->pickup_points['postcode'],
+			);
+		}
+
+		if ( $this->item_info->backend_data['create_return_label'] ) {
+			$addresses[] = array(
+				'AddressType' => '08',
+				'City'        => $this->item_info->customer['return_address_city'],
+				'CompanyName' => $this->item_info->customer['return_company'],
+				'Countrycode' => $this->item_info->shipper['country'],
+				'HouseNr'     => $this->item_info->customer['return_address_2'],
+				'Street'      => $this->item_info->customer['return_address_1'],
+				'Zipcode'     => $this->item_info->customer['return_address_zip'],
 			);
 		}
 

@@ -150,6 +150,21 @@ class Item_Info extends Base_Info {
 					return $return;
 				},
 			),
+			'excluded_dropoff_days'    => array(
+				'default'  => array(),
+				'sanitize' => function( $dropoff_days ) use ( $self ) {
+					if ( empty( $dropoff_days ) || ! is_array( $dropoff_days ) ) {
+						return array();
+					}
+
+					$return = array();
+					foreach ( $dropoff_days as $day ) {
+						$return[] = $self->convert_day_to_number( $day );
+					}
+
+					return $return;
+				},
+			),
 			'pickup_points_enabled'    => array(
 				'default'  => false,
 				'sanitize' => function( $enabled ) {

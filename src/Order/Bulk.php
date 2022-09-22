@@ -7,6 +7,8 @@
 
 namespace PostNLWooCommerce\Order;
 
+use PostNLWooCommerce\Utils;
+
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
@@ -60,6 +62,12 @@ class Bulk extends Base {
 			if ( ! empty( $object_ids ) ) {
 				foreach ( $object_ids as $order_id ) {
 					$this->save_meta_value( $order_id, $_REQUEST );
+					$tracking_note = $this->get_tracking_note( $order_id );
+
+					if ( $this->settings->is_woocommerce_email_enabled() && ! empty( $tracking_note ) ) {
+						$order = wc_get_order( $order_id );
+						$order->add_order_note( $tracking_note, 1 );
+					}
 				}
 			}
 
@@ -136,7 +144,7 @@ class Bulk extends Base {
 			?>
 			<div id="postnl-create-label-modal" style="display:none;">
 				<div id="postnl-action-create-label">
-					<?php $this->fields_generator( $this->meta_box_fields() ); ?>
+					<?php Utils::fields_generator( $this->meta_box_fields() ); ?>
 
 					<br>
 					<button type="button" class="button button-primary" id="postnl_create_label_proceed"><?php esc_html_e( 'Submit', 'postnl-for-woocommerce' ); ?></button>

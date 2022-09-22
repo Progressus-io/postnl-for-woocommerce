@@ -8,8 +8,10 @@
 namespace PostNLWooCommerce\Order;
 
 use PostNLWooCommerce\Utils;
+use PostNLWooCommerce\Rest_API\Barcode;
 use PostNLWooCommerce\Rest_API\Shipping;
 use PostNLWooCommerce\Shipping_Method\Settings;
+use PostNLWooCommerce\Helper\Mapping;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -92,8 +94,9 @@ abstract class Base {
 			'postnl_order_meta_box_fields',
 			array(
 				array(
-					'id'   => $this->prefix . 'break_1',
-					'type' => 'break',
+					'id'          => $this->prefix . 'break_1',
+					'option_feat' => false,
+					'type'        => 'break',
 				),
 				array(
 					'id'           => $this->prefix . 'insured_shipping',
@@ -103,6 +106,7 @@ abstract class Base {
 					'description'  => '',
 					'value'        => '',
 					'show_in_bulk' => true,
+					'option_feat'  => true,
 					'container'    => true,
 				),
 				array(
@@ -113,6 +117,7 @@ abstract class Base {
 					'description'  => '',
 					'value'        => '',
 					'show_in_bulk' => true,
+					'option_feat'  => true,
 					'container'    => true,
 				),
 				array(
@@ -123,6 +128,7 @@ abstract class Base {
 					'description'  => '',
 					'value'        => '',
 					'show_in_bulk' => true,
+					'option_feat'  => true,
 					'container'    => true,
 				),
 				array(
@@ -133,6 +139,7 @@ abstract class Base {
 					'description'  => '',
 					'value'        => '',
 					'show_in_bulk' => true,
+					'option_feat'  => true,
 					'container'    => true,
 				),
 				array(
@@ -143,11 +150,13 @@ abstract class Base {
 					'description'  => '',
 					'value'        => '',
 					'show_in_bulk' => true,
+					'option_feat'  => true,
 					'container'    => true,
 				),
 				array(
-					'id'   => $this->prefix . 'break_2',
-					'type' => 'break',
+					'id'          => $this->prefix . 'break_2',
+					'option_feat' => false,
+					'type'        => 'break',
 				),
 				array(
 					'id'                => $this->prefix . 'num_labels',
@@ -163,6 +172,7 @@ abstract class Base {
 							'min'  => '0',
 						),
 					'show_in_bulk'      => true,
+					'option_feat'       => false,
 					'container'         => true,
 				),
 				array(
@@ -171,8 +181,9 @@ abstract class Base {
 					'label'        => __( 'Create Return Label: ', 'postnl-for-woocommerce' ),
 					'placeholder'  => '',
 					'description'  => '',
-					'value'        => '',
+					'value'        => $this->settings->get_return_address_default(),
 					'show_in_bulk' => true,
+					'option_feat'  => false,
 					'container'    => true,
 				),
 				array(
@@ -181,6 +192,7 @@ abstract class Base {
 					'nonce'        => true,
 					'value'        => wp_create_nonce( $this->nonce_key ),
 					'show_in_bulk' => true,
+					'option_feat'  => false,
 					'container'    => true,
 				),
 			)
@@ -188,64 +200,47 @@ abstract class Base {
 	}
 
 	/**
-	 * Generating meta box fields.
+	 * Get available option based on the countries and chosen option in the frontend checkout.
 	 *
-	 * @param array $fields list of fields.
+	 * @param WC_Order $order Order object.
+	 *
+	 * @return Array.
 	 */
-	public function fields_generator( $fields ) {
-		foreach ( $fields as $field ) {
-			if ( empty( $field['id'] ) ) {
-				continue;
-			}
+	public function get_available_options( $order ) {
+		if ( ! is_a( $order, 'WC_Order' ) ) {
+			return array();
+		}
 
-			if ( ! empty( $field['container'] ) && true === $field['container'] ) {
-				?>
-				<div class="shipment-postnl-row-container shipment-<?php echo esc_attr( $field['id'] ); ?>">
-				<?php
-			}
+		$product_map  = Mapping::product_code();
+		$from_country = Utils::get_base_country();
+		$to_country   = $order->get_shipping_country();
+		$saved_data   = $this->get_data( $order->get_id() );
 
-			switch ( $field['type'] ) {
-				case 'select':
-					woocommerce_wp_select( $field );
-					break;
+		if ( empty( $saved_data['frontend'] ) ) {
+			return array();
+		}
 
-				case 'checkbox':
-					woocommerce_wp_checkbox( $field );
-					break;
+		$selected_option   = '';
+		$available_options = array();
 
-				case 'hidden':
-					woocommerce_wp_hidden_input( $field );
-					break;
+		foreach ( $saved_data['frontend'] as $key => $value ) {
+			$converted_key = Utils::convert_data_key( $key );
 
-				case 'radio':
-					woocommerce_wp_radio( $field );
-					break;
-
-				case 'textarea':
-					woocommerce_wp_textarea_input( $field );
-					break;
-
-				case 'break':
-					echo '<div class="postnl-break-line ' . esc_attr( $field['id'] ) . '"><hr id="' . esc_attr( $field['id'] ) . '" /></div>';
-					break;
-
-				case 'text':
-				case 'number':
-				default:
-					woocommerce_wp_text_input( $field );
-					break;
-			}
-
-			if ( ! empty( $field['container'] ) && true === $field['container'] ) {
-				?>
-				</div>
-				<?php
+			if ( ! empty( $product_map[ $from_country ][ $to_country ][ $converted_key ] ) ) {
+				$selected_option = $converted_key;
+				break;
 			}
 		}
+
+		foreach ( $product_map[ $from_country ][ $to_country ][ $selected_option ] as $product_code => $sub_options ) {
+			$available_options = array_merge( $available_options, $sub_options );
+		}
+
+		return $available_options;
 	}
 
 	/**
-	 * Get frontend data from Order object.
+	 * Get saved data from Order object.
 	 *
 	 * @param int $order_id ID of the order.
 	 *
@@ -260,6 +255,49 @@ abstract class Base {
 
 		$data = $order->get_meta( $this->meta_name );
 		return ! empty( $data ) && is_array( $data ) ? $data : array();
+	}
+
+	/**
+	 * Init order object for meta box.
+	 *
+	 * @param WP_POST|WC_Order $metabox_object Either WP_Post or WC_Order object.
+	 */
+	public function init_order_object( $metabox_object ) {
+		if ( is_a( $metabox_object, 'WP_Post' ) ) {
+			return wc_get_order( $metabox_object->ID );
+		}
+
+		if ( is_a( $metabox_object, 'WC_Order' ) ) {
+			return $metabox_object;
+		}
+
+		return false;
+	}
+
+	/**
+	 * Check if the current order is using PostNL shipping method.
+	 *
+	 * @param WC_Order $order Order object.
+	 */
+	public function is_postnl_shipping_method( $order ) {
+
+		if ( ! is_a( $order, 'WC_Order' ) ) {
+			return false;
+		}
+
+		$shipping_methods = $order->get_shipping_methods();
+
+		if ( empty( $shipping_methods ) ) {
+			return false;
+		}
+
+		foreach ( $shipping_methods as $shipping_item ) {
+			if ( POSTNL_SETTINGS_ID === $shipping_item->get_method_id() ) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	/**
@@ -293,9 +331,11 @@ abstract class Base {
 			$saved_data['backend'][ $post_field ] = $post_value;
 		}
 
+		$barcode         = $this->create_barcode( $order );
 		$label_post_data = array(
 			'order'      => $order,
 			'saved_data' => $saved_data,
+			'barcode'    => $barcode,
 		);
 
 		$label_info          = $this->create_label( $label_post_data );
@@ -305,6 +345,32 @@ abstract class Base {
 		$order->save();
 
 		return $saved_data;
+	}
+
+	/**
+	 * Get frontend data from Order object.
+	 *
+	 * @param int $order_id ID of the order.
+	 *
+	 * @return array.
+	 */
+	public function get_frontend_data( $order_id ) {
+		$saved_data = $this->get_data( $order_id );
+
+		return ! empty( $saved_data['frontend'] ) ? $saved_data['frontend'] : array();
+	}
+
+	/**
+	 * Get backend data from Order object.
+	 *
+	 * @param int $order_id ID of the order.
+	 *
+	 * @return array.
+	 */
+	public function get_backend_data( $order_id ) {
+		$saved_data = $this->get_data( $order_id );
+
+		return ! empty( $saved_data['backend'] ) ? $saved_data['backend'] : array();
 	}
 
 	/**
@@ -364,6 +430,36 @@ abstract class Base {
 			'barcode'  => $barcode,
 			'filepath' => $filepath,
 		);
+	}
+
+	/**
+	 * Create PostNL barcode for current order
+	 *
+	 * @param WC_Order $order Order object.
+	 *
+	 * @return array
+	 *
+	 * @throws \Exception Error when response does not have Barcode value.
+	 */
+	public function create_barcode( $order ) {
+		$destination = Utils::get_shipping_zone( $order->get_shipping_country() );
+		$data        = array(
+			// ROW = Rest of the World ( outside Europe ).
+			'type'  => ( 'ROW' !== $destination ) ? '3S' : 'S10',
+			'serie' => '000000000-999999999',
+		);
+
+		$item_info = new Barcode\Item_Info( $data );
+		$barcode   = new Barcode\Client( $item_info );
+		$response  = $barcode->send_request();
+
+		if ( empty( $response['Barcode'] ) ) {
+			throw new \Exception(
+				esc_html__( 'Cannot create the barcode.', 'postnl-for-woocommerce' )
+			);
+		}
+
+		return $response['Barcode'];
 	}
 
 	/**
@@ -479,5 +575,54 @@ abstract class Base {
 		} else {
 			return false;
 		}
+	}
+
+	/**
+	 * Get tracking note for the order.
+	 *
+	 * @param Int $order_id ID of the order object.
+	 *
+	 * @return String
+	 */
+	protected function get_tracking_note( $order_id ) {
+
+		if ( ! empty( $this->settings->get_woocommerce_email_text() ) ) {
+			$tracking_note = $this->settings->get_woocommerce_email_text();
+		} else {
+			// translators: %s the current service.
+			$tracking_note = sprintf( __( '%s Tracking Number: {tracking-link}', 'postnl-for-woocommerce' ), $this->service );
+		}
+
+		$tracking_link = $this->get_tracking_link( $order_id );
+
+		if ( empty( $tracking_link ) ) {
+			return '';
+		}
+
+		$tracking_note_new = str_replace( '{tracking-link}', $tracking_link, $tracking_note, $count );
+
+		if ( 0 === $count ) {
+			$tracking_note_new = $tracking_note . ' ' . $tracking_link;
+		}
+
+		return $tracking_note_new;
+	}
+
+	/**
+	 * Get tracking url for the order.
+	 *
+	 * @param Int $order_id ID of the order object.
+	 */
+	protected function get_tracking_link( $order_id ) {
+		$saved_data = $this->get_data( $order_id );
+		$order      = wc_get_order( $order_id );
+
+		if ( empty( $saved_data['label']['barcode'] ) || ! is_a( $order, 'WC_Order' ) ) {
+			return '';
+		}
+
+		$tracking_url = Utils::generate_tracking_url( $saved_data['label']['barcode'], $order->get_shipping_country() );
+
+		return sprintf( '<a href="%1$s" target="_blank">%2$s</a>', $tracking_url, $saved_data['label']['barcode'] );
 	}
 }

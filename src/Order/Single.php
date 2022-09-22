@@ -26,7 +26,7 @@ class Single extends Base {
 	 */
 	public function init_hooks() {
 		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_order_single_css_script' ) );
-		add_action( 'add_meta_boxes', array( $this, 'add_meta_box' ), 20 );
+		add_action( 'add_meta_boxes', array( $this, 'add_meta_box' ), 20, 2 );
 
 		add_action( 'wp_ajax_postnl_order_save_form', array( $this, 'save_meta_box_ajax' ) );
 		add_action( 'wp_ajax_nopriv_postnl_order_save_form', array( $this, 'save_meta_box_ajax' ) );
@@ -71,8 +71,17 @@ class Single extends Base {
 
 	/**
 	 * Adding meta box in order admin page.
+	 *
+	 * @param String           $post_type Post type for current admin page.
+	 * @param WP_POST|WC_Order $post_or_order_object Either WP_Post or WC_Order object.
 	 */
-	public function add_meta_box() {
+	public function add_meta_box( $post_type, $post_or_order_object ) {
+		$order = $this->init_order_object( $post_or_order_object );
+
+		if ( ! is_a( $order, 'WC_Order' ) || ! $this->is_postnl_shipping_method( $order ) ) {
+			return;
+		}
+
 		$screen = wc_get_container()->get( CustomOrdersTableController::class )->custom_orders_table_usage_is_enabled()
 		? wc_get_page_screen_id( 'shop-order' )
 		: 'shop_order';
@@ -107,6 +116,31 @@ class Single extends Base {
 				}
 			}
 		}
+
+		return $meta_fields;
+	}
+
+	/**
+	 * Filter the fields to display the available fields only.
+	 *
+	 * @param Array $meta_fields Order meta fields.
+	 * @param Array $available_options Available fields based on the countries and chosen option in checkout page.
+	 *
+	 * @return array
+	 */
+	public function filter_available_fields( $meta_fields, $available_options ) {
+		$meta_fields = array_filter(
+			$meta_fields,
+			function( $field ) use ( $available_options ) {
+				$field_name = Utils::remove_prefix_field( $this->prefix, $field['id'] );
+
+				if ( false === $field['option_feat'] ) {
+					return true;
+				}
+
+				return in_array( $field_name, $available_options, true );
+			}
+		);
 
 		return $meta_fields;
 	}
@@ -325,20 +359,23 @@ class Single extends Base {
 	 * @param WP_Post|WC_Order $post_or_order_object current order object.
 	 */
 	public function meta_box_html( $post_or_order_object ) {
-		if ( ! is_a( $post_or_order_object, 'WC_Order' ) && empty( $post_or_order_object->ID ) ) {
+		$order = $this->init_order_object( $post_or_order_object );
+		if ( ! is_a( $order, 'WC_Order' ) ) {
 			return;
 		}
 
-		$order         = ( is_a( $post_or_order_object, 'WP_Post' ) ) ? wc_get_order( $post_or_order_object->ID ) : $post_or_order_object;
-		$form_class    = ( $this->have_backend_data( $order ) ) ? 'generated' : '';
-		$pickup_info   = $this->get_pickup_points_info( $order );
-		$delivery_info = $this->get_delivery_day_info( $order );
+		$form_class        = ( $this->have_backend_data( $order ) ) ? 'generated' : '';
+		$pickup_info       = $this->get_pickup_points_info( $order );
+		$delivery_info     = $this->get_delivery_day_info( $order );
+		$fields_with_value = $this->add_meta_box_value( $order );
+		$available_options = $this->get_available_options( $order );
+		$available_fields  = $this->filter_available_fields( $fields_with_value, $available_options );
 		?>
 		<div id="shipment-postnl-label-form" class="<?php echo esc_attr( $form_class ); ?>">
 			<?php $this->generate_delivery_type_html( $order ); ?>
 			<?php $this->generate_delivery_date_html( $delivery_info ); ?>
 			<?php $this->generate_pickup_points_html( $pickup_info ); ?>
-			<?php $this->fields_generator( $this->add_meta_box_value( $order ) ); ?>
+			<?php Utils::fields_generator( $available_fields ); ?>
 
 			<div class="button-container">
 				<button class="button button-primary button-save-form"><?php esc_html_e( 'Generate Label', 'postnl-for-woocommerce' ); ?></button>
@@ -391,8 +428,21 @@ class Single extends Base {
 				throw new \Exception( esc_html__( 'Order does not exists!', 'postnl-for-woocommerce' ) );
 			}
 
-			$saved_data = $this->save_meta_value( $order_id, $_REQUEST );
-			wp_send_json_success( $saved_data );
+			$saved_data    = $this->save_meta_value( $order_id, $_REQUEST );
+			$return_data   = $saved_data;
+			$tracking_note = $this->get_tracking_note( $order_id );
+
+			if ( $this->settings->is_woocommerce_email_enabled() && ! empty( $tracking_note ) ) {
+				$return_data = array_merge(
+					$saved_data,
+					array(
+						'tracking_note' => $tracking_note,
+						'note_type'     => Utils::get_tracking_note_type(),
+					)
+				);
+			}
+
+			wp_send_json_success( $return_data );
 		} catch ( \Exception $e ) {
 			wp_send_json_error(
 				array( 'message' => $e->getMessage() ),

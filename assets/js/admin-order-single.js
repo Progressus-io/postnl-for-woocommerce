@@ -54,6 +54,31 @@
 					for (let field in response.data.backend ) {
 						jQuery( '#postnl_' + field ).prop( 'disabled', true );
 					}
+
+					if( response.data.tracking_note ) {
+
+						$( '#woocommerce-order-notes' ).block({
+							message: null,
+							overlayCSS: {
+								background: '#fff',
+								opacity: 0.6
+							}
+						});
+
+						var data = {
+							action:    'woocommerce_add_order_note',
+							post_id:   woocommerce_admin_meta_boxes.post_id,
+							note_type: response.data.note_type,
+							note:      response.data.tracking_note,
+							security:  woocommerce_admin_meta_boxes.add_order_note_nonce
+						};
+
+						$.post( woocommerce_admin_meta_boxes.ajax_url, data, function( response_note ) {
+							$( 'ul.order_notes' ).prepend( response_note );
+							$( '#woocommerce-order-notes' ).unblock();
+							$( '#add_order_note' ).val( '' );
+						});
+					}
 				} else {
 					var error_text = response.data.hasOwnProperty( 'message' ) ? response.data.message : 'Unknown error!';
 					error_cont.html( error_text );

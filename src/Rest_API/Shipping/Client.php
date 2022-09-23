@@ -116,7 +116,7 @@ class Client extends Base {
 			$shipment['Amounts'][] = array(
 				'AmountType' => '02',
 				'Currency'   => $this->item_info->shipment['currency'],
-				'Value'      => $this->get_insurance_value(),
+				'Value'      => $this->item_info->shipment['subtotal'],
 			);
 		}
 
@@ -133,13 +133,6 @@ class Client extends Base {
 		}
 
 		return $shipments;
-	}
-
-	/**
-	 * Get insurance value.
-	 */
-	public function get_insurance_value() {
-		return 10;
 	}
 
 	/**

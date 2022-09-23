@@ -210,6 +210,7 @@ class Item_Info extends Base_Info {
 			'barcode'      => $barcode,
 			'currency'     => $order->get_currency(),
 			'total_weight' => $this->calculate_order_weight( $order ),
+			'subtotal'     => $order->get_subtotal(),
 		);
 
 		foreach ( $order->get_items() as $item_id => $item ) {
@@ -409,6 +410,12 @@ class Item_Info extends Base_Info {
 				'sanitize' => function( $value ) use ( $self ) {
 					return $self->float_round_sanitization( $value, 2 );
 				},
+			),
+			'subtotal'        => array(
+				'default' => 0,
+				'sanitize' => function( $value ) use ( $self ) {
+					return $self->float_round_sanitization( $value, 2 );
+				}
 			),
 			'email'           => array(
 				'validate' => function( $value ) {

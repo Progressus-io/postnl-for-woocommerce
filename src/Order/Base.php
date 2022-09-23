@@ -405,7 +405,7 @@ abstract class Base {
 	 *
 	 * @param array $post_data Order post data.
 	 *
-	 * @return array
+	 * @return array|Boolean
 	 *
 	 * @throws \Exception Error when response has an error.
 	 */
@@ -419,16 +419,42 @@ abstract class Base {
 		// Check any errors.
 		$this->check_label_and_barcode( $response );
 
-		$barcode  = $response['ResponseShipments'][0]['Barcode'];
-		$filename = 'postnl-' . $order->get_id() . '-' . $response['ResponseShipments'][0]['Barcode'] . '.pdf';
-		$filepath = trailingslashit( POSTNL_UPLOADS_DIR ) . $filename;
+		$message_types = Utils::get_label_response_type();
 
-		$test     = base64_decode( $response['ResponseShipments'][0]['Labels'][0]['Content'] );
-		$file_ret = file_put_contents( $filepath, $test );
+		foreach ( $message_types as $type => $content_type ) {
+			if ( empty( $response[ $type ] ) ) {
+				continue;
+			}
 
-		return array(
-			'barcode'  => $barcode,
-			'filepath' => $filepath,
+			foreach ( $response[ $type ] as $shipment_idx => $shipment_contents ) {
+
+				if ( empty( $shipment_contents['Labels'] ) ) {
+					continue 2;
+				}
+
+				foreach ( $shipment_contents['Labels'] as $label_idx => $label_contents ) {
+					if ( empty( $label_contents['Content'] ) ) {
+						continue 3;
+					}
+
+					$barcode  = $response[ $type ][ $shipment_idx ][ $content_type['barcode_key'] ];
+					$barcode  = is_array( $barcode ) ? array_shift( $barcode ) : $barcode;
+					$filename = 'postnl-' . $order->get_id() . '-' . $barcode . '.pdf';
+					$filepath = trailingslashit( POSTNL_UPLOADS_DIR ) . $filename;
+
+					$test     = base64_decode( $label_contents['Content'] );
+					$file_ret = file_put_contents( $filepath, $test );
+
+					return array(
+						'barcode'  => $barcode,
+						'filepath' => $filepath,
+					);
+				}
+			}
+		}
+
+		throw new \Exception(
+			esc_html__( 'Cannot create the label. Label content is missing', 'postnl-for-woocommerce' )
 		);
 	}
 
@@ -470,13 +496,36 @@ abstract class Base {
 	 * @throws \Exception Error when barcode or label content is missing.
 	 */
 	public function check_label_and_barcode( $response ) {
-		if ( empty( $response['ResponseShipments'][0]['Barcode'] ) ) {
+		$message_types = array(
+			'MergedLabels'      => array(
+				'content_type_key'   => 'Labeltype',
+				'content_type_value' => 'Label',
+			),
+			'ResponseShipments' => array(
+				'content_type_key'   => 'OutputType',
+				'content_type_value' => 'PDF',
+			),
+		);
+
+		$has_barcode = false;
+		$has_content = false;
+		foreach ( $message_types as $type => $content_type ) {
+			if ( ! empty( $response[ $type ][0]['Barcode'] ) ) {
+				$has_barcode = true;
+			}
+
+			if ( ! empty( $response[ $type ][0]['Labels'][0]['Content'] ) ) {
+				$has_content = true;
+			}
+		}
+
+		if ( ! $has_barcode ) {
 			throw new \Exception(
 				esc_html__( 'Cannot create the label. Barcode data is missing', 'postnl-for-woocommerce' )
 			);
 		}
 
-		if ( empty( $response['ResponseShipments'][0]['Labels'][0]['Content'] ) ) {
+		if ( ! $has_content ) {
 			throw new \Exception(
 				esc_html__( 'Cannot create the label. Label content is missing', 'postnl-for-woocommerce' )
 			);

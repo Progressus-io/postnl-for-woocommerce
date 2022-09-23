@@ -277,6 +277,25 @@ class Utils {
 	}
 
 	/**
+	 * Get the type of label response.
+	 *
+	 * @return Array.
+	 */
+	public static function get_label_response_type() {
+		return array(
+			'MergedLabels'      => array(
+				'content_type_key'   => 'Labeltype',
+				'content_type_value' => 'Label',
+				'barcode_key'        => 'Barcodes',
+			),
+			'ResponseShipments' => array(
+				'content_type_key'   => 'OutputType',
+				'content_type_value' => 'PDF',
+				'barcode_key'        => 'Barcode',
+			),
+		);
+	}
+	/**
 	 * Parsers a given array of arguments using a specific scheme.
 	 *
 	 * The scheme is a `key => array` associative array, where the `key` represents the argument key and the `array`

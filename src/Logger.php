@@ -80,28 +80,34 @@ class Logger {
 			return $message;
 		}
 
-		$message = json_decode( $message, true );
+		$message       = json_decode( $message, true );
+		$message_types = Utils::get_label_response_type();
 
-		if ( ! empty( $message['ResponseShipments'] ) ) {
-			foreach ( $message['ResponseShipments'] as $shipment_idx => $shipment_contents ) {
+		foreach ( $message_types as $type => $content_type ) {
+			if ( empty( $message[ $type ] ) ) {
+				continue;
+			}
+
+			foreach ( $message[ $type ] as $shipment_idx => $shipment_contents ) {
+
 				if ( empty( $shipment_contents['Labels'] ) ) {
-					return $message;
+					continue 2;
 				}
 
 				foreach ( $shipment_contents['Labels'] as $label_idx => $label_contents ) {
 					if ( empty( $label_contents['Content'] ) ) {
-						continue;
+						continue 3;
 					}
 
-					if ( empty( $label_contents['OutputType'] ) ) {
-						continue;
+					if ( empty( $label_contents[ $content_type['content_type_key'] ] ) ) {
+						continue 3;
 					}
 
-					if ( 'PDF' !== $label_contents['OutputType'] ) {
-						continue;
+					if ( $content_type['content_type_value'] !== $label_contents[ $content_type['content_type_key'] ] ) {
+						continue 3;
 					}
 
-					$message['ResponseShipments'][ $shipment_idx ]['Labels'][ $label_idx ]['Content'] = '[PDF data]';
+					$message[ $type ][ $shipment_idx ]['Labels'][ $label_idx ]['Content'] = '[PDF data]';
 				}
 			}
 		}

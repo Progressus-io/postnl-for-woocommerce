@@ -177,6 +177,11 @@ class Container {
 	 * Add delivery day fields.
 	 */
 	public function display_fields() {
+		// Only display the fields if these two options are enabled in the settings.
+		if ( ! $this->settings->is_delivery_days_enabled() && ! $this->settings->is_pickup_points_enabled() ) {
+			return;
+		}
+
 		$checkout_data = $this->get_checkout_data();
 
 		if ( ! empty( $checkout_data['error'] ) ) {

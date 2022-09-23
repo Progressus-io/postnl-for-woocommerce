@@ -107,11 +107,6 @@ class Client extends Base {
 			);
 		}
 
-		if ( $this->item_info->backend_data['create_return_label'] ) {
-			// hardcoded.
-			$shipment['ReturnBarcode'] = '3SRETR12345678';
-		}
-
 		if ( $this->item_info->backend_data['insured_shipping'] ) {
 			$shipment['Amounts'][] = array(
 				'AmountType' => '02',
@@ -207,18 +202,6 @@ class Client extends Base {
 				'HouseNrExt'  => '',
 				'Street'      => $this->item_info->pickup_points['address_1'],
 				'Zipcode'     => $this->item_info->pickup_points['postcode'],
-			);
-		}
-
-		if ( $this->item_info->backend_data['create_return_label'] ) {
-			$addresses[] = array(
-				'AddressType' => '08',
-				'City'        => $this->item_info->customer['return_address_city'],
-				'CompanyName' => $this->item_info->customer['return_company'],
-				'Countrycode' => $this->item_info->shipper['country'],
-				'HouseNr'     => $this->item_info->customer['return_address_2'],
-				'Street'      => $this->item_info->customer['return_address_1'],
-				'Zipcode'     => $this->item_info->customer['return_address_zip'],
 			);
 		}
 

@@ -10,6 +10,7 @@ namespace PostNLWooCommerce\Order;
 use PostNLWooCommerce\Utils;
 use PostNLWooCommerce\Rest_API\Barcode;
 use PostNLWooCommerce\Rest_API\Shipping;
+use PostNLWooCommerce\Rest_API\Return_Label;
 use PostNLWooCommerce\Shipping_Method\Settings;
 use PostNLWooCommerce\Helper\Mapping;
 
@@ -338,9 +339,9 @@ abstract class Base {
 			'barcode'    => $barcode,
 		);
 
-		$label_info          = $this->create_label( $label_post_data );
-		$saved_data['label'] = $label_info;
-
+		$labels               = $this->create_label( $label_post_data );
+		$return_labels        = $this->maybe_create_return_label( $label_post_data );
+		$saved_data['labels'] = array_merge( $labels, $return_labels );
 		$order->update_meta_data( $this->meta_name, $saved_data );
 		$order->save();
 
@@ -401,25 +402,16 @@ abstract class Base {
 	}
 
 	/**
-	 * Create PostNL label for current order
+	 * Put the label content into PDF files.
 	 *
-	 * @param array $post_data Order post data.
+	 * @param array    $response Response from PostNL API.
+	 * @param WC_Order $order Order object.
 	 *
-	 * @return array|Boolean
-	 *
-	 * @throws \Exception Error when response has an error.
+	 * @return array
 	 */
-	public function create_label( $post_data ) {
-		$order = $post_data['order'];
-
-		$item_info = new Shipping\Item_Info( $post_data );
-		$shipping  = new Shipping\Client( $item_info );
-		$response  = $shipping->send_request();
-
-		// Check any errors.
-		$this->check_label_and_barcode( $response );
-
+	public function put_label_content( $response, $order ) {
 		$message_types = Utils::get_label_response_type();
+		$labels        = array();
 
 		foreach ( $message_types as $type => $content_type ) {
 			if ( empty( $response[ $type ] ) ) {
@@ -437,15 +429,16 @@ abstract class Base {
 						continue 3;
 					}
 
-					$barcode  = $response[ $type ][ $shipment_idx ][ $content_type['barcode_key'] ];
-					$barcode  = is_array( $barcode ) ? array_shift( $barcode ) : $barcode;
-					$filename = 'postnl-' . $order->get_id() . '-' . $barcode . '.pdf';
-					$filepath = trailingslashit( POSTNL_UPLOADS_DIR ) . $filename;
+					$label_type = ! empty( $label_contents['Labeltype'] ) ? sanitize_title( $label_contents['Labeltype'] ) : 'unknown-type';
+					$barcode    = $response[ $type ][ $shipment_idx ][ $content_type['barcode_key'] ];
+					$barcode    = is_array( $barcode ) ? array_shift( $barcode ) : $barcode;
+					$filename   = 'postnl-' . $order->get_id() . '-' . $label_type . '-' . $barcode . '.pdf';
+					$filepath   = trailingslashit( POSTNL_UPLOADS_DIR ) . $filename;
 
 					$test     = base64_decode( $label_contents['Content'] );
 					$file_ret = file_put_contents( $filepath, $test );
 
-					return array(
+					$labels[ $label_type ] = array(
 						'barcode'  => $barcode,
 						'filepath' => $filepath,
 					);
@@ -453,9 +446,7 @@ abstract class Base {
 			}
 		}
 
-		throw new \Exception(
-			esc_html__( 'Cannot create the label. Label content is missing', 'postnl-for-woocommerce' )
-		);
+		return $labels;
 	}
 
 	/**
@@ -489,6 +480,67 @@ abstract class Base {
 	}
 
 	/**
+	 * Create PostNL label for current order
+	 *
+	 * @param array $post_data Order post data.
+	 *
+	 * @return array
+	 *
+	 * @throws \Exception Error when response has an error.
+	 */
+	public function create_label( $post_data ) {
+		$order = $post_data['order'];
+
+		$item_info = new Shipping\Item_Info( $post_data );
+		$shipping  = new Shipping\Client( $item_info );
+		$response  = $shipping->send_request();
+
+		// Check any errors.
+		$this->check_label_and_barcode( $response );
+
+		$labels = $this->put_label_content( $response, $order );
+
+		if ( empty( $labels ) ) {
+			throw new \Exception(
+				esc_html__( 'Cannot create the label. Label content is missing', 'postnl-for-woocommerce' )
+			);
+		}
+
+		return $labels;
+	}
+
+	/**
+	 * Create PostNL return label for current order
+	 *
+	 * @param array $post_data Order post data.
+	 *
+	 * @return array|Boolean
+	 *
+	 * @throws \Exception Error when response has an error.
+	 */
+	public function maybe_create_return_label( $post_data ) {
+		if ( 'yes' !== $post_data['saved_data']['backend']['create_return_label'] ) {
+			return array();
+		}
+
+		$order = $post_data['order'];
+
+		$item_info    = new Return_Label\Item_Info( $post_data );
+		$return_label = new Return_Label\Client( $item_info );
+		$response     = $return_label->send_request();
+
+		$labels = $this->put_label_content( $response, $order );
+
+		if ( empty( $labels ) ) {
+			throw new \Exception(
+				esc_html__( 'Cannot create the return label. Label content is missing', 'postnl-for-woocommerce' )
+			);
+		}
+
+		return $labels;
+	}
+
+	/**
 	 * Make sure the barcode and label content is exists before printing.
 	 *
 	 * @param Array $response Response from API Call.
@@ -496,16 +548,7 @@ abstract class Base {
 	 * @throws \Exception Error when barcode or label content is missing.
 	 */
 	public function check_label_and_barcode( $response ) {
-		$message_types = array(
-			'MergedLabels'      => array(
-				'content_type_key'   => 'Labeltype',
-				'content_type_value' => 'Label',
-			),
-			'ResponseShipments' => array(
-				'content_type_key'   => 'OutputType',
-				'content_type_value' => 'PDF',
-			),
-		);
+		$message_types = Utils::get_label_response_type();
 
 		$has_barcode = false;
 		$has_content = false;
@@ -550,14 +593,16 @@ abstract class Base {
 	/**
 	 * Generate download label url
 	 *
-	 * @param int $order_id ID of the order post.
+	 * @param int    $order_id ID of the order post.
+	 * @param String $label_type Type of the label. Possible options : 'label', 'return-label'.
 	 *
 	 * @return String.
 	 */
-	public function get_download_label_url( $order_id ) {
+	public function get_download_label_url( $order_id, $label_type = 'label' ) {
 		$download_url = add_query_arg(
 			array(
 				'postnl_label_order_id' => $order_id,
+				'label_type'            => $label_type,
 				'postnl_label_nonce'    => wp_create_nonce( 'postnl_download_label_nonce' ),
 			),
 			home_url()
@@ -577,6 +622,10 @@ abstract class Base {
 			return;
 		}
 
+		if ( empty( $_GET['label_type'] ) ) {
+			return;
+		}
+
 		// Check nonce before proceed.
 		$nonce_result = check_ajax_referer( 'postnl_download_label_nonce', sanitize_text_field( wp_unslash( $_GET['postnl_label_nonce'] ) ), false );
 
@@ -584,7 +633,8 @@ abstract class Base {
 			return;
 		}
 
-		$order_id = sanitize_text_field( wp_unslash( $_GET['postnl_label_order_id'] ) );
+		$order_id   = sanitize_text_field( wp_unslash( $_GET['postnl_label_order_id'] ) );
+		$label_type = sanitize_text_field( wp_unslash( $_GET['label_type'] ) );
 
 		if ( ! ( current_user_can( 'manage_woocommerce' ) || current_user_can( 'view_order', $order_id ) ) ) {
 			return;
@@ -592,7 +642,11 @@ abstract class Base {
 
 		$saved_data = $this->get_data( $order_id );
 
-		$this->download_label( $saved_data['label']['filepath'] );
+		if ( empty( $saved_data['labels'][ $label_type ]['filepath'] ) ) {
+			return;
+		}
+
+		$this->download_label( $saved_data['labels'][ $label_type ]['filepath'] );
 	}
 
 	/**

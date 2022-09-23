@@ -364,7 +364,11 @@ class Single extends Base {
 			return;
 		}
 
-		$form_class        = ( $this->have_backend_data( $order ) ) ? 'generated' : '';
+		$form_class = ( $this->have_backend_data( $order ) ) ? 'generated' : '';
+		if ( $this->have_backend_data( $order, 'create_return_label' ) ) {
+			$form_class .= ' has-return';
+		}
+
 		$pickup_info       = $this->get_pickup_points_info( $order );
 		$delivery_info     = $this->get_delivery_day_info( $order );
 		$fields_with_value = $this->add_meta_box_value( $order );
@@ -382,6 +386,9 @@ class Single extends Base {
 				<a href="<?php echo esc_url( $this->get_download_label_url( $order->get_id() ) ); ?>" class="button button-primary button-download-label"><?php esc_html_e( 'Download Label', 'postnl-for-woocommerce' ); ?></a>
 				<a class="button button-secondary delete-label" href="#"><?php esc_html_e( 'Delete Label', 'postnl-for-woocommerce' ); ?></a>
 			</div>
+			<div class="button-container return-container">
+				<a href="<?php echo esc_url( $this->get_download_label_url( $order->get_id(), 'return-label' ) ); ?>" class="button button-primary button-download-label"><?php esc_html_e( 'Download Return Label', 'postnl-for-woocommerce' ); ?></a>
+			</div>
 			<div id="shipment-postnl-error-text"></div>
 		</div>
 		<?php
@@ -391,11 +398,16 @@ class Single extends Base {
 	 * Additional fields of the meta box for child class.
 	 *
 	 * @param WC_Order $order current order object.
+	 * @param String   $field Backend field name.
 	 *
 	 * @return boolean
 	 */
-	public function have_backend_data( $order ) {
+	public function have_backend_data( $order, $field = '' ) {
 		$order_data = $order->get_meta( $this->meta_name );
+
+		if ( ! empty( $field ) ) {
+			return ! empty( $order_data['backend'][ $field ] );
+		}
 
 		return ! empty( $order_data['backend'] );
 	}

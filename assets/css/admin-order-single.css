@@ -26,6 +26,15 @@
 	display:none;
 }
 
+#shipment-postnl-label-form .return-container {
+	margin-top:3px;
+	display:none;
+}
+
+#shipment-postnl-label-form.generated.has-return .return-container {
+	display:block;
+}
+
 #shipment-postnl-label-form .postnl-break-line.postnl_break_2 {
 	margin-top:-9px;
 }

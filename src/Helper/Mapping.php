@@ -74,8 +74,7 @@ class Mapping {
 						'3096' => array( 'signature_on_delivery', 'only_home_address', 'return_no_answer' ),
 					),
 					'pickup_points' => array(
-						'3085' => array(),
-						'3533' => array( 'signature_on_delivery' ),
+						'3533' => array(),
 						'3534' => array( 'insured_shipping' ),
 					),
 				),

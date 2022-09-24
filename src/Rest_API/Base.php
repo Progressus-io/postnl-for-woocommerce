@@ -171,16 +171,26 @@ class Base {
 	}
 
 	/**
-	 * Get headers args for REST request.
+	 * Get basic headers args for REST request.
 	 *
-	 * @return String
+	 * @return Array
 	 */
-	public function get_headers_args() {
+	public function get_basic_headers_args() {
 		return array(
 			'apikey'       => $this->get_api_key(),
 			'accept'       => 'application/json',
 			'Content-Type' => 'application/json',
 		);
+	}
+
+	/**
+	 * Get headers args for REST request.
+	 * We can manipulate this in child class if some class has different needs for API headers.
+	 *
+	 * @return Array
+	 */
+	public function get_headers_args() {
+		return $this->get_basic_headers_args();
 	}
 
 	/**

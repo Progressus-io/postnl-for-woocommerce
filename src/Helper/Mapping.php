@@ -66,7 +66,6 @@ class Mapping {
 						'3090' => array( 'return_no_answer' ),
 						'3087' => array( 'insured_shipping' ),
 						'3189' => array( 'signature_on_delivery' ),
-						'2928' => array( 'letterbox' ),
 						'3390' => array( 'return_no_answer', 'only_home_address' ),
 						'3094' => array( 'insured_shipping', 'return_no_answer' ),
 						'3089' => array( 'signature_on_delivery', 'only_home_address' ),

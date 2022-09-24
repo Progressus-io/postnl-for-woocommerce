@@ -276,15 +276,23 @@ class Item_Info extends Base_Info {
 	 * Change or set the args value for rest of the world.
 	 */
 	public function set_rest_of_world_args() {
-		$to_country  = $this->api_args['shipping_address']['country'];
-		$destination = Utils::get_shipping_zone( $to_country );
-
-		if ( 'ROW' !== $destination ) {
+		if ( ! $this->is_rest_of_world() ) {
 			return;
 		}
 
 		$this->api_args['settings']['customer_code'] = $this->settings->get_globalpack_customer_code();
-		$this->api_args['settings']['barcode_type']  = $this->settings->get_globalpack_barcode_type();
+	}
+
+	/**
+	 * Check if the current order is for Rest of the world.
+	 *
+	 * @return Boolean.
+	 */
+	public function is_rest_of_world() {
+		$to_country  = $this->api_args['shipping_address']['country'];
+		$destination = Utils::get_shipping_zone( $to_country );
+
+		return ( 'ROW' === $destination );
 	}
 
 	/**
@@ -306,9 +314,6 @@ class Item_Info extends Base_Info {
 			),
 			'customer_num'         => array(
 				'error' => __( 'Customer Number is empty!', 'postnl-for-woocommerce' ),
-			),
-			'barcode_type'         => array(
-				'default' => '',
 			),
 			'company'              => array(
 				'default' => '',

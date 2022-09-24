@@ -41,7 +41,7 @@ class Client extends Base {
 	 */
 	public function compose_url_params() {
 		return array(
-			'Type'           => $this->item_info->query_args['type'],
+			'Type'           => $this->item_info->query_args['barcode_type'],
 			'Serie'          => $this->item_info->query_args['serie'],
 			'CustomerCode'   => $this->item_info->query_args['customer_code'],
 			'CustomerNumber' => $this->item_info->query_args['customer_num'],

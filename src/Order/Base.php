@@ -459,11 +459,8 @@ abstract class Base {
 	 * @throws \Exception Error when response does not have Barcode value.
 	 */
 	public function create_barcode( $order ) {
-		$destination = Utils::get_shipping_zone( $order->get_shipping_country() );
-		$data        = array(
-			// ROW = Rest of the World ( outside Europe ).
-			'type'  => ( 'ROW' !== $destination ) ? '3S' : 'S10',
-			'serie' => '000000000-999999999',
+		$data = array(
+			'order' => $order,
 		);
 
 		$item_info = new Barcode\Item_Info( $data );

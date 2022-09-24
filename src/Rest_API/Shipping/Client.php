@@ -44,15 +44,7 @@ class Client extends Base {
 	public function compose_body_request() {
 		return array(
 			'Customer'  => array(
-				'Address'            => array(
-					'AddressType' => '02',
-					'City'        => $this->item_info->shipper['city'],
-					'CompanyName' => $this->item_info->shipper['company'],
-					'Countrycode' => $this->item_info->shipper['country'],
-					'HouseNr'     => $this->item_info->shipper['address_2'],
-					'Street'      => $this->item_info->shipper['address_1'],
-					'Zipcode'     => $this->item_info->shipper['postcode'],
-				),
+				'Address'            => $this->get_customer_address(),
 				/* Temporarily hardcoded in Settings::get_location_code(). */
 				'CollectionLocation' => $this->item_info->customer['location_code'],
 				'CustomerCode'       => $this->item_info->customer['customer_code'],
@@ -65,9 +57,26 @@ class Client extends Base {
 			'Message'   => array(
 				'MessageID'        => '36209c3d-14d2-478f-85de-abccd84fa790',
 				'MessageTimeStamp' => gmdate( 'd-m-Y H:i:s' ),
-				'Printertype'      => 'GraphicFile|PDF',
+				'Printertype'      => $this->item_info->shipment['printer_type'],
 			),
 			'Shipments' => $this->get_shipments(),
+		);
+	}
+
+	/**
+	 * Get customer address information for Rest API.
+	 *
+	 * @return Array
+	 */
+	public function get_customer_address() {
+		return array(
+			'AddressType' => '02',
+			'City'        => $this->item_info->shipper['city'],
+			'CompanyName' => $this->item_info->shipper['company'],
+			'Countrycode' => $this->item_info->shipper['country'],
+			'HouseNr'     => $this->item_info->shipper['address_2'],
+			'Street'      => $this->item_info->shipper['address_1'],
+			'Zipcode'     => $this->item_info->shipper['postcode'],
 		);
 	}
 
@@ -117,11 +126,13 @@ class Client extends Base {
 
 		for ( $i = 1; $i <= $this->item_info->backend_data['num_labels']; $i++ ) {
 			if ( $this->item_info->backend_data['num_labels'] > 1 ) {
-				$shipment['Groups'][] = array(
-					'GroupType'     => '03',
-					'GroupCount'    => $this->item_info->backend_data['num_labels'],
-					'GroupSequence' => $i,
-					'MainBarcode'   => $this->item_info->shipment['barcode'],
+				$shipment['Groups'] = array(
+					array(
+						'GroupType'     => '03',
+						'GroupCount'    => $this->item_info->backend_data['num_labels'],
+						'GroupSequence' => $i,
+						'MainBarcode'   => $this->item_info->shipment['barcode'],
+					),
 				);
 			}
 			$shipments[] = $shipment;

@@ -405,6 +405,13 @@ class Item_Info extends Base_Info {
 					);
 				},
 			),
+			'printer_type'    => array(
+				'default'  => 'GraphicFile|PDF',
+				'sanitize' => function( $value ) use ( $self ) {
+					$num_labels = intval( $self->api_args['backend_data']['num_labels'] );
+					return ( 1 < $num_labels ) ? 'GraphicFile|PDF|MergeA' : 'GraphicFile|PDF';
+				},
+			),
 			'total_weight'    => array(
 				'error'    => __( 'Total weight is empty!', 'postnl-for-woocommerce' ),
 				'sanitize' => function( $value ) use ( $self ) {
@@ -412,7 +419,7 @@ class Item_Info extends Base_Info {
 				},
 			),
 			'subtotal'        => array(
-				'default' => 0,
+				'default'  => 0,
 				'sanitize' => function( $value ) use ( $self ) {
 					return $self->float_round_sanitization( $value, 2 );
 				},

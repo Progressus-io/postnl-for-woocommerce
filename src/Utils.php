@@ -265,14 +265,14 @@ class Utils {
 	 */
 	public static function get_available_barcode_type() {
 		return array(
-			'3S',
-			'2S',
-			'CC',
-			'CP',
-			'CD',
-			'CF',
-			'LA',
-			'S10',
+			'3S'  => '3S',
+			'2S'  => '2S',
+			'CC'  => 'CC',
+			'CP'  => 'CP',
+			'CD'  => 'CD',
+			'CF'  => 'CF',
+			'LA'  => 'LA',
+			'S10' => 'S10',
 		);
 	}
 

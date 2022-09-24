@@ -266,7 +266,11 @@ class Base {
 
 		if ( ! empty( $response['Errors'] ) ) {
 			$first_error = array_shift( $response['Errors'] );
-			$error_text  = ! empty( $first_error['Description'] ) ? $first_error['Description'] : esc_html__( 'Unknown error!', 'postnl-for-woocommerce' );
+			$error_text  = ! empty( $first_error['Description'] ) ? $first_error['Description'] : '';
+
+			if ( empty( $error_text ) ) {
+				$error_text = ! empty( $first_error['ErrorMsg'] ) ? $first_error['ErrorMsg'] : esc_html__( 'Unknown error!', 'postnl-for-woocommerce' );
+			}
 
 			throw new \Exception( $error_text );
 		}

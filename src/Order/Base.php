@@ -750,12 +750,12 @@ abstract class Base {
 		$saved_data = $this->get_data( $order_id );
 		$order      = wc_get_order( $order_id );
 
-		if ( empty( $saved_data['label']['barcode'] ) || ! is_a( $order, 'WC_Order' ) ) {
+		if ( empty( $saved_data['labels']['label']['barcode'] ) || ! is_a( $order, 'WC_Order' ) ) {
 			return '';
 		}
 
-		$tracking_url = Utils::generate_tracking_url( $saved_data['label']['barcode'], $order->get_shipping_country() );
+		$tracking_url = Utils::generate_tracking_url( $saved_data['labels']['label']['barcode'], $order->get_shipping_country() );
 
-		return sprintf( '<a href="%1$s" target="_blank">%2$s</a>', $tracking_url, $saved_data['label']['barcode'] );
+		return sprintf( '<a href="%1$s" target="_blank">%2$s</a>', $tracking_url, $saved_data['labels']['label']['barcode'] );
 	}
 }

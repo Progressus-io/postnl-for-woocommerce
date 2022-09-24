@@ -415,7 +415,7 @@ class Item_Info extends Base_Info {
 				'default' => 0,
 				'sanitize' => function( $value ) use ( $self ) {
 					return $self->float_round_sanitization( $value, 2 );
-				}
+				},
 			),
 			'email'           => array(
 				'validate' => function( $value ) {

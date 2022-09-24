@@ -369,6 +369,10 @@ class Single extends Base {
 			$form_class .= ' has-return';
 		}
 
+		if ( $this->have_backend_data( $order, 'letterbox' ) ) {
+			$form_class .= ' has-letterbox';
+		}
+
 		$pickup_info       = $this->get_pickup_points_info( $order );
 		$delivery_info     = $this->get_delivery_day_info( $order );
 		$fields_with_value = $this->add_meta_box_value( $order );
@@ -388,6 +392,9 @@ class Single extends Base {
 			</div>
 			<div class="button-container return-container">
 				<a href="<?php echo esc_url( $this->get_download_label_url( $order->get_id(), 'return-label' ) ); ?>" class="button button-primary button-download-label"><?php esc_html_e( 'Download Return Label', 'postnl-for-woocommerce' ); ?></a>
+			</div>
+			<div class="button-container letterbox-container">
+				<a href="<?php echo esc_url( $this->get_download_label_url( $order->get_id(), 'buspakjeextra' ) ); ?>" class="button button-primary button-download-label"><?php esc_html_e( 'Download Letterbox', 'postnl-for-woocommerce' ); ?></a>
 			</div>
 			<div id="shipment-postnl-error-text"></div>
 		</div>

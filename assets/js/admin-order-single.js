@@ -57,6 +57,10 @@
 						if ( 'create_return_label' === field && 'yes' === response.data.backend[ field ] ) {
 							label_form.addClass( 'has-return' );
 						}
+
+						if ( 'letterbox' === field && 'yes' === response.data.backend[ field ] ) {
+							label_form.addClass( 'has-letterbox' );
+						}
 					}
 
 					if( response.data.tracking_note ) {
@@ -132,6 +136,7 @@
 				if ( true === response.success ) {
 					label_form.removeClass( 'generated' );
 					label_form.removeClass( 'has-return' );
+					label_form.removeClass( 'has-letterbox' );
 
 					for ( var i = 0; i < postnl_admin_order_obj.fields.length; i++ ) {
 						label_form.find( '#' + postnl_admin_order_obj.fields[ i ] ).removeAttr( 'disabled' );

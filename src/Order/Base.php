@@ -11,6 +11,7 @@ use PostNLWooCommerce\Utils;
 use PostNLWooCommerce\Rest_API\Barcode;
 use PostNLWooCommerce\Rest_API\Shipping;
 use PostNLWooCommerce\Rest_API\Return_Label;
+use PostNLWooCommerce\Rest_API\Letterbox;
 use PostNLWooCommerce\Shipping_Method\Settings;
 use PostNLWooCommerce\Helper\Mapping;
 
@@ -151,7 +152,7 @@ abstract class Base {
 					'description'  => '',
 					'value'        => '',
 					'show_in_bulk' => true,
-					'option_feat'  => true,
+					'option_feat'  => false,
 					'container'    => true,
 				),
 				array(
@@ -341,7 +342,8 @@ abstract class Base {
 
 		$labels               = $this->create_label( $label_post_data );
 		$return_labels        = $this->maybe_create_return_label( $label_post_data );
-		$saved_data['labels'] = array_merge( $labels, $return_labels );
+		$letterboxes          = $this->maybe_create_letterbox( $label_post_data );
+		$saved_data['labels'] = array_merge( $labels, $return_labels, $letterboxes );
 		$order->update_meta_data( $this->meta_name, $saved_data );
 		$order->save();
 
@@ -531,6 +533,37 @@ abstract class Base {
 		if ( empty( $labels ) ) {
 			throw new \Exception(
 				esc_html__( 'Cannot create the return label. Label content is missing', 'postnl-for-woocommerce' )
+			);
+		}
+
+		return $labels;
+	}
+
+	/**
+	 * Create PostNL return label for current order
+	 *
+	 * @param array $post_data Order post data.
+	 *
+	 * @return array|Boolean
+	 *
+	 * @throws \Exception Error when response has an error.
+	 */
+	public function maybe_create_letterbox( $post_data ) {
+		if ( 'yes' !== $post_data['saved_data']['backend']['letterbox'] ) {
+			return array();
+		}
+
+		$order = $post_data['order'];
+
+		$item_info    = new Letterbox\Item_Info( $post_data );
+		$return_label = new Letterbox\Client( $item_info );
+		$response     = $return_label->send_request();
+
+		$labels = $this->put_label_content( $response, $order );
+
+		if ( empty( $labels ) ) {
+			throw new \Exception(
+				esc_html__( 'Cannot create the letterbox. Label content is missing', 'postnl-for-woocommerce' )
 			);
 		}
 

@@ -121,6 +121,9 @@ class Item_Info extends Base_Info {
 			'serie'                   => array(
 				'default'  => '000000000-999999999',
 				'sanitize' => function( $serie ) use ( $self ) {
+					if ( $self->is_europe() ) {
+						$serie = '0000000-9999999';
+					}
 					return $self->string_length_sanitization( $serie, 19 );
 				},
 			),
@@ -137,5 +140,17 @@ class Item_Info extends Base_Info {
 		$destination = Utils::get_shipping_zone( $to_country );
 
 		return ( 'ROW' === $destination );
+	}
+
+	/**
+	 * Check if the current order is for Rest of the world.
+	 *
+	 * @return Boolean.
+	 */
+	public function is_europe() {
+		$to_country  = $this->api_args['shipping_address']['country'];
+		$destination = Utils::get_shipping_zone( $to_country );
+
+		return ( 'EU' === $destination );
 	}
 }

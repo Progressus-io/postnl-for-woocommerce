@@ -82,6 +82,24 @@ class Item_Info extends Base_Info {
 	}
 
 	/**
+	 * Set extra API args.
+	 */
+	public function set_extra_data_to_api_args() {
+		$this->set_rest_of_world_args();
+	}
+
+	/**
+	 * Change or set the args value for rest of the world.
+	 */
+	public function set_rest_of_world_args() {
+		if ( ! $this->is_rest_of_world() ) {
+			return;
+		}
+
+		$this->api_args['settings']['customer_code'] = $this->settings->get_globalpack_customer_code();
+	}
+
+	/**
 	 * Retrieves the args scheme to use with for parsing store address info.
 	 *
 	 * @return array
@@ -123,7 +141,10 @@ class Item_Info extends Base_Info {
 				'sanitize' => function( $serie ) use ( $self ) {
 					if ( $self->is_europe() ) {
 						$serie = '0000000-9999999';
+					} elseif ( $self->is_rest_of_world() ) {
+						$serie = '0000-9999';
 					}
+
 					return $self->string_length_sanitization( $serie, 19 );
 				},
 			),

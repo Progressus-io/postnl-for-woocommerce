@@ -101,7 +101,11 @@ class Single extends Base {
 		$meta_fields = $this->meta_box_fields();
 
 		if ( is_a( $order, 'WC_Order' ) ) {
-			$order_data = $order->get_meta( $this->meta_name );
+			$order_data   = $order->get_meta( $this->meta_name );
+			$option_map   = Mapping::option_available_list();
+			$from_country = Utils::get_base_country();
+			$to_country   = $order->get_shipping_country();
+			$destination  = Utils::get_shipping_zone( $to_country );
 
 			foreach ( $meta_fields as $index => $field ) {
 				$field_name = Utils::remove_prefix_field( $this->prefix, $field['id'] );
@@ -113,6 +117,12 @@ class Single extends Base {
 				if ( isset( $order_data['backend'][ $field_name ] ) ) {
 					$meta_fields[ $index ]['custom_attributes']['disabled'] = 'disabled';
 					$meta_fields[ $index ]['value']                         = $order_data['backend'][ $field_name ];
+				}
+
+				if ( isset( $option_map[ $from_country ][ $destination ] ) ) {
+					$meta_fields[ $index ]['standard_feat'] = in_array( $field_name, $option_map[ $from_country ][ $destination ] );
+				} else {
+					$meta_fields[ $index ]['standard_feat'] = false;
 				}
 			}
 		}
@@ -134,7 +144,11 @@ class Single extends Base {
 			function( $field ) use ( $available_options ) {
 				$field_name = Utils::remove_prefix_field( $this->prefix, $field['id'] );
 
-				if ( false === $field['option_feat'] ) {
+				if ( true === $field['standard_feat'] ) {
+					return true;
+				}
+
+				if ( true === $field['const_field'] ) {
 					return true;
 				}
 

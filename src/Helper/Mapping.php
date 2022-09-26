@@ -124,6 +124,25 @@ class Mapping {
 	}
 
 	/**
+	 * Product code mapping.
+	 *
+	 * @return Array
+	 */
+	public static function option_available_list() {
+		return array(
+			'NL' => array(
+				'NL'  => array( 'create_return_label', 'num_labels', 'letterbox' ),
+				'BE'  => array( 'create_return_label', 'num_labels' ),
+				'EU'  => array( 'num_labels' ),
+				'ROW' => array( 'num_labels' ),
+			),
+			'BE' => array(
+				'BE' => array( 'num_labels' ),
+			),
+		);
+	}
+
+	/**
 	 * Product options mapping.
 	 *
 	 * @return Array

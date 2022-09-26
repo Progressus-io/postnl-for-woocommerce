@@ -150,6 +150,18 @@ abstract class Base {
 					'container'     => true,
 				),
 				array(
+					'id'            => $this->prefix . 'letterbox',
+					'type'          => 'checkbox',
+					'label'         => __( 'Letterbox: ', 'postnl-for-woocommerce' ),
+					'placeholder'   => '',
+					'description'   => '',
+					'value'         => '',
+					'show_in_bulk'  => true,
+					'standard_feat' => false,
+					'const_field'   => false,
+					'container'     => true,
+				),
+				array(
 					'id'            => $this->prefix . 'break_2',
 					'standard_feat' => false,
 					'const_field'   => true,
@@ -172,18 +184,6 @@ abstract class Base {
 					'standard_feat'     => true,
 					'const_field'       => false,
 					'container'         => true,
-				),
-				array(
-					'id'            => $this->prefix . 'letterbox',
-					'type'          => 'checkbox',
-					'label'         => __( 'Letterbox: ', 'postnl-for-woocommerce' ),
-					'placeholder'   => '',
-					'description'   => '',
-					'value'         => '',
-					'show_in_bulk'  => true,
-					'standard_feat' => true,
-					'const_field'   => false,
-					'container'     => true,
 				),
 				array(
 					'id'            => $this->prefix . 'create_return_label',
@@ -352,8 +352,7 @@ abstract class Base {
 
 		$labels               = $this->create_label( $label_post_data );
 		$return_labels        = $this->maybe_create_return_label( $label_post_data );
-		$letterboxes          = $this->maybe_create_letterbox( $label_post_data );
-		$saved_data['labels'] = array_merge( $labels, $return_labels, $letterboxes );
+		$saved_data['labels'] = array_merge( $labels, $return_labels );
 		$order->update_meta_data( $this->meta_name, $saved_data );
 		$order->save();
 
@@ -442,6 +441,7 @@ abstract class Base {
 					}
 
 					$label_type = ! empty( $label_contents['Labeltype'] ) ? sanitize_title( $label_contents['Labeltype'] ) : 'unknown-type';
+					$label_type = ( 'buspakjeextra' !== $label_type ) ? $label_type : 'label';
 					$barcode    = $response[ $type ][ $shipment_idx ][ $content_type['barcode_key'] ];
 					$barcode    = is_array( $barcode ) ? array_shift( $barcode ) : $barcode;
 					$filename   = 'postnl-' . $order->get_id() . '-' . $label_type . '-' . $barcode . '.pdf';

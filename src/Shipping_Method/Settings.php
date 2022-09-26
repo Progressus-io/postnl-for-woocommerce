@@ -393,10 +393,10 @@ class Settings extends \WC_Settings_API {
 				'type'        => 'select',
 				'description' => esc_html__( 'Use A6 format in case you use a labelprinter. Use A4 format for other regular printers.', 'postnl-for-woocommerce' ),
 				'desc_tip'    => true,
-				'default'     => 'Label (A6)',
+				'default'     => 'A6',
 				'options'     => array(
-					'Label (A6)'             => 'A6',
-					'Commercialinvoice (A4)' => 'A4',
+					'A6' => 'A6',
+					'A4' => 'A4',
 				),
 				'class'       => 'wc-enhanced-select',
 			),

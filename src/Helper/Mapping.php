@@ -151,7 +151,7 @@ class Mapping {
 	public static function option_available_list() {
 		return array(
 			'NL' => array(
-				'NL'  => array( 'create_return_label', 'num_labels', 'letterbox' ),
+				'NL'  => array( 'create_return_label', 'num_labels' ),
 				'BE'  => array( 'create_return_label', 'num_labels' ),
 				'EU'  => array( 'num_labels' ),
 				'ROW' => array( 'num_labels' ),

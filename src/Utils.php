@@ -488,4 +488,13 @@ class Utils {
 			}
 		}
 	}
+
+	/**
+	 * Get log URL in the admin.
+	 *
+	 * @return String.
+	 */
+	public static function get_log_url() {
+		return Logger::get_log_url();
+	}
 }

@@ -92,12 +92,17 @@ class Settings extends \WC_Settings_API {
 				'placeholder' => '',
 			),
 			'enable_logging'            => array(
-				'title'             => esc_html__( 'Enable Logging', 'postnl-for-woocommerce' ),
-				'type'              => 'checkbox',
-				'description'       => esc_html__( 'Log files can be used to diagnose problems.', 'postnl-for-woocommerce' ),
-				'desc_tip'          => true,
-				'default'           => '',
-				'placeholder'       => '',
+				'title'       => esc_html__( 'Enable Logging', 'postnl-for-woocommerce' ),
+				'type'        => 'checkbox',
+				'description' => sprintf(
+					// translators: %1$s is anchor opener tag and %2$s is anchor closer tag.
+					esc_html__( 'A log file containing the communication to the PostNL server will be maintained if this option is checked. This can be used in case of technical issues and can be found %1$shere%2$s.', 'postnl-for-woocommerce' ),
+					'<a href="' . esc_url( Utils::get_log_url() ) . '" target="_blank">',
+					'</a>'
+				),
+				'desc_tip'    => false,
+				'default'     => '',
+				'placeholder' => '',
 			),
 			'customer_num'              => array(
 				'title'             => esc_html__( 'Customer Number', 'postnl-for-woocommerce' ),
@@ -348,20 +353,20 @@ class Settings extends \WC_Settings_API {
 			'globalpack_barcode_type'   => array(
 				'title'             => esc_html__( 'GlobalPack Barcode Type', 'postnl-for-woocommerce' ),
 				'type'              => 'select',
-				'description'       => esc_html__( 'e.g. "CD"', 'postnl-for-woocommerce' ),
+				'description'       => '',
 				'desc_tip'          => true,
 				'default'           => '',
-				'placeholder'       => '',
+				'placeholder'       => esc_html__( 'CD', 'postnl-for-woocommerce' ),
 				'options'           => Utils::get_available_barcode_type(),
 				'custom_attributes' => array( 'maxlength' => '10' ),
 			),
 			'globalpack_customer_code'  => array(
 				'title'             => esc_html__( 'GlobalPack Customer Code', 'postnl-for-woocommerce' ),
 				'type'              => 'text',
-				'description'       => esc_html__( 'e.g. "1234"', 'postnl-for-woocommerce' ),
+				'description'       => '',
 				'desc_tip'          => true,
 				'default'           => '',
-				'placeholder'       => '',
+				'placeholder'       => esc_html__( '1234', 'postnl-for-woocommerce' ),
 				'custom_attributes' => array( 'maxlength' => '10' ),
 			),
 			'hs_tariff_code'            => array(
@@ -413,8 +418,8 @@ class Settings extends \WC_Settings_API {
 				'type'        => 'text',
 				'description' => esc_html__( 'Text added for tracking note email.', 'postnl-for-woocommerce' ),
 				'desc_tip'    => true,
-				'default'     => '',
-				'placeholder' => esc_html__( 'Tracking Number: {tracking-link}', 'postnl-for-woocommerce' ),
+				'default'     => esc_html__( 'This is your track and track link {tracking-link}', 'postnl-for-woocommerce' ),
+				'placeholder' => esc_html__( 'This is your track and track link {tracking-link}', 'postnl-for-woocommerce' ),
 			),
 		);
 	}

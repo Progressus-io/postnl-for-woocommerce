@@ -417,10 +417,12 @@ abstract class Base {
 	 *
 	 * @param array    $response Response from PostNL API.
 	 * @param WC_Order $order Order object.
+	 * @param String   $parent_barcode Generated barcode string.
+	 * @param String   $parent_label_type Type of label.
 	 *
 	 * @return array
 	 */
-	public function put_label_content( $response, $order ) {
+	public function put_label_content( $response, $order, $parent_barcode, $parent_label_type ) {
 		$message_types = Utils::get_label_response_type();
 		$labels        = array();
 
@@ -441,22 +443,24 @@ abstract class Base {
 					}
 
 					$label_type = ! empty( $label_contents['Labeltype'] ) ? sanitize_title( $label_contents['Labeltype'] ) : 'unknown-type';
-					$label_type = ( 'buspakjeextra' !== $label_type ) ? $label_type : 'label';
 					$barcode    = $response[ $type ][ $shipment_idx ][ $content_type['barcode_key'] ];
 					$barcode    = is_array( $barcode ) ? array_shift( $barcode ) : $barcode;
-					$filename   = 'postnl-' . $order->get_id() . '-' . $label_type . '-' . $barcode . '.pdf';
+					$filename   = Utils::generate_label_name( $order->get_id(), $label_type, $barcode );
 					$filepath   = trailingslashit( POSTNL_UPLOADS_DIR ) . $filename;
 
 					$test     = base64_decode( $label_contents['Content'] );
 					$file_ret = file_put_contents( $filepath, $test );
 
-					$labels[ $label_type ] = array(
+					$labels[] = array(
+						'type'     => $label_type,
 						'barcode'  => $barcode,
 						'filepath' => $filepath,
 					);
 				}
 			}
 		}
+
+		$labels = $this->maybe_merge_labels( $labels, $order, $parent_barcode, $parent_label_type );
 
 		return $labels;
 	}
@@ -489,6 +493,68 @@ abstract class Base {
 	}
 
 	/**
+	 * Merging the label.
+	 *
+	 * @param Array    $labels List of labels.
+	 * @param WC_Order $order Order object.
+	 * @param String   $barcode Generated barcode string.
+	 * @param String   $label_type Type of label.
+	 *
+	 * @return Array.
+	 */
+	public function maybe_merge_labels( $labels, $order, $barcode, $label_type ) {
+		$merged_labels = array();
+
+		if ( ! is_array( $labels ) ) {
+			return $merged_labels;
+		}
+
+		if ( 1 === count( $labels ) ) {
+			return array(
+				$label_type => array_shift( $labels ),
+			);
+		}
+
+		$from_country    = Utils::get_base_country();
+		$to_country      = $order->get_shipping_country();
+		$destination     = Utils::get_shipping_zone( $to_country );
+		$label_type_list = Mapping::label_type_list();
+
+		$available_type  = ( ! empty( $label_type_list[ $from_country ][ $destination ] ) ) ? $label_type_list[ $from_country ][ $destination ] : array( 'label' );
+
+		$pdf = new \Clegginabox\PDFMerger\PDFMerger();
+
+		$trash_list = array();
+		foreach ( $labels as $label ) {
+			if ( ! in_array( $label['type'], $available_type, true ) ) {
+				continue;
+			}
+
+			$pdf->addPDF( $label['filepath'], 'all' );
+			$trash_list[] = $label['filepath'];
+		}
+
+		$filename = Utils::generate_label_name( $order->get_id(), $label_type, $barcode );
+		$filepath = trailingslashit( POSTNL_UPLOADS_DIR ) . $filename;
+
+		$pdf->merge( 'file', $filepath );
+
+		foreach ( $trash_list as $path ) {
+			if ( file_exists( $path ) && $path !== $filepath ) {
+				unlink( $path );
+			}
+		}
+
+		$merged_labels[ $label_type ] = array(
+			'type'     => $label_type,
+			'barcode'  => $barcode,
+			'filepath' => $filepath,
+		);
+
+		return $merged_labels;
+	}
+
+	/**
 	 * Create PostNL label for current order
 	 *
 	 * @param array $post_data Order post data.
@@ -507,7 +573,7 @@ abstract class Base {
 		// Check any errors.
 		$this->check_label_and_barcode( $response );
 
-		$labels = $this->put_label_content( $response, $order );
+		$labels = $this->put_label_content( $response, $order, $post_data['barcode'], 'label' );
 
 		if ( empty( $labels ) ) {
 			throw new \Exception(
@@ -538,7 +604,7 @@ abstract class Base {
 		$return_label = new Return_Label\Client( $item_info );
 		$response     = $return_label->send_request();
 
-		$labels = $this->put_label_content( $response, $order );
+		$labels = $this->put_label_content( $response, $order, $post_data['barcode'], 'return-label' );
 
 		if ( empty( $labels ) ) {
 			throw new \Exception(
@@ -569,7 +635,7 @@ abstract class Base {
 		$return_label = new Letterbox\Client( $item_info );
 		$response     = $return_label->send_request();
 
-		$labels = $this->put_label_content( $response, $order );
+		$labels = $this->put_label_content( $response, $order, $post_data['barcode'], 'letterbox' );
 
 		if ( empty( $labels ) ) {
 			throw new \Exception(

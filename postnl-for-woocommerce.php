@@ -6,8 +6,8 @@
  * Author: PostNL
  * Author URI: https://postnl.post/
  * Version: 1.0.0
- * WC requires at least: 2.6.14
- * WC tested up to: 6.6.0
+ * WC requires at least: 4.0
+ * WC tested up to: 6.6
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by

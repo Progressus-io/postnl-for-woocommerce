@@ -132,7 +132,7 @@ class Mapping {
 	public static function label_type_list() {
 		return array(
 			'NL' => array(
-				'NL'  => array( 'label', 'buspakjeextra', 'return-label' ),
+				'NL'  => array( 'label', 'buspakjeextra', 'printcodelabel' ),
 				'BE'  => array( 'label' ),
 				'EU'  => array( 'label' ),
 				'ROW' => array( 'cn23', 'cp71' ),

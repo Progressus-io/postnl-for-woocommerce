@@ -265,17 +265,28 @@ class Utils {
 	 */
 	public static function get_available_barcode_type() {
 		return array(
-			'3S'  => '3S',
-			'2S'  => '2S',
-			'CC'  => 'CC',
-			'CP'  => 'CP',
-			'CD'  => 'CD',
-			'CF'  => 'CF',
-			'LA'  => 'LA',
-			'S10' => 'S10',
+			'3S' => '3S',
+			'2S' => '2S',
+			'CC' => 'CC',
+			'CP' => 'CP',
+			'CD' => 'CD',
+			'CF' => 'CF',
+			'LA' => 'LA',
 		);
 	}
 
+	/**
+	 * Generate the label file name.
+	 *
+	 * @param Int    $order_id ID of the order object.
+	 * @param String $label_type Type of label.
+	 * @param String $barcode Barcode string.
+	 *
+	 * @return String.
+	 */
+	public static function generate_label_name( $order_id, $label_type, $barcode ) {
+		return 'postnl-' . $order_id . '-' . $label_type . '-' . $barcode . '.pdf';
+	}
 	/**
 	 * Get the type of label response.
 	 *
@@ -476,5 +487,14 @@ class Utils {
 				<?php
 			}
 		}
+	}
+
+	/**
+	 * Get log URL in the admin.
+	 *
+	 * @return String.
+	 */
+	public static function get_log_url() {
+		return Logger::get_log_url();
 	}
 }

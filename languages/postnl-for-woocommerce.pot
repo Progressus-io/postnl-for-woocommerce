@@ -1,0 +1,805 @@
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PostNL for WooCommerce\n"
+"POT-Creation-Date: 2022-09-28 18:20+0700\n"
+"PO-Revision-Date: 2022-09-28 18:20+0700\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=INTEGER; plural=EXPRESSION;\n"
+"X-Generator: Poedit 3.1.1\n"
+"X-Poedit-Basepath: ..\n"
+"X-Poedit-Flags-xgettext: --add-comments=translators:\n"
+"X-Poedit-WPHeader: postnl-for-woocommerce.php\n"
+"X-Poedit-SourceCharset: UTF-8\n"
+"X-Poedit-KeywordsList: __;_e;_n:1,2;_x:1,2c;_ex:1,2c;_nx:4c,1,2;esc_attr__;"
+"esc_attr_e;esc_attr_x:1,2c;esc_html__;esc_html_e;esc_html_x:1,2c;_n_noop:1,2;"
+"_nx_noop:3c,1,2;__ngettext_noop:1,2\n"
+"X-Poedit-SearchPath-0: .\n"
+"X-Poedit-SearchPathExcluded-0: *.min.js\n"
+"X-Poedit-SearchPathExcluded-1: vendor\n"
+
+#. translators: %s: shop cart url
+#: src/Frontend/Base.php:169
+#, php-format
+msgid ""
+"Sorry, your session has expired. <a href=\"%s\" class=\"wc-backward\">Return "
+"to shop</a>"
+msgstr ""
+
+#: src/Frontend/Base.php:334
+msgid "PostNL Evening Fee"
+msgstr ""
+
+#: src/Frontend/Delivery_Day.php:45
+msgid "Please choose the delivery day!"
+msgstr ""
+
+#: src/Frontend/Delivery_Day.php:101
+msgid "Delivery Day"
+msgstr ""
+
+#: src/Frontend/Dropoff_Points.php:52
+msgid "Dropoff Points"
+msgstr ""
+
+#: src/Frontend/Dropoff_Points.php:127
+msgid "Please choose the dropoff points!"
+msgstr ""
+
+#: src/Helper/Mapping.php:30
+msgid "Standard Shipment"
+msgstr ""
+
+#: src/Helper/Mapping.php:31
+msgid "Evening Delivery"
+msgstr ""
+
+#: src/Helper/Mapping.php:34
+msgid "Pickup at PostNL Point"
+msgstr ""
+
+#: src/Helper/Mapping.php:39
+msgid "Standard Shipment Belgium"
+msgstr ""
+
+#: src/Helper/Mapping.php:42
+msgid "Pickup at PostNL Point Belgium"
+msgstr ""
+
+#: src/Helper/Mapping.php:45
+msgid "EU Parcel"
+msgstr ""
+
+#: src/Helper/Mapping.php:46
+msgid "Globalpack"
+msgstr ""
+
+#: src/Helper/Mapping.php:49
+msgid "Belgium Domestic"
+msgstr ""
+
+#: src/Main.php:261
+msgid "PostNL plugin requires WooCommerce to be installed and activated!"
+msgstr ""
+
+#: src/Main.php:274
+msgid ""
+"PostNL plugin requires store country to be Netherlands (NL) or Belgium (BE)!"
+msgstr ""
+
+#: src/Main.php:287
+msgid "PostNL plugin requires store currency to be EUR, USD, GBP or CNY!"
+msgstr ""
+
+#: src/Order/Base.php:107
+msgid "Insured Shipping: "
+msgstr ""
+
+#: src/Order/Base.php:119
+msgid "Return if no answer: "
+msgstr ""
+
+#: src/Order/Base.php:131
+msgid "Signature on Delivery: "
+msgstr ""
+
+#: src/Order/Base.php:143
+msgid "Only Home Address: "
+msgstr ""
+
+#: src/Order/Base.php:155
+msgid "Letterbox: "
+msgstr ""
+
+#: src/Order/Base.php:173
+msgid "Number of Labels: "
+msgstr ""
+
+#: src/Order/Base.php:191
+msgid "Create Return Label: "
+msgstr ""
+
+#: src/Order/Base.php:399 src/Order/Single.php:463 src/Order/Single.php:513
+msgid "Order does not exists!"
+msgstr ""
+
+#: src/Order/Base.php:488
+msgid "Cannot create the barcode."
+msgstr ""
+
+#: src/Order/Base.php:580 src/Order/Base.php:679
+msgid "Cannot create the label. Label content is missing"
+msgstr ""
+
+#: src/Order/Base.php:611
+msgid "Cannot create the return label. Label content is missing"
+msgstr ""
+
+#: src/Order/Base.php:642
+msgid "Cannot create the letterbox. Label content is missing"
+msgstr ""
+
+#: src/Order/Base.php:673
+msgid "Cannot create the label. Barcode data is missing"
+msgstr ""
+
+#. translators: %s the current service.
+#: src/Order/Base.php:802
+#, php-format
+msgid "%s Tracking Number: {tracking-link}"
+msgstr ""
+
+#: src/Order/Bulk.php:42
+msgid "PostNL Create Label"
+msgstr ""
+
+#: src/Order/Bulk.php:150
+msgid "Submit"
+msgstr ""
+
+#. translators: %s will be replaced by service name.
+#: src/Order/Single.php:90
+#, php-format
+msgid "%s Label & Tracking"
+msgstr ""
+
+#: src/Order/Single.php:262
+msgid "Delivery Type:"
+msgstr ""
+
+#: src/Order/Single.php:293
+msgid "Delivery Date:"
+msgstr ""
+
+#: src/Order/Single.php:344
+msgid "Pickup Address:"
+msgstr ""
+
+#: src/Order/Single.php:349
+msgid "Date:"
+msgstr ""
+
+#: src/Order/Single.php:353
+msgid "Time:"
+msgstr ""
+
+#: src/Order/Single.php:403
+msgid "Generate Label"
+msgstr ""
+
+#: src/Order/Single.php:404
+msgid "Download Label"
+msgstr ""
+
+#: src/Order/Single.php:405
+msgid "Delete Label"
+msgstr ""
+
+#: src/Order/Single.php:408
+msgid "Download Return Label"
+msgstr ""
+
+#: src/Order/Single.php:412
+msgid "Download Letterbox"
+msgstr ""
+
+#: src/Order/Single.php:449 src/Order/Single.php:499
+msgid "Cannot find nonce field!"
+msgstr ""
+
+#: src/Order/Single.php:455 src/Order/Single.php:505
+msgid "Nonce is invalid!"
+msgstr ""
+
+#. translators: %s will be replaced by service name.
+#: src/Product/Single.php:70
+#, php-format
+msgid "Country of Origin (%s)"
+msgstr ""
+
+#: src/Product/Single.php:71
+msgid "Country of Origin."
+msgstr ""
+
+#: src/Product/Single.php:74
+msgid "- select country -"
+msgstr ""
+
+#. translators: %s will be replaced by service name.
+#: src/Product/Single.php:82
+#, php-format
+msgid "HS Tariff Code (%s)"
+msgstr ""
+
+#: src/Product/Single.php:83
+msgid ""
+"HS Tariff Code is a number assigned to every possible commodity that can be "
+"imported or exported from any country."
+msgstr ""
+
+#: src/Product/Single.php:152
+msgid "Product ID does not exists!"
+msgstr ""
+
+#: src/Rest_API/Barcode/Item_Info.php:65
+#: src/Rest_API/Shipping/Item_Info.php:139
+msgid "Order ID does not exists!"
+msgstr ""
+
+#: src/Rest_API/Barcode/Item_Info.php:114
+#: src/Rest_API/Shipping/Item_Info.php:313
+msgid "Customer Code is empty!"
+msgstr ""
+
+#: src/Rest_API/Barcode/Item_Info.php:117
+#: src/Rest_API/Shipping/Item_Info.php:316
+msgid "Customer Number is empty!"
+msgstr ""
+
+#. translators: %1$s is a barcode type.
+#: src/Rest_API/Barcode/Item_Info.php:127
+#, php-format
+msgid "Barcode type: %1$s is not available!"
+msgstr ""
+
+#: src/Rest_API/Base.php:273 src/Rest_API/Base.php:282
+#: src/Rest_API/Base.php:290
+msgid "Unknown error!"
+msgstr ""
+
+#: src/Rest_API/Base_Info.php:135 src/Rest_API/Base_Info.php:139
+msgid "Shipping \"First Name\" is empty!"
+msgstr ""
+
+#: src/Rest_API/Base_Info.php:157 src/Rest_API/Base_Info.php:161
+msgid "Shipping \"Address 1\" is empty!"
+msgstr ""
+
+#: src/Rest_API/Base_Info.php:173
+msgid "Shipping \"City\" is empty!"
+msgstr ""
+
+#: src/Rest_API/Base_Info.php:176
+msgid "Shipping \"Postcode\" is empty!"
+msgstr ""
+
+#: src/Rest_API/Base_Info.php:182
+msgid "Shipping \"Country\" is empty!"
+msgstr ""
+
+#: src/Rest_API/Base_Info.php:205 src/Rest_API/Base_Info.php:209
+msgid "Base \"Address 1\" is empty!"
+msgstr ""
+
+#: src/Rest_API/Base_Info.php:221
+msgid "Base \"City\" is empty!"
+msgstr ""
+
+#: src/Rest_API/Base_Info.php:224
+msgid "Base \"Postcode\" is empty!"
+msgstr ""
+
+#: src/Rest_API/Base_Info.php:230
+msgid "Base \"Country\" is empty!"
+msgstr ""
+
+#: src/Rest_API/Checkout/Item_Info.php:118
+msgid "Order date is empty!"
+msgstr ""
+
+#: src/Rest_API/Checkout/Item_Info.php:122
+msgid "Shipping duration is empty!"
+msgstr ""
+
+#: src/Rest_API/Checkout/Item_Info.php:130
+msgid "Wrong format for cut off time!"
+msgstr ""
+
+#: src/Rest_API/Checkout/Item_Info.php:204
+msgid "Locations value is not a number!"
+msgstr ""
+
+#: src/Rest_API/Shipping/Item_Info.php:310
+msgid "Location Code is empty!"
+msgstr ""
+
+#: src/Rest_API/Shipping/Item_Info.php:325
+msgid "Store email is empty!"
+msgstr ""
+
+#: src/Rest_API/Shipping/Item_Info.php:331
+msgid "Wrong format for store email!"
+msgstr ""
+
+#: src/Rest_API/Shipping/Item_Info.php:383
+msgid "Order ID is empty!"
+msgstr ""
+
+#: src/Rest_API/Shipping/Item_Info.php:386
+msgid "Barcode is empty!"
+msgstr ""
+
+#: src/Rest_API/Shipping/Item_Info.php:389
+msgid "Product code is empty!"
+msgstr ""
+
+#: src/Rest_API/Shipping/Item_Info.php:393
+msgid "Wrong format for product code!"
+msgstr ""
+
+#: src/Rest_API/Shipping/Item_Info.php:427
+msgid "Total weight is empty!"
+msgstr ""
+
+#: src/Rest_API/Shipping/Item_Info.php:442
+msgid "Customer email is not valid!"
+msgstr ""
+
+#: src/Rest_API/Shipping/Item_Info.php:451
+msgid "Currency is not available!"
+msgstr ""
+
+#: src/Rest_API/Shipping/Item_Info.php:478
+msgid "Delivery day \"Date\" is empty!"
+msgstr ""
+
+#: src/Rest_API/Shipping/Item_Info.php:494
+msgid "Delivery day \"From\" is empty!"
+msgstr ""
+
+#: src/Rest_API/Shipping/Item_Info.php:507
+msgid "Delivery day \"To\" is empty!"
+msgstr ""
+
+#: src/Rest_API/Shipping/Item_Info.php:523
+msgid "Delivery day \"Type\" is empty!"
+msgstr ""
+
+#: src/Rest_API/Shipping/Item_Info.php:546
+msgid "Pickup \"Company name\" is empty!"
+msgstr ""
+
+#: src/Rest_API/Shipping/Item_Info.php:555
+msgid "Pickup \"Address 1\" is empty!"
+msgstr ""
+
+#: src/Rest_API/Shipping/Item_Info.php:570
+msgid "Pickup Point \"City\" is empty!"
+msgstr ""
+
+#: src/Rest_API/Shipping/Item_Info.php:579
+msgid "Pickup Point \"Postcode\" is empty!"
+msgstr ""
+
+#: src/Rest_API/Shipping/Item_Info.php:591
+msgid "Pickup Point \"Country\" is empty!"
+msgstr ""
+
+#: src/Rest_API/Shipping/Item_Info.php:690
+msgid "Item HS Code must be between 6 and 20 characters long"
+msgstr ""
+
+#: src/Rest_API/Shipping/Item_Info.php:703
+msgid "Item \"Product ID\" is empty!"
+msgstr ""
+
+#: src/Rest_API/Shipping/Item_Info.php:706
+msgid "Item \"Product SKU\" is empty!"
+msgstr ""
+
+#: src/Rest_API/Shipping/Item_Info.php:723
+msgid "Item quantity must be more than 1"
+msgstr ""
+
+#. translators: %1$s & %2$s is replaced with <a> tag.
+#: src/Shipping_Method/PostNL.php:33
+#, php-format
+msgid ""
+"Below you will find all functions for controlling, preparing and processing "
+"your shipment with PostNL. Prerequisite is a valid PostNL business customer "
+"contract. If you are not yet a PostNL business customer, you can request a "
+"quote %1$shere%2$s."
+msgstr ""
+
+#: src/Shipping_Method/Settings.php:67
+msgid "Account Settings"
+msgstr ""
+
+#. translators: %1$s & %2$s is replaced with <a> tag.
+#: src/Shipping_Method/Settings.php:70
+#, php-format
+msgid ""
+"Please configure your shipping parameters and your access towards the PostNL "
+"APIs by means of authentication. You can find the details of your PostNL "
+"account in Mijn %1$sPostNL%2$s under \"My Account\"."
+msgstr ""
+
+#: src/Shipping_Method/Settings.php:73
+msgid "API Key"
+msgstr ""
+
+#. translators: %1$s & %2$s is replaced with <a> tag.
+#: src/Shipping_Method/Settings.php:76
+#, php-format
+msgid ""
+"Insert your PostNL production API-key. You can find your API-key on Mijn "
+"%1$sPostNL%2$s under \"My Account\"."
+msgstr ""
+
+#: src/Shipping_Method/Settings.php:82
+msgid "Environment Mode"
+msgstr ""
+
+#: src/Shipping_Method/Settings.php:84
+msgid "Choose the environment mode."
+msgstr ""
+
+#: src/Shipping_Method/Settings.php:87
+msgid "Production"
+msgstr ""
+
+#: src/Shipping_Method/Settings.php:88
+msgid "Sandbox"
+msgstr ""
+
+#: src/Shipping_Method/Settings.php:95
+msgid "Enable Logging"
+msgstr ""
+
+#. translators: %1$s is anchor opener tag and %2$s is anchor closer tag.
+#: src/Shipping_Method/Settings.php:99
+#, php-format
+msgid ""
+"A log file containing the communication to the PostNL server will be "
+"maintained if this option is checked. This can be used in case of technical "
+"issues and can be found %1$shere%2$s."
+msgstr ""
+
+#: src/Shipping_Method/Settings.php:108
+msgid "Customer Number"
+msgstr ""
+
+#: src/Shipping_Method/Settings.php:110
+msgid "e.g. \"11223344\""
+msgstr ""
+
+#: src/Shipping_Method/Settings.php:116
+msgid "Customer Code"
+msgstr ""
+
+#: src/Shipping_Method/Settings.php:118
+msgid "e.g. \"DEVC\""
+msgstr ""
+
+#: src/Shipping_Method/Settings.php:140
+msgid "Return Settings"
+msgstr ""
+
+#: src/Shipping_Method/Settings.php:142
+msgid "Please configure your return parameters."
+msgstr ""
+
+#: src/Shipping_Method/Settings.php:145
+msgid "Default Return Address"
+msgstr ""
+
+#: src/Shipping_Method/Settings.php:147
+msgid "Default whether to create a return address or not."
+msgstr ""
+
+#: src/Shipping_Method/Settings.php:153
+msgid "Company Name"
+msgstr ""
+
+#: src/Shipping_Method/Settings.php:155
+msgid "Enter return company name."
+msgstr ""
+
+#: src/Shipping_Method/Settings.php:160
+msgid "Replynumber"
+msgstr ""
+
+#: src/Shipping_Method/Settings.php:162
+msgid "Enter replynumber."
+msgstr ""
+
+#: src/Shipping_Method/Settings.php:169
+msgid "Street Address"
+msgstr ""
+
+#: src/Shipping_Method/Settings.php:171
+msgid "Enter Return Street Address."
+msgstr ""
+
+#: src/Shipping_Method/Settings.php:178
+msgid "House Number"
+msgstr ""
+
+#: src/Shipping_Method/Settings.php:180
+msgid "Enter return house number."
+msgstr ""
+
+#: src/Shipping_Method/Settings.php:187
+msgid "Zipcode"
+msgstr ""
+
+#: src/Shipping_Method/Settings.php:189
+msgid "Enter Return Zipcode."
+msgstr ""
+
+#: src/Shipping_Method/Settings.php:194
+msgid "City"
+msgstr ""
+
+#: src/Shipping_Method/Settings.php:196
+msgid "Enter Return City."
+msgstr ""
+
+#: src/Shipping_Method/Settings.php:201
+msgid "Return Customer Code"
+msgstr ""
+
+#: src/Shipping_Method/Settings.php:203
+msgid ""
+"Be aware that the Return Customer Code differs from the regular Customer "
+"Code. You can find your Return customer code in Mijn PostNL."
+msgstr ""
+
+#: src/Shipping_Method/Settings.php:210
+msgid "Frontend Settings"
+msgstr ""
+
+#: src/Shipping_Method/Settings.php:212
+msgid "Please configure your frontend options parameters."
+msgstr ""
+
+#: src/Shipping_Method/Settings.php:215
+msgid "Enable PostNL Pick-up Points"
+msgstr ""
+
+#: src/Shipping_Method/Settings.php:217 src/Shipping_Method/Settings.php:245
+#: src/Shipping_Method/Settings.php:269 src/Shipping_Method/Settings.php:341
+msgid "Enable"
+msgstr ""
+
+#: src/Shipping_Method/Settings.php:218
+msgid ""
+"Show PostNL pick-up points in the checkout so that your customers can choose "
+"to get their orders delivered at a PostNL pick-up point."
+msgstr ""
+
+#: src/Shipping_Method/Settings.php:243
+msgid "Enable Delivery Days"
+msgstr ""
+
+#: src/Shipping_Method/Settings.php:246
+msgid ""
+"Show delivery days in the checkout so that your customers can choose which "
+"day to receive their order."
+msgstr ""
+
+#: src/Shipping_Method/Settings.php:253
+msgid "Number of Delivery Days"
+msgstr ""
+
+#: src/Shipping_Method/Settings.php:255
+msgid "Number of delivery days displayed in the frontend. Maximum will be 12."
+msgstr ""
+
+#: src/Shipping_Method/Settings.php:267
+msgid "Enable Evening Delivery"
+msgstr ""
+
+#: src/Shipping_Method/Settings.php:270
+msgid "Enable evening delivery on the frontend."
+msgstr ""
+
+#: src/Shipping_Method/Settings.php:277
+msgid "Evening Delivery Fee"
+msgstr ""
+
+#: src/Shipping_Method/Settings.php:279
+msgid "Fee for evening delivery option."
+msgstr ""
+
+#: src/Shipping_Method/Settings.php:286
+msgid "Transit Time"
+msgstr ""
+
+#: src/Shipping_Method/Settings.php:288
+msgid ""
+"The number of days it takes for the order to be delivered after the order "
+"has been placed."
+msgstr ""
+
+#: src/Shipping_Method/Settings.php:294
+msgid "Cut Off Time"
+msgstr ""
+
+#: src/Shipping_Method/Settings.php:296
+msgid ""
+"If an order is ordered after this time, one day will be added to the transit "
+"time."
+msgstr ""
+
+#: src/Shipping_Method/Settings.php:302
+msgid "Drop off Days"
+msgstr ""
+
+#: src/Shipping_Method/Settings.php:304 src/Utils.php:27
+msgid "Monday"
+msgstr ""
+
+#: src/Shipping_Method/Settings.php:305
+msgid "Select which days you ship orders."
+msgstr ""
+
+#: src/Shipping_Method/Settings.php:311 src/Utils.php:28
+msgid "Tuesday"
+msgstr ""
+
+#: src/Shipping_Method/Settings.php:316 src/Utils.php:29
+msgid "Wednesday"
+msgstr ""
+
+#: src/Shipping_Method/Settings.php:321 src/Utils.php:30
+msgid "Thursday"
+msgstr ""
+
+#: src/Shipping_Method/Settings.php:326 src/Utils.php:31
+msgid "Friday"
+msgstr ""
+
+#: src/Shipping_Method/Settings.php:331 src/Utils.php:32
+msgid "Saturday"
+msgstr ""
+
+#: src/Shipping_Method/Settings.php:336 src/Utils.php:33
+msgid "Sunday"
+msgstr ""
+
+#: src/Shipping_Method/Settings.php:339
+msgid "Check Dutch addresses"
+msgstr ""
+
+#: src/Shipping_Method/Settings.php:342
+msgid "Based on zipcode and housenumber the address is checked."
+msgstr ""
+
+#: src/Shipping_Method/Settings.php:349
+msgid "Shipping Outside Europe Settings"
+msgstr ""
+
+#: src/Shipping_Method/Settings.php:351
+msgid "Please configure your shipping outside Europe option parameters."
+msgstr ""
+
+#: src/Shipping_Method/Settings.php:354
+msgid "GlobalPack Barcode Type"
+msgstr ""
+
+#: src/Shipping_Method/Settings.php:359
+msgid "CD"
+msgstr ""
+
+#: src/Shipping_Method/Settings.php:364
+msgid "GlobalPack Customer Code"
+msgstr ""
+
+#: src/Shipping_Method/Settings.php:369
+msgid "1234"
+msgstr ""
+
+#: src/Shipping_Method/Settings.php:373
+msgid "Default HS Tariff Code"
+msgstr ""
+
+#: src/Shipping_Method/Settings.php:375
+msgid ""
+"The HS tariff code is used by customs to classify goods. The HS tariff code "
+"can be found on the website of the Dutch Chamber of Commerce."
+msgstr ""
+
+#: src/Shipping_Method/Settings.php:381
+msgid "Default Country of Origin"
+msgstr ""
+
+#: src/Shipping_Method/Settings.php:383
+msgid "Default country of origin if none is set in the product."
+msgstr ""
+
+#: src/Shipping_Method/Settings.php:392
+msgid "Printer &amp; Email Settings"
+msgstr ""
+
+#: src/Shipping_Method/Settings.php:394
+msgid "Please configure your printer and email option parameters."
+msgstr ""
+
+#: src/Shipping_Method/Settings.php:397
+msgid "Label Format"
+msgstr ""
+
+#: src/Shipping_Method/Settings.php:399
+msgid ""
+"Use A6 format in case you use a labelprinter. Use A4 format for other "
+"regular printers."
+msgstr ""
+
+#: src/Shipping_Method/Settings.php:409
+msgid "WooCommerce Email"
+msgstr ""
+
+#: src/Shipping_Method/Settings.php:411
+msgid "Enable WooCommerce tracking note email."
+msgstr ""
+
+#: src/Shipping_Method/Settings.php:417
+msgid "WooCommerce Email Text"
+msgstr ""
+
+#: src/Shipping_Method/Settings.php:419
+msgid "Text added for tracking note email."
+msgstr ""
+
+#: src/Shipping_Method/Settings.php:421 src/Shipping_Method/Settings.php:422
+msgid "This is your track and track link {tracking-link}"
+msgstr ""
+
+#. translators: %s is a field argument.
+#: src/Utils.php:355
+#, php-format
+msgid "Please specify a \"%s\" argument"
+msgstr ""
+
+#: templates/checkout/postnl-delivery-day.php:30
+msgid "No charge"
+msgstr ""
+
+#: templates/checkout/postnl-dropoff-points.php:116
+msgid "Vanaf"
+msgstr ""
+
+#. Plugin Name of the plugin/theme
+msgid "PostNL for WooCommerce"
+msgstr ""
+
+#. Plugin URI of the plugin/theme
+msgid "https://github.com/Progressus-io/postnl-for-woocommerce/"
+msgstr ""
+
+#. Description of the plugin/theme
+msgid "WooCommerce integration for PostNL"
+msgstr ""
+
+#. Author of the plugin/theme
+msgid "PostNL"
+msgstr ""
+
+#. Author URI of the plugin/theme
+msgid "https://postnl.post/"
+msgstr ""

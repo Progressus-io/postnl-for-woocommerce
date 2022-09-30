@@ -1,3 +1,13 @@
+.postnl-logo-container {
+	margin-top:15px;
+	margin-bottom:15px;
+}
+
+.postnl-logo-container img {
+	height:50px;
+	width:auto;
+}
+
 #shipment-postnl-label-form label {
 	font-weight:700;
 }

@@ -17,6 +17,9 @@ $field = array_shift( $fields );
 ?>
 <tr class="postnl-co-tr postnl-co-tr-container">
 	<td colspan="2">
+		<div class="postnl_logo_container">
+			<img src="<?php echo esc_url( trailingslashit( POSTNL_WC_PLUGIN_DIR_URL ) . 'assets/images/postnl-logo.png' ); ?>" class="postnl_checkout_logo" alt="PostNL" />
+		</div>
 		<div id="postnl_checkout_option" class="postnl_checkout_container">
 			<div class="postnl_checkout_tab_container">
 				<ul class="postnl_checkout_tab_list">

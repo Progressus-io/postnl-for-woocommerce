@@ -70,10 +70,19 @@ class Settings extends \WC_Settings_API {
 				'description' => sprintf( __( 'Please configure your shipping parameters and your access towards the PostNL APIs by means of authentication. You can find the details of your PostNL account in Mijn %1$sPostNL%2$s under "My Account".', 'postnl-for-woocommerce' ), '<a href="https://mijn.postnl.nl/c/BP2_Mod_Login.app" target="_blank">', '</a>' ),
 			),
 			'api_keys'                  => array(
-				'title'       => esc_html__( 'API Key', 'postnl-for-woocommerce' ),
+				'title'       => esc_html__( 'Production API Key', 'postnl-for-woocommerce' ),
 				'type'        => 'text',
 				// translators: %1$s & %2$s is replaced with <a> tag.
 				'description' => sprintf( __( 'Insert your PostNL production API-key. You can find your API-key on Mijn %1$sPostNL%2$s under "My Account".', 'postnl-for-woocommerce' ), '<a href="https://mijn.postnl.nl/c/BP2_Mod_Login.app" target="_blank">', '</a>' ),
+				'desc_tip'    => true,
+				'default'     => '',
+				'placeholder' => '',
+			),
+			'api_keys_sandbox'          => array(
+				'title'       => esc_html__( 'Sandbox API Key', 'postnl-for-woocommerce' ),
+				'type'        => 'text',
+				// translators: %1$s & %2$s is replaced with <a> tag.
+				'description' => sprintf( __( 'Insert your PostNL staging API-key. You can find your API-key on Mijn %1$sPostNL%2$s under "My Account".', 'postnl-for-woocommerce' ), '<a href="https://mijn.postnl.nl/c/BP2_Mod_Login.app" target="_blank">', '</a>' ),
 				'desc_tip'    => true,
 				'default'     => '',
 				'placeholder' => '',
@@ -92,12 +101,17 @@ class Settings extends \WC_Settings_API {
 				'placeholder' => '',
 			),
 			'enable_logging'            => array(
-				'title'             => esc_html__( 'Enable Logging', 'postnl-for-woocommerce' ),
-				'type'              => 'checkbox',
-				'description'       => esc_html__( 'Log files can be used to diagnose problems.', 'postnl-for-woocommerce' ),
-				'desc_tip'          => true,
-				'default'           => '',
-				'placeholder'       => '',
+				'title'       => esc_html__( 'Enable Logging', 'postnl-for-woocommerce' ),
+				'type'        => 'checkbox',
+				'description' => sprintf(
+					// translators: %1$s is anchor opener tag and %2$s is anchor closer tag.
+					esc_html__( 'A log file containing the communication to the PostNL server will be maintained if this option is checked. This can be used in case of technical issues and can be found %1$shere%2$s.', 'postnl-for-woocommerce' ),
+					'<a href="' . esc_url( Utils::get_log_url() ) . '" target="_blank">',
+					'</a>'
+				),
+				'desc_tip'    => false,
+				'default'     => '',
+				'placeholder' => '',
 			),
 			'customer_num'              => array(
 				'title'             => esc_html__( 'Customer Number', 'postnl-for-woocommerce' ),
@@ -348,20 +362,20 @@ class Settings extends \WC_Settings_API {
 			'globalpack_barcode_type'   => array(
 				'title'             => esc_html__( 'GlobalPack Barcode Type', 'postnl-for-woocommerce' ),
 				'type'              => 'select',
-				'description'       => esc_html__( 'e.g. "CD"', 'postnl-for-woocommerce' ),
+				'description'       => '',
 				'desc_tip'          => true,
 				'default'           => '',
-				'placeholder'       => '',
+				'placeholder'       => esc_html__( 'CD', 'postnl-for-woocommerce' ),
 				'options'           => Utils::get_available_barcode_type(),
 				'custom_attributes' => array( 'maxlength' => '10' ),
 			),
 			'globalpack_customer_code'  => array(
 				'title'             => esc_html__( 'GlobalPack Customer Code', 'postnl-for-woocommerce' ),
 				'type'              => 'text',
-				'description'       => esc_html__( 'e.g. "1234"', 'postnl-for-woocommerce' ),
+				'description'       => '',
 				'desc_tip'          => true,
 				'default'           => '',
-				'placeholder'       => '',
+				'placeholder'       => esc_html__( '1234', 'postnl-for-woocommerce' ),
 				'custom_attributes' => array( 'maxlength' => '10' ),
 			),
 			'hs_tariff_code'            => array(
@@ -393,10 +407,10 @@ class Settings extends \WC_Settings_API {
 				'type'        => 'select',
 				'description' => esc_html__( 'Use A6 format in case you use a labelprinter. Use A4 format for other regular printers.', 'postnl-for-woocommerce' ),
 				'desc_tip'    => true,
-				'default'     => 'Label (A6)',
+				'default'     => 'A6',
 				'options'     => array(
-					'Label (A6)'             => 'A6',
-					'Commercialinvoice (A4)' => 'A4',
+					'A6' => 'A6',
+					'A4' => 'A4',
 				),
 				'class'       => 'wc-enhanced-select',
 			),
@@ -413,8 +427,8 @@ class Settings extends \WC_Settings_API {
 				'type'        => 'text',
 				'description' => esc_html__( 'Text added for tracking note email.', 'postnl-for-woocommerce' ),
 				'desc_tip'    => true,
-				'default'     => '',
-				'placeholder' => esc_html__( 'Tracking Number: {tracking-link}', 'postnl-for-woocommerce' ),
+				'default'     => esc_html__( 'This is your track and track link {tracking-link}', 'postnl-for-woocommerce' ),
+				'placeholder' => esc_html__( 'This is your track and track link {tracking-link}', 'postnl-for-woocommerce' ),
 			),
 		);
 	}
@@ -498,6 +512,15 @@ class Settings extends \WC_Settings_API {
 	}
 
 	/**
+	 * Get sandbox API Key from the settings.
+	 *
+	 * @return String
+	 */
+	public function get_api_key_sandbox() {
+		return $this->get_country_option( 'api_keys_sandbox', '' );
+	}
+
+	/**
 	 * Get customer number from the settings.
 	 *
 	 * @return String
@@ -526,7 +549,7 @@ class Settings extends \WC_Settings_API {
 		return $this->get_country_option( 'location_code', '' );
 		*/
 
-		return '1234506';
+		return '123456';
 	}
 
 	/**

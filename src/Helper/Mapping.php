@@ -125,6 +125,25 @@ class Mapping {
 	}
 
 	/**
+	 * Label type mapping.
+	 *
+	 * @return Array
+	 */
+	public static function label_type_list() {
+		return array(
+			'NL' => array(
+				'NL'  => array( 'label', 'buspakjeextra', 'printcodelabel' ),
+				'BE'  => array( 'label' ),
+				'EU'  => array( 'label' ),
+				'ROW' => array( 'cn23', 'cp71' ),
+			),
+			'BE' => array(
+				'BE' => array( 'label' ),
+			),
+		);
+	}
+
+	/**
 	 * Product code mapping.
 	 *
 	 * @return Array
@@ -132,7 +151,7 @@ class Mapping {
 	public static function option_available_list() {
 		return array(
 			'NL' => array(
-				'NL'  => array( 'create_return_label', 'num_labels', 'letterbox' ),
+				'NL'  => array( 'create_return_label', 'num_labels' ),
 				'BE'  => array( 'create_return_label', 'num_labels' ),
 				'EU'  => array( 'num_labels' ),
 				'ROW' => array( 'num_labels' ),

@@ -413,7 +413,13 @@ class Item_Info extends Base_Info {
 			'printer_type'    => array(
 				'default'  => 'GraphicFile|PDF',
 				'sanitize' => function( $value ) use ( $self ) {
-					$num_labels = intval( $self->api_args['backend_data']['num_labels'] );
+					$label_format = $self->api_args['settings']['label_format'];
+					$num_labels   = intval( $self->api_args['backend_data']['num_labels'] );
+
+					if ( 'A6' === $label_format ) {
+						return 'GraphicFile|PDF';
+					}
+
 					return ( 1 < $num_labels ) ? 'GraphicFile|PDF|MergeA' : 'GraphicFile|PDF';
 				},
 			),

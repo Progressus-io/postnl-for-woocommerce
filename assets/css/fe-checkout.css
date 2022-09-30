@@ -2,6 +2,16 @@ tr.postnl-co-tr-container > td {
 	padding:0px;
 }
 
+.postnl_logo_container {
+	margin-top:15px;
+	margin-bottom:15px;
+}
+
+.postnl_logo_container img {
+	height:50px;
+	width:auto;
+}
+
 .postnl_checkout_container {
 	border-radius:5px;
 	margin:5px;

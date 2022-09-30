@@ -394,6 +394,9 @@ class Single extends Base {
 		$available_fields  = $this->filter_available_fields( $fields_with_value, $available_options );
 		?>
 		<div id="shipment-postnl-label-form" class="<?php echo esc_attr( $form_class ); ?>">
+			<div class="postnl-logo-container">
+				<img src="<?php echo esc_url( trailingslashit( POSTNL_WC_PLUGIN_DIR_URL ) . 'assets/images/postnl-logo.png' ); ?>" class="postnl_checkout_logo" alt="PostNL" />
+			</div>
 			<?php $this->generate_delivery_type_html( $order ); ?>
 			<?php $this->generate_delivery_date_html( $delivery_info ); ?>
 			<?php $this->generate_pickup_points_html( $pickup_info ); ?>

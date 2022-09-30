@@ -531,7 +531,7 @@ class Settings extends \WC_Settings_API {
 		return $this->get_country_option( 'location_code', '' );
 		*/
 
-		return '1234506';
+		return '123456';
 	}
 
 	/**

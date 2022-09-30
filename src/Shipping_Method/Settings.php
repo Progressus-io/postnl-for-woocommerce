@@ -70,10 +70,19 @@ class Settings extends \WC_Settings_API {
 				'description' => sprintf( __( 'Please configure your shipping parameters and your access towards the PostNL APIs by means of authentication. You can find the details of your PostNL account in Mijn %1$sPostNL%2$s under "My Account".', 'postnl-for-woocommerce' ), '<a href="https://mijn.postnl.nl/c/BP2_Mod_Login.app" target="_blank">', '</a>' ),
 			),
 			'api_keys'                  => array(
-				'title'       => esc_html__( 'API Key', 'postnl-for-woocommerce' ),
+				'title'       => esc_html__( 'Production API Key', 'postnl-for-woocommerce' ),
 				'type'        => 'text',
 				// translators: %1$s & %2$s is replaced with <a> tag.
 				'description' => sprintf( __( 'Insert your PostNL production API-key. You can find your API-key on Mijn %1$sPostNL%2$s under "My Account".', 'postnl-for-woocommerce' ), '<a href="https://mijn.postnl.nl/c/BP2_Mod_Login.app" target="_blank">', '</a>' ),
+				'desc_tip'    => true,
+				'default'     => '',
+				'placeholder' => '',
+			),
+			'api_keys_sandbox'          => array(
+				'title'       => esc_html__( 'Sandbox API Key', 'postnl-for-woocommerce' ),
+				'type'        => 'text',
+				// translators: %1$s & %2$s is replaced with <a> tag.
+				'description' => sprintf( __( 'Insert your PostNL staging API-key. You can find your API-key on Mijn %1$sPostNL%2$s under "My Account".', 'postnl-for-woocommerce' ), '<a href="https://mijn.postnl.nl/c/BP2_Mod_Login.app" target="_blank">', '</a>' ),
 				'desc_tip'    => true,
 				'default'     => '',
 				'placeholder' => '',
@@ -500,6 +509,15 @@ class Settings extends \WC_Settings_API {
 	 */
 	public function get_api_key() {
 		return $this->get_country_option( 'api_keys', '' );
+	}
+
+	/**
+	 * Get sandbox API Key from the settings.
+	 *
+	 * @return String
+	 */
+	public function get_api_key_sandbox() {
+		return $this->get_country_option( 'api_keys_sandbox', '' );
 	}
 
 	/**

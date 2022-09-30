@@ -154,7 +154,7 @@ class Base {
 	 * Set API key value.
 	 */
 	public function set_api_key() {
-		$this->api_key = ( true === $this->is_sandbox ) ? $this->settings->get_api_key() : $this->settings->get_api_key();
+		$this->api_key = ( true === $this->is_sandbox ) ? $this->settings->get_api_key_sandbox() : $this->settings->get_api_key();
 	}
 
 	/**

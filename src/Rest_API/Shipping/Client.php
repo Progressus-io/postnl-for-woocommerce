@@ -39,20 +39,6 @@ class Client extends Base {
 	}
 
 	/**
-	 * Get headers args for REST request.
-	 *
-	 * @return Array
-	 */
-	public function get_headers_args() {
-		$headers = $this->get_basic_headers_args();
-
-		// Add WooCommerce flag for PostNL SourceSystem.
-		$headers['SourceSystem'] = '35';
-
-		return $headers;
-	}
-
-	/**
 	 * Function for composing API request.
 	 */
 	public function compose_body_request() {

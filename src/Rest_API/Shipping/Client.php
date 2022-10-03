@@ -126,6 +126,7 @@ class Client extends Base {
 
 		for ( $i = 1; $i <= $this->item_info->backend_data['num_labels']; $i++ ) {
 			if ( $this->item_info->backend_data['num_labels'] > 1 ) {
+				unset( $shipment['Barcode'] );
 				$shipment['Groups'] = array(
 					array(
 						'GroupType'     => '03',

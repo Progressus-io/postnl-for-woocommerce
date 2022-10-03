@@ -349,9 +349,12 @@ abstract class Base {
 			'saved_data' => $saved_data,
 			'barcode'    => $barcode,
 		);
+		$labels          = $this->create_label( $label_post_data );
 
-		$labels               = $this->create_label( $label_post_data );
-		$return_labels        = $this->maybe_create_return_label( $label_post_data );
+		$return_post_data             = $label_post_data;
+		$return_post_data['barcode '] = $this->create_barcode( $order );
+		$return_labels                = $this->maybe_create_return_label( $label_post_data );
+
 		$saved_data['labels'] = array_merge( $labels, $return_labels );
 		$order->update_meta_data( $this->meta_name, $saved_data );
 		$order->save();

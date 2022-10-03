@@ -420,7 +420,7 @@ class Item_Info extends Base_Info {
 						return 'GraphicFile|PDF';
 					}
 
-					return ( 1 < $num_labels ) ? 'GraphicFile|PDF|MergeA' : 'GraphicFile|PDF';
+					return 'GraphicFile|PDF|MergeA';
 				},
 			),
 			'total_weight'    => array(

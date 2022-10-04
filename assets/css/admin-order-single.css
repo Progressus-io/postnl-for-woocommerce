@@ -1,11 +1,7 @@
-.postnl-logo-container {
-	margin-top:15px;
-	margin-bottom:15px;
-}
-
-.postnl-logo-container img {
-	height:50px;
-	width:auto;
+#woocommerce-shipment-postnl-label h2.hndle.ui-sortable-handle {
+	background: url(../images/postnl-logo.png) no-repeat left 14px top / contain;
+	height: 20px;
+	padding: 5px 0 5px 55px;
 }
 
 #shipment-postnl-label-form label {

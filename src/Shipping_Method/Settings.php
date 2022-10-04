@@ -69,6 +69,19 @@ class Settings extends \WC_Settings_API {
 				// translators: %1$s & %2$s is replaced with <a> tag.
 				'description' => sprintf( __( 'Please configure your shipping parameters and your access towards the PostNL APIs by means of authentication. You can find the details of your PostNL account in Mijn %1$sPostNL%2$s under "My Account".', 'postnl-for-woocommerce' ), '<a href="https://mijn.postnl.nl/c/BP2_Mod_Login.app" target="_blank">', '</a>' ),
 			),
+            'environment_mode'          => array(
+                'title'       => esc_html__( 'Environment Mode', 'postnl-for-woocommerce' ),
+                'type'        => 'select',
+                'description' => __( 'Choose the environment mode.', 'postnl-for-woocommerce' ),
+                'desc_tip'    => true,
+                'options'     => array(
+                    'production' => esc_html__( 'Production', 'postnl-for-woocommerce' ),
+                    'sandbox'    => esc_html__( 'Sandbox', 'postnl-for-woocommerce' ),
+                ),
+                'class'       => 'wc-enhanced-select',
+                'default'     => 'production',
+                'placeholder' => '',
+            ),
 			'api_keys'                  => array(
 				'title'       => esc_html__( 'Production API Key', 'postnl-for-woocommerce' ),
 				'type'        => 'text',
@@ -85,19 +98,6 @@ class Settings extends \WC_Settings_API {
 				'description' => sprintf( __( 'Insert your PostNL staging API-key. You can find your API-key on Mijn %1$sPostNL%2$s under "My Account".', 'postnl-for-woocommerce' ), '<a href="https://mijn.postnl.nl/c/BP2_Mod_Login.app" target="_blank">', '</a>' ),
 				'desc_tip'    => true,
 				'default'     => '',
-				'placeholder' => '',
-			),
-			'environment_mode'          => array(
-				'title'       => esc_html__( 'Environment Mode', 'postnl-for-woocommerce' ),
-				'type'        => 'select',
-				'description' => __( 'Choose the environment mode.', 'postnl-for-woocommerce' ),
-				'desc_tip'    => true,
-				'options'     => array(
-					'production' => esc_html__( 'Production', 'postnl-for-woocommerce' ),
-					'sandbox'    => esc_html__( 'Sandbox', 'postnl-for-woocommerce' ),
-				),
-				'class'       => 'wc-enhanced-select',
-				'default'     => 'production',
 				'placeholder' => '',
 			),
 			'enable_logging'            => array(

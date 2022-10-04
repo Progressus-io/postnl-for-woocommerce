@@ -27,6 +27,7 @@ class Bulk extends Base {
 		add_filter( 'bulk_actions-edit-shop_order', array( $this, 'add_order_bulk_actions' ), 10, 1 );
 		add_filter( 'handle_bulk_actions-edit-shop_order', array( $this, 'process_order_bulk_actions' ), 10, 3 );
 		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_bulk_assets' ) );
+        add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_shipping_method_assets' ) );
 		add_action( 'admin_footer', array( $this, 'model_content_fields_create_label' ) );
 		add_filter( 'postnl_order_meta_box_fields', array( $this, 'additional_meta_box' ), 10, 1 );
 	}
@@ -104,6 +105,23 @@ class Bulk extends Base {
 			);
 		}
 	}
+
+    /**
+     * enqueue js file in shipping method settings page
+     */
+    public function enqueue_shipping_method_assets(){
+        $screen = get_current_screen();
+
+        if ( ! empty( $screen->id ) && 'woocommerce_page_wc-settings' === $screen->id && ! empty( $_GET[ 'section' ] ) && POSTNL_SETTINGS_ID === sanitize_text_field( $_GET[ 'section' ] ) ) {
+            wp_enqueue_script(
+                'postnl-admin-settings',
+                POSTNL_WC_PLUGIN_DIR_URL . '/assets/js/admin-settings.js',
+                array('jquery'),
+                POSTNL_WC_VERSION,
+                true
+            );
+        }
+    }
 
 	/**
 	 * Adding additional meta box in order admin page.

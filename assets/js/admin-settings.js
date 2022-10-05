@@ -11,19 +11,15 @@
 				.on( 'change', this.display_api_key_field );
 		},
 
-		display_api_key_field: function( ){
+		display_api_key_field: function() {
 			var value = jQuery( '#woocommerce_postnl_environment_mode' ).val();
 
-			if( 'production' === value ){
-
+			if ( 'production' === value ) {
 				jQuery('#woocommerce_postnl_api_keys').closest('tr').show();
 				jQuery('#woocommerce_postnl_api_keys_sandbox').closest('tr').hide();
-
-			}else{
-
+			} else {
 				jQuery('#woocommerce_postnl_api_keys').closest('tr').hide();
 				jQuery('#woocommerce_postnl_api_keys_sandbox').closest('tr').show();
-
 			}
 
 		},

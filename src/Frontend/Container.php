@@ -60,7 +60,7 @@ class Container {
 		add_action( 'woocommerce_cart_calculate_fees', array( $this, 'add_cart_fees' ), 10, 1 );
 		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_scripts_styles' ) );
 		add_filter( 'woocommerce_shipping_' . POSTNL_SETTINGS_ID . '_is_available', array( $this, 'is_shipping_method_available' ), 10, 2 );
-        add_filter( 'woocommerce_cart_shipping_method_full_label', array( $this, 'add_shipping_method_icon' ), 10, 2 );
+		add_filter( 'woocommerce_cart_shipping_method_full_label', array( $this, 'add_shipping_method_icon' ), 10, 2 );
 	}
 
 	/**

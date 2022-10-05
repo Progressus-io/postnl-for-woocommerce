@@ -242,19 +242,20 @@ class Container {
 		return $available;
 	}
 
-    /**
-     * Replace shipping method title with Icon.
-     *
-     * @param $label
-     * @param $method
-     * @return string
-     */
-    public function add_shipping_method_icon( $label, $method ) {
-        if( POSTNL_SETTINGS_ID === $method->method_id ) {
-            $method_title   = $method->get_label();
-            $label          = str_replace( $method_title, '<img src="'. esc_url( trailingslashit( POSTNL_WC_PLUGIN_DIR_URL ) . 'assets/images/postnl-logo.png' ) .'" class="postnl_shipping_method_icon" alt="'. $method_title .'" /> ', $label );
-        }
+	/**
+	 * Replace shipping method title with Icon.
+	 *
+	 * @param $label
+	 * @param $method
+	 *
+	 * @return mixed|string
+	 */
+	public function add_shipping_method_icon( $label, $method ) {
+		if( POSTNL_SETTINGS_ID === $method->method_id ) {
+			$method_title   = $method->get_label();
+			$label          = '<img src="'. esc_url( trailingslashit( POSTNL_WC_PLUGIN_DIR_URL ) . 'assets/images/postnl-logo-40x40.png' ) .'" class="postnl_shipping_method_icon" alt="'. $method_title .'" />' . $label;
+		}
 
-        return $label;
-    }
+		return $label;
+	}
 }

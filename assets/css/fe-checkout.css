@@ -2,9 +2,15 @@ tr.postnl-co-tr-container > td {
 	padding:0px;
 }
 
+.woocommerce-shipping-methods label:has(.postnl_shipping_method_icon) {
+	display: flex;
+	align-items: center;
+}
+
 .postnl_shipping_method_icon{
 	max-height: 32px;
-	width:auto;
+	width: auto;
+	margin-right: 24px;
 }
 
 .postnl_checkout_container {

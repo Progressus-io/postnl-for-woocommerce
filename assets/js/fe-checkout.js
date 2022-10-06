@@ -18,6 +18,10 @@ var reload_require = false;
 			jQuery('body').on( 'updated_checkout', this.refresh_page );
 			billing_country.on( 'change', this.check_country );
 			shipping_country.on( 'change', this.check_country );
+
+			// Trigger updated_checkout if house number changed
+			jQuery('#billing_house_number').on( 'change', this.validate_housenumber );
+			jQuery('#shipping_house_number').on( 'change', this.validate_housenumber );
 		},
 
 		operate: function() {
@@ -82,10 +86,15 @@ var reload_require = false;
 
 			console.log( 'reload_require : ' + reload_require  );
 		},
+
 		refresh_page: function() {
 			if ( reload_require ){
 				location.reload(true);
 			}
+		},
+
+		validate_housenumber: function(){
+			jQuery('body').trigger('update_checkout');
 		}
 	};
 

@@ -80,7 +80,7 @@ var reload_require = false;
 		},
 		refresh_page: function() {
 			if ( reload_require ){
-				location.reload();
+				location.reload(true);
 			}
 		}
 	};

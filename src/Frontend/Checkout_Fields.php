@@ -39,7 +39,7 @@ class Checkout_Fields {
 	 * Collection of hooks when initiation.
 	 */
 	public function init_hooks() {
-		add_action( 'woocommerce_checkout_fields', array( $this, 'reorder_fields' ), 10 );
+		add_action( 'woocommerce_checkout_fields', array( $this, 'reorder_fields' ) );
 	}
 
 	/**
@@ -92,7 +92,7 @@ class Checkout_Fields {
 			'required'      => true
 		);
 
-		$fields_to_order    = [ 'first_name', 'last_name', 'country', 'postcode', 'house_number', 'address_2', 'address_2', 'address_1', 'city' ];
+		$fields_to_order    = [ 'first_name', 'last_name', 'country', 'postcode', 'house_number', 'address_2', 'address_1', 'city' ];
 		foreach ( $fields_to_order as $priority => $field ) {
 			$fields[ $key ][ $key.'_'.$field ][ 'priority' ] = $priority + 1;
 		}

@@ -1,3 +1,5 @@
+var reload_require = false;
+
 ( function( $ ) {
 
 	var postnl_fe_checkout = {
@@ -5,6 +7,13 @@
 		init: function() {
 			jQuery('body').on( 'updated_checkout', this.use_select2 );
 			jQuery('body').on( 'updated_checkout', this.operate );
+
+			// Reload page if country changed to NL
+			var billing_country = jQuery('#billing_country');
+			billing_country.attr( 'old-value', billing_country.val() );
+
+			jQuery('body').on( 'updated_checkout', this.refresh_page );
+			billing_country.on( 'change', this.check_country )
 		},
 
 		operate: function() {
@@ -62,6 +71,18 @@
 				minimumResultsForSearch: -1
 			} );
 		},
+
+		check_country: function() {
+			reload_require = 'NL' === $(this).attr('old-value') || 'NL' === $(this).val();
+			$(this).attr( 'old-value', $(this).val() );
+
+			console.log( 'reload_require : ' + reload_require  );
+		},
+		refresh_page: function() {
+			if ( reload_require ){
+				location.reload();
+			}
+		}
 	};
 
 	postnl_fe_checkout.init();

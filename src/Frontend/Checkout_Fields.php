@@ -83,7 +83,7 @@ class Checkout_Fields {
 	/**
 	 *
 	 */
-	protected function reorder_fields_by_key( $fields, $key ) {
+	protected function reorder_fields_by_key( $key, $fields ) {
 		// Add House number field.
 		$fields[ $key ][ $key.'_house_number'] = array(
 			'type'          => 'text',

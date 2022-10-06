@@ -117,6 +117,10 @@ class Checkout_Fields {
 			return;
 		}
 
+		if ( 'NL' !== $this->get_billing_country() && 'NL' !== $this->get_shipping_country() ) {
+			return;
+		}
+
 		$checkout_data = $this->validate_address();
 		if ( ! empty( $checkout_data['error'] ) ) {
 			wc_add_notice( $checkout_data['error'], 'error' );
@@ -137,6 +141,19 @@ class Checkout_Fields {
 			}
 
 			$post_data = Utils::set_post_data_address( $post_data );
+
+			// Check if address filled
+			if ( ! isset( $post_data[ 'shipping_house_number' ] ) || '' === $post_data[ 'shipping_house_number' ] ) {
+				return array();
+			}
+
+			if ( ! isset( $post_data[ 'shipping_postcode' ] ) || '' === $post_data[ 'shipping_postcode' ] ) {
+				return array();
+			}
+
+			if ( ! isset( $post_data[ 'shipping_address_1' ] ) || '' === $post_data[ 'shipping_address_1' ] ) {
+				return array();
+			}
 
 			$item_info = new Postcode_Check\Item_Info( $post_data );
 			$api_call  = new Postcode_Check\Client( $item_info );

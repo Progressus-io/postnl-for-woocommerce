@@ -224,6 +224,7 @@ class Main {
 		new Frontend\Container();
 		new Frontend\Delivery_Day();
 		new Frontend\Dropoff_Points();
+        new Frontend\Checkout_Fields();
 	}
 
 	/**

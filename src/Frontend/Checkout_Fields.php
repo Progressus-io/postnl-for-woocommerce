@@ -22,7 +22,7 @@ class Checkout_Fields {
 	/**
 	 * Settings class instance.
 	 *
-	 * @var PostNLWooCommerce\Shipping_Method\Settings
+	 * @var Settings
 	 */
 	protected $settings;
 
@@ -81,9 +81,14 @@ class Checkout_Fields {
 	}
 
 	/**
+	 * Reorder fields by key.
 	 *
+	 * @param string $key
+	 * @param array $fields
+	 *
+	 * @return array
 	 */
-	protected function reorder_fields_by_key( $key, $fields ) {
+	protected function reorder_fields_by_key( string $key, array $fields ) {
 		// Add House number field.
 		$fields[ $key ][ $key.'_house_number'] = array(
 			'type'          => 'text',

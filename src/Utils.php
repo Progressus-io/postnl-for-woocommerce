@@ -174,6 +174,10 @@ class Utils {
 			$post_data['shipping_state']      = $post_data['billing_state'];
 			$post_data['shipping_country']    = $post_data['billing_country'];
 			$post_data['shipping_postcode']   = $post_data['billing_postcode'];
+
+			if ( isset( $post_data['billing_house_number'] ) ) {
+				$post_data['shipping_house_number'] = $post_data['billing_house_number'];
+			}
 		}
 
 		return $post_data;

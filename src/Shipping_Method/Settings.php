@@ -344,8 +344,8 @@ class Settings extends \WC_Settings_API {
 				'type'  => 'checkbox',
 				'label' => __( 'Sunday', 'postnl-for-woocommerce' ),
 			),
-			'check_nl_address'       => array(
-				'title'       => __( 'Check Netherlands addresses', 'postnl-for-woocommerce' ),
+			'validate_nl_address'       => array(
+				'title'       => __( 'Validate Netherlands addresses', 'postnl-for-woocommerce' ),
 				'type'        => 'checkbox',
 				'label'       => __( 'Enable', 'postnl-for-woocommerce' ),
 				'description' => __( 'Based on zipcode and housenumber the address is checked.', 'postnl-for-woocommerce' ),
@@ -1089,8 +1089,8 @@ class Settings extends \WC_Settings_API {
 	 *
 	 * @return String
 	 */
-	public function get_check_nl_address() {
-		return $this->get_country_option( 'check_nl_address', '' );
+	public function get_validate_nl_address() {
+		return $this->get_country_option( 'validate_nl_address', '' );
 	}
 
 	/**
@@ -1098,8 +1098,8 @@ class Settings extends \WC_Settings_API {
 	 *
 	 * @return Bool
 	 */
-	public function is_check_nl_address_enabled() {
-		return ( 'yes' === $this->get_check_nl_address() );
+	public function is_validate_nl_address_enabled() {
+		return ( 'yes' === $this->get_validate_nl_address() );
 	}
 
 	/**

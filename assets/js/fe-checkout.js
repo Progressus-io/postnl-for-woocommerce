@@ -12,8 +12,12 @@ var reload_require = false;
 			var billing_country = jQuery('#billing_country');
 			billing_country.attr( 'old-value', billing_country.val() );
 
+			var shipping_country = jQuery('#shipping_country');
+			shipping_country.attr( 'old-value', shipping_country.val() );
+
 			jQuery('body').on( 'updated_checkout', this.refresh_page );
-			billing_country.on( 'change', this.check_country )
+			billing_country.on( 'change', this.check_country );
+			shipping_country.on( 'change', this.check_country );
 		},
 
 		operate: function() {

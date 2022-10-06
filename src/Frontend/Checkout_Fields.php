@@ -52,11 +52,11 @@ class Checkout_Fields {
 		}
 
 		if ( 'NL' === $this->get_billing_country() ) {
-			return $this->reorder_fields_by_key( 'billing', $fields );
+			$fields = $this->reorder_fields_by_key( 'billing', $fields );
 		}
 
 		if ( 'NL' === $this->get_shipping_country() ) {
-			return $this->reorder_fields_by_key( 'shipping', $fields );
+			$fields = $this->reorder_fields_by_key( 'shipping', $fields );
 		}
 
 		return $fields;

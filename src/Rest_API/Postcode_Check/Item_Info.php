@@ -41,12 +41,6 @@ class Item_Info extends Base_Info {
 	 */
 	public $body;
 
-	/**
-	 * Shipper data of the item info.
-	 *
-	 * @var shipper
-	 */
-	public $shipper;
 
 	/**
 	 * Receiver data of the item info.
@@ -73,9 +67,33 @@ class Item_Info extends Base_Info {
 		$post_data = Utils::set_post_data_address( $post_data );
 
 		$this->api_args['shipping_address'] = array(
-			'address_1'  => ( ! empty( $post_data['shipping_address_1'] ) ) ? $post_data['shipping_address_1'] : '',
-			'address_2'  => ( ! empty( $post_data['shipping_address_2'] ) ) ? $post_data['shipping_address_2'] : '',
-			'postcode'   => ( ! empty( $post_data['shipping_postcode'] ) ) ? $post_data['shipping_postcode'] : ''
+			'address_1'     => ( ! empty( $post_data['shipping_address_1'] ) ) ? $post_data['billing_address_1'] : '',
+			'house_number'  => ( ! empty( $post_data['shipping_house_number'] ) ) ? $post_data['billing_house_number'] : '',
+			'postcode'      => ( ! empty( $post_data['shipping_postcode'] ) ) ? $post_data['billing_postcode'] : ''
+		);
+	}
+
+	/**
+	 * Retrieves the args scheme to use with for parsing shipping address info.
+	 *
+	 * @return array
+	 */
+	protected function get_receiver_info_schema() {
+		// Closures in PHP 5.3 do not inherit class context
+		// So we need to copy $this into a lexical variable and pass it to closures manually.
+		$self = $this;
+
+		return array(
+			'address_1'     => array(
+				'error' => __( 'Shipping "Address 1" is empty!', 'postnl-for-woocommerce' )
+			),
+			'house_number'  => array(
+				'error'     => __( 'Shipping "House number" is empty!', 'postnl-for-woocommerce' ),
+				'default'   => '',
+			),
+			'postcode'      => array(
+				'error' => __( 'Shipping "Postcode" is empty!', 'postnl-for-woocommerce' ),
+			),
 		);
 	}
 }

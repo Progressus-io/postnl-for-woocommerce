@@ -8,6 +8,8 @@
 namespace PostNLWooCommerce\Frontend;
 
 use PostNLWooCommerce\Shipping_Method\Settings;
+use PostNLWooCommerce\Rest_API\Postcode_Check;
+use PostNLWooCommerce\Utils;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -39,7 +41,8 @@ class Checkout_Fields {
 	 * Collection of hooks when initiation.
 	 */
 	public function init_hooks() {
-		add_action( 'woocommerce_checkout_fields', array( $this, 'reorder_fields' ) );
+		add_filter( 'woocommerce_checkout_fields', array( $this, 'reorder_fields' ) );
+		add_action( 'woocommerce_review_order_after_shipping', array( $this, 'validate_nl_address' ));
 	}
 
 	/**
@@ -103,5 +106,51 @@ class Checkout_Fields {
 		}
 
 		return $fields;
+	}
+
+	/**
+	 * Validate NL address
+	 * @return void
+	 */
+	public function validate_nl_address() {
+		if ( ! $this->settings->is_validate_nl_address_enabled() ) {
+			return;
+		}
+
+		$checkout_data = $this->validate_address();
+		if ( ! empty( $checkout_data['error'] ) ) {
+			wc_add_notice( $checkout_data['error'], 'error' );
+		}
+	}
+
+	/**
+	 * Check address by PostNL Checkout Rest API.
+	 *
+	 * @return array
+	 */
+	public function validate_address() {
+		try {
+			$post_data = ( new Container() )->get_checkout_post_data();
+
+			if ( empty( $post_data ) ) {
+				return array();
+			}
+
+			$post_data = Utils::set_post_data_address( $post_data );
+
+			$item_info = new Postcode_Check\Item_Info( $post_data );
+			$api_call  = new Postcode_Check\Client( $item_info );
+			$response  = $api_call->send_request();
+
+			return array(
+				'response'  => $response,
+				'post_data' => $post_data,
+			);
+		} catch ( \Exception $e ) {
+			return array(
+				'response' => array(),
+				'error'    => $e->getMessage(),
+			);
+		}
 	}
 }

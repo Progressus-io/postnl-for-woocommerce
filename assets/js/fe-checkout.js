@@ -8,7 +8,7 @@ var reload_require = false;
 			jQuery('body').on( 'updated_checkout', this.use_select2 );
 			jQuery('body').on( 'updated_checkout', this.operate );
 
-			// Reload page if country changed to NL
+			// Reload page if country changed from/to NL
 			var billing_country = jQuery('#billing_country');
 			billing_country.attr( 'old-value', billing_country.val() );
 
@@ -19,9 +19,16 @@ var reload_require = false;
 			billing_country.on( 'change', this.check_country );
 			shipping_country.on( 'change', this.check_country );
 
-			// Trigger updated_checkout if house number changed
-			jQuery('#billing_house_number').on( 'change', this.validate_address );
-			jQuery('#shipping_house_number').on( 'change', this.validate_address );
+			// Trigger updated_checkout if shipping house number changed
+			if ( ! jQuery('#ship-to-different-address-checkbox').is(':checked') ) {
+				jQuery('#billing_house_number').on( 'change', function (){
+					jQuery('body').trigger('update_checkout');
+				} );
+			} else {
+				jQuery('#shipping_house_number').on( 'change', function (){
+					jQuery('body').trigger('update_checkout');
+				} );
+			}
 		},
 
 		operate: function() {
@@ -92,41 +99,6 @@ var reload_require = false;
 				location.reload(true);
 			}
 		},
-
-		validate_address: function () {
-			var type = 'billing';
-			if ( $('#ship-to-different-address-checkbox').is(':checked') ) {
-				type = 'shipping';
-			}
-
-			if ( 'NL' !== $('#' + type + '_country').val() ){
-				return;
-			}
-
-			var data = {
-				'action': 'validate_nl_address',
-				'house_number': $('#' + type + '_house_number').val(),
-				'postcode': $('#' + type + '_postcode').val(),
-				'address_2': $('#' + type + '_address_2').val()
-			};
-
-			$.post( wc_add_to_cart_params.ajax_url, data, function (response) {
-
-				if (true === response.success) {
-					/*
-					If its a valid address fill it then trigger update_checkout
-					 */
-					if ( response.data.hasOwnProperty('city') && response.data.hasOwnProperty('streetName') ) {
-						$('#' + type + '_city').val(response.data.city);
-						$('#' + type + '_address_1').val(response.data.streetName);
-
-						// After filling data trigger update_checkout
-						jQuery('body').trigger('update_checkout');
-					}
-				}
-
-			});
-		}
 	};
 
 	postnl_fe_checkout.init();

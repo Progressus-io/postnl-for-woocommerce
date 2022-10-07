@@ -43,9 +43,8 @@ class Checkout_Fields {
 	public function init_hooks() {
 		add_filter( 'woocommerce_checkout_fields', array( $this, 'reorder_fields' ) );
 
-		// Validate NL addresses ajax
-		add_action( 'wp_ajax_validate_nl_address', array( $this, 'validate_nl_address' ) );
-		add_action( 'wp_ajax_nopriv_validate_nl_address', array( $this, 'validate_nl_address' ) );
+		add_action( 'woocommerce_checkout_update_order_review', array( $this, 'validate_nl_address' ) );
+		add_filter('woocommerce_update_order_review_fragments', array( $this, 'fill_validated_address' ) );
 	}
 
 	/**
@@ -126,32 +125,29 @@ class Checkout_Fields {
 		}
 
 		try {
-			if ( empty( $_POST ) ) {
+			$post_data = $this->get_checkout_post_data();
+
+			if ( empty( $post_data ) ) {
 				return array();
 			}
 
-			// Check if address filled
-			if ( ! isset( $_POST[ 'house_number' ] ) || '' === $_POST[ 'house_number' ] ) {
+			$shipping_address = Utils::set_post_data_address( $post_data );
+
+			if ( ! isset( $shipping_address[ 'shipping_house_number' ] ) || '' === $shipping_address[ 'shipping_house_number' ] ) {
 				return array();
 			}
 
-			if ( ! isset( $_POST[ 'postcode' ] ) || '' === $_POST[ 'postcode' ] ) {
+			if ( ! isset( $shipping_address[ 'shipping_postcode' ] ) || '' === $shipping_address[ 'shipping_postcode' ] ) {
 				return array();
 			}
 
-			// Sanitize data
-			$post_data = [
-				'shipping_postcode'     => sanitize_text_field( $_POST[ 'postcode' ] ),
-				'shipping_house_number' => sanitize_text_field( $_POST[ 'house_number' ] ),
-				'shipping_address_2'    => sanitize_text_field( $_POST[ 'address_2' ] )
-			];
-
-			$item_info = new Postcode_Check\Item_Info( $post_data );
+			$item_info = new Postcode_Check\Item_Info( $shipping_address );
 			$api_call  = new Postcode_Check\Client( $item_info );
 			$response  = $api_call->send_request();
 
-			wp_send_json_success( $response[0] ?? [] );
-			die();
+			WC()->session->set( 'validated_address_city', $response[0]['city'] ?? '' );
+			WC()->session->set( 'validated_address_streetName', $response[0]['streetName'] ?? '' );
+			WC()->session->set( 'is_shipping_address', isset( $post_data['ship_to_different_address'] ) );
 
 		} catch ( \Exception $e ) {
 
@@ -160,5 +156,45 @@ class Checkout_Fields {
 			] );
 
 		}
+	}
+
+	public function fill_validated_address( $fragments ){
+		if ( ! WC()->session->get( 'is_shipping_address' ) ) {
+			$address_type = 'billing';
+		} else {
+			$address_type = 'shipping';
+		}
+
+		$city       = WC()->session->get( 'validated_address_city' ) ?? '';
+		$streetName = WC()->session->get( 'validated_address_streetName' ) ?? '';
+
+		if ( '' !== $city ) {
+			$fragments['#'.$address_type.'_city'] = '<input type="text" class="input-text " name="'.$address_type.'_city" id="'.$address_type.'_city" placeholder="" value="'.$city.'" autocomplete="address-level2">';
+		}
+
+		if ( '' !== $streetName ) {
+			$fragments['#'.$address_type.'_address_1'] = '<input type="text" class="input-text " name="'.$address_type.'_address_1" id="'.$address_type.'_address_1" value="'.$streetName.'" autocomplete="address-line1">';
+		}
+
+		return $fragments;
+	}
+
+	/**
+	 * Get checkout $_POST['post_data'].
+	 *
+	 * @return array
+	 */
+	public function get_checkout_post_data() {
+		if ( empty( $_REQUEST['post_data'] ) ) {
+			return array();
+		}
+
+		$post_data = array();
+
+		if ( isset( $_REQUEST['post_data'] ) ) {
+			parse_str( sanitize_text_field( wp_unslash( $_REQUEST['post_data'] ) ), $post_data );
+		}
+
+		return $post_data;
 	}
 }

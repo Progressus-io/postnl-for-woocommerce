@@ -95,7 +95,7 @@ var reload_require = false;
 
 		validate_address: function () {
 			var type = 'billing';
-			if ( $('ship-to-different-address-checkbox').is(':checked') ) {
+			if ( $('#ship-to-different-address-checkbox').is(':checked') ) {
 				type = 'shipping';
 			}
 
@@ -117,8 +117,8 @@ var reload_require = false;
 					If its a valid address fill it then trigger update_checkout
 					 */
 					if ( response.data.hasOwnProperty('city') && response.data.hasOwnProperty('streetName') ) {
-						$('#billing_city').val(response.data.city);
-						$('#billing_address_1').val(response.data.streetName);
+						$('#' + type + '_city').val(response.data.city);
+						$('#' + type + '_address_1').val(response.data.streetName);
 
 						// After filling data trigger update_checkout
 						jQuery('body').trigger('update_checkout');

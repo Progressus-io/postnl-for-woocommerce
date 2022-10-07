@@ -42,7 +42,10 @@ class Checkout_Fields {
 	 */
 	public function init_hooks() {
 		add_filter( 'woocommerce_checkout_fields', array( $this, 'reorder_fields' ) );
-		add_action( 'woocommerce_review_order_after_shipping', array( $this, 'validate_nl_address' ));
+
+		// Validate NL addresses ajax
+		add_action( 'wp_ajax_validate_nl_address', array( $this, 'validate_nl_address' ) );
+		add_action( 'wp_ajax_nopriv_validate_nl_address', array( $this, 'validate_nl_address' ) );
 	}
 
 	/**
@@ -109,10 +112,11 @@ class Checkout_Fields {
 	}
 
 	/**
-	 * Validate NL address
-	 * @return void
+	 * Check address by PostNL Checkout Rest API.
+	 *
+	 * @return array|void
 	 */
-	public function validate_nl_address() {
+	public function validate_nl_address( ) {
 		if ( ! $this->settings->is_validate_nl_address_enabled() ) {
 			return;
 		}
@@ -121,53 +125,40 @@ class Checkout_Fields {
 			return;
 		}
 
-		$checkout_data = $this->validate_address();
-		if ( ! empty( $checkout_data['error'] ) ) {
-			wc_add_notice( $checkout_data['error'], 'error' );
-		}
-	}
-
-	/**
-	 * Check address by PostNL Checkout Rest API.
-	 *
-	 * @return array
-	 */
-	public function validate_address() {
 		try {
-			$post_data = ( new Container() )->get_checkout_post_data();
-
-			if ( empty( $post_data ) ) {
+			if ( empty( $_POST ) ) {
 				return array();
 			}
-
-			$post_data = Utils::set_post_data_address( $post_data );
 
 			// Check if address filled
-			if ( ! isset( $post_data[ 'shipping_house_number' ] ) || '' === $post_data[ 'shipping_house_number' ] ) {
+			if ( ! isset( $_POST[ 'house_number' ] ) || '' === $_POST[ 'house_number' ] ) {
 				return array();
 			}
 
-			if ( ! isset( $post_data[ 'shipping_postcode' ] ) || '' === $post_data[ 'shipping_postcode' ] ) {
+			if ( ! isset( $_POST[ 'postcode' ] ) || '' === $_POST[ 'postcode' ] ) {
 				return array();
 			}
 
-			if ( ! isset( $post_data[ 'shipping_address_1' ] ) || '' === $post_data[ 'shipping_address_1' ] ) {
-				return array();
-			}
+			// Sanitize data
+			$post_data = [
+				'shipping_postcode'     => sanitize_text_field( $_POST[ 'postcode' ] ),
+				'shipping_house_number' => sanitize_text_field( $_POST[ 'house_number' ] ),
+				'shipping_address_2'    => sanitize_text_field( $_POST[ 'address_2' ] )
+			];
 
 			$item_info = new Postcode_Check\Item_Info( $post_data );
 			$api_call  = new Postcode_Check\Client( $item_info );
 			$response  = $api_call->send_request();
 
-			return array(
-				'response'  => $response,
-				'post_data' => $post_data,
-			);
+			wp_send_json_success( $response[0] ?? [] );
+			die();
+
 		} catch ( \Exception $e ) {
-			return array(
-				'response' => array(),
-				'error'    => $e->getMessage(),
-			);
+
+			wp_send_json_error( [
+				'message'    => $e->getMessage()
+			] );
+
 		}
 	}
 }

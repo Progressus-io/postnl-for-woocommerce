@@ -64,13 +64,13 @@ class Item_Info extends Base_Info {
 	 * @param Array $post_data Data from post variable in checkout page.
 	 */
 	public function convert_data_to_args( $post_data ) {
-		$post_data = Utils::set_post_data_address( $post_data );
 
 		$this->api_args['shipping_address'] = array(
-			'address_1'     => ( ! empty( $post_data['shipping_address_1'] ) ) ? $post_data['billing_address_1'] : '',
-			'house_number'  => ( ! empty( $post_data['shipping_house_number'] ) ) ? $post_data['billing_house_number'] : '',
-			'postcode'      => ( ! empty( $post_data['shipping_postcode'] ) ) ? $post_data['billing_postcode'] : ''
+			'address_2'     => $post_data['shipping_address_2'] ?? '',
+			'house_number'  => $post_data['shipping_house_number'] ?? '',
+			'postcode'      => $post_data['shipping_postcode'] ?? ''
 		);
+
 	}
 
 	/**
@@ -84,12 +84,11 @@ class Item_Info extends Base_Info {
 		$self = $this;
 
 		return array(
-			'address_1'     => array(
-				'error' => __( 'Shipping "Address 1" is empty!', 'postnl-for-woocommerce' )
+			'address_2'     => array(
+				'default'   => ''
 			),
 			'house_number'  => array(
 				'error'     => __( 'Shipping "House number" is empty!', 'postnl-for-woocommerce' ),
-				'default'   => '',
 			),
 			'postcode'      => array(
 				'error' => __( 'Shipping "Postcode" is empty!', 'postnl-for-woocommerce' ),

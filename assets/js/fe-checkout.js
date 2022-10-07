@@ -20,8 +20,8 @@ var reload_require = false;
 			shipping_country.on( 'change', this.check_country );
 
 			// Trigger updated_checkout if house number changed
-			jQuery('#billing_house_number').on( 'change', this.validate_housenumber );
-			jQuery('#shipping_house_number').on( 'change', this.validate_housenumber );
+			jQuery('#billing_house_number').on( 'change', this.validate_address );
+			jQuery('#shipping_house_number').on( 'change', this.validate_address );
 		},
 
 		operate: function() {
@@ -93,8 +93,39 @@ var reload_require = false;
 			}
 		},
 
-		validate_housenumber: function(){
-			jQuery('body').trigger('update_checkout');
+		validate_address: function () {
+			var type = 'billing';
+			if ( $('ship-to-different-address-checkbox').is(':checked') ) {
+				type = 'shipping';
+			}
+
+			if ( 'NL' !== $('#' + type + '_country').val() ){
+				return;
+			}
+
+			var data = {
+				'action': 'validate_nl_address',
+				'house_number': $('#' + type + '_house_number').val(),
+				'postcode': $('#' + type + '_postcode').val(),
+				'address_2': $('#' + type + '_address_2').val()
+			};
+
+			$.post( wc_add_to_cart_params.ajax_url, data, function (response) {
+
+				if (true === response.success) {
+					/*
+					If its a valid address fill it then trigger update_checkout
+					 */
+					if ( response.data.hasOwnProperty('city') && response.data.hasOwnProperty('streetName') ) {
+						$('#billing_city').val(response.data.city);
+						$('#billing_address_1').val(response.data.streetName);
+
+						// After filling data trigger update_checkout
+						jQuery('body').trigger('update_checkout');
+					}
+				}
+
+			});
 		}
 	};
 

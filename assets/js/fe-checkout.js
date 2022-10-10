@@ -19,16 +19,23 @@ var reload_require = false;
 			billing_country.on( 'change', this.check_country );
 			shipping_country.on( 'change', this.check_country );
 
-			// Trigger updated_checkout if shipping house number changed
-			if ( ! jQuery('#ship-to-different-address-checkbox').is(':checked') ) {
-				jQuery('#billing_house_number').on( 'change', function (){
+			// Trigger update_checkout on address change
+			jQuery('#billing_house_number').on( 'change', function (){
+				if ( ! jQuery('#ship-to-different-address-checkbox').is(':checked') ) {
 					jQuery('body').trigger('update_checkout');
-				} );
-			} else {
-				jQuery('#shipping_house_number').on( 'change', function (){
+				}
+			} );
+			jQuery('#billing_postcode').on( 'change', function (){
+				if ( ! jQuery('#ship-to-different-address-checkbox').is(':checked') ) {
 					jQuery('body').trigger('update_checkout');
-				} );
-			}
+				}
+			} );
+			jQuery('#shipping_house_number').on( 'change', function (){
+				jQuery('body').trigger('update_checkout');
+			} );
+			jQuery('#shipping_postcode').on( 'change', function (){
+				jQuery('body').trigger('update_checkout');
+			} );
 		},
 
 		operate: function() {

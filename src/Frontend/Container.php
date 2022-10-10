@@ -271,7 +271,11 @@ class Container {
 		}
 
 		$fragments['#' . $address_type . '_city']       = '<input type="text" class="input-text " name="' . $address_type . '_city" id="' . $address_type . '_city" placeholder="" value="' . $validated_address[ 'city' ] . '" autocomplete="address-level2">';
-		$fragments['#'  .$address_type . '_address_1']  = '<input type="text" class="input-text " name="' . $address_type . '_address_1" id="' . $address_type . '_address_1" value="' . $validated_address[ 'street' ] . '" autocomplete="address-line1">';
+
+		// Fill address 1 if only house number field exist
+		if ( $this->settings->is_reorder_nl_address_enabled() ) {
+			$fragments['#'  .$address_type . '_address_1']  = '<input type="text" class="input-text " name="' . $address_type . '_address_1" id="' . $address_type . '_address_1" value="' . $validated_address[ 'street' ] . '" autocomplete="address-line1">';
+		}
 
 		return $fragments;
 	}

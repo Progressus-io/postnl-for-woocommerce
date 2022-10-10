@@ -9,6 +9,7 @@ namespace PostNLWooCommerce\Frontend;
 
 use PostNLWooCommerce\Shipping_Method\Settings;
 use PostNLWooCommerce\Rest_API\Checkout;
+use PostNLWooCommerce\Rest_API\Postcode_Check;
 use PostNLWooCommerce\Utils;
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -56,10 +57,13 @@ class Container {
 	 * Collection of hooks when initiation.
 	 */
 	public function init_hooks() {
+		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_scripts_styles' ) );
+
 		add_action( 'woocommerce_review_order_after_shipping', array( $this, 'display_fields' ) );
 		add_action( 'woocommerce_cart_calculate_fees', array( $this, 'add_cart_fees' ), 10, 1 );
-		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_scripts_styles' ) );
+
 		add_filter( 'woocommerce_shipping_' . POSTNL_SETTINGS_ID . '_is_available', array( $this, 'is_shipping_method_available' ), 10, 2 );
+		add_filter('woocommerce_update_order_review_fragments', array( $this, 'fill_validated_address' ) );
 	}
 
 	/**
@@ -157,6 +161,20 @@ class Container {
 				}
 			}
 
+			// Validate address if required
+			if ( $this->is_address_validation_required() ) {
+
+				if ( ! isset( $post_data[ 'shipping_house_number' ] ) || '' === $post_data[ 'shipping_house_number' ] ) {
+					return array();
+				}
+
+				if ( ! isset( $post_data[ 'shipping_postcode' ] ) || '' === $post_data[ 'shipping_postcode' ] ) {
+					return array();
+				}
+
+				$this->validated_address( $post_data );
+			}
+
 			$item_info = new Checkout\Item_Info( $post_data );
 			$api_call  = new Checkout\Client( $item_info );
 			$response  = $api_call->send_request();
@@ -208,6 +226,58 @@ class Container {
 	}
 
 	/**
+	 * Check address by PostNL Checkout Rest API.
+	 *
+	 * @return void
+	 * @throws \Exception
+	 */
+	public function validated_address( $post_data ) {
+		$item_info = new Postcode_Check\Item_Info( $post_data );
+		$api_call  = new Postcode_Check\Client( $item_info );
+		$response  = $api_call->send_request();
+
+		if ( empty( $response[0] ) ) {
+			// Clear validated address.
+			WC()->session->set( POSTNL_SETTINGS_ID . '_validated_address', [] );
+
+			throw new \Exception( esc_html__( 'This is not a valid address!', 'postnl-for-woocommerce' ) );
+		} else {
+			// Set validated address.
+			WC()->session->set( POSTNL_SETTINGS_ID . '_validated_address', [
+				'city'                      => $response[0]['city'],
+				'street'                    => $response[0]['streetName'],
+				'ship_to_different_address' => ! empty( $post_data['ship_to_different_address'] )
+			] );
+		}
+	}
+
+	/**
+	 * Fill checkout form fields after address validation.
+	 *
+	 * @param $fragments
+	 *
+	 * @return mixed
+	 */
+	public function fill_validated_address( $fragments ){
+		$validated_address = WC()->session->get( POSTNL_SETTINGS_ID . '_validated_address' );
+
+		if ( ! is_array( $validated_address ) || empty( $validated_address ) ) {
+			return  $fragments;
+		}
+
+		if ( $validated_address[ 'ship_to_different_address' ] ) {
+			$address_type = 'shipping';
+		} else {
+			$address_type = 'billing';
+		}
+
+		$fragments['#' . $address_type . '_city']       = '<input type="text" class="input-text " name="' . $address_type . '_city" id="' . $address_type . '_city" placeholder="" value="' . $validated_address[ 'city' ] . '" autocomplete="address-level2">';
+		$fragments['#'  .$address_type . '_address_1']  = '<input type="text" class="input-text " name="' . $address_type . '_address_1" id="' . $address_type . '_address_1" value="' . $validated_address[ 'street' ] . '" autocomplete="address-line1">';
+
+		return $fragments;
+	}
+
+	/**
 	 * Add cart fees.
 	 *
 	 * @param WC_Cart $cart Cart object.
@@ -239,5 +309,38 @@ class Container {
 		}
 
 		return $available;
+	}
+
+	/**
+	 * Get Cart Shipping country
+	 *
+	 * @return string|null
+	 */
+	public function get_shipping_country() {
+		return WC()->customer->get_shipping_country();
+	}
+
+	/**
+	 * Get Cart Billing country
+	 *
+	 * @return string|null
+	 */
+	public function get_billing_country() {
+		return WC()->customer->get_billing_country();
+	}
+
+	/**
+	 * Check if address validation required.
+	 */
+	public function is_address_validation_required() {
+		if ( ! $this->settings->is_validate_nl_address_enabled() ) {
+			return false;
+		}
+
+		if ( 'NL' !== $this->get_billing_country() && 'NL' !== $this->get_shipping_country() ) {
+			return false;
+		}
+
+		return true;
 	}
 }

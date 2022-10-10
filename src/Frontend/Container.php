@@ -63,7 +63,7 @@ class Container {
 		add_action( 'woocommerce_cart_calculate_fees', array( $this, 'add_cart_fees' ), 10, 1 );
 
 		add_filter( 'woocommerce_shipping_' . POSTNL_SETTINGS_ID . '_is_available', array( $this, 'is_shipping_method_available' ), 10, 2 );
-		add_filter('woocommerce_update_order_review_fragments', array( $this, 'fill_validated_address' ) );
+		add_filter( 'woocommerce_update_order_review_fragments', array( $this, 'fill_validated_address' ) );
 	}
 
 	/**
@@ -129,9 +129,7 @@ class Container {
 
 		$post_data = array();
 
-		if ( isset( $_REQUEST['post_data'] ) ) {
-			parse_str( sanitize_text_field( wp_unslash( $_REQUEST['post_data'] ) ), $post_data );
-		}
+		parse_str( sanitize_text_field( wp_unslash( urldecode( $_REQUEST['post_data'] ) ) ), $post_data );
 
 		return $post_data;
 	}
@@ -156,7 +154,7 @@ class Container {
 			}
 
 			foreach ( $post_data as $post_key => $post_value ) {
-				if ( false !== strpos( $post_key, 'shipping_method' ) && false === strpos( $post_value, POSTNL_SETTINGS_ID ) ) {
+				if ( false !== strpos( $post_key, 'shipping_method' ) && false === strpos( $post_value[0], POSTNL_SETTINGS_ID ) ) {
 					return array();
 				}
 			}

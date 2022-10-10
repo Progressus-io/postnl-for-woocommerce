@@ -84,7 +84,16 @@ class Item_Info extends Base_Info {
 		$self = $this;
 
 		return array(
+			'first_name'     => array(
+				'default'   => ''
+			),
+			'address_1'     => array(
+				'default'   => ''
+			),
 			'address_2'     => array(
+				'default'   => ''
+			),
+			'city'     => array(
 				'default'   => ''
 			),
 			'house_number'  => array(

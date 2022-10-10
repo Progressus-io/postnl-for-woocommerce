@@ -240,7 +240,8 @@ class Container {
 			// Clear validated address.
 			WC()->session->set( POSTNL_SETTINGS_ID . '_validated_address', [] );
 
-			throw new \Exception( esc_html__( 'This is not a valid address!', 'postnl-for-woocommerce' ) );
+			// Add notice without blocking checkout call
+			wc_add_notice( esc_html__( 'This is not a valid address!', 'postnl-for-woocommerce' ), 'notice' );
 		} else {
 			// Set validated address.
 			WC()->session->set( POSTNL_SETTINGS_ID . '_validated_address', [

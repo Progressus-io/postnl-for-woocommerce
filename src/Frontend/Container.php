@@ -245,6 +245,7 @@ class Container {
 			WC()->session->set( POSTNL_SETTINGS_ID . '_validated_address', [
 				'city'                      => $response[0]['city'],
 				'street'                    => $response[0]['streetName'],
+				'house_number'              => $response[0]['houseNumber'],
 				'ship_to_different_address' => ! empty( $post_data['ship_to_different_address'] )
 			] );
 		}
@@ -270,12 +271,15 @@ class Container {
 			$address_type = 'billing';
 		}
 
-		$fragments['#' . $address_type . '_city']       = '<input type="text" class="input-text " name="' . $address_type . '_city" id="' . $address_type . '_city" placeholder="" value="' . $validated_address[ 'city' ] . '" autocomplete="address-level2">';
-
-		// Fill address 1 if only house number field exist
-		if ( $this->settings->is_reorder_nl_address_enabled() ) {
-			$fragments['#'  .$address_type . '_address_1']  = '<input type="text" class="input-text " name="' . $address_type . '_address_1" id="' . $address_type . '_address_1" value="' . $validated_address[ 'street' ] . '" autocomplete="address-line1">';
+		// Fill Address 1 with street name & house number if fields reordering disabled.
+		if ( ! $this->settings->is_reorder_nl_address_enabled() ) {
+			$address_1 = $validated_address[ 'street' ] . ' ' . $validated_address[ 'house_number' ];
+		} else {
+			$address_1 = $validated_address[ 'street' ];
 		}
+		$fragments['#'  .$address_type . '_address_1']  = '<input type="text" class="input-text " name="' . $address_type . '_address_1" id="' . $address_type . '_address_1" value="' . $address_1 . '" autocomplete="address-line1">';
+
+		$fragments['#' . $address_type . '_city']       = '<input type="text" class="input-text " name="' . $address_type . '_city" id="' . $address_type . '_city" placeholder="" value="' . $validated_address[ 'city' ] . '" autocomplete="address-level2">';
 
 		return $fragments;
 	}

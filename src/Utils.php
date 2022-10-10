@@ -174,13 +174,9 @@ class Utils {
 			$post_data['shipping_state']      = $post_data['billing_state'];
 			$post_data['shipping_country']    = $post_data['billing_country'];
 			$post_data['shipping_postcode']   = $post_data['billing_postcode'];
-
-			if ( isset( $post_data['billing_house_number'] ) ) {
-				$post_data['shipping_house_number'] = $post_data['billing_house_number'];
-			}
 		}
 
-		return $post_data;
+		return self::set_address_house_number( $post_data );
 	}
 
 	/**
@@ -501,4 +497,52 @@ class Utils {
 	public static function get_log_url() {
 		return Logger::get_log_url();
 	}
+
+    /**
+     * Get house number from address.
+     *
+     */
+    public static function set_address_house_number( $post_data ) {
+        // Return house number if posted
+        if ( isset( $post_data['billing_house_number'] ) && empty( $post_data['ship_to_different_address'] ) ) {
+            // Set shipping house number
+	        $post_data['shipping_house_number' ] = $post_data['billing_house_number'];
+            return $post_data;
+        } elseif ( isset( $post_data['shipping_house_number' ] ) && ! empty( $post_data['ship_to_different_address'] ) ) {
+            // Nothing to do
+            return $post_data;
+        }
+
+        // Set Address 2 as house number
+        if ( ! empty( $post_data[ 'shipping_address_2' ] ) ) {
+	        $post_data['shipping_house_number' ]    = $post_data['shipping_address_2'];
+	        $post_data['shipping_address_2']        = '';
+            return $post_data;
+        }
+
+        // Split Address 1 then set house number & House Number Extension
+        return self::split_address( $post_data );
+    }
+
+	/**
+     * Split address into street and house number.
+     *
+	 * @param $post_data
+	 *
+	 * @return mixed|string
+	 */
+    private static function split_address( $post_data ) {
+	    $address_exploded = explode(' ', urldecode( $post_data['shipping_address_1'] ) );
+
+        if ( 2 === count( $address_exploded ) ) {
+	        $post_data['shipping_address_1']    = $address_exploded[0];
+	        $post_data['shipping_house_number'] = $address_exploded[1];
+        } elseif ( 3 === count( $address_exploded ) ) {
+	        $post_data['shipping_address_1']    = $address_exploded[0];
+	        $post_data['shipping_house_number'] = $address_exploded[1];
+	        $post_data['shipping_address_2']    = $address_exploded[2];
+        }
+
+        return $post_data;
+    }
 }

@@ -513,13 +513,6 @@ class Utils {
             return $post_data;
         }
 
-        // Set Address 2 as house number
-        if ( ! empty( $post_data[ 'shipping_address_2' ] ) ) {
-	        $post_data['shipping_house_number' ]    = $post_data['shipping_address_2'];
-	        $post_data['shipping_address_2']        = '';
-            return $post_data;
-        }
-
         // Split Address 1 then set house number & House Number Extension
         return self::split_address( $post_data );
     }
@@ -534,13 +527,20 @@ class Utils {
     private static function split_address( $post_data ) {
 	    $address_exploded = explode(' ', urldecode( $post_data['shipping_address_1'] ) );
 
-        if ( 2 === count( $address_exploded ) ) {
-	        $post_data['shipping_address_1']    = $address_exploded[0];
-	        $post_data['shipping_house_number'] = $address_exploded[1];
-        } elseif ( 3 === count( $address_exploded ) ) {
-	        $post_data['shipping_address_1']    = $address_exploded[0];
-	        $post_data['shipping_house_number'] = $address_exploded[1];
-	        $post_data['shipping_address_2']    = $address_exploded[2];
+        if ( ! empty( $post_data['shipping_address_2'] ) ) {
+            if ( 1 === count( $address_exploded ) ){
+	            $post_data['shipping_house_number'] = $address_exploded[0];
+            } elseif ( 2 === count( $address_exploded ) ) {
+		        $post_data['shipping_address_1']    = $address_exploded[0];
+		        $post_data['shipping_house_number'] = $address_exploded[1];
+	        }
+        } else {
+	        if ( 1 === count( $address_exploded ) ){
+		        $post_data['shipping_house_number'] = $address_exploded[0];
+	        } elseif ( 2 === count( $address_exploded ) ) {
+		        $post_data['shipping_house_number'] = $address_exploded[0];
+		        $post_data['shipping_address_2']    = $address_exploded[1];
+	        }
         }
 
         return $post_data;

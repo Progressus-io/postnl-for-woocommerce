@@ -879,6 +879,6 @@ abstract class Base {
 
 		$tracking_url = Utils::generate_tracking_url( $saved_data['labels']['label']['barcode'], $order->get_shipping_country() );
 
-		return sprintf( '<a href="%1$s" target="_blank">%2$s</a>', $tracking_url, $saved_data['labels']['label']['barcode'] );
+		return sprintf( '<a href="%1$s" target="_blank" class="postnl-tracking-link">%2$s</a>', $tracking_url, $saved_data['labels']['label']['barcode'] );
 	}
 }

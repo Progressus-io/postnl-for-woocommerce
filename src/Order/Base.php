@@ -349,13 +349,20 @@ abstract class Base {
 			'saved_data' => $saved_data,
 			'barcode'    => $barcode,
 		);
-		$labels          = $this->create_label( $label_post_data );
 
-		$return_post_data             = $label_post_data;
-		$return_post_data['barcode '] = $this->create_barcode( $order );
-		$return_labels                = $this->maybe_create_return_label( $label_post_data );
+		$label_post_data['return_barcode'] = $this->maybe_create_return_barcode( $label_post_data );
+
+		$labels = $this->create_label( $label_post_data );
+
+		/*
+		Temporarily commented.
+		$return_post_data            = $label_post_data;
+		$return_post_data['barcode'] = $this->create_barcode( $order );
+		$return_labels               = $this->maybe_create_return_label( $label_post_data );
 
 		$saved_data['labels'] = array_merge( $labels, $return_labels );
+		*/
+		$saved_data['labels'] = $labels;
 		$order->update_meta_data( $this->meta_name, $saved_data );
 		$order->save();
 
@@ -493,6 +500,43 @@ abstract class Base {
 		}
 
 		return $response['Barcode'];
+	}
+
+	/**
+	 * Create PostNL return barcode for current order
+	 *
+	 * @param array $post_data Order post data.
+	 *
+	 * @return array|Boolean
+	 *
+	 * @throws \Exception Error when response has an error.
+	 */
+	public function maybe_create_return_barcode( $post_data ) {
+		if ( 'yes' !== $post_data['saved_data']['backend']['create_return_label'] ) {
+			return '';
+		}
+
+		return '3SRETR' . rand( 100000000, 999999999 );
+
+		/*
+		Temporarily commented.
+		$data = array(
+			'order'         => $post_data['order'],
+			'customer_code' => 'RETR',
+		);
+
+		$item_info = new Barcode\Item_Info( $data );
+		$barcode   = new Barcode\Client( $item_info );
+		$response  = $barcode->send_request();
+
+		if ( empty( $response['Barcode'] ) ) {
+			throw new \Exception(
+				esc_html__( 'Cannot create return barcode.', 'postnl-for-woocommerce' )
+			);
+		}
+
+		return $response['Barcode'];
+		*/
 	}
 
 	/**

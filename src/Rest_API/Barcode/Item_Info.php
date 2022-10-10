@@ -68,6 +68,10 @@ class Item_Info extends Base_Info {
 
 		$order = $post_data['order'];
 
+		if ( ! empty( $post_data['customer_code'] ) ) {
+			$this->api_args['custom']['customer_code'] = $post_data['customer_code'];
+		}
+
 		$this->api_args['shipping_address'] = array(
 			'first_name' => $order->get_shipping_first_name(),
 			'last_name'  => $order->get_shipping_last_name(),
@@ -86,6 +90,7 @@ class Item_Info extends Base_Info {
 	 */
 	public function set_extra_data_to_api_args() {
 		$this->set_rest_of_world_args();
+		$this->set_custom_customer_code();
 	}
 
 	/**
@@ -97,6 +102,17 @@ class Item_Info extends Base_Info {
 		}
 
 		$this->api_args['settings']['customer_code'] = $this->settings->get_globalpack_customer_code();
+	}
+
+	/**
+	 * Change or set the args value for custom customer code.
+	 */
+	public function set_custom_customer_code() {
+		if ( ! $this->api_args['custom']['customer_code'] ) {
+			return;
+		}
+
+		$this->api_args['settings']['customer_code'] = $this->api_args['custom']['customer_code'];
 	}
 
 	/**

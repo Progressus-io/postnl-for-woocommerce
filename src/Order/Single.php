@@ -407,9 +407,11 @@ class Single extends Base {
 				<a href="<?php echo esc_url( $this->get_download_label_url( $order->get_id() ) ); ?>" class="button button-primary button-download-label"><?php esc_html_e( 'Download Label', 'postnl-for-woocommerce' ); ?></a>
 				<a class="button button-secondary delete-label" href="#"><?php esc_html_e( 'Delete Label', 'postnl-for-woocommerce' ); ?></a>
 			</div>
+			<!-- 
 			<div class="button-container return-container">
 				<a href="<?php echo esc_url( $this->get_download_label_url( $order->get_id(), 'return-label' ) ); ?>" class="button button-primary button-download-label"><?php esc_html_e( 'Download Return Label', 'postnl-for-woocommerce' ); ?></a>
 			</div>
+			-->
 			<!-- 
 			<div class="button-container letterbox-container">
 				<a href="<?php echo esc_url( $this->get_download_label_url( $order->get_id(), 'buspakjeextra' ) ); ?>" class="button button-primary button-download-label"><?php esc_html_e( 'Download Letterbox', 'postnl-for-woocommerce' ); ?></a>

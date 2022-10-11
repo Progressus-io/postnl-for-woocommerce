@@ -162,12 +162,14 @@ class Container {
 			// Validate address if required
 			if ( $this->is_address_validation_required() ) {
 
-				if ( ! isset( $post_data[ 'shipping_house_number' ] ) || '' === $post_data[ 'shipping_house_number' ] ) {
+				if ( ! isset( $post_data['shipping_postcode'] ) || '' === $post_data['shipping_postcode'] ) {
 					return array();
 				}
 
-				if ( ! isset( $post_data[ 'shipping_postcode' ] ) || '' === $post_data[ 'shipping_postcode' ] ) {
+				if ( empty( $post_data['shipping_house_number'] ) && $this->settings->is_reorder_nl_address_enabled() ) {
 					return array();
+				} elseif ( empty( $post_data['shipping_house_number'] ) && ! $this->settings->is_reorder_nl_address_enabled() ) {
+					throw new \Exception( 'Address does not contain house number!' );
 				}
 
 				$this->validated_address( $post_data );

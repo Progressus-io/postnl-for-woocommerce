@@ -142,7 +142,6 @@ class Item_Info extends Base_Info {
 
 		$order      = $post_data['order'];
 		$saved_data = $post_data['saved_data'];
-		$barcode    = $post_data['barcode'];
 
 		$this->api_args['billing_address'] = array(
 			'first_name' => $order->get_billing_first_name(),
@@ -206,11 +205,12 @@ class Item_Info extends Base_Info {
 		);
 
 		$this->api_args['order_details'] = array(
-			'order_id'     => $order->get_id(),
-			'barcode'      => $barcode,
-			'currency'     => $order->get_currency(),
-			'total_weight' => $this->calculate_order_weight( $order ),
-			'subtotal'     => $order->get_subtotal(),
+			'order_id'       => $order->get_id(),
+			'barcode'        => $post_data['barcode'],
+			'return_barcode' => $post_data['return_barcode'],
+			'currency'       => $order->get_currency(),
+			'total_weight'   => $this->calculate_order_weight( $order ),
+			'subtotal'       => $order->get_subtotal(),
 		);
 
 		foreach ( $order->get_items() as $item_id => $item ) {
@@ -384,6 +384,9 @@ class Item_Info extends Base_Info {
 			),
 			'barcode'         => array(
 				'error' => __( 'Barcode is empty!', 'postnl-for-woocommerce' ),
+			),
+			'return_barcode'  => array(
+				'default' => '',
 			),
 			'product_code'    => array(
 				'error'    => __( 'Product code is empty!', 'postnl-for-woocommerce' ),

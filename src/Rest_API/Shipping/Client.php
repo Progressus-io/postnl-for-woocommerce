@@ -116,6 +116,10 @@ class Client extends Base {
 			);
 		}
 
+		if ( ! empty( $this->item_info->shipment['return_barcode'] ) ) {
+			$shipment['ReturnBarcode'] = $this->item_info->shipment['return_barcode'];
+		}
+
 		if ( $this->item_info->backend_data['insured_shipping'] ) {
 			$shipment['Amounts'][] = array(
 				'AmountType' => '02',
@@ -214,6 +218,18 @@ class Client extends Base {
 				'HouseNrExt'  => '',
 				'Street'      => $this->item_info->pickup_points['address_1'],
 				'Zipcode'     => $this->item_info->pickup_points['postcode'],
+			);
+		}
+
+		if ( $this->item_info->shipment['return_barcode'] ) {
+			$addresses[] = array(
+				'AddressType' => '08',
+				'City'        => $this->item_info->customer['return_address_city'],
+				'CompanyName' => $this->item_info->customer['return_company'],
+				'Countrycode' => $this->item_info->shipper['country'],
+				'HouseNr'     => $this->item_info->customer['return_address_2'],
+				'Street'      => $this->item_info->customer['return_address_1'],
+				'Zipcode'     => $this->item_info->customer['return_address_zip'],
 			);
 		}
 

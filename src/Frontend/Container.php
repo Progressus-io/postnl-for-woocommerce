@@ -259,6 +259,10 @@ class Container {
 	 * @return mixed
 	 */
 	public function fill_validated_address( $fragments ) {
+		if ( ! $this->settings->is_reorder_nl_address_enabled() ) {
+			return $fragments;
+		}
+
 		$validated_address = WC()->session->get( POSTNL_SETTINGS_ID . '_validated_address' );
 
 		if ( ! is_array( $validated_address ) || empty( $validated_address ) ) {

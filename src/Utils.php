@@ -508,7 +508,7 @@ class Utils {
             // Set shipping house number
 	        $post_data['shipping_house_number' ] = $post_data['billing_house_number'];
             return $post_data;
-        } elseif ( isset( $post_data['shipping_house_number' ] ) && ! empty( $post_data['ship_to_different_address'] ) ) {
+        } elseif ( isset( $post_data['shipping_house_number' ] ) ) {
             // Nothing to do
             return $post_data;
         }
@@ -525,23 +525,31 @@ class Utils {
 	 * @return mixed|string
 	 */
     private static function split_address( $post_data ) {
-	    $address_exploded = explode(' ', urldecode( $post_data['shipping_address_1'] ) );
+	    $house_number_key = false;
+	    // Break address into pieces by spaces
+	    $address_exploded = explode( ' ', $post_data['shipping_address_1'] );
 
-        if ( ! empty( $post_data['shipping_address_2'] ) ) {
-            if ( 1 === count( $address_exploded ) ){
-	            $post_data['shipping_house_number'] = $address_exploded[0];
-            } elseif ( 2 === count( $address_exploded ) ) {
-		        $post_data['shipping_address_1']    = $address_exploded[0];
-		        $post_data['shipping_house_number'] = $address_exploded[1];
-	        }
-        } else {
-	        if ( 1 === count( $address_exploded ) ){
-		        $post_data['shipping_house_number'] = $address_exploded[0];
-	        } elseif ( 2 === count( $address_exploded ) ) {
-		        $post_data['shipping_house_number'] = $address_exploded[0];
-		        $post_data['shipping_address_2']    = $address_exploded[1];
-	        }
-        }
+	    // If no spaces found
+	    if( count($address_exploded) == 1 ) {
+		    // Break address into pieces by '.'
+		    $address_exploded = explode( '.', $post_data['shipping_address_1'] );
+	    }
+
+	    // If greater than 1, means there are two parts to the address
+	    if ( count( $address_exploded ) > 1 ) {
+		    foreach ( $address_exploded as $address_key => $address_value ) {
+			    if ( is_numeric( $address_value ) ) {
+				    // Set last index as street number
+				    $house_number_key = $address_key;
+			    }
+
+                /*
+                 * Todo: check if $address_value is roman number
+                 */
+		    }
+
+		    $post_data['shipping_house_number' ] = $address_exploded[ $house_number_key ];
+	    }
 
         return $post_data;
     }

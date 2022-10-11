@@ -258,14 +258,14 @@ class Container {
 	 *
 	 * @return mixed
 	 */
-	public function fill_validated_address( $fragments ){
+	public function fill_validated_address( $fragments ) {
 		$validated_address = WC()->session->get( POSTNL_SETTINGS_ID . '_validated_address' );
 
 		if ( ! is_array( $validated_address ) || empty( $validated_address ) ) {
-			return  $fragments;
+			return $fragments;
 		}
 
-		if ( $validated_address[ 'ship_to_different_address' ] ) {
+		if ( $validated_address['ship_to_different_address'] ) {
 			$address_type = 'shipping';
 		} else {
 			$address_type = 'billing';
@@ -273,13 +273,13 @@ class Container {
 
 		// Fill Address 1 with street name & house number if fields reordering disabled.
 		if ( ! $this->settings->is_reorder_nl_address_enabled() ) {
-			$address_1 = $validated_address[ 'street' ] . ' ' . $validated_address[ 'house_number' ];
+			$address_1 = $validated_address['street'] . ' ' . $validated_address['house_number'];
 		} else {
-			$address_1 = $validated_address[ 'street' ];
+			$address_1 = $validated_address['street'];
 		}
-		$fragments['#'  .$address_type . '_address_1']  = '<input type="text" class="input-text " name="' . $address_type . '_address_1" id="' . $address_type . '_address_1" value="' . $address_1 . '" autocomplete="address-line1">';
+		$fragments[ '#' . $address_type . '_address_1' ] = '<input type="text" class="input-text " name="' . $address_type . '_address_1" id="' . $address_type . '_address_1" value="' . $address_1 . '" autocomplete="address-line1">';
 
-		$fragments['#' . $address_type . '_city']       = '<input type="text" class="input-text " name="' . $address_type . '_city" id="' . $address_type . '_city" placeholder="" value="' . $validated_address[ 'city' ] . '" autocomplete="address-level2">';
+		$fragments[ '#' . $address_type . '_city' ] = '<input type="text" class="input-text " name="' . $address_type . '_city" id="' . $address_type . '_city" placeholder="" value="' . $validated_address['city'] . '" autocomplete="address-level2">';
 
 		return $fragments;
 	}
@@ -338,6 +338,8 @@ class Container {
 
 	/**
 	 * Check if address validation required.
+	 *
+	 * @return bool
 	 */
 	public function is_address_validation_required() {
 		if ( ! $this->settings->is_validate_nl_address_enabled() ) {

@@ -498,24 +498,25 @@ class Utils {
 		return Logger::get_log_url();
 	}
 
-    /**
-     * Get house number from address.
-     *
-     */
-    public static function set_address_house_number( $post_data ) {
-        // Return house number if posted
-        if ( isset( $post_data['billing_house_number'] ) && empty( $post_data['ship_to_different_address'] ) ) {
-            // Set shipping house number
-	        $post_data['shipping_house_number' ] = $post_data['billing_house_number'];
-            return $post_data;
-        } elseif ( isset( $post_data['shipping_house_number' ] ) ) {
-            // Nothing to do
-            return $post_data;
-        }
+	/**
+	 * Get house number from address.
+	 *
+	 */
+	public static function set_address_house_number( $post_data ) {
+		// Return house number if posted
+		if ( isset( $post_data['billing_house_number'] ) && empty( $post_data['ship_to_different_address'] ) ) {
+			// Set shipping house number
+			$post_data['shipping_house_number'] = $post_data['billing_house_number'];
 
-        // Split Address 1 then set house number & House Number Extension
-        return self::split_address( $post_data );
-    }
+			return $post_data;
+		} elseif ( isset( $post_data['shipping_house_number'] ) ) {
+			// Nothing to do
+			return $post_data;
+		}
+
+		// Split Address 1 then set house number & House Number Extension
+		return self::split_address( $post_data );
+	}
 
 	/**
      * Split address into street and house number.

@@ -173,7 +173,11 @@ abstract class Base_Info {
 				'error' => __( 'Shipping "City" is empty!', 'postnl-for-woocommerce' ),
 			),
 			'postcode'   => array(
-				'error' => __( 'Shipping "Postcode" is empty!', 'postnl-for-woocommerce' ),
+				'error'    => __( 'Shipping "Postcode" is empty!', 'postnl-for-woocommerce' ),
+				'sanitize' => function( $value ) use ( $self ) {
+					$value = str_replace( ' ', '', $value );
+					return $self->string_length_sanitization( $value, 7 );
+				},
 			),
 			'state'      => array(
 				'default' => '',
@@ -221,7 +225,11 @@ abstract class Base_Info {
 				'error' => __( 'Base "City" is empty!', 'postnl-for-woocommerce' ),
 			),
 			'postcode'  => array(
-				'error' => __( 'Base "Postcode" is empty!', 'postnl-for-woocommerce' ),
+				'error'    => __( 'Base "Postcode" is empty!', 'postnl-for-woocommerce' ),
+				'sanitize' => function( $value ) use ( $self ) {
+					$value = str_replace( ' ', '', $value );
+					return $self->string_length_sanitization( $value, 7 );
+				},
 			),
 			'state'     => array(
 				'default' => '',

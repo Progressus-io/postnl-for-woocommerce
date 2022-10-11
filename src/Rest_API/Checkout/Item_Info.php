@@ -248,6 +248,7 @@ class Item_Info extends Base_Info {
 			'postcode'  => array(
 				'error'    => esc_html__( 'Shipping "Postcode" is empty!', 'postnl-for-woocommerce' ),
 				'sanitize' => function( $value ) use ( $self ) {
+					$value = str_replace( ' ', '', $value );
 					return $self->string_length_sanitization( $value, 7 );
 				},
 			),

@@ -77,11 +77,11 @@ class Settings extends \WC_Settings_API {
 				'options'     => array(
 					'production' => esc_html__( 'Production', 'postnl-for-woocommerce' ),
 					'sandbox'    => esc_html__( 'Sandbox', 'postnl-for-woocommerce' ),
-					),
+				),
 				'class'       => 'wc-enhanced-select',
 				'default'     => 'production',
 				'placeholder' => '',
-				),
+			),
 			'api_keys'                  => array(
 				'title'       => esc_html__( 'Production API Key', 'postnl-for-woocommerce' ),
 				'type'        => 'text',

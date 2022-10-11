@@ -524,33 +524,33 @@ class Utils {
 	 *
 	 * @return mixed|string
 	 */
-    private static function split_address( $post_data ) {
-	    $house_number_key = false;
-	    // Break address into pieces by spaces
-	    $address_exploded = explode( ' ', $post_data['shipping_address_1'] );
+	private static function split_address( $post_data ) {
+		$house_number_key = false;
+		// Break address into pieces by spaces
+		$address_exploded = explode( ' ', $post_data['shipping_address_1'] );
 
-	    // If no spaces found
-	    if( count($address_exploded) == 1 ) {
-		    // Break address into pieces by '.'
-		    $address_exploded = explode( '.', $post_data['shipping_address_1'] );
-	    }
+		// If no spaces found
+		if ( count( $address_exploded ) == 1 ) {
+			// Break address into pieces by '.'
+			$address_exploded = explode( '.', $post_data['shipping_address_1'] );
+		}
 
-	    // If greater than 1, means there are two parts to the address
-	    if ( count( $address_exploded ) > 1 ) {
-		    foreach ( $address_exploded as $address_key => $address_value ) {
-			    if ( is_numeric( $address_value ) ) {
-				    // Set last index as street number
-				    $house_number_key = $address_key;
-			    }
+		// If greater than 1, means there are two parts to the address
+		if ( count( $address_exploded ) > 1 ) {
+			foreach ( $address_exploded as $address_key => $address_value ) {
+				if ( is_numeric( $address_value ) ) {
+					// Set last index as street number
+					$house_number_key = $address_key;
+				}
 
-                /*
-                 * Todo: check if $address_value is roman number
-                 */
-		    }
+				/*
+				 * Todo: check if $address_value is roman number
+				 */
+			}
 
-		    $post_data['shipping_house_number' ] = $address_exploded[ $house_number_key ];
-	    }
+			$post_data['shipping_house_number'] = $address_exploded[ $house_number_key ];
+		}
 
-        return $post_data;
-    }
+		return $post_data;
+	}
 }

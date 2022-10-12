@@ -543,41 +543,57 @@ class Utils {
 			}
 		}
 
-		if ( ! empty( $post_data['shipping_address_2'] ) ) {
-			// if no house number found
-			if ( ! $house_number_key ) {
-				if ( is_numeric( $post_data['shipping_address_2'] ) ) {
-					// Set Address 2 as house number if its number
-					$post_data['shipping_house_number'] = $post_data['shipping_address_2'];
-					$post_data['shipping_address_2']    = '';
-				}
-
-				return $post_data;
+		// if no house number found
+		if ( ! $house_number_key ) {
+			if ( is_numeric( $post_data['shipping_address_2'] ) ) {
+				// Set Address 2 as house number if its number
+				$post_data['shipping_house_number'] = $post_data['shipping_address_2'];
+				$post_data['shipping_address_2']    = '';
 			}
 
-			// if Address contains street name and house number
-			if ( 2 == count( $address_exploded ) ) {
-				// Set house number
+			return $post_data;
+		}
+
+		// if Address contains street name and house number
+		if ( 2 == count( $address_exploded ) ) {
+			// Set house number
+			$post_data['shipping_house_number'] = $address_exploded[ $house_number_key ];
+
+			return $post_data;
+		}
+
+		if ( 3 === count( $address_exploded ) ) {
+			if ( ! is_numeric( $address_exploded[1] ) && 2 === $house_number_key ) {
+				// ex: De Lindelaan 20
 				$post_data['shipping_house_number'] = $address_exploded[ $house_number_key ];
 
 				return $post_data;
 			}
 
-			if ( 3 === count( $address_exploded ) ) {
-				if ( ! is_numeric( $address_exploded[1] ) && 2 === $house_number_key ) {
-					// ex: De Lindelaan 20
-					$post_data['shipping_house_number'] = $address_exploded[ $house_number_key ];
-
-					return $post_data;
-				}
-
-				// if address contains 2 numbers
-				if ( is_numeric( $address_exploded[1] ) ) {
-					// Set house number and extension
+			// if address contains 2 numbers
+			if ( is_numeric( $address_exploded[1] ) ) {
+				// Set house number and extension
+				if ( ! empty( $post_data['shipping_address_2'] ) ) {
+					$post_data['shipping_address_1']    = $address_exploded[0] . ' ' . $address_exploded[1];
 					$post_data['shipping_house_number'] = $address_exploded[2];
-
-					return $post_data;
+				} else {
+					$post_data['shipping_address_1']    = $address_exploded[0];
+					$post_data['shipping_house_number'] = $address_exploded[1];
+					$post_data['shipping_address_2']    = $address_exploded[2];
 				}
+
+				return $post_data;
+			}
+		}
+
+		if ( 4 === count( $address_exploded ) && empty( $post_data['shipping_address_2'] ) ) {
+			if ( is_numeric( $address_exploded[1] ) ) {
+				// Set house number and extension
+				$post_data['shipping_address_1']    = $address_exploded[0] . ' ' . $address_exploded[1];
+				$post_data['shipping_house_number'] = $address_exploded[2];
+				$post_data['shipping_address_2']    = $address_exploded[3];
+
+				return $post_data;
 			}
 		}
 

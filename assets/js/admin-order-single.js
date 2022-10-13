@@ -141,6 +141,28 @@
 					for ( var i = 0; i < postnl_admin_order_obj.fields.length; i++ ) {
 						label_form.find( '#' + postnl_admin_order_obj.fields[ i ] ).removeAttr( 'disabled' );
 					}
+
+					$( '.order_notes .note .postnl-tracking-link' ).each( function(){
+						var note = $( this ).closest( 'li.note' );
+
+						$( note ).block({
+							message: null,
+							overlayCSS: {
+								background: '#fff',
+								opacity: 0.6
+							}
+						});
+
+						var data = {
+							action:   'woocommerce_delete_order_note',
+							note_id:  $( note ).attr( 'rel' ),
+							security: woocommerce_admin_meta_boxes.delete_order_note_nonce
+						};
+
+						$.post( woocommerce_admin_meta_boxes.ajax_url, data, function() {
+							$( note ).remove();
+						});
+					} );
 				} else {
 					var error_text = response.data.hasOwnProperty( 'message' ) ? response.data.message : 'Unknown error!';
 					error_cont.html( error_text );

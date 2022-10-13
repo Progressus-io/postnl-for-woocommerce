@@ -220,6 +220,48 @@ class Item_Info extends Base_Info {
 	}
 
 	/**
+	 * Retrieves the args scheme to use with for parsing shipping address info.
+	 *
+	 * @return array
+	 */
+	protected function get_receiver_info_schema() {
+		// Closures in PHP 5.3 do not inherit class context
+		// So we need to copy $this into a lexical variable and pass it to closures manually.
+		$self = $this;
+
+		return array(
+			'address_1' => array(
+				'default'  => '',
+				'sanitize' => function( $value ) use ( $self ) {
+					return $self->string_length_sanitization( $value, 35 );
+				},
+			),
+			'address_2' => array(
+				'default'  => '',
+				'sanitize' => function( $value ) use ( $self ) {
+					return $self->string_length_sanitization( $value, 5 );
+				},
+			),
+			'city'      => array(
+				'default' => '',
+			),
+			'postcode'  => array(
+				'error'    => esc_html__( 'Shipping "Postcode" is empty!', 'postnl-for-woocommerce' ),
+				'sanitize' => function( $value ) use ( $self ) {
+					$value = str_replace( ' ', '', $value );
+					return $self->string_length_sanitization( $value, 7 );
+				},
+			),
+			'country'   => array(
+				'default'  => '',
+				'sanitize' => function( $value ) use ( $self ) {
+					return $self->string_length_sanitization( $value, 2 );
+				},
+			),
+		);
+	}
+
+	/**
 	 * Convert day string to number.
 	 *
 	 * @param String $day Three character of day name.

@@ -157,6 +157,9 @@ class Main {
 
 		// Locate woocommerce template.
 		add_filter( 'woocommerce_locate_template', array( $this, 'woocommerce_locate_template' ), 20, 3 );
+
+		// Enqueue shipping method settings js.
+		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_shipping_method_assets' ) );
 	}
 
 	/**
@@ -224,6 +227,7 @@ class Main {
 		new Frontend\Container();
 		new Frontend\Delivery_Day();
 		new Frontend\Dropoff_Points();
+        new Frontend\Checkout_Fields();
 	}
 
 	/**
@@ -340,5 +344,22 @@ class Main {
 	public static function get_logger() {
 		$settings = Shipping_Method\Settings::get_instance();
 		return new Logger( $settings->is_logging_enabled() );
+	}
+
+	/**
+	 * enqueue js file in shipping method settings page
+	 */
+	public function enqueue_shipping_method_assets() {
+		$screen = get_current_screen();
+
+		if ( ! empty( $screen->id ) && 'woocommerce_page_wc-settings' === $screen->id && ! empty( $_GET['section'] ) && POSTNL_SETTINGS_ID === wp_unslash( $_GET['section'] ) ) {
+			wp_enqueue_script(
+				'postnl-admin-settings',
+				POSTNL_WC_PLUGIN_DIR_URL . '/assets/js/admin-settings.js',
+				array( 'jquery' ),
+				POSTNL_WC_VERSION,
+				true
+			);
+		}
 	}
 }

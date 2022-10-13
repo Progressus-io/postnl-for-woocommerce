@@ -69,6 +69,19 @@ class Settings extends \WC_Settings_API {
 				// translators: %1$s & %2$s is replaced with <a> tag.
 				'description' => sprintf( __( 'Please configure your shipping parameters and your access towards the PostNL APIs by means of authentication. You can find the details of your PostNL account in Mijn %1$sPostNL%2$s under "My Account".', 'postnl-for-woocommerce' ), '<a href="https://mijn.postnl.nl/c/BP2_Mod_Login.app" target="_blank">', '</a>' ),
 			),
+			'environment_mode'          => array(
+				'title'       => esc_html__( 'Environment Mode', 'postnl-for-woocommerce' ),
+				'type'        => 'select',
+				'description' => __( 'Choose the environment mode.', 'postnl-for-woocommerce' ),
+				'desc_tip'    => true,
+				'options'     => array(
+					'production' => esc_html__( 'Production', 'postnl-for-woocommerce' ),
+					'sandbox'    => esc_html__( 'Sandbox', 'postnl-for-woocommerce' ),
+				),
+				'class'       => 'wc-enhanced-select',
+				'default'     => 'production',
+				'placeholder' => '',
+			),
 			'api_keys'                  => array(
 				'title'       => esc_html__( 'Production API Key', 'postnl-for-woocommerce' ),
 				'type'        => 'text',
@@ -85,19 +98,6 @@ class Settings extends \WC_Settings_API {
 				'description' => sprintf( __( 'Insert your PostNL staging API-key. You can find your API-key on Mijn %1$sPostNL%2$s under "My Account".', 'postnl-for-woocommerce' ), '<a href="https://mijn.postnl.nl/c/BP2_Mod_Login.app" target="_blank">', '</a>' ),
 				'desc_tip'    => true,
 				'default'     => '',
-				'placeholder' => '',
-			),
-			'environment_mode'          => array(
-				'title'       => esc_html__( 'Environment Mode', 'postnl-for-woocommerce' ),
-				'type'        => 'select',
-				'description' => __( 'Choose the environment mode.', 'postnl-for-woocommerce' ),
-				'desc_tip'    => true,
-				'options'     => array(
-					'production' => esc_html__( 'Production', 'postnl-for-woocommerce' ),
-					'sandbox'    => esc_html__( 'Sandbox', 'postnl-for-woocommerce' ),
-				),
-				'class'       => 'wc-enhanced-select',
-				'default'     => 'production',
 				'placeholder' => '',
 			),
 			'enable_logging'            => array(
@@ -344,11 +344,19 @@ class Settings extends \WC_Settings_API {
 				'type'  => 'checkbox',
 				'label' => __( 'Sunday', 'postnl-for-woocommerce' ),
 			),
-			'check_dutch_address'       => array(
-				'title'       => __( 'Check Dutch addresses', 'postnl-for-woocommerce' ),
+			'validate_nl_address'       => array(
+				'title'       => __( 'Validate Netherlands addresses', 'postnl-for-woocommerce' ),
 				'type'        => 'checkbox',
 				'label'       => __( 'Enable', 'postnl-for-woocommerce' ),
 				'description' => __( 'Based on zipcode and housenumber the address is checked.', 'postnl-for-woocommerce' ),
+				'desc_tip'    => true,
+				'default'     => 'yes',
+			),
+			'reorder_nl_address'       => array(
+				'title'       => __( 'Reorder Netherlands addresses', 'postnl-for-woocommerce' ),
+				'type'        => 'checkbox',
+				'label'       => __( 'Enable', 'postnl-for-woocommerce' ),
+				'description' => __( 'Checking this will reorder checkout fields for Netherlands country and it will add "House Number" field.', 'postnl-for-woocommerce' ),
 				'desc_tip'    => true,
 				'default'     => 'yes',
 			),
@@ -1077,21 +1085,39 @@ class Settings extends \WC_Settings_API {
 	}
 
 	/**
-	 * Get check dutch address value from the settings.
+	 * Get check Netherlands address value from the settings.
 	 *
 	 * @return String
 	 */
-	public function get_check_dutch_address() {
-		return $this->get_country_option( 'check_dutch_address', '' );
+	public function get_validate_nl_address() {
+		return $this->get_country_option( 'validate_nl_address', '' );
 	}
 
 	/**
-	 * Return true if check dutch address field is ticked.
+	 * Return true if check Netherlands address field is ticked.
 	 *
 	 * @return Bool
 	 */
-	public function is_check_dutch_address_enabled() {
-		return ( 'yes' === $this->get_check_dutch_address() );
+	public function is_validate_nl_address_enabled() {
+		return ( 'yes' === $this->get_validate_nl_address() );
+	}
+
+	/**
+	 * Get reorder Netherlands address value from the settings.
+	 *
+	 * @return String
+	 */
+	public function get_reorder_nl_address() {
+		return $this->get_country_option( 'reorder_nl_address', '' );
+	}
+
+	/**
+	 * Return true if reorder Netherlands address field is ticked.
+	 *
+	 * @return Bool
+	 */
+	public function is_reorder_nl_address_enabled() {
+		return ( 'yes' === $this->get_reorder_nl_address() );
 	}
 
 	/**

@@ -414,7 +414,7 @@ abstract class Base {
 		// Delete label file.
 		$this->delete_label( $saved_data );
 		unset( $saved_data['backend'] );
-		unset( $saved_data['label'] );
+		unset( $saved_data['labels'] );
 
 		$order->update_meta_data( $this->meta_name, $saved_data );
 		$order->save();
@@ -733,14 +733,14 @@ abstract class Base {
 	 *
 	 * @param array $saved_data Order saved meta data.
 	 *
-	 * @return array
+	 * @return bool
 	 */
 	public function delete_label( $saved_data ) {
-		if ( empty( $saved_data['label']['filepath'] ) ) {
+		if ( empty( $saved_data['labels']['label']['filepath'] ) ) {
 			return false;
 		}
 
-		return unlink( $saved_data['label']['filepath'] );
+		return unlink( $saved_data['labels']['label']['filepath'] );
 	}
 
 	/**

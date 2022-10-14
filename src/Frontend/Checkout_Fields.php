@@ -88,19 +88,39 @@ class Checkout_Fields {
 	 *
 	 * @return array
 	 */
-	protected function reorder_fields_by_key( string $key, array $fields ) {
+	protected function reorder_fields_by_key( string $address_type, array $fields ) {
 		// Add House number field.
-		$fields[ $key ][ $key.'_house_number'] = array(
-			'type'          => 'text',
-			'label'         => __( 'House number', 'postnl-for-woocommerce' ),
-			'placeholder'   => _x( 'House number', 'placeholder', 'postnl-for-woocommerce' ),
-			'required'      => true
+		$fields[ $address_type ][ $address_type . '_house_number' ] = array(
+			'type'        => 'text',
+			'label'       => __( 'House number', 'postnl-for-woocommerce' ),
+			'placeholder' => _x( 'House number', 'placeholder', 'postnl-for-woocommerce' ),
+			'required'    => true
 		);
 
-		$fields_to_order    = [ 'first_name', 'last_name', 'country', 'postcode', 'house_number', 'address_2', 'address_1', 'city' ];
-		foreach ( $fields_to_order as $priority => $field ) {
-			$fields[ $key ][ $key.'_'.$field ][ 'priority' ] = $priority + 1;
+		$fields_to_order = [
+			$address_type . '_' . 'first_name'   => 10,
+			$address_type . '_' . 'last_name'    => 20,
+			$address_type . '_' . 'country'      => 30,
+			$address_type . '_' . 'postcode'     => 40,
+			$address_type . '_' . 'house_number' => 50,
+			$address_type . '_' . 'address_2'    => 60,
+			$address_type . '_' . 'address_1'    => 70,
+			$address_type . '_' . 'city'         => 80
+		];
+
+		$ordered_fields = array();
+		$priority       = count( $fields_to_order ) * 10;
+		foreach ( $fields[ $address_type ] as $field_key => $field ) {
+			$ordered_fields[ $field_key ] = $field;
+			if ( isset( $fields_to_order[ $field_key ] ) ) {
+				$ordered_fields[ $field_key ]['priority'] = $fields_to_order[ $field_key ];
+			} else {
+				$ordered_fields[ $field_key ]['priority'] = $priority;
+				$priority += 10;
+			}
 		}
+
+		$fields[ $address_type ] = $ordered_fields;
 
 		return $fields;
 	}

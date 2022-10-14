@@ -39,24 +39,23 @@ class Checkout_Fields {
 	 * Collection of hooks when initiation.
 	 */
 	public function init_hooks() {
-		add_filter( 'woocommerce_checkout_fields', array( $this, 'reorder_fields' ) );
+		if ( $this->settings->is_reorder_nl_address_enabled() ) {
+			add_filter( 'woocommerce_checkout_fields', array( $this, 'reorganize_checkout_fields' ) );
+			add_filter( 'woocommerce_get_country_locale', array( $this, 'country_locale_field_order' ) );
+		}
 	}
 
 	/**
 	 * Add delivery day fields.
 	 */
-	public function reorder_fields( $fields ) {
+	public function reorganize_checkout_fields( $fields ) {
 		// Reorder the fields if setting enabled.
-		if ( ! $this->settings->is_reorder_nl_address_enabled() ) {
-			return $fields;
-		}
-
 		if ( 'NL' === $this->get_billing_country() ) {
-			$fields = $this->reorder_fields_by_key( 'billing', $fields );
+			$fields = $this->reorganize_address_fields( 'billing', $fields );
 		}
 
 		if ( 'NL' === $this->get_shipping_country() ) {
-			$fields = $this->reorder_fields_by_key( 'shipping', $fields );
+			$fields = $this->reorganize_address_fields( 'shipping', $fields );
 		}
 
 		return $fields;
@@ -88,8 +87,7 @@ class Checkout_Fields {
 	 *
 	 * @return array
 	 */
-	protected function reorder_fields_by_key( string $address_type, array $fields ) {
-		// Add House number field.
+	protected function reorganize_address_fields( string $address_type, array $fields ) {
 		$fields[ $address_type ][ $address_type . '_house_number' ] = array(
 			'type'        => 'text',
 			'label'       => __( 'House number', 'postnl-for-woocommerce' ),
@@ -109,7 +107,7 @@ class Checkout_Fields {
 		];
 
 		$ordered_fields = array();
-		$priority       = count( $fields_to_order ) * 10;
+		$priority       = ( count( $fields_to_order ) + 1 ) * 10;
 		foreach ( $fields[ $address_type ] as $field_key => $field ) {
 			$ordered_fields[ $field_key ] = $field;
 			if ( isset( $fields_to_order[ $field_key ] ) ) {
@@ -123,6 +121,21 @@ class Checkout_Fields {
 		$fields[ $address_type ] = $ordered_fields;
 
 		return $fields;
+	}
+
+	/**
+	 * Change postcode field priority for NL country
+	 *
+	 * @param $checkout_fields
+	 *
+	 * @return array
+	 */
+	function country_locale_field_order( $checkout_fields ) {
+		if ( isset( $checkout_fields['NL']['postcode']['priority'] ) ) {
+			$checkout_fields['NL']['postcode']['priority'] = 40;
+		}
+
+		return $checkout_fields;
 	}
 
 }

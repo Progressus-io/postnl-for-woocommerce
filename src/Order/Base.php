@@ -458,9 +458,9 @@ abstract class Base {
 					$filename   = Utils::generate_label_name( $order->get_id(), $label_type, $barcode );
 					$filepath   = trailingslashit( POSTNL_UPLOADS_DIR ) . $filename;
 
-					$test     = base64_decode( $label_contents['Content'] );
 					if ( wp_mkdir_p( POSTNL_UPLOADS_DIR ) && ! file_exists( $filepath ) ) {
-						$file_ret = file_put_contents( $filepath, $test );
+						$content  = base64_decode( $label_contents['Content'] );
+						$file_ret = file_put_contents( $filepath, $content );
 					}
 
 					$labels[] = array(

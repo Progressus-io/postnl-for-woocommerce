@@ -151,9 +151,9 @@ class Settings extends \WC_Settings_API {
 				'description' => esc_html__( 'Please configure your return parameters.', 'postnl-for-woocommerce' ),
 			),
 			'return_address_default'    => array(
-				'title'       => esc_html__( 'Default Return Address', 'postnl-for-woocommerce' ),
+				'title'       => esc_html__( 'Default Return Label', 'postnl-for-woocommerce' ),
 				'type'        => 'checkbox',
-				'description' => esc_html__( 'Default whether to create a return address or not.', 'postnl-for-woocommerce' ),
+				'description' => esc_html__( 'Default whether to create a return label or not.', 'postnl-for-woocommerce' ),
 				'desc_tip'    => true,
 				'default'     => '',
 				'placeholder' => '',

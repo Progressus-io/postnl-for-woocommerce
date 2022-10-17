@@ -11,6 +11,8 @@ tr.postnl-co-tr-container > td {
 	max-height: 32px;
 	width: auto;
 	margin-right: 5px;
+	vertical-align: middle;
+	display: inline-block;
 }
 
 .postnl_checkout_container {

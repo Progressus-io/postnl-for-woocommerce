@@ -9,6 +9,8 @@
 				.on( 'change', '#bulk-action-selector-top', this.toggle_create_label_modal );
 			posts_filter
 				.on( 'change', '#bulk-action-selector-bottom', this.toggle_create_label_modal );
+			posts_filter
+				.on( 'click', '.button.action', this.disable_submit_button );
 		},
 
 		toggle_create_label_modal: function( evt ){
@@ -32,6 +34,8 @@
 						var field_clone = jQuery( this ).clone();
 						post_form.find( '#postnl-field-container' ).append( field_clone );
 					} );
+
+					jQuery( this ).prop( 'disabled', true );
 					post_form.submit();
 				} );
 
@@ -40,6 +44,16 @@
 
 			}
 
+		},
+
+		disable_submit_button: function( evt ) {
+			var bulkactions = jQuery( this ).closest( '.bulkactions' );
+			var bulkdropdown = bulkactions.find( 'select[name=action]' );
+
+			if ( 'postnl-create-label' === bulkdropdown.val() ) {
+				jQuery( this ).prop( 'disabled', true );
+				jQuery( '#posts-filter' ).submit();
+			}
 		},
 	};
 

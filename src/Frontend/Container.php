@@ -64,6 +64,7 @@ class Container {
 
 		add_filter( 'woocommerce_shipping_' . POSTNL_SETTINGS_ID . '_is_available', array( $this, 'is_shipping_method_available' ), 10, 2 );
 		add_filter( 'woocommerce_update_order_review_fragments', array( $this, 'fill_validated_address' ) );
+		add_filter( 'woocommerce_cart_shipping_method_full_label', array( $this, 'add_shipping_method_icon' ), 10, 2 );
 	}
 
 	/**
@@ -357,5 +358,20 @@ class Container {
 		}
 
 		return true;
+	/**
+	 * Replace shipping method title with Icon.
+	 *
+	 * @param $label
+	 * @param $method
+	 *
+	 * @return mixed|string
+	 */
+	public function add_shipping_method_icon( $label, $method ) {
+		if( POSTNL_SETTINGS_ID === $method->method_id ) {
+			$method_title   = $method->get_label();
+			$label          = '<img src="'. esc_url( trailingslashit( POSTNL_WC_PLUGIN_DIR_URL ) . 'assets/images/postnl-logo-40x40.png' ) .'" class="postnl_shipping_method_icon" alt="'. $method_title .'" />' . $label;
+		}
+
+		return $label;
 	}
 }

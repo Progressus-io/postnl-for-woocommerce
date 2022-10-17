@@ -2,14 +2,17 @@ tr.postnl-co-tr-container > td {
 	padding:0px;
 }
 
-.postnl_logo_container {
-	margin-top:15px;
-	margin-bottom:15px;
+.woocommerce-shipping-methods label:has(.postnl_shipping_method_icon) {
+	display: flex;
+	align-items: center;
 }
 
-.postnl_logo_container img {
-	height:50px;
-	width:auto;
+.postnl_shipping_method_icon{
+	max-height: 32px;
+	width: auto;
+	margin-right: 5px;
+	vertical-align: middle;
+	display: inline-block;
 }
 
 .postnl_checkout_container {

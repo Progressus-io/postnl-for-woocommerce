@@ -414,7 +414,7 @@ abstract class Base {
 		// Delete label file.
 		$this->delete_label( $saved_data );
 		unset( $saved_data['backend'] );
-		unset( $saved_data['label'] );
+		unset( $saved_data['labels'] );
 
 		$order->update_meta_data( $this->meta_name, $saved_data );
 		$order->save();
@@ -458,8 +458,10 @@ abstract class Base {
 					$filename   = Utils::generate_label_name( $order->get_id(), $label_type, $barcode );
 					$filepath   = trailingslashit( POSTNL_UPLOADS_DIR ) . $filename;
 
-					$test     = base64_decode( $label_contents['Content'] );
-					$file_ret = file_put_contents( $filepath, $test );
+					if ( wp_mkdir_p( POSTNL_UPLOADS_DIR ) && ! file_exists( $filepath ) ) {
+						$content  = base64_decode( $label_contents['Content'] );
+						$file_ret = file_put_contents( $filepath, $content );
+					}
 
 					$labels[] = array(
 						'type'     => $label_type,
@@ -733,14 +735,14 @@ abstract class Base {
 	 *
 	 * @param array $saved_data Order saved meta data.
 	 *
-	 * @return array
+	 * @return bool
 	 */
 	public function delete_label( $saved_data ) {
-		if ( empty( $saved_data['label']['filepath'] ) ) {
+		if ( empty( $saved_data['labels']['label']['filepath'] ) ) {
 			return false;
 		}
 
-		return unlink( $saved_data['label']['filepath'] );
+		return unlink( $saved_data['labels']['label']['filepath'] );
 	}
 
 	/**

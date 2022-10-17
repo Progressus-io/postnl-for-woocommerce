@@ -87,7 +87,7 @@ class Single extends Base {
 		: 'shop_order';
 
 		// translators: %s will be replaced by service name.
-		add_meta_box( 'woocommerce-shipment-postnl-label', __( 'Label & Tracking', 'postnl-for-woocommerce' ), array( $this, 'meta_box_html' ), $screen, 'side', 'high' );
+		add_meta_box( 'woocommerce-shipment-postnl-label', esc_html__( 'Label & Tracking', 'postnl-for-woocommerce' ), array( $this, 'meta_box_html' ), $screen, 'side', 'high' );
 	}
 
 	/**

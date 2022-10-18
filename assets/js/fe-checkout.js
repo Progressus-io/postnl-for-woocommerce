@@ -1,3 +1,5 @@
+var reload_require = false;
+
 ( function( $ ) {
 
 	var postnl_fe_checkout = {
@@ -5,6 +7,24 @@
 		init: function() {
 			jQuery('body').on( 'updated_checkout', this.use_select2 );
 			jQuery('body').on( 'updated_checkout', this.operate );
+
+			// Trigger update_checkout on address change
+			jQuery('#billing_house_number').on( 'change', function (){
+				if ( ! jQuery('#ship-to-different-address-checkbox').is(':checked') ) {
+					jQuery('body').trigger('update_checkout');
+				}
+			} );
+			jQuery('#billing_postcode').on( 'change', function (){
+				if ( ! jQuery('#ship-to-different-address-checkbox').is(':checked') ) {
+					jQuery('body').trigger('update_checkout');
+				}
+			} );
+			jQuery('#shipping_house_number').on( 'change', function (){
+				jQuery('body').trigger('update_checkout');
+			} );
+			jQuery('#shipping_postcode').on( 'change', function (){
+				jQuery('body').trigger('update_checkout');
+			} );
 		},
 
 		operate: function() {

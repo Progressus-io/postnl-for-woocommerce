@@ -1,5 +1,3 @@
-var reload_require = false;
-
 ( function( $ ) {
 
 	var postnl_fe_checkout = {

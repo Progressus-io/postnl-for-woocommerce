@@ -87,74 +87,36 @@ class Address_Utils {
 	 */
 	private static function split_address( $post_data ) {
 		// Break address into pieces by spaces
-		$address_exploded = explode( ' ', $post_data['shipping_address_1'] );
+		$address_exploded   = explode( ' ', $post_data['shipping_address_1'] );
+		$address_has_number = false;
 
-		// If no spaces found
-		if ( count( $address_exploded ) == 1 ) {
-			// Break address into pieces by '.'
-			$address_exploded = explode( '.', $post_data['shipping_address_1'] );
-		}
-
-		$house_number_key = false;
 		foreach ( $address_exploded as $address_key => $address_value ) {
+			// Number count in address 1
 			if ( is_numeric( $address_value ) ) {
-				// Set last index as street number
-				$house_number_key = $address_key;
+				$set_key            = $address_key;
+				$address_has_number = true;
 			}
 		}
 
-		// if no house number found
-		if ( ! $house_number_key ) {
-			if ( is_numeric( $post_data['shipping_address_2'] ) ) {
-				// Set Address 2 as house number if its number
-				$post_data['shipping_house_number'] = $post_data['shipping_address_2'];
-				$post_data['shipping_address_2']    = '';
-			}
-
+		if ( ! $address_has_number ) {
 			return $post_data;
 		}
 
-		// if Address contains street name and house number
-		if ( 2 == count( $address_exploded ) ) {
-			// Set house number
-			$post_data['shipping_house_number'] = $address_exploded[ $house_number_key ];
+		// The number is the first part of address 1
+		if ( 0 === $set_key ) {
+			// Set "house_number" first, as first part
+			$post_data['shipping_house_number'] = implode( ' ', array_slice( $address_exploded, 0, 1 ) );
 
-			return $post_data;
-		}
-
-		if ( 3 === count( $address_exploded ) ) {
-			if ( ! is_numeric( $address_exploded[1] ) && 2 === $house_number_key ) {
-				// ex: De Lindelaan 20
-				$post_data['shipping_house_number'] = $address_exploded[ $house_number_key ];
-
-				return $post_data;
+			// Remove "house_number" from "address_1"
+			$post_data['shipping_address_1'] = implode( ' ', array_slice( $address_exploded, 1 ) );
+		} else {
+			if ( empty( $post_data['shipping_address_2'] ) ) {
+				// Set "address_2" to be house number extension
+				$post_data['shipping_address_2'] = implode( ' ', array_slice( $address_exploded, $set_key + 1, count( $address_exploded ) ) );
 			}
 
-			// if address contains 2 numbers
-			if ( is_numeric( $address_exploded[1] ) ) {
-				// Set house number and extension
-				if ( ! empty( $post_data['shipping_address_2'] ) ) {
-					$post_data['shipping_address_1']    = $address_exploded[0] . ' ' . $address_exploded[1];
-					$post_data['shipping_house_number'] = $address_exploded[2];
-				} else {
-					$post_data['shipping_address_1']    = $address_exploded[0];
-					$post_data['shipping_house_number'] = $address_exploded[1];
-					$post_data['shipping_address_2']    = $address_exploded[2];
-				}
-
-				return $post_data;
-			}
-		}
-
-		if ( 4 === count( $address_exploded ) && empty( $post_data['shipping_address_2'] ) ) {
-			if ( is_numeric( $address_exploded[1] ) ) {
-				// Set house number and extension
-				$post_data['shipping_address_1']    = $address_exploded[0] . ' ' . $address_exploded[1];
-				$post_data['shipping_house_number'] = $address_exploded[2];
-				$post_data['shipping_address_2']    = $address_exploded[3];
-
-				return $post_data;
-			}
+			$post_data['shipping_house_number'] = $address_exploded[ $set_key ];
+			$post_data['shipping_address_1']    = implode( ' ', array_slice( $address_exploded, 0, $set_key ) );
 		}
 
 		return $post_data;

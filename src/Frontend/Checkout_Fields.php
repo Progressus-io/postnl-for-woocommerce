@@ -98,7 +98,7 @@ class Checkout_Fields {
 			'city'
 		];
 
-		foreach ($fields_to_order as $key => $field ) {
+		foreach ( $fields_to_order as $key => $field ) {
 			$checkout_fields['NL'][ $field ]['priority'] = $key + 1;
 		}
 

@@ -63,10 +63,7 @@ class Container {
 		add_action( 'woocommerce_review_order_after_shipping', array( $this, 'display_fields' ) );
 		add_action( 'woocommerce_cart_calculate_fees', array( $this, 'add_cart_fees' ), 10, 1 );
 
-		add_filter( 'woocommerce_shipping_' . POSTNL_SETTINGS_ID . '_is_available', array(
-			$this,
-			'is_shipping_method_available'
-		), 10, 2 );
+		add_filter( 'woocommerce_shipping_' . POSTNL_SETTINGS_ID . '_is_available', array( $this, 'is_shipping_method_available' ), 10, 2 );
 		add_filter( 'woocommerce_update_order_review_fragments', array( $this, 'fill_validated_address' ) );
 		add_filter( 'woocommerce_cart_shipping_method_full_label', array( $this, 'add_shipping_method_icon' ), 10, 2 );
 	}
@@ -266,7 +263,7 @@ class Container {
 	 * @return mixed
 	 */
 	public function fill_validated_address( $fragments ) {
-		if ( ! $this->settings->is_reorder_nl_address_enabled() ) {
+		if ( ! $this->settings->is_validate_nl_address_enabled() ) {
 			return $fragments;
 		}
 

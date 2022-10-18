@@ -8,17 +8,6 @@ var reload_require = false;
 			jQuery('body').on( 'updated_checkout', this.use_select2 );
 			jQuery('body').on( 'updated_checkout', this.operate );
 
-			// Reload page if country changed from/to NL
-			var billing_country = jQuery('#billing_country');
-			billing_country.attr( 'old-value', billing_country.val() );
-
-			var shipping_country = jQuery('#shipping_country');
-			shipping_country.attr( 'old-value', shipping_country.val() );
-
-			jQuery('body').on( 'updated_checkout', this.refresh_page );
-			billing_country.on( 'change', this.check_country );
-			shipping_country.on( 'change', this.check_country );
-
 			// Trigger update_checkout on address change
 			jQuery('#billing_house_number').on( 'change', function (){
 				if ( ! jQuery('#ship-to-different-address-checkbox').is(':checked') ) {
@@ -92,19 +81,6 @@ var reload_require = false;
 			selectbox.select2( {
 				minimumResultsForSearch: -1
 			} );
-		},
-
-		check_country: function() {
-			reload_require = 'NL' === $(this).attr('old-value') || 'NL' === $(this).val();
-			$(this).attr( 'old-value', $(this).val() );
-
-			console.log( 'reload_require : ' + reload_require  );
-		},
-
-		refresh_page: function() {
-			if ( reload_require ){
-				location.reload(true);
-			}
 		},
 	};
 

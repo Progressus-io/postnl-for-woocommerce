@@ -41,12 +41,7 @@ class OrdersList extends Base {
 		return $columns;
 	}
 
-	public function add_order_barcode_column_content( $column ) {
-		global $post, $theorder;
-
-		$order_id = wc_get_container()->get( CustomOrdersTableController::class )->custom_orders_table_usage_is_enabled()
-			? $theorder->get_id()
-			: $post->ID;
+	public function add_order_barcode_column_content( $column, $order_id ) {
 
 		if ( $order_id ) {
 			if ( 'postnl_tracking_link' === $column ) {

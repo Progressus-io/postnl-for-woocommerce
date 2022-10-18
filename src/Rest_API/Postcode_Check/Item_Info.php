@@ -27,20 +27,6 @@ class Item_Info extends Base_Info {
 	 */
 	protected $api_args;
 
-	/**
-	 * Settings class instance.
-	 *
-	 * @var PostNLWooCommerce\Shipping_Method\Settings
-	 */
-	protected $settings;
-
-	/**
-	 * Body of the item info.
-	 *
-	 * @var body
-	 */
-	public $body;
-
 
 	/**
 	 * Receiver data of the item info.

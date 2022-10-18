@@ -132,7 +132,9 @@ class Mapping {
 	public static function label_type_list() {
 		return array(
 			'NL' => array(
-				'NL'  => array( 'label', 'buspakjeextra', 'printcodelabel' ),
+				// Return label is added here since smart return is not implemented yet.
+				// If smart return is implemented, we might need to remove return-label from this list.
+				'NL'  => array( 'label', 'return-label', 'buspakjeextra', 'printcodelabel' ),
 				'BE'  => array( 'label' ),
 				'EU'  => array( 'label' ),
 				'ROW' => array( 'cn23', 'cp71' ),

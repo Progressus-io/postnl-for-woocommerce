@@ -60,6 +60,13 @@ class Main {
 	public $shipping_order_bulk = null;
 
 	/**
+	 * Orders List
+	 *
+	 * @var PostNLWooCommerce\Order\OrdersList
+	 */
+	public $orders_list = null;
+
+	/**
 	 * Shipping Settings.
 	 *
 	 * @var PostNLWooCommerce\Shipping_Method\Settings
@@ -142,6 +149,7 @@ class Main {
 	public function init() {
 		$this->get_shipping_order();
 		$this->get_shipping_order_bulk();
+		$this->get_orders_list();
 		$this->get_shipping_product();
 		$this->get_frontend();
 	}
@@ -205,6 +213,19 @@ class Main {
 		}
 
 		return $this->shipping_order_bulk;
+	}
+
+	/**
+	 * Get order bulk class.
+	 *
+	 * @return Order\OrdersList
+	 */
+	public function get_orders_list() {
+		if ( empty( $this->orders_list ) ) {
+			$this->shipping_order_bulk = new Order\OrdersList();
+		}
+
+		return $this->orders_list;
 	}
 
 	/**

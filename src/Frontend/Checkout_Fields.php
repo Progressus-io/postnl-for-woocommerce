@@ -60,7 +60,7 @@ class Checkout_Fields {
 		$address_fields_array['house_number'] = array(
 			'type'        => 'text',
 			'label'       => __( 'House number', 'postnl-for-woocommerce' ),
-			'placeholder' => _x( 'House number', 'placeholder', 'postnl-for-woocommerce' ),
+			'placeholder' => esc_attr__( 'House number', 'postnl-for-woocommerce' ),
 			'required'    => false,
 			'hidden'      => true
 		);
@@ -76,30 +76,44 @@ class Checkout_Fields {
 	 * @return array
 	 */
 	function get_country_locale( $checkout_fields ) {
-		/*
-		 * House Number field
-		 */
-		$checkout_fields['NL']['house_number'] = array(
-			'required' => true,
-			'hidden'   => false
+		$fields_to_order = array(
+			'first_name'   => array(
+				'priority' => 1
+			),
+			'last_name'    => array(
+				'priority' => 2
+			),
+			'company'      => array(
+				'priority' => 3
+			),
+			'country'      => array(
+				'priority' => 4
+			),
+			'postcode'     => array(
+				'priority' => 5
+			),
+			'house_number' => array(
+				'priority' => 6,
+				'required' => true,
+				'hidden'   => false
+			),
+			'address_2'    => array(
+				'placeholder' => esc_attr__( 'House Number Extension', 'postnl-for-woocommerce' ),
+				'priority'    => 7
+			),
+			'address_1'    => array(
+				'placeholder' => esc_attr__( 'Street Name', 'postnl-for-woocommerce' ),
+				'priority'    => 8
+			),
+			'city'         => array(
+				'priority' => 9
+			)
 		);
 
-		/*
-		 * Reorder fields
-		 */
-		$fields_to_order = [
-			'first_name',
-			'last_name',
-			'country',
-			'postcode',
-			'house_number',
-			'address_2',
-			'address_1',
-			'city'
-		];
-
-		foreach ( $fields_to_order as $key => $field ) {
-			$checkout_fields['NL'][ $field ]['priority'] = $key + 1;
+		foreach ( $fields_to_order as $field_key => $field ) {
+			foreach ( $field as $override => $value ) {
+				$checkout_fields['NL'][ $field_key ][ $override ] = $value;
+			}
 		}
 
 		return $checkout_fields;

@@ -7,6 +7,7 @@
 
 namespace PostNLWooCommerce\Rest_API\Checkout;
 
+use PostNLWooCommerce\Address_Utils;
 use PostNLWooCommerce\Rest_API\Base_Info;
 use PostNLWooCommerce\Shipping_Method\Settings;
 use PostNLWooCommerce\Utils;
@@ -78,7 +79,7 @@ class Item_Info extends Base_Info {
 	 * @param Array $post_data Data from post variable in checkout page.
 	 */
 	public function convert_data_to_args( $post_data ) {
-		$post_data = Utils::set_post_data_address( $post_data );
+		$post_data = Address_Utils::set_post_data_address( $post_data );
 
 		$this->api_args['shipping_address'] = array(
 			'first_name' => ( ! empty( $post_data['shipping_first_name'] ) ) ? $post_data['shipping_first_name'] : '',

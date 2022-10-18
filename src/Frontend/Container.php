@@ -7,6 +7,7 @@
 
 namespace PostNLWooCommerce\Frontend;
 
+use PostNLWooCommerce\Address_Utils;
 use PostNLWooCommerce\Shipping_Method\Settings;
 use PostNLWooCommerce\Rest_API\Checkout;
 use PostNLWooCommerce\Rest_API\Postcode_Check;
@@ -151,7 +152,7 @@ class Container {
 				return array();
 			}
 
-			$post_data = Utils::set_post_data_address( $post_data );
+			$post_data = Address_Utils::set_post_data_address( $post_data );
 
 			if ( ! in_array( $post_data['shipping_country'], Utils::get_available_country(), true ) ) {
 				return array();
@@ -166,7 +167,7 @@ class Container {
 			// Validate address if required
 			if ( $this->is_address_validation_required() ) {
 
-				if ( ! isset( $post_data['shipping_postcode'] ) || '' === $post_data['shipping_postcode'] ) {
+				if ( empty( $post_data['shipping_postcode'] ) ) {
 					return array();
 				}
 
@@ -329,24 +330,6 @@ class Container {
 	}
 
 	/**
-	 * Get Cart Shipping country
-	 *
-	 * @return string|null
-	 */
-	public function get_shipping_country() {
-		return WC()->customer->get_shipping_country();
-	}
-
-	/**
-	 * Get Cart Billing country
-	 *
-	 * @return string|null
-	 */
-	public function get_billing_country() {
-		return WC()->customer->get_billing_country();
-	}
-
-	/**
 	 * Check if address validation required.
 	 *
 	 * @return bool
@@ -356,7 +339,7 @@ class Container {
 			return false;
 		}
 
-		if ( 'NL' !== $this->get_billing_country() && 'NL' !== $this->get_shipping_country() ) {
+		if ( 'NL' !== Address_Utils::get_customer_billing_country() && 'NL' !== Address_Utils::get_customer_shipping_country() ) {
 			return false;
 		}
 

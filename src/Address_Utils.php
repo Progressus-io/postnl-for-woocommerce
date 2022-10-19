@@ -75,7 +75,7 @@ class Address_Utils {
 		}
 
 		// Split Address 1 then set HouseNumber & HouseNumber Extension
-		return self::split_address( $post_data );
+		return self::split_address( $post_data, true );
 	}
 
 	/**
@@ -85,10 +85,10 @@ class Address_Utils {
 	 *
 	 * @return mixed|string
 	 */
-	public static function split_address( $post_data, $is_shipping_address = true ) {
+	public static function split_address( $post_data, $is_checkout_data = false ) {
 		// If its checkout posted data, add shipping_ prefix to array keys
 		$address_type = '';
-		if ( $is_shipping_address ) {
+		if ( $is_checkout_data ) {
 			$address_type = 'shipping_';
 		}
 

@@ -172,7 +172,7 @@ class Item_Info extends Base_Info {
 		);
 
 		// Check the house number.
-		$this->api_args['shipping_address'] = Address_Utils::split_address( $shipping_address, false );
+		$this->api_args['shipping_address'] = Address_Utils::split_address( $shipping_address );
 
 		$this->api_args['backend_data'] = array(
 			'delivery_type'         => $saved_data['backend']['delivery_type'] ?? '',

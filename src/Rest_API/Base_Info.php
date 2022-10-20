@@ -185,6 +185,9 @@ abstract class Base_Info {
 			'country'    => array(
 				'error' => __( 'Shipping "Country" is empty!', 'postnl-for-woocommerce' ),
 			),
+			'house_number'      => array(
+				'default' => '',
+			),
 		);
 	}
 

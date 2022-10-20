@@ -7,6 +7,7 @@
 
 namespace PostNLWooCommerce\Rest_API\Shipping;
 
+use PostNLWooCommerce\Address_Utils;
 use PostNLWooCommerce\Rest_API\Base_Info;
 use PostNLWooCommerce\Shipping_Method\Settings;
 use PostNLWooCommerce\Utils;
@@ -157,17 +158,21 @@ class Item_Info extends Base_Info {
 			'postcode'   => $order->get_billing_postcode(),
 		);
 
-		$this->api_args['shipping_address'] = array(
-			'first_name' => $order->get_shipping_first_name(),
-			'last_name'  => $order->get_shipping_last_name(),
-			'company'    => $order->get_shipping_company(),
-			'address_1'  => $order->get_shipping_address_1(),
-			'address_2'  => $order->get_shipping_address_2(),
-			'city'       => $order->get_shipping_city(),
-			'state'      => $order->get_shipping_state(),
-			'country'    => $order->get_shipping_country(),
-			'postcode'   => $order->get_shipping_postcode(),
+		$shipping_address = array(
+			'first_name'   => $order->get_shipping_first_name(),
+			'last_name'    => $order->get_shipping_last_name(),
+			'company'      => $order->get_shipping_company(),
+			'address_1'    => $order->get_shipping_address_1(),
+			'address_2'    => $order->get_shipping_address_2(),
+			'city'         => $order->get_shipping_city(),
+			'state'        => $order->get_shipping_state(),
+			'country'      => $order->get_shipping_country(),
+			'postcode'     => $order->get_shipping_postcode(),
+			'house_number' => $order->get_meta( '_shipping_house_number' ),
 		);
+
+		// Check the house number.
+		$this->api_args['shipping_address'] = Address_Utils::split_address( $shipping_address );
 
 		$this->api_args['backend_data'] = array(
 			'delivery_type'         => $saved_data['backend']['delivery_type'] ?? '',

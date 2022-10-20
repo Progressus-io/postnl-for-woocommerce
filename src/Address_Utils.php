@@ -75,7 +75,7 @@ class Address_Utils {
 		}
 
 		// Split Address 1 then set HouseNumber & HouseNumber Extension
-		return self::split_address( $post_data );
+		return self::split_address( $post_data, true );
 	}
 
 	/**
@@ -85,9 +85,20 @@ class Address_Utils {
 	 *
 	 * @return mixed|string
 	 */
-	private static function split_address( $post_data ) {
+	public static function split_address( $post_data, $is_checkout_data = false ) {
+		// If its checkout posted data, add shipping_ prefix to array keys
+		$address_type = '';
+		if ( $is_checkout_data ) {
+			$address_type = 'shipping_';
+		}
+
+		// If its contain house number, nothing to do
+		if ( ! empty( $post_data[ $address_type . 'house_number' ] ) ) {
+			return $post_data;
+		}
+
 		// Break address into pieces by spaces
-		$address_exploded   = explode( ' ', $post_data['shipping_address_1'] );
+		$address_exploded   = explode( ' ', $post_data[ $address_type . 'address_1' ] );
 		$address_has_number = false;
 
 		foreach ( $address_exploded as $address_key => $address_value ) {
@@ -105,18 +116,18 @@ class Address_Utils {
 		// The number is the first part of address 1
 		if ( 0 === $set_key ) {
 			// Set "house_number" first, as first part
-			$post_data['shipping_house_number'] = implode( ' ', array_slice( $address_exploded, 0, 1 ) );
+			$post_data[ $address_type . 'house_number' ] = implode( ' ', array_slice( $address_exploded, 0, 1 ) );
 
 			// Remove "house_number" from "address_1"
-			$post_data['shipping_address_1'] = implode( ' ', array_slice( $address_exploded, 1 ) );
+			$post_data[ $address_type . 'address_1' ] = implode( ' ', array_slice( $address_exploded, 1 ) );
 		} else {
-			if ( empty( $post_data['shipping_address_2'] ) ) {
+			if ( empty( $post_data[ $address_type . 'address_2' ] ) ) {
 				// Set "address_2" to be house number extension
-				$post_data['shipping_address_2'] = implode( ' ', array_slice( $address_exploded, $set_key + 1, count( $address_exploded ) ) );
+				$post_data[ $address_type . 'address_2' ] = implode( ' ', array_slice( $address_exploded, $set_key + 1, count( $address_exploded ) ) );
 			}
 
-			$post_data['shipping_house_number'] = $address_exploded[ $set_key ];
-			$post_data['shipping_address_1']    = implode( ' ', array_slice( $address_exploded, 0, $set_key ) );
+			$post_data[ $address_type . 'house_number' ] = $address_exploded[ $set_key ];
+			$post_data[ $address_type . 'address_1' ]    = implode( ' ', array_slice( $address_exploded, 0, $set_key ) );
 		}
 
 		return $post_data;

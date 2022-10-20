@@ -520,10 +520,6 @@ abstract class Base {
 
 		$return_code = $this->settings->get_return_customer_code();
 
-		return '3S' . $return_code . rand( 100000000, 999999999 );
-
-		/*
-		Temporarily commented.
 		$data = array(
 			'order'         => $post_data['order'],
 			'customer_code' => $return_code,
@@ -540,7 +536,6 @@ abstract class Base {
 		}
 
 		return $response['Barcode'];
-		*/
 	}
 
 	/**

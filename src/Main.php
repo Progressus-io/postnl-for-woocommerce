@@ -174,7 +174,8 @@ class Main {
 	 * Localisation.
 	 */
 	public function load_textdomain() {
-		load_plugin_textdomain( 'postnl-for-woocommerce', false, dirname( plugin_basename( __FILE__ ) ) . '/languages/' );
+		error_log( untrailingslashit( dirname( POSTNL_WC_PLUGIN_BASENAME ) ) . '/languages' );
+		load_plugin_textdomain( 'postnl-for-woocommerce', false, untrailingslashit( dirname( POSTNL_WC_PLUGIN_BASENAME ) ) . '/languages' );
 	}
 
 	/**
@@ -248,7 +249,7 @@ class Main {
 		new Frontend\Container();
 		new Frontend\Delivery_Day();
 		new Frontend\Dropoff_Points();
-        new Frontend\Checkout_Fields();
+		new Frontend\Checkout_Fields();
 	}
 
 	/**
@@ -368,7 +369,7 @@ class Main {
 	}
 
 	/**
-	 * enqueue js file in shipping method settings page
+	 * Enqueue js file in shipping method settings page.
 	 */
 	public function enqueue_shipping_method_assets() {
 		$screen = get_current_screen();

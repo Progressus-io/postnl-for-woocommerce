@@ -371,12 +371,11 @@ class Settings extends \WC_Settings_API {
 			),
 			'globalpack_barcode_type'   => array(
 				'title'             => esc_html__( 'GlobalPack Barcode Type', 'postnl-for-woocommerce' ),
-				'type'              => 'select',
+				'type'              => 'text',
 				'description'       => '',
 				'desc_tip'          => true,
 				'default'           => '',
 				'placeholder'       => esc_html__( 'CD', 'postnl-for-woocommerce' ),
-				'options'           => Utils::get_available_barcode_type(),
 				'custom_attributes' => array( 'maxlength' => '10' ),
 			),
 			'globalpack_customer_code'  => array(

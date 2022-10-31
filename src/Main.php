@@ -174,7 +174,6 @@ class Main {
 	 * Localisation.
 	 */
 	public function load_textdomain() {
-		error_log( untrailingslashit( dirname( POSTNL_WC_PLUGIN_BASENAME ) ) . '/languages' );
 		load_plugin_textdomain( 'postnl-for-woocommerce', false, untrailingslashit( dirname( POSTNL_WC_PLUGIN_BASENAME ) ) . '/languages' );
 	}
 

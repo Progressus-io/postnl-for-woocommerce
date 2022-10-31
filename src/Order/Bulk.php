@@ -21,6 +21,13 @@ if ( ! defined( 'ABSPATH' ) ) {
 class Bulk extends Base {
 
 	/**
+	 * Field name for action confirmation option text.
+	 *
+	 * @var String
+	 */
+	public $bulk_option_text_name = '_postnl_bulk_action_confirmation';
+
+	/**
 	 * Collection of hooks when initiation.
 	 */
 	public function init_hooks() {
@@ -29,6 +36,9 @@ class Bulk extends Base {
 		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_bulk_assets' ) );
 		add_action( 'admin_footer', array( $this, 'model_content_fields_create_label' ) );
 		add_filter( 'postnl_order_meta_box_fields', array( $this, 'additional_meta_box' ), 10, 1 );
+
+		// Display admin notices for bulk actions.
+		add_action( 'admin_notices', array( $this, 'render_messages' ) );
 	}
 
 	/**
@@ -58,23 +68,46 @@ class Bulk extends Base {
 			return $redirect;
 		}
 
+		$array_messages = array(
+			'user_id' => get_current_user_id(),
+		);
+
+		$saved_datas    = array();
+
 		try {
 			if ( ! empty( $object_ids ) ) {
 				foreach ( $object_ids as $order_id ) {
-					$this->save_meta_value( $order_id, $_REQUEST );
+					$saved_datas[] = $this->save_meta_value( $order_id, $_REQUEST );
 					$tracking_note = $this->get_tracking_note( $order_id );
 
 					if ( $this->settings->is_woocommerce_email_enabled() && ! empty( $tracking_note ) ) {
 						$order = wc_get_order( $order_id );
 						$order->add_order_note( $tracking_note, 1 );
 					}
+
+					array_push(
+						$array_messages,
+						array(
+							// translators: %1$s is an order ID.
+							'message' => sprintf( esc_html__( '#%1$s : PostNL label has been created.', 'postnl-for-woocommerce' ), $order_id ),
+							'type'    => 'success',
+						)
+					);
 				}
 			}
-
-			return $redirect;
 		} catch ( \Exception $e ) {
-			return $redirect;
+			array_push(
+				$array_messages,
+				array(
+					'message' => $e->getMessage(),
+					'type'    => 'error',
+				)
+			);
 		}
+
+		update_option( $this->bulk_option_text_name, $array_messages );
+
+		return $redirect;
 	}
 
 	/**
@@ -151,6 +184,45 @@ class Bulk extends Base {
 				</div>
 			</div>
 			<?php
+		}
+	}
+
+	/**
+	 * Display messages on order view screen.
+	 */
+	public function render_messages() {
+		$current_screen = get_current_screen();
+
+		if ( isset( $current_screen->id ) && in_array( $current_screen->id, array( 'shop_order', 'edit-shop_order' ), true ) ) {
+
+			$bulk_action_message_opt = get_option( $this->bulk_option_text_name );
+
+			if ( ( $bulk_action_message_opt ) && is_array( $bulk_action_message_opt ) ) {
+
+				// Remove first element from array and verify if it is the user id.
+				$user_id = array_shift( $bulk_action_message_opt );
+				if ( get_current_user_id() !== (int) $user_id ) {
+					return;
+				}
+
+				foreach ( $bulk_action_message_opt as $key => $value ) {
+					$message = $value['message'];
+					$type    = wp_kses_post( $value['type'] );
+
+					switch ( $type ) {
+						case 'error':
+							echo '<div class="notice notice-error is-dismissible"><ul><li>' . wp_kses_post( $message ) . '</li></ul></div>';
+							break;
+						case 'success':
+							echo '<div class="notice notice-success is-dismissible"><ul><li><strong>' . wp_kses_post( $message ) . '</strong></li></ul></div>';
+							break;
+						default:
+							echo '<div class="notice notice-warning is-dismissible"><ul><li><strong>' . wp_kses_post( $message ) . '</strong></li></ul></div>';
+					}
+				}
+
+				delete_option( $this->bulk_option_text_name );
+			}
 		}
 	}
 }

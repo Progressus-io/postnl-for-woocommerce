@@ -39,6 +39,7 @@ class Bulk extends Base {
 
 		// Display admin notices for bulk actions.
 		add_action( 'admin_notices', array( $this, 'render_messages' ) );
+		add_action( 'init', array( $this, 'get_bulk_file' ), 10 );
 	}
 
 	/**
@@ -72,7 +73,7 @@ class Bulk extends Base {
 			'user_id' => get_current_user_id(),
 		);
 
-		$saved_datas    = array();
+		$saved_datas = array();
 
 		try {
 			if ( ! empty( $object_ids ) ) {
@@ -95,6 +96,13 @@ class Bulk extends Base {
 					);
 				}
 			}
+
+			if ( ! empty( $saved_datas ) ) {
+				array_push(
+					$array_messages,
+					$this->merge_bulk_labels( $saved_datas )
+				);
+			}
 		} catch ( \Exception $e ) {
 			array_push(
 				$array_messages,
@@ -108,6 +116,92 @@ class Bulk extends Base {
 		update_option( $this->bulk_option_text_name, $array_messages );
 
 		return $redirect;
+	}
+
+	/**
+	 * Merge bulk labels.
+	 *
+	 * @param Array $saved_datas Saved PostNL order data.
+	 */
+	public function merge_bulk_labels( $saved_datas ) {
+		$label_paths   = array();
+		$array_messags = array();
+
+		foreach ( $saved_datas as $saved_data ) {
+			if ( empty( $saved_data['labels']['label']['filepath'] ) ) {
+				continue;
+			}
+
+			$label_paths[] = $saved_data['labels']['label']['filepath'];
+		}
+
+		$filename    = 'postnl-bulk-' . get_current_user_id() . '.pdf';
+		$merged_info = $this->merge_labels( $label_paths, $filename );
+
+		if ( file_exists( $merged_info ['filepath'] ) ) {
+			// We're saving the bulk file path temporarily and access it later during the download process.
+			// This information expires in 3 minutes (180 seconds), just enough for the user to see the
+			// Displayed link and click it if he or she wishes to download the bulk labels.
+			set_transient( '_postnl_bulk_download_labels_file_' . get_current_user_id(), $merged_info ['filepath'], 180 );
+
+			// Construct URL pointing to the download label endpoint (with bulk param).
+			$bulk_download_label_url = $this->get_download_bulk_url();
+
+			return array(
+				// translators: %1$s is anchor tag opener. %2$s is anchor tag closer.
+				'message' => sprintf( esc_html__( 'Bulk PostNL labels file created - %1$sdownload file%2$s', 'postnl-for-woocommerce' ), '<a href="' . esc_url( $bulk_download_label_url ) . '" download>', '</a>' ),
+				'type'    => 'success',
+			);
+		}
+
+		return array(
+			'message' => esc_html__( 'Could not create bulk PostNL label file, download individually.', 'postnl-for-woocommerce' ),
+			'type'    => 'error',
+		);
+	}
+
+	/**
+	 * Generate download label url
+	 *
+	 * @return String.
+	 */
+	public function get_download_bulk_url() {
+		$download_url = add_query_arg(
+			array(
+				'postnl_label_bulk_nonce' => wp_create_nonce( 'postnl_download_label_bulk_nonce' ),
+			),
+			home_url()
+		);
+
+		return $download_url;
+	}
+
+	/**
+	 * Get label file.
+	 *
+	 * @since   1.0.0
+	 * @return  void
+	 */
+	public function get_bulk_file() {
+
+		if ( empty( $_GET['postnl_label_bulk_nonce'] ) ) {
+			return;
+		}
+
+		// Check nonce before proceed.
+		$nonce_result = check_ajax_referer( 'postnl_download_label_bulk_nonce', sanitize_text_field( wp_unslash( $_GET['postnl_label_bulk_nonce'] ) ), false );
+
+		if ( ! current_user_can( 'manage_woocommerce' ) ) {
+			return;
+		}
+
+		$label_path = get_transient( '_postnl_bulk_download_labels_file_' . get_current_user_id() );
+
+		if ( empty( $label_path ) ) {
+			return;
+		}
+
+		$this->download_label( $label_path );
 	}
 
 	/**

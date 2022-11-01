@@ -75,9 +75,9 @@ class Bulk extends Base {
 
 		$saved_datas = array();
 
-		try {
-			if ( ! empty( $object_ids ) ) {
-				foreach ( $object_ids as $order_id ) {
+		if ( ! empty( $object_ids ) ) {
+			foreach ( $object_ids as $order_id ) {
+				try {
 					$saved_datas[] = $this->save_meta_value( $order_id, $_REQUEST );
 					$tracking_note = $this->get_tracking_note( $order_id );
 
@@ -94,22 +94,22 @@ class Bulk extends Base {
 							'type'    => 'success',
 						)
 					);
+				} catch ( \Exception $e ) {
+					array_push(
+						$array_messages,
+						array(
+							'message' => sprintf( '#%1$s : %2$s', $order_id, $e->getMessage() ),
+							'type'    => 'error',
+						)
+					);
 				}
 			}
+		}
 
-			if ( ! empty( $saved_datas ) ) {
-				array_push(
-					$array_messages,
-					$this->merge_bulk_labels( $saved_datas )
-				);
-			}
-		} catch ( \Exception $e ) {
+		if ( ! empty( $saved_datas ) ) {
 			array_push(
 				$array_messages,
-				array(
-					'message' => $e->getMessage(),
-					'type'    => 'error',
-				)
+				$this->merge_bulk_labels( $saved_datas )
 			);
 		}
 

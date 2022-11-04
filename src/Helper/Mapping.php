@@ -120,6 +120,11 @@ class Mapping {
 						'4878' => array( 'insured_shipping' ),
 					),
 				),
+				'NL' => array(
+					'delivery_day' => array(
+						'4944' => array(),
+					),
+				),
 			),
 		);
 	}

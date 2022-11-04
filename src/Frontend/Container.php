@@ -323,7 +323,8 @@ class Container {
 	 * @return Boolean.
 	 */
 	public function is_shipping_method_available( $available, $package ) {
-		if ( ! empty( $package['destination']['country'] ) && 'BE' !== $package['destination']['country'] && 'BE' === WC()->countries->get_base_country() ) {
+		$be_available_countries = array( 'NL', 'BE' );
+		if ( ! empty( $package['destination']['country'] ) && ! in_array( $package['destination']['country'], $be_available_countries, true ) && 'BE' === WC()->countries->get_base_country() ) {
 			return false;
 		}
 

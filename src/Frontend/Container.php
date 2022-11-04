@@ -140,6 +140,8 @@ class Container {
 	 * Get data from PostNL Checkout Rest API.
 	 *
 	 * @return array
+	 *
+	 * @throws \Exception If the checkout data process has error.
 	 */
 	public function get_checkout_data() {
 		try {
@@ -161,7 +163,7 @@ class Container {
 				}
 			}
 
-			// Validate address if required
+			// Validate address if required.
 			if ( $this->is_address_validation_required() ) {
 
 				if ( empty( $post_data['shipping_postcode'] ) ) {
@@ -230,8 +232,7 @@ class Container {
 	/**
 	 * Check address by PostNL Checkout Rest API.
 	 *
-	 * @return void
-	 * @throws \Exception
+	 * @param Array $post_data Checkout post data.
 	 */
 	public function validated_address( $post_data ) {
 		$item_info = new Postcode_Check\Item_Info( $post_data );
@@ -240,25 +241,28 @@ class Container {
 
 		if ( empty( $response[0] ) ) {
 			// Clear validated address.
-			WC()->session->set( POSTNL_SETTINGS_ID . '_validated_address', [] );
+			WC()->session->set( POSTNL_SETTINGS_ID . '_validated_address', array() );
 
-			// Add notice without blocking checkout call
+			// Add notice without blocking checkout call.
 			wc_add_notice( esc_html__( 'This is not a valid address!', 'postnl-for-woocommerce' ), 'notice' );
 		} else {
 			// Set validated address.
-			WC()->session->set( POSTNL_SETTINGS_ID . '_validated_address', [
-				'city'                      => $response[0]['city'],
-				'street'                    => $response[0]['streetName'],
-				'house_number'              => $response[0]['houseNumber'],
-				'ship_to_different_address' => ! empty( $post_data['ship_to_different_address'] )
-			] );
+			WC()->session->set(
+				POSTNL_SETTINGS_ID . '_validated_address',
+				array(
+					'city'                      => $response[0]['city'],
+					'street'                    => $response[0]['streetName'],
+					'house_number'              => $response[0]['houseNumber'],
+					'ship_to_different_address' => ! empty( $post_data['ship_to_different_address'] ),
+				)
+			);
 		}
 	}
 
 	/**
 	 * Fill checkout form fields after address validation.
 	 *
-	 * @param $fragments
+	 * @param Array $fragments Cart fragments.
 	 *
 	 * @return mixed
 	 */
@@ -314,7 +318,7 @@ class Container {
 	 * Check if the shipping method is available for the shipping country.
 	 *
 	 * @param Boolean $available Default value for shipping method availability.
-	 * @param Array $package Current package in the cart.
+	 * @param Array   $package Current package in the cart.
 	 *
 	 * @return Boolean.
 	 */
@@ -346,8 +350,8 @@ class Container {
 	/**
 	 * Replace shipping method title with Icon.
 	 *
-	 * @param $label
-	 * @param $method
+	 * @param String             $label String of label html.
+	 * @param WC_Shipping_Method $method Shipping method object.
 	 *
 	 * @return mixed|string
 	 */

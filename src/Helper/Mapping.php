@@ -192,4 +192,21 @@ class Mapping {
 			),
 		);
 	}
+
+	/**
+	 * List of countries that available for checkout feature.
+	 *
+	 * @return Array.
+	 */
+	public static function available_country_for_checkout_feature() {
+		return array(
+			'NL' => array(
+				'NL' => array( 'pickup_points', 'delivery_day', 'evening_delivery' ),
+				'BE' => array( 'pickup_points', 'delivery_day' ),
+			),
+			'BE' => array(
+				'BE' => array( 'pickup_points' ),
+			),
+		);
+	}
 }

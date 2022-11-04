@@ -12,6 +12,7 @@ use PostNLWooCommerce\Shipping_Method\Settings;
 use PostNLWooCommerce\Rest_API\Checkout;
 use PostNLWooCommerce\Rest_API\Postcode_Check;
 use PostNLWooCommerce\Utils;
+use PostNLWooCommerce\Helper\Mapping;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -151,9 +152,12 @@ class Container {
 				return array();
 			}
 
-			$post_data = Address_Utils::set_post_data_address( $post_data );
+			$post_data         = Address_Utils::set_post_data_address( $post_data );
+			$available_country = Mapping::available_country_for_checkout_feature();
+			$receiver_country  = ! empty( $post_data['shipping_country'] ) ? $post_data['shipping_country'] : '';
+			$store_country     = Utils::get_base_country();
 
-			if ( ! in_array( $post_data['shipping_country'], Utils::get_available_country(), true ) ) {
+			if ( ! isset( $available_country[ $store_country ][ $receiver_country ] ) ) {
 				return array();
 			}
 

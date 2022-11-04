@@ -5,7 +5,7 @@
  * Description: WooCommerce integration for PostNL
  * Author: PostNL
  * Author URI: https://postnl.post/
- * Version: 1.0.0
+ * Version: 5.0.0
  * WC requires at least: 4.0
  * WC tested up to: 6.6
  *

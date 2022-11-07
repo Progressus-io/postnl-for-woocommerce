@@ -64,7 +64,6 @@ class Container {
 		add_action( 'woocommerce_review_order_after_shipping', array( $this, 'display_fields' ) );
 		add_action( 'woocommerce_cart_calculate_fees', array( $this, 'add_cart_fees' ), 10, 1 );
 
-		add_filter( 'woocommerce_shipping_' . POSTNL_SETTINGS_ID . '_is_available', array( $this, 'is_shipping_method_available' ), 10, 2 );
 		add_filter( 'woocommerce_update_order_review_fragments', array( $this, 'fill_validated_address' ) );
 		add_filter( 'woocommerce_cart_shipping_method_full_label', array( $this, 'add_shipping_method_icon' ), 10, 2 );
 	}
@@ -316,23 +315,6 @@ class Container {
 			$evening_fee = Base::evening_fee_data();
 			$cart->add_fee( $evening_fee['fee_name'], wc_format_decimal( $post_data['postnl_delivery_day_price'] ) );
 		}
-	}
-
-	/**
-	 * Check if the shipping method is available for the shipping country.
-	 *
-	 * @param Boolean $available Default value for shipping method availability.
-	 * @param Array   $package Current package in the cart.
-	 *
-	 * @return Boolean.
-	 */
-	public function is_shipping_method_available( $available, $package ) {
-		$be_available_countries = array( 'NL', 'BE' );
-		if ( ! empty( $package['destination']['country'] ) && ! in_array( $package['destination']['country'], $be_available_countries, true ) && 'BE' === WC()->countries->get_base_country() ) {
-			return false;
-		}
-
-		return $available;
 	}
 
 	/**

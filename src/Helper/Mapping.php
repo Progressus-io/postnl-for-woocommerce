@@ -125,6 +125,16 @@ class Mapping {
 						'4944' => array(),
 					),
 				),
+				'EU' => array(
+					'delivery_day' => array(
+						'4944' => array(),
+					),
+				),
+				'ROW' => array(
+					'delivery_day' => array(
+						'4945' => array(),
+					),
+				),
 			),
 		);
 	}
@@ -145,7 +155,10 @@ class Mapping {
 				'ROW' => array( 'cn23', 'cp71' ),
 			),
 			'BE' => array(
-				'BE' => array( 'label' ),
+				'BE'  => array( 'label' ),
+				'NL'  => array( 'label' ),
+				'EU'  => array( 'label' ),
+				'ROW' => array( 'cn23', 'cp71' ),
 			),
 		);
 	}
@@ -164,7 +177,10 @@ class Mapping {
 				'ROW' => array( 'num_labels' ),
 			),
 			'BE' => array(
-				'BE' => array( 'num_labels' ),
+				'BE'  => array( 'num_labels' ),
+				'NL'  => array( 'num_labels' ),
+				'EU'  => array( 'num_labels' ),
+				'ROW' => array( 'num_labels' ),
 			),
 		);
 	}

@@ -52,7 +52,7 @@ class Checkout_Fields {
 	/**
 	 * Add House Number to address fields.
 	 *
-	 * @param $address_fields_array
+	 * @param Array $address_fields_array Address fields.
 	 *
 	 * @return array
 	 */
@@ -62,7 +62,7 @@ class Checkout_Fields {
 			'label'       => __( 'House number', 'postnl-for-woocommerce' ),
 			'placeholder' => esc_attr__( 'House number', 'postnl-for-woocommerce' ),
 			'required'    => false,
-			'hidden'      => true
+			'hidden'      => true,
 		);
 
 		return $address_fields_array;
@@ -71,43 +71,43 @@ class Checkout_Fields {
 	/**
 	 * Localization for NL address fields.
 	 *
-	 * @param $checkout_fields
+	 * @param Array $checkout_fields Checkout fields.
 	 *
 	 * @return array
 	 */
-	function get_country_locale( $checkout_fields ) {
+	public function get_country_locale( $checkout_fields ) {
 		$fields_to_order = array(
 			'first_name'   => array(
-				'priority' => 1
+				'priority' => 1,
 			),
 			'last_name'    => array(
-				'priority' => 2
+				'priority' => 2,
 			),
 			'company'      => array(
-				'priority' => 3
+				'priority' => 3,
 			),
 			'country'      => array(
-				'priority' => 4
+				'priority' => 4,
 			),
 			'postcode'     => array(
-				'priority' => 5
+				'priority' => 5,
 			),
 			'house_number' => array(
 				'priority' => 6,
 				'required' => true,
-				'hidden'   => false
+				'hidden'   => false,
 			),
 			'address_2'    => array(
 				'placeholder' => esc_attr__( 'House Number Extension', 'postnl-for-woocommerce' ),
-				'priority'    => 7
+				'priority'    => 7,
 			),
 			'address_1'    => array(
 				'placeholder' => esc_attr__( 'Street Name', 'postnl-for-woocommerce' ),
-				'priority'    => 8
+				'priority'    => 8,
 			),
 			'city'         => array(
-				'priority' => 9
-			)
+				'priority' => 9,
+			),
 		);
 
 		foreach ( $fields_to_order as $field_key => $field ) {
@@ -122,15 +122,15 @@ class Checkout_Fields {
 	/**
 	 * Add fields selectors
 	 *
-	 * @param $locale_fields
+	 * @param Array $locale_fields local fields.
 	 *
 	 * @return mixed
 	 */
-	function country_locale_field_selectors( $locale_fields ) {
+	public function country_locale_field_selectors( $locale_fields ) {
 		$additional_selectors = array(
 			'house_number' => '#billing_house_number_field, #shipping_house_number_field',
 			'first_name'   => '#billing_first_name_field, #shipping_first_name_field',
-			'last_name'    => '#billing_last_name_field, #shipping_last_name_field'
+			'last_name'    => '#billing_last_name_field, #shipping_last_name_field',
 		);
 
 		return array_merge( $locale_fields, $additional_selectors );
@@ -139,9 +139,9 @@ class Checkout_Fields {
 	/**
 	 * Add house number field to admin shipping fields.
 	 *
-	 * @param array $fields
+	 * @param Array $fields Fields of shipping.
 	 *
-	 * @return array
+	 * @return Array
 	 */
 	public function admin_shipping_fields( $fields ) {
 		$new_fields = array();
@@ -149,7 +149,7 @@ class Checkout_Fields {
 			if ( 'address_1' === $key ) {
 				$new_fields['house_number'] = array(
 					'label' => __( 'House number', 'postnl-for-woocommerce' ),
-					'show'  => false
+					'show'  => false,
 				);
 			}
 
@@ -162,8 +162,8 @@ class Checkout_Fields {
 	/**
 	 * Display house number in admin order shipping address.
 	 *
-	 * @param array $address
-	 * @param \WC_Order $order
+	 * @param Array    $address Array of shipping address.
+	 * @param WC_Order $order Order object.
 	 *
 	 * @return array
 	 */

@@ -98,6 +98,8 @@ abstract class Base {
 
 		add_filter( 'woocommerce_checkout_posted_data', array( $this, 'validate_posted_data' ) );
 		add_action( 'woocommerce_checkout_update_order_meta', array( $this, 'save_data' ), 10, 2 );
+		add_action( 'woocommerce_checkout_update_order_meta', array( $this, 'save_default_data' ), 15, 2 );
+		add_action( 'woocommerce_checkout_update_order_meta', array( $this, 'calculate_evening_fee' ), 20, 2 );
 		add_filter( 'postnl_frontend_checkout_tab', array( $this, 'add_checkout_tab' ), 10, 2 );
 		add_action( 'postnl_checkout_content', array( $this, 'display_content' ), 10, 2 );
 	}
@@ -179,7 +181,27 @@ abstract class Base {
 		}
 
 		$data = $this->validate_fields( $data, $_POST );
+		$data = $this->add_default_value_to_data( $data, $_POST );
 
+		return $data;
+	}
+
+	/**
+	 * Add default value to data.
+	 *
+	 * @param array $data Array of posted data.
+	 * @param array $posted_data Array of global _POST data.
+	 *
+	 * @return array.
+	 */
+	public function add_default_value_to_data( $data, $posted_data ) {
+		foreach ( $posted_data as $input_id => $input_val ) {
+			if ( false === strpos( $input_id, 'postnl_default' ) ) {
+				continue;
+			}
+
+			$data[ $input_id ] = $input_val;
+		}
 		return $data;
 	}
 
@@ -265,12 +287,14 @@ abstract class Base {
 	}
 
 	/**
-	 * Save frontend field value to meta.
+	 * Save default value to data if dropoff points is not picked.
 	 *
-	 * @param int   $order_id ID of the order.
-	 * @param array $posted_data Posted values.
+	 * @param array $order_id ID of order post.
+	 * @param array $posted_data Array of global _POST data.
+	 *
+	 * @return array.
 	 */
-	public function save_data( $order_id, $posted_data ) {
+	public function save_default_data( $order_id, $posted_data ) {
 		$order = wc_get_order( $order_id );
 
 		if ( ! is_a( $order, 'WC_Order' ) ) {
@@ -279,12 +303,41 @@ abstract class Base {
 
 		$data = $this->get_data( $order->get_id() );
 
-		foreach ( $this->get_fields() as $field ) {
-			if ( array_key_exists( $field['id'], $posted_data ) ) {
-				$field_name                      = Utils::remove_prefix_field( $this->prefix, $field['id'] );
-				$data['frontend'][ $field_name ] = sanitize_text_field( wp_unslash( $posted_data[ $field['id'] ] ) );
-			}
+		if ( ! empty( $data['frontend'] ) ) {
+			return;
 		}
+
+		foreach ( $posted_data as $input_id => $input_val ) {
+			if ( false === strpos( $input_id, 'postnl_default' ) || empty( $input_val ) ) {
+				continue;
+			}
+
+			$replaced_id = str_replace( 'postnl_default', 'postnl_delivery_day', $input_id );
+			$field_name  = Utils::remove_prefix_field( $this->prefix, $replaced_id );
+
+			$data['frontend'][ $field_name ] = $input_val;
+		}
+
+		$order->update_meta_data( $this->meta_name, $data );
+		$order->save();
+	}
+
+	/**
+	 * Calculate evening fee.
+	 *
+	 * @param array $order_id ID of order post.
+	 * @param array $posted_data Array of global _POST data.
+	 *
+	 * @return array.
+	 */
+	public function calculate_evening_fee( $order_id, $posted_data ) {
+		$order = wc_get_order( $order_id );
+
+		if ( ! is_a( $order, 'WC_Order' ) ) {
+			return;
+		}
+
+		$data = $this->get_data( $order->get_id() );
 
 		$add_optional_fee = true;
 		$evening_fee      = self::evening_fee_data();
@@ -315,6 +368,31 @@ abstract class Base {
 			$order->add_item( $item_fee );
 
 			$order->calculate_totals();
+		}
+
+		$order->save();
+	}
+
+	/**
+	 * Save frontend field value to meta.
+	 *
+	 * @param int   $order_id ID of the order.
+	 * @param array $posted_data Posted values.
+	 */
+	public function save_data( $order_id, $posted_data ) {
+		$order = wc_get_order( $order_id );
+
+		if ( ! is_a( $order, 'WC_Order' ) ) {
+			return;
+		}
+
+		$data = $this->get_data( $order->get_id() );
+
+		foreach ( $this->get_fields() as $field ) {
+			if ( array_key_exists( $field['id'], $posted_data ) && ! empty( $posted_data[ $field['id'] ] ) ) {
+				$field_name                      = Utils::remove_prefix_field( $this->prefix, $field['id'] );
+				$data['frontend'][ $field_name ] = sanitize_text_field( wp_unslash( $posted_data[ $field['id'] ] ) );
+			}
 		}
 
 		$order->update_meta_data( $this->meta_name, $data );

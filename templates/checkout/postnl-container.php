@@ -47,6 +47,14 @@ $field = array_shift( $fields );
 			<div class="postnl_checkout_content_container">
 				<?php do_action( 'postnl_checkout_content', $response, $post_data ); ?>
 			</div>
+			<div class="postnl_checkout_default">
+				<input type="hidden" name="postnl_default" id="postnl_default" value="<?php echo esc_attr( $default_val['val'] ); ?>" />
+				<input type="hidden" name="postnl_default_date" id="postnl_default_date" value="<?php echo esc_attr( $default_val['date'] ); ?>" />
+				<input type="hidden" name="postnl_default_from" id="postnl_default_from" value="<?php echo esc_attr( $default_val['from'] ); ?>" />
+				<input type="hidden" name="postnl_default_to" id="postnl_default_to" value="<?php echo esc_attr( $default_val['to'] ); ?>" />
+				<input type="hidden" name="postnl_default_price" id="postnl_default_price" value="<?php echo esc_attr( $default_val['price'] ); ?>" />
+				<input type="hidden" name="postnl_default_type" id="postnl_default_type" value="<?php echo esc_attr( $default_val['type'] ); ?>" />
+			</div>
 		</div>
 	</td>
 </tr>

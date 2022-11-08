@@ -123,8 +123,7 @@ class Dropoff_Points extends Base {
 			'postnl_frontend_dropoff_points_fields',
 			array(
 				array(
-					'id'         => $this->prefix . $this->primary_field,
-					'error_text' => esc_html__( 'Please choose the dropoff points!', 'postnl-for-woocommerce' ),
+					'id' => $this->prefix . $this->primary_field,
 				),
 				array(
 					'id'      => $this->prefix . $this->primary_field . '_address_company',
@@ -200,7 +199,7 @@ class Dropoff_Points extends Base {
 				return $data;
 			}
 
-			$data[ $field['id'] ] = sanitize_text_field( wp_unslash( $posted_data[ $field['id'] ] ) );
+			$data[ $field['id'] ] = ! empty( $posted_data[ $field['id'] ] ) ? sanitize_text_field( wp_unslash( $posted_data[ $field['id'] ] ) ) : '';
 		}
 
 		return $data;

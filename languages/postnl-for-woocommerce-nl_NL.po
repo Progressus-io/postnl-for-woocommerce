@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PostNL for WooCommerce\n"
 "POT-Creation-Date: 2022-10-26 12:22+0700\n"
-"PO-Revision-Date: 2022-10-26 12:26+0700\n"
+"PO-Revision-Date: 2022-11-08 20:47+0700\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: nl_NL\n"
@@ -49,7 +49,7 @@ msgstr ""
 
 #: src/Frontend/Container.php:246
 msgid "This is not a valid address!"
-msgstr ""
+msgstr "Dit is geen valide adres!"
 
 #: src/Frontend/Delivery_Day.php:45
 msgid "Please choose the delivery day!"
@@ -57,11 +57,11 @@ msgstr ""
 
 #: src/Frontend/Delivery_Day.php:101
 msgid "Delivery Day"
-msgstr ""
+msgstr "Bezorgdagen"
 
 #: src/Frontend/Dropoff_Points.php:52
 msgid "Dropoff Points"
-msgstr ""
+msgstr "PostNL punten"
 
 #: src/Frontend/Dropoff_Points.php:127
 msgid "Please choose the dropoff points!"

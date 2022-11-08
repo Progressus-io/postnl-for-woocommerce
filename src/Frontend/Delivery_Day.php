@@ -140,10 +140,13 @@ class Delivery_Day extends Base {
 				$delivery_option['Timeframe']
 			);
 
-			$timestamp = strtotime( $delivery_option['DeliveryDate'] );
+			$timestamp    = strtotime( $delivery_option['DeliveryDate'] );
+			$day          = strtolower( gmdate( 'D', $timestamp ) );
+			$days_of_week = Utils::days_of_week();
+			$day_name     = $days_of_week[ $day ];
 
 			$return_data['delivery_options'][] = array(
-				'day'     => gmdate( 'l', $timestamp ),
+				'day'     => $day_name,
 				'date'    => gmdate( 'Y-m-d', $timestamp ),
 				'options' => $options,
 			);

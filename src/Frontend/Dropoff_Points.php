@@ -68,6 +68,7 @@ class Dropoff_Points extends Base {
 			return array();
 		}
 
+		$show_desc     = empty( $response['DeliveryOptions'] );
 		$pickup_points = $response['PickupOptions'];
 		$return_data   = $this->get_init_content_data( $post_data );
 
@@ -87,6 +88,7 @@ class Dropoff_Points extends Base {
 				$timestamp = strtotime( $date );
 
 				$return_data['dropoff_options'][] = array(
+					'show_desc'  => $show_desc,
 					'partner_id' => $dropoff_option['PartnerID'],
 					'loc_code'   => $dropoff_option['LocationCode'],
 					'time'       => $dropoff_option['PickupTime'],

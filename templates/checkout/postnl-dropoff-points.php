@@ -85,14 +85,29 @@ function postnl_generate_hidden_input( $dropoff_point, $field_name ) {
 		<?php
 	}
 }
-?>
-<div class="postnl_content" id="postnl_dropoff_points_content">
+
+/**
+ * Function to display dropoff point desc.
+ *
+ * @param Array $data Data dropoff point value.
+ */
+function postnl_display_dropoff_desc( $data ) {
+	if ( empty( $data['dropoff_options'][0]['show_desc'] ) || true !== $data['dropoff_options'][0]['show_desc'] ) {
+		return;
+	}
+
+	?>
 	<div class="postnl_content_desc">
 		<?php
-		// translators: %1$s is <strong> opener and %2$s is <strong> closer.
-		echo sprintf( esc_html__( 'Receive shipment at home? Continue %1$swithout%2$s selecting a Pick-up Point.', 'postnl-for-woocommerce' ), '<strong>', '</strong>' );
+			// translators: %1$s is <strong> opener and %2$s is <strong> closer.
+			echo sprintf( esc_html__( 'Receive shipment at home? Continue %1$swithout%2$s selecting a Pick-up Point.', 'postnl-for-woocommerce' ), '<strong>', '</strong>' );
 		?>
 	</div>
+	<?php
+}
+?>
+<div class="postnl_content" id="postnl_dropoff_points_content">
+	<?php postnl_display_dropoff_desc( $data ); ?>
 	<ul class="postnl_dropoff_points_list postnl_list">
 		<?php foreach ( $data['dropoff_options'] as $point ) { ?>
 			<?php

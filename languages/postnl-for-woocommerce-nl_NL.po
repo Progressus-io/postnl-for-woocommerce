@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PostNL for WooCommerce\n"
 "POT-Creation-Date: 2022-11-09 11:33+0700\n"
-"PO-Revision-Date: 2022-11-09 11:40+0700\n"
+"PO-Revision-Date: 2022-11-09 16:38+0700\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: nl_NL\n"
@@ -225,7 +225,7 @@ msgstr ""
 
 #: src/Order/Single.php:403
 msgid "Create Shipment"
-msgstr ""
+msgstr "Zending aanmaken"
 
 #: src/Order/Single.php:404
 msgid "Print Label"
@@ -255,11 +255,11 @@ msgstr ""
 #: src/Product/Single.php:70
 #, php-format
 msgid "Country of Origin (%s)"
-msgstr ""
+msgstr "Land van herkomst (%s)"
 
 #: src/Product/Single.php:71
 msgid "Country of Origin."
-msgstr ""
+msgstr "Land van herkomst."
 
 #: src/Product/Single.php:74
 msgid "- select country -"
@@ -269,7 +269,7 @@ msgstr ""
 #: src/Product/Single.php:82
 #, php-format
 msgid "HS Tariff Code (%s)"
-msgstr ""
+msgstr "GS tarief code (%s)"
 
 #: src/Product/Single.php:83
 msgid ""
@@ -867,7 +867,7 @@ msgstr ""
 
 #: src/Shipping_Method/Settings.php:435
 msgid "WooCommerce Email Text"
-msgstr ""
+msgstr "WooCommerce Email Tekst"
 
 #: src/Shipping_Method/Settings.php:437
 msgid "Text added for tracking note email."

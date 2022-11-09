@@ -1,8 +1,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PostNL for WooCommerce\n"
-"POT-Creation-Date: 2022-10-26 12:22+0700\n"
-"PO-Revision-Date: 2022-11-08 20:47+0700\n"
+"POT-Creation-Date: 2022-11-09 11:33+0700\n"
+"PO-Revision-Date: 2022-11-09 11:40+0700\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: nl_NL\n"
@@ -23,14 +23,14 @@ msgstr ""
 "X-Poedit-SearchPathExcluded-1: vendor\n"
 
 #. translators: %s: shop cart url
-#: src/Frontend/Base.php:169
+#: src/Frontend/Base.php:171
 #, php-format
 msgid ""
 "Sorry, your session has expired. <a href=\"%s\" class=\"wc-backward\">Return "
 "to shop</a>"
 msgstr ""
 
-#: src/Frontend/Base.php:334
+#: src/Frontend/Base.php:412
 msgid "PostNL Evening Fee"
 msgstr ""
 
@@ -47,7 +47,7 @@ msgstr "Huisnummer toevoeging"
 msgid "Street Name"
 msgstr ""
 
-#: src/Frontend/Container.php:246
+#: src/Frontend/Container.php:322
 msgid "This is not a valid address!"
 msgstr "Dit is geen valide adres!"
 
@@ -63,13 +63,9 @@ msgstr "Bezorgdagen"
 msgid "Dropoff Points"
 msgstr "PostNL punten"
 
-#: src/Frontend/Dropoff_Points.php:127
-msgid "Please choose the dropoff points!"
-msgstr ""
-
 #: src/Helper/Mapping.php:30
 msgid "Standard Shipment"
-msgstr ""
+msgstr "Standaard Bezorging"
 
 #: src/Helper/Mapping.php:31 src/Shipping_Method/Settings.php:278
 msgid "Evening Delivery"
@@ -77,7 +73,7 @@ msgstr "Avondbezorging"
 
 #: src/Helper/Mapping.php:34
 msgid "Pickup at PostNL Point"
-msgstr ""
+msgstr "Ophalen PostNL Punt"
 
 #: src/Helper/Mapping.php:39
 msgid "Standard Shipment Belgium"
@@ -89,7 +85,7 @@ msgstr ""
 
 #: src/Helper/Mapping.php:45
 msgid "EU Parcel"
-msgstr ""
+msgstr "Europese zending"
 
 #: src/Helper/Mapping.php:46
 msgid "Globalpack"
@@ -114,31 +110,31 @@ msgstr ""
 
 #: src/Order/Base.php:107
 msgid "Insured Shipping: "
-msgstr ""
+msgstr "Verzekerd verzenden: "
 
 #: src/Order/Base.php:119
 msgid "Return if no answer: "
-msgstr ""
+msgstr "Retour bij geen gehoor: "
 
 #: src/Order/Base.php:131
 msgid "Signature on Delivery: "
-msgstr ""
+msgstr "Handtekening voor ontvangst: "
 
 #: src/Order/Base.php:143
 msgid "Only Home Address: "
-msgstr ""
+msgstr "Alleen huisadres: "
 
 #: src/Order/Base.php:155
 msgid "Letterbox: "
-msgstr ""
+msgstr "Brievenbuspakje: "
 
 #: src/Order/Base.php:173
 msgid "Number of Labels: "
-msgstr ""
+msgstr "Aantal labels: "
 
 #: src/Order/Base.php:191
 msgid "Create Return Label: "
-msgstr ""
+msgstr "Creëer retourlabel: "
 
 #: src/Order/Base.php:409 src/Order/Single.php:465 src/Order/Single.php:515
 msgid "Order does not exists!"
@@ -152,33 +148,49 @@ msgstr ""
 msgid "Cannot create return barcode."
 msgstr ""
 
-#: src/Order/Base.php:626 src/Order/Base.php:725
+#: src/Order/Base.php:648 src/Order/Base.php:747
 msgid "Cannot create the label. Label content is missing"
 msgstr ""
 
-#: src/Order/Base.php:657
+#: src/Order/Base.php:679
 msgid "Cannot create the return label. Label content is missing"
 msgstr ""
 
-#: src/Order/Base.php:688
+#: src/Order/Base.php:710
 msgid "Cannot create the letterbox. Label content is missing"
 msgstr ""
 
-#: src/Order/Base.php:719
+#: src/Order/Base.php:741
 msgid "Cannot create the label. Barcode data is missing"
 msgstr ""
 
 #. translators: %s the current service.
-#: src/Order/Base.php:848
+#: src/Order/Base.php:870
 #, php-format
 msgid "%s Tracking Number: {tracking-link}"
 msgstr ""
 
-#: src/Order/Bulk.php:42
+#: src/Order/Bulk.php:53
 msgid "PostNL Create Label"
 msgstr ""
 
-#: src/Order/Bulk.php:150
+#. translators: %1$s is an order ID.
+#: src/Order/Bulk.php:93
+#, php-format
+msgid "#%1$s : PostNL label has been created."
+msgstr ""
+
+#. translators: %1$s is anchor tag opener. %2$s is anchor tag closer.
+#: src/Order/Bulk.php:152
+#, php-format
+msgid "Bulk PostNL labels file created - %1$sdownload file%2$s"
+msgstr ""
+
+#: src/Order/Bulk.php:158
+msgid "Could not create bulk PostNL label file, download individually."
+msgstr ""
+
+#: src/Order/Bulk.php:277
 msgid "Submit"
 msgstr ""
 
@@ -193,11 +205,11 @@ msgstr ""
 
 #: src/Order/Single.php:262
 msgid "Delivery Type:"
-msgstr ""
+msgstr "Type bezorging:"
 
 #: src/Order/Single.php:293
 msgid "Delivery Date:"
-msgstr ""
+msgstr "Bezorgdatum:"
 
 #: src/Order/Single.php:344
 msgid "Pickup Address:"
@@ -217,11 +229,11 @@ msgstr ""
 
 #: src/Order/Single.php:404
 msgid "Print Label"
-msgstr ""
+msgstr "Print Label"
 
 #: src/Order/Single.php:405
 msgid "Delete Label"
-msgstr ""
+msgstr "Verwijder Label"
 
 #: src/Order/Single.php:409
 msgid "Print Return Label"
@@ -795,19 +807,19 @@ msgstr "GlobalPack Barcode Type"
 msgid "CD"
 msgstr ""
 
-#: src/Shipping_Method/Settings.php:383
+#: src/Shipping_Method/Settings.php:382
 msgid "GlobalPack Customer Code"
 msgstr "Globalpack Klantcode"
 
-#: src/Shipping_Method/Settings.php:388
+#: src/Shipping_Method/Settings.php:387
 msgid "1234"
 msgstr ""
 
-#: src/Shipping_Method/Settings.php:392
+#: src/Shipping_Method/Settings.php:391
 msgid "Default HS Tariff Code"
 msgstr "Standaard GS tarief code"
 
-#: src/Shipping_Method/Settings.php:394
+#: src/Shipping_Method/Settings.php:393
 msgid ""
 "The HS tariff code is used by customs to classify goods. The HS tariff code "
 "can be found on the website of the Dutch Chamber of Commerce."
@@ -816,28 +828,28 @@ msgstr ""
 "classificeren. De GS tarief code van goederen is te vinden op de website van "
 "de Nederlandse Kamer van Koophandel."
 
-#: src/Shipping_Method/Settings.php:400
+#: src/Shipping_Method/Settings.php:399
 msgid "Default Country of Origin"
 msgstr "Standaard land van herkomst"
 
-#: src/Shipping_Method/Settings.php:402
+#: src/Shipping_Method/Settings.php:401
 #, fuzzy
 msgid "Default country of origin is used by customs."
 msgstr "De douane bekijkt het land van herkomst."
 
-#: src/Shipping_Method/Settings.php:411
+#: src/Shipping_Method/Settings.php:410
 msgid "Printer &amp; Email Settings"
 msgstr "Printer &amp; Email Instellingen"
 
-#: src/Shipping_Method/Settings.php:413
+#: src/Shipping_Method/Settings.php:412
 msgid "Please configure your printer and email preferences."
 msgstr "Stel hier jouw printer en email voorkeuren in."
 
-#: src/Shipping_Method/Settings.php:416
+#: src/Shipping_Method/Settings.php:415
 msgid "Label Format"
 msgstr "Labelformaat"
 
-#: src/Shipping_Method/Settings.php:418
+#: src/Shipping_Method/Settings.php:417
 msgid ""
 "Use A6 format in case you use a labelprinter. Use A4 format for other "
 "regular printers."
@@ -845,23 +857,23 @@ msgstr ""
 "Stel A6 formaat in indien je gebruik maakt van een label printen. Gebruik "
 "het A4 formaat voor gebruikelijke printers."
 
-#: src/Shipping_Method/Settings.php:428
+#: src/Shipping_Method/Settings.php:427
 msgid "WooCommerce Email"
 msgstr ""
 
-#: src/Shipping_Method/Settings.php:430
+#: src/Shipping_Method/Settings.php:429
 msgid "Enable WooCommerce tracking note email."
 msgstr ""
 
-#: src/Shipping_Method/Settings.php:436
+#: src/Shipping_Method/Settings.php:435
 msgid "WooCommerce Email Text"
 msgstr ""
 
-#: src/Shipping_Method/Settings.php:438
+#: src/Shipping_Method/Settings.php:437
 msgid "Text added for tracking note email."
 msgstr ""
 
-#: src/Shipping_Method/Settings.php:440 src/Shipping_Method/Settings.php:441
+#: src/Shipping_Method/Settings.php:439 src/Shipping_Method/Settings.php:440
 msgid "This is your track and track link {tracking-link}"
 msgstr ""
 
@@ -871,11 +883,16 @@ msgstr ""
 msgid "Please specify a \"%s\" argument"
 msgstr ""
 
-#: templates/checkout/postnl-delivery-day.php:30
-msgid "No charge"
+#. translators: %1$s is <strong> opener and %2$s is <strong> closer.
+#: templates/checkout/postnl-dropoff-points.php:93
+#, php-format
+msgid ""
+"Receive shipment at home? Continue %1$swithout%2$s selecting a Pick-up Point."
 msgstr ""
+"Zending thuis ontvangen? Ga door %1$szonder%2$s een PostNL-punt te "
+"selecteren."
 
-#: templates/checkout/postnl-dropoff-points.php:116
+#: templates/checkout/postnl-dropoff-points.php:122
 msgid "Vanaf"
 msgstr ""
 

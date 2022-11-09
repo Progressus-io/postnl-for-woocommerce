@@ -68,7 +68,7 @@ class Dropoff_Points extends Base {
 			return array();
 		}
 
-		$show_desc     = empty( $response['DeliveryOptions'] );
+		$show_desc     = ( empty( $response['DeliveryOptions'] ) || ! $this->settings->is_delivery_days_enabled() );
 		$pickup_points = $response['PickupOptions'];
 		$return_data   = $this->get_init_content_data( $post_data );
 

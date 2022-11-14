@@ -1,0 +1,20 @@
+{
+    "name": "clegginabox/pdf-merger",
+    "description": "PDF File Merger for PHP5",
+    "license": "MIT",
+    "require": {
+        "setasign/fpdi": "^2.2",
+        "setasign/fpdf": "^1.8"
+    },
+    "authors": [
+        {
+            "name": "Paul Clegg",
+            "email": "paul@clegginabox.co.uk"
+        }
+    ],
+    "autoload": {
+        "classmap": [
+            "src/PDFMerger/PDFMerger.php"
+        ]
+    }
+}

@@ -199,6 +199,77 @@ class Container {
 	}
 
 	/**
+	 * Get default value for NL -> NL if nothing is picked.
+	 *
+	 * @param Array $response Response from checkout API.
+	 * @param Array $post_data Submitted post input.
+	 *
+	 * @return Array.
+	 */
+	public function get_default_value( $response, $post_data ) {
+		$default_val = array(
+			'val'   => '',
+			'day'   => '',
+			'date'  => '',
+			'from'  => '',
+			'to'    => '',
+			'type'  => '',
+			'price' => '',
+		);
+
+		if ( empty( $response['DeliveryOptions'] ) ) {
+			return $default_val;
+		}
+
+		$evening_fee = Base::evening_fee_data();
+
+		foreach ( $response['DeliveryOptions'] as $delivery_option ) {
+			if ( empty( $delivery_option['DeliveryDate'] ) || empty( $delivery_option['Timeframe'] ) ) {
+				continue;
+			}
+
+			$options = array_map(
+				function( $timeframe ) use ( $evening_fee ) {
+					$type  = array_shift( $timeframe['Options'] );
+					$price = ( 'Evening' === $type ) ? $evening_fee['fee_price'] : 0;
+
+					return array(
+						'from'  => Utils::get_hour_min( $timeframe['From'] ),
+						'to'    => Utils::get_hour_min( $timeframe['To'] ),
+						'type'  => $type,
+						'price' => $price,
+					);
+				},
+				$delivery_option['Timeframe']
+			);
+
+			$options = array_filter(
+				$options,
+				function( $option ) {
+					return ( 'Evening' !== $option['type'] );
+				}
+			);
+
+			if ( empty( $options ) ) {
+				continue;
+			}
+
+			$timestamp = strtotime( $delivery_option['DeliveryDate'] );
+			$default_val['day']   = gmdate( 'l', $timestamp );
+			$default_val['date']  = gmdate( 'Y-m-d', $timestamp );
+			$default_val['from']  = $options[0]['from'];
+			$default_val['to']    = $options[0]['to'];
+			$default_val['type']  = $options[0]['type'];
+			$default_val['price'] = $options[0]['price'];
+			$default_val['val']   = sanitize_title( $default_val['date'] . '_' . $default_val['from'] . '-' . $default_val['to'] . '_' . $default_val['price'] );
+
+			return $default_val;
+		}
+
+		return $default_val;
+	}
+
+	/**
 	 * Add delivery day fields.
 	 */
 	public function display_fields() {
@@ -218,10 +289,11 @@ class Container {
 		}
 
 		$template_args = array(
-			'tabs'      => $this->get_available_tabs( $checkout_data['response'] ),
-			'response'  => $checkout_data['response'],
-			'post_data' => $checkout_data['post_data'],
-			'fields'    => array(
+			'tabs'        => $this->get_available_tabs( $checkout_data['response'] ),
+			'response'    => $checkout_data['response'],
+			'post_data'   => $checkout_data['post_data'],
+			'default_val' => $this->get_default_value( $checkout_data['response'], $checkout_data['post_data'] ),
+			'fields'      => array(
 				array(
 					'name'  => $this->tab_field,
 					'value' => $this->get_tab_field_value( $checkout_data['post_data'] ),

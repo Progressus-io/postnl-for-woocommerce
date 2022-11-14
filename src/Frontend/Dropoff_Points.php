@@ -68,6 +68,7 @@ class Dropoff_Points extends Base {
 			return array();
 		}
 
+		$show_desc     = ( empty( $response['DeliveryOptions'] ) || ! $this->settings->is_delivery_days_enabled() );
 		$pickup_points = $response['PickupOptions'];
 		$return_data   = $this->get_init_content_data( $post_data );
 
@@ -87,6 +88,7 @@ class Dropoff_Points extends Base {
 				$timestamp = strtotime( $date );
 
 				$return_data['dropoff_options'][] = array(
+					'show_desc'  => $show_desc,
 					'partner_id' => $dropoff_option['PartnerID'],
 					'loc_code'   => $dropoff_option['LocationCode'],
 					'time'       => $dropoff_option['PickupTime'],
@@ -123,8 +125,7 @@ class Dropoff_Points extends Base {
 			'postnl_frontend_dropoff_points_fields',
 			array(
 				array(
-					'id'         => $this->prefix . $this->primary_field,
-					'error_text' => esc_html__( 'Please choose the dropoff points!', 'postnl-for-woocommerce' ),
+					'id' => $this->prefix . $this->primary_field,
 				),
 				array(
 					'id'      => $this->prefix . $this->primary_field . '_address_company',
@@ -200,7 +201,7 @@ class Dropoff_Points extends Base {
 				return $data;
 			}
 
-			$data[ $field['id'] ] = sanitize_text_field( wp_unslash( $posted_data[ $field['id'] ] ) );
+			$data[ $field['id'] ] = ! empty( $posted_data[ $field['id'] ] ) ? sanitize_text_field( wp_unslash( $posted_data[ $field['id'] ] ) ) : '';
 		}
 
 		return $data;

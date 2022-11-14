@@ -1,4 +1,5 @@
-=== PostNL for WooCommerce ===
+# PostNL for WooCommerce
+
 Contributors: PostNL
 Donate link: 
 Tags: PostNL, Shipping
@@ -14,26 +15,26 @@ License URI: https://www.gnu.org/licenses/gpl-2.0.html
 The official PostNL for WooCommerce plugin allows you to automate your e-commerce order process. Covering shipping services from PostNL Netherlands and Belgium.
 
 
-== Description ==
+## Description
 
 PostNL’s official extension for WooCommerce on WordPress. Manage your national and international shipments easily.
 
-== Features ==
+## Features
 
-== Installation & Configuration ==
+## Installation & Configuration
 
 1. Upload the downloaded plugin files to your `/wp-content/plugins/postnl-for-woocommerce` directory, **OR** install the plugin through the WordPress plugins screen directly.
 2. Activate the plugin through the 'Plugins' screen in WordPress.
 3. Go to WooCommerce–>Settings->Shipping and Click the "PostNL" to configure the plugin.
 
-== Support ==
+## Support
 
-== Additional Information == 
+## Additional Information
 
-== Screenshots ==
+## Screenshots
 
 
-== Changelog ==
+### Changelog
 
 = 5.0 =
 * First public release

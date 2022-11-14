@@ -46,7 +46,10 @@ class Mapping {
 				'ROW' => esc_html__( 'Globalpack', 'postnl-for-woocommerce' ),
 			),
 			'BE' => array(
-				'BE' => esc_html__( 'Belgium Domestic', 'postnl-for-woocommerce' ),
+				'BE'  => esc_html__( 'Belgium Domestic', 'postnl-for-woocommerce' ),
+				'NL'  => esc_html__( 'EU Parcel', 'postnl-for-woocommerce' ),
+				'EU'  => esc_html__( 'EU Parcel', 'postnl-for-woocommerce' ),
+				'ROW' => esc_html__( 'Globalpack', 'postnl-for-woocommerce' ),
 			),
 		);
 	}

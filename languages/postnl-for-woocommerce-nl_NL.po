@@ -1,8 +1,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PostNL for WooCommerce\n"
-"POT-Creation-Date: 2022-11-09 11:33+0700\n"
-"PO-Revision-Date: 2022-11-09 16:38+0700\n"
+"POT-Creation-Date: 2022-11-15 08:44+0700\n"
+"PO-Revision-Date: 2022-11-15 08:45+0700\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: nl_NL\n"
@@ -83,11 +83,12 @@ msgstr ""
 msgid "Pickup at PostNL Point Belgium"
 msgstr ""
 
-#: src/Helper/Mapping.php:45
+#: src/Helper/Mapping.php:45 src/Helper/Mapping.php:50
+#: src/Helper/Mapping.php:51
 msgid "EU Parcel"
 msgstr "Europese zending"
 
-#: src/Helper/Mapping.php:46
+#: src/Helper/Mapping.php:46 src/Helper/Mapping.php:52
 msgid "Globalpack"
 msgstr ""
 
@@ -884,7 +885,7 @@ msgid "Please specify a \"%s\" argument"
 msgstr ""
 
 #. translators: %1$s is <strong> opener and %2$s is <strong> closer.
-#: templates/checkout/postnl-dropoff-points.php:93
+#: templates/checkout/postnl-dropoff-points.php:103
 #, php-format
 msgid ""
 "Receive shipment at home? Continue %1$swithout%2$s selecting a Pick-up Point."
@@ -892,7 +893,7 @@ msgstr ""
 "Zending thuis ontvangen? Ga door %1$szonder%2$s een PostNL-punt te "
 "selecteren."
 
-#: templates/checkout/postnl-dropoff-points.php:122
+#: templates/checkout/postnl-dropoff-points.php:137
 msgid "Vanaf"
 msgstr ""
 
@@ -905,8 +906,14 @@ msgid "https://github.com/Progressus-io/postnl-for-woocommerce/"
 msgstr ""
 
 #. Description of the plugin/theme
-msgid "WooCommerce integration for PostNL"
+msgid ""
+"With this plug-in you can easily confirm your PostNL shipments and print "
+"shipping labels in no time. In addition, your customers are more in control "
+"because they choose where and when they receive their order."
 msgstr ""
+"Met deze plug-in meld je eenvoudig zendingen aan bij PostNL en print je met "
+"een handomdraai verzendlabels. Daarnaast zijn jouw klanten meer in control "
+"omdat zij zelf aangeven waar en wanneer zij hun bestelling ontvangen."
 
 #. Author of the plugin/theme
 msgid "PostNL"

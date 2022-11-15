@@ -2,7 +2,7 @@
 /**
  * Plugin Name: PostNL for WooCommerce
  * Plugin URI: https://github.com/Progressus-io/postnl-for-woocommerce/
- * Description: WooCommerce integration for PostNL
+ * Description: With this plug-in you can easily confirm your PostNL shipments and print shipping labels in no time. In addition, your customers are more in control because they choose where and when they receive their order.
  * Author: PostNL
  * Author URI: https://postnl.post/
  * Version: 5.0.0

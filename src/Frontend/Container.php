@@ -12,6 +12,7 @@ use PostNLWooCommerce\Shipping_Method\Settings;
 use PostNLWooCommerce\Rest_API\Checkout;
 use PostNLWooCommerce\Rest_API\Postcode_Check;
 use PostNLWooCommerce\Utils;
+use PostNLWooCommerce\Helper\Mapping;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -63,7 +64,6 @@ class Container {
 		add_action( 'woocommerce_review_order_after_shipping', array( $this, 'display_fields' ) );
 		add_action( 'woocommerce_cart_calculate_fees', array( $this, 'add_cart_fees' ), 10, 1 );
 
-		add_filter( 'woocommerce_shipping_' . POSTNL_SETTINGS_ID . '_is_available', array( $this, 'is_shipping_method_available' ), 10, 2 );
 		add_filter( 'woocommerce_update_order_review_fragments', array( $this, 'fill_validated_address' ) );
 		add_filter( 'woocommerce_cart_shipping_method_full_label', array( $this, 'add_shipping_method_icon' ), 10, 2 );
 	}
@@ -140,6 +140,8 @@ class Container {
 	 * Get data from PostNL Checkout Rest API.
 	 *
 	 * @return array
+	 *
+	 * @throws \Exception If the checkout data process has error.
 	 */
 	public function get_checkout_data() {
 		try {
@@ -149,9 +151,12 @@ class Container {
 				return array();
 			}
 
-			$post_data = Address_Utils::set_post_data_address( $post_data );
+			$post_data         = Address_Utils::set_post_data_address( $post_data );
+			$available_country = Mapping::available_country_for_checkout_feature();
+			$receiver_country  = ! empty( $post_data['shipping_country'] ) ? $post_data['shipping_country'] : '';
+			$store_country     = Utils::get_base_country();
 
-			if ( ! in_array( $post_data['shipping_country'], Utils::get_available_country(), true ) ) {
+			if ( ! isset( $available_country[ $store_country ][ $receiver_country ] ) ) {
 				return array();
 			}
 
@@ -161,7 +166,7 @@ class Container {
 				}
 			}
 
-			// Validate address if required
+			// Validate address if required.
 			if ( $this->is_address_validation_required() ) {
 
 				if ( empty( $post_data['shipping_postcode'] ) ) {
@@ -194,6 +199,77 @@ class Container {
 	}
 
 	/**
+	 * Get default value for NL -> NL if nothing is picked.
+	 *
+	 * @param Array $response Response from checkout API.
+	 * @param Array $post_data Submitted post input.
+	 *
+	 * @return Array.
+	 */
+	public function get_default_value( $response, $post_data ) {
+		$default_val = array(
+			'val'   => '',
+			'day'   => '',
+			'date'  => '',
+			'from'  => '',
+			'to'    => '',
+			'type'  => '',
+			'price' => '',
+		);
+
+		if ( empty( $response['DeliveryOptions'] ) ) {
+			return $default_val;
+		}
+
+		$evening_fee = Base::evening_fee_data();
+
+		foreach ( $response['DeliveryOptions'] as $delivery_option ) {
+			if ( empty( $delivery_option['DeliveryDate'] ) || empty( $delivery_option['Timeframe'] ) ) {
+				continue;
+			}
+
+			$options = array_map(
+				function( $timeframe ) use ( $evening_fee ) {
+					$type  = array_shift( $timeframe['Options'] );
+					$price = ( 'Evening' === $type ) ? $evening_fee['fee_price'] : 0;
+
+					return array(
+						'from'  => Utils::get_hour_min( $timeframe['From'] ),
+						'to'    => Utils::get_hour_min( $timeframe['To'] ),
+						'type'  => $type,
+						'price' => $price,
+					);
+				},
+				$delivery_option['Timeframe']
+			);
+
+			$options = array_filter(
+				$options,
+				function( $option ) {
+					return ( 'Evening' !== $option['type'] );
+				}
+			);
+
+			if ( empty( $options ) ) {
+				continue;
+			}
+
+			$timestamp = strtotime( $delivery_option['DeliveryDate'] );
+			$default_val['day']   = gmdate( 'l', $timestamp );
+			$default_val['date']  = gmdate( 'Y-m-d', $timestamp );
+			$default_val['from']  = $options[0]['from'];
+			$default_val['to']    = $options[0]['to'];
+			$default_val['type']  = $options[0]['type'];
+			$default_val['price'] = $options[0]['price'];
+			$default_val['val']   = sanitize_title( $default_val['date'] . '_' . $default_val['from'] . '-' . $default_val['to'] . '_' . $default_val['price'] );
+
+			return $default_val;
+		}
+
+		return $default_val;
+	}
+
+	/**
 	 * Add delivery day fields.
 	 */
 	public function display_fields() {
@@ -213,10 +289,11 @@ class Container {
 		}
 
 		$template_args = array(
-			'tabs'      => $this->get_available_tabs( $checkout_data['response'] ),
-			'response'  => $checkout_data['response'],
-			'post_data' => $checkout_data['post_data'],
-			'fields'    => array(
+			'tabs'        => $this->get_available_tabs( $checkout_data['response'] ),
+			'response'    => $checkout_data['response'],
+			'post_data'   => $checkout_data['post_data'],
+			'default_val' => $this->get_default_value( $checkout_data['response'], $checkout_data['post_data'] ),
+			'fields'      => array(
 				array(
 					'name'  => $this->tab_field,
 					'value' => $this->get_tab_field_value( $checkout_data['post_data'] ),
@@ -230,8 +307,7 @@ class Container {
 	/**
 	 * Check address by PostNL Checkout Rest API.
 	 *
-	 * @return void
-	 * @throws \Exception
+	 * @param Array $post_data Checkout post data.
 	 */
 	public function validated_address( $post_data ) {
 		$item_info = new Postcode_Check\Item_Info( $post_data );
@@ -240,25 +316,28 @@ class Container {
 
 		if ( empty( $response[0] ) ) {
 			// Clear validated address.
-			WC()->session->set( POSTNL_SETTINGS_ID . '_validated_address', [] );
+			WC()->session->set( POSTNL_SETTINGS_ID . '_validated_address', array() );
 
-			// Add notice without blocking checkout call
+			// Add notice without blocking checkout call.
 			wc_add_notice( esc_html__( 'This is not a valid address!', 'postnl-for-woocommerce' ), 'notice' );
 		} else {
 			// Set validated address.
-			WC()->session->set( POSTNL_SETTINGS_ID . '_validated_address', [
-				'city'                      => $response[0]['city'],
-				'street'                    => $response[0]['streetName'],
-				'house_number'              => $response[0]['houseNumber'],
-				'ship_to_different_address' => ! empty( $post_data['ship_to_different_address'] )
-			] );
+			WC()->session->set(
+				POSTNL_SETTINGS_ID . '_validated_address',
+				array(
+					'city'                      => $response[0]['city'],
+					'street'                    => $response[0]['streetName'],
+					'house_number'              => $response[0]['houseNumber'],
+					'ship_to_different_address' => ! empty( $post_data['ship_to_different_address'] ),
+				)
+			);
 		}
 	}
 
 	/**
 	 * Fill checkout form fields after address validation.
 	 *
-	 * @param $fragments
+	 * @param Array $fragments Cart fragments.
 	 *
 	 * @return mixed
 	 */
@@ -311,22 +390,6 @@ class Container {
 	}
 
 	/**
-	 * Check if the shipping method is available for the shipping country.
-	 *
-	 * @param Boolean $available Default value for shipping method availability.
-	 * @param Array $package Current package in the cart.
-	 *
-	 * @return Boolean.
-	 */
-	public function is_shipping_method_available( $available, $package ) {
-		if ( ! empty( $package['destination']['country'] ) && 'BE' !== $package['destination']['country'] && 'BE' === WC()->countries->get_base_country() ) {
-			return false;
-		}
-
-		return $available;
-	}
-
-	/**
 	 * Check if address validation required.
 	 *
 	 * @return bool
@@ -346,8 +409,8 @@ class Container {
 	/**
 	 * Replace shipping method title with Icon.
 	 *
-	 * @param $label
-	 * @param $method
+	 * @param String             $label String of label html.
+	 * @param WC_Shipping_Method $method Shipping method object.
 	 *
 	 * @return mixed|string
 	 */

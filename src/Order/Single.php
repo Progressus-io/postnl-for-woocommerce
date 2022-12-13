@@ -8,6 +8,7 @@
 namespace PostNLWooCommerce\Order;
 
 use Automattic\WooCommerce\Internal\DataStores\Orders\CustomOrdersTableController;
+use mysql_xdevapi\Exception;
 use PostNLWooCommerce\Utils;
 use PostNLWooCommerce\Helper\Mapping;
 

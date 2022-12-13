@@ -46,7 +46,10 @@ class Mapping {
 				'ROW' => esc_html__( 'Globalpack', 'postnl-for-woocommerce' ),
 			),
 			'BE' => array(
-				'BE' => esc_html__( 'Belgium Domestic', 'postnl-for-woocommerce' ),
+				'BE'  => esc_html__( 'Belgium Domestic', 'postnl-for-woocommerce' ),
+				'NL'  => esc_html__( 'EU Parcel', 'postnl-for-woocommerce' ),
+				'EU'  => esc_html__( 'EU Parcel', 'postnl-for-woocommerce' ),
+				'ROW' => esc_html__( 'Globalpack', 'postnl-for-woocommerce' ),
 			),
 		);
 	}
@@ -120,6 +123,21 @@ class Mapping {
 						'4878' => array( 'insured_shipping' ),
 					),
 				),
+				'NL' => array(
+					'delivery_day' => array(
+						'4944' => array(),
+					),
+				),
+				'EU' => array(
+					'delivery_day' => array(
+						'4944' => array(),
+					),
+				),
+				'ROW' => array(
+					'delivery_day' => array(
+						'4945' => array(),
+					),
+				),
 			),
 		);
 	}
@@ -140,7 +158,10 @@ class Mapping {
 				'ROW' => array( 'cn23', 'cp71' ),
 			),
 			'BE' => array(
-				'BE' => array( 'label' ),
+				'BE'  => array( 'label' ),
+				'NL'  => array( 'label' ),
+				'EU'  => array( 'label' ),
+				'ROW' => array( 'cn23', 'cp71' ),
 			),
 		);
 	}
@@ -159,7 +180,10 @@ class Mapping {
 				'ROW' => array( 'num_labels' ),
 			),
 			'BE' => array(
-				'BE' => array( 'num_labels' ),
+				'BE'  => array( 'num_labels' ),
+				'NL'  => array( 'num_labels' ),
+				'EU'  => array( 'num_labels' ),
+				'ROW' => array( 'num_labels' ),
 			),
 		);
 	}
@@ -184,6 +208,23 @@ class Mapping {
 						),
 					),
 				),
+			),
+		);
+	}
+
+	/**
+	 * List of countries that available for checkout feature.
+	 *
+	 * @return Array.
+	 */
+	public static function available_country_for_checkout_feature() {
+		return array(
+			'NL' => array(
+				'NL' => array( 'pickup_points', 'delivery_day', 'evening_delivery' ),
+				'BE' => array( 'pickup_points', 'delivery_day' ),
+			),
+			'BE' => array(
+				'BE' => array( 'pickup_points' ),
 			),
 		);
 	}

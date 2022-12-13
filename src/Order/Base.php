@@ -568,25 +568,20 @@ abstract class Base {
 
 		$available_type  = ( ! empty( $label_type_list[ $from_country ][ $destination ] ) ) ? $label_type_list[ $from_country ][ $destination ] : array( 'label' );
 
-		$pdf = new \Clegginabox\PDFMerger\PDFMerger();
-
-		$trash_list = array();
+		$file_paths = array();
 		foreach ( $labels as $label ) {
 			if ( ! in_array( $label['type'], $available_type, true ) ) {
 				continue;
 			}
 
-			$pdf->addPDF( $label['filepath'], 'all' );
-			$trash_list[] = $label['filepath'];
+			$file_paths[] = $label['filepath'];
 		}
 
-		$filename = Utils::generate_label_name( $order->get_id(), $label_type, $barcode );
-		$filepath = trailingslashit( POSTNL_UPLOADS_DIR ) . $filename;
+		$filename    = Utils::generate_label_name( $order->get_id(), $label_type, $barcode );
+		$merged_info = $this->merge_labels( $file_paths, $filename );
 
-		$pdf->merge( 'file', $filepath );
-
-		foreach ( $trash_list as $path ) {
-			if ( file_exists( $path ) && $path !== $filepath ) {
+		foreach ( $merged_info['merged_filepaths'] as $path ) {
+			if ( file_exists( $path ) && $path !== $merged_info['filepath'] ) {
 				unlink( $path );
 			}
 		}
@@ -594,10 +589,37 @@ abstract class Base {
 		$merged_labels[ $label_type ] = array(
 			'type'     => $label_type,
 			'barcode'  => $barcode,
-			'filepath' => $filepath,
+			'filepath' => $merged_info['filepath'],
 		);
 
 		return $merged_labels;
+	}
+
+	/**
+	 * Merge PDF Labels.
+	 *
+	 * @param Array  $label_paths List of label path.
+	 * @param String $merge_filename Name of the file after the merge process.
+	 *
+	 * @return Array List of filepath that has been merged.
+	 */
+	protected function merge_labels( $label_paths, $merge_filename ) {
+		$pdf          = new \Clegginabox\PDFMerger\PDFMerger();
+		$merged_paths = array();
+
+		foreach ( $label_paths as $path ) {
+			$pdf->addPDF( $path, 'all' );
+			$merged_paths[] = $path;
+		}
+
+		$filepath = trailingslashit( POSTNL_UPLOADS_DIR ) . $merge_filename;
+
+		$pdf->merge( 'file', $filepath );
+
+		return array(
+			'merged_filepaths' => $merged_paths,
+			'filepath'         => $filepath,
+		);
 	}
 
 	/**

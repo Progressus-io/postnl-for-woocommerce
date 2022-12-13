@@ -1,8 +1,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PostNL for WooCommerce\n"
-"POT-Creation-Date: 2022-11-15 08:44+0700\n"
-"PO-Revision-Date: 2022-12-13 07:47+0200\n"
+"POT-Creation-Date: 2022-12-13 08:00+0200\n"
+"PO-Revision-Date: 2022-12-13 08:01+0200\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: nl_NL\n"
@@ -35,7 +35,7 @@ msgid "PostNL Evening Fee"
 msgstr ""
 
 #: src/Frontend/Checkout_Fields.php:62 src/Frontend/Checkout_Fields.php:63
-#: src/Frontend/Checkout_Fields.php:151
+#: src/Frontend/Checkout_Fields.php:152
 msgid "House number"
 msgstr "Huisnummer"
 
@@ -44,6 +44,10 @@ msgid "House Number Extension"
 msgstr "Huisnummer toevoeging"
 
 #: src/Frontend/Checkout_Fields.php:105
+msgid "Street"
+msgstr "Straat"
+
+#: src/Frontend/Checkout_Fields.php:106
 msgid "Street Name"
 msgstr ""
 

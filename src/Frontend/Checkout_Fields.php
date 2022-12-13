@@ -102,6 +102,7 @@ class Checkout_Fields {
 				'priority'    => 7,
 			),
 			'address_1'    => array(
+				'label'       => __( 'Street', 'postnl-for-woocommerce' ),
 				'placeholder' => esc_attr__( 'Street Name', 'postnl-for-woocommerce' ),
 				'priority'    => 8,
 			),

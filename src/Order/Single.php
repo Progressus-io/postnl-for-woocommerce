@@ -43,7 +43,11 @@ class Single extends Base {
 	public function enqueue_order_single_css_script() {
 		$screen = get_current_screen();
 
-		if ( ! empty( $screen->id ) && 'shop_order' === $screen->id && ! empty( $screen->base ) && 'post' === $screen->base ) {
+		if ( empty( $screen->id ) ) {
+			return;
+		}
+
+		if ( ( 'shop_order' === $screen->id && 'post' === $screen->base ) || 'woocommerce_page_wc-orders' === $screen->id ) {
 			wp_enqueue_style( 'postnl-admin-order-single', POSTNL_WC_PLUGIN_DIR_URL . '/assets/css/admin-order-single.css', array(), POSTNL_WC_VERSION );
 
 			wp_enqueue_script(
@@ -82,9 +86,13 @@ class Single extends Base {
 			return;
 		}
 
-		$screen = wc_get_container()->get( CustomOrdersTableController::class )->custom_orders_table_usage_is_enabled()
-		? wc_get_page_screen_id( 'shop-order' )
-		: 'shop_order';
+		try {
+			$screen = wc_get_container()->get( CustomOrdersTableController::class )->custom_orders_table_usage_is_enabled()
+				? wc_get_page_screen_id( 'shop-order' )
+				: 'shop_order';
+		} catch ( \Exception $e ) {
+			$screen = 'shop_order';
+		}
 
 		// translators: %s will be replaced by service name.
 		add_meta_box( 'woocommerce-shipment-postnl-label', esc_html__( 'Label & Tracking', 'postnl-for-woocommerce' ), array( $this, 'meta_box_html' ), $screen, 'side', 'high' );

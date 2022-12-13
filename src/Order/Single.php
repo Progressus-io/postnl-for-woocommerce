@@ -82,9 +82,13 @@ class Single extends Base {
 			return;
 		}
 
-		$screen = wc_get_container()->get( CustomOrdersTableController::class )->custom_orders_table_usage_is_enabled()
-		? wc_get_page_screen_id( 'shop-order' )
-		: 'shop_order';
+		try {
+			$screen = wc_get_container()->get( CustomOrdersTableController::class )->custom_orders_table_usage_is_enabled()
+				? wc_get_page_screen_id( 'shop-order' )
+				: 'shop_order';
+		} catch ( \Exception $e ) {
+			$screen = 'shop_order';
+		}
 
 		// translators: %s will be replaced by service name.
 		add_meta_box( 'woocommerce-shipment-postnl-label', esc_html__( 'Label & Tracking', 'postnl-for-woocommerce' ), array( $this, 'meta_box_html' ), $screen, 'side', 'high' );

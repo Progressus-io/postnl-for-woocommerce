@@ -1,8 +1,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PostNL for WooCommerce\n"
-"POT-Creation-Date: 2022-12-13 08:00+0200\n"
-"PO-Revision-Date: 2022-12-13 08:01+0200\n"
+"POT-Creation-Date: 2022-12-13 08:22+0200\n"
+"PO-Revision-Date: 2022-12-13 08:23+0200\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: nl_NL\n"
@@ -887,6 +887,10 @@ msgstr ""
 #, php-format
 msgid "Please specify a \"%s\" argument"
 msgstr ""
+
+#: templates/checkout/postnl-delivery-day.php:33
+msgid "Evening"
+msgstr "Avond"
 
 #. translators: %1$s is <strong> opener and %2$s is <strong> closer.
 #: templates/checkout/postnl-dropoff-points.php:103

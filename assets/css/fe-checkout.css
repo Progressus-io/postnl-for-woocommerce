@@ -169,4 +169,9 @@ tr.postnl-co-tr-container > td {
 .postnl_content .postnl_list .postnl_sub_list .postnl_sub_radio_label i {
 	float:right;
 	font-style:normal;
+	margin-left: 10px;
+}
+
+.postnl_content .postnl_list .postnl_sub_list .postnl_sub_radio_label i:last-child {
+	margin-left: 0;
 }

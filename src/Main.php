@@ -85,6 +85,16 @@ class Main {
 	 */
 	public function __construct() {
 		add_action( 'init', array( $this, 'load_plugin' ), 1 );
+		add_action( 'before_woocommerce_init', array( $this, 'declare_wc_hpos_compatibility' ), 10 );
+	}
+
+	/**
+	 * Declare WooCommerce HPOS feature compatibility.
+	 */
+	public function declare_wc_hpos_compatibility() {
+		if ( class_exists( '\Automattic\WooCommerce\Utilities\FeaturesUtil' ) ) {
+			\Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility( 'custom_order_tables', 'postnl-for-woocommerce/postnl-for-woocommerce.php', true );
+		}
 	}
 
 	/**

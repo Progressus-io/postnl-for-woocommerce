@@ -43,7 +43,11 @@ class Single extends Base {
 	public function enqueue_order_single_css_script() {
 		$screen = get_current_screen();
 
-		if ( ! empty( $screen->id ) && 'shop_order' === $screen->id && ! empty( $screen->base ) && 'post' === $screen->base ) {
+		if ( empty( $screen->id ) ) {
+			return;
+		}
+
+		if ( ( 'shop_order' === $screen->id && 'post' === $screen->base ) || 'woocommerce_page_wc-orders' === $screen->id ) {
 			wp_enqueue_style( 'postnl-admin-order-single', POSTNL_WC_PLUGIN_DIR_URL . '/assets/css/admin-order-single.css', array(), POSTNL_WC_VERSION );
 
 			wp_enqueue_script(

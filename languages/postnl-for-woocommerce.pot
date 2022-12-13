@@ -808,9 +808,9 @@ msgstr ""
 msgid "WooCommerce Email"
 msgstr ""
 
-#: src/Shipping_Method/Settings.php:430
-msgid "Enable WooCommerce tracking note email."
-msgstr ""
+#: src/Shipping_Method/Settings.php:429
+msgid "When PostNL label is created send email to customer."
+msgstr "Verstuur email naar klant zodra PostNL label gecreëerd is."
 
 #: src/Shipping_Method/Settings.php:436
 msgid "WooCommerce Email Text"

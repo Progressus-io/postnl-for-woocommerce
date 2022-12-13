@@ -426,7 +426,7 @@ class Settings extends \WC_Settings_API {
 			'woocommerce_email'         => array(
 				'title'       => esc_html__( 'WooCommerce Email', 'postnl-for-woocommerce' ),
 				'type'        => 'checkbox',
-				'description' => esc_html__( 'Enable WooCommerce tracking note email.', 'postnl-for-woocommerce' ),
+				'description' => esc_html__( 'When PostNL label is created send email to customer.', 'postnl-for-woocommerce' ),
 				'desc_tip'    => true,
 				'default'     => '',
 				'placeholder' => '',

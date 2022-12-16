@@ -113,6 +113,10 @@ class Client extends Base {
 			$options[] = 'Evening';
 		}
 
+		if ( $this->item_info->body['morning_delivery_enabled'] ) {
+			$options[] = 'Morning';
+		}
+
 		return $options;
 	}
 }

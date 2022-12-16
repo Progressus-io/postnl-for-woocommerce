@@ -246,7 +246,7 @@ class Container {
 			$options = array_filter(
 				$options,
 				function( $option ) {
-					return ( 'Evening' !== $option['type'] );
+					return ( 'Evening' !== $option['type'] && 'Morning' !== $option['type'] );
 				}
 			);
 

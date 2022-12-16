@@ -274,6 +274,24 @@ class Settings extends \WC_Settings_API {
 				),
 				'class'             => 'country-nl',
 			),
+			'enable_morning_delivery'   => array(
+				'title'       => __( 'Morning Delivery', 'postnl-for-woocommerce' ),
+				'type'        => 'checkbox',
+				'label'       => __( 'Enable', 'postnl-for-woocommerce' ),
+				'description' => __( 'Enable morning delivery in the checkout so your customers can choose to receive their orders in the morning.', 'postnl-for-woocommerce' ),
+				'desc_tip'    => true,
+				'default'     => '',
+				'for_country' => array( 'NL' ),
+				'class'       => 'country-nl',
+			),
+			'morning_delivery_fee'      => array(
+				'title'       => __( 'Morning Delivery Fee', 'postnl-for-woocommerce' ),
+				'type'        => 'text',
+				'description' => __( 'Fee for receiving orders in the morning.', 'postnl-for-woocommerce' ),
+				'desc_tip'    => true,
+				'for_country' => array( 'NL' ),
+				'class'       => 'wc_input_price country-nl',
+			),
 			'enable_evening_delivery'   => array(
 				'title'       => __( 'Evening Delivery', 'postnl-for-woocommerce' ),
 				'type'        => 'checkbox',
@@ -799,6 +817,33 @@ class Settings extends \WC_Settings_API {
 	 */
 	public function get_evening_delivery_fee() {
 		return $this->get_country_option( 'evening_delivery_fee' );
+	}
+
+	/**
+	 * Get enable morning delivery from the settings.
+	 *
+	 * @return String
+	 */
+	public function get_enable_morning_delivery() {
+		return $this->get_country_option( 'enable_morning_delivery' );
+	}
+
+	/**
+	 * Return true if evening delivery field is ticked.
+	 *
+	 * @return Bool
+	 */
+	public function is_morning_delivery_enabled() {
+		return ( 'yes' === $this->get_enable_morning_delivery() );
+	}
+
+	/**
+	 * Get evening delivery fee from the settings.
+	 *
+	 * @return String
+	 */
+	public function get_morning_delivery_fee() {
+		return $this->get_country_option( 'morning_delivery_fee' );
 	}
 
 	/**

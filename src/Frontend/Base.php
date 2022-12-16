@@ -347,10 +347,10 @@ abstract class Base {
 			return;
 		}
 
-		if ( ! empty( $data['frontend'][ $evening_fee['condition']['key'] ] ) ) {
+		if ( $evening_fee['condition']['value'] === $data['frontend'][ $evening_fee['condition']['key'] ] ) {
 			$fee_name = $evening_fee['fee_name'];
 			$fee_price = $evening_fee['fee_price'];
-		} elseif ( ! empty( $data['frontend'][ $morning_fee['condition']['key'] ] ) ) {
+		} elseif ( $morning_fee['condition']['value'] === $data['frontend'][ $morning_fee['condition']['key'] ] ) {
 			$fee_name = $morning_fee['fee_name'];
 			$fee_price = $morning_fee['fee_price'];
 		}

@@ -33,7 +33,7 @@ if ( empty( $data['delivery_options'] ) ) {
 							$delivery_time = '';
 							if( 'Evening' === $option['type'] ) {
 								$delivery_time = esc_html__( 'Evening', 'postnl-for-woocommerce' );
-							} elseif( 'Morning' === $option['type'] ) {
+							} elseif( '08:00-12:00' === $option['type'] ) {
 								$delivery_time = esc_html__( 'Morning', 'postnl-for-woocommerce' );
 							}
 						?>

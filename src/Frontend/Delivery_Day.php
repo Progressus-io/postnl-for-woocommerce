@@ -134,7 +134,7 @@ class Delivery_Day extends Base {
 						case 'Evening' :
 							$price = $evening_fee['fee_price'];
 							break;
-						case 'Morning' :
+						case '08:00-12:00' :
 							$price = $morning_fee['fee_price'];
 							break;
 						default :

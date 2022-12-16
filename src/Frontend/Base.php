@@ -437,7 +437,7 @@ abstract class Base {
 			'fee_price' => floatval( $morning_fee ),
 			'condition' => array(
 				'key'   => 'delivery_day_type',
-				'value' => 'Morning',
+				'value' => '08:00-12:00',
 			),
 		);
 	}

@@ -75,6 +75,7 @@ class Mapping {
 						'3389' => array( 'signature_on_delivery', 'return_no_answer' ),
 						'3096' => array( 'signature_on_delivery', 'only_home_address', 'return_no_answer' ),
 						'2928' => array( 'letterbox' ),
+						'3438' => array( 'id_check' ),
 					),
 					'pickup_points' => array(
 						'3533' => array(),

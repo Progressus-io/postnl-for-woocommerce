@@ -102,6 +102,18 @@ abstract class Base {
 					'type'          => 'break',
 				),
 				array(
+					'id'            => $this->prefix . 'id_check',
+					'type'          => 'checkbox',
+					'label'         => __( 'ID Check: ', 'postnl-for-woocommerce' ),
+					'placeholder'   => '',
+					'description'   => '',
+					'value'         => '',
+					'show_in_bulk'  => true,
+					'standard_feat' => false,
+					'const_field'   => false,
+					'container'     => true,
+				),
+				array(
 					'id'            => $this->prefix . 'insured_shipping',
 					'type'          => 'checkbox',
 					'label'         => __( 'Insured Shipping: ', 'postnl-for-woocommerce' ),

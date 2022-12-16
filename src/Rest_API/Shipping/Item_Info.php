@@ -183,6 +183,7 @@ class Item_Info extends Base_Info {
 			'num_labels'            => $saved_data['backend']['num_labels'] ?? '',
 			'create_return_label'   => $saved_data['backend']['create_return_label'] ?? '',
 			'letterbox'             => $saved_data['backend']['letterbox'] ?? '',
+			'id_check'              => $saved_data['backend']['id_check'] ?? '',
 		);
 
 		$this->api_args['frontend_data'] = array(
@@ -663,6 +664,12 @@ class Item_Info extends Base_Info {
 				},
 			),
 			'letterbox'             => array(
+				'default'  => false,
+				'sanitize' => function( $picked ) {
+					return ( 'yes' === $picked );
+				},
+			),
+			'id_check'              => array(
 				'default'  => false,
 				'sanitize' => function( $picked ) {
 					return ( 'yes' === $picked );

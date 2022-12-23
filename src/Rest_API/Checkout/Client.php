@@ -105,16 +105,16 @@ class Client extends Base {
 			$options[] = 'Pickup';
 		}
 
+		if ( $this->item_info->body['morning_delivery_enabled'] ) {
+			$options[] = '08:00-12:00';
+		}
+
 		if ( $this->item_info->body['delivery_days_enabled'] ) {
 			$options[] = 'Daytime';
 		}
 
 		if ( $this->item_info->body['evening_delivery_enabled'] ) {
 			$options[] = 'Evening';
-		}
-
-		if ( $this->item_info->body['morning_delivery_enabled'] ) {
-			$options[] = '08:00-12:00';
 		}
 
 		return $options;

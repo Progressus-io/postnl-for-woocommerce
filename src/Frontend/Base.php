@@ -99,7 +99,7 @@ abstract class Base {
 		add_filter( 'woocommerce_checkout_posted_data', array( $this, 'validate_posted_data' ) );
 		add_action( 'woocommerce_checkout_update_order_meta', array( $this, 'save_data' ), 10, 2 );
 		add_action( 'woocommerce_checkout_update_order_meta', array( $this, 'save_default_data' ), 15, 2 );
-		add_action( 'woocommerce_checkout_update_order_meta', array( $this, 'calculate_delivery_day_fee' ), 20, 2 );
+		add_action( 'woocommerce_checkout_update_order_meta', array( $this, 'calculate_non_standard_fee' ), 20, 2 );
 		add_filter( 'postnl_frontend_checkout_tab', array( $this, 'add_checkout_tab' ), 10, 2 );
 		add_action( 'postnl_checkout_content', array( $this, 'display_content' ), 10, 2 );
 	}
@@ -323,14 +323,14 @@ abstract class Base {
 	}
 
 	/**
-	 * Calculate delivery day fee.
+	 * Calculate non standard delivery day fee.
 	 *
 	 * @param array $order_id ID of order post.
 	 * @param array $posted_data Array of global _POST data.
 	 *
 	 * @return array.
 	 */
-	public function calculate_delivery_day_fee( $order_id, $posted_data ) {
+	public function calculate_non_standard_fee( $order_id, $posted_data ) {
 		$order = wc_get_order( $order_id );
 
 		if ( ! is_a( $order, 'WC_Order' ) ) {

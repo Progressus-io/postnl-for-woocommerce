@@ -118,6 +118,7 @@ class Delivery_Day extends Base {
 		}
 
 		$evening_fee = parent::evening_fee_data();
+		$morning_fee = parent::morning_fee_data();
 		$return_data = $this->get_init_content_data( $post_data );
 
 		foreach ( $response['DeliveryOptions'] as $delivery_option ) {
@@ -126,9 +127,20 @@ class Delivery_Day extends Base {
 			}
 
 			$options = array_map(
-				function( $timeframe ) use ( $evening_fee ) {
+				function( $timeframe ) use ( $evening_fee, $morning_fee ) {
 					$type  = array_shift( $timeframe['Options'] );
-					$price = ( 'Evening' === $type ) ? $evening_fee['fee_price'] : 0;
+
+					switch ( $type ) {
+						case 'Evening' :
+							$price = $evening_fee['fee_price'];
+							break;
+						case '08:00-12:00' :
+							$price = $morning_fee['fee_price'];
+							break;
+						default :
+							$price = 0;
+							break;
+					}
 
 					return array(
 						'from'  => Utils::get_hour_min( $timeframe['From'] ),

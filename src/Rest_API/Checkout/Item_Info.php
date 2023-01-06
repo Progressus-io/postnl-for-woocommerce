@@ -196,6 +196,16 @@ class Item_Info extends Base_Info {
 					return $enabled;
 				},
 			),
+			'morning_delivery_enabled' => array(
+				'default'  => false,
+				'sanitize' => function( $enabled ) {
+					if ( ! is_bool( $enabled ) ) {
+						return false;
+					}
+
+					return $enabled;
+				},
+			),
 			'number_pickup_points'     => array(
 				'rename'   => 'locations',
 				'default'  => 10,

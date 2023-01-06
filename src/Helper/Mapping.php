@@ -27,8 +27,9 @@ class Mapping {
 			'NL' => array(
 				'NL'  => array(
 					'delivery_day_type'   => array(
-						'Daytime' => esc_html__( 'Standard Shipment', 'postnl-for-woocommerce' ),
-						'Evening' => esc_html__( 'Evening Delivery', 'postnl-for-woocommerce' ),
+						'08:00-12:00' => esc_html__( 'Morning Delivery', 'postnl-for-woocommerce' ),
+						'Daytime'     => esc_html__( 'Standard Shipment', 'postnl-for-woocommerce' ),
+						'Evening'     => esc_html__( 'Evening Delivery', 'postnl-for-woocommerce' ),
 					),
 					'dropoff_points_type' => array(
 						'Pickup' => esc_html__( 'Pickup at PostNL Point', 'postnl-for-woocommerce' ),
@@ -75,6 +76,7 @@ class Mapping {
 						'3389' => array( 'signature_on_delivery', 'return_no_answer' ),
 						'3096' => array( 'signature_on_delivery', 'only_home_address', 'return_no_answer' ),
 						'2928' => array( 'letterbox' ),
+						'3438' => array( 'id_check' ),
 					),
 					'pickup_points' => array(
 						'3533' => array(),
@@ -200,9 +202,13 @@ class Mapping {
 					'frontend_data' => array(
 						'delivery_day' => array(
 							'type' => array(
-								'Evening' => array(
+								'Evening'     => array(
 									'characteristic' => '118',
 									'option'         => '006',
+								),
+								'08:00-12:00' => array(
+									'characteristic' => '118',
+									'option'         => '008',
 								),
 							),
 						),

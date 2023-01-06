@@ -30,7 +30,12 @@ if ( empty( $data['delivery_options'] ) ) {
 							$is_charged = ( empty( $option['price'] ) ) ? '' : wc_price( $option['price'] );
 							$is_checked = ( $value === $data['value'] ) ? 'checked="checked"' : '';
 							$is_active  = ( $value === $data['value'] ) ? 'active' : '';
-							$is_evening = ( 'Evening' === $option['type'] ) ? __( 'Evening', 'postnl-for-woocommerce' ) : '';
+							$delivery_time = '';
+							if( 'Evening' === $option['type'] ) {
+								$delivery_time = esc_html__( 'Evening', 'postnl-for-woocommerce' );
+							} elseif( '08:00-12:00' === $option['type'] ) {
+								$delivery_time = esc_html__( 'Morning', 'postnl-for-woocommerce' );
+							}
 						?>
 						<li 
 							class="<?php echo esc_attr( $option['type'] . ' ' . $is_active ); ?>"
@@ -50,7 +55,7 @@ if ( empty( $data['delivery_options'] ) ) {
 									<?php echo esc_html( $is_checked ); ?>
 								/>
 								<i><?php echo wp_kses_post( $is_charged ); ?></i>
-								<i><?php echo esc_html( $is_evening ); ?></i>
+								<i><?php echo esc_html( $delivery_time ); ?></i>
 								<span><?php echo esc_html( $option['from'] . ' - ' . $option['to'] ); ?></span>
 							</label>
 						</li>

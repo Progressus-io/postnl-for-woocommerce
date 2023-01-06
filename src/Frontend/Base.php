@@ -99,7 +99,7 @@ abstract class Base {
 		add_filter( 'woocommerce_checkout_posted_data', array( $this, 'validate_posted_data' ) );
 		add_action( 'woocommerce_checkout_update_order_meta', array( $this, 'save_data' ), 10, 2 );
 		add_action( 'woocommerce_checkout_update_order_meta', array( $this, 'save_default_data' ), 15, 2 );
-		add_action( 'woocommerce_checkout_update_order_meta', array( $this, 'calculate_evening_fee' ), 20, 2 );
+		add_action( 'woocommerce_checkout_update_order_meta', array( $this, 'calculate_non_standard_fee' ), 20, 2 );
 		add_filter( 'postnl_frontend_checkout_tab', array( $this, 'add_checkout_tab' ), 10, 2 );
 		add_action( 'postnl_checkout_content', array( $this, 'display_content' ), 10, 2 );
 	}
@@ -323,14 +323,14 @@ abstract class Base {
 	}
 
 	/**
-	 * Calculate evening fee.
+	 * Calculate non standard delivery day fee.
 	 *
 	 * @param array $order_id ID of order post.
 	 * @param array $posted_data Array of global _POST data.
 	 *
-	 * @return array.
+	 * @return void
 	 */
-	public function calculate_evening_fee( $order_id, $posted_data ) {
+	public function calculate_non_standard_fee( $order_id, $posted_data ) {
 		$order = wc_get_order( $order_id );
 
 		if ( ! is_a( $order, 'WC_Order' ) ) {
@@ -339,31 +339,37 @@ abstract class Base {
 
 		$data = $this->get_data( $order->get_id() );
 
-		$add_optional_fee = true;
-		$evening_fee      = self::evening_fee_data();
+		$add_optional_fee  = true;
+		$non_standard_fees = array(
+			self::evening_fee_data(),
+			self::morning_fee_data()
+		);
 
-		foreach ( $order->get_fees() as $item_fee ) {
-			$fee_name = $item_fee->get_name();
-
-			if ( $item_fee->get_name() === $evening_fee['fee_name'] ) {
-				$add_optional_fee = false;
+		foreach ( $non_standard_fees as $fee ) {
+			if ( $fee['condition']['value'] === $data['frontend'][ $fee['condition']['key'] ] ) {
+				$fee_name  = $fee['fee_name'];
+				$fee_price = $fee['fee_price'];
 			}
 		}
 
-		if ( empty( $data['frontend'][ $evening_fee['condition']['key'] ] ) ) {
-			$add_optional_fee = false;
-		} elseif ( $data['frontend'][ $evening_fee['condition']['key'] ] !== $evening_fee['condition']['value'] ) {
-			$add_optional_fee = false;
+		if ( ! isset( $fee_name ) ) {
+			return;
+		}
+
+		foreach ( $order->get_fees() as $item_fee ) {
+			if ( $item_fee->get_name() === $fee_name ) {
+				$add_optional_fee = false;
+			}
 		}
 
 		if ( true === $add_optional_fee ) {
 			$item_fee = new \WC_Order_Item_Fee();
 
-			$item_fee->set_name( $evening_fee['fee_name'] );
-			$item_fee->set_amount( $evening_fee['fee_price'] );
+			$item_fee->set_name( $fee_name );
+			$item_fee->set_amount( $fee_price );
 			$item_fee->set_tax_class( '' );
 			$item_fee->set_tax_status( 'taxable' );
-			$item_fee->set_total( $evening_fee['fee_price'] );
+			$item_fee->set_total( $fee_price );
 
 			$order->add_item( $item_fee );
 
@@ -414,6 +420,25 @@ abstract class Base {
 			'condition' => array(
 				'key'   => 'delivery_day_type',
 				'value' => 'Evening',
+			),
+		);
+	}
+
+	/**
+	 * Get evening fee data.
+	 *
+	 * @return array
+	 */
+	public static function morning_fee_data() {
+		$settings    = Settings::get_instance();
+		$morning_fee = $settings->get_morning_delivery_fee();
+
+		return array(
+			'fee_name'  => esc_html__( 'PostNL Morning Fee', 'postnl-for-woocommerce' ),
+			'fee_price' => floatval( $morning_fee ),
+			'condition' => array(
+				'key'   => 'delivery_day_type',
+				'value' => '08:00-12:00',
 			),
 		);
 	}

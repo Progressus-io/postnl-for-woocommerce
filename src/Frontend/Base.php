@@ -349,6 +349,7 @@ abstract class Base {
 			if ( $fee['condition']['value'] === $data['frontend'][ $fee['condition']['key'] ] ) {
 				$fee_name  = $fee['fee_name'];
 				$fee_price = $fee['fee_price'];
+				break;
 			}
 		}
 

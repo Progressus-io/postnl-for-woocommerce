@@ -328,7 +328,7 @@ abstract class Base {
 	 * @param array $order_id ID of order post.
 	 * @param array $posted_data Array of global _POST data.
 	 *
-	 * @return array.
+	 * @return void
 	 */
 	public function calculate_non_standard_fee( $order_id, $posted_data ) {
 		$order = wc_get_order( $order_id );
@@ -339,20 +339,21 @@ abstract class Base {
 
 		$data = $this->get_data( $order->get_id() );
 
-		$add_optional_fee = true;
-		$evening_fee      = self::evening_fee_data();
-		$morning_fee      = self::morning_fee_data();
+		$add_optional_fee  = true;
+		$non_standard_fees = array(
+			self::evening_fee_data(),
+			self::morning_fee_data()
+		);
 
-		if ( empty( $data['frontend'][ $evening_fee['condition']['key'] ] ) && empty( $data['frontend'][ $morning_fee['condition']['key'] ] ) ) {
-			return;
+		foreach ( $non_standard_fees as $fee ) {
+			if ( $fee['condition']['value'] === $data['frontend'][ $fee['condition']['key'] ] ) {
+				$fee_name  = $fee['fee_name'];
+				$fee_price = $fee['fee_price'];
+			}
 		}
 
-		if ( $evening_fee['condition']['value'] === $data['frontend'][ $evening_fee['condition']['key'] ] ) {
-			$fee_name = $evening_fee['fee_name'];
-			$fee_price = $evening_fee['fee_price'];
-		} elseif ( $morning_fee['condition']['value'] === $data['frontend'][ $morning_fee['condition']['key'] ] ) {
-			$fee_name = $morning_fee['fee_name'];
-			$fee_price = $morning_fee['fee_price'];
+		if ( ! isset( $fee_name ) ) {
+			return;
 		}
 
 		foreach ( $order->get_fees() as $item_fee ) {

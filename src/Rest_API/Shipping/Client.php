@@ -198,6 +198,7 @@ class Client extends Base {
 
 		$addresses[] = array(
 			'AddressType' => '01',
+			'CompanyName' => $this->item_info->receiver['company'],
 			'City'        => $this->item_info->receiver['city'],
 			'Countrycode' => $this->item_info->receiver['country'],
 			'FirstName'   => $this->item_info->receiver['first_name'],

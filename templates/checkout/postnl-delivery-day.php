@@ -27,7 +27,7 @@ if ( empty( $data['delivery_options'] ) ) {
 					<?php foreach ( $delivery['options'] as $option ) { ?>
 						<?php
 							$value      = sanitize_title( $delivery['date'] . '_' . $option['from'] . '-' . $option['to'] . '_' . $option['price'] );
-							$is_charged = ( empty( $option['price'] ) ) ? '' : wc_price( $option['price'] );
+							$is_charged = ( empty( $option['price'] ) ) ? '' : '+ ' . wc_price( $option['price'] );
 							$is_checked = ( $value === $data['value'] ) ? 'checked="checked"' : '';
 							$is_active  = ( $value === $data['value'] ) ? 'active' : '';
 							$delivery_time = '';

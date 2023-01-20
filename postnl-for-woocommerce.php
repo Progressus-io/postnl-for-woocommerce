@@ -35,7 +35,7 @@ if ( ! defined( 'POSTNL_WC_PLUGIN_FILE' ) ) {
 	define( 'POSTNL_WC_PLUGIN_FILE', __FILE__ );
 }
 
-require_once 'vendor/autoload.php';
+require_once ( plugin_dir_path( __FILE__ ) . '/vendor/autoload.php' );
 
 /**
  * Main PostNL for WooCommerce.

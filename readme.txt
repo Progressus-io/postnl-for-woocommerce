@@ -5,9 +5,9 @@ Tags: PostNL, Shipping
 Requires at least: 4.6
 Requires PHP: 5.6
 Tested up to: 6.0
-Stable tag: 5.0.0
+Stable tag: 5.1.0
 WC requires at least: 4.0
-WC tested up to: 6.9
+WC tested up to: 7.3
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -34,6 +34,15 @@ PostNL’s official extension for WooCommerce on WordPress. Manage your national
 
 
 == Changelog ==
+
+= 5.1 =
+* Support shipping from BE
+* Add morning delivery option
+* Add ID check shipping option
+* Fix : Make dropoff points optional
+* Fix WooCommerce HPOS compatibility
+* Fix track and trace URL
+* Print company name on the label
 
 = 5.0 =
 * First public release

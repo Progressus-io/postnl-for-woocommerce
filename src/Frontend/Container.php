@@ -383,9 +383,11 @@ class Container {
 			return;
 		}
 
-		if ( ! empty( $post_data['postnl_delivery_day_price'] ) && 'delivery_day' === $post_data['postnl_option'] ) {
-			$evening_fee = Base::evening_fee_data();
-			$cart->add_fee( $evening_fee['fee_name'], wc_format_decimal( $post_data['postnl_delivery_day_price'] ) );
+		$non_standard_fees        = Base::non_standard_fees_data();
+		$is_non_standard_delivery = isset( $non_standard_fees[ $post_data['postnl_delivery_day_type'] ] );
+
+		if ( ! empty( $post_data['postnl_delivery_day_price'] ) && 'delivery_day' === $post_data['postnl_option'] && $is_non_standard_delivery ) {
+			$cart->add_fee( $non_standard_fees[ $post_data['postnl_delivery_day_type'] ]['fee_name'], wc_format_decimal( $post_data['postnl_delivery_day_price'] ) );
 		}
 	}
 

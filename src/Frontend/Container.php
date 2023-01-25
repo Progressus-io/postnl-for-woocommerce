@@ -245,8 +245,8 @@ class Container {
 
 			$options = array_filter(
 				$options,
-				function( $option ) {
-					return ( 'Evening' !== $option['type'] && '08:00-12:00' !== $option['type'] );
+				function( $option ) use ( $non_standard_fees ) {
+					return isset( $non_standard_fees[ $option['type'] ] );
 				}
 			);
 

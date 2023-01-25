@@ -476,9 +476,10 @@ abstract class Base {
 					}
 
 					$labels[] = array(
-						'type'     => $label_type,
-						'barcode'  => $barcode,
-						'filepath' => $filepath,
+						'type'       => $label_type,
+						'barcode'    => $barcode,
+						'created_at' => current_time( 'timestamp' ),
+						'filepath'   => $filepath,
 					);
 				}
 			}
@@ -599,9 +600,10 @@ abstract class Base {
 		}
 
 		$merged_labels[ $label_type ] = array(
-			'type'     => $label_type,
-			'barcode'  => $barcode,
-			'filepath' => $merged_info['filepath'],
+			'type'       => $label_type,
+			'barcode'    => $barcode,
+			'created_at' => current_time( 'timestamp' ),
+			'filepath'   => $merged_info['filepath'],
 		);
 
 		return $merged_labels;

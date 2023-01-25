@@ -426,7 +426,7 @@ abstract class Base {
 	}
 
 	/**
-	 * Get evening fee data.
+	 * Get morning fee data.
 	 *
 	 * @return array
 	 */
@@ -441,6 +441,18 @@ abstract class Base {
 				'key'   => 'delivery_day_type',
 				'value' => '08:00-12:00',
 			),
+		);
+	}
+
+	/**
+	 * Get available nonstandard delivery time fees data
+	 *
+	 * @return array
+	 */
+	public static function non_standard_fees_data() {
+		return array(
+			'08:00-12:00' => self::morning_fee_data(),
+			'Evening'     => self::evening_fee_data()
 		);
 	}
 }

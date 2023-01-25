@@ -78,17 +78,6 @@ class Bulk extends Base {
 		if ( ! empty( $object_ids ) ) {
 			foreach ( $object_ids as $order_id ) {
 				try {
-					$saved_data = $this->get_data( $order_id );
-
-					if ( ! empty( $saved_data['labels']['label']['created_at'] ) && ! empty( $saved_data['labels']['label']['filepath'] ) ) {
-						$time_deviation = current_time( 'timestamp' ) - intval( $saved_data['labels']['label']['created_at'] );
-
-						if ( $time_deviation <= 7 * DAY_IN_SECONDS ) {
-							$saved_datas[] = $saved_data;
-							continue;
-						}
-					}
-
 					$saved_datas[] = $this->save_meta_value( $order_id, $_REQUEST );
 					$tracking_note = $this->get_tracking_note( $order_id );
 

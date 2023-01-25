@@ -374,6 +374,11 @@ abstract class Base {
 
 		$saved_data['labels'] = array_merge( $labels, $return_labels );
 		*/
+		$saved_data['barcode'] = array(
+			'value'      => $barcode,
+			'created_at' => current_time( 'timestamp' ),
+		);
+
 		$saved_data['labels'] = $labels;
 		$order->update_meta_data( $this->meta_name, $saved_data );
 		$order->save();
@@ -500,6 +505,17 @@ abstract class Base {
 	 * @throws \Exception Error when response does not have Barcode value.
 	 */
 	public function create_barcode( $order ) {
+		$saved_data = $this->get_data( $order->get_id() );
+
+		// Check if barcode has been created on the last 7 days.
+		if ( ! empty( $saved_data['barcode']['created_at'] ) && ! empty( $saved_data['barcode']['value'] ) ) {
+			$time_deviation = current_time( 'timestamp' ) - intval( $saved_data['barcode']['created_at'] );
+
+			if ( $time_deviation <= 7 * DAY_IN_SECONDS ) {
+				return $saved_data['barcode']['value'];
+			}
+		}
+
 		$data = array(
 			'order' => $order,
 		);

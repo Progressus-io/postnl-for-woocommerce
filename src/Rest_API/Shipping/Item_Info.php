@@ -212,6 +212,7 @@ class Item_Info extends Base_Info {
 
 		$this->api_args['order_details'] = array(
 			'order_id'       => $order->get_id(),
+			'order_number'   => $order->get_order_number(),
 			'barcode'        => $post_data['barcode'],
 			'return_barcode' => $post_data['return_barcode'],
 			'currency'       => $order->get_currency(),
@@ -387,6 +388,9 @@ class Item_Info extends Base_Info {
 		return array(
 			'order_id'        => array(
 				'error' => __( 'Order ID is empty!', 'postnl-for-woocommerce' ),
+			),
+			'order_number'        => array(
+				'error' => __( 'Order number is empty!', 'postnl-for-woocommerce' ),
 			),
 			'barcode'         => array(
 				'error' => __( 'Barcode is empty!', 'postnl-for-woocommerce' ),

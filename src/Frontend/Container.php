@@ -221,7 +221,7 @@ class Container {
 			return $default_val;
 		}
 
-		$evening_fee = Base::evening_fee_data();
+		$non_standard_fees = Base::non_standard_fees_data();
 
 		foreach ( $response['DeliveryOptions'] as $delivery_option ) {
 			if ( empty( $delivery_option['DeliveryDate'] ) || empty( $delivery_option['Timeframe'] ) ) {
@@ -229,9 +229,9 @@ class Container {
 			}
 
 			$options = array_map(
-				function( $timeframe ) use ( $evening_fee ) {
+				function( $timeframe ) use ( $non_standard_fees ) {
 					$type  = array_shift( $timeframe['Options'] );
-					$price = ( 'Evening' === $type ) ? $evening_fee['fee_price'] : 0;
+					$price = isset( $non_standard_fees[ $type ] ) ? $non_standard_fees[ $type ]['fee_price'] : 0;
 
 					return array(
 						'from'  => Utils::get_hour_min( $timeframe['From'] ),
@@ -245,8 +245,8 @@ class Container {
 
 			$options = array_filter(
 				$options,
-				function( $option ) {
-					return ( 'Evening' !== $option['type'] && '08:00-12:00' !== $option['type'] );
+				function( $option ) use ( $non_standard_fees ) {
+					return isset( $non_standard_fees[ $option['type'] ] );
 				}
 			);
 
@@ -383,9 +383,11 @@ class Container {
 			return;
 		}
 
-		if ( ! empty( $post_data['postnl_delivery_day_price'] ) && 'delivery_day' === $post_data['postnl_option'] ) {
-			$evening_fee = Base::evening_fee_data();
-			$cart->add_fee( $evening_fee['fee_name'], wc_format_decimal( $post_data['postnl_delivery_day_price'] ) );
+		$non_standard_fees        = Base::non_standard_fees_data();
+		$is_non_standard_delivery = isset( $non_standard_fees[ $post_data['postnl_delivery_day_type'] ] );
+
+		if ( ! empty( $post_data['postnl_delivery_day_price'] ) && 'delivery_day' === $post_data['postnl_option'] && $is_non_standard_delivery ) {
+			$cart->add_fee( $non_standard_fees[ $post_data['postnl_delivery_day_type'] ]['fee_name'], wc_format_decimal( $post_data['postnl_delivery_day_price'] ) );
 		}
 	}
 

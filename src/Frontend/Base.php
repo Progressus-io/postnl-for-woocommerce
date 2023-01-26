@@ -340,13 +340,10 @@ abstract class Base {
 		$data = $this->get_data( $order->get_id() );
 
 		$add_optional_fee  = true;
-		$non_standard_fees = array(
-			self::evening_fee_data(),
-			self::morning_fee_data()
-		);
+		$non_standard_fees = self::non_standard_fees_data();
 
-		foreach ( $non_standard_fees as $fee ) {
-			if ( $fee['condition']['value'] === $data['frontend'][ $fee['condition']['key'] ] ) {
+		foreach ( $non_standard_fees as $type => $fee ) {
+			if ( $type === $data['frontend'][ $fee['condition']['key'] ] ) {
 				$fee_name  = $fee['fee_name'];
 				$fee_price = $fee['fee_price'];
 				break;
@@ -426,7 +423,7 @@ abstract class Base {
 	}
 
 	/**
-	 * Get evening fee data.
+	 * Get morning fee data.
 	 *
 	 * @return array
 	 */
@@ -441,6 +438,18 @@ abstract class Base {
 				'key'   => 'delivery_day_type',
 				'value' => '08:00-12:00',
 			),
+		);
+	}
+
+	/**
+	 * Get available nonstandard delivery time fees data
+	 *
+	 * @return array
+	 */
+	public static function non_standard_fees_data() {
+		return array(
+			'08:00-12:00' => self::morning_fee_data(),
+			'Evening'     => self::evening_fee_data()
 		);
 	}
 }

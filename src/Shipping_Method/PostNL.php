@@ -90,7 +90,7 @@ class PostNL extends \WC_Shipping_Flat_Rate {
 		$form_fields['minimum_for_free_shipping'] = array(
 			'title' 		=> esc_html__( 'Minimum amount for free shipping', 'postnl-for-woocommerce' ),
 			'type' 			=> 'number',
-			'label' 		=> esc_html__( '0 or keep it empty to disable this feature', 'postnl-for-woocommerce' ),
+			'description'   => esc_html__( '0 or keep it empty to disable this feature', 'postnl-for-woocommerce' ),
 			'default' 		=> 0,
 		);
 

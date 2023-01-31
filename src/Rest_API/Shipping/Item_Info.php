@@ -184,6 +184,9 @@ class Item_Info extends Base_Info {
 			'create_return_label'   => $saved_data['backend']['create_return_label'] ?? '',
 			'letterbox'             => $saved_data['backend']['letterbox'] ?? '',
 			'id_check'              => $saved_data['backend']['id_check'] ?? '',
+			'packets'               => $saved_data['backend']['packets'] ?? '',
+			'mailboxpacket'         => $saved_data['backend']['mailboxpacket'] ?? '',
+			'track_and_trace'       => $saved_data['backend']['track_and_trace'] ?? '',
 		);
 
 		$this->api_args['frontend_data'] = array(
@@ -674,6 +677,24 @@ class Item_Info extends Base_Info {
 				},
 			),
 			'id_check'              => array(
+				'default'  => false,
+				'sanitize' => function( $picked ) {
+					return ( 'yes' === $picked );
+				},
+			),
+			'packets'              => array(
+				'default'  => false,
+				'sanitize' => function( $picked ) {
+					return ( 'yes' === $picked );
+				},
+			),
+			'mailboxpacket'              => array(
+				'default'  => false,
+				'sanitize' => function( $picked ) {
+					return ( 'yes' === $picked );
+				},
+			),
+			'track_and_trace'              => array(
 				'default'  => false,
 				'sanitize' => function( $picked ) {
 					return ( 'yes' === $picked );

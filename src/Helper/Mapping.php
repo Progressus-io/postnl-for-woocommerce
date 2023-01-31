@@ -58,7 +58,7 @@ class Mapping {
 	/**
 	 * Product code mapping.
 	 *
-	 * @return Array
+	 * @return array
 	 */
 	public static function product_code() {
 		return array(
@@ -96,7 +96,7 @@ class Mapping {
 				),
 				'EU'  => array(
 					'delivery_day'  => array(
-						'4944' => array(),
+						'4907' => array( 'track_and_trace' ),
 					),
 					'pickup_points' => array(
 						'4944' => array(),
@@ -127,12 +127,12 @@ class Mapping {
 				),
 				'NL' => array(
 					'delivery_day' => array(
-						'4944' => array(),
+						'4907' => array( 'track_and_trace' ),
 					),
 				),
 				'EU' => array(
 					'delivery_day' => array(
-						'4944' => array(),
+						'4907' => array( 'track_and_trace' ),
 					),
 				),
 				'ROW' => array(

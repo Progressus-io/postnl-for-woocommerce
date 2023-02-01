@@ -76,17 +76,17 @@ class PostNL extends \WC_Shipping_Flat_Rate {
 	}
 
 	/**
-	 * Manipulate the title default.
+	 * Add form fields for PostNL.
 	 *
 	 * @param Array $form_fields List of instance form fields.
 	 *
 	 * @return Array
 	 */
 	public function instance_form_fields( $form_fields ) {
-		// Change title default value
+		// Change title default value.
 		$form_fields['title']['default'] = $this->method_title;
 
-		// Minimum for free shipping
+		// Minimum for free shipping.
 		$form_fields['minimum_for_free_shipping'] = array(
 			'title' 		=> esc_html__( 'Minimum amount for free shipping', 'postnl-for-woocommerce' ),
 			'type' 			=> 'number',

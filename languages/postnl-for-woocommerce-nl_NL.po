@@ -1,8 +1,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PostNL for WooCommerce\n"
-"POT-Creation-Date: 2023-01-07 23:49+0200\n"
-"PO-Revision-Date: 2023-01-07 23:51+0200\n"
+"POT-Creation-Date: 2023-02-01 16:51+0200\n"
+"PO-Revision-Date: 2023-02-01 16:54+0200\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: nl_NL\n"
@@ -30,11 +30,11 @@ msgid ""
 "to shop</a>"
 msgstr ""
 
-#: src/Frontend/Base.php:419
+#: src/Frontend/Base.php:416
 msgid "PostNL Evening Fee"
 msgstr ""
 
-#: src/Frontend/Base.php:438
+#: src/Frontend/Base.php:435
 msgid "PostNL Morning Fee"
 msgstr ""
 
@@ -153,36 +153,36 @@ msgstr "Aantal labels: "
 msgid "Create Return Label: "
 msgstr "Creëer retourlabel: "
 
-#: src/Order/Base.php:421 src/Order/Single.php:473 src/Order/Single.php:523
+#: src/Order/Base.php:426 src/Order/Single.php:473 src/Order/Single.php:523
 msgid "Order does not exists!"
 msgstr ""
 
-#: src/Order/Base.php:512
+#: src/Order/Base.php:529
 msgid "Cannot create the barcode."
 msgstr ""
 
-#: src/Order/Base.php:546
+#: src/Order/Base.php:563
 msgid "Cannot create return barcode."
 msgstr ""
 
-#: src/Order/Base.php:660 src/Order/Base.php:759
+#: src/Order/Base.php:678 src/Order/Base.php:777
 msgid "Cannot create the label. Label content is missing"
 msgstr ""
 
-#: src/Order/Base.php:691
+#: src/Order/Base.php:709
 msgid "Cannot create the return label. Label content is missing"
 msgstr ""
 
-#: src/Order/Base.php:722
+#: src/Order/Base.php:740
 msgid "Cannot create the letterbox. Label content is missing"
 msgstr ""
 
-#: src/Order/Base.php:753
+#: src/Order/Base.php:771
 msgid "Cannot create the label. Barcode data is missing"
 msgstr ""
 
 #. translators: %s the current service.
-#: src/Order/Base.php:882
+#: src/Order/Base.php:900
 #, php-format
 msgid "%s Tracking Number: {tracking-link}"
 msgstr ""
@@ -304,12 +304,12 @@ msgid "Order ID does not exists!"
 msgstr ""
 
 #: src/Rest_API/Barcode/Item_Info.php:130
-#: src/Rest_API/Shipping/Item_Info.php:319
+#: src/Rest_API/Shipping/Item_Info.php:320
 msgid "Customer Code is empty!"
 msgstr ""
 
 #: src/Rest_API/Barcode/Item_Info.php:133
-#: src/Rest_API/Shipping/Item_Info.php:322
+#: src/Rest_API/Shipping/Item_Info.php:323
 msgid "Customer Number is empty!"
 msgstr ""
 
@@ -381,95 +381,99 @@ msgstr ""
 msgid "Shipping \"House number\" is empty!"
 msgstr ""
 
-#: src/Rest_API/Shipping/Item_Info.php:316
+#: src/Rest_API/Shipping/Item_Info.php:317
 msgid "Location Code is empty!"
 msgstr ""
 
-#: src/Rest_API/Shipping/Item_Info.php:331
+#: src/Rest_API/Shipping/Item_Info.php:332
 msgid "Store email is empty!"
 msgstr ""
 
-#: src/Rest_API/Shipping/Item_Info.php:337
+#: src/Rest_API/Shipping/Item_Info.php:338
 msgid "Wrong format for store email!"
 msgstr ""
 
-#: src/Rest_API/Shipping/Item_Info.php:389
+#: src/Rest_API/Shipping/Item_Info.php:390
 msgid "Order ID is empty!"
 msgstr ""
 
-#: src/Rest_API/Shipping/Item_Info.php:392
+#: src/Rest_API/Shipping/Item_Info.php:393
+msgid "Order number is empty!"
+msgstr ""
+
+#: src/Rest_API/Shipping/Item_Info.php:396
 msgid "Barcode is empty!"
 msgstr ""
 
-#: src/Rest_API/Shipping/Item_Info.php:398
+#: src/Rest_API/Shipping/Item_Info.php:402
 msgid "Product code is empty!"
 msgstr ""
 
-#: src/Rest_API/Shipping/Item_Info.php:402
+#: src/Rest_API/Shipping/Item_Info.php:406
 msgid "Wrong format for product code!"
 msgstr ""
 
-#: src/Rest_API/Shipping/Item_Info.php:436
+#: src/Rest_API/Shipping/Item_Info.php:440
 msgid "Total weight is empty!"
 msgstr ""
 
-#: src/Rest_API/Shipping/Item_Info.php:451
+#: src/Rest_API/Shipping/Item_Info.php:455
 msgid "Customer email is not valid!"
 msgstr ""
 
-#: src/Rest_API/Shipping/Item_Info.php:460
+#: src/Rest_API/Shipping/Item_Info.php:464
 msgid "Currency is not available!"
 msgstr ""
 
-#: src/Rest_API/Shipping/Item_Info.php:487
+#: src/Rest_API/Shipping/Item_Info.php:491
 msgid "Delivery day \"Date\" is empty!"
 msgstr ""
 
-#: src/Rest_API/Shipping/Item_Info.php:503
+#: src/Rest_API/Shipping/Item_Info.php:507
 msgid "Delivery day \"From\" is empty!"
 msgstr ""
 
-#: src/Rest_API/Shipping/Item_Info.php:516
+#: src/Rest_API/Shipping/Item_Info.php:520
 msgid "Delivery day \"To\" is empty!"
 msgstr ""
 
-#: src/Rest_API/Shipping/Item_Info.php:532
+#: src/Rest_API/Shipping/Item_Info.php:536
 msgid "Delivery day \"Type\" is empty!"
 msgstr ""
 
-#: src/Rest_API/Shipping/Item_Info.php:555
+#: src/Rest_API/Shipping/Item_Info.php:559
 msgid "Pickup \"Company name\" is empty!"
 msgstr ""
 
-#: src/Rest_API/Shipping/Item_Info.php:564
+#: src/Rest_API/Shipping/Item_Info.php:568
 msgid "Pickup \"Address 1\" is empty!"
 msgstr ""
 
-#: src/Rest_API/Shipping/Item_Info.php:579
+#: src/Rest_API/Shipping/Item_Info.php:583
 msgid "Pickup Point \"City\" is empty!"
 msgstr ""
 
-#: src/Rest_API/Shipping/Item_Info.php:588
+#: src/Rest_API/Shipping/Item_Info.php:592
 msgid "Pickup Point \"Postcode\" is empty!"
 msgstr ""
 
-#: src/Rest_API/Shipping/Item_Info.php:600
+#: src/Rest_API/Shipping/Item_Info.php:604
 msgid "Pickup Point \"Country\" is empty!"
 msgstr ""
 
-#: src/Rest_API/Shipping/Item_Info.php:705
+#: src/Rest_API/Shipping/Item_Info.php:709
 msgid "Item HS Code must be between 6 and 20 characters long"
 msgstr ""
 
-#: src/Rest_API/Shipping/Item_Info.php:718
+#: src/Rest_API/Shipping/Item_Info.php:722
 msgid "Item \"Product ID\" is empty!"
 msgstr ""
 
-#: src/Rest_API/Shipping/Item_Info.php:721
+#: src/Rest_API/Shipping/Item_Info.php:725
 msgid "Item \"Product SKU\" is empty!"
 msgstr ""
 
-#: src/Rest_API/Shipping/Item_Info.php:738
+#: src/Rest_API/Shipping/Item_Info.php:742
 msgid "Item quantity must be more than 1"
 msgstr ""
 
@@ -486,6 +490,15 @@ msgstr ""
 "verwerken van jouw zendingen met PostNL. Hiervoor heb je een zakelijk "
 "contract nodig met PostNL. Ben je nog geen klant van PostNL? Dan kan je "
 "%1$shier%2$s klant worden."
+
+#: src/Shipping_Method/PostNL.php:93
+#, php-format
+msgid "Free shipping from %s"
+msgstr "Gratis verzenden vanaf %s"
+
+#: src/Shipping_Method/PostNL.php:95
+msgid "Keep empty if you don’t want to use Free shipping"
+msgstr "Laat leeg in als je geen gebruik wil maken van Gratis verzenden."
 
 #: src/Shipping_Method/Settings.php:67
 msgid "Account Settings"

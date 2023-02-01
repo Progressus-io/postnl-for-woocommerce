@@ -62,6 +62,13 @@ class Settings extends \WC_Settings_API {
 		);
 
 		return array(
+			// Manual.
+			'user_manual'    => array(
+				'title'       => esc_html__( 'Manual', 'postnl-for-woocommerce' ),
+				'type'        => 'title',
+				// translators: %1$s & %2$s is replaced with <a> tag.
+				'description' => sprintf( __( 'Consult the %1$smanual%2$s for help installing the plug-in.', 'postnl-for-woocommerce' ), '<a href="https://postnl.github.io/woocommerce/new-manual/?lang=nl" target="_blank">', '</a>' ),
+			),
 			// Account Settings.
 			'account_settings_title'    => array(
 				'title'       => esc_html__( 'Account Settings', 'postnl-for-woocommerce' ),

@@ -49,51 +49,19 @@ class PostNL extends \WC_Shipping_Flat_Rate {
 		$this->init_form_fields();
 		$this->init_settings();
 
-		add_filter( 'woocommerce_shipping_instance_form_fields_' . $this->id, array( $this, 'instance_form_fields' ), 10, 1 );
+		add_filter( 'woocommerce_shipping_instance_form_fields_' . $this->id, array( $this, 'change_title_default' ), 10, 1 );
 		add_action( 'woocommerce_update_options_shipping_' . $this->id, array( $this, 'process_admin_options' ) );
 	}
 
 	/**
-	 * Calculate the shipping costs.
-	 *
-	 * @param array $package Package of items from cart.
-	 */
-	public function calculate_shipping( $package = array() ) {
-		// Set free shipping rate if cart subtotal exceed minimum_for_free_shipping
-		$minimum_for_free_shipping = $this->get_option( 'minimum_for_free_shipping' );
-		if ( '' !== $minimum_for_free_shipping && $package['cart_subtotal'] > $minimum_for_free_shipping ) {
-			$rate = array(
-				'id'      => $this->get_rate_id(),
-				'label'   => $this->title,
-				'cost'    => 0,
-				'package' => $package,
-			);
-
-			$this->add_rate( $rate );
-		} else {
-			parent::calculate_shipping();
-		}
-	}
-
-	/**
-	 * Add form fields for PostNL.
+	 * Manipulate the title default.
 	 *
 	 * @param Array $form_fields List of instance form fields.
 	 *
 	 * @return Array
 	 */
-	public function instance_form_fields( $form_fields ) {
-		// Change title default value.
+	public function change_title_default( $form_fields ) {
 		$form_fields['title']['default'] = $this->method_title;
-
-		// Minimum for free shipping.
-		$form_fields['minimum_for_free_shipping'] = array(
-			'title' 		=> esc_html__( 'Minimum amount for free shipping', 'postnl-for-woocommerce' ),
-			'type' 			=> 'number',
-			'description'   => esc_html__( '0 or keep it empty to disable this feature', 'postnl-for-woocommerce' ),
-			'default' 		=> 0,
-		);
-
 		return $form_fields;
 	}
 

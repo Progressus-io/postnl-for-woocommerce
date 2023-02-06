@@ -80,7 +80,16 @@ Follow these instructions (https://www.postnl.nl/Images/aanvragen-api-key-stappe
 
 == Changelog ==
 
-= 5.X.X (2023-02-06) =
+= 5.1.0 (2023-02-06) =
+* Support shipping from BE
+* Add morning delivery option
+* Add ID check shipping option
+* Fix : Make dropoff points optional
+* Fix WooCommerce HPOS compatibility
+* Fix track and trace URL
+* Print company name on the label
+
+= 5.0.0 (2023-02-06) =
 * MAJOR RELEASE
 * Reconfigure the plug-in.
 

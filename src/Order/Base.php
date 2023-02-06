@@ -237,14 +237,14 @@ abstract class Base {
 
 		$product_map  = Mapping::product_code();
 		$from_country = Utils::get_base_country();
-		$to_country   = $order->get_shipping_country();
+		$to_country   = Utils::get_shipping_zone( $order->get_shipping_country() );
 		$saved_data   = $this->get_data( $order->get_id() );
 
 		if ( empty( $saved_data['frontend'] ) ) {
-			return array();
+			$saved_data['frontend'] = array();
 		}
 
-		$selected_option   = '';
+		$selected_option   = 'delivery_day';
 		$available_options = array();
 
 		foreach ( $saved_data['frontend'] as $key => $value ) {

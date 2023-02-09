@@ -71,7 +71,7 @@ class PostNL extends \WC_Shipping_Flat_Rate {
 
 			$this->add_rate( $rate );
 		} else {
-			parent::calculate_shipping();
+			parent::calculate_shipping( $package );
 		}
 	}
 

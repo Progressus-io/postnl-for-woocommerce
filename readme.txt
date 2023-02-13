@@ -4,7 +4,7 @@ Tags: woocommerce, export, delivery, packages, PostNL, Shipping
 Requires at least: 4.6
 Requires PHP: 5.6
 Tested up to: 6.0
-Stable tag: 5.1.0
+Stable tag: 5.1.1
 WC requires at least: 4.0
 WC tested up to: 7.3
 License: GPLv2 or later
@@ -79,6 +79,9 @@ Follow these instructions (https://www.postnl.nl/Images/aanvragen-api-key-stappe
 5. PostNL information on the order details page
 
 == Changelog ==
+
+= 5.1.1 (2023-02-13) =
+* Fix shipping cost calculation for shipping classes
 
 = 5.1.0 (2023-02-06) =
 * Support shipping from BE

@@ -3,10 +3,10 @@ Contributors: PostNL, shadim, abdalsalaam
 Tags: woocommerce, export, delivery, packages, PostNL, Shipping
 Requires at least: 4.6
 Requires PHP: 5.6
-Tested up to: 6.0
-Stable tag: 5.1.1
+Tested up to: 6.1
+Stable tag: 5.1.2
 WC requires at least: 4.0
-WC tested up to: 7.3
+WC tested up to: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -79,6 +79,9 @@ Follow these instructions (https://www.postnl.nl/Images/aanvragen-api-key-stappe
 5. PostNL information on the order details page
 
 == Changelog ==
+
+= 5.1.2 (2023-02-20) =
+* Allow all GlobalPack barcode types usage
 
 = 5.1.1 (2023-02-13) =
 * Fix shipping cost calculation for shipping classes

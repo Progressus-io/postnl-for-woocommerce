@@ -5,9 +5,10 @@
  * Description: With this plug-in you can easily confirm your PostNL shipments and print shipping labels in no time. In addition, your customers are more in control because they choose where and when they receive their order.
  * Author: PostNL
  * Author URI: https://postnl.post/
- * Version: 5.1.1
+ * Version: 5.1.2
+ * Tested up to: 6.1
  * WC requires at least: 4.0
- * WC tested up to: 7.3
+ * WC tested up to: 7.4
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by

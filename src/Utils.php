@@ -236,23 +236,6 @@ class Utils {
 	}
 
 	/**
-	 * Get the available barcode type.
-	 *
-	 * @return String
-	 */
-	public static function get_available_barcode_type() {
-		return array(
-			'3S' => '3S',
-			'2S' => '2S',
-			'CC' => 'CC',
-			'CP' => 'CP',
-			'CD' => 'CD',
-			'CF' => 'CF',
-			'LA' => 'LA',
-		);
-	}
-
-	/**
 	 * Generate the label file name.
 	 *
 	 * @param Int    $order_id ID of the order object.

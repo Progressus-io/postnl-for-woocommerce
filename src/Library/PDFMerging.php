@@ -14,6 +14,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 use Exception;
 use setasign\Fpdi\Fpdi;
 use PostNLWooCommerce\Shipping_Method\Settings;
+use PostNLWooCommerce\Utils;
 
 class PDFMerging {
 	private $_files;    //['form.pdf']  ["1,2,4, 5-19"]
@@ -66,7 +67,6 @@ class PDFMerging {
 
         $fpdi         = new Fpdi();
 		$files        = array();
-		$label_format = $this->settings->get_label_format();
 
         // merger operations
         foreach ($this->_files as $file) {
@@ -114,17 +114,28 @@ class PDFMerging {
         }
 
 		$label_number = 1;
+		$a4_size      = Utils::get_paper_size( 'A4' );
+		$a6_size      = Utils::get_paper_size( 'A6' );
+		$label_format = $this->settings->get_label_format();
 
 		foreach ( $files as $filename => $file_templates ) {
 			foreach ( $file_templates as $file_template ) {
 				if ( 'A6' === $label_format ) {
 					$fpdi->AddPage( $file_template['orientation'], array( $file_template['size']['width'], $file_template['size']['height'] ) );
                     $fpdi->useTemplate( $file_template['template'] );
+					$label_number = 1;
+					continue;
+				}
+
+				if ( intval( $file_template['size']['width'] ) !== intval( $a4_size['width'] ) && intval( $file_template['size']['height'] ) !== intval( $a4_size['height'] ) && intval( $file_template['size']['width'] ) !== intval( $a6_size['width'] ) && intval( $file_template['size']['height'] ) !== intval( $a6_size['height'] ) ) {
+					$fpdi->AddPage( $file_template['orientation'], array( $file_template['size']['width'], $file_template['size']['height'] ) );
+                    $fpdi->useTemplate( $file_template['template'] );
+					$label_number = 1;
 					continue;
 				}
 
 				if ( 1 === $label_number % 4 ) {
-					$fpdi->AddPage($file_template['orientation'], array( '297.03888888889', '209.90277777778' ));
+					$fpdi->AddPage($file_template['orientation'], array( $a4_size['width'], $a4_size['height'] ));
 					$label_number = 1;
 				}
 				

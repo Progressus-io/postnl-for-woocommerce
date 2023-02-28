@@ -135,15 +135,6 @@ class Item_Info extends Base_Info {
 			'globalpack_barcode_type' => array(
 				'rename'   => 'barcode_type',
 				'default'  => '3S',
-				'validate' => function( $type ) use ( $self ) {
-					$available_type = array_keys( Utils::get_available_barcode_type() );
-					if ( $self->is_rest_of_world() && ! in_array( $type, $available_type, true ) ) {
-						throw new \Exception(
-							// translators: %1$s is a barcode type.
-							sprintf( esc_html__( 'Barcode type: %1$s is not available!', 'postnl-for-woocommerce' ), $type )
-						);
-					}
-				},
 				'sanitize' => function( $value ) use ( $self ) {
 					if ( ! $self->is_rest_of_world() ) {
 						return '3S';

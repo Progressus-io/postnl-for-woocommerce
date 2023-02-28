@@ -133,12 +133,16 @@ class Bulk extends Base {
 
 		foreach ( $gen_labels as $idx => $label ) {
 			foreach ( $label as $label_type => $label_info ) {
-				if ( empty( $label_info['merged_files'] ) || empty( $label_info['filepath'] ) ) {
+				if ( empty( $label_info['filepath'] ) ) {
 					continue 2;
 				}
 
 				if ( 'A6' === $label_format ) {
 					$label_paths[] = $label_info['filepath'];
+					continue 2;
+				}
+
+				if ( empty( $label_info['merged_files'] ) ) {
 					continue 2;
 				}
 

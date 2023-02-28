@@ -264,14 +264,14 @@ abstract class Base {
 	 *
 	 * @param WC_Order $order Order object.
 	 *
-	 * @return Array.
+	 * @return array.
 	 */
 	public function get_available_options( $order ) {
 		if ( ! is_a( $order, 'WC_Order' ) ) {
 			return array();
 		}
 
-		$product_map  = Mapping::product_code();
+		$product_map  = Mapping::products_data();
 		$from_country = Utils::get_base_country();
 		$to_country   = Utils::get_shipping_zone( $order->get_shipping_country() );
 		$saved_data   = $this->get_data( $order->get_id() );
@@ -292,8 +292,8 @@ abstract class Base {
 			}
 		}
 
-		foreach ( $product_map[ $from_country ][ $to_country ][ $selected_option ] as $product_code => $sub_options ) {
-			$available_options = array_merge( $available_options, $sub_options );
+		foreach ( $product_map[ $from_country ][ $to_country ][ $selected_option ] as $product ) {
+			$available_options = array_merge( $available_options, $product['combination'] );
 		}
 
 		return $available_options;

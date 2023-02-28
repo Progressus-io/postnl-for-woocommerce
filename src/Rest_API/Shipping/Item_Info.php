@@ -860,7 +860,7 @@ class Item_Info extends Base_Info {
 		$to_country       = $this->api_args['shipping_address']['country'];
 
 		$features = array_keys( $checked_features );
-		$code_map = Mapping::product_code();
+		$code_map = Mapping::products_data();
 
 		$product_code = '';
 		$destination  = Utils::get_shipping_zone( $to_country );
@@ -869,21 +869,21 @@ class Item_Info extends Base_Info {
 			return $product_code;
 		}
 
-		foreach ( $code_map[ $from_country ][ $destination ][ $shipping_feature ] as $code => $feature_list ) {
-			if ( empty( $feature_list ) && empty( $product_code ) ) {
-				$product_code = $code;
+		foreach ( $code_map[ $from_country ][ $destination ][ $shipping_feature ] as $product ) {
+			if ( empty( $product['combination'] ) && empty( $product_code ) ) {
+				$product_code = $product['code'];
 				continue;
 			}
 
 			$is_this_it = true;
-			foreach ( $feature_list as $feature ) {
+			foreach ( $product['combination'] as $feature ) {
 				if ( ! in_array( $feature, $features ) ) {
 					$is_this_it = false;
 				}
 			}
 
 			if ( $is_this_it ) {
-				$product_code = $code;
+				$product_code = $product['code'];
 			}
 		}
 

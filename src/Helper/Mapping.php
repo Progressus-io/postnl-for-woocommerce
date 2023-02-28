@@ -56,47 +56,127 @@ class Mapping {
 	}
 
 	/**
-	 * Product code mapping.
+	 * Products code & options mapping.
 	 *
-	 * @return array
+	 * @return array[]
 	 */
-	public static function product_code() {
+	public static function products_data() {
 		return array(
 			'NL' => array(
 				'NL'  => array(
 					'delivery_day'  => array(
-						'3085' => array(),
-						'3385' => array( 'only_home_address' ),
-						'3090' => array( 'return_no_answer' ),
-						'3087' => array( 'insured_shipping' ),
-						'3189' => array( 'signature_on_delivery' ),
-						'3390' => array( 'return_no_answer', 'only_home_address' ),
-						'3094' => array( 'insured_shipping', 'return_no_answer' ),
-						'3089' => array( 'signature_on_delivery', 'only_home_address' ),
-						'3389' => array( 'signature_on_delivery', 'return_no_answer' ),
-						'3096' => array( 'signature_on_delivery', 'only_home_address', 'return_no_answer' ),
-						'2928' => array( 'letterbox' ),
-						'3438' => array( 'id_check' ),
+						array(
+							'combination' => array(),
+							'code'        => '3085',
+							'options'     => array()
+						),
+						array(
+							'combination' => array( 'only_home_address' ),
+							'code'        => '3385',
+							'options'     => array()
+						),
+						array(
+							'combination' => array( 'return_no_answer' ),
+							'code'        => '3090',
+							'options'     => array()
+						),
+						array(
+							'combination' => array( 'insured_shipping' ),
+							'code'        => '3087',
+							'options'     => array()
+						),
+						array(
+							'combination' => array( 'signature_on_delivery' ),
+							'code'        => '3189',
+							'options'     => array()
+						),
+						array(
+							'combination' => array( 'return_no_answer', 'only_home_address' ),
+							'code'        => '3390',
+							'options'     => array()
+						),
+						array(
+							'combination' => array( 'insured_shipping', 'return_no_answer' ),
+							'code'        => '3094',
+							'options'     => array()
+						),
+						array(
+							'combination' => array( 'signature_on_delivery', 'only_home_address' ),
+							'code'        => '3089',
+							'options'     => array()
+						),
+						array(
+							'combination' => array( 'signature_on_delivery', 'return_no_answer' ),
+							'code'        => '3389',
+							'options'     => array()
+						),
+						array(
+							'combination' => array( 'signature_on_delivery', 'only_home_address', 'return_no_answer' ),
+							'code'        => '3096',
+							'options'     => array()
+						),
+						array(
+							'combination' => array( 'letterbox' ),
+							'code'        => '2928',
+							'options'     => array()
+						),
+						array(
+							'combination' => array( 'id_check' ),
+							'code'        => '3438',
+							'options'     => array()
+						)
 					),
 					'pickup_points' => array(
-						'3533' => array(),
-						'3534' => array( 'insured_shipping' ),
-					),
+						array(
+							'combination' => array(),
+							'code'        => '3533',
+							'options'     => array()
+						),
+						array(
+							'combination' => array( 'insured_shipping' ),
+							'code'        => '3534',
+							'options'     => array()
+						),
+					)
 				),
 				'BE'  => array(
 					'delivery_day'  => array(
-						'4946' => array(),
-						'4941' => array( 'only_home_address' ),
-						'4912' => array( 'signature_on_delivery' ),
-						'4914' => array( 'insured_shipping' ),
+						array(
+							'combination' => array(),
+							'code'        => '4946',
+							'options'     => array()
+						),
+						array(
+							'combination' => array( 'only_home_address' ),
+							'code'        => '4941',
+							'options'     => array()
+						),
+						array(
+							'combination' => array( 'signature_on_delivery' ),
+							'code'        => '4912',
+							'options'     => array()
+						),
+						array(
+							'combination' => array( 'insured_shipping' ),
+							'code'        => '4914',
+							'options'     => array()
+						)
 					),
 					'pickup_points' => array(
-						'4936' => array(),
+						array(
+							'combination' => array(),
+							'code'        => '4936',
+							'options'     => array()
+						)
 					),
 				),
 				'EU'  => array(
 					'delivery_day'  => array(
-						'4907' => array( 'track_and_trace' ),
+						array(
+							'combination' => array(),
+							'code'        => '4944',
+							'options'     => array()
+						)
 					),
 					'pickup_points' => array(
 						'4944' => array(),
@@ -104,43 +184,85 @@ class Mapping {
 				),
 				'ROW' => array(
 					'delivery_day'  => array(
-						'4945' => array(),
+						array(
+							'combination' => array(),
+							'code'        => '4945',
+							'options'     => array()
+						)
 					),
 					'pickup_points' => array(
-						'4945' => array(),
+						array(
+							'combination' => array(),
+							'code'        => '4945',
+							'options'     => array()
+						)
 					),
-				),
+				)
 			),
 			'BE' => array(
-				'BE' => array(
+				'BE'  => array(
 					'delivery_day'  => array(
-						'4961' => array(),
-						'4960' => array( 'only_home_address' ),
-						'4963' => array( 'signature_on_delivery' ),
-						'4962' => array( 'signature_on_delivery', 'only_home_address' ),
-						'4965' => array( 'insured_shipping', 'only_home_address' ),
+						array(
+							'combination' => array(),
+							'code'        => '4961',
+							'options'     => array()
+						),
+						array(
+							'combination' => array( 'only_home_address' ),
+							'code'        => '4960',
+							'options'     => array()
+						),
+						array(
+							'combination' => array( 'signature_on_delivery' ),
+							'code'        => '4963',
+							'options'     => array()
+						),
+						array(
+							'combination' => array( 'signature_on_delivery', 'only_home_address' ),
+							'code'        => '4962',
+							'options'     => array()
+						),
+						array(
+							'combination' => array( 'insured_shipping', 'only_home_address' ),
+							'code'        => '4965',
+							'options'     => array()
+						)
 					),
 					'pickup_points' => array(
-						'4880' => array(),
-						'4878' => array( 'insured_shipping' ),
+						array(
+							'combination' => array(),
+							'code'        => '4880',
+							'options'     => array()
+						),
+						array(
+							'combination' => array( 'insured_shipping' ),
+							'code'        => '4878',
+							'options'     => array()
+						)
 					),
 				),
-				'NL' => array(
+				'NL'  => array(
 					'delivery_day' => array(
-						'4907' => array( 'track_and_trace' ),
+						array(
+							'combination' => array( 'track_and_trace' ),
+							'code'        => '4907',
+							'options'     => array()
+						)
 					),
 				),
-				'EU' => array(
+				'EU'  => array(
 					'delivery_day' => array(
-						'4907' => array( 'track_and_trace' ),
+						array(
+							'combination' => array( 'track_and_trace' ),
+							'code'        => '4907',
+							'options'     => array()
+						)
 					),
 				),
 				'ROW' => array(
-					'delivery_day' => array(
-						'4945' => array(),
-					),
+					'delivery_day' => array(),
 				),
-			),
+			)
 		);
 	}
 
@@ -193,7 +315,7 @@ class Mapping {
 	/**
 	 * Product options mapping.
 	 *
-	 * @return Array
+	 * @return array
 	 */
 	public static function product_options() {
 		return array(

@@ -278,8 +278,8 @@ class Item_Info extends Base_Info {
 	 * Set product code in the order details.
 	 */
 	public function set_order_product_code() {
-		$this->api_args['order_details']['product_code']    = $this->get_product_code();
-		$this->api_args['order_details']['product_options'] = $this->get_product_options();
+		$this->api_args['order_details']['shipping_product'] = $this->get_shipping_product();
+		$this->api_args['order_details']['product_options']  = $this->get_product_options();
 	}
 
 	/**
@@ -401,18 +401,15 @@ class Item_Info extends Base_Info {
 			'return_barcode'  => array(
 				'default' => '',
 			),
-			'product_code'    => array(
+			'shipping_product'    => array(
 				'error'    => __( 'Product code is empty!', 'postnl-for-woocommerce' ),
 				'validate' => function( $value ) {
-					if ( ! is_numeric( $value ) && 4 !== strlen( $value ) ) {
+					if ( empty( $value ) || ! is_numeric( $value['code'] ) && 4 !== strlen( $value['code'] ) ) {
 						throw new \Exception(
 							__( 'Wrong format for product code!', 'postnl-for-woocommerce' )
 						);
 					}
-				},
-				'sanitize' => function( $value ) use ( $self ) {
-					return $self->string_length_sanitization( $value, 4 );
-				},
+				}
 			),
 			'product_options' => array(
 				'default'  => array(
@@ -851,9 +848,10 @@ class Item_Info extends Base_Info {
 	/**
 	 * Get product code from api args.
 	 *
-	 * @return String.
+	 * @return array.
+	 * @throws \Exception
 	 */
-	public function get_product_code() {
+	public function get_shipping_product() {
 		$checked_features = $this->get_selected_label_features();
 		$shipping_feature = $this->get_selected_shipping_features();
 		$from_country     = $this->api_args['store_address']['country'];
@@ -862,16 +860,16 @@ class Item_Info extends Base_Info {
 		$features = array_keys( $checked_features );
 		$code_map = Mapping::products_data();
 
-		$product_code = '';
+		$selected_product = array();
 		$destination  = Utils::get_shipping_zone( $to_country );
 
 		if ( empty( $code_map[ $from_country ][ $destination ][ $shipping_feature ] ) ) {
-			return $product_code;
+			return $selected_product;
 		}
 
 		foreach ( $code_map[ $from_country ][ $destination ][ $shipping_feature ] as $product ) {
-			if ( empty( $product['combination'] ) && empty( $product_code ) ) {
-				$product_code = $product['code'];
+			if ( empty( $product['combination'] ) && empty( $selected_product ) ) {
+				$selected_product = $product;
 				continue;
 			}
 
@@ -883,11 +881,11 @@ class Item_Info extends Base_Info {
 			}
 
 			if ( $is_this_it ) {
-				$product_code = $product['code'];
+				$selected_product = $product;
 			}
 		}
 
-		return $product_code;
+		return $selected_product;
 	}
 
 	/**
@@ -896,7 +894,7 @@ class Item_Info extends Base_Info {
 	 * @return String.
 	 */
 	public function get_product_options() {
-		$option_map   = Mapping::product_options();
+		$option_map   = Mapping::additional_product_options();
 		$from_country = $this->api_args['store_address']['country'];
 		$to_country   = $this->api_args['shipping_address']['country'];
 		$destination  = Utils::get_shipping_zone( $to_country );

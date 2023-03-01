@@ -56,7 +56,7 @@ class Mapping {
 	}
 
 	/**
-	 * Products code & options mapping.
+	 * Products code & required options mapping.
 	 *
 	 * @return array[]
 	 */
@@ -436,11 +436,11 @@ class Mapping {
 	}
 
 	/**
-	 * Product options mapping.
+	 * Additional Product options mapping.
 	 *
 	 * @return array
 	 */
-	public static function product_options() {
+	public static function additional_product_options() {
 		return array(
 			'NL' => array(
 				'NL' => array(

@@ -350,6 +350,20 @@ class Mapping {
 							'option'         => '012',
 						)
 					)
+				),
+				array(
+					'combination' => array( 'track_and_trace', 'insured_plus' ),
+					'code'        => '4907',
+					'options'     => array(
+						array(
+							'characteristic' => '004',
+							'option'         => '016',
+						),
+						array(
+							'characteristic' => '101',
+							'option'         => '012',
+						)
+					)
 				)
 			),
 			self::EU_ROW_products()
@@ -381,6 +395,16 @@ class Mapping {
 						array(
 							'characteristic' => '005',
 							'option'         => '025',
+						)
+					)
+				),
+				array(
+					'combination' => array( 'track_and_trace', 'insured_plus' ),
+					'code'        => '4909',
+					'options'     => array(
+						array(
+							'characteristic' => '004',
+							'option'         => '016',
 						)
 					)
 				)

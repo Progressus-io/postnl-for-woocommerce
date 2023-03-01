@@ -187,6 +187,7 @@ class Item_Info extends Base_Info {
 			'packets'               => $saved_data['backend']['packets'] ?? '',
 			'mailboxpacket'         => $saved_data['backend']['mailboxpacket'] ?? '',
 			'track_and_trace'       => $saved_data['backend']['track_and_trace'] ?? '',
+			'insured_plus'          => $saved_data['backend']['insured_plus'] ?? '',
 		);
 
 		$this->api_args['frontend_data'] = array(
@@ -692,6 +693,12 @@ class Item_Info extends Base_Info {
 				},
 			),
 			'track_and_trace'              => array(
+				'default'  => false,
+				'sanitize' => function( $picked ) {
+					return ( 'yes' === $picked );
+				},
+			),
+			'insured_plus'          => array(
 				'default'  => false,
 				'sanitize' => function( $picked ) {
 					return ( 'yes' === $picked );

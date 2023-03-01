@@ -126,6 +126,18 @@ abstract class Base {
 					'container'     => true,
 				),
 				array(
+					'id'            => $this->prefix . 'insured_plus',
+					'type'          => 'checkbox',
+					'label'         => __( 'Insured Plus: ', 'postnl-for-woocommerce' ),
+					'placeholder'   => '',
+					'description'   => '',
+					'value'         => '',
+					'show_in_bulk'  => true,
+					'standard_feat' => false,
+					'const_field'   => false,
+					'container'     => true,
+				),
+				array(
 					'id'            => $this->prefix . 'return_no_answer',
 					'type'          => 'checkbox',
 					'label'         => __( 'Return if no answer: ', 'postnl-for-woocommerce' ),

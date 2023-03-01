@@ -85,11 +85,7 @@ class Item_Info extends Base_Info {
 		);
 
 		// This will be used to determined if we must use a specific barcode types
-		$this->api_args['backend_data'] = array(
-			'packets'               => $post_data['saved_data']['backend']['packets'] ?? '',
-			'mailboxpacket'         => $post_data['saved_data']['backend']['mailboxpacket'] ?? '',
-			'track_and_trace'       => $post_data['saved_data']['backend']['track_and_trace'] ?? '',
-		);
+		$this->api_args['backend_data'] = $post_data['saved_data']['backend'];
 	}
 
 	/**
@@ -222,9 +218,13 @@ class Item_Info extends Base_Info {
 		}
 
 		if ( ! empty( $selected_options ) ) {
-			foreach ( $deafult_types as $type => $options_combination ) {
-				if ( natsort( $selected_options ) === natsort( $options_combination ) ) {
-					return $type;
+			foreach ( $deafult_types as $type => $options_combinations ) {
+				foreach ( $options_combinations as $combination ) {
+					natsort( $combination );
+					natsort( $selected_options );
+					if ( $selected_options === $combination ) {
+						return $type;
+					}
 				}
 			}
 		}

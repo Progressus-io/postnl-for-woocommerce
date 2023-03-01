@@ -846,7 +846,7 @@ class Item_Info extends Base_Info {
 	}
 
 	/**
-	 * Get product code from api args.
+	 * Get product from api args.
 	 *
 	 * @return array.
 	 * @throws \Exception
@@ -886,6 +886,18 @@ class Item_Info extends Base_Info {
 		}
 
 		return $selected_product;
+	}
+
+	/**
+	 * Get product code from api args.
+	 *
+	 * @return string.
+	 * @throws \Exception
+	 */
+	public function get_product_code() {
+		$product = $this->get_shipping_product();
+
+		return $product['code'] ?? '';
 	}
 
 	/**

@@ -171,30 +171,36 @@ class Mapping {
 					),
 				),
 				'EU'  => array(
-					'delivery_day'  => array(
+					'delivery_day'  => self::european_shipment_products(),
+					'pickup_points' => array(
 						array(
 							'combination' => array(),
-							'code'        => '4944',
-							'options'     => array()
+							'code'        => '4907',
+							'options'     => array(
+								array(
+									'characteristic' => '005',
+									'option'         => '025',
+								),
+								array(
+									'characteristic' => '101',
+									'option'         => '012',
+								)
+							)
 						)
-					),
-					'pickup_points' => array(
-						'4944' => array(),
 					),
 				),
 				'ROW' => array(
-					'delivery_day'  => array(
-						array(
-							'combination' => array(),
-							'code'        => '4945',
-							'options'     => array()
-						)
-					),
+					'delivery_day'  => self::globalpack_products(),
 					'pickup_points' => array(
 						array(
 							'combination' => array(),
-							'code'        => '4945',
-							'options'     => array()
+							'code'        => '4909',
+							'options'     => array(
+								array(
+									'characteristic' => '005',
+									'option'         => '025',
+								)
+							)
 						)
 					),
 				)
@@ -244,25 +250,142 @@ class Mapping {
 				'NL'  => array(
 					'delivery_day' => array(
 						array(
-							'combination' => array( 'track_and_trace' ),
-							'code'        => '4907',
+							'combination' => array(),
+							'code'        => '4944',
 							'options'     => array()
 						)
 					),
 				),
 				'EU'  => array(
-					'delivery_day' => array(
-						array(
-							'combination' => array( 'track_and_trace' ),
-							'code'        => '4907',
-							'options'     => array()
-						)
-					),
+					'delivery_day' => self::european_shipment_products(),
 				),
 				'ROW' => array(
-					'delivery_day' => array(),
-				),
+					'delivery_day' => self::globalpack_products()
+				)
 			)
+		);
+	}
+
+	/**
+	 * Products code & options available for European and GlobalPack Shipments.
+	 *
+	 * @return array[]
+	 */
+	public static function EU_ROW_products() {
+		return array(
+			array(
+				'combination' => array( 'mailboxpacket' ),
+				'code'        => '6440',
+				'options'     => array()
+			),
+			array(
+				'combination' => array( 'track_and_trace', 'mailboxpacket' ),
+				'code'        => '6972',
+				'options'     => array()
+			),
+			array(
+				'combination' => array( 'packets' ),
+				'code'        => '6405',
+				'options'     => array()
+			),
+			array(
+				'combination' => array( 'track_and_trace', 'packets' ),
+				'code'        => '6350',
+				'options'     => array()
+			),
+			array(
+				'combination' => array( 'track_and_trace', 'packets', 'insured_shipping' ),
+				'code'        => '6906',
+				'options'     => array()
+			)
+		);
+	}
+
+	/**
+	 * Products code & options available for European Shipments.
+	 *
+	 * @return array[]
+	 */
+	public static function european_shipment_products() {
+		return array_merge(
+			array(
+				array(
+					'combination' => array(),
+					'code'        => '4907',
+					'options'     => array(
+						array(
+							'characteristic' => '005',
+							'option'         => '025',
+						),
+						array(
+							'characteristic' => '101',
+							'option'         => '012',
+						)
+					)
+				),
+				array(
+					'combination' => array( 'track_and_trace' ),
+					'code'        => '4907',
+					'options'     => array(
+						array(
+							'characteristic' => '005',
+							'option'         => '025',
+						),
+						array(
+							'characteristic' => '101',
+							'option'         => '012',
+						)
+					)
+				),
+				array(
+					'combination' => array( 'track_and_trace', 'insured_shipping' ),
+					'code'        => '4907',
+					'options'     => array(
+						array(
+							'characteristic' => '004',
+							'option'         => '015',
+						),
+						array(
+							'characteristic' => '101',
+							'option'         => '012',
+						)
+					)
+				)
+			),
+			self::EU_ROW_products()
+		);
+	}
+
+	/**
+	 * Products code & options available for GlobalPack Shipments.
+	 *
+	 * @return array[]
+	 */
+	public static function globalpack_products() {
+		return array_merge(
+			array(
+				array(
+					'combination' => array(),
+					'code'        => '4909',
+					'options'     => array(
+						array(
+							'characteristic' => '005',
+							'option'         => '025',
+						)
+					)
+				),
+				array(
+					'combination' => array( 'track_and_trace' ),
+					'code'        => '4909',
+					'options'     => array(
+						array(
+							'characteristic' => '005',
+							'option'         => '025',
+						)
+					)
+				)
+			),
+			self::EU_ROW_products()
 		);
 	}
 

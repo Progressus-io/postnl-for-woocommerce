@@ -83,6 +83,13 @@ class Item_Info extends Base_Info {
 			'country'    => $order->get_shipping_country(),
 			'postcode'   => $order->get_shipping_postcode(),
 		);
+
+		// This will be used to determined if we must use a specific barcode types
+		$this->api_args['backend_data'] = array(
+			'packets'               => $saved_data['backend']['packets'] ?? '',
+			'mailboxpacket'         => $saved_data['backend']['mailboxpacket'] ?? '',
+			'track_and_trace'       => $saved_data['backend']['track_and_trace'] ?? '',
+		);
 	}
 
 	/**
@@ -137,8 +144,11 @@ class Item_Info extends Base_Info {
 				'default'  => '3S',
 				'sanitize' => function( $value ) use ( $self ) {
 					if ( ! $self->is_rest_of_world() ) {
-						return '3S';
+						return $this->check_product_barcode_type( '3S' );
 					}
+
+					// Use barcode type for specific products
+					$value = $this->check_product_barcode_type( $value );
 
 					return $self->string_length_sanitization( $value, 4 );
 				},
@@ -180,5 +190,43 @@ class Item_Info extends Base_Info {
 		$destination = Utils::get_shipping_zone( $to_country );
 
 		return ( 'EU' === $destination );
+	}
+
+	/**
+	 * Use specific barcode types for some products.
+	 *
+	 * @param $barcode_type
+	 *
+	 * @return string
+	 */
+	public function check_product_barcode_type( $barcode_type ) {
+		$deafult_types = array(
+			'UE' => array(
+				array( 'mailboxpacket' ),
+				array( 'packets' )
+			),
+			'LA' => array(
+				array( 'track_and_trace', 'mailboxpacket' ),
+				array( 'track_and_trace', 'packets' )
+			),
+			'RI' => array(
+				array( 'track_and_trace', 'packets', 'insured_shipping' )
+			)
+		);
+
+		$selected_options = array();
+		foreach ( $this->api_args['backend_data'] as $option => $value ) {
+			if ( 'yes' === $value ) {
+				$selected_options[] = $option;
+			}
+		}
+
+		foreach ( $deafult_types as $type => $options_combination ) {
+			if ( natsort( $selected_options ) === natsort( $options_combination ) ) {
+				return $type;
+			}
+		}
+
+		return $barcode_type;
 	}
 }

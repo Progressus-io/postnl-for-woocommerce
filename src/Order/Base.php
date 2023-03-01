@@ -565,7 +565,8 @@ abstract class Base {
 		}
 
 		$data = array(
-			'order' => $order,
+			'order'      => $order,
+			'saved_data' => $saved_data
 		);
 
 		$item_info = new Barcode\Item_Info( $data );

@@ -403,12 +403,13 @@ abstract class Base {
 			$saved_data['backend'][ $post_field ] = $post_value;
 		}
 
-		$barcode         = $this->create_barcode( $order );
 		$label_post_data = array(
 			'order'      => $order,
 			'saved_data' => $saved_data,
-			'barcode'    => $barcode,
 		);
+
+		$barcode                    = $this->create_barcode( $label_post_data );
+		$label_post_data['barcode'] = $barcode;
 
 		$label_post_data['return_barcode'] = $this->maybe_create_return_barcode( $label_post_data );
 
@@ -546,14 +547,14 @@ abstract class Base {
 	/**
 	 * Create PostNL barcode for current order
 	 *
-	 * @param WC_Order $order Order object.
+	 * @param array $label_post_data .
 	 *
 	 * @return array
 	 *
 	 * @throws \Exception Error when response does not have Barcode value.
 	 */
-	public function create_barcode( $order ) {
-		$saved_data = $this->get_data( $order->get_id() );
+	public function create_barcode( $label_post_data ) {
+		$saved_data = $label_post_data['saved_data'];
 
 		// Check if barcode has been created on the last 7 days.
 		if ( ! empty( $saved_data['barcode']['created_at'] ) && ! empty( $saved_data['barcode']['value'] ) ) {
@@ -565,7 +566,7 @@ abstract class Base {
 		}
 
 		$data = array(
-			'order'      => $order,
+			'order'      => $label_post_data['order'],
 			'saved_data' => $saved_data
 		);
 

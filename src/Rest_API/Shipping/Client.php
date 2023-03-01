@@ -117,6 +117,20 @@ class Client extends Base {
 			);
 		}
 
+		// Add the required product options
+		if ( ! empty( $this->item_info->shipment['shipping_product']['options'] ) ) {
+			if ( ! isset( $shipment['ProductOptions'] ) ) {
+				$shipment['ProductOptions'] = array();
+			}
+
+			foreach ( $this->item_info->shipment['shipping_product']['options'] as $option ) {
+				$shipment['ProductOptions'][] = array(
+					'Characteristic' => $option['characteristic'],
+					'Option'         => $option['option'],
+				);
+			}
+		}
+
 		if ( ! empty( $this->item_info->shipment['return_barcode'] ) ) {
 			$shipment['ReturnBarcode'] = $this->item_info->shipment['return_barcode'];
 		}

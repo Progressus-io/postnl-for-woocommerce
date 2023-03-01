@@ -270,14 +270,14 @@ class Item_Info extends Base_Info {
 	 * Set extra API args.
 	 */
 	public function set_extra_data_to_api_args() {
-		$this->set_order_product_code();
+		$this->set_order_shipping_product();
 		$this->set_rest_of_world_args();
 	}
 
 	/**
 	 * Set product code in the order details.
 	 */
-	public function set_order_product_code() {
+	public function set_order_shipping_product() {
 		$this->api_args['order_details']['shipping_product'] = $this->get_shipping_product();
 		$this->api_args['order_details']['product_options']  = $this->get_product_options();
 	}

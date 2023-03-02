@@ -36,6 +36,9 @@ PostNL’s official extension for WooCommerce on WordPress. Manage your national
 
 ## Changelog
 
+### 5.1.3
+* Fix merged labels on bulk operation
+
 ### 5.1.2
 * Allow all GlobalPack barcode types usage
 

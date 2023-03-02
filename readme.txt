@@ -80,6 +80,9 @@ Follow these instructions (https://www.postnl.nl/Images/aanvragen-api-key-stappe
 
 == Changelog ==
 
+= 5.1.3 (2023-02-20) =
+* Fix merged labels on bulk operation
+
 = 5.1.2 (2023-02-20) =
 * Allow all GlobalPack barcode types usage
 

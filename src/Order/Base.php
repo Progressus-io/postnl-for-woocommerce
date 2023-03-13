@@ -14,7 +14,7 @@ use PostNLWooCommerce\Rest_API\Return_Label;
 use PostNLWooCommerce\Rest_API\Letterbox;
 use PostNLWooCommerce\Shipping_Method\Settings;
 use PostNLWooCommerce\Helper\Mapping;
-use PostNLWooCommerce\Library\PDFMerging;
+use PostNLWooCommerce\Library\CustomizedPDFMerger;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -643,7 +643,7 @@ abstract class Base {
 	 * @return Array List of filepath that has been merged.
 	 */
 	protected function merge_labels( $label_paths, $merge_filename ) {
-		$pdf          = new PDFMerging();
+		$pdf          = new CustomizedPDFMerger();
 		$merged_paths = array();
 
 		foreach ( $label_paths as $path ) {

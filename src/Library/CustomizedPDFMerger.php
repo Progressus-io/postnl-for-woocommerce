@@ -1,6 +1,6 @@
 <?php
 /**
- * Class PDFMerging file.
+ * Class CustomizedPDFMerger file.
  *
  * @package PostNLWooCommerce\Library
  */
@@ -16,7 +16,7 @@ use setasign\Fpdi\Fpdi;
 use PostNLWooCommerce\Shipping_Method\Settings;
 use PostNLWooCommerce\Utils;
 
-class PDFMerging {
+class CustomizedPDFMerger {
 	private $_files;    //['form.pdf']  ["1,2,4, 5-19"]
     private $_fpdi;
 

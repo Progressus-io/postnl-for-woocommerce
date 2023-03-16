@@ -4,7 +4,7 @@ Tags: woocommerce, export, delivery, packages, PostNL, Shipping
 Requires at least: 4.6
 Requires PHP: 5.6
 Tested up to: 6.1
-Stable tag: 5.1.2
+Stable tag: 5.1.3
 WC requires at least: 4.0
 WC tested up to: 7.4
 License: GPLv2 or later
@@ -79,6 +79,9 @@ Follow these instructions (https://www.postnl.nl/Images/aanvragen-api-key-stappe
 5. PostNL information on the order details page
 
 == Changelog ==
+
+= 5.1.3 (2023-03-16) =
+* Fix : Pick-up points not being shown in checkout page
 
 = 5.1.2 (2023-02-20) =
 * Allow all GlobalPack barcode types usage

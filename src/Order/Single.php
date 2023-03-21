@@ -467,19 +467,16 @@ class Single extends Base {
 
 			$order_id = ! empty( $_REQUEST['order_id'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['order_id'] ) ) : 0;
 
-			// Check if order id is really an ID from shop_order post type.
-			$order = wc_get_order( $order_id );
-			if ( ! is_a( $order, 'WC_Order' ) ) {
-				throw new \Exception( esc_html__( 'Order does not exists!', 'postnl-for-woocommerce' ) );
-			}
-
-			$saved_data    = $this->save_meta_value( $order_id, $_REQUEST );
-			$return_data   = $saved_data;
+			$result        = $this->save_meta_value( $order_id, $_REQUEST );
+			$return_data   = $result['saved_data'];
+			$labels        = $result['labels'];
 			$tracking_note = $this->get_tracking_note( $order_id );
+
+			$this->delete_label_files( $labels );
 
 			if ( $this->settings->is_woocommerce_email_enabled() && ! empty( $tracking_note ) ) {
 				$return_data = array_merge(
-					$saved_data,
+					$result['saved_data'],
 					array(
 						'tracking_note' => $tracking_note,
 						'note_type'     => Utils::get_tracking_note_type(),

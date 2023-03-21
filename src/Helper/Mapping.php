@@ -157,13 +157,13 @@ class Mapping {
 				'NL'  => array( 'label', 'return-label', 'buspakjeextra', 'printcodelabel' ),
 				'BE'  => array( 'label' ),
 				'EU'  => array( 'label' ),
-				'ROW' => array( 'cn23', 'cp71' ),
+				'ROW' => array( 'cn23', 'cp71', 'label' ),
 			),
 			'BE' => array(
 				'BE'  => array( 'label' ),
 				'NL'  => array( 'label' ),
 				'EU'  => array( 'label' ),
-				'ROW' => array( 'cn23', 'cp71' ),
+				'ROW' => array( 'cn23', 'cp71', 'label' ),
 			),
 		);
 	}

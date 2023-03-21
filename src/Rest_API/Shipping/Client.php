@@ -101,7 +101,7 @@ class Client extends Base {
 			),
 			'Customs'             => $this->get_customs(),
 			'ProductCodeDelivery' => $this->item_info->shipment['product_code'],
-			'Reference'           => $this->item_info->shipment['order_number']
+			'Reference'           => $this->item_info->shipment['order_number'],
 		);
 
 		if ( $this->item_info->is_delivery_day() ) {

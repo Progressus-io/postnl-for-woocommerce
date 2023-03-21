@@ -241,11 +241,12 @@ class Utils {
 	 * @param Int    $order_id ID of the order object.
 	 * @param String $label_type Type of label.
 	 * @param String $barcode Barcode string.
+	 * @param String $label_format Label Format whether A4 or A6.
 	 *
 	 * @return String.
 	 */
-	public static function generate_label_name( $order_id, $label_type, $barcode ) {
-		return 'postnl-' . $order_id . '-' . $label_type . '-' . $barcode . '.pdf';
+	public static function generate_label_name( $order_id, $label_type, $barcode, $label_format ) {
+		return 'postnl-' . $order_id . '-' . $label_type . '-' . $barcode . '-' . $label_format . '.pdf';
 	}
 	/**
 	 * Get the type of label response.
@@ -456,5 +457,27 @@ class Utils {
 	 */
 	public static function get_log_url() {
 		return Logger::get_log_url();
+	}
+
+	/**
+	 * Get paper size information.
+	 *
+	 * @param String $paper Paper name.
+	 *
+	 * @return Array.
+	 */
+	public static function get_paper_size( $paper = 'A4' ) {
+		$papers = array(
+			'A4' => array(
+				'width'  => '297.03888888889',
+				'height' => '209.90277777778',
+			),
+			'A6' => array(
+				'width'  => '148.00086111111',
+				'height' => '105.00077777778',
+			),
+		);
+
+		return isset( $papers[ $paper ] ) ? $papers[ $paper ] : array();
 	}
 }

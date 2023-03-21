@@ -37,6 +37,7 @@ PostNL’s official extension for WooCommerce on WordPress. Manage your national
 ## Changelog
 
 ### 5.1.3
+=======
 * Fix : Pick-up points not being shown in checkout page
 
 ### 5.1.2

@@ -3,7 +3,6 @@
 	var postnl_fe_checkout = {
 		// init Class
 		init: function() {
-			jQuery('body').on( 'updated_checkout', this.use_select2 );
 			jQuery('body').on( 'updated_checkout', this.operate );
 
 			// Trigger update_checkout on address change
@@ -72,13 +71,6 @@
 			} );
 
 			checkout_option.find( '.postnl_checkout_tab_list .active .postnl_option' ).trigger( 'click' );
-		},
-
-		use_select2: function(){
-			var selectbox = jQuery( '.postnl-checkout-field.select2 select' );
-			selectbox.select2( {
-				minimumResultsForSearch: -1
-			} );
 		},
 	};
 

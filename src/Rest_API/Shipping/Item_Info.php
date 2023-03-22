@@ -223,7 +223,7 @@ class Item_Info extends Base_Info {
 		foreach ( $order->get_items() as $item_id => $item ) {
 			$product = $item->get_product();
 
-			if ( empty( $product ) || $product->is_virtual() ) {
+			if ( ! is_a( $product, 'WC_Product' ) || $product->is_virtual() ) {
 				continue;
 			}
 

@@ -57,7 +57,7 @@ class Item_Info extends Base_Info {
 	 *
 	 * @param Array $post_data Data from post variable in checkout page.
 	 *
-	 * @throws \Exception If order id does not exists.
+	 * @throws \Exception If order id does not exist.
 	 */
 	public function convert_data_to_args( $post_data ) {
 		if ( ! is_a( $post_data['order'], 'WC_Order' ) ) {
@@ -84,7 +84,7 @@ class Item_Info extends Base_Info {
 			'postcode'   => $order->get_shipping_postcode(),
 		);
 
-		// This will be used to determined if we must use a specific barcode types
+		// This will be used to determined if we must use a specific barcode types.
 		$this->api_args['backend_data'] = $post_data['saved_data']['backend'];
 	}
 
@@ -121,7 +121,7 @@ class Item_Info extends Base_Info {
 	/**
 	 * Retrieves the args scheme to use with for parsing store address info.
 	 *
-	 * @return array
+	 * @return array.
 	 */
 	protected function get_query_info_schema() {
 		// Closures in PHP 5.3 do not inherit class context
@@ -143,7 +143,7 @@ class Item_Info extends Base_Info {
 						return $this->check_product_barcode_type( '3S' );
 					}
 
-					// Use barcode type for specific products
+					// Use barcode type for specific products.
 					$value = $this->check_product_barcode_type( $value );
 
 					return $self->string_length_sanitization( $value, 4 );
@@ -191,9 +191,9 @@ class Item_Info extends Base_Info {
 	/**
 	 * Use specific barcode types for some products.
 	 *
-	 * @param $barcode_type
+	 * @param string  $barcode_type Selected GlobalPack barcode type.
 	 *
-	 * @return string
+	 * @return string.
 	 */
 	public function check_product_barcode_type( $barcode_type ) {
 		$deafult_types = array(

@@ -58,7 +58,7 @@ class Mapping {
 	/**
 	 * Products code & required options mapping.
 	 *
-	 * @return array[]
+	 * @return array[].
 	 */
 	public static function products_data() {
 		return array(
@@ -269,7 +269,7 @@ class Mapping {
 	/**
 	 * Products code & options available for European and GlobalPack Shipments.
 	 *
-	 * @return array[]
+	 * @return array[].
 	 */
 	public static function EU_ROW_products() {
 		return array(
@@ -304,7 +304,7 @@ class Mapping {
 	/**
 	 * Products code & options available for European Shipments.
 	 *
-	 * @return array[]
+	 * @return array[].
 	 */
 	public static function european_shipment_products() {
 		return array_merge(
@@ -373,7 +373,7 @@ class Mapping {
 	/**
 	 * Products code & options available for GlobalPack Shipments.
 	 *
-	 * @return array[]
+	 * @return array[].
 	 */
 	public static function globalpack_products() {
 		return array_merge(
@@ -416,7 +416,7 @@ class Mapping {
 	/**
 	 * Label type mapping.
 	 *
-	 * @return Array
+	 * @return array.
 	 */
 	public static function label_type_list() {
 		return array(
@@ -440,7 +440,7 @@ class Mapping {
 	/**
 	 * Product code mapping.
 	 *
-	 * @return Array
+	 * @return array.
 	 */
 	public static function option_available_list() {
 		return array(
@@ -462,7 +462,7 @@ class Mapping {
 	/**
 	 * Additional Product options mapping.
 	 *
-	 * @return array
+	 * @return array.
 	 */
 	public static function additional_product_options() {
 		return array(
@@ -490,7 +490,7 @@ class Mapping {
 	/**
 	 * List of countries that available for checkout feature.
 	 *
-	 * @return Array.
+	 * @return array.
 	 */
 	public static function available_country_for_checkout_feature() {
 		return array(

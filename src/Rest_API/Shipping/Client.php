@@ -117,7 +117,7 @@ class Client extends Base {
 			);
 		}
 
-		// Add the required product options
+		// Add the required product options.
 		if ( ! empty( $this->item_info->shipment['shipping_product']['options'] ) ) {
 			$shipment['ProductOptions'] = $shipment['ProductOptions'] ?? array();
 

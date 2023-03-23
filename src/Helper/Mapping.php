@@ -68,74 +68,74 @@ class Mapping {
 						array(
 							'combination' => array(),
 							'code'        => '3085',
-							'options'     => array()
+							'options'     => array(),
 						),
 						array(
 							'combination' => array( 'only_home_address' ),
 							'code'        => '3385',
-							'options'     => array()
+							'options'     => array(),
 						),
 						array(
 							'combination' => array( 'return_no_answer' ),
 							'code'        => '3090',
-							'options'     => array()
+							'options'     => array(),
 						),
 						array(
 							'combination' => array( 'insured_shipping' ),
 							'code'        => '3087',
-							'options'     => array()
+							'options'     => array(),
 						),
 						array(
 							'combination' => array( 'signature_on_delivery' ),
 							'code'        => '3189',
-							'options'     => array()
+							'options'     => array(),
 						),
 						array(
 							'combination' => array( 'return_no_answer', 'only_home_address' ),
 							'code'        => '3390',
-							'options'     => array()
+							'options'     => array(),
 						),
 						array(
 							'combination' => array( 'insured_shipping', 'return_no_answer' ),
 							'code'        => '3094',
-							'options'     => array()
+							'options'     => array(),
 						),
 						array(
 							'combination' => array( 'signature_on_delivery', 'only_home_address' ),
 							'code'        => '3089',
-							'options'     => array()
+							'options'     => array(),
 						),
 						array(
 							'combination' => array( 'signature_on_delivery', 'return_no_answer' ),
 							'code'        => '3389',
-							'options'     => array()
+							'options'     => array(),
 						),
 						array(
 							'combination' => array( 'signature_on_delivery', 'only_home_address', 'return_no_answer' ),
 							'code'        => '3096',
-							'options'     => array()
+							'options'     => array(),
 						),
 						array(
 							'combination' => array( 'letterbox' ),
 							'code'        => '2928',
-							'options'     => array()
+							'options'     => array(),
 						),
 						array(
 							'combination' => array( 'id_check' ),
 							'code'        => '3438',
-							'options'     => array()
+							'options'     => array(),
 						)
 					),
 					'pickup_points' => array(
 						array(
 							'combination' => array(),
 							'code'        => '3533',
-							'options'     => array()
+							'options'     => array(),
 						),
 						array(
 							'combination' => array( 'insured_shipping' ),
 							'code'        => '3534',
-							'options'     => array()
+							'options'     => array(),
 						),
 					)
 				),
@@ -144,29 +144,29 @@ class Mapping {
 						array(
 							'combination' => array(),
 							'code'        => '4946',
-							'options'     => array()
+							'options'     => array(),
 						),
 						array(
 							'combination' => array( 'only_home_address' ),
 							'code'        => '4941',
-							'options'     => array()
+							'options'     => array(),
 						),
 						array(
 							'combination' => array( 'signature_on_delivery' ),
 							'code'        => '4912',
-							'options'     => array()
+							'options'     => array(),
 						),
 						array(
 							'combination' => array( 'insured_shipping' ),
 							'code'        => '4914',
-							'options'     => array()
+							'options'     => array(),
 						)
 					),
 					'pickup_points' => array(
 						array(
 							'combination' => array(),
 							'code'        => '4936',
-							'options'     => array()
+							'options'     => array(),
 						)
 					),
 				),
@@ -211,39 +211,39 @@ class Mapping {
 						array(
 							'combination' => array(),
 							'code'        => '4961',
-							'options'     => array()
+							'options'     => array(),
 						),
 						array(
 							'combination' => array( 'only_home_address' ),
 							'code'        => '4960',
-							'options'     => array()
+							'options'     => array(),
 						),
 						array(
 							'combination' => array( 'signature_on_delivery' ),
 							'code'        => '4963',
-							'options'     => array()
+							'options'     => array(),
 						),
 						array(
 							'combination' => array( 'signature_on_delivery', 'only_home_address' ),
 							'code'        => '4962',
-							'options'     => array()
+							'options'     => array(),
 						),
 						array(
 							'combination' => array( 'insured_shipping', 'only_home_address' ),
 							'code'        => '4965',
-							'options'     => array()
+							'options'     => array(),
 						)
 					),
 					'pickup_points' => array(
 						array(
 							'combination' => array(),
 							'code'        => '4880',
-							'options'     => array()
+							'options'     => array(),
 						),
 						array(
 							'combination' => array( 'insured_shipping' ),
 							'code'        => '4878',
-							'options'     => array()
+							'options'     => array(),
 						)
 					),
 				),
@@ -252,7 +252,7 @@ class Mapping {
 						array(
 							'combination' => array(),
 							'code'        => '4944',
-							'options'     => array()
+							'options'     => array(),
 						)
 					),
 				),

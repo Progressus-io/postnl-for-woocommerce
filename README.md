@@ -6,9 +6,9 @@
 * Requires at least: 4.6
 * Requires PHP: 5.6
 * Tested up to: 6.1
-* Stable tag: 5.1.2
+* Stable tag: 5.1.4
 * WC requires at least: 4.0
-* WC tested up to: 7.4
+* WC tested up to: 7.5
 * License: GPLv2 or later
 * License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -35,6 +35,12 @@ PostNL’s official extension for WooCommerce on WordPress. Manage your national
 
 
 ## Changelog
+
+### 5.1.4
+* Fix merged labels on bulk operation
+
+### 5.1.3
+* Fix : Pick-up points not being shown in checkout page
 
 ### 5.1.2
 * Allow all GlobalPack barcode types usage

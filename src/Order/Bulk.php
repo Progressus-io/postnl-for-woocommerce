@@ -74,11 +74,14 @@ class Bulk extends Base {
 		);
 
 		$saved_datas = array();
+		$gen_labels  = array(); // Generated labels.
 
 		if ( ! empty( $object_ids ) ) {
 			foreach ( $object_ids as $order_id ) {
 				try {
-					$saved_datas[] = $this->save_meta_value( $order_id, $_REQUEST );
+					$result        = $this->save_meta_value( $order_id, $_REQUEST );
+					$gen_labels[]  = $result['labels'];
+					$saved_datas[] = $result['saved_data'];
 					$tracking_note = $this->get_tracking_note( $order_id );
 
 					if ( $this->settings->is_woocommerce_email_enabled() && ! empty( $tracking_note ) ) {
@@ -106,10 +109,10 @@ class Bulk extends Base {
 			}
 		}
 
-		if ( ! empty( $saved_datas ) ) {
+		if ( ! empty( $gen_labels ) ) {
 			array_push(
 				$array_messages,
-				$this->merge_bulk_labels( $saved_datas )
+				$this->merge_bulk_labels( $gen_labels )
 			);
 		}
 
@@ -121,22 +124,40 @@ class Bulk extends Base {
 	/**
 	 * Merge bulk labels.
 	 *
-	 * @param Array $saved_datas Saved PostNL order data.
+	 * @param Array $gen_labels Generated labels.
 	 */
-	public function merge_bulk_labels( $saved_datas ) {
+	public function merge_bulk_labels( $gen_labels ) {
+		$label_format  = $this->settings->get_label_format();
 		$label_paths   = array();
 		$array_messags = array();
 
-		foreach ( $saved_datas as $saved_data ) {
-			if ( empty( $saved_data['labels']['label']['filepath'] ) ) {
-				continue;
-			}
+		foreach ( $gen_labels as $idx => $label ) {
+			foreach ( $label as $label_type => $label_info ) {
+				if ( empty( $label_info['filepath'] ) ) {
+					continue 2;
+				}
 
-			$label_paths[] = $saved_data['labels']['label']['filepath'];
+				if ( 'A6' === $label_format ) {
+					$label_paths[] = $label_info['filepath'];
+					continue 2;
+				}
+
+				if ( empty( $label_info['merged_files'] ) ) {
+					continue 2;
+				}
+
+				foreach ( $label_info['merged_files'] as $path ) {
+					$label_paths[] = $path;
+				}
+			}
 		}
 
 		$filename    = 'postnl-bulk-' . get_current_user_id() . '.pdf';
 		$merged_info = $this->merge_labels( $label_paths, $filename );
+
+		foreach ( $gen_labels as $labels ) {
+			$this->delete_label_files( $labels );
+		}
 
 		if ( file_exists( $merged_info ['filepath'] ) ) {
 			// We're saving the bulk file path temporarily and access it later during the download process.

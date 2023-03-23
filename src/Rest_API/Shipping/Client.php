@@ -119,9 +119,7 @@ class Client extends Base {
 
 		// Add the required product options
 		if ( ! empty( $this->item_info->shipment['shipping_product']['options'] ) ) {
-			if ( ! isset( $shipment['ProductOptions'] ) ) {
-				$shipment['ProductOptions'] = array();
-			}
+			$shipment['ProductOptions'] = $shipment['ProductOptions'] ?? array();
 
 			foreach ( $this->item_info->shipment['shipping_product']['options'] as $option ) {
 				$shipment['ProductOptions'][] = array(

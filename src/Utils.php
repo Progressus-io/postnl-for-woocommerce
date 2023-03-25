@@ -480,4 +480,19 @@ class Utils {
 
 		return isset( $papers[ $paper ] ) ? $papers[ $paper ] : array();
 	}
+
+	/**
+	 * @param string $shipping_method Cart shipping method.
+	 *
+	 * @return string.
+	 */
+	public static function get_cart_shipping_method_id( $shipping_method ) {
+		if( empty( $shipping_method ) ) {
+			return $shipping_method;
+		}
+
+		// Assumes format 'name:id'
+		$shipping_method = explode(':', $shipping_method );
+		return $shipping_method[0] ?? $shipping_method;
+	}
 }

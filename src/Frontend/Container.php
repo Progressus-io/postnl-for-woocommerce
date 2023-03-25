@@ -155,13 +155,14 @@ class Container {
 			$available_country = Mapping::available_country_for_checkout_feature();
 			$receiver_country  = ! empty( $post_data['shipping_country'] ) ? $post_data['shipping_country'] : '';
 			$store_country     = Utils::get_base_country();
+			$sipping_methods   = $this->settings->get_supported_shipping_methods();
 
 			if ( ! isset( $available_country[ $store_country ][ $receiver_country ] ) ) {
 				return array();
 			}
 
 			foreach ( $post_data as $post_key => $post_value ) {
-				if ( false !== strpos( $post_key, 'shipping_method' ) && false === strpos( $post_value[0], POSTNL_SETTINGS_ID ) ) {
+				if ( false !== strpos( $post_key, 'shipping_method' ) && ! in_array( Utils::get_cart_shipping_method_id( $post_value[0] ), $sipping_methods ) ) {
 					return array();
 				}
 			}

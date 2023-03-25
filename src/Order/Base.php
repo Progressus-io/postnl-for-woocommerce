@@ -317,7 +317,7 @@ abstract class Base {
 		}
 
 		foreach ( $shipping_methods as $shipping_item ) {
-			if ( POSTNL_SETTINGS_ID === $shipping_item->get_method_id() ) {
+			if ( in_array( $shipping_item->get_method_id(), $this->settings->get_supported_shipping_methods() ) ) {
 				return true;
 			}
 		}

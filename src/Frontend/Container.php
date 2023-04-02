@@ -276,7 +276,7 @@ class Container {
 			}
 
 			foreach ( $post_data as $post_key => $post_value ) {
-				if ( false !== strpos( $post_key, 'shipping_method' ) && false === strpos( $post_value[0], POSTNL_SETTINGS_ID ) ) {
+				if ( 'shipping_method' === $post_key && false === strpos( $post_value[0], POSTNL_SETTINGS_ID ) ) {
 					return;
 				}
 			}

@@ -220,9 +220,9 @@ class Item_Info extends Base_Info {
 		if ( ! empty( $selected_options ) ) {
 			foreach ( $default_type as $type => $options_combinations ) {
 				foreach ( $options_combinations as $combination ) {
-					natsort( $combination );
-					natsort( $selected_options );
-					if ( $selected_options === $combination ) {
+					sort( $combination );
+					sort( $selected_options );
+					if ( $selected_options == $combination ) {
 						return $type;
 					}
 				}

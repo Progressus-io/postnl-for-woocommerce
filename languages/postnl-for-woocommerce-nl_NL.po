@@ -1,8 +1,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PostNL for WooCommerce\n"
-"POT-Creation-Date: 2023-04-04 23:25+0200\n"
-"PO-Revision-Date: 2023-04-04 23:26+0200\n"
+"POT-Creation-Date: 2023-04-04 23:27+0200\n"
+"PO-Revision-Date: 2023-04-04 23:27+0200\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: nl_NL\n"
@@ -101,8 +101,8 @@ msgid "EU Parcel"
 msgstr "Europese zending"
 
 #: src/Helper/Mapping.php:47 src/Helper/Mapping.php:53
-msgid "Globalpack"
-msgstr ""
+msgid "Non-EU Shipment"
+msgstr "Non-EU bezorging"
 
 #: src/Helper/Mapping.php:50
 msgid "Belgium Domestic"

@@ -174,6 +174,7 @@ class Client extends Base {
 			// Hardcoded.
 			'TransactionCode'        => '11',
 			'TransactionDescription' => 'Sale of goods',
+			'ShipmentType'           => 'Commercial Goods',
 			'Content'                => $this->get_custom_contents(),
 		);
 	}

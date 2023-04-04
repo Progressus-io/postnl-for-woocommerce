@@ -196,7 +196,7 @@ class Item_Info extends Base_Info {
 	 * @return string.
 	 */
 	public function check_product_barcode_type( $barcode_type ) {
-		$deafult_types = array(
+		$default_type = array(
 			'UE' => array(
 				array( 'mailboxpacket' ),
 				array( 'packets' )
@@ -218,7 +218,7 @@ class Item_Info extends Base_Info {
 		}
 
 		if ( ! empty( $selected_options ) ) {
-			foreach ( $deafult_types as $type => $options_combinations ) {
+			foreach ( $default_type as $type => $options_combinations ) {
 				foreach ( $options_combinations as $combination ) {
 					natsort( $combination );
 					natsort( $selected_options );

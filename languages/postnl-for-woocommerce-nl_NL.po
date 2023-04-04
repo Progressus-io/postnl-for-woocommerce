@@ -1,8 +1,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PostNL for WooCommerce\n"
-"POT-Creation-Date: 2023-04-04 23:03+0200\n"
-"PO-Revision-Date: 2023-04-04 23:04+0200\n"
+"POT-Creation-Date: 2023-04-04 23:25+0200\n"
+"PO-Revision-Date: 2023-04-04 23:26+0200\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: nl_NL\n"
@@ -151,11 +151,11 @@ msgstr "Brievenbuspakje: "
 
 #: src/Order/Base.php:192
 msgid "Packets: "
-msgstr ""
+msgstr "Pakje: "
 
 #: src/Order/Base.php:204
-msgid "Mailboxpacket: "
-msgstr ""
+msgid "Mailbox Packet: "
+msgstr "Brievenbuspakje: "
 
 #: src/Order/Base.php:216
 msgid "Track & Trace: "

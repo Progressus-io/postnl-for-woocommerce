@@ -201,7 +201,7 @@ abstract class Base {
 				array(
 					'id'            => $this->prefix . 'mailboxpacket',
 					'type'          => 'checkbox',
-					'label'         => __( 'Mailboxpacket: ', 'postnl-for-woocommerce' ),
+					'label'         => __( 'Mailbox Packet: ', 'postnl-for-woocommerce' ),
 					'placeholder'   => '',
 					'description'   => '',
 					'value'         => '',

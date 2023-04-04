@@ -160,7 +160,32 @@ class Mapping {
 							'combination' => array( 'insured_shipping' ),
 							'code'        => '4914',
 							'options'     => array(),
-						)
+						),
+						array(
+							'combination' => array( 'mailboxpacket' ),
+							'code'        => '6440',
+							'options'     => array(),
+						),
+						array(
+							'combination' => array( 'mailboxpacket', 'track_and_trace' ),
+							'code'        => '6972',
+							'options'     => array(),
+						),
+						array(
+							'combination' => array( 'packets' ),
+							'code'        => '6405',
+							'options'     => array(),
+						),
+						array(
+							'combination' => array( 'packets', 'track_and_trace' ),
+							'code'        => '6350',
+							'options'     => array(),
+						),
+						array(
+							'combination' => array( 'packets', 'track_and_trace', 'insured_shipping' ),
+							'code'        => '6906',
+							'options'     => array(),
+						),
 					),
 					'pickup_points' => array(
 						array(

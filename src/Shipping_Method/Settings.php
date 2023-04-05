@@ -465,7 +465,29 @@ class Settings extends \WC_Settings_API {
 				'default'     => esc_html__( 'This is your track and track link {tracking-link}', 'postnl-for-woocommerce' ),
 				'placeholder' => esc_html__( 'This is your track and track link {tracking-link}', 'postnl-for-woocommerce' ),
 			),
-		);
+            // Default shipping Options Settings.
+            'default_shipping_options_title' => array(
+                'title'       => esc_html__( 'Default shipping Options Settings', 'postnl-for-woocommerce' ),
+                'type'        => 'title',
+                'description' => esc_html__( 'Please select Default shipping Options.', 'postnl-for-woocommerce' ),
+            ),
+            'default_shipping_options' => array(
+                'title'       => __( 'Default Shipping Option', 'postnl-for-woocommerce' ),
+                'type'        => 'multiselect',
+                'description' => __( 'Select a default shipping option for all orders that are shipped with PostNL.', 'postnl-for-woocommerce' ),
+                'default'     => '',
+                'options'     => array(
+                    ''                         => __( 'None', 'postnl-for-woocommerce' ),
+                    'id_check'                 => __( 'ID Check', 'postnl-for-woocommerce' ),
+                    'insured_shipping'         => __( 'Insured Shipping', 'postnl-for-woocommerce' ),
+                    'return_no_answer'      => __( 'Return if no answer', 'postnl-for-woocommerce' ),
+                    'signature_on_delivery'    => __( 'Signature on Delivery', 'postnl-for-woocommerce' ),
+                    'only_home_address'        => __( 'Only Home Address', 'postnl-for-woocommerce' ),
+                    'letterbox'                => __( 'Letterbox', 'postnl-for-woocommerce' ),
+                ),
+            ),
+
+        );
 	}
 
 	/**
@@ -1191,4 +1213,17 @@ class Settings extends \WC_Settings_API {
 	public function is_logging_enabled() {
 		return ( 'yes' === $this->get_enable_logging() );
 	}
+
+    /**
+     * Get all shipping options.
+     *
+     * @return array
+     */
+    public function get_default_shipping_options() {
+        $settings = get_option( 'woocommerce_postnl_settings' );
+        $default_shipping_options = isset( $settings['default_shipping_options'] ) ? $settings['default_shipping_options'] : array();
+    }
+
+
+
 }

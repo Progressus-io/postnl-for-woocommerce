@@ -473,18 +473,23 @@ class Settings extends \WC_Settings_API {
             ),
             'default_shipping_options' => array(
                 'title'       => __( 'Default Shipping Option', 'postnl-for-woocommerce' ),
-                'type'        => 'multiselect',
+                'type'        => 'select',
                 'description' => __( 'Select a default shipping option for all orders that are shipped with PostNL.', 'postnl-for-woocommerce' ),
                 'default'     => '',
                 'options'     => array(
-                    ''                         => __( 'None', 'postnl-for-woocommerce' ),
-                    'id_check'                 => __( 'ID Check', 'postnl-for-woocommerce' ),
-                    'insured_shipping'         => __( 'Insured Shipping', 'postnl-for-woocommerce' ),
-                    'return_no_answer'      => __( 'Return if no answer', 'postnl-for-woocommerce' ),
-                    'signature_on_delivery'    => __( 'Signature on Delivery', 'postnl-for-woocommerce' ),
-                    'only_home_address'        => __( 'Only Home Address', 'postnl-for-woocommerce' ),
-                    'letterbox'                => __( 'Letterbox', 'postnl-for-woocommerce' ),
-                ),
+                    ''                                           => __( 'None', 'postnl-for-woocommerce' ),
+                    'id_check'                                   => __( 'ID Check', 'postnl-for-woocommerce' ),
+                    'insured_shipping'                           => __( 'Insured Shipping', 'postnl-for-woocommerce' ),
+                    'return_no_answer'                           => __( 'Return if no answer', 'postnl-for-woocommerce' ),
+                    'signature_on_delivery'                      => __( 'Signature on Delivery', 'postnl-for-woocommerce' ),
+                    'only_home_address'                          => __( 'Only Home Address', 'postnl-for-woocommerce' ),
+                    'letterbox'                                  => __( 'Letterbox', 'postnl-for-woocommerce' ),
+                    'signature_insured'                          => __( 'Signature on Delivery + Insured Shipping', 'postnl-for-woocommerce' ),
+                    'signature_return_no_answer'                 => __( 'Signature on Delivery + Return if no answer', 'postnl-for-woocommerce' ),
+                    'signature_insured_return_no_answer'         => __( 'Signature on Delivery + Insured Shipping + Return if no answer', 'postnl-for-woocommerce' ),
+                    'only_home_address_return_no_answer'         => __( 'Only Home Address + Return if no answer', 'postnl-for-woocommerce' ),
+                    'only_home_address_return_signature'         => __( 'Only Home Address + Return if no answer + Signature on Delivery', 'postnl-for-woocommerce' ),
+                    'only_home_address_signature'                => __( 'Only Home Address + Signature on Delivery', 'postnl-for-woocommerce' ),                ),
             ),
 
         );
@@ -1221,7 +1226,7 @@ class Settings extends \WC_Settings_API {
      */
     public function get_default_shipping_options() {
         $settings = get_option( 'woocommerce_postnl_settings' );
-        $default_shipping_options = isset( $settings['default_shipping_options'] ) ? $settings['default_shipping_options'] : array();
+        $default_shipping_options = isset( $settings['default_shipping_options'] ) ? $settings['default_shipping_options'] : '';
     }
 
 

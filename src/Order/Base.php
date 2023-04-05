@@ -14,7 +14,6 @@ use PostNLWooCommerce\Rest_API\Return_Label;
 use PostNLWooCommerce\Rest_API\Letterbox;
 use PostNLWooCommerce\Shipping_Method\Settings;
 use PostNLWooCommerce\Helper\Mapping;
-use PostNLWooCommerce\Library\CustomizedPDFMerger;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -93,6 +92,52 @@ abstract class Base {
 	 * List of meta box fields.
 	 */
 	public function meta_box_fields() {
+        // Get the default shipping options.
+		$default_shipping_options = $this->settings->get_default_shipping_options();
+		$default_options = [
+			'id_check' => false,
+			'insured_shipping' => false,
+			'return_no_answer' => false,
+			'signature_on_delivery' => false,
+			'only_home_address' => false,
+			'letterbox'                => false,
+		];
+
+		switch ($default_shipping_options) {
+			case 'signature_insured':
+				$default_options['signature_on_delivery'] = true;
+				$default_options['insured_shipping'] = true;
+				break;
+			case 'signature_return_no_answer':
+				$default_options['signature_on_delivery'] = true;
+				$default_options['return_no_answer'] = true;
+				break;
+			case 'signature_insured_return_no_answer':
+				$default_options['signature_on_delivery'] = true;
+				$default_options['insured_shipping'] = true;
+				$default_options['return_no_answer'] = true;
+				break;
+			case 'only_home_address_return_no_answer':
+				$default_options['only_home_address'] = true;
+				$default_options['return_no_answer'] = true;
+				break;
+			case 'only_home_address_return_signature':
+				$default_options['only_home_address'] = true;
+				$default_options['return_no_answer'] = true;
+				$default_options['signature_on_delivery'] = true;
+				break;
+			case 'only_home_address_signature':
+				$default_options['only_home_address'] = true;
+				$default_options['signature_on_delivery'] = true;
+				break;
+			default:
+				// Handle the individual options
+				$options = explode(',', $default_shipping_options);
+				foreach ($options as $option) {
+					$default_options[$option] = true;
+				}
+		}
+
 		return apply_filters(
 			'postnl_order_meta_box_fields',
 			array(
@@ -108,7 +153,7 @@ abstract class Base {
 					'label'         => __( 'ID Check: ', 'postnl-for-woocommerce' ),
 					'placeholder'   => '',
 					'description'   => '',
-					'value'         => '',
+					'value'         => $default_options['id_check'] ? 'yes' : '',
 					'show_in_bulk'  => true,
 					'standard_feat' => false,
 					'const_field'   => false,
@@ -120,7 +165,7 @@ abstract class Base {
 					'label'         => __( 'Insured Shipping: ', 'postnl-for-woocommerce' ),
 					'placeholder'   => '',
 					'description'   => '',
-					'value'         => '',
+					'value'         => $default_options['insured_shipping'] ? 'yes' : '',
 					'show_in_bulk'  => true,
 					'standard_feat' => false,
 					'const_field'   => false,
@@ -132,7 +177,7 @@ abstract class Base {
 					'label'         => __( 'Return if no answer: ', 'postnl-for-woocommerce' ),
 					'placeholder'   => '',
 					'description'   => '',
-					'value'         => '',
+					'value'         => $default_options['return_no_answer'] ? 'yes' : '',
 					'show_in_bulk'  => true,
 					'standard_feat' => false,
 					'const_field'   => false,
@@ -144,7 +189,7 @@ abstract class Base {
 					'label'         => __( 'Signature on Delivery: ', 'postnl-for-woocommerce' ),
 					'placeholder'   => '',
 					'description'   => '',
-					'value'         => '',
+					'value'         => $default_options['signature_on_delivery'] ? 'yes' : '',
 					'show_in_bulk'  => true,
 					'standard_feat' => false,
 					'const_field'   => false,
@@ -156,7 +201,7 @@ abstract class Base {
 					'label'         => __( 'Only Home Address: ', 'postnl-for-woocommerce' ),
 					'placeholder'   => '',
 					'description'   => '',
-					'value'         => '',
+					'value'         => $default_options['only_home_address'] ? 'yes' : '',
 					'show_in_bulk'  => true,
 					'standard_feat' => false,
 					'const_field'   => false,
@@ -168,7 +213,7 @@ abstract class Base {
 					'label'         => __( 'Letterbox: ', 'postnl-for-woocommerce' ),
 					'placeholder'   => '',
 					'description'   => '',
-					'value'         => '',
+					'value'         => $default_options['letterbox'] ? 'yes' : '',
 					'show_in_bulk'  => true,
 					'standard_feat' => false,
 					'const_field'   => false,
@@ -330,14 +375,12 @@ abstract class Base {
 	 *
 	 * @param  int   $order_id Order post ID.
 	 * @param  array $meta_values PostNL meta values.
-	 *
-	 * @throws \Exception Throw error for invalid order id.
 	 */
 	public function save_meta_value( $order_id, $meta_values ) {
 		$order = wc_get_order( $order_id );
 
 		if ( ! is_a( $order, 'WC_Order' ) ) {
-			throw new \Exception( esc_html__( 'Order does not exists!', 'postnl-for-woocommerce' ) );
+			return false;
 		}
 
 		$saved_data = $this->get_data( $order_id );
@@ -382,21 +425,11 @@ abstract class Base {
 			'created_at' => current_time( 'timestamp' ),
 		);
 
-		$saved_data['labels'] = array_map(
-			function( $label ) {
-				unset( $label['merged_files'] );
-				return $label;
-			},
-			$labels
-		);
+		$saved_data['labels'] = $labels;
 		$order->update_meta_data( $this->meta_name, $saved_data );
 		$order->save();
 
-		// Need to add labels in array to remove the merged files later.
-		return array(
-			'saved_data' => $saved_data,
-			'labels'     => $labels,
-		);
+		return $saved_data;
 	}
 
 	/**
@@ -485,7 +518,7 @@ abstract class Base {
 					$label_type = ! empty( $label_contents['Labeltype'] ) ? sanitize_title( $label_contents['Labeltype'] ) : 'unknown-type';
 					$barcode    = $response[ $type ][ $shipment_idx ][ $content_type['barcode_key'] ];
 					$barcode    = is_array( $barcode ) ? array_shift( $barcode ) : $barcode;
-					$filename   = Utils::generate_label_name( $order->get_id(), $label_type, $barcode, 'A6' );
+					$filename   = Utils::generate_label_name( $order->get_id(), $label_type, $barcode );
 					$filepath   = trailingslashit( POSTNL_UPLOADS_DIR ) . $filename;
 
 					if ( wp_mkdir_p( POSTNL_UPLOADS_DIR ) && ! file_exists( $filepath ) ) {
@@ -591,14 +624,13 @@ abstract class Base {
 	 * @return Array.
 	 */
 	public function maybe_merge_labels( $labels, $order, $barcode, $label_type ) {
-		$label_format  = $this->settings->get_label_format();
 		$merged_labels = array();
 
 		if ( ! is_array( $labels ) ) {
 			return $merged_labels;
 		}
 
-		if ( 1 === count( $labels ) && 'A6' === $label_format ) {
+		if ( 1 === count( $labels ) ) {
 			return array(
 				$label_type => array_shift( $labels ),
 			);
@@ -620,15 +652,20 @@ abstract class Base {
 			$file_paths[] = $label['filepath'];
 		}
 
-		$filename    = Utils::generate_label_name( $order->get_id(), $label_type, $barcode, $label_format );
+		$filename    = Utils::generate_label_name( $order->get_id(), $label_type, $barcode );
 		$merged_info = $this->merge_labels( $file_paths, $filename );
 
+		foreach ( $merged_info['merged_filepaths'] as $path ) {
+			if ( file_exists( $path ) && $path !== $merged_info['filepath'] ) {
+				unlink( $path );
+			}
+		}
+
 		$merged_labels[ $label_type ] = array(
-			'type'         => $label_type,
-			'barcode'      => $barcode,
-			'created_at'   => current_time( 'timestamp' ),
-			'filepath'     => $merged_info['filepath'],
-			'merged_files' => $merged_info['merged_filepaths'],
+			'type'       => $label_type,
+			'barcode'    => $barcode,
+			'created_at' => current_time( 'timestamp' ),
+			'filepath'   => $merged_info['filepath'],
 		);
 
 		return $merged_labels;
@@ -643,7 +680,7 @@ abstract class Base {
 	 * @return Array List of filepath that has been merged.
 	 */
 	protected function merge_labels( $label_paths, $merge_filename ) {
-		$pdf          = new CustomizedPDFMerger();
+		$pdf          = new \Clegginabox\PDFMerger\PDFMerger();
 		$merged_paths = array();
 
 		foreach ( $label_paths as $path ) {
@@ -940,28 +977,5 @@ abstract class Base {
 		$tracking_url = Utils::generate_tracking_url( $saved_data['labels']['label']['barcode'], $order->get_shipping_country(), $order->get_shipping_postcode() );
 
 		return sprintf( '<a href="%1$s" target="_blank" class="postnl-tracking-link">%2$s</a>', esc_url( $tracking_url ), $saved_data['labels']['label']['barcode'] );
-	}
-
-	/**
-	 * Delete label files from label info.
-	 *
-	 * @param Array $labels List of label info.
-	 */
-	public function delete_label_files( $labels ) {
-		if ( empty( $labels ) ) {
-			return;
-		}
-
-		foreach ( $labels as $label_type => $label_info ) {
-			if ( empty( $label_info['merged_files'] ) || empty( $label_info['filepath'] ) ) {
-				continue;
-			}
-
-			foreach ( $label_info['merged_files'] as $path ) {
-				if ( file_exists( $path ) && $path !== $label_info['filepath'] ) {
-					unlink( $path );
-				}
-			}
-		}
 	}
 }

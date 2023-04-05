@@ -93,6 +93,18 @@ abstract class Base {
 	 * List of meta box fields.
 	 */
 	public function meta_box_fields() {
+        // Get the default shipping options.
+        $settings = get_option( 'woocommerce_postnl_settings' );
+        $default_shipping_options = isset($settings['default_shipping_options']) ? $settings['default_shipping_options'] : '';
+
+        // Check if the new combined options are selected
+        $is_signature_insured = $default_shipping_options === 'signature_insured';
+        $is_signature_return_no_answer = $default_shipping_options === 'signature_return_no_answer';
+        $is_signature_insured_return_no_answer = $default_shipping_options === 'signature_insured_return_no_answer';
+        $is_only_home_address_return_no_answer = $default_shipping_options === 'only_home_address_return_no_answer';
+        $is_only_home_address_return_signature = $default_shipping_options === 'only_home_address_return_signature';
+        $is_only_home_address_signature = $default_shipping_options === 'only_home_address_signature';
+
 		return apply_filters(
 			'postnl_order_meta_box_fields',
 			array(
@@ -108,8 +120,8 @@ abstract class Base {
 					'label'         => __( 'ID Check: ', 'postnl-for-woocommerce' ),
 					'placeholder'   => '',
 					'description'   => '',
-					'value'         => '',
-					'show_in_bulk'  => true,
+                    'value' => $default_shipping_options === 'id_check' ? 'yes' : '',
+                    'show_in_bulk'  => true,
 					'standard_feat' => false,
 					'const_field'   => false,
 					'container'     => true,
@@ -120,8 +132,8 @@ abstract class Base {
 					'label'         => __( 'Insured Shipping: ', 'postnl-for-woocommerce' ),
 					'placeholder'   => '',
 					'description'   => '',
-					'value'         => '',
-					'show_in_bulk'  => true,
+                    'value' => $default_shipping_options === 'insured_shipping' || $is_signature_insured || $is_signature_insured_return_no_answer ? 'yes' : '',
+                    'show_in_bulk'  => true,
 					'standard_feat' => false,
 					'const_field'   => false,
 					'container'     => true,
@@ -132,8 +144,8 @@ abstract class Base {
 					'label'         => __( 'Return if no answer: ', 'postnl-for-woocommerce' ),
 					'placeholder'   => '',
 					'description'   => '',
-					'value'         => '',
-					'show_in_bulk'  => true,
+                    'value' => $default_shipping_options === 'return_no_answer' || $is_signature_return_no_answer || $is_signature_insured_return_no_answer || $is_only_home_address_return_no_answer || $is_only_home_address_return_signature ? 'yes' : '',
+                    'show_in_bulk'  => true,
 					'standard_feat' => false,
 					'const_field'   => false,
 					'container'     => true,
@@ -144,8 +156,8 @@ abstract class Base {
 					'label'         => __( 'Signature on Delivery: ', 'postnl-for-woocommerce' ),
 					'placeholder'   => '',
 					'description'   => '',
-					'value'         => '',
-					'show_in_bulk'  => true,
+                    'value' => $default_shipping_options === 'signature_on_delivery' || $is_signature_insured || $is_signature_return_no_answer || $is_signature_insured_return_no_answer || $is_only_home_address_return_signature ? 'yes' : '',
+                    'show_in_bulk'  => true,
 					'standard_feat' => false,
 					'const_field'   => false,
 					'container'     => true,
@@ -156,8 +168,8 @@ abstract class Base {
 					'label'         => __( 'Only Home Address: ', 'postnl-for-woocommerce' ),
 					'placeholder'   => '',
 					'description'   => '',
-					'value'         => '',
-					'show_in_bulk'  => true,
+                    'value' => $default_shipping_options === 'only_home_address' || $is_only_home_address_return_no_answer || $is_only_home_address_return_signature ? 'yes' : '',
+                    'show_in_bulk'  => true,
 					'standard_feat' => false,
 					'const_field'   => false,
 					'container'     => true,
@@ -168,8 +180,8 @@ abstract class Base {
 					'label'         => __( 'Letterbox: ', 'postnl-for-woocommerce' ),
 					'placeholder'   => '',
 					'description'   => '',
-					'value'         => '',
-					'show_in_bulk'  => true,
+                    'value' => $default_shipping_options === 'letterbox' ? 'yes' : '',
+                    'show_in_bulk'  => true,
 					'standard_feat' => false,
 					'const_field'   => false,
 					'container'     => true,

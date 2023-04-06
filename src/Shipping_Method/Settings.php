@@ -465,6 +465,34 @@ class Settings extends \WC_Settings_API {
 				'default'     => esc_html__( 'This is your track and track link {tracking-link}', 'postnl-for-woocommerce' ),
 				'placeholder' => esc_html__( 'This is your track and track link {tracking-link}', 'postnl-for-woocommerce' ),
 			),
+			// Default shipping Options Settings.
+			'default_shipping_options_title' => array(
+				'title'       => esc_html__( 'Default shipping Options Settings', 'postnl-for-woocommerce' ),
+				'type'        => 'title',
+				'description' => esc_html__( 'Please select Default shipping Options.', 'postnl-for-woocommerce' ),
+			),
+			'default_shipping_options'       => array(
+				'title'       => __( 'Default Shipping Option', 'postnl-for-woocommerce' ),
+				'type'        => 'select',
+				'description' => __( 'Select a default shipping option for all orders that are shipped with PostNL.', 'postnl-for-woocommerce' ),
+				'default'     => '',
+				'options'     => array(
+					''                                   => __( 'None', 'postnl-for-woocommerce' ),
+					'id_check'                           => __( 'ID Check', 'postnl-for-woocommerce' ),
+					'insured_shipping'                   => __( 'Insured Shipping', 'postnl-for-woocommerce' ),
+					'return_no_answer'                   => __( 'Return if no answer', 'postnl-for-woocommerce' ),
+					'signature_on_delivery'              => __( 'Signature on Delivery', 'postnl-for-woocommerce' ),
+					'only_home_address'                  => __( 'Only Home Address', 'postnl-for-woocommerce' ),
+					'letterbox'                          => __( 'Letterbox', 'postnl-for-woocommerce' ),
+					'signature_insured'                  => __( 'Signature on Delivery + Insured Shipping', 'postnl-for-woocommerce' ),
+					'signature_return_no_answer'         => __( 'Signature on Delivery + Return if no answer', 'postnl-for-woocommerce' ),
+					'signature_insured_return_no_answer' => __( 'Signature on Delivery + Insured Shipping + Return if no answer', 'postnl-for-woocommerce' ),
+					'only_home_address_return_no_answer' => __( 'Only Home Address + Return if no answer', 'postnl-for-woocommerce' ),
+					'only_home_address_return_signature' => __( 'Only Home Address + Return if no answer + Signature on Delivery', 'postnl-for-woocommerce' ),
+					'only_home_address_signature'        => __( 'Only Home Address + Signature on Delivery', 'postnl-for-woocommerce' ),
+				),
+			),
+
 		);
 	}
 
@@ -1191,4 +1219,56 @@ class Settings extends \WC_Settings_API {
 	public function is_logging_enabled() {
 		return ( 'yes' === $this->get_enable_logging() );
 	}
+
+	/**
+	 * Get all shipping options.
+	 *
+	 * @return array
+	 */
+	public function get_default_shipping_options() {
+		$shipping_options = $this->get_country_option( 'default_shipping_options', '' );
+		$default_options  = array(
+			'id_check'              => false,
+			'insured_shipping'      => false,
+			'return_no_answer'      => false,
+			'signature_on_delivery' => false,
+			'only_home_address'     => false,
+			'letterbox'             => false,
+		);
+
+		switch ( $shipping_options ) {
+			case 'signature_insured':
+				$default_options['signature_on_delivery'] = true;
+				$default_options['insured_shipping']      = true;
+				break;
+			case 'signature_return_no_answer':
+				$default_options['signature_on_delivery'] = true;
+				$default_options['return_no_answer']      = true;
+				break;
+			case 'signature_insured_return_no_answer':
+				$default_options['signature_on_delivery'] = true;
+				$default_options['insured_shipping']      = true;
+				$default_options['return_no_answer']      = true;
+				break;
+			case 'only_home_address_return_no_answer':
+				$default_options['only_home_address'] = true;
+				$default_options['return_no_answer']  = true;
+				break;
+			case 'only_home_address_return_signature':
+				$default_options['only_home_address']     = true;
+				$default_options['return_no_answer']      = true;
+				$default_options['signature_on_delivery'] = true;
+				break;
+			case 'only_home_address_signature':
+				$default_options['only_home_address']     = true;
+				$default_options['signature_on_delivery'] = true;
+				break;
+			default:
+				// Handle the individual options
+				$default_options[ $shipping_options ] = true;
+		}
+
+		return $default_options;
+	}
+
 }

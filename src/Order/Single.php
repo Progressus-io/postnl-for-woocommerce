@@ -428,24 +428,6 @@ class Single extends Base {
 	}
 
 	/**
-	 * Additional fields of the meta box for child class.
-	 *
-	 * @param WC_Order $order current order object.
-	 * @param String   $field Backend field name.
-	 *
-	 * @return boolean
-	 */
-	public function have_backend_data( $order, $field = '' ) {
-		$order_data = $order->get_meta( $this->meta_name );
-
-		if ( ! empty( $field ) ) {
-			return ! empty( $order_data['backend'][ $field ] );
-		}
-
-		return ! empty( $order_data['backend'] );
-	}
-
-	/**
 	 * Saving meta box in order admin page using ajax.
 	 *
 	 * @throws \Exception Throw error for invalid nonce.

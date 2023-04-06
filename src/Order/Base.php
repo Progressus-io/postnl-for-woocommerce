@@ -93,6 +93,9 @@ abstract class Base {
 	 * List of meta box fields.
 	 */
 	public function meta_box_fields() {
+		// Get the default shipping options.
+		$default_options = $this->settings->get_default_shipping_options();
+
 		return apply_filters(
 			'postnl_order_meta_box_fields',
 			array(
@@ -108,7 +111,7 @@ abstract class Base {
 					'label'         => __( 'ID Check: ', 'postnl-for-woocommerce' ),
 					'placeholder'   => '',
 					'description'   => '',
-					'value'         => '',
+					'value'         => $default_options['id_check'] ? 'yes' : '',
 					'show_in_bulk'  => true,
 					'standard_feat' => false,
 					'const_field'   => false,
@@ -120,7 +123,7 @@ abstract class Base {
 					'label'         => __( 'Insured Shipping: ', 'postnl-for-woocommerce' ),
 					'placeholder'   => '',
 					'description'   => '',
-					'value'         => '',
+					'value'         => $default_options['insured_shipping'] ? 'yes' : '',
 					'show_in_bulk'  => true,
 					'standard_feat' => false,
 					'const_field'   => false,
@@ -132,7 +135,7 @@ abstract class Base {
 					'label'         => __( 'Return if no answer: ', 'postnl-for-woocommerce' ),
 					'placeholder'   => '',
 					'description'   => '',
-					'value'         => '',
+					'value'         => $default_options['return_no_answer'] ? 'yes' : '',
 					'show_in_bulk'  => true,
 					'standard_feat' => false,
 					'const_field'   => false,
@@ -144,7 +147,7 @@ abstract class Base {
 					'label'         => __( 'Signature on Delivery: ', 'postnl-for-woocommerce' ),
 					'placeholder'   => '',
 					'description'   => '',
-					'value'         => '',
+					'value'         => $default_options['signature_on_delivery'] ? 'yes' : '',
 					'show_in_bulk'  => true,
 					'standard_feat' => false,
 					'const_field'   => false,
@@ -156,7 +159,7 @@ abstract class Base {
 					'label'         => __( 'Only Home Address: ', 'postnl-for-woocommerce' ),
 					'placeholder'   => '',
 					'description'   => '',
-					'value'         => '',
+					'value'         => $default_options['only_home_address'] ? 'yes' : '',
 					'show_in_bulk'  => true,
 					'standard_feat' => false,
 					'const_field'   => false,
@@ -168,7 +171,7 @@ abstract class Base {
 					'label'         => __( 'Letterbox: ', 'postnl-for-woocommerce' ),
 					'placeholder'   => '',
 					'description'   => '',
-					'value'         => '',
+					'value'         => $default_options['letterbox'] ? 'yes' : '',
 					'show_in_bulk'  => true,
 					'standard_feat' => false,
 					'const_field'   => false,

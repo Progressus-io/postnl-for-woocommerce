@@ -229,6 +229,14 @@ class Settings extends \WC_Settings_API {
 				'type'        => 'title',
 				'description' => esc_html__( 'Please configure your checkout preferences.', 'postnl-for-woocommerce' ),
 			),
+			'supported_shipping_methods' => array(
+				'title'       => esc_html__( 'Shipping Methods', 'postnl-for-woocommerce' ),
+				'type'        => 'multiselect',
+				'description' => esc_html__( 'Select Shipping Methods can be associated with PostNL.', 'postnl-for-woocommerce' ),
+				'desc_tip'    => true,
+				'options'     => $this->get_shipping_methods(),
+				'class'       => 'wc-enhanced-select',
+			),
 			'enable_pickup_points'      => array(
 				'title'       => __( 'PostNL Pick-up Points', 'postnl-for-woocommerce' ),
 				'type'        => 'checkbox',
@@ -1271,4 +1279,25 @@ class Settings extends \WC_Settings_API {
 		return $default_options;
 	}
 
+	/**
+	 * Return array of shipping methods.
+	 *
+	 * @return array.
+	 */
+	public function get_shipping_methods() {
+		return  wp_list_pluck( WC()->shipping->get_shipping_methods(), 'method_title', 'id' );
+	}
+
+	/**
+	 * Get supported shipping methods from the settings.
+	 *
+	 * @return array.
+	 */
+	public function get_supported_shipping_methods() {
+		$suppoted_shipping_methods = (array) $this->get_option( 'supported_shipping_methods' );
+		// Add PostNL method by default
+		$suppoted_shipping_methods[] = POSTNL_SETTINGS_ID;
+
+		return $suppoted_shipping_methods;
+	}
 }

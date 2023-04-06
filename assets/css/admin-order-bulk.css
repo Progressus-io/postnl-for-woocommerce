@@ -1,3 +1,19 @@
 #postnl-action-create-label .form-field input.short {
 	width:50px;
 }
+
+.postnl-action-create-label:after,
+.postnl-action-download-label:after {
+	content: "";
+	background-size: 20px !important;
+	display: inline-block;
+	margin: 0 !important;
+}
+
+.postnl-action-create-label:after {
+	background: url(../images/postnl-logo.png) no-repeat center center;
+}
+
+.postnl-action-download-label:after {
+	background: url(../images/post-download-label.png) no-repeat center center;
+}

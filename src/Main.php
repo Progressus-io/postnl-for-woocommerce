@@ -195,7 +195,7 @@ class Main {
 	 * @return array<WC_Shipping_Method>
 	 */
 	public function add_shipping_method( $shipping_methods ) {
-		$shipping_methods[ $this->settings_id ] = new Shipping_Method\PostNL();
+		$shipping_methods[ $this->settings_id ] = 'PostNLWooCommerce\Shipping_Method\PostNL';
 		return $shipping_methods;
 	}
 

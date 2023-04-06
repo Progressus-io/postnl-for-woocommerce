@@ -320,7 +320,7 @@ abstract class Base {
 		}
 
 		foreach ( $shipping_methods as $shipping_item ) {
-			if ( POSTNL_SETTINGS_ID === $shipping_item->get_method_id() ) {
+			if ( in_array( $shipping_item->get_method_id(), $this->settings->get_supported_shipping_methods() ) ) {
 				return true;
 			}
 		}
@@ -966,5 +966,23 @@ abstract class Base {
 				}
 			}
 		}
+	}
+
+	/**
+	 * Check if the order have the label data.
+	 *
+	 * @param WC_Order $order current order object.
+	 * @param String   $field Backend field name.
+	 *
+	 * @return boolean
+	 */
+	public function have_backend_data( $order, $field = '' ) {
+		$order_data = $order->get_meta( $this->meta_name );
+
+		if ( ! empty( $field ) ) {
+			return ! empty( $order_data['backend'][ $field ] );
+		}
+
+		return ! empty( $order_data['backend'] );
 	}
 }

@@ -353,10 +353,10 @@ class Bulk extends Base {
 		if ( current_user_can( 'edit_shop_orders' ) && isset( $_GET['order_id'] ) ) {
 			$order_id = absint( wp_unslash( $_GET['order_id'] ) );
 
-			$array_messages = array(
+			$array_messages   = array(
 				'user_id' => get_current_user_id(),
 			);
-			$result = $this->generate_label_and_notes( $order_id, $_REQUEST );
+			$result           = $this->generate_label_and_notes( $order_id, $_REQUEST );
 			$array_messages[] = $result['message'];
 
 			update_option( $this->bulk_option_text_name, $array_messages );

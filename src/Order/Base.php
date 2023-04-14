@@ -358,7 +358,20 @@ abstract class Base {
 			$post_value = ! empty( $meta_values[ $field['id'] ] ) ? sanitize_text_field( wp_unslash( $meta_values[ $field['id'] ] ) ) : '';
 			$post_field = Utils::remove_prefix_field( $this->prefix, $field['id'] );
 
-			$saved_data['backend'][ $post_field ] = $post_value;
+			if ( ! empty( $post_value ) ) {
+				$saved_data['backend'][ $post_field ] = $post_value;
+			} else {
+				// Retrieves the default shipping options from the settings
+				$default_options = $this->settings->get_default_shipping_options();
+				// Retrieves the available shipping options for the order
+				$available_fields = $this->get_available_options( $order );
+				foreach ( $default_options as $default_option_key => $default_option_value ) {
+					// Checks if the current default option key exists in the available options for the order and has a value of true
+					if ( $default_option_value && in_array( $default_option_key, $available_fields ) ) {
+						$saved_data['backend'][ $default_option_key ] = 'yes';
+					}
+				}
+			}
 		}
 
 		$barcode         = $this->create_barcode( $order );

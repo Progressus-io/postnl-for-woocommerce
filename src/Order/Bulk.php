@@ -82,7 +82,7 @@ class Bulk extends Base {
 		if ( ! empty( $object_ids ) ) {
 			foreach ( $object_ids as $order_id ) {
 				$result           = $this->generate_label_and_notes( $order_id, $_REQUEST );
-				$array_messages[] += $result['messages'];
+				$array_messages[] = $result['message'];
 				$gen_labels[]     = $result['labels_data']['labels'];
 			}
 		}
@@ -356,8 +356,8 @@ class Bulk extends Base {
 			$array_messages = array(
 				'user_id' => get_current_user_id(),
 			);
-			$result         = $this->generate_label_and_notes( $order_id, $_REQUEST );
-			$array_messages += $result['messages'];
+			$result = $this->generate_label_and_notes( $order_id, $_REQUEST );
+			$array_messages[] = $result['message'];
 
 			update_option( $this->bulk_option_text_name, $array_messages );
 		}
@@ -375,7 +375,9 @@ class Bulk extends Base {
 	 * @return array Array of labels & messages.
 	 */
 	public function generate_label_and_notes( $order_id, $post_data ) {
-		$result = array();
+		$result = array(
+			'messages' => array(),
+		);
 
 		try {
 			$result['labels_data'] = $this->save_meta_value( $order_id, $post_data );
@@ -386,13 +388,13 @@ class Bulk extends Base {
 				$order->add_order_note( $tracking_note, 1 );
 			}
 
-			$result['messages'][] = array(
+			$result['message'] = array(
 				'message' => sprintf( esc_html__( '#%1$s : PostNL label has been created.', 'postnl-for-woocommerce' ),
 					$order_id ),
 				'type'    => 'success',
 			);
 		} catch ( \Exception $e ) {
-			$result['messages'][] = array(
+			$result['message'] = array(
 				'message' => sprintf( '#%1$s : %2$s', $order_id, $e->getMessage() ),
 				'type'    => 'error',
 			);

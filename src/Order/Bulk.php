@@ -375,9 +375,7 @@ class Bulk extends Base {
 	 * @return array Array of labels & messages.
 	 */
 	public function generate_label_and_notes( $order_id, $post_data ) {
-		$result = array(
-			'messages' => array(),
-		);
+		$result = array();
 
 		try {
 			$result['labels_data'] = $this->save_meta_value( $order_id, $post_data );

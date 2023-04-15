@@ -5,10 +5,10 @@
 * Tags: PostNL, Shipping
 * Requires at least: 4.6
 * Requires PHP: 5.6
-* Tested up to: 6.1
-* Stable tag: 5.1.4
+* Tested up to: 6.2
+* Stable tag: 5.2.0
 * WC requires at least: 4.0
-* WC tested up to: 7.5
+* WC tested up to: 7.6
 * License: GPLv2 or later
 * License URI: https://www.gnu.org/licenses/gpl-2.0.html
 

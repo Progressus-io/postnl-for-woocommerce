@@ -79,6 +79,12 @@ Follow these instructions (https://www.postnl.nl/Images/aanvragen-api-key-stappe
 5. PostNL information on the order details page
 
 == Changelog ==
+= 5.2.0 =
+* Feature: Add capability to associate shipping methods with PostNL method
+* Feature: Add Label printing icons from the order overview
+* Feature: Add shipping options by default to all orders
+* Fix: Fatal error when trying to create label for order with deleted Product
+* Fix: Checkout shipping address validation
 
 = 5.1.4 (2023-03-21) =
 * Fix merged labels on bulk operation

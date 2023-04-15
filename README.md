@@ -36,6 +36,13 @@ PostNL’s official extension for WooCommerce on WordPress. Manage your national
 
 ## Changelog
 
+### 5.2.0
+* Feature: Add capability to associate shipping methods with PostNL method
+* Feature: Add Label printing icons from the order overview
+* Feature: Add shipping options by default to all orders
+* Fix: Fatal error when trying to create label for order with deleted Product
+* Fix: Checkout shipping address validation
+
 ### 5.1.4
 * Fix merged labels on bulk operation
 

@@ -25,6 +25,11 @@ class Single extends Base {
 	 * Collection of hooks when initiation.
 	 */
 	public function init_hooks() {
+		add_filter( 'woocommerce_admin_shipping_fields', array( $this, 'admin_address_fields' ) );
+		add_filter( 'woocommerce_admin_billing_fields', array( $this, 'admin_address_fields' ) );
+		add_filter( 'woocommerce_order_formatted_shipping_address', array( $this, 'display_shipping_house_number' ), 10, 2 );
+		add_filter( 'woocommerce_order_formatted_billing_address', array( $this, 'display_billing_house_number' ), 10, 2 );
+
 		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_order_single_css_script' ) );
 		add_action( 'add_meta_boxes', array( $this, 'add_meta_box' ), 20, 2 );
 
@@ -527,5 +532,77 @@ class Single extends Base {
 				array( 'message' => $e->getMessage() ),
 			);
 		}
+	}
+
+	/**
+	 * Add house number field to the order address fields within the dashboard.
+	 *
+	 * @param array $fields address fields.
+	 *
+	 * @return array.
+	 */
+	public function admin_address_fields( $fields ) {
+		$new_fields = array();
+		foreach ( $fields as $key => $field ) {
+			if ( 'address_1' === $key ) {
+				$new_fields['house_number'] = array(
+					'label' => __( 'House number', 'postnl-for-woocommerce' ),
+					'show'  => false,
+				);
+			}
+
+			$new_fields[ $key ] = $field;
+		}
+
+		return $new_fields;
+	}
+
+	/**
+	 * Modify address and add house number.
+	 *
+	 * @param array    $address Array of shipping address.
+	 * @param \WC_Order $order Order object.
+	 * @param String $type Address type.
+	 *
+	 * @return mixed
+	 */
+	public function add_house_number_to_address( $address, $order, $type = 'shipping' ) {
+		if ( 'shipping' === $type ) {
+			$house_number_meta = '_shipping_house_number';
+		} else {
+			$house_number_meta = '_billing_house_number';
+		}
+
+		$house_number = $order->get_meta( $house_number_meta );
+
+		if ( $house_number ) {
+			$address['address_1'] .= ' ' . $house_number;
+		}
+
+		return $address;
+	}
+
+	/**
+	 * Add house number to the shipping address within the order.
+	 *
+	 * @param array    $address Array of shipping address.
+	 * @param \WC_Order $order Order object.
+	 *
+	 * @return array
+	 */
+	public function display_shipping_house_number( $address, $order ) {
+		return $this->add_house_number_to_address( $address, $order, 'shipping' );
+	}
+
+	/**
+	 * Add house number to the billing address within the order.
+	 *
+	 * @param array    $address Array of shipping address.
+	 * @param \WC_Order $order Order object.
+	 *
+	 * @return array
+	 */
+	public function display_billing_house_number( $address, $order ) {
+		return $this->add_house_number_to_address( $address, $order, 'billing' );
 	}
 }

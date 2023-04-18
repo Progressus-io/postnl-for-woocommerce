@@ -45,7 +45,8 @@ class Checkout_Fields {
 			add_filter( 'woocommerce_country_locale_field_selectors', array( $this, 'country_locale_field_selectors' ) );
 
 			add_filter( 'woocommerce_admin_shipping_fields', array( $this, 'admin_shipping_fields' ) );
-			add_filter( 'woocommerce_order_formatted_shipping_address', array( $this, 'display_house_number' ), 10, 2 );
+			add_filter( 'woocommerce_order_formatted_shipping_address', array( $this, 'display_shipping_house_number' ), 10, 2 );
+			add_filter( 'woocommerce_order_formatted_billing_address', array( $this, 'display_billing_house_number' ), 10, 2 );
 		}
 	}
 
@@ -161,20 +162,52 @@ class Checkout_Fields {
 	}
 
 	/**
-	 * Display house number in admin order shipping address.
+	 * Modify address and add house number.
 	 *
-	 * @param Array    $address Array of shipping address.
-	 * @param WC_Order $order Order object.
+	 * @param array    $address Array of shipping address.
+	 * @param \WC_Order $order Order object.
+	 * @param String $type Address type.
 	 *
-	 * @return array
+	 * @return mixed
 	 */
-	public function display_house_number( $address, $order ) {
-		$house_number = $order->get_meta( '_shipping_house_number' );
+	public function add_house_number_to_address( $address, $order, $type = 'shipping' ) {
+		if ( 'shipping' === $type ) {
+			$house_number_meta = '_shipping_house_number';
+		} else {
+			$house_number_meta = '_billing_house_number';
+		}
+
+		$house_number = $order->get_meta( $house_number_meta );
+
 		if ( $house_number ) {
 			$address['address_1'] .= ' ' . $house_number;
 		}
 
 		return $address;
+	}
+
+	/**
+	 * Add house number to the shipping address within the order.
+	 *
+	 * @param array    $address Array of shipping address.
+	 * @param \WC_Order $order Order object.
+	 *
+	 * @return array
+	 */
+	public function display_shipping_house_number( $address, $order ) {
+		return $this->add_house_number_to_address( $address, $order, 'shipping' );
+	}
+
+	/**
+	 * Add house number to the billing address within the order.
+	 *
+	 * @param array    $address Array of shipping address.
+	 * @param \WC_Order $order Order object.
+	 *
+	 * @return array
+	 */
+	public function display_billing_house_number( $address, $order ) {
+		return $this->add_house_number_to_address( $address, $order, 'billing' );
 	}
 
 }

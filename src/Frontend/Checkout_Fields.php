@@ -44,7 +44,8 @@ class Checkout_Fields {
 			add_filter( 'woocommerce_get_country_locale', array( $this, 'get_country_locale' ) );
 			add_filter( 'woocommerce_country_locale_field_selectors', array( $this, 'country_locale_field_selectors' ) );
 
-			add_filter( 'woocommerce_admin_shipping_fields', array( $this, 'admin_shipping_fields' ) );
+			add_filter( 'woocommerce_admin_shipping_fields', array( $this, 'admin_address_fields' ) );
+			add_filter( 'woocommerce_admin_billing_fields', array( $this, 'admin_address_fields' ) );
 			add_filter( 'woocommerce_order_formatted_shipping_address', array( $this, 'display_shipping_house_number' ), 10, 2 );
 			add_filter( 'woocommerce_order_formatted_billing_address', array( $this, 'display_billing_house_number' ), 10, 2 );
 		}
@@ -139,13 +140,13 @@ class Checkout_Fields {
 	}
 
 	/**
-	 * Add house number field to admin shipping fields.
+	 * Add house number field to the order address fields within the dashboard.
 	 *
-	 * @param Array $fields Fields of shipping.
+	 * @param array $fields address fields.
 	 *
-	 * @return Array
+	 * @return array.
 	 */
-	public function admin_shipping_fields( $fields ) {
+	public function admin_address_fields( $fields ) {
 		$new_fields = array();
 		foreach ( $fields as $key => $field ) {
 			if ( 'address_1' === $key ) {

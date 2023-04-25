@@ -275,7 +275,7 @@ abstract class Base_Info {
 	 * @return String
 	 */
 	public function get_current_time() {
-		return gmdate( 'd-m-Y H:i:s' );
+		return current_time( 'd-m-Y H:i:s' );
 	}
 
 	/**

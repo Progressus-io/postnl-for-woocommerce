@@ -982,4 +982,17 @@ abstract class Base {
 
 		return ! empty( $order_data['backend'] );
 	}
+
+	/**
+	 * Check if the order have the label file.
+	 *
+	 * @param  \WC_Order  $order  current order object.
+	 *
+	 * @return boolean
+	 */
+	public function have_label_file( $order ) {
+		$order_data = $order->get_meta( $this->meta_name );
+
+		return ! empty( $order_data['labels']['label']['filepath'] );
+	}
 }

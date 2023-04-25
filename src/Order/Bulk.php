@@ -329,7 +329,7 @@ class Bulk extends Base {
 			return $actions;
 		}
 
-		if ( $this->have_backend_data( $order ) ) {
+		if ( $this->have_label_file( $order ) ) {
 			$actions['postnl-label'] = array(
 				'url'    => $this->get_download_label_url( $order->get_id() ),
 				'name'   => esc_html__( 'PostNL Print Label', 'postnl-for-woocommerce' ),

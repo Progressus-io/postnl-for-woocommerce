@@ -386,7 +386,7 @@ class Single extends Base {
 			return;
 		}
 
-		$form_class = ( $this->have_backend_data( $order ) ) ? 'generated' : '';
+		$form_class = ( $this->have_label_file( $order ) ) ? 'generated' : '';
 		if ( $this->have_backend_data( $order, 'create_return_label' ) ) {
 			$form_class .= ' has-return';
 		}

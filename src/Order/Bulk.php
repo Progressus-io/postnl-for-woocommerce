@@ -379,12 +379,16 @@ class Bulk extends Base {
 
 		try {
 			$result['labels_data'] = $this->save_meta_value( $order_id, $post_data );
-			$tracking_note         = $this->get_tracking_note( $order_id );
+			$tracking_note = $this->get_tracking_note( $order_id );
+
+			$customer_note = false;
 
 			if ( $this->settings->is_woocommerce_email_enabled() && ! empty( $tracking_note ) ) {
-				$order = wc_get_order( $order_id );
-				$order->add_order_note( $tracking_note, 1 );
+				$customer_note = true;
 			}
+			$order = wc_get_order( $order_id );
+			$order->add_order_note( $tracking_note, $customer_note );
+
 
 			$result['message'] = array(
 				'message' => sprintf( esc_html__( '#%1$s : PostNL label has been created.', 'postnl-for-woocommerce' ),

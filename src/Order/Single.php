@@ -461,7 +461,7 @@ class Single extends Base {
 					$result['saved_data'],
 					array(
 						'tracking_note' => $tracking_note,
-						'note_type'     => $this->settings->is_woocommerce_email_enabled() ? Utils::get_tracking_note_type() : Utils::get_private_tracking_note_type(),
+						'note_type' => $this->settings->is_woocommerce_email_enabled() ? 'customer' : 'private',
 					)
 				);
 			}

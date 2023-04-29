@@ -227,24 +227,6 @@ class Utils {
 	}
 
 	/**
-	 * Get the type of tracking note to be saved in the order.
-	 *
-	 * @return String
-	 */
-	public static function get_tracking_note_type() {
-		return 'customer';
-	}
-
-	/**
-	 * Get the type of private tracking note to be saved in the order.
-	 *
-	 * @return String
-	 */
-	public static function get_private_tracking_note_type() {
-		return 'private';
-	}
-
-	/**
 	 * Generate the label file name.
 	 *
 	 * @param Int    $order_id ID of the order object.

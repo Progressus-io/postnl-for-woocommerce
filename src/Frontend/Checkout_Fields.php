@@ -43,9 +43,6 @@ class Checkout_Fields {
 			add_filter( 'woocommerce_default_address_fields', array( $this, 'add_house_number' ) );
 			add_filter( 'woocommerce_get_country_locale', array( $this, 'get_country_locale' ) );
 			add_filter( 'woocommerce_country_locale_field_selectors', array( $this, 'country_locale_field_selectors' ) );
-
-			add_filter( 'woocommerce_admin_shipping_fields', array( $this, 'admin_shipping_fields' ) );
-			add_filter( 'woocommerce_order_formatted_shipping_address', array( $this, 'display_house_number' ), 10, 2 );
 		}
 	}
 
@@ -135,46 +132,6 @@ class Checkout_Fields {
 		);
 
 		return array_merge( $locale_fields, $additional_selectors );
-	}
-
-	/**
-	 * Add house number field to admin shipping fields.
-	 *
-	 * @param Array $fields Fields of shipping.
-	 *
-	 * @return Array
-	 */
-	public function admin_shipping_fields( $fields ) {
-		$new_fields = array();
-		foreach ( $fields as $key => $field ) {
-			if ( 'address_1' === $key ) {
-				$new_fields['house_number'] = array(
-					'label' => __( 'House number', 'postnl-for-woocommerce' ),
-					'show'  => false,
-				);
-			}
-
-			$new_fields[ $key ] = $field;
-		}
-
-		return $new_fields;
-	}
-
-	/**
-	 * Display house number in admin order shipping address.
-	 *
-	 * @param Array    $address Array of shipping address.
-	 * @param WC_Order $order Order object.
-	 *
-	 * @return array
-	 */
-	public function display_house_number( $address, $order ) {
-		$house_number = $order->get_meta( '_shipping_house_number' );
-		if ( $house_number ) {
-			$address['address_1'] .= ' ' . $house_number;
-		}
-
-		return $address;
 	}
 
 }

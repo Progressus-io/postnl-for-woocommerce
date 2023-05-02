@@ -42,6 +42,9 @@ PostNL’s official extension for WooCommerce on WordPress. Manage your national
 * Feature: Add shipping options by default to all orders
 * Fix: Fatal error when trying to create label for order with deleted Product
 * Fix: Checkout shipping address validation
+* Fix: House number not copied over to invoice address
+* Fix: Missing T&T info on order details page when email settings is disabled
+* Fix: Delivery Date & Transit Time
 
 ### 5.1.4
 * Fix merged labels on bulk operation

@@ -61,7 +61,7 @@ class Container {
 	public function init_hooks() {
 		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_scripts_styles' ) );
 
-		add_action( 'woocommerce_review_order_after_shipping', array( $this, 'display_fields' ) );
+		add_action( 'woocommerce_review_order_after_shipping', array( $this, 'postnl_fields' ),10 );
 		add_action( 'woocommerce_cart_calculate_fees', array( $this, 'add_cart_fees' ), 10, 1 );
 
 		add_filter( 'woocommerce_update_order_review_fragments', array( $this, 'fill_validated_address' ) );
@@ -139,63 +139,20 @@ class Container {
 	/**
 	 * Get data from PostNL Checkout Rest API.
 	 *
-	 * @return array
+	 * @param  array  $post_data  Checkout post input.
 	 *
+	 * @return array.
 	 * @throws \Exception If the checkout data process has error.
 	 */
-	public function get_checkout_data() {
-		try {
-			$post_data = $this->get_checkout_post_data();
+	public function get_checkout_data( $post_data ) {
+		$item_info = new Checkout\Item_Info( $post_data );
+		$api_call  = new Checkout\Client( $item_info );
+		$response  = $api_call->send_request();
 
-			if ( empty( $post_data ) ) {
-				return array();
-			}
-
-			$post_data         = Address_Utils::set_post_data_address( $post_data );
-			$available_country = Mapping::available_country_for_checkout_feature();
-			$receiver_country  = ! empty( $post_data['shipping_country'] ) ? $post_data['shipping_country'] : '';
-			$store_country     = Utils::get_base_country();
-
-			if ( ! isset( $available_country[ $store_country ][ $receiver_country ] ) ) {
-				return array();
-			}
-
-			foreach ( $post_data as $post_key => $post_value ) {
-				if ( false !== strpos( $post_key, 'shipping_method' ) && false === strpos( $post_value[0], POSTNL_SETTINGS_ID ) ) {
-					return array();
-				}
-			}
-
-			// Validate address if required.
-			if ( $this->is_address_validation_required() ) {
-
-				if ( empty( $post_data['shipping_postcode'] ) ) {
-					return array();
-				}
-
-				if ( empty( $post_data['shipping_house_number'] ) && $this->settings->is_reorder_nl_address_enabled() ) {
-					return array();
-				} elseif ( empty( $post_data['shipping_house_number'] ) && ! $this->settings->is_reorder_nl_address_enabled() ) {
-					throw new \Exception( 'Address does not contain house number!' );
-				}
-
-				$this->validated_address( $post_data );
-			}
-
-			$item_info = new Checkout\Item_Info( $post_data );
-			$api_call  = new Checkout\Client( $item_info );
-			$response  = $api_call->send_request();
-
-			return array(
-				'response'  => $response,
-				'post_data' => $post_data,
-			);
-		} catch ( \Exception $e ) {
-			return array(
-				'response' => array(),
-				'error'    => $e->getMessage(),
-			);
-		}
+		return array(
+			'response'  => $response,
+			'post_data' => $post_data,
+		);
 	}
 
 	/**
@@ -270,19 +227,20 @@ class Container {
 	}
 
 	/**
-	 * Add delivery day fields.
+	 * Add delivery day & Pickup points fields.
+	 *
+	 * @param  array  $post_data  Checkout post input.
+	 *
+	 * @return void.
+	 * @throws \Exception.
 	 */
-	public function display_fields() {
+	public function display_fields( $post_data ) {
 		// Only display the fields if these two options are enabled in the settings.
 		if ( ! $this->settings->is_delivery_days_enabled() && ! $this->settings->is_pickup_points_enabled() ) {
 			return;
 		}
 
-		$checkout_data = $this->get_checkout_data();
-
-		if ( ! empty( $checkout_data['error'] ) ) {
-			wc_add_notice( $checkout_data['error'], 'error' );
-		}
+		$checkout_data = $this->get_checkout_data( $post_data );
 
 		if ( empty( $checkout_data['response'] ) ) {
 			return;
@@ -302,6 +260,58 @@ class Container {
 		);
 
 		wc_get_template( $this->template_file, $template_args, '', POSTNL_WC_PLUGIN_DIR_PATH . '/templates/' );
+	}
+
+	/**
+	 * Check address and display fields.
+	 *
+	 * @return void.
+	 */
+	public function postnl_fields() {
+		try {
+			$post_data = $this->get_checkout_post_data();
+
+			if ( empty( $post_data ) ) {
+				return;
+			}
+
+			foreach ( $post_data as $post_key => $post_value ) {
+				if ( 'shipping_method' === $post_key && false === strpos( $post_value[0], POSTNL_SETTINGS_ID ) ) {
+					return;
+				}
+			}
+
+			$available_country = Mapping::available_country_for_checkout_feature();
+			$receiver_country  = ! empty( $post_data['shipping_country'] ) ? $post_data['shipping_country'] : '';
+			$store_country     = Utils::get_base_country();
+
+			if ( ! isset( $available_country[ $store_country ][ $receiver_country ] ) ) {
+				return;
+			}
+
+			$post_data = Address_Utils::set_post_data_address( $post_data );
+
+			//Validate address.
+			if ( $this->is_address_validation_required() ) {
+				if ( empty( $post_data['shipping_postcode'] ) ) {
+					return;
+				}
+
+				if ( empty( $post_data['shipping_house_number'] ) && $this->settings->is_reorder_nl_address_enabled() ) {
+					return;
+				} elseif ( empty( $post_data['shipping_house_number'] ) && ! $this->settings->is_reorder_nl_address_enabled() ) {
+					throw new \Exception( 'Address does not contain house number!' );
+				}
+
+				$this->validated_address( $post_data );
+			}
+
+			// Display PostNL Delivery day & Pickup points.
+			$this->display_fields( $post_data );
+
+		} catch ( \Exception $e ) {
+			wc_add_notice( $e->getMessage(), 'error' );
+		}
 	}
 
 	/**

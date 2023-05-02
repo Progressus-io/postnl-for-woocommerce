@@ -3,10 +3,10 @@ Contributors: PostNL, shadim, abdalsalaam
 Tags: woocommerce, export, delivery, packages, PostNL, Shipping
 Requires at least: 4.6
 Requires PHP: 5.6
-Tested up to: 6.1
-Stable tag: 5.1.4
+Tested up to: 6.2
+Stable tag: 5.2.0
 WC requires at least: 4.0
-WC tested up to: 7.5
+WC tested up to: 7.6
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -79,6 +79,15 @@ Follow these instructions (https://www.postnl.nl/Images/aanvragen-api-key-stappe
 5. PostNL information on the order details page
 
 == Changelog ==
+= 5.2.0 (2023-05-02) =
+* Feature: Add capability to associate shipping methods with PostNL method
+* Feature: Add Label printing icons from the order overview
+* Feature: Add shipping options by default to all orders
+* Fix: Fatal error when trying to create label for order with deleted Product
+* Fix: Checkout shipping address validation
+* Fix: House number not copied over to invoice address
+* Fix: Missing T&T info on order details page when email settings is disabled
+* Fix: Delivery Date & Transit Time
 
 = 5.1.4 (2023-03-21) =
 * Fix merged labels on bulk operation

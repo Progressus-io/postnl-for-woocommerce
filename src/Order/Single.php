@@ -456,12 +456,12 @@ class Single extends Base {
 
 			$this->delete_label_files( $labels );
 
-			if ( $this->settings->is_woocommerce_email_enabled() && ! empty( $tracking_note ) ) {
+			if ( ! empty( $tracking_note ) ) {
 				$return_data = array_merge(
 					$result['saved_data'],
 					array(
 						'tracking_note' => $tracking_note,
-						'note_type'     => Utils::get_tracking_note_type(),
+						'note_type' => $this->settings->is_woocommerce_email_enabled() ? 'customer' : 'private',
 					)
 				);
 			}

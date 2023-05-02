@@ -93,6 +93,9 @@ abstract class Base {
 	 * List of meta box fields.
 	 */
 	public function meta_box_fields() {
+		// Get the default shipping options.
+		$default_options = $this->settings->get_default_shipping_options();
+
 		return apply_filters(
 			'postnl_order_meta_box_fields',
 			array(
@@ -108,7 +111,7 @@ abstract class Base {
 					'label'         => __( 'ID Check: ', 'postnl-for-woocommerce' ),
 					'placeholder'   => '',
 					'description'   => '',
-					'value'         => '',
+					'value'         => $default_options['id_check'] ? 'yes' : '',
 					'show_in_bulk'  => true,
 					'standard_feat' => false,
 					'const_field'   => false,
@@ -120,7 +123,7 @@ abstract class Base {
 					'label'         => __( 'Insured Shipping: ', 'postnl-for-woocommerce' ),
 					'placeholder'   => '',
 					'description'   => '',
-					'value'         => '',
+					'value'         => $default_options['insured_shipping'] ? 'yes' : '',
 					'show_in_bulk'  => true,
 					'standard_feat' => false,
 					'const_field'   => false,
@@ -132,7 +135,7 @@ abstract class Base {
 					'label'         => __( 'Return if no answer: ', 'postnl-for-woocommerce' ),
 					'placeholder'   => '',
 					'description'   => '',
-					'value'         => '',
+					'value'         => $default_options['return_no_answer'] ? 'yes' : '',
 					'show_in_bulk'  => true,
 					'standard_feat' => false,
 					'const_field'   => false,
@@ -144,7 +147,7 @@ abstract class Base {
 					'label'         => __( 'Signature on Delivery: ', 'postnl-for-woocommerce' ),
 					'placeholder'   => '',
 					'description'   => '',
-					'value'         => '',
+					'value'         => $default_options['signature_on_delivery'] ? 'yes' : '',
 					'show_in_bulk'  => true,
 					'standard_feat' => false,
 					'const_field'   => false,
@@ -156,7 +159,7 @@ abstract class Base {
 					'label'         => __( 'Only Home Address: ', 'postnl-for-woocommerce' ),
 					'placeholder'   => '',
 					'description'   => '',
-					'value'         => '',
+					'value'         => $default_options['only_home_address'] ? 'yes' : '',
 					'show_in_bulk'  => true,
 					'standard_feat' => false,
 					'const_field'   => false,
@@ -168,7 +171,7 @@ abstract class Base {
 					'label'         => __( 'Letterbox: ', 'postnl-for-woocommerce' ),
 					'placeholder'   => '',
 					'description'   => '',
-					'value'         => '',
+					'value'         => $default_options['letterbox'] ? 'yes' : '',
 					'show_in_bulk'  => true,
 					'standard_feat' => false,
 					'const_field'   => false,
@@ -317,7 +320,7 @@ abstract class Base {
 		}
 
 		foreach ( $shipping_methods as $shipping_item ) {
-			if ( POSTNL_SETTINGS_ID === $shipping_item->get_method_id() ) {
+			if ( in_array( $shipping_item->get_method_id(), $this->settings->get_supported_shipping_methods() ) ) {
 				return true;
 			}
 		}
@@ -355,7 +358,20 @@ abstract class Base {
 			$post_value = ! empty( $meta_values[ $field['id'] ] ) ? sanitize_text_field( wp_unslash( $meta_values[ $field['id'] ] ) ) : '';
 			$post_field = Utils::remove_prefix_field( $this->prefix, $field['id'] );
 
-			$saved_data['backend'][ $post_field ] = $post_value;
+			if ( ! empty( $post_value ) ) {
+				$saved_data['backend'][ $post_field ] = $post_value;
+			} else {
+				// Retrieves the default shipping options from the settings
+				$default_options = $this->settings->get_default_shipping_options();
+				// Retrieves the available shipping options for the order
+				$available_fields = $this->get_available_options( $order );
+				foreach ( $default_options as $default_option_key => $default_option_value ) {
+					// Checks if the current default option key exists in the available options for the order and has a value of true
+					if ( $default_option_value && in_array( $default_option_key, $available_fields ) ) {
+						$saved_data['backend'][ $default_option_key ] = 'yes';
+					}
+				}
+			}
 		}
 
 		$barcode         = $this->create_barcode( $order );
@@ -963,5 +979,36 @@ abstract class Base {
 				}
 			}
 		}
+	}
+
+	/**
+	 * Check if the order have the label data.
+	 *
+	 * @param WC_Order $order current order object.
+	 * @param String   $field Backend field name.
+	 *
+	 * @return boolean
+	 */
+	public function have_backend_data( $order, $field = '' ) {
+		$order_data = $order->get_meta( $this->meta_name );
+
+		if ( ! empty( $field ) ) {
+			return ! empty( $order_data['backend'][ $field ] );
+		}
+
+		return ! empty( $order_data['backend'] );
+	}
+
+	/**
+	 * Check if the order have the label file.
+	 *
+	 * @param  \WC_Order  $order  current order object.
+	 *
+	 * @return boolean
+	 */
+	public function have_label_file( $order ) {
+		$order_data = $order->get_meta( $this->meta_name );
+
+		return ! empty( $order_data['labels']['label']['filepath'] );
 	}
 }

@@ -40,6 +40,10 @@ class Bulk extends Base {
 		// Display admin notices for bulk actions.
 		add_action( 'admin_notices', array( $this, 'render_messages' ) );
 		add_action( 'init', array( $this, 'get_bulk_file' ), 10 );
+
+		// Add 'Create Label' action button.
+		add_action( 'wp_ajax_postnl_create_label', array( $this, 'postnl_create_label_ajax' ) );
+		add_filter( 'woocommerce_admin_order_actions', array( $this, 'add_create_label_actions_button' ), 10, 2 );
 	}
 
 	/**
@@ -73,47 +77,18 @@ class Bulk extends Base {
 			'user_id' => get_current_user_id(),
 		);
 
-		$saved_datas = array();
 		$gen_labels  = array(); // Generated labels.
 
 		if ( ! empty( $object_ids ) ) {
 			foreach ( $object_ids as $order_id ) {
-				try {
-					$result        = $this->save_meta_value( $order_id, $_REQUEST );
-					$gen_labels[]  = $result['labels'];
-					$saved_datas[] = $result['saved_data'];
-					$tracking_note = $this->get_tracking_note( $order_id );
-
-					if ( $this->settings->is_woocommerce_email_enabled() && ! empty( $tracking_note ) ) {
-						$order = wc_get_order( $order_id );
-						$order->add_order_note( $tracking_note, 1 );
-					}
-
-					array_push(
-						$array_messages,
-						array(
-							// translators: %1$s is an order ID.
-							'message' => sprintf( esc_html__( '#%1$s : PostNL label has been created.', 'postnl-for-woocommerce' ), $order_id ),
-							'type'    => 'success',
-						)
-					);
-				} catch ( \Exception $e ) {
-					array_push(
-						$array_messages,
-						array(
-							'message' => sprintf( '#%1$s : %2$s', $order_id, $e->getMessage() ),
-							'type'    => 'error',
-						)
-					);
-				}
+				$result           = $this->generate_label_and_notes( $order_id, $_REQUEST );
+				$array_messages[] = $result['message'];
+				$gen_labels[]     = $result['labels_data']['labels'];
 			}
 		}
 
 		if ( ! empty( $gen_labels ) ) {
-			array_push(
-				$array_messages,
-				$this->merge_bulk_labels( $gen_labels )
-			);
+			$array_messages[] = $this->merge_bulk_labels( $gen_labels );
 		}
 
 		update_option( $this->bulk_option_text_name, $array_messages );
@@ -339,5 +314,93 @@ class Bulk extends Base {
 				delete_option( $this->bulk_option_text_name );
 			}
 		}
+	}
+
+	/**
+	 * Add Crete Label button to the action buttons within the order list table.
+	 *
+	 * @param  array  $actions  Order actions.
+	 * @param  \WC_Order  $order  Current order object.
+	 *
+	 */
+	public function add_create_label_actions_button( array $actions, \WC_Order $order ) {
+		// Display the button for all orders that have a PostNL as a shipping method.
+		if ( ! $this->is_postnl_shipping_method( $order ) ) {
+			return $actions;
+		}
+
+		if ( $this->have_label_file( $order ) ) {
+			$actions['postnl-label'] = array(
+				'url'    => $this->get_download_label_url( $order->get_id() ),
+				'name'   => esc_html__( 'PostNL Print Label', 'postnl-for-woocommerce' ),
+				'action' => 'postnl-action-download-label',
+			);
+		} else {
+			$actions['postnl-label'] = array(
+				'url'    => wp_nonce_url( admin_url( 'admin-ajax.php?action=postnl_create_label&order_id=' . $order->get_id() ), 'postnl_create_label' ),
+				'name'   => esc_html__( 'PostNL Create Label', 'postnl-for-woocommerce' ),
+				'action' => 'postnl-action-create-label',
+			);
+		}
+
+		return $actions;
+	}
+
+	/**
+	 * Process PostNL by action button.
+	 */
+	public function postnl_create_label_ajax() {
+		if ( current_user_can( 'edit_shop_orders' ) && isset( $_GET['order_id'] ) ) {
+			$order_id = absint( wp_unslash( $_GET['order_id'] ) );
+
+			$array_messages   = array(
+				'user_id' => get_current_user_id(),
+			);
+			$result           = $this->generate_label_and_notes( $order_id, $_REQUEST );
+			$array_messages[] = $result['message'];
+
+			update_option( $this->bulk_option_text_name, $array_messages );
+		}
+
+		wp_safe_redirect( wp_get_referer() ? wp_get_referer() : admin_url( 'edit.php?post_type=shop_order' ) );
+		exit;
+	}
+
+	/**
+	 * Generate shipping label and add order note.
+	 *
+	 * @param  int   $order_id Order post ID.
+	 * @param  array $post_data posted data.
+	 *
+	 * @return array Array of labels & messages.
+	 */
+	public function generate_label_and_notes( $order_id, $post_data ) {
+		$result = array();
+
+		try {
+			$result['labels_data'] = $this->save_meta_value( $order_id, $post_data );
+			$tracking_note         = $this->get_tracking_note( $order_id );
+			$customer_note         = false;
+
+			if ( $this->settings->is_woocommerce_email_enabled() && ! empty( $tracking_note ) ) {
+				$customer_note = true;
+			}
+
+			$order = wc_get_order( $order_id );
+			$order->add_order_note( $tracking_note, $customer_note );
+
+			$result['message'] = array(
+				'message' => sprintf( esc_html__( '#%1$s : PostNL label has been created.', 'postnl-for-woocommerce' ),
+					$order_id ),
+				'type'    => 'success',
+			);
+		} catch ( \Exception $e ) {
+			$result['message'] = array(
+				'message' => sprintf( '#%1$s : %2$s', $order_id, $e->getMessage() ),
+				'type'    => 'error',
+			);
+		}
+
+		return $result;
 	}
 }

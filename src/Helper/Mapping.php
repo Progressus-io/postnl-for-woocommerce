@@ -215,7 +215,7 @@ class Mapping {
 					),
 				),
 				'ROW' => array(
-					'delivery_day'  => self::globalpack_products(),
+					'delivery_day'  => array_merge( self::globalpack_products(), self::EU_ROW_products() ),
 					'pickup_points' => array(
 						array(
 							'combination' => array(),
@@ -401,40 +401,37 @@ class Mapping {
 	 * @return array[].
 	 */
 	public static function globalpack_products() {
-		return array_merge(
+		return array(
 			array(
-				array(
-					'combination' => array(),
-					'code'        => '4909',
-					'options'     => array(
-						array(
-							'characteristic' => '005',
-							'option'         => '025',
-						)
-					)
-				),
-				array(
-					'combination' => array( 'track_and_trace' ),
-					'code'        => '4909',
-					'options'     => array(
-						array(
-							'characteristic' => '005',
-							'option'         => '025',
-						)
-					)
-				),
-				array(
-					'combination' => array( 'track_and_trace', 'insured_plus' ),
-					'code'        => '4909',
-					'options'     => array(
-						array(
-							'characteristic' => '004',
-							'option'         => '016',
-						)
+				'combination' => array(),
+				'code'        => '4909',
+				'options'     => array(
+					array(
+						'characteristic' => '005',
+						'option'         => '025',
 					)
 				)
 			),
-			self::EU_ROW_products()
+			array(
+				'combination' => array( 'track_and_trace' ),
+				'code'        => '4909',
+				'options'     => array(
+					array(
+						'characteristic' => '005',
+						'option'         => '025',
+					)
+				)
+			),
+			array(
+				'combination' => array( 'track_and_trace', 'insured_plus' ),
+				'code'        => '4909',
+				'options'     => array(
+					array(
+						'characteristic' => '004',
+						'option'         => '016',
+					)
+				)
+			)
 		);
 	}
 

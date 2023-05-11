@@ -407,8 +407,8 @@ class Mapping {
 				'code'        => '4909',
 				'options'     => array(
 					array(
-						'characteristic' => '005',
-						'option'         => '025',
+						'characteristic' => '004',
+						'option'         => '015',
 					)
 				)
 			),

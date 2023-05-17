@@ -130,16 +130,16 @@ class Item_Info extends Base_Info {
 		$self = $this;
 
 		return array(
-			'customer_code'           => array(
+			'customer_code'            => array(
 				'error' => __( 'Customer Code is empty!', 'postnl-for-woocommerce' ),
 			),
-			'customer_num'            => array(
+			'customer_num'             => array(
 				'error' => __( 'Customer Number is empty!', 'postnl-for-woocommerce' ),
 			),
-			'globalpack_barcode_type' => array(
+			'globalpack_barcode_type'  => array(
 				'rename'   => 'barcode_type',
 				'default'  => '3S',
-				'sanitize' => function( $value ) use ( $self ) {
+				'sanitize' => function ( $value ) use ( $self ) {
 					if ( ! $self->is_rest_of_world() ) {
 						return $self->check_product_barcode_type( '3S' );
 					}
@@ -150,12 +150,12 @@ class Item_Info extends Base_Info {
 					return $self->string_length_sanitization( $value, 4 );
 				},
 			),
-			'serie'                   => array(
+			'serie'                    => array(
 				'default'  => '000000000-999999999',
-				'sanitize' => function( $serie ) use ( $self ) {
+				'sanitize' => function ( $serie ) use ( $self ) {
 
 					$barcode_type = $self->check_product_barcode_type( $self->api_args['settings'] );
-					if ( in_array( $barcode_type, array( 'RI','UE','LA' ) ) ) {
+					if ( in_array( $barcode_type, array( 'RI', 'UE', 'LA' ) ) ) {
 						return '00000000-99999999';
 					}
 
@@ -168,6 +168,11 @@ class Item_Info extends Base_Info {
 					}
 
 					return $self->string_length_sanitization( $serie, 19 );
+				},
+			),
+			'globalpack_customer_code' => array(
+				'sanitize' => function ( $value ) use ( $self ) {
+					return $self->string_length_sanitization( $value, 4 );
 				},
 			),
 		);

@@ -153,10 +153,18 @@ class Item_Info extends Base_Info {
 			'serie'                   => array(
 				'default'  => '000000000-999999999',
 				'sanitize' => function( $serie ) use ( $self ) {
+
+					$barcode_type = $self->check_product_barcode_type( $self->api_args['settings'] );
+					if ( in_array( $barcode_type, array( 'RI','UE','LA' ) ) ) {
+						return '00000000-99999999';
+					}
+
 					if ( $self->is_europe() ) {
-						$serie = '0000000-9999999';
-					} elseif ( $self->is_rest_of_world() ) {
-						$serie = '0000-9999';
+						return '0000000-9999999';
+					}
+
+					if ( $self->is_rest_of_world() ) {
+						return '0000-9999';
 					}
 
 					return $self->string_length_sanitization( $serie, 19 );

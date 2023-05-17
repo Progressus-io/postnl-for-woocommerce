@@ -56,6 +56,14 @@ class Single extends Base {
 			wp_enqueue_style( 'postnl-admin-order-single', POSTNL_WC_PLUGIN_DIR_URL . '/assets/css/admin-order-single.css', array(), POSTNL_WC_VERSION );
 
 			wp_enqueue_script(
+				'postnl-admin-order-trackAndTrace',
+				POSTNL_WC_PLUGIN_DIR_URL . '/assets/js/trackAndTrace.js',
+				array( 'jquery' ),
+				POSTNL_WC_VERSION,
+				true
+			);
+
+			wp_enqueue_script(
 				'postnl-admin-order-single',
 				POSTNL_WC_PLUGIN_DIR_URL . '/assets/js/admin-order-single.js',
 				array( 'jquery' ),

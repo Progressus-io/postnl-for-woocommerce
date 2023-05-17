@@ -40,11 +40,14 @@ class Client extends Base {
 	 * @return Array.
 	 */
 	public function compose_url_params() {
+		$range = Utils::get_barcode_range( $this->item_info->query_args['barcode_type'], $this->item_info->query_args['globalpack_customer_code'] );
+
 		return array(
 			'Type'           => $this->item_info->query_args['barcode_type'],
 			'Serie'          => $this->item_info->query_args['serie'],
 			'CustomerCode'   => $this->item_info->query_args['customer_code'],
 			'CustomerNumber' => $this->item_info->query_args['customer_num'],
+			'Range'          => $range,
 		);
 	}
 }

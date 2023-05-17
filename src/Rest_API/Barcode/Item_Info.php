@@ -7,6 +7,7 @@
 
 namespace PostNLWooCommerce\Rest_API\Barcode;
 
+use PostNLWooCommerce\Helper\Mapping;
 use PostNLWooCommerce\Rest_API\Base_Info;
 use PostNLWooCommerce\Shipping_Method\Settings;
 use PostNLWooCommerce\Utils;
@@ -196,19 +197,7 @@ class Item_Info extends Base_Info {
 	 * @return string.
 	 */
 	public function check_product_barcode_type( $barcode_type ) {
-		$default_type = array(
-			'UE' => array(
-				array( 'mailboxpacket' ),
-				array( 'packets' )
-			),
-			'LA' => array(
-				array( 'track_and_trace', 'mailboxpacket' ),
-				array( 'track_and_trace', 'packets' )
-			),
-			'RI' => array(
-				array( 'track_and_trace', 'packets', 'insured_shipping' )
-			)
-		);
+		$barcode_types = Mapping::products_custom_barcode_types();
 
 		$selected_options = array();
 		foreach ( $this->api_args['backend_data'] as $option => $value ) {
@@ -218,7 +207,7 @@ class Item_Info extends Base_Info {
 		}
 
 		if ( ! empty( $selected_options ) ) {
-			foreach ( $default_type as $type => $options_combinations ) {
+			foreach ( $barcode_types as $type => $options_combinations ) {
 				foreach ( $options_combinations as $combination ) {
 					sort( $combination );
 					sort( $selected_options );

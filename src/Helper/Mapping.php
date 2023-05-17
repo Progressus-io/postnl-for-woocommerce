@@ -525,4 +525,25 @@ class Mapping {
 			),
 		);
 	}
+
+	/**
+	 * List of barcodes types used for specific products.
+	 *
+	 * @return array.
+	 */
+	public static function products_custom_barcode_types() {
+		return array(
+			'UE' => array(
+				array( 'mailboxpacket' ),
+				array( 'packets' )
+			),
+			'LA' => array(
+				array( 'track_and_trace', 'mailboxpacket' ),
+				array( 'track_and_trace', 'packets' )
+			),
+			'RI' => array(
+				array( 'track_and_trace', 'packets', 'insured_shipping' )
+			)
+		);
+	}
 }

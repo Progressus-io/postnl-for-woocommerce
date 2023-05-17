@@ -7,6 +7,7 @@
 
 namespace PostNLWooCommerce\Rest_API\Barcode;
 
+use PostNLWooCommerce\Helper\Mapping;
 use PostNLWooCommerce\Rest_API\Base_Info;
 use PostNLWooCommerce\Shipping_Method\Settings;
 use PostNLWooCommerce\Utils;
@@ -129,36 +130,49 @@ class Item_Info extends Base_Info {
 		$self = $this;
 
 		return array(
-			'customer_code'           => array(
+			'customer_code'            => array(
 				'error' => __( 'Customer Code is empty!', 'postnl-for-woocommerce' ),
 			),
-			'customer_num'            => array(
+			'customer_num'             => array(
 				'error' => __( 'Customer Number is empty!', 'postnl-for-woocommerce' ),
 			),
-			'globalpack_barcode_type' => array(
+			'globalpack_barcode_type'  => array(
 				'rename'   => 'barcode_type',
 				'default'  => '3S',
-				'sanitize' => function( $value ) use ( $self ) {
+				'sanitize' => function ( $value ) use ( $self ) {
 					if ( ! $self->is_rest_of_world() ) {
-						return $this->check_product_barcode_type( '3S' );
+						return $self->check_product_barcode_type( '3S' );
 					}
 
 					// Use barcode type for specific products.
-					$value = $this->check_product_barcode_type( $value );
+					$value = $self->check_product_barcode_type( $value );
 
 					return $self->string_length_sanitization( $value, 4 );
 				},
 			),
-			'serie'                   => array(
+			'serie'                    => array(
 				'default'  => '000000000-999999999',
-				'sanitize' => function( $serie ) use ( $self ) {
+				'sanitize' => function ( $serie ) use ( $self ) {
+
+					$barcode_type = $self->check_product_barcode_type( $self->api_args['settings'] );
+					if ( in_array( $barcode_type, array( 'RI', 'UE', 'LA' ) ) ) {
+						return '00000000-99999999';
+					}
+
 					if ( $self->is_europe() ) {
-						$serie = '0000000-9999999';
-					} elseif ( $self->is_rest_of_world() ) {
-						$serie = '0000-9999';
+						return '0000000-9999999';
+					}
+
+					if ( $self->is_rest_of_world() ) {
+						return '0000-9999';
 					}
 
 					return $self->string_length_sanitization( $serie, 19 );
+				},
+			),
+			'globalpack_customer_code' => array(
+				'sanitize' => function ( $value ) use ( $self ) {
+					return $self->string_length_sanitization( $value, 4 );
 				},
 			),
 		);
@@ -196,19 +210,7 @@ class Item_Info extends Base_Info {
 	 * @return string.
 	 */
 	public function check_product_barcode_type( $barcode_type ) {
-		$default_type = array(
-			'UE' => array(
-				array( 'mailboxpacket' ),
-				array( 'packets' )
-			),
-			'LA' => array(
-				array( 'track_and_trace', 'mailboxpacket' ),
-				array( 'track_and_trace', 'packets' )
-			),
-			'RI' => array(
-				array( 'track_and_trace', 'packets', 'insured_shipping' )
-			)
-		);
+		$barcode_types = Mapping::products_custom_barcode_types();
 
 		$selected_options = array();
 		foreach ( $this->api_args['backend_data'] as $option => $value ) {
@@ -218,7 +220,7 @@ class Item_Info extends Base_Info {
 		}
 
 		if ( ! empty( $selected_options ) ) {
-			foreach ( $default_type as $type => $options_combinations ) {
+			foreach ( $barcode_types as $type => $options_combinations ) {
 				foreach ( $options_combinations as $combination ) {
 					sort( $combination );
 					sort( $selected_options );

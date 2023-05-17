@@ -7,6 +7,8 @@
 
 namespace PostNLWooCommerce;
 
+use PostNLWooCommerce\Helper\Mapping;
+
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
@@ -485,5 +487,27 @@ class Utils {
 		// Assumes format 'name:id'
 		$shipping_method = explode(':', $shipping_method );
 		return $shipping_method[0] ?? $shipping_method;
+	}
+
+	/**
+	 * Get barcode range.
+	 *
+	 * @param $barcode_type.
+	 * @param $globalpack_customer_code.
+	 *
+	 * @return string.
+	 */
+	public static function get_barcode_range( $barcode_type, $globalpack_customer_code ) {
+		$globalpack_barcodes = Mapping::products_custom_barcode_types();
+
+		if ( 0 === strpos( $barcode_type, 'C' ) ) {
+			return $globalpack_customer_code;
+		}
+
+		if ( ! isset( $globalpack_barcodes[ $barcode_type ] ) ) {
+			return '';
+		}
+
+		return 'NL';
 	}
 }

@@ -407,8 +407,8 @@ class Mapping {
 				'code'        => '4909',
 				'options'     => array(
 					array(
-						'characteristic' => '005',
-						'option'         => '025',
+						'characteristic' => '004',
+						'option'         => '015',
 					)
 				)
 			),
@@ -523,6 +523,27 @@ class Mapping {
 			'BE' => array(
 				'BE' => array( 'pickup_points' ),
 			),
+		);
+	}
+
+	/**
+	 * List of barcodes types used for specific products.
+	 *
+	 * @return array.
+	 */
+	public static function products_custom_barcode_types() {
+		return array(
+			'UE' => array(
+				array( 'mailboxpacket' ),
+				array( 'packets' )
+			),
+			'LA' => array(
+				array( 'track_and_trace', 'mailboxpacket' ),
+				array( 'track_and_trace', 'packets' )
+			),
+			'RI' => array(
+				array( 'track_and_trace', 'packets', 'insured_shipping' )
+			)
 		);
 	}
 }

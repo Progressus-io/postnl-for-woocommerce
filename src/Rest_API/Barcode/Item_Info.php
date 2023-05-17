@@ -141,11 +141,11 @@ class Item_Info extends Base_Info {
 				'default'  => '3S',
 				'sanitize' => function( $value ) use ( $self ) {
 					if ( ! $self->is_rest_of_world() ) {
-						return $this->check_product_barcode_type( '3S' );
+						return $self->check_product_barcode_type( '3S' );
 					}
 
 					// Use barcode type for specific products.
-					$value = $this->check_product_barcode_type( $value );
+					$value = $self->check_product_barcode_type( $value );
 
 					return $self->string_length_sanitization( $value, 4 );
 				},

@@ -275,8 +275,10 @@ class Container {
 				return;
 			}
 
+			$sipping_methods = $this->settings->get_supported_shipping_methods();
+
 			foreach ( $post_data as $post_key => $post_value ) {
-				if ( 'shipping_method' === $post_key && false === strpos( $post_value[0], POSTNL_SETTINGS_ID ) ) {
+				if ( 'shipping_method' === $post_key && ! in_array( Utils::get_cart_shipping_method_id( $post_value[0] ), $sipping_methods ) ) {
 					return;
 				}
 			}

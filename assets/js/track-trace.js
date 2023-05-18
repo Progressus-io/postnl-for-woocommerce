@@ -1,28 +1,28 @@
 ( function( $ ) {
 
     //Force to select Track & Trace
-    const insuredShipping = $('#postnl_insured_shipping');
+    const insured_shipping = $('#postnl_insured_shipping');
     const insuredPlus = $('#postnl_insured_plus');
-    const trackAndTrace = $('#postnl_track_and_trace');
+    const track_and_trace = $('#postnl_track_and_trace');
 
-    function updateTrackAndTraceStatus() {
-        if (insuredShipping.is(':checked') || insuredPlus.is(':checked')) {
-            trackAndTrace.prop('checked', true);
+    function update_track_trace_status() {
+        if (insured_shipping.is(':checked') || insuredPlus.is(':checked')) {
+            track_and_trace.prop('checked', true);
         }
     }
 
-    function trackAndTraceChangeHandler() {
-        if (insuredShipping.is(':checked') || insuredPlus.is(':checked')) {
-            trackAndTrace.prop('checked', true);
+    function track_and_traceChangeHandler() {
+        if (insured_shipping.is(':checked') || insuredPlus.is(':checked')) {
+            track_and_trace.prop('checked', true);
         }
     }
 
-    insuredShipping.on('change', updateTrackAndTraceStatus);
-    insuredPlus.on('change', updateTrackAndTraceStatus);
-    trackAndTrace.on('change', trackAndTraceChangeHandler);
+    insured_shipping.on('change', update_track_trace_status);
+    insuredPlus.on('change', update_track_trace_status);
+    track_and_trace.on('change', track_and_traceChangeHandler);
 
     // Run the function once at the beginning to set the correct initial state
-    updateTrackAndTraceStatus();
+    update_track_trace_status();
 
 } )( jQuery );
 

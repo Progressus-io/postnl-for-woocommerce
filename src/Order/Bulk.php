@@ -228,7 +228,7 @@ class Bulk extends Base {
 
 			wp_enqueue_script(
 				'postnl-admin-order-trackAndTrace',
-				POSTNL_WC_PLUGIN_DIR_URL . '/assets/js/trackAndTrace.js',
+				POSTNL_WC_PLUGIN_DIR_URL . '/assets/js/track-trace.js',
 				array( 'jquery' ),
 				POSTNL_WC_VERSION,
 				true

@@ -204,7 +204,10 @@ abstract class Base_Info {
 
 		return array(
 			'company'   => array(
-				'default' => '',
+				'default'  => '',
+				'sanitize' => function ( $name ) use ( $self ) {
+					return htmlspecialchars_decode( $name );
+				},
 			),
 			'email'     => array(
 				'default' => '',

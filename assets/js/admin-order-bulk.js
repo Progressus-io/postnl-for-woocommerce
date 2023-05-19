@@ -59,6 +59,4 @@
 
 	postnl_order_bulk.init();
 
-
 } )( jQuery );
-

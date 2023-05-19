@@ -200,5 +200,4 @@
 
 	window.postnl_order_single_refresh = postnl_order_single.refresh_items;
 
-
 } )( jQuery );

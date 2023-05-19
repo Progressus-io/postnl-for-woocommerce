@@ -59,26 +59,6 @@
 
 	postnl_order_bulk.init();
 
+
 } )( jQuery );
-(function ($) {
-	$(document).ready(function () {
-		const insuredShipping = $('#postnl_insured_shipping');
-		const insuredPlus = $('#postnl_insured_plus');
-		const trackAndTrace = $('#postnl_track_and_trace');
 
-		function updateTrackAndTraceStatus() {
-			if (insuredShipping.is(':checked') || insuredPlus.is(':checked')) {
-				trackAndTrace.prop('checked', false);
-				trackAndTrace.prop('disabled', true);
-			} else {
-				trackAndTrace.prop('disabled', false);
-			}
-		}
-
-		insuredShipping.on('change', updateTrackAndTraceStatus);
-		insuredPlus.on('change', updateTrackAndTraceStatus);
-
-		// Run the function once at the beginning to set the correct initial state
-		updateTrackAndTraceStatus();
-	});
-})(jQuery);

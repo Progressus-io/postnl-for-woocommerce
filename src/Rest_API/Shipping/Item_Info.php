@@ -832,27 +832,13 @@ class Item_Info extends Base_Info {
 	}
 
 	/**
-	 * Get selected features in the order admin.
-	 *
-	 * @return Array
-	 */
-	public function get_selected_label_features() {
-		return array_filter(
-			$this->api_args['backend_data'],
-			function( $value ) {
-				return ( 'yes' === $value );
-			}
-		);
-	}
-
-	/**
 	 * Get product from api args.
 	 *
 	 * @return array.
 	 * @throws \Exception
 	 */
 	public function get_shipping_product() {
-		$checked_features = $this->get_selected_label_features();
+		$checked_features = Utils::get_selected_label_features( $this->api_args['backend_data'] );
 		$shipping_feature = $this->get_selected_shipping_features();
 		$from_country     = $this->api_args['store_address']['country'];
 		$to_country       = $this->api_args['shipping_address']['country'];

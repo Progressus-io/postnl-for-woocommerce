@@ -500,14 +500,30 @@ class Utils {
 	public static function get_barcode_range( $barcode_type, $globalpack_customer_code ) {
 		$globalpack_barcodes = Mapping::products_custom_barcode_types();
 
+		if ( isset( $globalpack_barcodes[ $barcode_type ] ) ) {
+			return 'NL';
+		}
+
 		if ( 0 === strpos( $barcode_type, 'C' ) ) {
 			return $globalpack_customer_code;
 		}
 
-		if ( ! isset( $globalpack_barcodes[ $barcode_type ] ) ) {
-			return '';
-		}
+		return '';
+	}
 
-		return 'NL';
+	/**
+	 * Get selected features in the order admin.
+	 *
+	 * @param array $backend_data list of backend data.
+	 *
+	 * @return array.
+	 */
+	public static function get_selected_label_features( $backend_data ) {
+		return array_filter(
+				$backend_data,
+				function ( $value ) {
+					return ( 'yes' === $value );
+				}
+		);
 	}
 }

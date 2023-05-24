@@ -213,7 +213,9 @@ class Item_Info extends Base_Info {
 		$barcode_types = Mapping::products_custom_barcode_types();
 
 		$selected_options = array();
-		foreach ( $this->api_args['backend_data'] as $option => $value ) {
+		$backend_data     = Utils::get_selected_label_features( $this->api_args['backend_data'] );
+
+		foreach ( $backend_data as $option => $value ) {
 			if ( 'yes' === $value ) {
 				$selected_options[] = $option;
 			}

@@ -275,8 +275,10 @@ class Container {
 				return;
 			}
 
+			$sipping_methods = $this->settings->get_supported_shipping_methods();
+
 			foreach ( $post_data as $post_key => $post_value ) {
-				if ( 'shipping_method' === $post_key && false === strpos( $post_value[0], POSTNL_SETTINGS_ID ) ) {
+				if ( 'shipping_method' === $post_key && ! in_array( Utils::get_cart_shipping_method_id( $post_value[0] ), $sipping_methods ) ) {
 					return;
 				}
 			}
@@ -394,7 +396,7 @@ class Container {
 		}
 
 		$non_standard_fees        = Base::non_standard_fees_data();
-		$is_non_standard_delivery = isset( $non_standard_fees[ $post_data['postnl_delivery_day_type'] ] );
+		$is_non_standard_delivery = ! empty( $post_data['postnl_delivery_day_type'] ) && isset( $non_standard_fees[ $post_data['postnl_delivery_day_type'] ] );
 
 		if ( ! empty( $post_data['postnl_delivery_day_price'] ) && 'delivery_day' === $post_data['postnl_option'] && $is_non_standard_delivery ) {
 			$cart->add_fee( $non_standard_fees[ $post_data['postnl_delivery_day_type'] ]['fee_name'], wc_format_decimal( $post_data['postnl_delivery_day_price'] ) );

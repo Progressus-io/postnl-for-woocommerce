@@ -6,9 +6,9 @@
 * Requires at least: 4.6
 * Requires PHP: 5.6
 * Tested up to: 6.2
-* Stable tag: 5.2.0
+* Stable tag: 5.2.1
 * WC requires at least: 4.0
-* WC tested up to: 7.6
+* WC tested up to: 7.7
 * License: GPLv2 or later
 * License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -35,6 +35,11 @@ PostNL’s official extension for WooCommerce on WordPress. Manage your national
 
 
 ## Changelog
+
+### 5.2.1
+* Fix: PostNL supported shipping methods in checkout.
+* Fix: Ampersands in shop name not copied over to label correctly.
+* Fix: Undefined array key warning.
 
 ### 5.2.0
 * Feature: Add capability to associate shipping methods with PostNL method

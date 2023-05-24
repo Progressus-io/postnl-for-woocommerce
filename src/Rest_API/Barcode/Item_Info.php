@@ -86,7 +86,7 @@ class Item_Info extends Base_Info {
 		);
 
 		// This will be used to determined if we must use a specific barcode types.
-		$this->api_args['backend_data'] = $post_data['saved_data']['backend'];
+		$this->api_args['backend_data'] = $post_data['saved_data']['backend'] ?? array();
 	}
 
 	/**
@@ -112,7 +112,7 @@ class Item_Info extends Base_Info {
 	 * Change or set the args value for custom customer code.
 	 */
 	public function set_custom_customer_code() {
-		if ( ! $this->api_args['custom']['customer_code'] ) {
+		if ( empty( $this->api_args['custom']['customer_code'] ) ) {
 			return;
 		}
 
@@ -210,8 +210,7 @@ class Item_Info extends Base_Info {
 	 * @return string.
 	 */
 	public function check_product_barcode_type( $barcode_type ) {
-		$barcode_types = Mapping::products_custom_barcode_types();
-
+		$barcode_types    = Mapping::products_custom_barcode_types();
 		$selected_options = array();
 		$backend_data     = Utils::get_selected_label_features( $this->api_args['backend_data'] );
 

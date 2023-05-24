@@ -519,11 +519,17 @@ class Utils {
 	 * @return array.
 	 */
 	public static function get_selected_label_features( $backend_data ) {
-		return array_filter(
+		$selected_features = array_filter(
 				$backend_data,
 				function ( $value ) {
 					return ( 'yes' === $value );
 				}
 		);
+
+		if ( isset( $selected_features['create_return_label'] ) ) {
+			unset( $selected_features['create_return_label'] );
+		}
+
+		return $selected_features;
 	}
 }

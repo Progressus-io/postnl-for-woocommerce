@@ -4,7 +4,7 @@ Tags: woocommerce, export, delivery, packages, PostNL, Shipping
 Requires at least: 4.6
 Requires PHP: 5.6
 Tested up to: 6.2
-Stable tag: 5.2.1
+Stable tag: 5.2.2
 WC requires at least: 4.0
 WC tested up to: 7.7
 License: GPLv2 or later
@@ -79,6 +79,9 @@ Follow these instructions (https://www.postnl.nl/Images/aanvragen-api-key-stappe
 5. PostNL information on the order details page
 
 == Changelog ==
+= 5.2.2 (2023-05-30) =
+* Add new shipping product for international shipments.
+
 = 5.2.1 (2023-05-23) =
 * Fix: PostNL supported shipping methods in checkout.
 * Fix: Ampersands in shop name not copied over to label correctly.

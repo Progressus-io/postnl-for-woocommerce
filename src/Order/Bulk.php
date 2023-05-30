@@ -225,6 +225,15 @@ class Bulk extends Base {
 				POSTNL_WC_VERSION,
 				true
 			);
+
+			wp_enqueue_script(
+				'postnl-admin-shipment-track-trace',
+				POSTNL_WC_PLUGIN_DIR_URL . '/assets/js/admin-shipment-track-trace.js',
+				array( 'jquery' ),
+				POSTNL_WC_VERSION,
+				true
+			);
+
 		}
 	}
 

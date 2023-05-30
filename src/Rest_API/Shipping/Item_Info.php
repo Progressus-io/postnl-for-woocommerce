@@ -184,6 +184,10 @@ class Item_Info extends Base_Info {
 			'create_return_label'   => $saved_data['backend']['create_return_label'] ?? '',
 			'letterbox'             => $saved_data['backend']['letterbox'] ?? '',
 			'id_check'              => $saved_data['backend']['id_check'] ?? '',
+			'packets'               => $saved_data['backend']['packets'] ?? '',
+			'mailboxpacket'         => $saved_data['backend']['mailboxpacket'] ?? '',
+			'track_and_trace'       => $saved_data['backend']['track_and_trace'] ?? '',
+			'insured_plus'          => $saved_data['backend']['insured_plus'] ?? '',
 		);
 
 		$this->api_args['frontend_data'] = array(
@@ -267,16 +271,16 @@ class Item_Info extends Base_Info {
 	 * Set extra API args.
 	 */
 	public function set_extra_data_to_api_args() {
-		$this->set_order_product_code();
+		$this->set_order_shipping_product();
 		$this->set_rest_of_world_args();
 	}
 
 	/**
 	 * Set product code in the order details.
 	 */
-	public function set_order_product_code() {
-		$this->api_args['order_details']['product_code']    = $this->get_product_code();
-		$this->api_args['order_details']['product_options'] = $this->get_product_options();
+	public function set_order_shipping_product() {
+		$this->api_args['order_details']['shipping_product'] = $this->get_shipping_product();
+		$this->api_args['order_details']['product_options']  = $this->get_product_options();
 	}
 
 	/**
@@ -398,18 +402,15 @@ class Item_Info extends Base_Info {
 			'return_barcode'  => array(
 				'default' => '',
 			),
-			'product_code'    => array(
+			'shipping_product'    => array(
 				'error'    => __( 'Product code is empty!', 'postnl-for-woocommerce' ),
 				'validate' => function( $value ) {
-					if ( ! is_numeric( $value ) && 4 !== strlen( $value ) ) {
+					if ( empty( $value ) || ! is_numeric( $value['code'] ) && 4 !== strlen( $value['code'] ) ) {
 						throw new \Exception(
 							__( 'Wrong format for product code!', 'postnl-for-woocommerce' )
 						);
 					}
-				},
-				'sanitize' => function( $value ) use ( $self ) {
-					return $self->string_length_sanitization( $value, 4 );
-				},
+				}
 			),
 			'product_options' => array(
 				'default'  => array(
@@ -672,6 +673,30 @@ class Item_Info extends Base_Info {
 					return ( 'yes' === $picked );
 				},
 			),
+			'packets'              => array(
+				'default'  => false,
+				'sanitize' => function( $picked ) {
+					return ( 'yes' === $picked );
+				},
+			),
+			'mailboxpacket'              => array(
+				'default'  => false,
+				'sanitize' => function( $picked ) {
+					return ( 'yes' === $picked );
+				},
+			),
+			'track_and_trace'              => array(
+				'default'  => false,
+				'sanitize' => function( $picked ) {
+					return ( 'yes' === $picked );
+				},
+			),
+			'insured_plus'          => array(
+				'default'  => false,
+				'sanitize' => function( $picked ) {
+					return ( 'yes' === $picked );
+				},
+			),
 		);
 	}
 
@@ -807,59 +832,58 @@ class Item_Info extends Base_Info {
 	}
 
 	/**
-	 * Get selected features in the order admin.
+	 * Get product from api args.
 	 *
-	 * @return Array
+	 * @return array.
+	 * @throws \Exception
 	 */
-	public function get_selected_label_features() {
-		return array_filter(
-			$this->api_args['backend_data'],
-			function( $value ) {
-				return ( 'yes' === $value );
-			}
-		);
-	}
-
-	/**
-	 * Get product code from api args.
-	 *
-	 * @return String.
-	 */
-	public function get_product_code() {
-		$checked_features = $this->get_selected_label_features();
+	public function get_shipping_product() {
+		$checked_features = Utils::get_selected_label_features( $this->api_args['backend_data'] );
 		$shipping_feature = $this->get_selected_shipping_features();
 		$from_country     = $this->api_args['store_address']['country'];
 		$to_country       = $this->api_args['shipping_address']['country'];
 
 		$features = array_keys( $checked_features );
-		$code_map = Mapping::product_code();
+		$code_map = Mapping::products_data();
 
-		$product_code = '';
+		$selected_product = array();
 		$destination  = Utils::get_shipping_zone( $to_country );
 
 		if ( empty( $code_map[ $from_country ][ $destination ][ $shipping_feature ] ) ) {
-			return $product_code;
+			return $selected_product;
 		}
 
-		foreach ( $code_map[ $from_country ][ $destination ][ $shipping_feature ] as $code => $feature_list ) {
-			if ( empty( $feature_list ) && empty( $product_code ) ) {
-				$product_code = $code;
+		foreach ( $code_map[ $from_country ][ $destination ][ $shipping_feature ] as $product ) {
+			if ( empty( $product['combination'] ) && empty( $selected_product ) ) {
+				$selected_product = $product;
 				continue;
 			}
 
 			$is_this_it = true;
-			foreach ( $feature_list as $feature ) {
+			foreach ( $product['combination'] as $feature ) {
 				if ( ! in_array( $feature, $features ) ) {
 					$is_this_it = false;
 				}
 			}
 
 			if ( $is_this_it ) {
-				$product_code = $code;
+				$selected_product = $product;
 			}
 		}
 
-		return $product_code;
+		return $selected_product;
+	}
+
+	/**
+	 * Get product code from api args.
+	 *
+	 * @return string.
+	 * @throws \Exception
+	 */
+	public function get_product_code() {
+		$product = $this->get_shipping_product();
+
+		return $product['code'] ?? '';
 	}
 
 	/**
@@ -868,7 +892,7 @@ class Item_Info extends Base_Info {
 	 * @return String.
 	 */
 	public function get_product_options() {
-		$option_map   = Mapping::product_options();
+		$option_map   = Mapping::additional_product_options();
 		$from_country = $this->api_args['store_address']['country'];
 		$to_country   = $this->api_args['shipping_address']['country'];
 		$destination  = Utils::get_shipping_zone( $to_country );

@@ -100,7 +100,7 @@ class Client extends Base {
 				'Weight' => $this->item_info->shipment['total_weight'],
 			),
 			'Customs'             => $this->get_customs(),
-			'ProductCodeDelivery' => $this->item_info->shipment['product_code'],
+			'ProductCodeDelivery' => $this->item_info->shipment['shipping_product']['code'],
 			'Reference'           => $this->item_info->shipment['order_number'],
 		);
 
@@ -115,6 +115,18 @@ class Client extends Base {
 					'Option'         => $this->item_info->shipment['product_options']['option'],
 				),
 			);
+		}
+
+		// Add the required product options.
+		if ( ! empty( $this->item_info->shipment['shipping_product']['options'] ) ) {
+			$shipment['ProductOptions'] = $shipment['ProductOptions'] ?? array();
+
+			foreach ( $this->item_info->shipment['shipping_product']['options'] as $option ) {
+				$shipment['ProductOptions'][] = array(
+					'Characteristic' => $option['characteristic'],
+					'Option'         => $option['option'],
+				);
+			}
 		}
 
 		if ( ! empty( $this->item_info->shipment['return_barcode'] ) ) {
@@ -162,6 +174,7 @@ class Client extends Base {
 			// Hardcoded.
 			'TransactionCode'        => '11',
 			'TransactionDescription' => 'Sale of goods',
+			'ShipmentType'           => 'Commercial Goods',
 			'Content'                => $this->get_custom_contents(),
 		);
 	}

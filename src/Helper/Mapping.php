@@ -44,110 +44,401 @@ class Mapping {
 					),
 				),
 				'EU'  => esc_html__( 'EU Parcel', 'postnl-for-woocommerce' ),
-				'ROW' => esc_html__( 'Globalpack', 'postnl-for-woocommerce' ),
+				'ROW' => esc_html__( 'Non-EU Shipment', 'postnl-for-woocommerce' ),
 			),
 			'BE' => array(
 				'BE'  => esc_html__( 'Belgium Domestic', 'postnl-for-woocommerce' ),
 				'NL'  => esc_html__( 'EU Parcel', 'postnl-for-woocommerce' ),
 				'EU'  => esc_html__( 'EU Parcel', 'postnl-for-woocommerce' ),
-				'ROW' => esc_html__( 'Globalpack', 'postnl-for-woocommerce' ),
+				'ROW' => esc_html__( 'Non-EU Shipment', 'postnl-for-woocommerce' ),
 			),
 		);
 	}
 
 	/**
-	 * Product code mapping.
+	 * Products code & required options mapping.
 	 *
-	 * @return Array
+	 * @return array[].
 	 */
-	public static function product_code() {
+	public static function products_data() {
 		return array(
 			'NL' => array(
 				'NL'  => array(
 					'delivery_day'  => array(
-						'3085' => array(),
-						'3385' => array( 'only_home_address' ),
-						'3090' => array( 'return_no_answer' ),
-						'3087' => array( 'insured_shipping' ),
-						'3189' => array( 'signature_on_delivery' ),
-						'3390' => array( 'return_no_answer', 'only_home_address' ),
-						'3094' => array( 'insured_shipping', 'return_no_answer' ),
-						'3089' => array( 'signature_on_delivery', 'only_home_address' ),
-						'3389' => array( 'signature_on_delivery', 'return_no_answer' ),
-						'3096' => array( 'signature_on_delivery', 'only_home_address', 'return_no_answer' ),
-						'2928' => array( 'letterbox' ),
-						'3438' => array( 'id_check' ),
+						array(
+							'combination' => array(),
+							'code'        => '3085',
+							'options'     => array(),
+						),
+						array(
+							'combination' => array( 'only_home_address' ),
+							'code'        => '3385',
+							'options'     => array(),
+						),
+						array(
+							'combination' => array( 'return_no_answer' ),
+							'code'        => '3090',
+							'options'     => array(),
+						),
+						array(
+							'combination' => array( 'insured_shipping' ),
+							'code'        => '3087',
+							'options'     => array(),
+						),
+						array(
+							'combination' => array( 'signature_on_delivery' ),
+							'code'        => '3189',
+							'options'     => array(),
+						),
+						array(
+							'combination' => array( 'return_no_answer', 'only_home_address' ),
+							'code'        => '3390',
+							'options'     => array(),
+						),
+						array(
+							'combination' => array( 'insured_shipping', 'return_no_answer' ),
+							'code'        => '3094',
+							'options'     => array(),
+						),
+						array(
+							'combination' => array( 'signature_on_delivery', 'only_home_address' ),
+							'code'        => '3089',
+							'options'     => array(),
+						),
+						array(
+							'combination' => array( 'signature_on_delivery', 'return_no_answer' ),
+							'code'        => '3389',
+							'options'     => array(),
+						),
+						array(
+							'combination' => array( 'signature_on_delivery', 'only_home_address', 'return_no_answer' ),
+							'code'        => '3096',
+							'options'     => array(),
+						),
+						array(
+							'combination' => array( 'letterbox' ),
+							'code'        => '2928',
+							'options'     => array(),
+						),
+						array(
+							'combination' => array( 'id_check' ),
+							'code'        => '3438',
+							'options'     => array(),
+						)
 					),
 					'pickup_points' => array(
-						'3533' => array(),
-						'3534' => array( 'insured_shipping' ),
-					),
+						array(
+							'combination' => array(),
+							'code'        => '3533',
+							'options'     => array(),
+						),
+						array(
+							'combination' => array( 'insured_shipping' ),
+							'code'        => '3534',
+							'options'     => array(),
+						),
+					)
 				),
 				'BE'  => array(
 					'delivery_day'  => array(
-						'4946' => array(),
-						'4941' => array( 'only_home_address' ),
-						'4912' => array( 'signature_on_delivery' ),
-						'4914' => array( 'insured_shipping' ),
+						array(
+							'combination' => array(),
+							'code'        => '4946',
+							'options'     => array(),
+						),
+						array(
+							'combination' => array( 'only_home_address' ),
+							'code'        => '4941',
+							'options'     => array(),
+						),
+						array(
+							'combination' => array( 'signature_on_delivery' ),
+							'code'        => '4912',
+							'options'     => array(),
+						),
+						array(
+							'combination' => array( 'insured_shipping' ),
+							'code'        => '4914',
+							'options'     => array(),
+						),
+						array(
+							'combination' => array( 'mailboxpacket' ),
+							'code'        => '6440',
+							'options'     => array(),
+						),
+						array(
+							'combination' => array( 'mailboxpacket', 'track_and_trace' ),
+							'code'        => '6972',
+							'options'     => array(),
+						),
+						array(
+							'combination' => array( 'packets' ),
+							'code'        => '6405',
+							'options'     => array(),
+						),
+						array(
+							'combination' => array( 'packets', 'track_and_trace' ),
+							'code'        => '6350',
+							'options'     => array(),
+						),
+						array(
+							'combination' => array( 'packets', 'track_and_trace', 'insured_shipping' ),
+							'code'        => '6906',
+							'options'     => array(),
+						),
 					),
 					'pickup_points' => array(
-						'4936' => array(),
+						array(
+							'combination' => array(),
+							'code'        => '4936',
+							'options'     => array(),
+						)
 					),
 				),
 				'EU'  => array(
-					'delivery_day'  => array(
-						'4944' => array(),
-					),
+					'delivery_day'  => self::european_shipment_products(),
 					'pickup_points' => array(
-						'4944' => array(),
+						array(
+							'combination' => array(),
+							'code'        => '4907',
+							'options'     => array(
+								array(
+									'characteristic' => '005',
+									'option'         => '025',
+								),
+								array(
+									'characteristic' => '101',
+									'option'         => '012',
+								)
+							)
+						)
 					),
 				),
 				'ROW' => array(
-					'delivery_day'  => array(
-						'4945' => array(),
-					),
+					'delivery_day'  => array_merge( self::globalpack_products(), self::EU_ROW_products() ),
 					'pickup_points' => array(
-						'4945' => array(),
+						array(
+							'combination' => array(),
+							'code'        => '4909',
+							'options'     => array(
+								array(
+									'characteristic' => '005',
+									'option'         => '025',
+								)
+							)
+						)
 					),
-				),
+				)
 			),
 			'BE' => array(
-				'BE' => array(
+				'BE'  => array(
 					'delivery_day'  => array(
-						'4961' => array(),
-						'4960' => array( 'only_home_address' ),
-						'4963' => array( 'signature_on_delivery' ),
-						'4962' => array( 'signature_on_delivery', 'only_home_address' ),
-						'4965' => array( 'insured_shipping', 'only_home_address' ),
+						array(
+							'combination' => array(),
+							'code'        => '4961',
+							'options'     => array(),
+						),
+						array(
+							'combination' => array( 'only_home_address' ),
+							'code'        => '4960',
+							'options'     => array(),
+						),
+						array(
+							'combination' => array( 'signature_on_delivery' ),
+							'code'        => '4963',
+							'options'     => array(),
+						),
+						array(
+							'combination' => array( 'signature_on_delivery', 'only_home_address' ),
+							'code'        => '4962',
+							'options'     => array(),
+						),
+						array(
+							'combination' => array( 'insured_shipping', 'only_home_address' ),
+							'code'        => '4965',
+							'options'     => array(),
+						)
 					),
 					'pickup_points' => array(
-						'4880' => array(),
-						'4878' => array( 'insured_shipping' ),
+						array(
+							'combination' => array(),
+							'code'        => '4880',
+							'options'     => array(),
+						),
+						array(
+							'combination' => array( 'insured_shipping' ),
+							'code'        => '4878',
+							'options'     => array(),
+						)
 					),
 				),
-				'NL' => array(
+				'NL'  => array(
 					'delivery_day' => array(
-						'4944' => array(),
+						array(
+							'combination' => array(),
+							'code'        => '4944',
+							'options'     => array(),
+						)
 					),
 				),
-				'EU' => array(
-					'delivery_day' => array(
-						'4944' => array(),
-					),
+				'EU'  => array(
+					'delivery_day' => self::european_shipment_products(),
 				),
 				'ROW' => array(
-					'delivery_day' => array(
-						'4945' => array(),
-					),
-				),
+					'delivery_day' => self::globalpack_products()
+				)
+			)
+		);
+	}
+
+	/**
+	 * Products code & options available for European and GlobalPack Shipments.
+	 *
+	 * @return array[].
+	 */
+	public static function EU_ROW_products() {
+		return array(
+			array(
+				'combination' => array( 'mailboxpacket' ),
+				'code'        => '6440',
+				'options'     => array()
 			),
+			array(
+				'combination' => array( 'track_and_trace', 'mailboxpacket' ),
+				'code'        => '6972',
+				'options'     => array()
+			),
+			array(
+				'combination' => array( 'packets' ),
+				'code'        => '6405',
+				'options'     => array()
+			),
+			array(
+				'combination' => array( 'track_and_trace', 'packets' ),
+				'code'        => '6350',
+				'options'     => array()
+			),
+			array(
+				'combination' => array( 'track_and_trace', 'packets', 'insured_shipping' ),
+				'code'        => '6906',
+				'options'     => array()
+			)
+		);
+	}
+
+	/**
+	 * Products code & options available for European Shipments.
+	 *
+	 * @return array[].
+	 */
+	public static function european_shipment_products() {
+		return array_merge(
+			array(
+				array(
+					'combination' => array(),
+					'code'        => '4907',
+					'options'     => array(
+						array(
+							'characteristic' => '005',
+							'option'         => '025',
+						),
+						array(
+							'characteristic' => '101',
+							'option'         => '012',
+						)
+					)
+				),
+				array(
+					'combination' => array( 'track_and_trace' ),
+					'code'        => '4907',
+					'options'     => array(
+						array(
+							'characteristic' => '005',
+							'option'         => '025',
+						),
+						array(
+							'characteristic' => '101',
+							'option'         => '012',
+						)
+					)
+				),
+				array(
+					'combination' => array( 'track_and_trace', 'insured_shipping' ),
+					'code'        => '4907',
+					'options'     => array(
+						array(
+							'characteristic' => '004',
+							'option'         => '015',
+						),
+						array(
+							'characteristic' => '101',
+							'option'         => '012',
+						)
+					)
+				),
+				array(
+					'combination' => array( 'track_and_trace', 'insured_plus' ),
+					'code'        => '4907',
+					'options'     => array(
+						array(
+							'characteristic' => '004',
+							'option'         => '016',
+						),
+						array(
+							'characteristic' => '101',
+							'option'         => '012',
+						)
+					)
+				)
+			),
+			self::EU_ROW_products()
+		);
+	}
+
+	/**
+	 * Products code & options available for GlobalPack Shipments.
+	 *
+	 * @return array[].
+	 */
+	public static function globalpack_products() {
+		return array(
+			array(
+				'combination' => array(),
+				'code'        => '4909',
+				'options'     => array(
+					array(
+						'characteristic' => '004',
+						'option'         => '015',
+					)
+				)
+			),
+			array(
+				'combination' => array( 'track_and_trace' ),
+				'code'        => '4909',
+				'options'     => array(
+					array(
+						'characteristic' => '005',
+						'option'         => '025',
+					)
+				)
+			),
+			array(
+				'combination' => array( 'track_and_trace', 'insured_plus' ),
+				'code'        => '4909',
+				'options'     => array(
+					array(
+						'characteristic' => '004',
+						'option'         => '016',
+					)
+				)
+			)
 		);
 	}
 
 	/**
 	 * Label type mapping.
 	 *
-	 * @return Array
+	 * @return array.
 	 */
 	public static function label_type_list() {
 		return array(
@@ -157,13 +448,13 @@ class Mapping {
 				'NL'  => array( 'label', 'return-label', 'buspakjeextra', 'printcodelabel' ),
 				'BE'  => array( 'label' ),
 				'EU'  => array( 'label' ),
-				'ROW' => array( 'cn23', 'cp71', 'label' ),
+				'ROW' => array( 'cn23', 'cp71', 'label', 'commercialinvoice' ),
 			),
 			'BE' => array(
 				'BE'  => array( 'label' ),
 				'NL'  => array( 'label' ),
 				'EU'  => array( 'label' ),
-				'ROW' => array( 'cn23', 'cp71', 'label' ),
+				'ROW' => array( 'cn23', 'cp71', 'label', 'commercialinvoice' ),
 			),
 		);
 	}
@@ -171,7 +462,7 @@ class Mapping {
 	/**
 	 * Product code mapping.
 	 *
-	 * @return Array
+	 * @return array.
 	 */
 	public static function option_available_list() {
 		return array(
@@ -191,11 +482,11 @@ class Mapping {
 	}
 
 	/**
-	 * Product options mapping.
+	 * Additional Product options mapping.
 	 *
-	 * @return Array
+	 * @return array.
 	 */
-	public static function product_options() {
+	public static function additional_product_options() {
 		return array(
 			'NL' => array(
 				'NL' => array(
@@ -221,7 +512,7 @@ class Mapping {
 	/**
 	 * List of countries that available for checkout feature.
 	 *
-	 * @return Array.
+	 * @return array.
 	 */
 	public static function available_country_for_checkout_feature() {
 		return array(
@@ -232,6 +523,27 @@ class Mapping {
 			'BE' => array(
 				'BE' => array( 'pickup_points' ),
 			),
+		);
+	}
+
+	/**
+	 * List of barcodes types used for specific products.
+	 *
+	 * @return array.
+	 */
+	public static function products_custom_barcode_types() {
+		return array(
+			'UE' => array(
+				array( 'mailboxpacket' ),
+				array( 'packets' )
+			),
+			'LA' => array(
+				array( 'track_and_trace', 'mailboxpacket' ),
+				array( 'track_and_trace', 'packets' )
+			),
+			'RI' => array(
+				array( 'track_and_trace', 'packets', 'insured_shipping' )
+			)
 		);
 	}
 }

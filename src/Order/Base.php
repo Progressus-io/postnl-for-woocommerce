@@ -130,6 +130,18 @@ abstract class Base {
 					'container'     => true,
 				),
 				array(
+					'id'            => $this->prefix . 'insured_plus',
+					'type'          => 'checkbox',
+					'label'         => __( 'Insured Plus: ', 'postnl-for-woocommerce' ),
+					'placeholder'   => '',
+					'description'   => '',
+					'value'         => '',
+					'show_in_bulk'  => true,
+					'standard_feat' => false,
+					'const_field'   => false,
+					'container'     => true,
+				),
+				array(
 					'id'            => $this->prefix . 'return_no_answer',
 					'type'          => 'checkbox',
 					'label'         => __( 'Return if no answer: ', 'postnl-for-woocommerce' ),
@@ -172,6 +184,42 @@ abstract class Base {
 					'placeholder'   => '',
 					'description'   => '',
 					'value'         => $default_options['letterbox'] ? 'yes' : '',
+					'show_in_bulk'  => true,
+					'standard_feat' => false,
+					'const_field'   => false,
+					'container'     => true,
+				),
+				array(
+					'id'            => $this->prefix . 'packets',
+					'type'          => 'checkbox',
+					'label'         => __( 'Packets: ', 'postnl-for-woocommerce' ),
+					'placeholder'   => '',
+					'description'   => '',
+					'value'         => '',
+					'show_in_bulk'  => true,
+					'standard_feat' => false,
+					'const_field'   => false,
+					'container'     => true,
+				),
+				array(
+					'id'            => $this->prefix . 'mailboxpacket',
+					'type'          => 'checkbox',
+					'label'         => __( 'Mailbox Packet: ', 'postnl-for-woocommerce' ),
+					'placeholder'   => '',
+					'description'   => '',
+					'value'         => '',
+					'show_in_bulk'  => true,
+					'standard_feat' => false,
+					'const_field'   => false,
+					'container'     => true,
+				),
+				array(
+					'id'            => $this->prefix . 'track_and_trace',
+					'type'          => 'checkbox',
+					'label'         => __( 'Track & Trace: ', 'postnl-for-woocommerce' ),
+					'placeholder'   => '',
+					'description'   => '',
+					'value'         => '',
 					'show_in_bulk'  => true,
 					'standard_feat' => false,
 					'const_field'   => false,
@@ -232,14 +280,14 @@ abstract class Base {
 	 *
 	 * @param WC_Order $order Order object.
 	 *
-	 * @return Array.
+	 * @return array.
 	 */
 	public function get_available_options( $order ) {
 		if ( ! is_a( $order, 'WC_Order' ) ) {
 			return array();
 		}
 
-		$product_map  = Mapping::product_code();
+		$product_map  = Mapping::products_data();
 		$from_country = Utils::get_base_country();
 		$to_country   = Utils::get_shipping_zone( $order->get_shipping_country() );
 		$saved_data   = $this->get_data( $order->get_id() );
@@ -260,8 +308,8 @@ abstract class Base {
 			}
 		}
 
-		foreach ( $product_map[ $from_country ][ $to_country ][ $selected_option ] as $product_code => $sub_options ) {
-			$available_options = array_merge( $available_options, $sub_options );
+		foreach ( $product_map[ $from_country ][ $to_country ][ $selected_option ] as $product ) {
+			$available_options = array_merge( $available_options, $product['combination'] );
 		}
 
 		return $available_options;
@@ -374,12 +422,13 @@ abstract class Base {
 			}
 		}
 
-		$barcode         = $this->create_barcode( $order );
 		$label_post_data = array(
 			'order'      => $order,
 			'saved_data' => $saved_data,
-			'barcode'    => $barcode,
 		);
+
+		$barcode                    = $this->create_barcode( $label_post_data );
+		$label_post_data['barcode'] = $barcode;
 
 		$label_post_data['return_barcode'] = $this->maybe_create_return_barcode( $label_post_data );
 
@@ -527,14 +576,14 @@ abstract class Base {
 	/**
 	 * Create PostNL barcode for current order
 	 *
-	 * @param WC_Order $order Order object.
+	 * @param array $label_post_data .
 	 *
 	 * @return array
 	 *
 	 * @throws \Exception Error when response does not have Barcode value.
 	 */
-	public function create_barcode( $order ) {
-		$saved_data = $this->get_data( $order->get_id() );
+	public function create_barcode( $label_post_data ) {
+		$saved_data = $label_post_data['saved_data'];
 
 		// Check if barcode has been created on the last 7 days.
 		if ( ! empty( $saved_data['barcode']['created_at'] ) && ! empty( $saved_data['barcode']['value'] ) ) {
@@ -546,7 +595,8 @@ abstract class Base {
 		}
 
 		$data = array(
-			'order' => $order,
+			'order'      => $label_post_data['order'],
+			'saved_data' => $saved_data
 		);
 
 		$item_info = new Barcode\Item_Info( $data );
@@ -572,7 +622,7 @@ abstract class Base {
 	 * @throws \Exception Error when response has an error.
 	 */
 	public function maybe_create_return_barcode( $post_data ) {
-		if ( 'yes' !== $post_data['saved_data']['backend']['create_return_label'] ) {
+		if ( ! isset( $post_data['saved_data']['backend']['create_return_label'] ) || 'yes' !== $post_data['saved_data']['backend']['create_return_label'] ) {
 			return '';
 		}
 

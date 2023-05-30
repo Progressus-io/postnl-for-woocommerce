@@ -7,6 +7,7 @@
 
 namespace PostNLWooCommerce\Rest_API\Barcode;
 
+use PostNLWooCommerce\Helper\Mapping;
 use PostNLWooCommerce\Rest_API\Base_Info;
 use PostNLWooCommerce\Shipping_Method\Settings;
 use PostNLWooCommerce\Utils;
@@ -57,7 +58,7 @@ class Item_Info extends Base_Info {
 	 *
 	 * @param Array $post_data Data from post variable in checkout page.
 	 *
-	 * @throws \Exception If order id does not exists.
+	 * @throws \Exception If order id does not exist.
 	 */
 	public function convert_data_to_args( $post_data ) {
 		if ( ! is_a( $post_data['order'], 'WC_Order' ) ) {
@@ -83,6 +84,9 @@ class Item_Info extends Base_Info {
 			'country'    => $order->get_shipping_country(),
 			'postcode'   => $order->get_shipping_postcode(),
 		);
+
+		// This will be used to determined if we must use a specific barcode types.
+		$this->api_args['backend_data'] = $post_data['saved_data']['backend'] ?? array();
 	}
 
 	/**
@@ -108,7 +112,7 @@ class Item_Info extends Base_Info {
 	 * Change or set the args value for custom customer code.
 	 */
 	public function set_custom_customer_code() {
-		if ( ! $this->api_args['custom']['customer_code'] ) {
+		if ( empty( $this->api_args['custom']['customer_code'] ) ) {
 			return;
 		}
 
@@ -118,7 +122,7 @@ class Item_Info extends Base_Info {
 	/**
 	 * Retrieves the args scheme to use with for parsing store address info.
 	 *
-	 * @return array
+	 * @return array.
 	 */
 	protected function get_query_info_schema() {
 		// Closures in PHP 5.3 do not inherit class context
@@ -126,33 +130,49 @@ class Item_Info extends Base_Info {
 		$self = $this;
 
 		return array(
-			'customer_code'           => array(
+			'customer_code'            => array(
 				'error' => __( 'Customer Code is empty!', 'postnl-for-woocommerce' ),
 			),
-			'customer_num'            => array(
+			'customer_num'             => array(
 				'error' => __( 'Customer Number is empty!', 'postnl-for-woocommerce' ),
 			),
-			'globalpack_barcode_type' => array(
+			'globalpack_barcode_type'  => array(
 				'rename'   => 'barcode_type',
 				'default'  => '3S',
-				'sanitize' => function( $value ) use ( $self ) {
+				'sanitize' => function ( $value ) use ( $self ) {
 					if ( ! $self->is_rest_of_world() ) {
-						return '3S';
+						return $self->check_product_barcode_type( '3S' );
 					}
+
+					// Use barcode type for specific products.
+					$value = $self->check_product_barcode_type( $value );
 
 					return $self->string_length_sanitization( $value, 4 );
 				},
 			),
-			'serie'                   => array(
+			'serie'                    => array(
 				'default'  => '000000000-999999999',
-				'sanitize' => function( $serie ) use ( $self ) {
+				'sanitize' => function ( $serie ) use ( $self ) {
+
+					$barcode_type = $self->check_product_barcode_type( $self->api_args['settings'] );
+					if ( in_array( $barcode_type, array( 'RI', 'UE', 'LA' ) ) ) {
+						return '00000000-99999999';
+					}
+
 					if ( $self->is_europe() ) {
-						$serie = '0000000-9999999';
-					} elseif ( $self->is_rest_of_world() ) {
-						$serie = '0000-9999';
+						return '0000000-9999999';
+					}
+
+					if ( $self->is_rest_of_world() ) {
+						return '0000-9999';
 					}
 
 					return $self->string_length_sanitization( $serie, 19 );
+				},
+			),
+			'globalpack_customer_code' => array(
+				'sanitize' => function ( $value ) use ( $self ) {
+					return $self->string_length_sanitization( $value, 4 );
 				},
 			),
 		);
@@ -180,5 +200,38 @@ class Item_Info extends Base_Info {
 		$destination = Utils::get_shipping_zone( $to_country );
 
 		return ( 'EU' === $destination );
+	}
+
+	/**
+	 * Use specific barcode types for some products.
+	 *
+	 * @param string  $barcode_type Selected GlobalPack barcode type.
+	 *
+	 * @return string.
+	 */
+	public function check_product_barcode_type( $barcode_type ) {
+		$barcode_types    = Mapping::products_custom_barcode_types();
+		$selected_options = array();
+		$backend_data     = Utils::get_selected_label_features( $this->api_args['backend_data'] );
+
+		foreach ( $backend_data as $option => $value ) {
+			if ( 'yes' === $value ) {
+				$selected_options[] = $option;
+			}
+		}
+
+		if ( ! empty( $selected_options ) ) {
+			foreach ( $barcode_types as $type => $options_combinations ) {
+				foreach ( $options_combinations as $combination ) {
+					sort( $combination );
+					sort( $selected_options );
+					if ( $selected_options == $combination ) {
+						return $type;
+					}
+				}
+			}
+		}
+
+		return $barcode_type;
 	}
 }

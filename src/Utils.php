@@ -532,4 +532,21 @@ class Utils {
 
 		return $selected_features;
 	}
+
+	/**
+	 * Generate Delivery Date.
+	 *
+	 * @param $delivery_info
+	 *
+	 * @return string.
+	 */
+	public static function generate_delivery_date_html( $delivery_info ) {
+		if ( ! isset( $delivery_info['delivery_day_date'] ) ) {
+			return __( 'As soon as possible', 'postnl-for-woocommerce' );
+		}
+
+		$day = date( 'l', strtotime( $delivery_info['delivery_day_date'] ) );
+
+		return $day . ' ' . $delivery_info['delivery_day_date'];
+	}
 }

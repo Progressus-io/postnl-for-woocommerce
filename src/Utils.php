@@ -549,4 +549,45 @@ class Utils {
 
 		return $day . ' ' . $delivery_info['delivery_day_date'];
 	}
+
+	/**
+	 * Generate selected hipping options html.
+	 *
+	 * @param $backend_data  .
+	 *
+	 * @return string.
+	 */
+	public static function generate_shipping_options_html( $backend_data ) {
+		$options_to_display = self::get_shipping_options();
+		$selected_options   = array();
+
+		foreach ( $backend_data as $option_key => $value ) {
+			if ( isset( $options_to_display[ $option_key ] ) && 'yes' === $value ) {
+				$selected_options[] = $options_to_display[ $option_key ];
+			}
+		}
+
+		if ( empty( $selected_options ) ) {
+			return '-';
+		}
+
+		return implode( ', ', $selected_options );
+	}
+
+	/**
+	 * Get available shipping options.
+	 *
+	 * @return array.
+	 */
+	public static function get_shipping_options() {
+		return array(
+				'id_check'              => __( 'ID Check', 'postnl-for-woocommerce' ),
+				'insured_shipping'      => __( 'Insured Shipping', 'postnl-for-woocommerce' ),
+				'return_no_answer'      => __( 'Return if no answer', 'postnl-for-woocommerce' ),
+				'signature_on_delivery' => __( 'Signature on Delivery', 'postnl-for-woocommerce' ),
+				'only_home_address'     => __( 'Only Home Address', 'postnl-for-woocommerce' ),
+				'letterbox'             => __( 'Letterbox', 'postnl-for-woocommerce' ),
+				'packets'               => __( 'Packets', 'postnl-for-woocommerce' ),
+		);
+	}
 }

@@ -581,13 +581,13 @@ class Utils {
 	 */
 	public static function get_shipping_options() {
 		return array(
-				'id_check'              => __( 'ID Check', 'postnl-for-woocommerce' ),
-				'insured_shipping'      => __( 'Insured Shipping', 'postnl-for-woocommerce' ),
-				'return_no_answer'      => __( 'Return if no answer', 'postnl-for-woocommerce' ),
-				'signature_on_delivery' => __( 'Signature on Delivery', 'postnl-for-woocommerce' ),
-				'only_home_address'     => __( 'Only Home Address', 'postnl-for-woocommerce' ),
-				'letterbox'             => __( 'Letterbox', 'postnl-for-woocommerce' ),
-				'packets'               => __( 'Packets', 'postnl-for-woocommerce' ),
+				'id_check'              => esc_html__( 'ID Check', 'postnl-for-woocommerce' ),
+				'insured_shipping'      => esc_html__( 'Insured Shipping', 'postnl-for-woocommerce' ),
+				'return_no_answer'      => esc_html__( 'Return if no answer', 'postnl-for-woocommerce' ),
+				'signature_on_delivery' => esc_html__( 'Signature on Delivery', 'postnl-for-woocommerce' ),
+				'only_home_address'     => esc_html__( 'Only Home Address', 'postnl-for-woocommerce' ),
+				'letterbox'             => esc_html__( 'Letterbox', 'postnl-for-woocommerce' ),
+				'packets'               => esc_html__( 'Packets', 'postnl-for-woocommerce' ),
 		);
 	}
 }

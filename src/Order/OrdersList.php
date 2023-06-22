@@ -31,10 +31,10 @@ class OrdersList extends Base {
 		// add 'Delivery Date' orders page column content
 		add_action( 'manage_shop_order_posts_custom_column', array( $this, 'add_order_delivery_date_column_content' ), 10, 2 );
 
-		// add 'Delivery Date' orders page column header
+		// add 'Shipping options' orders page column header
 		add_filter( 'manage_edit-shop_order_columns', array( $this, 'add_order_shipping_options_column_header' ), 30 );
 
-		// add 'Delivery Date' orders page column content
+		// add 'Shipping options' orders page column content
 		add_action( 'manage_shop_order_posts_custom_column', array( $this, 'add_order_shipping_options_column_content' ), 10, 2 );
 
 		// add 'Label Created' orders page column header
@@ -44,34 +44,52 @@ class OrdersList extends Base {
 		add_action( 'manage_shop_order_posts_custom_column', array( $this, 'add_order_barcode_column_content' ), 10, 2 );
 	}
 
+	/**
+	 * Add barcode column header.
+	 *
+	 * @param $columns.
+	 *
+	 * @return array.
+	 */
 	public function add_order_barcode_column_header( $columns ) {
-
 		$wc_actions = $columns['wc_actions'];
 		unset( $columns['wc_actions'] );
+
 		$columns['postnl_tracking_link'] = esc_html__( 'PostNL Tracking', 'postnl-for-woocommerce' );
 		$columns['wc_actions']           = $wc_actions;
 
 		return $columns;
 	}
 
+	/**
+	 * Add barcode column content.
+	 *
+	 * @param $column.
+	 * @param $order_id.
+	 *
+	 * @return void.
+	 */
 	public function add_order_barcode_column_content( $column, $order_id ) {
+		if ( empty( $order_id ) ) {
+			return;
+		}
 
-		if ( $order_id ) {
-			if ( 'postnl_tracking_link' === $column ) {
-				echo $this->get_tracking_link( $order_id );
-			}
+		if ( 'postnl_tracking_link' === $column ) {
+			echo $this->get_tracking_link( $order_id );
 		}
 	}
 
 	/**
+	 * Add delivery date column header.
+	 *
 	 * @param $columns  .
 	 *
 	 * @return array.
 	 */
 	public function add_order_delivery_date_column_header( $columns ) {
-
 		$wc_actions = $columns['wc_actions'];
 		unset( $columns['wc_actions'] );
+
 		$columns['postnl_delivery_date'] = esc_html__( 'Delivery Date', 'postnl-for-woocommerce' );
 		$columns['wc_actions']           = $wc_actions;
 
@@ -79,7 +97,7 @@ class OrdersList extends Base {
 	}
 
 	/**
-	 * Generate column content.
+	 * Add delivery date column content.
 	 *
 	 * @param $column  .
 	 * @param $order_id  .
@@ -88,7 +106,7 @@ class OrdersList extends Base {
 	 */
 	public function add_order_delivery_date_column_content( $column, $order_id ) {
 		if ( empty( $order_id ) ) {
-		return;
+			return;
 		}
 
 		if ( 'postnl_delivery_date' === $column ) {
@@ -105,14 +123,16 @@ class OrdersList extends Base {
 	}
 
 	/**
+	 * Add shipping options column header.
+	 *
 	 * @param $columns  .
 	 *
 	 * @return array.
 	 */
 	public function add_order_shipping_options_column_header( $columns ) {
-
 		$wc_actions = $columns['wc_actions'];
 		unset( $columns['wc_actions'] );
+
 		$columns['postnl_shipping_options'] = esc_html__( 'Shipping options', 'postnl-for-woocommerce' );
 		$columns['wc_actions']              = $wc_actions;
 
@@ -120,7 +140,7 @@ class OrdersList extends Base {
 	}
 
 	/**
-	 * Generate column content.
+	 * Add shipping options column content.
 	 *
 	 * @param $column  .
 	 * @param $order_id  .
@@ -129,9 +149,9 @@ class OrdersList extends Base {
 	 */
 	public function add_order_shipping_options_column_content( $column, $order_id ) {
 		if ( empty( $order_id ) ) {
-		     return;
+			return;
 		}
-	
+
 		if ( 'postnl_shipping_options' === $column ) {
 			$backend_data = $this->get_backend_data( $order_id );
 

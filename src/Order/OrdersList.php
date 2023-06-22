@@ -126,12 +126,14 @@ class OrdersList extends Base {
 	 * @return void.
 	 */
 	public function add_order_shipping_options_column_content( $column, $order_id ) {
-		if ( $order_id ) {
-			if ( 'postnl_shipping_options' === $column ) {
-				$backend_data = $this->get_backend_data( $order_id );
+		if ( empty( $order_id ) ) {
+		     return;
+		}
+	
+		if ( 'postnl_shipping_options' === $column ) {
+			$backend_data = $this->get_backend_data( $order_id );
 
-				echo Utils::generate_shipping_options_html( $backend_data );
-			}
+			echo Utils::generate_shipping_options_html( $backend_data );
 		}
 	}
 }

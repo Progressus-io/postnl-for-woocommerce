@@ -14,7 +14,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Class Bulk
+ * Class OrdersList
  *
  * @package PostNLWooCommerce\Order
  */

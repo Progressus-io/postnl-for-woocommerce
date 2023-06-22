@@ -87,18 +87,20 @@ class OrdersList extends Base {
 	 * @return void.
 	 */
 	public function add_order_delivery_date_column_content( $column, $order_id ) {
-		if ( $order_id ) {
-			if ( 'postnl_delivery_date' === $column ) {
-				$order = wc_get_order( $order_id );
+		if ( empty( $order_id ) ) {
+		return;
+		}
 
-				if ( ! is_a( $order, 'WC_Order' ) ) {
-					return;
-				}
+		if ( 'postnl_delivery_date' === $column ) {
+			$order = wc_get_order( $order_id );
 
-				$delivery_info = $this->get_order_frontend_info( $order, 'delivery_day_date' );
-
-				echo Utils::generate_delivery_date_html( $delivery_info );
+			if ( ! is_a( $order, 'WC_Order' ) ) {
+				return;
 			}
+
+			$delivery_info = $this->get_order_frontend_info( $order, 'delivery_day_date' );
+
+			echo Utils::generate_delivery_date_html( $delivery_info );
 		}
 	}
 

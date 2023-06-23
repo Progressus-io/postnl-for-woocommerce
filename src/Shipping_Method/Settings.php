@@ -138,7 +138,13 @@ class Settings extends \WC_Settings_API {
 				'placeholder'       => 'DEVC',
 				'custom_attributes' => array( 'maxlength' => '10' ),
 			),
-
+			'return_company'            => array(
+				'title'       => esc_html__( 'Company Name', 'postnl-for-woocommerce' ),
+				'type'        => 'text',
+				'description' => esc_html__( 'Enter return company name.', 'postnl-for-woocommerce' ),
+				'desc_tip'    => true,
+				'default'     => '',
+			),
 			/*
 			Temporarily hardcoded.
 			'location_code'             => array(
@@ -166,13 +172,6 @@ class Settings extends \WC_Settings_API {
 				'default'     => '',
 				'label'       => esc_html__( 'Enable', 'postnl-for-woocommerce' ),
 				'placeholder' => '',
-			),
-			'return_company'            => array(
-				'title'       => esc_html__( 'Company Name', 'postnl-for-woocommerce' ),
-				'type'        => 'text',
-				'description' => esc_html__( 'Enter return company name.', 'postnl-for-woocommerce' ),
-				'desc_tip'    => true,
-				'default'     => '',
 			),
 			'return_replynumber'        => array(
 				'title'       => esc_html__( 'Replynumber', 'postnl-for-woocommerce' ),

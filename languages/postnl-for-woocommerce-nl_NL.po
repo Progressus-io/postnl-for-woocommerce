@@ -1,8 +1,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PostNL for WooCommerce\n"
-"POT-Creation-Date: 2023-06-21 10:28+0300\n"
-"PO-Revision-Date: 2023-06-21 10:31+0300\n"
+"POT-Creation-Date: 2023-06-27 18:43+0300\n"
+"PO-Revision-Date: 2023-06-27 18:44+0300\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: nl_NL\n"
@@ -53,7 +53,7 @@ msgstr "Straat"
 
 #: src/Frontend/Checkout_Fields.php:103
 msgid "Street Name"
-msgstr ""
+msgstr "Straatnaam"
 
 #: src/Frontend/Container.php:334
 msgid "This is not a valid address!"
@@ -232,15 +232,15 @@ msgstr "Print Label"
 msgid "#%1$s : PostNL label has been created."
 msgstr ""
 
-#: src/Order/OrdersList.php:51
+#: src/Order/OrdersList.php:57
 msgid "PostNL Tracking"
 msgstr ""
 
-#: src/Order/OrdersList.php:75
+#: src/Order/OrdersList.php:92
 msgid "Delivery Date"
 msgstr "Bezorg datum"
 
-#: src/Order/OrdersList.php:114
+#: src/Order/OrdersList.php:135
 #, fuzzy
 #| msgid "Shipping Outside Europe Settings"
 msgid "Shipping options"

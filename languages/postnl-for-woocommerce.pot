@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PostNL for WooCommerce\n"
-"POT-Creation-Date: 2023-06-21 10:28+0300\n"
+"POT-Creation-Date: 2023-06-27 18:44+0300\n"
 "PO-Revision-Date: 2022-09-28 18:20+0700\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -230,15 +230,15 @@ msgstr ""
 msgid "#%1$s : PostNL label has been created."
 msgstr ""
 
-#: src/Order/OrdersList.php:51
+#: src/Order/OrdersList.php:57
 msgid "PostNL Tracking"
 msgstr ""
 
-#: src/Order/OrdersList.php:75
+#: src/Order/OrdersList.php:92
 msgid "Delivery Date"
 msgstr ""
 
-#: src/Order/OrdersList.php:114
+#: src/Order/OrdersList.php:135
 msgid "Shipping options"
 msgstr ""
 

@@ -44,15 +44,15 @@ class Address_Utils {
 	 */
 	public static function set_post_data_address( $post_data ) {
 		if ( empty( $post_data['ship_to_different_address'] ) ) {
-			$post_data['shipping_first_name'] = $post_data['billing_first_name'];
-			$post_data['shipping_last_name']  = $post_data['billing_last_name'];
-			$post_data['shipping_company']    = $post_data['billing_company'];
-			$post_data['shipping_address_1']  = $post_data['billing_address_1'];
-			$post_data['shipping_address_2']  = $post_data['billing_address_2'];
-			$post_data['shipping_city']       = $post_data['billing_city'];
-			$post_data['shipping_state']      = $post_data['billing_state'];
-			$post_data['shipping_country']    = $post_data['billing_country'];
-			$post_data['shipping_postcode']   = $post_data['billing_postcode'];
+			$post_data['shipping_first_name'] = $post_data['billing_first_name'] ?? '';
+			$post_data['shipping_last_name']  = $post_data['billing_last_name'] ?? '';
+			$post_data['shipping_company']    = $post_data['billing_company'] ?? '';
+			$post_data['shipping_address_1']  = $post_data['billing_address_1'] ?? '';
+			$post_data['shipping_address_2']  = $post_data['billing_address_2'] ?? '';
+			$post_data['shipping_city']       = $post_data['billing_city'] ?? '';
+			$post_data['shipping_state']      = $post_data['billing_state'] ?? '';
+			$post_data['shipping_country']    = $post_data['billing_country'] ?? '';
+			$post_data['shipping_postcode']   = $post_data['billing_postcode'] ?? '';
 		}
 
 		return self::set_address_house_number( $post_data );

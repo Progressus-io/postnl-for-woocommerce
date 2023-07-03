@@ -106,6 +106,11 @@ class Mapping {
 							'options'     => array(),
 						),
 						array(
+							'combination' => array( 'insured_shipping', 'signature_on_delivery' ),
+							'code'        => '3087',
+							'options'     => array(),
+						),
+						array(
 							'combination' => array( 'signature_on_delivery', 'return_no_answer' ),
 							'code'        => '3389',
 							'options'     => array(),

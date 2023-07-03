@@ -6,9 +6,9 @@
 * Requires at least: 4.6
 * Requires PHP: 5.6
 * Tested up to: 6.2
-* Stable tag: 5.2.2
+* Stable tag: 5.2.3
 * WC requires at least: 4.0
-* WC tested up to: 7.7
+* WC tested up to: 7.8
 * License: GPLv2 or later
 * License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -35,6 +35,14 @@ PostNL’s official extension for WooCommerce on WordPress. Manage your national
 
 
 ## Changelog
+
+### 5.2.3
+* Create column for Delivery Date on the order overview page.
+* Add Company name instead of the shop name on shipping label.
+* Translate street name field placeholder.
+* Fix: Delete barcode and tracking number of order when the label is deleted.
+* Fix: Choosing insurance + signature on delivery results in uninsured parcel.
+* Fix: PHP warnings.
 
 ### 5.2.2
 * Add new shipping product for international shipments.

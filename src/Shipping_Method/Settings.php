@@ -139,11 +139,11 @@ class Settings extends \WC_Settings_API {
 				'custom_attributes' => array( 'maxlength' => '10' ),
 			),
 			'return_company'            => array(
-				'title'       => esc_html__( 'Company Name', 'postnl-for-woocommerce' ),
-				'type'        => 'text',
-				'description' => esc_html__( 'Enter return company name.', 'postnl-for-woocommerce' ),
-				'desc_tip'    => true,
-				'default'     => '',
+				'title'             => esc_html__( 'Company Name', 'postnl-for-woocommerce' ),
+				'type'              => 'text',
+				'description'       => esc_html__( 'Enter company name - this name will be noted as the sender on the label', 'postnl-for-woocommerce' ),
+				'desc_tip'          => true,
+				'default'           => '',
 			),
 			/*
 			Temporarily hardcoded.

@@ -182,36 +182,6 @@ class Single extends Base {
 	}
 
 	/**
-	 * Get order information from frontend data.
-	 *
-	 * @param WC_Order $order Order object.
-	 * @param String   $needle String that will be used to search the frontend value.
-	 *
-	 * @return Array.
-	 */
-	public function get_order_frontend_info( $order, $needle ) {
-		if ( ! is_a( $order, 'WC_Order' ) ) {
-			return array();
-		}
-
-		$order_data = $order->get_meta( $this->meta_name );
-
-		if ( ! empty( $order_data['frontend'] ) ) {
-			$info_value = array();
-
-			foreach ( $order_data['frontend'] as $key => $value ) {
-				if ( false !== strpos( $key, $needle ) ) {
-					$info_value[ $key ] = $value;
-				}
-			}
-
-			return $info_value;
-		}
-
-		return array();
-	}
-
-	/**
 	 * Get dropoff points information.
 	 *
 	 * @param WC_Order $order Order object.

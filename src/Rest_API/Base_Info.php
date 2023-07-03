@@ -68,7 +68,7 @@ abstract class Base_Info {
 	 */
 	public function set_store_address_data() {
 		$this->api_args['store_address'] = array(
-			'company'   => get_bloginfo( 'name' ),
+			'company'   => $this->settings->get_return_company_name(),
 			'email'     => get_bloginfo( 'admin_email' ),
 			'address_1' => WC()->countries->get_base_address(),
 			'address_2' => WC()->countries->get_base_address_2(),

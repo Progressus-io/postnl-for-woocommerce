@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PostNL for WooCommerce\n"
-"POT-Creation-Date: 2023-07-03 12:40+0300\n"
+"POT-Creation-Date: 2023-07-07 18:47+0300\n"
 "PO-Revision-Date: 2022-09-28 18:20+0700\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -154,7 +154,7 @@ msgid "Packets: "
 msgstr ""
 
 #: src/Order/Base.php:207
-msgid "Mailbox Packet: "
+msgid "Mailbox Packet ( International ): "
 msgstr ""
 
 #: src/Order/Base.php:219

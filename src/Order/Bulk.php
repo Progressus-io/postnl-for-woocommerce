@@ -83,7 +83,10 @@ class Bulk extends Base {
 			foreach ( $object_ids as $order_id ) {
 				$result           = $this->generate_label_and_notes( $order_id, $_REQUEST );
 				$array_messages[] = $result['message'];
-				$gen_labels[]     = $result['labels_data']['labels'];
+
+				if ( isset( $result['labels_data']['labels'] ) ) {
+					$gen_labels[]     = $result['labels_data']['labels'];
+				}
 			}
 		}
 

@@ -934,7 +934,7 @@ class Item_Info extends Base_Info {
 	protected function check_mailbox_weight_limit( $backend_data, $order_weight ) {
 		if ( 'yes' === $backend_data['mailboxpacket'] && $order_weight > 2000 ) {
 			throw new \Exception(
-				__( 'Max weight for Mailbox is 2 kg!' . $order_weight, 'postnl-for-woocommerce' )
+				__( 'Max weight for Mailbox is 2 kg!', 'postnl-for-woocommerce' )
 			);
 		}
 	}

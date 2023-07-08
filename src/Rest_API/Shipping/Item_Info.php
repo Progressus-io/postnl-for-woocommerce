@@ -141,8 +141,9 @@ class Item_Info extends Base_Info {
 			);
 		}
 
-		$order      = $post_data['order'];
-		$saved_data = $post_data['saved_data'];
+		$order        = $post_data['order'];
+		$saved_data   = $post_data['saved_data'];
+		$order_weight = $this->calculate_order_weight( $order );
 
 		$this->api_args['billing_address'] = array(
 			'first_name' => $order->get_billing_first_name(),
@@ -190,6 +191,9 @@ class Item_Info extends Base_Info {
 			'insured_plus'          => $saved_data['backend']['insured_plus'] ?? '',
 		);
 
+		// Check mailbox weight limit
+		$this->check_mailbox_weight_limit( $this->api_args['backend_data'], $order_weight );
+
 		$this->api_args['frontend_data'] = array(
 			'delivery_day'  => array(
 				'value' => $saved_data['frontend']['delivery_day'] ?? '',
@@ -220,7 +224,7 @@ class Item_Info extends Base_Info {
 			'barcode'        => $post_data['barcode'],
 			'return_barcode' => $post_data['return_barcode'],
 			'currency'       => $order->get_currency(),
-			'total_weight'   => $this->calculate_order_weight( $order ),
+			'total_weight'   => $order_weight,
 			'subtotal'       => $order->get_subtotal(),
 		);
 
@@ -916,5 +920,22 @@ class Item_Info extends Base_Info {
 		}
 
 		return array();
+	}
+
+	/**
+	 * Check mailbox weight limit.
+	 *
+	 * @param $backend_data  .
+	 * @param $order_weight  .
+	 *
+	 * @return void.
+	 * @throws \Exception if the order weight exceeds 2000 grams.
+	 */
+	protected function check_mailbox_weight_limit( $backend_data, $order_weight ) {
+		if ( 'yes' === $backend_data['mailboxpacket'] && $order_weight > 2000 ) {
+			throw new \Exception(
+				__( 'Max weight for Mailbox is 2 kg!' . $order_weight, 'postnl-for-woocommerce' )
+			);
+		}
 	}
 }

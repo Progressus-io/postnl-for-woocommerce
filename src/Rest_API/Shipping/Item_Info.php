@@ -932,7 +932,9 @@ class Item_Info extends Base_Info {
 	 * @throws \Exception if the order weight exceeds 2000 grams.
 	 */
 	protected function check_mailbox_weight_limit( $backend_data, $order_weight ) {
-		if ( 'yes' === $backend_data['mailboxpacket'] && 2000 < $order_weight ) {
+		$is_mailbox = 'yes' === $backend_data['mailboxpacket'] || 'yes' === $backend_data['letterbox'];
+
+		if ( $is_mailbox && 2000 < $order_weight ) {
 			throw new \Exception(
 				esc_html__( 'Max weight for Mailbox is 2 kg!', 'postnl-for-woocommerce' )
 			);

@@ -936,7 +936,7 @@ class Item_Info extends Base_Info {
 
 		if ( $is_mailbox && 2000 < $order_weight ) {
 			throw new \Exception(
-				esc_html__( 'Max weight for Mailbox is 2 kg!', 'postnl-for-woocommerce' )
+				esc_html__( 'Max weight for Mailbox Packet is 2kg!', 'postnl-for-woocommerce' )
 			);
 		}
 	}

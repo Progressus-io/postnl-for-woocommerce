@@ -74,10 +74,10 @@ class Bulk extends Base {
 		}
 
 		$array_messages = array(
-			'user_id' => get_current_user_id(),
+				'user_id' => get_current_user_id(),
 		);
 
-		$gen_labels  = array(); // Generated labels.
+		$gen_labels = array(); // Generated labels.
 
 		if ( ! empty( $object_ids ) ) {
 			foreach ( $object_ids as $order_id ) {

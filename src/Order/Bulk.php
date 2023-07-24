@@ -81,14 +81,14 @@ class Bulk extends Base {
 
 		if ( ! empty( $object_ids ) ) {
 			foreach ( $object_ids as $order_id ) {
-				$result           = $this->generate_label_and_notes( $order_id, $_REQUEST );
+				$result = $this->generate_label_and_notes( $order_id, $_REQUEST );
 
 				if ( isset( $result['message'] ) ) {
 					$array_messages[] = $result['message'];
 				}
 
 				if ( isset( $result['labels_data']['labels'] ) ) {
-					$gen_labels[]     = $result['labels_data']['labels'];
+					$gen_labels[] = $result['labels_data']['labels'];
 				}
 			}
 		}

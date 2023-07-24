@@ -74,16 +74,22 @@ class Bulk extends Base {
 		}
 
 		$array_messages = array(
-			'user_id' => get_current_user_id(),
+				'user_id' => get_current_user_id(),
 		);
 
-		$gen_labels  = array(); // Generated labels.
+		$gen_labels = array(); // Generated labels.
 
 		if ( ! empty( $object_ids ) ) {
 			foreach ( $object_ids as $order_id ) {
-				$result           = $this->generate_label_and_notes( $order_id, $_REQUEST );
-				$array_messages[] = $result['message'];
-				$gen_labels[]     = $result['labels_data']['labels'];
+				$result = $this->generate_label_and_notes( $order_id, $_REQUEST );
+
+				if ( isset( $result['message'] ) ) {
+					$array_messages[] = $result['message'];
+				}
+
+				if ( isset( $result['labels_data']['labels'] ) ) {
+					$gen_labels[] = $result['labels_data']['labels'];
+				}
 			}
 		}
 

@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PostNL for WooCommerce\n"
-"POT-Creation-Date: 2023-07-11 15:28+0300\n"
+"POT-Creation-Date: 2023-07-25 01:02+0300\n"
 "PO-Revision-Date: 2022-09-28 18:20+0700\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -203,29 +203,29 @@ msgstr ""
 msgid "%s Tracking Number: {tracking-link}"
 msgstr ""
 
-#: src/Order/Bulk.php:57 src/Order/Bulk.php:350
+#: src/Order/Bulk.php:57 src/Order/Bulk.php:356
 msgid "PostNL Create Label"
 msgstr ""
 
 #. translators: %1$s is anchor tag opener. %2$s is anchor tag closer.
-#: src/Order/Bulk.php:148
+#: src/Order/Bulk.php:154
 #, php-format
 msgid "Bulk PostNL labels file created - %1$sdownload file%2$s"
 msgstr ""
 
-#: src/Order/Bulk.php:154
+#: src/Order/Bulk.php:160
 msgid "Could not create bulk PostNL label file, download individually."
 msgstr ""
 
-#: src/Order/Bulk.php:282
+#: src/Order/Bulk.php:288
 msgid "Submit"
 msgstr ""
 
-#: src/Order/Bulk.php:344
+#: src/Order/Bulk.php:350
 msgid "PostNL Print Label"
 msgstr ""
 
-#: src/Order/Bulk.php:402
+#: src/Order/Bulk.php:408
 #, php-format
 msgid "#%1$s : PostNL label has been created."
 msgstr ""
@@ -331,12 +331,12 @@ msgid "Order ID does not exists!"
 msgstr ""
 
 #: src/Rest_API/Barcode/Item_Info.php:134
-#: src/Rest_API/Shipping/Item_Info.php:324
+#: src/Rest_API/Shipping/Item_Info.php:328
 msgid "Customer Code is empty!"
 msgstr ""
 
 #: src/Rest_API/Barcode/Item_Info.php:137
-#: src/Rest_API/Shipping/Item_Info.php:327
+#: src/Rest_API/Shipping/Item_Info.php:331
 msgid "Customer Number is empty!"
 msgstr ""
 
@@ -402,100 +402,104 @@ msgstr ""
 msgid "Shipping \"House number\" is empty!"
 msgstr ""
 
-#: src/Rest_API/Shipping/Item_Info.php:321
+#: src/Rest_API/Shipping/Item_Info.php:325
 msgid "Location Code is empty!"
 msgstr ""
 
-#: src/Rest_API/Shipping/Item_Info.php:336
+#: src/Rest_API/Shipping/Item_Info.php:340
 msgid "Store email is empty!"
 msgstr ""
 
-#: src/Rest_API/Shipping/Item_Info.php:342
+#: src/Rest_API/Shipping/Item_Info.php:346
 msgid "Wrong format for store email!"
 msgstr ""
 
-#: src/Rest_API/Shipping/Item_Info.php:394
+#: src/Rest_API/Shipping/Item_Info.php:398
 msgid "Order ID is empty!"
 msgstr ""
 
-#: src/Rest_API/Shipping/Item_Info.php:397
+#: src/Rest_API/Shipping/Item_Info.php:401
 msgid "Order number is empty!"
 msgstr ""
 
-#: src/Rest_API/Shipping/Item_Info.php:400
+#: src/Rest_API/Shipping/Item_Info.php:404
 msgid "Barcode is empty!"
 msgstr ""
 
-#: src/Rest_API/Shipping/Item_Info.php:406
+#: src/Rest_API/Shipping/Item_Info.php:410
 msgid "Product code is empty!"
 msgstr ""
 
-#: src/Rest_API/Shipping/Item_Info.php:410
+#: src/Rest_API/Shipping/Item_Info.php:414
 msgid "Wrong format for product code!"
 msgstr ""
 
-#: src/Rest_API/Shipping/Item_Info.php:434
+#: src/Rest_API/Shipping/Item_Info.php:438
 msgid "Total weight is empty!"
 msgstr ""
 
-#: src/Rest_API/Shipping/Item_Info.php:449
+#: src/Rest_API/Shipping/Item_Info.php:453
 msgid "Customer email is not valid!"
 msgstr ""
 
-#: src/Rest_API/Shipping/Item_Info.php:458
+#: src/Rest_API/Shipping/Item_Info.php:462
 msgid "Currency is not available!"
 msgstr ""
 
-#: src/Rest_API/Shipping/Item_Info.php:485
+#: src/Rest_API/Shipping/Item_Info.php:489
 msgid "Delivery day \"Date\" is empty!"
 msgstr ""
 
-#: src/Rest_API/Shipping/Item_Info.php:501
+#: src/Rest_API/Shipping/Item_Info.php:505
 msgid "Delivery day \"From\" is empty!"
 msgstr ""
 
-#: src/Rest_API/Shipping/Item_Info.php:514
+#: src/Rest_API/Shipping/Item_Info.php:518
 msgid "Delivery day \"To\" is empty!"
 msgstr ""
 
-#: src/Rest_API/Shipping/Item_Info.php:530
+#: src/Rest_API/Shipping/Item_Info.php:534
 msgid "Delivery day \"Type\" is empty!"
 msgstr ""
 
-#: src/Rest_API/Shipping/Item_Info.php:553
+#: src/Rest_API/Shipping/Item_Info.php:557
 msgid "Pickup \"Company name\" is empty!"
 msgstr ""
 
-#: src/Rest_API/Shipping/Item_Info.php:562
+#: src/Rest_API/Shipping/Item_Info.php:566
 msgid "Pickup \"Address 1\" is empty!"
 msgstr ""
 
-#: src/Rest_API/Shipping/Item_Info.php:577
+#: src/Rest_API/Shipping/Item_Info.php:581
 msgid "Pickup Point \"City\" is empty!"
 msgstr ""
 
-#: src/Rest_API/Shipping/Item_Info.php:586
+#: src/Rest_API/Shipping/Item_Info.php:590
 msgid "Pickup Point \"Postcode\" is empty!"
 msgstr ""
 
-#: src/Rest_API/Shipping/Item_Info.php:598
+#: src/Rest_API/Shipping/Item_Info.php:602
 msgid "Pickup Point \"Country\" is empty!"
 msgstr ""
 
-#: src/Rest_API/Shipping/Item_Info.php:727
+#: src/Rest_API/Shipping/Item_Info.php:731
 msgid "Item HS Code must be between 6 and 20 characters long"
 msgstr ""
 
-#: src/Rest_API/Shipping/Item_Info.php:740
+#: src/Rest_API/Shipping/Item_Info.php:744
 msgid "Item \"Product ID\" is empty!"
 msgstr ""
 
-#: src/Rest_API/Shipping/Item_Info.php:743
+#: src/Rest_API/Shipping/Item_Info.php:747
 msgid "Item \"Product SKU\" is empty!"
 msgstr ""
 
-#: src/Rest_API/Shipping/Item_Info.php:760
+#: src/Rest_API/Shipping/Item_Info.php:764
 msgid "Item quantity must be more than 1"
+msgstr ""
+
+#: src/Rest_API/Shipping/Item_Info.php:939
+msgid "Max weight for Mailbox Packet is 2kg!"
 msgstr ""
 
 #. translators: %1$s & %2$s is replaced with <a> tag.

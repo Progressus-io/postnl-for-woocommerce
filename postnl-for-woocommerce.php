@@ -8,7 +8,7 @@
  * Version: 5.2.4
  * Tested up to: 6.2
  * WC requires at least: 4.0
- * WC tested up to: 7.8
+ * WC tested up to: 7.9
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by

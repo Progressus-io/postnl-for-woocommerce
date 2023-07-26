@@ -80,6 +80,9 @@ Follow these instructions (https://www.postnl.nl/Images/aanvragen-api-key-stappe
 
 == Changelog ==
 
+= 5.2.5 (2023-xx-xx) =
+* Fix multi-collo barcodes call.
+
 = 5.2.4 (2023-07-25) =
 * Fix bug in Bulk actions menu.
 * Add weight limit for Mailbox.

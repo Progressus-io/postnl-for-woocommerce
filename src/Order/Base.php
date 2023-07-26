@@ -547,6 +547,7 @@ abstract class Base {
 		$this->delete_label( $saved_data );
 		unset( $saved_data['backend'] );
 		unset( $saved_data['labels'] );
+		unset( $saved_data['barcodes'] );
 
 		$order->update_meta_data( $this->meta_name, $saved_data );
 		$order->save();

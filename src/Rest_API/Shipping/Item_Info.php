@@ -221,7 +221,7 @@ class Item_Info extends Base_Info {
 		$this->api_args['order_details'] = array(
 			'order_id'       => $order->get_id(),
 			'order_number'   => $order->get_order_number(),
-			'main_barcode'   => $post_data['barcode'],
+			'main_barcode'   => $post_data['main_barcode'],
 			'barcodes'       => $post_data['barcodes'],
 			'return_barcode' => $post_data['return_barcode'],
 			'currency'       => $order->get_currency(),

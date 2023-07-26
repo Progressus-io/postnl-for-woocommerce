@@ -427,9 +427,9 @@ abstract class Base {
 			'saved_data' => $saved_data,
 		);
 
-		$barcodes                    = $this->maybe_create_multi_barcodes( $label_post_data );
-		$label_post_data['barcode']  = $barcodes[0]; // for MainBarcode.
-		$label_post_data['barcodes'] = $barcodes;
+		$barcodes                        = $this->maybe_create_multi_barcodes( $label_post_data );
+		$label_post_data['main_barcode'] = $barcodes[0]; // for MainBarcode.
+		$label_post_data['barcodes']     = $barcodes;
 
 		$label_post_data['return_barcode'] = $this->maybe_create_return_barcode( $label_post_data );
 
@@ -808,7 +808,7 @@ abstract class Base {
 		// Check any errors.
 		$this->check_label_and_barcode( $response );
 
-		$labels = $this->put_label_content( $response, $order, $post_data['barcode'], 'label' );
+		$labels = $this->put_label_content( $response, $order, $post_data['main_barcode'], 'label' );
 
 		if ( empty( $labels ) ) {
 			throw new \Exception(
@@ -839,7 +839,7 @@ abstract class Base {
 		$return_label = new Return_Label\Client( $item_info );
 		$response     = $return_label->send_request();
 
-		$labels = $this->put_label_content( $response, $order, $post_data['barcode'], 'return-label' );
+		$labels = $this->put_label_content( $response, $order, $post_data['main_barcode'], 'return-label' );
 
 		if ( empty( $labels ) ) {
 			throw new \Exception(
@@ -870,7 +870,7 @@ abstract class Base {
 		$return_label = new Letterbox\Client( $item_info );
 		$response     = $return_label->send_request();
 
-		$labels = $this->put_label_content( $response, $order, $post_data['barcode'], 'letterbox' );
+		$labels = $this->put_label_content( $response, $order, $post_data['main_barcode'], 'letterbox' );
 
 		if ( empty( $labels ) ) {
 			throw new \Exception(

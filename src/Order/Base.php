@@ -427,8 +427,9 @@ abstract class Base {
 			'saved_data' => $saved_data,
 		);
 
-		$barcode                    = $this->create_barcode( $label_post_data );
-		$label_post_data['barcode'] = $barcode;
+		$barcodes                        = $this->maybe_create_multi_barcodes( $label_post_data );
+		$label_post_data['main_barcode'] = $barcodes[0]; // for MainBarcode.
+		$label_post_data['barcodes']     = $barcodes;
 
 		$label_post_data['return_barcode'] = $this->maybe_create_return_barcode( $label_post_data );
 
@@ -442,9 +443,15 @@ abstract class Base {
 
 		$saved_data['labels'] = array_merge( $labels, $return_labels );
 		*/
-		$saved_data['barcode'] = array(
-			'value'      => $barcode,
-			'created_at' => current_time( 'timestamp' ),
+
+		$saved_data['barcodes'] = array_map(
+			function( $barc ) {
+				return array(
+					'value'      => $barc,
+					'created_at' => current_time( 'timestamp' ),
+				);
+			},
+			$barcodes
 		);
 
 		$saved_data['labels'] = array_map(
@@ -540,7 +547,7 @@ abstract class Base {
 		$this->delete_label( $saved_data );
 		unset( $saved_data['backend'] );
 		unset( $saved_data['labels'] );
-		unset( $saved_data['barcode'] );
+		unset( $saved_data['barcodes'] );
 
 		$order->update_meta_data( $this->meta_name, $saved_data );
 		$order->save();
@@ -614,20 +621,9 @@ abstract class Base {
 	 * @throws \Exception Error when response does not have Barcode value.
 	 */
 	public function create_barcode( $label_post_data ) {
-		$saved_data = $label_post_data['saved_data'];
-
-		// Check if barcode has been created on the last 7 days.
-		if ( ! empty( $saved_data['barcode']['created_at'] ) && ! empty( $saved_data['barcode']['value'] ) ) {
-			$time_deviation = current_time( 'timestamp' ) - intval( $saved_data['barcode']['created_at'] );
-
-			if ( $time_deviation <= 7 * DAY_IN_SECONDS ) {
-				return $saved_data['barcode']['value'];
-			}
-		}
-
 		$data = array(
 			'order'      => $label_post_data['order'],
-			'saved_data' => $saved_data
+			'saved_data' => $label_post_data['saved_data'],
 		);
 
 		$item_info = new Barcode\Item_Info( $data );
@@ -641,6 +637,42 @@ abstract class Base {
 		}
 
 		return $response['Barcode'];
+	}
+
+	/**
+	 * Get multi barcodes from cacne or create new barcodes for current order.
+	 *
+	 * @param array $post_data Order post data.
+	 *
+	 * @return array
+	 *
+	 * @throws \Exception Error when response has an error.
+	 */
+	public function maybe_create_multi_barcodes( $post_data ) {
+		// Minimum number of labels is 1 so it will create at least 1 barcode.
+		$num_labels = 1;
+		$barcodes   = array();
+		$saved_data = $post_data['saved_data'];
+
+		if ( isset( $saved_data['backend']['num_labels'] ) && 1 < intval( $saved_data['backend']['num_labels'] ) ) {
+			$num_labels = intval( $saved_data['backend']['num_labels'] );
+		}
+
+		for ( $i = 0; $i < $num_labels; $i++ ) {
+			// Check if barcode has been created on the last 7 days before creating a new one.
+			if ( ! empty( $saved_data['barcodes'][ $i ]['created_at'] ) && ! empty( $saved_data['barcodes'][ $i ]['value'] ) ) {
+				$time_deviation = current_time( 'timestamp' ) - intval( $saved_data['barcodes'][ $i ]['created_at'] );
+
+				if ( $time_deviation <= 7 * DAY_IN_SECONDS ) {
+					$barcodes[ $i ] = $saved_data['barcodes'][ $i ]['value'];
+					continue;
+				}
+			}
+
+			$barcodes[ $i ] = $this->create_barcode( $post_data );
+		}
+
+		return $barcodes;
 	}
 
 	/**
@@ -777,7 +809,7 @@ abstract class Base {
 		// Check any errors.
 		$this->check_label_and_barcode( $response );
 
-		$labels = $this->put_label_content( $response, $order, $post_data['barcode'], 'label' );
+		$labels = $this->put_label_content( $response, $order, $post_data['main_barcode'], 'label' );
 
 		if ( empty( $labels ) ) {
 			throw new \Exception(
@@ -808,7 +840,7 @@ abstract class Base {
 		$return_label = new Return_Label\Client( $item_info );
 		$response     = $return_label->send_request();
 
-		$labels = $this->put_label_content( $response, $order, $post_data['barcode'], 'return-label' );
+		$labels = $this->put_label_content( $response, $order, $post_data['main_barcode'], 'return-label' );
 
 		if ( empty( $labels ) ) {
 			throw new \Exception(
@@ -839,7 +871,7 @@ abstract class Base {
 		$return_label = new Letterbox\Client( $item_info );
 		$response     = $return_label->send_request();
 
-		$labels = $this->put_label_content( $response, $order, $post_data['barcode'], 'letterbox' );
+		$labels = $this->put_label_content( $response, $order, $post_data['main_barcode'], 'letterbox' );
 
 		if ( empty( $labels ) ) {
 			throw new \Exception(

@@ -221,7 +221,8 @@ class Item_Info extends Base_Info {
 		$this->api_args['order_details'] = array(
 			'order_id'       => $order->get_id(),
 			'order_number'   => $order->get_order_number(),
-			'barcode'        => $post_data['barcode'],
+			'main_barcode'   => $post_data['main_barcode'],
+			'barcodes'       => $post_data['barcodes'],
 			'return_barcode' => $post_data['return_barcode'],
 			'currency'       => $order->get_currency(),
 			'total_weight'   => $order_weight,
@@ -394,19 +395,22 @@ class Item_Info extends Base_Info {
 		$self = $this;
 
 		return array(
-			'order_id'        => array(
+			'order_id'         => array(
 				'error' => __( 'Order ID is empty!', 'postnl-for-woocommerce' ),
 			),
-			'order_number'        => array(
+			'order_number'     => array(
 				'error' => __( 'Order number is empty!', 'postnl-for-woocommerce' ),
 			),
-			'barcode'         => array(
+			'main_barcode'     => array(
 				'error' => __( 'Barcode is empty!', 'postnl-for-woocommerce' ),
 			),
-			'return_barcode'  => array(
+			'barcodes'         => array(
+				'default' => array(),
+			),
+			'return_barcode'   => array(
 				'default' => '',
 			),
-			'shipping_product'    => array(
+			'shipping_product' => array(
 				'error'    => __( 'Product code is empty!', 'postnl-for-woocommerce' ),
 				'validate' => function( $value ) {
 					if ( empty( $value ) || ! is_numeric( $value['code'] ) && 4 !== strlen( $value['code'] ) ) {

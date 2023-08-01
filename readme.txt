@@ -80,6 +80,9 @@ Follow these instructions (https://www.postnl.nl/Images/aanvragen-api-key-stappe
 
 == Changelog ==
 
+= 5.2.6 (2023-xx-xx) =
+* Fix: HPOS declaration path.
+
 = 5.2.5 (2023-07-31) =
 * Fix multi-collo barcodes call.
 

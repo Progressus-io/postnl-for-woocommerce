@@ -36,6 +36,9 @@ PostNL’s official extension for WooCommerce on WordPress. Manage your national
 
 ## Changelog
 
+### 5.2.6
+* Fix: HPOS declaration path.
+
 ### 5.2.5
 * Fix multi-collo barcodes call.
 

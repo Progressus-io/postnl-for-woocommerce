@@ -141,9 +141,8 @@ class Item_Info extends Base_Info {
 			);
 		}
 
-		$order        = $post_data['order'];
-		$saved_data   = $post_data['saved_data'];
-		$order_weight = $this->calculate_order_weight( $order );
+		$order      = $post_data['order'];
+		$saved_data = $post_data['saved_data'];
 
 		$this->api_args['billing_address'] = array(
 			'first_name' => $order->get_billing_first_name(),
@@ -191,9 +190,6 @@ class Item_Info extends Base_Info {
 			'insured_plus'          => $saved_data['backend']['insured_plus'] ?? '',
 		);
 
-		// Check mailbox weight limit
-		$this->check_mailbox_weight_limit( $this->api_args['backend_data'], $order_weight );
-
 		$this->api_args['frontend_data'] = array(
 			'delivery_day'  => array(
 				'value' => $saved_data['frontend']['delivery_day'] ?? '',
@@ -221,11 +217,10 @@ class Item_Info extends Base_Info {
 		$this->api_args['order_details'] = array(
 			'order_id'       => $order->get_id(),
 			'order_number'   => $order->get_order_number(),
-			'main_barcode'   => $post_data['main_barcode'],
-			'barcodes'       => $post_data['barcodes'],
+			'barcode'        => $post_data['barcode'],
 			'return_barcode' => $post_data['return_barcode'],
 			'currency'       => $order->get_currency(),
-			'total_weight'   => $order_weight,
+			'total_weight'   => $this->calculate_order_weight( $order ),
 			'subtotal'       => $order->get_subtotal(),
 		);
 
@@ -395,22 +390,19 @@ class Item_Info extends Base_Info {
 		$self = $this;
 
 		return array(
-			'order_id'         => array(
+			'order_id'        => array(
 				'error' => __( 'Order ID is empty!', 'postnl-for-woocommerce' ),
 			),
-			'order_number'     => array(
+			'order_number'        => array(
 				'error' => __( 'Order number is empty!', 'postnl-for-woocommerce' ),
 			),
-			'main_barcode'     => array(
+			'barcode'         => array(
 				'error' => __( 'Barcode is empty!', 'postnl-for-woocommerce' ),
 			),
-			'barcodes'         => array(
-				'default' => array(),
-			),
-			'return_barcode'   => array(
+			'return_barcode'  => array(
 				'default' => '',
 			),
-			'shipping_product' => array(
+			'shipping_product'    => array(
 				'error'    => __( 'Product code is empty!', 'postnl-for-woocommerce' ),
 				'validate' => function( $value ) {
 					if ( empty( $value ) || ! is_numeric( $value['code'] ) && 4 !== strlen( $value['code'] ) ) {
@@ -924,24 +916,5 @@ class Item_Info extends Base_Info {
 		}
 
 		return array();
-	}
-
-	/**
-	 * Check mailbox weight limit.
-	 *
-	 * @param $backend_data  .
-	 * @param $order_weight  .
-	 *
-	 * @return void.
-	 * @throws \Exception if the order weight exceeds 2000 grams.
-	 */
-	protected function check_mailbox_weight_limit( $backend_data, $order_weight ) {
-		$is_mailbox = 'yes' === $backend_data['mailboxpacket'] || 'yes' === $backend_data['letterbox'];
-
-		if ( $is_mailbox && 2000 < $order_weight ) {
-			throw new \Exception(
-				esc_html__( 'Max weight for Mailbox Packet is 2kg!', 'postnl-for-woocommerce' )
-			);
-		}
 	}
 }

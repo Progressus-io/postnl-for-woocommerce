@@ -88,7 +88,7 @@ class Client extends Base {
 
 		$shipment = array(
 			'Addresses'           => $this->get_shipment_addresses(),
-			'Barcode'             => $this->item_info->shipment['main_barcode'],
+			'Barcode'             => $this->item_info->shipment['barcode'],
 			'Contacts'            => array(
 				array(
 					'ContactType' => '01',
@@ -143,13 +143,13 @@ class Client extends Base {
 
 		for ( $i = 1; $i <= $this->item_info->backend_data['num_labels']; $i++ ) {
 			if ( $this->item_info->backend_data['num_labels'] > 1 ) {
-				$shipment['Barcode'] = $this->item_info->shipment['barcodes'][ ( $i - 1 ) ];
-				$shipment['Groups']  = array(
+				unset( $shipment['Barcode'] );
+				$shipment['Groups'] = array(
 					array(
 						'GroupType'     => '03',
 						'GroupCount'    => $this->item_info->backend_data['num_labels'],
 						'GroupSequence' => $i,
-						'MainBarcode'   => $this->item_info->shipment['main_barcode'],
+						'MainBarcode'   => $this->item_info->shipment['barcode'],
 					),
 				);
 			}

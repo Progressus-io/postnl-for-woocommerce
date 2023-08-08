@@ -22,7 +22,7 @@ class Main {
 	 *
 	 * @var _version
 	 */
-	private $version = '5.2.3';
+	private $version = '5.2.5';
 
 	/**
 	 * The ID of this plugin settings.

@@ -570,6 +570,7 @@ class Mapping {
 			),
 			'BE' => array(
 				'BE' => array( 'pickup_points' ),
+				'NL' => array( 'pickup_points' ),
 			),
 		);
 	}

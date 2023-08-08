@@ -300,7 +300,7 @@ class Mapping {
 							'options'     => array(),
 						),
 						array(
-							'combination' => array( 'id_check' , 'signature_on_delivery' , 'only_home_address' ),
+							'combination' => array( 'id_check', 'signature_on_delivery', 'only_home_address' ),
 							'code'        => '4895',
 							'options'     => array(
 								array(
@@ -310,19 +310,19 @@ class Mapping {
 							),
 						),
 						array(
-							'combination' => array( 'signature_on_delivery', 'only_home_address','return_no_answer' ),
+							'combination' => array( 'signature_on_delivery', 'only_home_address', 'return_no_answer' ),
 							'code'        => '4896',
 							'options'     => array(),
 						),
 						array(
-							'combination' => array( 'signature_on_delivery', 'only_home_address','insured_shipping' ),
+							'combination' => array( 'signature_on_delivery', 'only_home_address', 'insured_shipping' ),
 							'code'        => '4897',
 							'options'     => array(),
 						)
 					),
 					'pickup_points' => array(
 						array(
-							'combination' => array('signature_on_delivery'),
+							'combination' => array( 'signature_on_delivery' ),
 							'code'        => '4898',
 							'options'     => array(),
 						)
@@ -333,7 +333,7 @@ class Mapping {
 					'delivery_day' => self::european_shipment_products(),
 				),
 				'ROW' => array(
-					'delivery_day' => self::globalpack_products()
+					'delivery_day' => self::globalpack_products(),
 				)
 			)
 		);

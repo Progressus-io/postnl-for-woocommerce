@@ -85,8 +85,6 @@ class Dropoff_Points extends Base {
 					continue;
 				}
 
-				$timestamp = strtotime( $date );
-
 				$return_data['dropoff_options'][] = array(
 					'show_desc'  => $show_desc,
 					'partner_id' => $dropoff_option['PartnerID'],

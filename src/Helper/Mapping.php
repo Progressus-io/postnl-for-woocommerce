@@ -302,7 +302,12 @@ class Mapping {
 						array(
 							'combination' => array( 'id_check' , 'signature_on_delivery' , 'only_home_address' ),
 							'code'        => '4895',
-							'options'     => array(),
+							'options'     => array(
+								array(
+									'characteristic' => '002',
+									'option'         => '014',
+								),
+							),
 						),
 						array(
 							'combination' => array( 'signature_on_delivery', 'only_home_address','return_no_answer' ),

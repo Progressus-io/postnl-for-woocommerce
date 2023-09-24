@@ -483,7 +483,7 @@ class Single extends Base {
 			// Check if order id is really an ID from shop_order post type.
 			$order = wc_get_order( $order_id );
 			if ( ! is_a( $order, 'WC_Order' ) ) {
-				throw new \Exception( esc_html__( 'Order does not exists!', 'postnl-for-woocommerce' ) );
+				throw new \Exception( esc_html__( 'Order does not exist!', 'postnl-for-woocommerce' ) );
 			}
 
 			$saved_data = $this->delete_meta_value( $order_id );

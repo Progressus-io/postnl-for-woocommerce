@@ -1,8 +1,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PostNL for WooCommerce\n"
-"POT-Creation-Date: 2023-07-25 01:01+0300\n"
-"PO-Revision-Date: 2023-07-25 01:01+0300\n"
+"POT-Creation-Date: 2023-09-24 03:34+0300\n"
+"PO-Revision-Date: 2023-09-24 03:34+0300\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: nl_NL\n"
@@ -10,7 +10,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-"X-Generator: Poedit 3.3.1\n"
+"X-Generator: Poedit 1.8.13\n"
 "X-Poedit-Basepath: ..\n"
 "X-Poedit-Flags-xgettext: --add-comments=translators:\n"
 "X-Poedit-WPHeader: postnl-for-woocommerce.php\n"
@@ -29,14 +29,16 @@ msgid ""
 "Sorry, your session has expired. <a href=\"%s\" class=\"wc-backward\">Return "
 "to shop</a>"
 msgstr ""
+"Uw sessie is verlopen. <a href=\"%s\" class=\"wc-backward\">Keer terug naar "
+"de winkel</a>"
 
 #: src/Frontend/Base.php:416
 msgid "PostNL Evening Fee"
-msgstr ""
+msgstr "Toeslag avondbezorging"
 
 #: src/Frontend/Base.php:435
 msgid "PostNL Morning Fee"
-msgstr ""
+msgstr "Toeslag ochtendbezorging"
 
 #: src/Frontend/Checkout_Fields.php:59 src/Frontend/Checkout_Fields.php:60
 #: src/Order/Single.php:510
@@ -61,7 +63,7 @@ msgstr "Dit is geen valide adres!"
 
 #: src/Frontend/Delivery_Day.php:45
 msgid "Please choose the delivery day!"
-msgstr ""
+msgstr "Kies a.u.b. de bezorgdag"
 
 #: src/Frontend/Delivery_Day.php:101
 msgid "Delivery Day"
@@ -89,11 +91,11 @@ msgstr "Ophalen PostNL Punt"
 
 #: src/Helper/Mapping.php:40
 msgid "Standard Shipment Belgium"
-msgstr ""
+msgstr "Standaardzending België"
 
 #: src/Helper/Mapping.php:43
 msgid "Pickup at PostNL Point Belgium"
-msgstr ""
+msgstr "Ophalen bij PostNL België"
 
 #: src/Helper/Mapping.php:46 src/Helper/Mapping.php:51
 #: src/Helper/Mapping.php:52
@@ -106,24 +108,26 @@ msgstr "Non-EU bezorging"
 
 #: src/Helper/Mapping.php:50
 msgid "Belgium Domestic"
-msgstr ""
+msgstr "België binnenland"
 
 #: src/Main.php:296
 msgid "PostNL plugin requires WooCommerce to be installed and activated!"
-msgstr ""
+msgstr "De PostNL plugin vereist het installeren en activeren van WooCommerce!"
 
 #: src/Main.php:309
 msgid ""
 "PostNL plugin requires store country to be Netherlands (NL) or Belgium (BE)!"
-msgstr ""
+msgstr "De PostNL plugin vereist een winkellocatie in Nederland of België!"
 
 #: src/Main.php:322
 msgid "PostNL plugin requires store currency to be EUR, USD, GBP or CNY!"
 msgstr ""
+"De PostNL plugin vereist een van de volgende winkelvaluta: EUR, USD, GBP of "
+"CNY"
 
 #: src/Order/Base.php:111
 msgid "ID Check: "
-msgstr ""
+msgstr "Leeftijdscheck:"
 
 #: src/Order/Base.php:123
 msgid "Insured Shipping: "
@@ -159,7 +163,7 @@ msgstr "Brievenbuspakje (Internationaal): "
 
 #: src/Order/Base.php:219
 msgid "Track & Trace: "
-msgstr ""
+msgstr "Track & Trace"
 
 #: src/Order/Base.php:237
 msgid "Number of Labels: "
@@ -170,56 +174,56 @@ msgid "Create Return Label: "
 msgstr "Creëer retourlabel: "
 
 #: src/Order/Base.php:391 src/Order/Base.php:534 src/Order/Single.php:486
-msgid "Order does not exists!"
-msgstr ""
+msgid "Order does not exist!"
+msgstr "Deze order bestaat niet!"
 
 #: src/Order/Base.php:639
 msgid "Cannot create the barcode."
-msgstr ""
+msgstr "Kan geen barcode genereren"
 
 #: src/Order/Base.php:673
 msgid "Cannot create return barcode."
-msgstr ""
+msgstr "Kan geen retourbarcode genereren"
 
 #: src/Order/Base.php:784 src/Order/Base.php:883
 msgid "Cannot create the label. Label content is missing"
-msgstr ""
+msgstr "Kan geen label creëren, label-inhoud ontbreekt"
 
 #: src/Order/Base.php:815
 msgid "Cannot create the return label. Label content is missing"
-msgstr ""
+msgstr "Kan geen retourlabel creëren, label-inhoud ontbreekt"
 
 #: src/Order/Base.php:846
 msgid "Cannot create the letterbox. Label content is missing"
-msgstr ""
+msgstr "Kan geen brievenbuspakje creëren, label-inhoud ontbreekt"
 
 #: src/Order/Base.php:877
 msgid "Cannot create the label. Barcode data is missing"
-msgstr ""
+msgstr "Kan geen label creëren, barcode-informatie ontbreekt"
 
 #. translators: %s the current service.
 #: src/Order/Base.php:1006
 #, php-format
 msgid "%s Tracking Number: {tracking-link}"
-msgstr ""
+msgstr "%s Barcode: {tracking-link}"
 
 #: src/Order/Bulk.php:57 src/Order/Bulk.php:356
 msgid "PostNL Create Label"
-msgstr ""
+msgstr "PostNL label aanmaken"
 
 #. translators: %1$s is anchor tag opener. %2$s is anchor tag closer.
 #: src/Order/Bulk.php:154
 #, php-format
 msgid "Bulk PostNL labels file created - %1$sdownload file%2$s"
-msgstr ""
+msgstr "Bulkactie voltooid - %1$sbestand downloaden%2$s"
 
 #: src/Order/Bulk.php:160
 msgid "Could not create bulk PostNL label file, download individually."
-msgstr ""
+msgstr "Bulkactie kan niet worden uitgevoerd, download individuele labels"
 
 #: src/Order/Bulk.php:288
 msgid "Submit"
-msgstr ""
+msgstr "Aanmaken"
 
 #: src/Order/Bulk.php:350
 #, fuzzy
@@ -234,7 +238,7 @@ msgstr ""
 
 #: src/Order/OrdersList.php:57
 msgid "PostNL Tracking"
-msgstr ""
+msgstr "PostNL label aangemaakt"
 
 #: src/Order/OrdersList.php:92
 msgid "Delivery Date"
@@ -249,7 +253,7 @@ msgstr "Versturen buiten Europa"
 #. translators: %s will be replaced by service name.
 #: src/Order/Single.php:112
 msgid "Label & Tracking"
-msgstr ""
+msgstr "Label & Tracking"
 
 #: src/Order/Single.php:254
 msgid "Delivery Type:"
@@ -261,15 +265,15 @@ msgstr "Bezorg datum:"
 
 #: src/Order/Single.php:336
 msgid "Pickup Address:"
-msgstr ""
+msgstr "Afhaaladres:"
 
 #: src/Order/Single.php:341
 msgid "Date:"
-msgstr ""
+msgstr "Datum:"
 
 #: src/Order/Single.php:345
 msgid "Time:"
-msgstr ""
+msgstr "Tijd:"
 
 #: src/Order/Single.php:395
 msgid "Create Shipment"
@@ -285,11 +289,11 @@ msgstr "Verwijder Label"
 
 #: src/Order/Single.php:401
 msgid "Print Return Label"
-msgstr ""
+msgstr "Retourlabel printen"
 
 #: src/Order/Single.php:406
 msgid "Print Letterbox"
-msgstr ""
+msgstr "Label printen"
 
 #: src/Order/Single.php:425 src/Order/Single.php:472
 msgid "Cannot find nonce field!"
@@ -311,7 +315,7 @@ msgstr "Land van herkomst."
 
 #: src/Product/Single.php:74
 msgid "- select country -"
-msgstr ""
+msgstr "- Selecteer land -"
 
 #. translators: %s will be replaced by service name.
 #: src/Product/Single.php:82
@@ -324,6 +328,8 @@ msgid ""
 "HS Tariff Code is a number assigned to every possible commodity that can be "
 "imported or exported from any country."
 msgstr ""
+"De GS tarief code is een code die wordt toegewezen aan ieder mogelijk "
+"product wat geïmporteerd en geëxporteerd kan worden naar iedere bestemming"
 
 #: src/Product/Single.php:152
 msgid "Product ID does not exists!"
@@ -337,66 +343,66 @@ msgstr ""
 #: src/Rest_API/Barcode/Item_Info.php:134
 #: src/Rest_API/Shipping/Item_Info.php:328
 msgid "Customer Code is empty!"
-msgstr ""
+msgstr "Klantcode is leeg!"
 
 #: src/Rest_API/Barcode/Item_Info.php:137
 #: src/Rest_API/Shipping/Item_Info.php:331
 msgid "Customer Number is empty!"
-msgstr ""
+msgstr "Klantnummer is leeg!"
 
 #: src/Rest_API/Base.php:274 src/Rest_API/Base.php:283
 #: src/Rest_API/Base.php:291
 msgid "Unknown error!"
-msgstr ""
+msgstr "Onbekende fout"
 
 #: src/Rest_API/Base_Info.php:136 src/Rest_API/Base_Info.php:140
 msgid "Shipping \"First Name\" is empty!"
-msgstr ""
+msgstr "Voornaam verzending is een vereist veld"
 
 #: src/Rest_API/Base_Info.php:158 src/Rest_API/Base_Info.php:162
 msgid "Shipping \"Address 1\" is empty!"
-msgstr ""
+msgstr "Straat en huisnummer verzending is een vereist veld."
 
 #: src/Rest_API/Base_Info.php:174
 msgid "Shipping \"City\" is empty!"
-msgstr ""
+msgstr "Plaats verzending is een vereist veld."
 
 #: src/Rest_API/Base_Info.php:177 src/Rest_API/Checkout/Item_Info.php:260
 #: src/Rest_API/Postcode_Check/Item_Info.php:89
 msgid "Shipping \"Postcode\" is empty!"
-msgstr ""
+msgstr "Postcode verzending is een vereist veld."
 
 #: src/Rest_API/Base_Info.php:187
 msgid "Shipping \"Country\" is empty!"
-msgstr ""
+msgstr "Land verzending is een vereist veld."
 
 #: src/Rest_API/Base_Info.php:216 src/Rest_API/Base_Info.php:220
 msgid "Base \"Address 1\" is empty!"
-msgstr ""
+msgstr "Geen winkeladres ingesteld!"
 
 #: src/Rest_API/Base_Info.php:232
 msgid "Base \"City\" is empty!"
-msgstr ""
+msgstr "Geen plaats van winkel ingesteld!"
 
 #: src/Rest_API/Base_Info.php:235
 msgid "Base \"Postcode\" is empty!"
-msgstr ""
+msgstr "Geen postcode van winkel ingesteld!s"
 
 #: src/Rest_API/Base_Info.php:245
 msgid "Base \"Country\" is empty!"
-msgstr ""
+msgstr "Geen land van winkel ingesteld!"
 
 #: src/Rest_API/Checkout/Item_Info.php:119
 msgid "Order date is empty!"
-msgstr ""
+msgstr "Geen orderdatum!"
 
 #: src/Rest_API/Checkout/Item_Info.php:123
 msgid "Shipping duration is empty!"
-msgstr ""
+msgstr "Geen overkomstduur ingesteld!"
 
 #: src/Rest_API/Checkout/Item_Info.php:131
 msgid "Wrong format for cut off time!"
-msgstr ""
+msgstr "Verkeerde format van Cut-off tijd ingesteld!"
 
 #: src/Rest_API/Checkout/Item_Info.php:215
 msgid "Locations value is not a number!"
@@ -404,7 +410,7 @@ msgstr ""
 
 #: src/Rest_API/Postcode_Check/Item_Info.php:86
 msgid "Shipping \"House number\" is empty!"
-msgstr ""
+msgstr "Huisnummer verzending is een vereist veld!"
 
 #: src/Rest_API/Shipping/Item_Info.php:325
 msgid "Location Code is empty!"
@@ -615,8 +621,8 @@ msgid ""
 msgstr ""
 "Als deze functie is ingeschakeld wordt er een log-bestand opgebouwd die "
 "communictie gegevens bevat naar de server van PostNL. Deze gegevens van "
-"toegevoegde waarde zijn in geval van technische issues en kunnen "
-"%1$shier%2$s gevonden worden."
+"toegevoegde waarde zijn in geval van technische issues en kunnen %1$shier"
+"%2$s gevonden worden."
 
 #: src/Shipping_Method/Settings.php:119 src/Shipping_Method/Settings.php:173
 #: src/Shipping_Method/Settings.php:242 src/Shipping_Method/Settings.php:270

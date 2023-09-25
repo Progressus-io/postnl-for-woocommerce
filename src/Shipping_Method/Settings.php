@@ -499,6 +499,15 @@ class Settings extends \WC_Settings_API {
 					'only_home_address_signature'        => __( 'Only Home Address + Signature on Delivery', 'postnl-for-woocommerce' ),
 				),
 			),
+			'auto_complete_order'         => array(
+				'title'       => esc_html__( 'Automatically change order status to Completed ', 'postnl-for-woocommerce' ),
+				'type'        => 'checkbox',
+				'label'       => esc_html__( 'Automatically change order status to Completed once an order has been pre-alerted and printed', 'postnl-for-woocommerce' ),
+				'description' => esc_html__( 'Automatically change order status to Completed once an order has been pre-alerted and printed', 'postnl-for-woocommerce' ),
+				'desc_tip'    => true,
+				'default'     => '',
+				'placeholder' => '',
+			),
 
 		);
 	}
@@ -1299,4 +1308,22 @@ class Settings extends \WC_Settings_API {
 
 		return $suppoted_shipping_methods;
 	}
+
+	/**
+	 * Get Automatically change order status to Completed value from the settings.
+	 *
+	 * @return String
+	 */
+	public function get_auto_complete_order() {
+		return $this->get_country_option( 'auto_complete_order', '' );
+	}
+	/**
+	 * Return true if Automatically change order status to Completed is ticked.
+	 *
+	 * @return Bool
+	 */
+	public function is_auto_complete_order_enabled() {
+		return ( 'yes' === $this->get_auto_complete_order() );
+	}
+
 }

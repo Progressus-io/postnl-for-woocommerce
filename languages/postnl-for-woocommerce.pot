@@ -170,7 +170,7 @@ msgid "Create Return Label: "
 msgstr ""
 
 #: src/Order/Base.php:391 src/Order/Base.php:534 src/Order/Single.php:486
-msgid "Order does not exists!"
+msgid "Order does not exist!"
 msgstr ""
 
 #: src/Order/Base.php:639

@@ -956,7 +956,7 @@ class Item_Info extends Base_Info {
 	protected function check_insurance_amount_limit( $backend_data, $order_total ) {
 		if ( 'yes' === $backend_data['insured_shipping'] && $order_total > 5000 ) {
 			throw new \Exception(
-				__( 'Insurance amount  is required and cannot exceed the maximum allowed amount (€ 5000) Your total is. ' . $order_total, 'postnl-for-woocommerce' )
+				__( 'Insurance amount is required and cannot exceed the maximum allowed amount (€ 5000). Your total is: ' . $order_total, 'postnl-for-woocommerce' )
 			);
 		}
 	}

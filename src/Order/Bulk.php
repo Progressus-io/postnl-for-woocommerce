@@ -134,7 +134,14 @@ class Bulk extends Base {
 		}
 
 		$filename    = 'postnl-bulk-' . get_current_user_id() . '.pdf';
-		$merged_info = $this->merge_labels( $label_paths, $filename );
+
+		if ( isset( $_GET['postnl_position_printing_labels'] ) ) {
+			$start_position = sanitize_text_field( $_GET['postnl_position_printing_labels'] );
+		} else {
+			$start_position = 'top-left';
+		}
+
+		$merged_info = $this->merge_labels( $label_paths, $filename, $start_position );
 
 		foreach ( $gen_labels as $labels ) {
 			$this->delete_label_files( $labels );

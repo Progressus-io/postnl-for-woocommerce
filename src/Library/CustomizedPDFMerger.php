@@ -185,7 +185,6 @@ class CustomizedPDFMerger {
 				$coords = $coordinate_map[ $start_position ][ $label_number ];
 				$fpdi->useTemplate( $file_template['template'], $coords[0], $coords[1], $file_template['size']['width'], $file_template['size']['height'], false );
 
-				$label_number ++;
 
 
 				$label_number++;

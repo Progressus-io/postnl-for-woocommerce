@@ -3,10 +3,10 @@ Contributors: PostNL, shadim, abdalsalaam
 Tags: woocommerce, export, delivery, packages, PostNL, Shipping
 Requires at least: 4.6
 Requires PHP: 5.6
-Tested up to: 6.2
-Stable tag: 5.2.5
+Tested up to: 6.3
+Stable tag: 5.3.0
 WC requires at least: 4.0
-WC tested up to: 7.8
+WC tested up to: 8.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -79,6 +79,13 @@ Follow these instructions (https://www.postnl.nl/Images/aanvragen-api-key-stappe
 5. PostNL information on the order details page
 
 == Changelog ==
+
+= 5.3.0 (2023-10-03) =
+* Add: New product codes for shipping from Belgium to Netherlands.
+* Add: Decide start position when printing label is set to A4.
+* Add: Automatically change status to Completed once an order has been pre-alerted and printed.
+* Fix: Check Insurance amount limit.
+* Fix: Update Netherlands translation.
 
 = 5.2.5 (2023-07-31) =
 * Fix multi-collo barcodes call.

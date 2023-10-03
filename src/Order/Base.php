@@ -461,6 +461,12 @@ abstract class Base {
 			},
 			$labels
 		);
+
+		if ( $this->settings->is_auto_complete_order_enabled() ) {
+			// Updating the order status to completed.
+			$order->update_status( 'completed' );
+		}
+
 		$order->update_meta_data( $this->meta_name, $saved_data );
 		$order->save();
 

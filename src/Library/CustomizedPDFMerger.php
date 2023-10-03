@@ -118,38 +118,39 @@ class CustomizedPDFMerger {
 		$a6_size      = Utils::get_paper_size( 'A6' );
 		$label_format = $this->settings->get_label_format();
 	    $first_page = true;
-	    $coordinate_map = [
-		    'top-left'     => [
-			    1 => [ 0, 0 ],
-			    2 => [ 148, 0 ],
-			    3 => [ 0, 105 ],
-			    4 => [ 148, 105 ],
-		    ],
-		    'top-right'    => [
-			    1 => [ 148, 0 ],
-			    2 => [ 0, 105 ],
-			    3 => [ 148, 105 ],
-			    4 => [ 148, 0 ], // this will be on a new page
-		    ],
-		    'bottom-left'  => [
-			    1 => [ 0, 105 ],
-			    2 => [ 148, 105 ],
-			    3 => [ 0, 105 ], // this will be on a new page
-			    4 => [ 148, 0 ], // this will be on a new page
-		    ],
-		    'bottom-right' => [
-			    1 => [ 148, 105 ],
-			    2 => [ 0, 0 ], // this will be on a new page
-			    3 => [ 148, 0 ], // this will be on a new page
-			    4 => [ 0, 105 ], // this will be on a new page
-		    ],
-	    ];
-	    $new_page_condition_map = [
+	    $coordinate_map = array(
+		    'top-left'     => array(
+			    1 => array( 0, 0 ),
+			    2 => array( 148, 0 ),
+			    3 => array( 0, 105 ),
+			    4 => array( 148, 105 ),
+		    ),
+		    'top-right'    => array(
+			    1 => array( 148, 0 ),
+			    2 => array( 0, 105 ),
+			    3 => array( 148, 105 ),
+			    4 => array( 148, 0 ), // this will be on a new page
+		    ),
+		    'bottom-left'  => array(
+			    1 => array( 0, 105 ),
+			    2 => array( 148, 105 ),
+			    3 => array( 0, 105 ), // this will be on a new page
+			    4 => array( 148, 0 ), // this will be on a new page
+		    ),
+		    'bottom-right' => array(
+			    1 => array( 148, 105 ),
+			    2 => array( 0, 0 ), // this will be on a new page
+			    3 => array( 148, 0 ), // this will be on a new page
+			    4 => array( 0, 105 ), // this will be on a new page
+		    ),
+	    );
+
+	    $new_page_condition_map = array(
 		    'top-left'     => 4,
 		    'top-right'    => 3,
 		    'bottom-left'  => 2,
 		    'bottom-right' => 1,
-	    ];
+	    );
 
 
 	    foreach ( $files as $filename => $file_templates ) {

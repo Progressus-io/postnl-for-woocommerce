@@ -213,16 +213,16 @@ abstract class Base_Info {
 				'default' => '',
 			),
 			'address_1' => array(
-				'error'    => __( 'Base "Address 1" is empty!', 'postnl-for-woocommerce' ),
-				'validate' => function( $name ) use ( $self ) {
-					if ( empty( $name ) ) {
+				'error'    => __( 'No store address configured!', 'postnl-for-woocommerce' ),
+				'validate' => function( $address_1 ) use ( $self ) {
+					if ( empty( $address_1 ) ) {
 						throw new \Exception(
-							__( 'Base "Address 1" is empty!', 'postnl-for-woocommerce' )
+							__( 'No store address configured!', 'postnl-for-woocommerce' )
 						);
 					}
 				},
-				'sanitize' => function( $name ) use ( $self ) {
-					return $self->string_length_sanitization( $name, 50 );
+				'sanitize' => function( $address_1 ) use ( $self ) {
+					return $self->string_length_sanitization( $address_1, 50 );
 				},
 			),
 			'address_2' => array(

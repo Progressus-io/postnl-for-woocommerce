@@ -1,8 +1,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PostNL for WooCommerce\n"
-"POT-Creation-Date: 2023-10-19 14:25+0700\n"
-"PO-Revision-Date: 2023-10-19 14:26+0700\n"
+"POT-Creation-Date: 2023-10-25 11:17+0700\n"
+"PO-Revision-Date: 2023-10-25 11:19+0700\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: nl_NL\n"
@@ -401,20 +401,20 @@ msgid "Shipping \"Country\" is empty!"
 msgstr "Land verzending is een vereist veld."
 
 #: src/Rest_API/Base_Info.php:216 src/Rest_API/Base_Info.php:220
-msgid "No store address configured!"
-msgstr "Geen winkeladres ingesteld!"
+msgid "Store address 1 is not configured!"
+msgstr "Winkeladres niet ingevuld!"
 
 #: src/Rest_API/Base_Info.php:232
-msgid "Base \"City\" is empty!"
-msgstr "Geen plaats van winkel ingesteld!"
+msgid "Store city is not configured!"
+msgstr "Plaatsnaam van winkel niet ingevuld!"
 
 #: src/Rest_API/Base_Info.php:235
-msgid "Base \"Postcode\" is empty!"
-msgstr "Geen postcode van winkel ingesteld!s"
+msgid "Store postcode is not configured!"
+msgstr " Postcode van winkel niet ingevuld!"
 
 #: src/Rest_API/Base_Info.php:245
-msgid "Base \"Country\" is empty!"
-msgstr "Geen land van winkel ingesteld!"
+msgid "Store country is not configured!"
+msgstr "Land van winkel niet ingevuld!"
 
 #: src/Rest_API/Checkout/Item_Info.php:119
 msgid "Order date is empty!"
@@ -1177,6 +1177,15 @@ msgstr ""
 #. Author URI of the plugin/theme
 msgid "https://postnl.post/"
 msgstr ""
+
+#~ msgid "Base \"City\" is empty!"
+#~ msgstr "Geen plaats van winkel ingesteld!"
+
+#~ msgid "Base \"Postcode\" is empty!"
+#~ msgstr "Geen postcode van winkel ingesteld!s"
+
+#~ msgid "Base \"Country\" is empty!"
+#~ msgstr "Geen land van winkel ingesteld!"
 
 #~ msgid "Base \"Address 1\" is empty!"
 #~ msgstr "Geen winkeladres ingesteld!"

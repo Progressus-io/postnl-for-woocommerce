@@ -41,6 +41,12 @@ class OrdersList extends Base {
 
 		// add 'Label Created' orders page column content
 		add_action( 'manage_shop_order_posts_custom_column', array( $this, 'add_order_barcode_column_content' ), 10, 2 );
+
+		// Make delivery date column sortable.
+		add_filter( "manage_edit-shop_order_sortable_columns", array( $this, 'sort_delivery_date_column' ) );
+
+		// Make sorting work properly.
+		add_action('pre_get_posts', array( $this, 'sortable_orderby_delivery_date' ) );
 	}
 
 	/**
@@ -155,6 +161,26 @@ class OrdersList extends Base {
 			$backend_data = $this->get_backend_data( $order_id );
 
 			echo Utils::generate_shipping_options_html( $backend_data );
+		}
+	}
+
+	/**
+	 * Make delivery date column sortable.
+	 *
+	 * @param array $columns Added columns.
+	 */
+	public function sort_delivery_date_column( $columns ) {
+		$meta_key = 'postnl_delivery_date';
+		return wp_parse_args( array('postnl_delivery_date' => $meta_key), $columns );
+	}
+
+	public function sortable_orderby_delivery_date( $query ) {
+		global $pagenow;
+
+		$orderby = $query->get( 'orderby');
+		if ( 'postnl_delivery_date' === $orderby ) {
+			$query->set( 'meta_key', '_' . POSTNL_SETTINGS_ID . '_frontend_delivery_day_date' );
+			$query->set( 'orderby', 'meta_value' );
 		}
 	}
 }

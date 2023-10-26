@@ -54,11 +54,11 @@ msgstr "Straat"
 
 #: src/Frontend/Checkout_Fields.php:103
 msgid "Street Name"
-msgstr "Straatnaam"
+msgstr "Straat"
 
 #: src/Frontend/Container.php:334
 msgid "This is not a valid address!"
-msgstr "Dit is geen valide adres!"
+msgstr "Dit is geen geldig adres!"
 
 #: src/Frontend/Delivery_Day.php:45
 msgid "Please choose the delivery day!"
@@ -172,9 +172,9 @@ msgstr "Aantal labels: "
 msgid "Create Return Label: "
 msgstr "Creëer retourlabel: "
 
-#: src/Order/Base.php:391 src/Order/Base.php:547
-msgid "Order does not exists!"
-msgstr ""
+#: src/Order/Base.php:409 src/Order/Base.php:565
+msgid "Order does not exist!"
+msgstr "Deze order bestaat niet!"
 
 #: src/Order/Base.php:641
 msgid "Cannot create the barcode."
@@ -330,13 +330,13 @@ msgstr ""
 "product wat geïmporteerd en geëxporteerd kan worden naar iedere bestemming"
 
 #: src/Product/Single.php:152
-msgid "Product ID does not exists!"
-msgstr ""
+msgid "Product ID does not exist!"
+msgstr "Product ID bestaat niet!"
 
 #: src/Rest_API/Barcode/Item_Info.php:66
 #: src/Rest_API/Shipping/Item_Info.php:140
-msgid "Order ID does not exists!"
-msgstr ""
+msgid "Order ID does not exist!"
+msgstr "Ordernummer bestaat niet!"
 
 #: src/Rest_API/Barcode/Item_Info.php:134
 #: src/Rest_API/Shipping/Item_Info.php:329

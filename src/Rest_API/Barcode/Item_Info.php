@@ -63,7 +63,7 @@ class Item_Info extends Base_Info {
 	public function convert_data_to_args( $post_data ) {
 		if ( ! is_a( $post_data['order'], 'WC_Order' ) ) {
 			throw new \Exception(
-				__( 'Order ID does not exists!', 'postnl-for-woocommerce' )
+				__( 'Order ID does not exist!', 'postnl-for-woocommerce' )
 			);
 		}
 

@@ -4,9 +4,9 @@ Tags: woocommerce, export, delivery, packages, PostNL, Shipping
 Requires at least: 4.6
 Requires PHP: 5.6
 Tested up to: 6.3
-Stable tag: 5.3.0
+Stable tag: 5.3.1
 WC requires at least: 4.0
-WC tested up to: 8.1
+WC tested up to: 8.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -79,6 +79,9 @@ Follow these instructions (https://www.postnl.nl/Images/aanvragen-api-key-stappe
 5. PostNL information on the order details page
 
 == Changelog ==
+
+= 5.3.1 (2023-xx-xx) =
+* Fix: Change store address error text.
 
 = 5.3.0 (2023-10-03) =
 * Add: New product codes for shipping from Belgium to Netherlands.

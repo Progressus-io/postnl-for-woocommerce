@@ -176,11 +176,33 @@ class OrdersList extends Base {
 
 	public function sortable_orderby_delivery_date( $query ) {
 		global $pagenow;
-
-		$orderby = $query->get( 'orderby');
-		if ( 'postnl_delivery_date' === $orderby ) {
-			$query->set( 'meta_key', '_' . POSTNL_SETTINGS_ID . '_frontend_delivery_day_date' );
-			$query->set( 'orderby', 'meta_value' );
+	
+		if ( 'edit.php' !== $pagenow || ! isset( $_GET['post_type'] ) || 'shop_order' !== $_GET['post_type'] ) {
+			return;
 		}
-	}
+	
+		$orderby = $query->get( 'orderby');
+		$order = strtoupper($query->get('order')) === 'ASC' ? 'ASC' : 'DESC';
+	
+		if ( 'postnl_delivery_date' === $orderby ) {
+			// Only if sorting by delivery date, filter the results to "on-hold" and "pending" statuses
+			$query->set( 'post_status', array( 'wc-on-hold', 'wc-pending' ) );
+	
+			add_filter( 'posts_join', function( $join ) {
+				global $wpdb;
+				$join .= " LEFT JOIN {$wpdb->postmeta} AS m1 ON {$wpdb->posts}.ID = m1.post_id AND m1.meta_key = '_postnl_old_orders_delivery_date' ";
+				$join .= " LEFT JOIN {$wpdb->postmeta} AS m2 ON {$wpdb->posts}.ID = m2.post_id AND m2.meta_key = '_postnl_frontend_delivery_day_date' ";
+				return $join;
+			});
+	
+			add_filter( 'posts_orderby', function( $orderby ) use ($order) {
+				$orderby = "CASE 
+								WHEN m1.meta_key IS NULL AND m2.meta_key IS NULL THEN 0 
+								ELSE 1 
+							END {$order}, 
+							LEAST(IFNULL(m1.meta_value, '2999-12-31'), IFNULL(m2.meta_value, '2999-12-31')) {$order}";
+				return $orderby;
+			});
+		}
+	}	
 }

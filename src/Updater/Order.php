@@ -44,54 +44,49 @@ class Order {
 	public function __construct() {
 		$this->meta_name = '_' . $this->prefix . 'order_metadata';
 		add_filter( 'woocommerce_order_data_store_cpt_get_orders_query', array( $this, 'handle_custom_query_variable' ), 10, 2 );
-		//add_action( 'wp_footer', array( $this, 'update_existing_orders' ) );
+
+        if ( ! get_transient( 'updated_postnl_orders' ) ) {
+            $this->update_existing_orders();
+
+            set_transient( 'updated_postnl_orders', 'done', YEAR_IN_SECONDS );
+        }
 	}
 
 	public function update_existing_orders() {
+		// Query orders that have _postnl_order_metadata but do not have _postnl_old_orders_delivery_date
 		$orders = wc_get_orders(
 			array(
-				'postnl_meta_exists'             => '1',
-				'postnl_has_single_deliverydate' => 'no',
-				'limit'                          => -1,
-				'return'                         => 'ids',
+				'meta_query' => array(
+					'relation' => 'AND',
+					array(
+						'key'     => $this->meta_name,
+						'compare' => 'EXISTS'
+					),
+					array(
+						'key'     => '_postnl_old_orders_delivery_date',
+						'compare' => 'NOT EXISTS'
+					)
+				),
+				'limit'    => -1,
+				'return'   => 'ids',
+				'status'   => array('on-hold', 'pending')
 			)
 		);
 
 		if ( ! empty( $orders ) ) {
-			$postnl_instance   = \PostNLWooCommerce\postnl();
-			$postnl_frontend   = $postnl_instance->get_frontend();
-			$postnl_orderslist = $postnl_instance->get_orders_list();
-
 			foreach ( $orders as $order_id ) {
-
 				$order = wc_get_order( $order_id );
+				$postnl_meta = $order->get_meta($this->meta_name);
 
-				$fields_saved = false;
-
-				foreach ( $postnl_frontend['delivery_day']->get_fields() as $field ) {
-					if ( ! isset( $field['single'] ) || true !== $field['single'] ) {
-						continue;
-					}
-
-					$field_name    = Utils::remove_prefix_field( $this->prefix, $field['id'] );
-					$delivery_date = $postnl_orderslist->get_order_frontend_info( $order, $field_name );
-
-					if ( ! empty( $delivery_date[ $field_name ] ) ) {
-						$field_value = $delivery_date[ $field_name ];
-					} else {
-						$field_value = '';
-					}
-
-					$fields_saved = true;
-					$order->update_meta_data( '_' . $this->prefix . 'frontend_' . $field_name, $field_value );
-				}
-
-				if ( $fields_saved ) {
+				// Extract the delivery_day_date and save it under new_postnl_delivery_date
+				if (isset($postnl_meta['frontend']['delivery_day_date'])) {
+					$delivery_date = $postnl_meta['frontend']['delivery_day_date'];
+					$order->update_meta_data('_postnl_old_orders_delivery_date', $delivery_date);
 					$order->save();
 				}
 			}
 		}
-	}
+	}		
 
 	/**
 	 * Handle a custom 'postnl_ordermeta' query var to get orders with the '_postnl_order_metadata' meta.

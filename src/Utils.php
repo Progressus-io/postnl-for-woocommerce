@@ -544,11 +544,15 @@ class Utils {
 		if ( ! isset( $delivery_info['delivery_day_date'] ) ) {
 			return __( 'As soon as possible', 'postnl-for-woocommerce' );
 		}
-
+	
 		$day = date( 'l', strtotime( $delivery_info['delivery_day_date'] ) );
-
-		return $day . ' ' . $delivery_info['delivery_day_date'];
+		
+		// Convert to the Dutch date format
+		$dutchDate = DateTime::createFromFormat('Y-m-d', $delivery_info['delivery_day_date'])->format('d/m/Y');
+	
+		return $day . ' ' . $dutchDate;
 	}
+	
 
 	/**
 	 * Generate selected hipping options html.

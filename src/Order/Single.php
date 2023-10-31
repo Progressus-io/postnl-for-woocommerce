@@ -271,12 +271,12 @@ class Single extends Base {
 				$displayed_info = array(
 					'delivery_day_date',
 				);
-
+	
 				return in_array( $info, $displayed_info, true );
 			},
 			ARRAY_FILTER_USE_KEY
 		);
-
+	
 		if ( empty( $filtered_infos ) ) {
 			return;
 		}
@@ -285,16 +285,18 @@ class Single extends Base {
 				<label for="postnl_pickup_points"><?php esc_html_e( 'Delivery Date:', 'postnl-for-woocommerce' ); ?></label>
 				<?php
 				foreach ( $filtered_infos as $info_idx => $info_val ) {
+					// Convert to the Dutch date format
+					$dutchDate = DateTime::createFromFormat('Y-m-d', $info_val)->format('d/m/Y');
 					?>
 					<div class="postnl-info <?php echo esc_attr( $info_idx ); ?>">
-						<?php echo esc_html( $info_val ); ?>
+						<?php echo esc_html( $dutchDate ); ?>
 					</div>
 					<?php
 				}
 				?>
 			</div>
 		<?php
-	}
+	}	
 
 	/**
 	 * Generate the dropoff points html information.

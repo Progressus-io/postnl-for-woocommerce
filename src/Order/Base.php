@@ -406,7 +406,7 @@ abstract class Base {
 		$order = wc_get_order( $order_id );
 
 		if ( ! is_a( $order, 'WC_Order' ) ) {
-			throw new \Exception( esc_html__( 'Order does not exists!', 'postnl-for-woocommerce' ) );
+			throw new \Exception( esc_html__( 'Order does not exist!', 'postnl-for-woocommerce' ) );
 		}
 
 		$saved_data = $this->get_data( $order_id );
@@ -562,7 +562,7 @@ abstract class Base {
 		$order = wc_get_order( $order_id );
 
 		if ( ! is_a( $order, 'WC_Order' ) ) {
-			throw new \Exception( esc_html__( 'Order does not exists!', 'postnl-for-woocommerce' ) );
+			throw new \Exception( esc_html__( 'Order does not exist!', 'postnl-for-woocommerce' ) );
 		}
 
 		$saved_data = $this->get_data( $order_id );

@@ -100,6 +100,7 @@ abstract class Base {
 		add_action( 'woocommerce_checkout_update_order_meta', array( $this, 'save_data' ), 10, 2 );
 		add_action( 'woocommerce_checkout_update_order_meta', array( $this, 'save_default_data' ), 15, 2 );
 		add_action( 'woocommerce_checkout_update_order_meta', array( $this, 'calculate_non_standard_fee' ), 20, 2 );
+		add_action( 'woocommerce_checkout_update_order_meta', array( $this, 'save_data_to_single_meta' ), 25, 2 );
 		add_filter( 'postnl_frontend_checkout_tab', array( $this, 'add_checkout_tab' ), 10, 2 );
 		add_action( 'postnl_checkout_content', array( $this, 'display_content' ), 10, 2 );
 	}
@@ -375,6 +376,39 @@ abstract class Base {
 		}
 
 		$order->save();
+	}
+
+	/**
+	 * Save frontend field value to single meta.
+	 *
+	 * @param int   $order_id ID of the order.
+	 * @param array $posted_data Posted values.
+	 */
+	public function save_data_to_single_meta( $order_id, $posted_data ) {
+		$order = wc_get_order( $order_id );
+
+		if ( ! is_a( $order, 'WC_Order' ) ) {
+			return;
+		}
+
+		$fields_saved = false;
+
+		foreach ( $this->get_fields() as $field ) {
+			if ( ! isset( $field['single'] ) || true !== $field['single'] ) {
+				continue;
+			}
+
+			if ( array_key_exists( $field['id'], $posted_data ) && ! empty( $posted_data[ $field['id'] ] ) ) {
+				$field_name   = Utils::remove_prefix_field( $this->prefix, $field['id'] );
+				$field_value  = sanitize_text_field( wp_unslash( $posted_data[ $field['id'] ] ) );
+				$fields_saved = true;
+				$order->update_meta_data( '_' . $this->prefix . 'frontend_' . $field_name, $field_value );
+			}
+		}
+
+		if ( $fields_saved ) {
+			$order->save();
+		}
 	}
 
 	/**

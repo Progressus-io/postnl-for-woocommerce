@@ -41,6 +41,12 @@ class OrdersList extends Base {
 
 		// add 'Label Created' orders page column content
 		add_action( 'manage_shop_order_posts_custom_column', array( $this, 'add_order_barcode_column_content' ), 10, 2 );
+
+		// Make delivery date column sortable.
+		add_filter( "manage_edit-shop_order_sortable_columns", array( $this, 'sort_delivery_date_column' ) );
+
+		// Make sorting work properly.
+		add_action('pre_get_posts', array( $this, 'sortable_orderby_delivery_date' ) );
 	}
 
 	/**
@@ -157,4 +163,46 @@ class OrdersList extends Base {
 			echo Utils::generate_shipping_options_html( $backend_data );
 		}
 	}
+
+	/**
+	 * Make delivery date column sortable.
+	 *
+	 * @param array $columns Added columns.
+	 */
+	public function sort_delivery_date_column( $columns ) {
+		$meta_key = 'postnl_delivery_date';
+		return wp_parse_args( array('postnl_delivery_date' => $meta_key), $columns );
+	}
+
+	public function sortable_orderby_delivery_date( $query ) {
+		global $pagenow;
+	
+		if ( 'edit.php' !== $pagenow || ! isset( $_GET['post_type'] ) || 'shop_order' !== $_GET['post_type'] ) {
+			return;
+		}
+	
+		$orderby = $query->get( 'orderby');
+		$order = strtoupper($query->get('order')) === 'ASC' ? 'ASC' : 'DESC';
+	
+		if ( 'postnl_delivery_date' === $orderby ) {
+			// Only if sorting by delivery date, filter the results to "on-hold" and "pending" statuses
+			$query->set( 'post_status', array( 'wc-on-hold', 'wc-pending' ) );
+	
+			add_filter( 'posts_join', function( $join ) {
+				global $wpdb;
+				$join .= " LEFT JOIN {$wpdb->postmeta} AS m1 ON {$wpdb->posts}.ID = m1.post_id AND m1.meta_key = '_postnl_old_orders_delivery_date' ";
+				$join .= " LEFT JOIN {$wpdb->postmeta} AS m2 ON {$wpdb->posts}.ID = m2.post_id AND m2.meta_key = '_postnl_frontend_delivery_day_date' ";
+				return $join;
+			});
+	
+			add_filter( 'posts_orderby', function( $orderby ) use ($order) {
+				$orderby = "CASE 
+								WHEN m1.meta_key IS NULL AND m2.meta_key IS NULL THEN 0 
+								ELSE 1 
+							END {$order}, 
+							LEAST(IFNULL(m1.meta_value, '2999-12-31'), IFNULL(m2.meta_value, '2999-12-31')) {$order}";
+				return $orderby;
+			});
+		}
+	}	
 }

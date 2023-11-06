@@ -548,10 +548,12 @@ class Utils {
 		$day = date( 'l', strtotime( $delivery_info['delivery_day_date'] ) );
 		
 		// Convert to the Dutch date format
-		$dutchDate = DateTime::createFromFormat('Y-m-d', $delivery_info['delivery_day_date'])->format('d/m/Y');
+		$dateObj = date_create_from_format('Y-m-d', $delivery_info['delivery_day_date']);
+		$dutchDate = date_format($dateObj, 'd/m/Y');
 	
 		return $day . ' ' . $dutchDate;
 	}
+	
 	
 
 	/**

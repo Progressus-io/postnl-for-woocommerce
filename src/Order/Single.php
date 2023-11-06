@@ -286,7 +286,8 @@ class Single extends Base {
 				<?php
 				foreach ( $filtered_infos as $info_idx => $info_val ) {
 					// Convert to the Dutch date format
-					$dutchDate = DateTime::createFromFormat('Y-m-d', $info_val)->format('d/m/Y');
+					$dateObj = date_create_from_format('Y-m-d', $info_val);
+					$dutchDate = date_format($dateObj, 'd/m/Y');
 					?>
 					<div class="postnl-info <?php echo esc_attr( $info_idx ); ?>">
 						<?php echo esc_html( $dutchDate ); ?>
@@ -296,7 +297,7 @@ class Single extends Base {
 				?>
 			</div>
 		<?php
-	}	
+	}		
 
 	/**
 	 * Generate the dropoff points html information.

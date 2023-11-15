@@ -183,7 +183,7 @@ class Main {
 	 */
 	public function init_hooks() {
 		add_action( 'init', array( $this, 'init' ), 5 );
-		add_action( 'init', array( $this, 'load_textdomain' ) );
+		add_action( 'init', array( $this, 'load_textdomain' ), 3 );
 
 		add_filter( 'woocommerce_shipping_methods', array( $this, 'add_shipping_method' ) );
 

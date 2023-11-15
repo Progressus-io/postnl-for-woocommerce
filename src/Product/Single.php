@@ -149,7 +149,7 @@ class Single {
 		$product = wc_get_product( $product_id );
 
 		if ( empty( $product ) ) {
-			\WC_Admin_Meta_Boxes::add_error( esc_html__( 'Product ID does not exist!', 'postnl-for-woocommerce' ) );
+			\WC_Admin_Meta_Boxes::add_error( esc_html__( 'Product ID does not exists!', 'postnl-for-woocommerce' ) );
 			return;
 		}
 

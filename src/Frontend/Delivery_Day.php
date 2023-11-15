@@ -45,10 +45,9 @@ class Delivery_Day extends Base {
 				'error_text' => esc_html__( 'Please choose the delivery day!', 'postnl-for-woocommerce' ),
 			),
 			array(
-				'id'       => $this->prefix . $this->primary_field . '_date',
-				'primary'  => false,
-				'hidden'   => true,
-				'single'   => true,
+				'id'      => $this->prefix . $this->primary_field . '_date',
+				'primary' => false,
+				'hidden'  => true,
 			),
 			array(
 				'id'      => $this->prefix . $this->primary_field . '_from',

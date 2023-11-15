@@ -22,7 +22,7 @@ class Main {
 	 *
 	 * @var _version
 	 */
-	private $version = '5.3.0';
+	private $version = '5.3.1';
 
 	/**
 	 * The ID of this plugin settings.
@@ -73,19 +73,6 @@ class Main {
 	 */
 	public $shipping_settings = null;
 
-	/**
-	 * Frontend.
-	 *
-	 * @var []PostNLWooCommerce\Frontend
-	 */
-	public $frontend = array();
-
-	/**
-	 * Updater.
-	 *
-	 * @var []PostNLWooCommerce\Updater
-	 */
-	public $updater = array();
 	/**
 	 * Instance to call certain functions globally within the plugin
 	 *
@@ -175,7 +162,6 @@ class Main {
 		$this->get_orders_list();
 		$this->get_shipping_product();
 		$this->get_frontend();
-		$this->get_updater();
 	}
 
 	/**
@@ -183,7 +169,7 @@ class Main {
 	 */
 	public function init_hooks() {
 		add_action( 'init', array( $this, 'init' ), 5 );
-		add_action( 'init', array( $this, 'load_textdomain' ), 3 );
+		add_action( 'init', array( $this, 'load_textdomain' ) );
 
 		add_filter( 'woocommerce_shipping_methods', array( $this, 'add_shipping_method' ) );
 
@@ -246,7 +232,7 @@ class Main {
 	 */
 	public function get_orders_list() {
 		if ( empty( $this->orders_list ) ) {
-			$this->orders_list = new Order\OrdersList();
+			$this->shipping_order_bulk = new Order\OrdersList();
 		}
 
 		return $this->orders_list;
@@ -269,34 +255,10 @@ class Main {
 	 * Get frontend class.
 	 */
 	public function get_frontend() {
-		if ( empty( $this->frontend['container'] ) ) {
-			$this->frontend['container'] = new Frontend\Container();
-		}
-
-		if ( empty( $this->frontend['delivery_day'] ) ) {
-			$this->frontend['delivery_day'] = new Frontend\Delivery_Day();
-		}
-
-		if ( empty( $this->frontend['dropoff_points'] ) ) {
-			$this->frontend['dropoff_points'] = new Frontend\Dropoff_Points();
-		}
-
-		if ( empty( $this->frontend['checkout_fields'] ) ) {
-			$this->frontend['checkout_fields'] = new Frontend\Checkout_Fields();
-		}
-
-		return $this->frontend;
-	}
-
-	/**
-	 * Get updater classes.
-	 */
-	public function get_updater() {
-		if ( empty( $this->updater['order'] ) ) {
-			$this->updater['order'] = new Updater\Order();
-		}
-
-		return $this->updater;
+		new Frontend\Container();
+		new Frontend\Delivery_Day();
+		new Frontend\Dropoff_Points();
+		new Frontend\Checkout_Fields();
 	}
 
 	/**

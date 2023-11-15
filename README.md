@@ -6,9 +6,9 @@
 * Requires at least: 4.6
 * Requires PHP: 5.6
 * Tested up to: 6.3
-* Stable tag: 5.3.0
+* Stable tag: 5.3.1
 * WC requires at least: 4.0
-* WC tested up to: 8.1
+* WC tested up to: 8.2
 * License: GPLv2 or later
 * License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -35,6 +35,9 @@ PostNL’s official extension for WooCommerce on WordPress. Manage your national
 
 
 ## Changelog
+
+### 5.3.1
+* Fix: Change store address error text.
 
 ### 5.3.0
 * Add: New product codes for shipping from Belgium to Netherlands.

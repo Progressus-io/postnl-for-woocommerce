@@ -43,10 +43,10 @@ class OrdersList extends Base {
 		add_action( 'manage_shop_order_posts_custom_column', array( $this, 'add_order_barcode_column_content' ), 10, 2 );
 
 		// Make delivery date column sortable.
-		add_filter( "manage_edit-shop_order_sortable_columns", array( $this, 'sort_delivery_date_column' ) );
+		add_filter( 'manage_edit-shop_order_sortable_columns', array( $this, 'sort_delivery_date_column' ) );
 
 		// Make sorting work properly.
-		add_action('pre_get_posts', array( $this, 'sortable_orderby_delivery_date' ) );
+		add_action( 'pre_get_posts', array( $this, 'sortable_orderby_delivery_date' ) );
 	}
 
 	/**
@@ -171,7 +171,7 @@ class OrdersList extends Base {
 	 */
 	public function sort_delivery_date_column( $columns ) {
 		$meta_key = 'postnl_delivery_date';
-		return wp_parse_args( array('postnl_delivery_date' => $meta_key), $columns );
+		return wp_parse_args( array( 'postnl_delivery_date' => $meta_key ), $columns );
 	}
 
 	public function sortable_orderby_delivery_date( $query ) {
@@ -181,8 +181,8 @@ class OrdersList extends Base {
 			return;
 		}
 	
-		$orderby = $query->get( 'orderby');
-		$order = strtoupper($query->get('order')) === 'ASC' ? 'ASC' : 'DESC';
+		$orderby = $query->get( 'orderby' );
+		$order = 'ASC' === strtoupper( $query->get('order') ) ? 'ASC' : 'DESC';
 	
 		if ( 'postnl_delivery_date' === $orderby ) {
 			// Only if sorting by delivery date, filter the results to "on-hold" and "pending" statuses

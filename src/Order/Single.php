@@ -286,11 +286,11 @@ class Single extends Base {
 				<?php
 				foreach ( $filtered_infos as $info_idx => $info_val ) {
 					// Convert to the Dutch date format
-					$dateObj = date_create_from_format('Y-m-d', $info_val);
-					$dutchDate = date_format($dateObj, 'd/m/Y');
+					$date_obj   = date_create_from_format( 'Y-m-d', $info_val );
+					$dutch_date = date_format( $date_obj, 'd/m/Y' );
 					?>
 					<div class="postnl-info <?php echo esc_attr( $info_idx ); ?>">
-						<?php echo esc_html( $dutchDate ); ?>
+						<?php echo esc_html( $dutch_date ); ?>
 					</div>
 					<?php
 				}

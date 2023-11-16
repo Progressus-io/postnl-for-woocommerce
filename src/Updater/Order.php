@@ -75,13 +75,13 @@ class Order {
 
 		if ( ! empty( $orders ) ) {
 			foreach ( $orders as $order_id ) {
-				$order = wc_get_order( $order_id );
-				$postnl_meta = $order->get_meta($this->meta_name);
+				$order       = wc_get_order( $order_id );
+				$postnl_meta = $order->get_meta( $this->meta_name );
 
 				// Extract the delivery_day_date and save it under new_postnl_delivery_date
-				if (isset($postnl_meta['frontend']['delivery_day_date'])) {
+				if ( isset( $postnl_meta['frontend']['delivery_day_date'] ) ) {
 					$delivery_date = $postnl_meta['frontend']['delivery_day_date'];
-					$order->update_meta_data('_postnl_old_orders_delivery_date', $delivery_date);
+					$order->update_meta_data( '_postnl_old_orders_delivery_date', $delivery_date );
 					$order->save();
 				}
 			}

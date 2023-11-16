@@ -2,7 +2,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PostNL for WooCommerce\n"
-"POT-Creation-Date: 2023-10-25 11:16+0700\n"
+"POT-Creation-Date: 2023-09-29 08:25+0300\n"
 "PO-Revision-Date: 2022-09-28 18:20+0700\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -10,7 +10,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=INTEGER; plural=EXPRESSION;\n"
-"X-Generator: Poedit 3.4\n"
+"X-Generator: Poedit 1.8.13\n"
 "X-Poedit-Basepath: ..\n"
 "X-Poedit-Flags-xgettext: --add-comments=translators:\n"
 "X-Poedit-WPHeader: postnl-for-woocommerce.php\n"
@@ -22,7 +22,6 @@ msgstr ""
 "X-Poedit-SearchPathExcluded-0: *.min.js\n"
 "X-Poedit-SearchPathExcluded-1: vendor\n"
 
-#. translators: %s: shop cart url
 #: src/Frontend/Base.php:171
 #, php-format
 msgid ""
@@ -169,83 +168,61 @@ msgstr ""
 msgid "Create Return Label: "
 msgstr ""
 
-#: src/Order/Base.php:267
-msgid "Start position printing label: "
-msgstr ""
-
-#: src/Order/Base.php:271
-msgid "Top Left"
-msgstr ""
-
-#: src/Order/Base.php:272
-msgid "Top Right"
-msgstr ""
-
-#: src/Order/Base.php:273
-msgid "Bottom Left"
-msgstr ""
-
-#: src/Order/Base.php:274
-msgid "Bottom Right"
-msgstr ""
-
-#: src/Order/Base.php:409 src/Order/Base.php:565
+#: src/Order/Base.php:391 src/Order/Base.php:547
 msgid "Order does not exists!"
 msgstr ""
 
-#: src/Order/Base.php:659
+#: src/Order/Base.php:641
 msgid "Cannot create the barcode."
 msgstr ""
 
-#: src/Order/Base.php:729
+#: src/Order/Base.php:711
 msgid "Cannot create return barcode."
 msgstr ""
 
-#: src/Order/Base.php:844 src/Order/Base.php:943
+#: src/Order/Base.php:822 src/Order/Base.php:921
 msgid "Cannot create the label. Label content is missing"
 msgstr ""
 
-#: src/Order/Base.php:875
+#: src/Order/Base.php:853
 msgid "Cannot create the return label. Label content is missing"
 msgstr ""
 
-#: src/Order/Base.php:906
+#: src/Order/Base.php:884
 msgid "Cannot create the letterbox. Label content is missing"
 msgstr ""
 
-#: src/Order/Base.php:937
+#: src/Order/Base.php:915
 msgid "Cannot create the label. Barcode data is missing"
 msgstr ""
 
-#. translators: %s the current service.
-#: src/Order/Base.php:1066
+#: src/Order/Base.php:1044
 #, php-format
 msgid "%s Tracking Number: {tracking-link}"
 msgstr ""
 
-#: src/Order/Bulk.php:57 src/Order/Bulk.php:363
+#: src/Order/Bulk.php:57 src/Order/Bulk.php:356
 msgid "PostNL Create Label"
 msgstr ""
 
-#. translators: %1$s is anchor tag opener. %2$s is anchor tag closer.
-#: src/Order/Bulk.php:161
+#: src/Order/Bulk.php:154
 #, php-format
 msgid "Bulk PostNL labels file created - %1$sdownload file%2$s"
 msgstr ""
 
-#: src/Order/Bulk.php:167
+#: src/Order/Bulk.php:160
 msgid "Could not create bulk PostNL label file, download individually."
 msgstr ""
 
-#: src/Order/Bulk.php:295
+#: src/Order/Bulk.php:288
 msgid "Submit"
 msgstr ""
 
-#: src/Order/Bulk.php:357
+#: src/Order/Bulk.php:350
 msgid "PostNL Print Label"
 msgstr ""
 
-#: src/Order/Bulk.php:415
+#: src/Order/Bulk.php:408
 #, php-format
 msgid "#%1$s : PostNL label has been created."
 msgstr ""
@@ -262,7 +239,6 @@ msgstr ""
 msgid "Shipping options"
 msgstr ""
 
-#. translators: %s will be replaced by service name.
 #: src/Order/Single.php:112
 msgid "Label & Tracking"
 msgstr ""
@@ -319,7 +295,6 @@ msgstr ""
 msgid "Order does not exist!"
 msgstr ""
 
-#. translators: %s will be replaced by service name.
 #: src/Product/Single.php:70
 #, php-format
 msgid "Country of Origin (%s)"
@@ -333,7 +308,6 @@ msgstr ""
 msgid "- select country -"
 msgstr ""
 
-#. translators: %s will be replaced by service name.
 #: src/Product/Single.php:82
 #, php-format
 msgid "HS Tariff Code (%s)"
@@ -355,12 +329,12 @@ msgid "Order ID does not exists!"
 msgstr ""
 
 #: src/Rest_API/Barcode/Item_Info.php:134
-#: src/Rest_API/Shipping/Item_Info.php:332
+#: src/Rest_API/Shipping/Item_Info.php:329
 msgid "Customer Code is empty!"
 msgstr ""
 
 #: src/Rest_API/Barcode/Item_Info.php:137
-#: src/Rest_API/Shipping/Item_Info.php:335
+#: src/Rest_API/Shipping/Item_Info.php:332
 msgid "Customer Number is empty!"
 msgstr ""
 
@@ -391,19 +365,19 @@ msgid "Shipping \"Country\" is empty!"
 msgstr ""
 
 #: src/Rest_API/Base_Info.php:216 src/Rest_API/Base_Info.php:220
-msgid "Store address 1 is not configured!"
+msgid "Base \"Address 1\" is empty!"
 msgstr ""
 
 #: src/Rest_API/Base_Info.php:232
-msgid "Store city is not configured!"
+msgid "Base \"City\" is empty!"
 msgstr ""
 
 #: src/Rest_API/Base_Info.php:235
-msgid "Store postcode is not configured!"
+msgid "Base \"Postcode\" is empty!"
 msgstr ""
 
 #: src/Rest_API/Base_Info.php:245
-msgid "Store country is not configured!"
+msgid "Base \"Country\" is empty!"
 msgstr ""
 
 #: src/Rest_API/Checkout/Item_Info.php:119
@@ -426,113 +400,106 @@ msgstr ""
 msgid "Shipping \"House number\" is empty!"
 msgstr ""
 
-#: src/Rest_API/Shipping/Item_Info.php:329
+#: src/Rest_API/Shipping/Item_Info.php:326
 msgid "Location Code is empty!"
 msgstr ""
 
-#: src/Rest_API/Shipping/Item_Info.php:344
+#: src/Rest_API/Shipping/Item_Info.php:341
 msgid "Store email is empty!"
 msgstr ""
 
-#: src/Rest_API/Shipping/Item_Info.php:350
+#: src/Rest_API/Shipping/Item_Info.php:347
 msgid "Wrong format for store email!"
 msgstr ""
 
-#: src/Rest_API/Shipping/Item_Info.php:402
+#: src/Rest_API/Shipping/Item_Info.php:399
 msgid "Order ID is empty!"
 msgstr ""
 
-#: src/Rest_API/Shipping/Item_Info.php:405
+#: src/Rest_API/Shipping/Item_Info.php:402
 msgid "Order number is empty!"
 msgstr ""
 
-#: src/Rest_API/Shipping/Item_Info.php:408
+#: src/Rest_API/Shipping/Item_Info.php:405
 msgid "Barcode is empty!"
 msgstr ""
 
-#: src/Rest_API/Shipping/Item_Info.php:417
+#: src/Rest_API/Shipping/Item_Info.php:414
 msgid "Product code is empty!"
 msgstr ""
 
-#: src/Rest_API/Shipping/Item_Info.php:421
+#: src/Rest_API/Shipping/Item_Info.php:418
 msgid "Wrong format for product code!"
 msgstr ""
 
-#: src/Rest_API/Shipping/Item_Info.php:445
+#: src/Rest_API/Shipping/Item_Info.php:442
 msgid "Total weight is empty!"
 msgstr ""
 
-#: src/Rest_API/Shipping/Item_Info.php:460
+#: src/Rest_API/Shipping/Item_Info.php:457
 msgid "Customer email is not valid!"
 msgstr ""
 
-#: src/Rest_API/Shipping/Item_Info.php:469
+#: src/Rest_API/Shipping/Item_Info.php:466
 msgid "Currency is not available!"
 msgstr ""
 
-#: src/Rest_API/Shipping/Item_Info.php:496
+#: src/Rest_API/Shipping/Item_Info.php:493
 msgid "Delivery day \"Date\" is empty!"
 msgstr ""
 
-#: src/Rest_API/Shipping/Item_Info.php:512
+#: src/Rest_API/Shipping/Item_Info.php:509
 msgid "Delivery day \"From\" is empty!"
 msgstr ""
 
-#: src/Rest_API/Shipping/Item_Info.php:525
+#: src/Rest_API/Shipping/Item_Info.php:522
 msgid "Delivery day \"To\" is empty!"
 msgstr ""
 
-#: src/Rest_API/Shipping/Item_Info.php:541
+#: src/Rest_API/Shipping/Item_Info.php:538
 msgid "Delivery day \"Type\" is empty!"
 msgstr ""
 
-#: src/Rest_API/Shipping/Item_Info.php:564
+#: src/Rest_API/Shipping/Item_Info.php:561
 msgid "Pickup \"Company name\" is empty!"
 msgstr ""
 
-#: src/Rest_API/Shipping/Item_Info.php:573
+#: src/Rest_API/Shipping/Item_Info.php:570
 msgid "Pickup \"Address 1\" is empty!"
 msgstr ""
 
-#: src/Rest_API/Shipping/Item_Info.php:588
+#: src/Rest_API/Shipping/Item_Info.php:585
 msgid "Pickup Point \"City\" is empty!"
 msgstr ""
 
-#: src/Rest_API/Shipping/Item_Info.php:597
+#: src/Rest_API/Shipping/Item_Info.php:594
 msgid "Pickup Point \"Postcode\" is empty!"
 msgstr ""
 
-#: src/Rest_API/Shipping/Item_Info.php:609
+#: src/Rest_API/Shipping/Item_Info.php:606
 msgid "Pickup Point \"Country\" is empty!"
 msgstr ""
 
-#: src/Rest_API/Shipping/Item_Info.php:738
+#: src/Rest_API/Shipping/Item_Info.php:735
 msgid "Item HS Code must be between 6 and 20 characters long"
 msgstr ""
 
-#: src/Rest_API/Shipping/Item_Info.php:751
+#: src/Rest_API/Shipping/Item_Info.php:748
 msgid "Item \"Product ID\" is empty!"
 msgstr ""
 
-#: src/Rest_API/Shipping/Item_Info.php:754
+#: src/Rest_API/Shipping/Item_Info.php:751
 msgid "Item \"Product SKU\" is empty!"
 msgstr ""
 
-#: src/Rest_API/Shipping/Item_Info.php:771
+#: src/Rest_API/Shipping/Item_Info.php:768
 msgid "Item quantity must be more than 1"
 msgstr ""
 
-#: src/Rest_API/Shipping/Item_Info.php:946
+#: src/Rest_API/Shipping/Item_Info.php:943
 msgid "Max weight for Mailbox Packet is 2kg!"
 msgstr ""
 
-#: src/Rest_API/Shipping/Item_Info.php:963
-msgid ""
-"Insurance amount is required and cannot exceed the maximum allowed amount (€ "
-"5000). Your total is: "
-msgstr ""
-
-#. translators: %1$s & %2$s is replaced with <a> tag.
 #: src/Shipping_Method/PostNL.php:33
 #, php-format
 msgid ""
@@ -555,7 +522,6 @@ msgstr ""
 msgid "Manual"
 msgstr ""
 
-#. translators: %1$s & %2$s is replaced with <a> tag.
 #: src/Shipping_Method/Settings.php:70
 #, php-format
 msgid "Consult the %1$smanual%2$s for help installing the plug-in."
@@ -565,7 +531,6 @@ msgstr ""
 msgid "Account Settings"
 msgstr ""
 
-#. translators: %1$s & %2$s is replaced with <a> tag.
 #: src/Shipping_Method/Settings.php:77
 #, php-format
 msgid ""
@@ -594,7 +559,6 @@ msgstr ""
 msgid "Production API Key"
 msgstr ""
 
-#. translators: %1$s & %2$s is replaced with <a> tag.
 #: src/Shipping_Method/Settings.php:96
 #, php-format
 msgid ""
@@ -606,7 +570,6 @@ msgstr ""
 msgid "Sandbox API Key"
 msgstr ""
 
-#. translators: %1$s & %2$s is replaced with <a> tag.
 #: src/Shipping_Method/Settings.php:105
 #, php-format
 msgid ""
@@ -618,7 +581,6 @@ msgstr ""
 msgid "Logging"
 msgstr ""
 
-#. translators: %1$s is anchor opener tag and %2$s is anchor closer tag.
 #: src/Shipping_Method/Settings.php:115
 #, php-format
 msgid ""
@@ -1032,7 +994,6 @@ msgid ""
 "alerted and printed"
 msgstr ""
 
-#. translators: %s is a field argument.
 #: src/Utils.php:309
 #, php-format
 msgid "Please specify a \"%s\" argument"
@@ -1054,7 +1015,6 @@ msgstr ""
 msgid "Morning"
 msgstr ""
 
-#. translators: %1$s is <strong> opener and %2$s is <strong> closer.
 #: templates/checkout/postnl-dropoff-points.php:103
 #, php-format
 msgid ""

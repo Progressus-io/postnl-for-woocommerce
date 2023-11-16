@@ -80,7 +80,7 @@ Follow these instructions (https://www.postnl.nl/Images/aanvragen-api-key-stappe
 
 == Changelog ==
 
-= 5.3.2 (2023-xx-xx) =
+= 5.3.2 (2023-11-16) =
 * Add: Made the delivery date sortable by date.
 * Added Dutch translations in the PostNL settings screen in WooCommerce shipping settings.
 

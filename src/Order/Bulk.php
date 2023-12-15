@@ -33,6 +33,10 @@ class Bulk extends Base {
 	public function init_hooks() {
 		add_filter( 'bulk_actions-edit-shop_order', array( $this, 'add_order_bulk_actions' ), 10, 1 );
 		add_filter( 'handle_bulk_actions-edit-shop_order', array( $this, 'process_order_bulk_actions' ), 10, 3 );
+		
+		add_filter( 'bulk_actions-woocommerce_page_wc-orders', array( $this, 'add_order_bulk_actions' ), 10, 1 );
+		add_filter( 'handle_bulk_actions-woocommerce_page_wc-orders', array( $this, 'process_order_bulk_actions' ), 10, 3 );
+		
 		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_bulk_assets' ) );
 		add_action( 'admin_footer', array( $this, 'model_content_fields_create_label' ) );
 		add_filter( 'postnl_order_meta_box_fields', array( $this, 'additional_meta_box' ), 10, 1 );

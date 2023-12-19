@@ -137,7 +137,7 @@ class Item_Info extends Base_Info {
 	public function convert_data_to_args( $post_data ) {
 		if ( ! is_a( $post_data['order'], 'WC_Order' ) ) {
 			throw new \Exception(
-				__( 'Order ID does not exists!', 'postnl-for-woocommerce' )
+				__( 'Order ID does not exist!', 'postnl-for-woocommerce' )
 			);
 		}
 
@@ -228,6 +228,9 @@ class Item_Info extends Base_Info {
 			'total_weight'   => $order_weight,
 			'subtotal'       => $order->get_subtotal(),
 		);
+
+		// Check mailbox weight limit
+		$this->check_insurance_amount_limit( $this->api_args['backend_data'], $order->get_subtotal() );
 
 		foreach ( $order->get_items() as $item_id => $item ) {
 			$product = $item->get_product();
@@ -944,4 +947,22 @@ class Item_Info extends Base_Info {
 			);
 		}
 	}
+
+	/**
+	 * Check Insurance amount limit.
+	 *
+	 * @param $backend_data  .
+	 * @param $order_total  .
+	 *
+	 * @return void.
+	 * @throws \Exception if the order weight exceeds € 5000.
+	 */
+	protected function check_insurance_amount_limit( $backend_data, $order_total ) {
+		if ( 'yes' === $backend_data['insured_shipping'] && $order_total > 5000 ) {
+			throw new \Exception(
+				__( 'Insurance amount is required and cannot exceed the maximum allowed amount (€ 5000). Your total is: ' . $order_total, 'postnl-for-woocommerce' )
+			);
+		}
+	}
+
 }

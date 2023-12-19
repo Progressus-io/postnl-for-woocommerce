@@ -34,11 +34,11 @@
 						var field_clone = jQuery( this ).clone();
 						post_form.find( '#postnl-field-container' ).append( field_clone );
 					} );
-
+					var selected_value = tb_window.find('#postnl_position_printing_labels').val();
+					post_form.find('#postnl-field-container').append('<input type="hidden" name="postnl_position_printing_labels" value="' + selected_value + '">');
 					jQuery( this ).prop( 'disabled', true );
 					post_form.submit();
 				} );
-
 			}else{
 				jQuery('#TB_closeWindowButton').click();
 

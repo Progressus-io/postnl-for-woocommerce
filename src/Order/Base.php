@@ -262,6 +262,24 @@ abstract class Base {
 					'container'     => true,
 				),
 				array(
+					'id'            => $this->prefix . 'position_printing_labels',
+					'type'          => 'select',
+					'label'         => __( 'Start position printing label: ', 'postnl-for-woocommerce' ),
+					'placeholder'   => '',
+					'description'   => '',
+					'options'       => array(
+						'top-left'     => __( 'Top Left', 'postnl-for-woocommerce' ),
+						'top-right'    => __( 'Top Right', 'postnl-for-woocommerce' ),
+						'bottom-left'  => __( 'Bottom Left', 'postnl-for-woocommerce' ),
+						'bottom-right' => __( 'Bottom Right', 'postnl-for-woocommerce' ),
+					),
+					'value'         => '',
+					'show_in_bulk'  => true,
+					'standard_feat' => false,
+					'const_field'   => true,
+					'container'     => true,
+				),
+				array(
 					'id'            => $this->prefix . 'label_nonce',
 					'type'          => 'hidden',
 					'nonce'         => true,
@@ -388,7 +406,7 @@ abstract class Base {
 		$order = wc_get_order( $order_id );
 
 		if ( ! is_a( $order, 'WC_Order' ) ) {
-			throw new \Exception( esc_html__( 'Order does not exists!', 'postnl-for-woocommerce' ) );
+			throw new \Exception( esc_html__( 'Order does not exist!', 'postnl-for-woocommerce' ) );
 		}
 
 		$saved_data = $this->get_data( $order_id );
@@ -461,6 +479,12 @@ abstract class Base {
 			},
 			$labels
 		);
+
+		if ( $this->settings->is_auto_complete_order_enabled() ) {
+			// Updating the order status to completed.
+			$order->update_status( 'completed' );
+		}
+
 		$order->update_meta_data( $this->meta_name, $saved_data );
 		$order->save();
 
@@ -538,7 +562,7 @@ abstract class Base {
 		$order = wc_get_order( $order_id );
 
 		if ( ! is_a( $order, 'WC_Order' ) ) {
-			throw new \Exception( esc_html__( 'Order does not exists!', 'postnl-for-woocommerce' ) );
+			throw new \Exception( esc_html__( 'Order does not exist!', 'postnl-for-woocommerce' ) );
 		}
 
 		$saved_data = $this->get_data( $order_id );
@@ -771,7 +795,7 @@ abstract class Base {
 	 *
 	 * @return Array List of filepath that has been merged.
 	 */
-	protected function merge_labels( $label_paths, $merge_filename ) {
+	protected function merge_labels( $label_paths, $merge_filename, $start_position = 'top-left' ) {
 		$pdf          = new CustomizedPDFMerger();
 		$merged_paths = array();
 
@@ -782,7 +806,11 @@ abstract class Base {
 
 		$filepath = trailingslashit( POSTNL_UPLOADS_DIR ) . $merge_filename;
 
-		$pdf->merge( 'file', $filepath );
+		if ( isset( $_POST['postnl_position_printing_labels'] ) ) {
+			$start_position = sanitize_text_field( $_POST['postnl_position_printing_labels'] );
+		}
+
+		$pdf->merge( 'file', $filepath, 'A', $start_position );
 
 		return array(
 			'merged_filepaths' => $merged_paths,

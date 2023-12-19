@@ -5,10 +5,10 @@
 * Tags: PostNL, Shipping
 * Requires at least: 4.6
 * Requires PHP: 5.6
-* Tested up to: 6.2
-* Stable tag: 5.2.5
+* Tested up to: 6.3
+* Stable tag: 5.3.2
 * WC requires at least: 4.0
-* WC tested up to: 7.8
+* WC tested up to: 8.2
 * License: GPLv2 or later
 * License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -36,8 +36,20 @@ PostNL’s official extension for WooCommerce on WordPress. Manage your national
 
 ## Changelog
 
-### 5.2.6
+### 5.3.2
 * Fix: HPOS declaration path.
+
+### 5.3.1
+* Fix: Change store address error text.
+* Add: Made the delivery date sortable by date.
+* Added Dutch translations in the PostNL settings screen in WooCommerce shipping settings.
+
+### 5.3.0
+* Add: New product codes for shipping from Belgium to Netherlands.
+* Add: Decide start position when printing label is set to A4.
+* Add: Automatically change status to Completed once an order has been pre-alerted and printed.
+* Fix: Check Insurance amount limit.
+* Fix: Update Netherlands translation.
 
 ### 5.2.5
 * Fix multi-collo barcodes call.

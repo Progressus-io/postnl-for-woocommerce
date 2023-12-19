@@ -59,7 +59,7 @@ class CustomizedPDFMerger {
      * @param $orientation
      * @return PDF
      */
-    public function merge($outputmode = 'browser', $outputpath = 'newfile.pdf', $orientation = 'A')
+	public function merge( $outputmode = 'browser', $outputpath = 'newfile.pdf', $orientation = 'A', $start_position = 'top-left' )
     {
         if (!isset($this->_files) || !is_array($this->_files)) {
             throw new Exception("No PDFs to merge.");
@@ -117,8 +117,43 @@ class CustomizedPDFMerger {
 		$a4_size      = Utils::get_paper_size( 'A4' );
 		$a6_size      = Utils::get_paper_size( 'A6' );
 		$label_format = $this->settings->get_label_format();
+	    $first_page = true;
+	    $coordinate_map = array(
+		    'top-left'     => array(
+			    1 => array( 0, 0 ),
+			    2 => array( 148, 0 ),
+			    3 => array( 0, 105 ),
+			    4 => array( 148, 105 ),
+		    ),
+		    'top-right'    => array(
+			    1 => array( 148, 0 ),
+			    2 => array( 0, 105 ),
+			    3 => array( 148, 105 ),
+			    4 => array( 148, 0 ), // this will be on a new page
+		    ),
+		    'bottom-left'  => array(
+			    1 => array( 0, 105 ),
+			    2 => array( 148, 105 ),
+			    3 => array( 0, 105 ), // this will be on a new page
+			    4 => array( 148, 0 ), // this will be on a new page
+		    ),
+		    'bottom-right' => array(
+			    1 => array( 148, 105 ),
+			    2 => array( 0, 0 ), // this will be on a new page
+			    3 => array( 148, 0 ), // this will be on a new page
+			    4 => array( 0, 105 ), // this will be on a new page
+		    ),
+	    );
 
-		foreach ( $files as $filename => $file_templates ) {
+	    $new_page_condition_map = array(
+		    'top-left'     => 4,
+		    'top-right'    => 3,
+		    'bottom-left'  => 2,
+		    'bottom-right' => 1,
+	    );
+
+
+	    foreach ( $files as $filename => $file_templates ) {
 			foreach ( $file_templates as $file_template ) {
 				if ( 'A6' === $label_format ) {
 					$fpdi->AddPage( $file_template['orientation'], array( $file_template['size']['width'], $file_template['size']['height'] ) );
@@ -134,20 +169,23 @@ class CustomizedPDFMerger {
 					continue;
 				}
 
-				if ( 1 === $label_number % 4 ) {
-					$fpdi->AddPage($file_template['orientation'], array( $a4_size['width'], $a4_size['height'] ));
+				$new_page_condition = $new_page_condition_map[ $start_position ];
+
+				if ( 1 === $label_number % $new_page_condition || $start_position == 'bottom-right' ) {
+					$fpdi->AddPage( $file_template['orientation'], array( $a4_size['width'], $a4_size['height'] ) );
 					$label_number = 1;
+					if ( $first_page ) {
+						// If it's the first page, use the given start_position
+						$first_page = false;
+					} else {
+						// For other pages, always start from top-left
+						$start_position = 'top-left';
+					}
 				}
-				
-				if ( 1 === $label_number ) {
-					$fpdi->useTemplate($file_template['template'], 0, 0, $file_template['size']['width'], $file_template['size']['height'], false );
-				} elseif ( 2 === $label_number ) {
-					$fpdi->useTemplate($file_template['template'], 148, 0, $file_template['size']['width'], $file_template['size']['height'], false );
-				} elseif ( 3 === $label_number ) {
-					$fpdi->useTemplate($file_template['template'], 0, 105, $file_template['size']['width'], $file_template['size']['height'], false );
-				} elseif ( 4 === $label_number ) {
-					$fpdi->useTemplate($file_template['template'], 148, 105, $file_template['size']['width'], $file_template['size']['height'], false );
-				}
+				$coords = $coordinate_map[ $start_position ][ $label_number ];
+				$fpdi->useTemplate( $file_template['template'], $coords[0], $coords[1], $file_template['size']['width'], $file_template['size']['height'], false );
+
+
 
 				$label_number++;
 			}

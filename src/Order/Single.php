@@ -271,12 +271,12 @@ class Single extends Base {
 				$displayed_info = array(
 					'delivery_day_date',
 				);
-
+	
 				return in_array( $info, $displayed_info, true );
 			},
 			ARRAY_FILTER_USE_KEY
 		);
-
+	
 		if ( empty( $filtered_infos ) ) {
 			return;
 		}
@@ -285,16 +285,19 @@ class Single extends Base {
 				<label for="postnl_pickup_points"><?php esc_html_e( 'Delivery Date:', 'postnl-for-woocommerce' ); ?></label>
 				<?php
 				foreach ( $filtered_infos as $info_idx => $info_val ) {
+					// Convert to the Dutch date format
+					$date_obj   = date_create_from_format( 'Y-m-d', $info_val );
+					$dutch_date = date_format( $date_obj, 'd/m/Y' );
 					?>
 					<div class="postnl-info <?php echo esc_attr( $info_idx ); ?>">
-						<?php echo esc_html( $info_val ); ?>
+						<?php echo esc_html( $dutch_date ); ?>
 					</div>
 					<?php
 				}
 				?>
 			</div>
 		<?php
-	}
+	}		
 
 	/**
 	 * Generate the dropoff points html information.
@@ -483,7 +486,7 @@ class Single extends Base {
 			// Check if order id is really an ID from shop_order post type.
 			$order = wc_get_order( $order_id );
 			if ( ! is_a( $order, 'WC_Order' ) ) {
-				throw new \Exception( esc_html__( 'Order does not exists!', 'postnl-for-woocommerce' ) );
+				throw new \Exception( esc_html__( 'Order does not exist!', 'postnl-for-woocommerce' ) );
 			}
 
 			$saved_data = $this->delete_meta_value( $order_id );

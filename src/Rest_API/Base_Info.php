@@ -213,26 +213,26 @@ abstract class Base_Info {
 				'default' => '',
 			),
 			'address_1' => array(
-				'error'    => __( 'Base "Address 1" is empty!', 'postnl-for-woocommerce' ),
-				'validate' => function( $name ) use ( $self ) {
-					if ( empty( $name ) ) {
+				'error'    => __( 'Store address 1 is not configured!', 'postnl-for-woocommerce' ),
+				'validate' => function( $address_1 ) use ( $self ) {
+					if ( empty( $address_1 ) ) {
 						throw new \Exception(
-							__( 'Base "Address 1" is empty!', 'postnl-for-woocommerce' )
+							__( 'Store address 1 is not configured!', 'postnl-for-woocommerce' )
 						);
 					}
 				},
-				'sanitize' => function( $name ) use ( $self ) {
-					return $self->string_length_sanitization( $name, 50 );
+				'sanitize' => function( $address_1 ) use ( $self ) {
+					return $self->string_length_sanitization( $address_1, 50 );
 				},
 			),
 			'address_2' => array(
 				'default' => '',
 			),
 			'city'      => array(
-				'error' => __( 'Base "City" is empty!', 'postnl-for-woocommerce' ),
+				'error' => __( 'Store city is not configured!', 'postnl-for-woocommerce' ),
 			),
 			'postcode'  => array(
-				'error'    => __( 'Base "Postcode" is empty!', 'postnl-for-woocommerce' ),
+				'error'    => __( 'Store postcode is not configured!', 'postnl-for-woocommerce' ),
 				'sanitize' => function( $value ) use ( $self ) {
 					$value = str_replace( ' ', '', $value );
 					return $self->string_length_sanitization( $value, 7 );
@@ -242,7 +242,7 @@ abstract class Base_Info {
 				'default' => '',
 			),
 			'country'   => array(
-				'error' => __( 'Base "Country" is empty!', 'postnl-for-woocommerce' ),
+				'error' => __( 'Store country is not configured!', 'postnl-for-woocommerce' ),
 			),
 		);
 	}

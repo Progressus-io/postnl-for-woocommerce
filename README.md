@@ -37,11 +37,12 @@ PostNL’s official extension for WooCommerce on WordPress. Manage your national
 ## Changelog
 
 ### 5.3.2
-* Add: Made the delivery date sortable by date.
-* Added Dutch translations in the PostNL settings screen in WooCommerce shipping settings.
+* Fix: HPOS declaration path.
 
 ### 5.3.1
 * Fix: Change store address error text.
+* Add: Made the delivery date sortable by date.
+* Added Dutch translations in the PostNL settings screen in WooCommerce shipping settings.
 
 ### 5.3.0
 * Add: New product codes for shipping from Belgium to Netherlands.

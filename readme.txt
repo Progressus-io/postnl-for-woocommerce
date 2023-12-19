@@ -80,6 +80,9 @@ Follow these instructions (https://www.postnl.nl/Images/aanvragen-api-key-stappe
 
 == Changelog ==
 
+= 5.3.2 (2023-xx-xx) =
+* Fix: HPOS declaration path.
+
 = 5.3.1 (2023-11-21) =
 * Fix: Change store address error text.
 * Add: Made the delivery date sortable by date.

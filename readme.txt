@@ -6,7 +6,7 @@ Requires PHP: 5.6
 Tested up to: 6.3
 Stable tag: 5.3.1
 WC requires at least: 4.0
-WC tested up to: 8.2
+WC tested up to: 8.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -79,6 +79,9 @@ Follow these instructions (https://www.postnl.nl/Images/aanvragen-api-key-stappe
 5. PostNL information on the order details page
 
 == Changelog ==
+
+= 5.3.2 (2023-xx-xx) =
+* Fix: Bulk action does not work in HPOS.
 
 = 5.3.1 (2023-11-21) =
 * Fix: Change store address error text.

@@ -26,21 +26,27 @@ class OrdersList extends Base {
 	public function init_hooks() {
 		// add 'Delivery Date' orders page column header
 		add_filter( 'manage_edit-shop_order_columns', array( $this, 'add_order_delivery_date_column_header' ), 29 );
+		add_filter( 'manage_woocommerce_page_wc-orders_columns', array( $this, 'add_order_delivery_date_column_header' ), 29 );
 
 		// add 'Delivery Date' orders page column content
 		add_action( 'manage_shop_order_posts_custom_column', array( $this, 'add_order_delivery_date_column_content' ), 10, 2 );
+		add_action( 'manage_woocommerce_page_wc-orders_custom_column', array( $this, 'add_order_delivery_date_column_content' ), 10, 2 );
 
 		// add 'Shipping options' orders page column header
 		add_filter( 'manage_edit-shop_order_columns', array( $this, 'add_order_shipping_options_column_header' ), 30 );
+		add_filter( 'manage_woocommerce_page_wc-orders_columns', array( $this, 'add_order_shipping_options_column_header' ), 30 );
 
 		// add 'Shipping options' orders page column content
 		add_action( 'manage_shop_order_posts_custom_column', array( $this, 'add_order_shipping_options_column_content' ), 10, 2 );
+		add_action( 'manage_woocommerce_page_wc-orders_custom_column', array( $this, 'add_order_shipping_options_column_content' ), 10, 2 );
 
 		// add 'Label Created' orders page column header
 		add_filter( 'manage_edit-shop_order_columns', array( $this, 'add_order_barcode_column_header' ), 31 );
+		add_filter( 'manage_woocommerce_page_wc-orders_columns', array( $this, 'add_order_barcode_column_header' ), 31 );
 
 		// add 'Label Created' orders page column content
 		add_action( 'manage_shop_order_posts_custom_column', array( $this, 'add_order_barcode_column_content' ), 10, 2 );
+		add_action( 'manage_woocommerce_page_wc-orders_custom_column', array( $this, 'add_order_barcode_column_content' ), 10, 2 );
 
 		// Make delivery date column sortable.
 		add_filter( 'manage_edit-shop_order_sortable_columns', array( $this, 'sort_delivery_date_column' ) );

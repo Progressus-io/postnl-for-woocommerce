@@ -33,6 +33,10 @@ class Bulk extends Base {
 	public function init_hooks() {
 		add_filter( 'bulk_actions-edit-shop_order', array( $this, 'add_order_bulk_actions' ), 10, 1 );
 		add_filter( 'handle_bulk_actions-edit-shop_order', array( $this, 'process_order_bulk_actions' ), 10, 3 );
+
+		add_filter( 'bulk_actions-woocommerce_page_wc-orders', array( $this, 'add_order_bulk_actions' ), 10, 1 );
+		add_filter( 'handle_bulk_actions-woocommerce_page_wc-orders', array( $this, 'process_order_bulk_actions' ), 10, 3 );
+
 		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_bulk_assets' ) );
 		add_action( 'admin_footer', array( $this, 'model_content_fields_create_label' ) );
 		add_filter( 'postnl_order_meta_box_fields', array( $this, 'additional_meta_box' ), 10, 1 );
@@ -219,7 +223,9 @@ class Bulk extends Base {
 	public function enqueue_bulk_assets() {
 		$screen = get_current_screen();
 
-		if ( ! empty( $screen->id ) && 'edit-shop_order' === $screen->id && ! empty( $screen->base ) && 'edit' === $screen->base ) {
+		$is_legacy_order = ! empty( $screen->id ) && 'edit-shop_order' === $screen->id && ! empty( $screen->base ) && 'edit' === $screen->base;
+		$is_hpos_order   = ! empty( $screen->id ) && 'woocommerce_page_wc-orders' === $screen->id && ( empty( $_GET['action'] ) || 'edit' !== $_GET['action'] );
+		if ( $is_legacy_order || $is_hpos_order ) {
 			// Enqueue the assets.
 			wp_enqueue_style( 'thickbox' );
 			wp_enqueue_script( 'thickbox' );
@@ -278,14 +284,19 @@ class Bulk extends Base {
 	 * Collection of fields in create label bulk action.
 	 */
 	public function model_content_fields_create_label() {
-		global $pagenow, $typenow, $thepostid, $post;
+		global $thepostid, $post;
+
+		$screen = get_current_screen();
+
+		$is_legacy_order = ! empty( $screen->id ) && 'edit-shop_order' === $screen->id && ! empty( $screen->base ) && 'edit' === $screen->base;
+		$is_hpos_order   = ! empty( $screen->id ) && 'woocommerce_page_wc-orders' === $screen->id && ( empty( $_GET['action'] ) || 'edit' !== $_GET['action'] );
 
 		// Bugfix, warnings shown for Order table results with no Orders.
-		if ( empty( $thepostid ) && empty( $post ) ) {
+		if ( $is_legacy_order && empty( $thepostid ) && empty( $post ) ) {
 			return;
 		}
 
-		if ( 'shop_order' === $typenow && 'edit.php' === $pagenow ) {
+		if ( $is_legacy_order || $is_hpos_order ) {
 			?>
 			<div id="postnl-create-label-modal" style="display:none;">
 				<div id="postnl-action-create-label">
@@ -305,7 +316,10 @@ class Bulk extends Base {
 	public function render_messages() {
 		$current_screen = get_current_screen();
 
-		if ( isset( $current_screen->id ) && in_array( $current_screen->id, array( 'shop_order', 'edit-shop_order' ), true ) ) {
+		$is_legacy_order = isset( $current_screen->id ) && in_array( $current_screen->id, array( 'shop_order', 'edit-shop_order' ), true );
+		$is_hpos_order   = ! empty( $current_screen->id ) && 'woocommerce_page_wc-orders' === $current_screen->id;
+
+		if ( $is_legacy_order || $is_hpos_order ) {
 
 			$bulk_action_message_opt = get_option( $this->bulk_option_text_name );
 

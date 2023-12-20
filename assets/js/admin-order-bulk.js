@@ -3,7 +3,7 @@
 	var postnl_order_bulk = {
 		// init Class
 		init: function() {
-			var posts_filter = jQuery( '#posts-filter' );
+			var posts_filter = jQuery( '#posts-filter, #wc-orders-filter' );
 			
 			posts_filter
 				.on( 'change', '#bulk-action-selector-top', this.toggle_create_label_modal );
@@ -18,7 +18,7 @@
 
 			var value 		= jQuery( this ).val();
 			var title 		= jQuery(':selected', this ).text();
-			var post_form 	= jQuery( this ).parents('#posts-filter');
+			var post_form 	= jQuery( this ).parents('#posts-filter, #wc-orders-filter');
 
 			if( 'postnl-create-label' == value ){
 

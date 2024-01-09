@@ -34,6 +34,20 @@ class Single {
 	protected $service = POSTNL_SERVICE_NAME;
 
 	/**
+	 * Letterbox field name.
+	 * 
+	 * @var letterbox_parcel
+	 */
+	const letterbox_parcel = '_postnl_letterbox_parcel';
+	
+	/**
+	 * Letterbox field name.
+	 * 
+	 * @var max_qty_per_letterbox
+	 */
+	const max_qty_per_letterbox = '_postnl_max_qty_per_letterbox';
+
+	/**
 	 * Origin field name.
 	 *
 	 * @var origin_field
@@ -63,6 +77,21 @@ class Single {
 	 */
 	public static function product_field_maps( $service ) {
 		return array(
+			array(
+				'id'		  => self::letterbox_parcel,
+				'type'		  => 'checkbox',
+				'label'       => sprintf( esc_html__( 'Enable Letterbox Parcel (%s)', 'postnl-for-woocommerce' ), $service ),
+				'description' => esc_html__( 'Check this box to enable Letterbox Parcel.', 'postnl-for-woocommerce' ),
+				'desc_tip'    => 'true',
+			),
+			array(
+				'id'          => self::max_qty_per_letterbox,
+				'type'        => 'number',
+				'label'       => sprintf( esc_html__( 'Max qty per Letterbox (%s)', 'postnl-for-woocommerce' ), $service ),
+				'description' => esc_html__( 'Please fill in how many times this product fits in a letterbox parcel. A letterbox parcel may weigh a maximum of 2 kilograms and has the following maximum dimensions: 38x26.5x3.2 cm', 'postnl-for-woocommerce' ),
+				'desc_tip'    => 'true',
+				'placeholder' => 'Enter max quantity',
+			),
 			array(
 				'id'          => self::ORIGIN_FIELD,
 				'type'        => 'select',

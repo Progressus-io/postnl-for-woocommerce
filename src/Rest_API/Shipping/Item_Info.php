@@ -239,18 +239,22 @@ class Item_Info extends Base_Info {
 				continue;
 			}
 
-			$hs_code = ! empty( $product->get_meta( Single::HS_CODE_FIELD ) ) ? $product->get_meta( Single::HS_CODE_FIELD ) : $this->settings->get_hs_tariff_code();
-			$origin  = ! empty( $product->get_meta( Single::ORIGIN_FIELD ) ) ? $product->get_meta( Single::ORIGIN_FIELD ) : $this->settings->get_country_origin();
+			$hs_code   		   = ! empty( $product->get_meta( Single::HS_CODE_FIELD ) ) ? $product->get_meta( Single::HS_CODE_FIELD ) : $this->settings->get_hs_tariff_code();
+			$origin    		   = ! empty( $product->get_meta( Single::ORIGIN_FIELD ) ) ? $product->get_meta( Single::ORIGIN_FIELD ) : $this->settings->get_country_origin();
+			$letterbox 		   = ! empty( $product->get_meta( Single::letterbox_parcel ) ) ? $product->get_meta( Single::letterbox_parcel ) : $this->settings->get_letterbox_parcel();
+			$qty_per_letterbox = ! empty( $product->get_meta( Single::max_qty_per_letterbox ) ) ? $product->get_meta( Single::max_qty_per_letterbox ) : $this->settings->get_qty_per_letterbox();
 
 			$content = array(
-				'product_id'       => $product->get_id(),
-				'qty'              => $item->get_quantity(),
-				'sku'              => $product->get_sku(),
-				'item_value'       => $item->get_subtotal(),
-				'item_description' => $product->get_name(),
-				'item_weight'      => $product->get_weight(),
-				'hs_code'          => $hs_code,
-				'origin'           => $origin,
+				'product_id'       	=> $product->get_id(),
+				'qty'              	=> $item->get_quantity(),
+				'sku'              	=> $product->get_sku(),
+				'item_value'       	=> $item->get_subtotal(),
+				'item_description' 	=> $product->get_name(),
+				'item_weight'      	=> $product->get_weight(),
+				'hs_code'          	=> $hs_code,
+				'origin'           	=> $origin,
+				'letterbox'		   	=> $letterbox,
+				'qty_per_letterbox' => $qty_per_letterbox,
 			);
 
 			$this->api_args['order_details']['contents'][] = $content;

@@ -241,8 +241,8 @@ class Item_Info extends Base_Info {
 
 			$hs_code   		   = ! empty( $product->get_meta( Single::HS_CODE_FIELD ) ) ? $product->get_meta( Single::HS_CODE_FIELD ) : $this->settings->get_hs_tariff_code();
 			$origin    		   = ! empty( $product->get_meta( Single::ORIGIN_FIELD ) ) ? $product->get_meta( Single::ORIGIN_FIELD ) : $this->settings->get_country_origin();
-			$letterbox 		   = ! empty( $product->get_meta( Single::letterbox_parcel ) ) ? $product->get_meta( Single::letterbox_parcel ) : $this->settings->get_letterbox_parcel();
-			$qty_per_letterbox = ! empty( $product->get_meta( Single::max_qty_per_letterbox ) ) ? $product->get_meta( Single::max_qty_per_letterbox ) : $this->settings->get_qty_per_letterbox();
+			$letterbox 		   = ! empty( $product->get_meta( Single::letterbox_parcel ) ) ? $product->get_meta( Single::LETTERBOX_PARCEL ) : $this->settings->get_letterbox_parcel();
+			$qty_per_letterbox = ! empty( $product->get_meta( Single::max_qty_per_letterbox ) ) ? $product->get_meta( Single::MAX_QTY_PER_LETTERBOX ) : $this->settings->get_qty_per_letterbox();
 
 			$content = array(
 				'product_id'       	=> $product->get_id(),

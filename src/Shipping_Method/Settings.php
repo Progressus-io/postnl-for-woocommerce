@@ -1129,6 +1129,24 @@ class Settings extends \WC_Settings_API {
 	}
 
 	/**
+	 * Get Letterbox Parcel from the settings.
+	 *
+	 * @return String
+	 */
+	public function get_letterbox_parcel() {
+		return $this->get_country_option( 'letterbox_parcel', '' );
+	}
+
+	/**
+	 * Get Max Qty per Letterbox from the settings.
+	 *
+	 * @return String
+	 */
+	public function get_qty_per_letterbox() {
+		return $this->get_country_option( 'max_qty_per_letterbox', '' );
+	}
+
+	/**
 	 * Get label format from the settings.
 	 *
 	 * @return String

@@ -123,11 +123,12 @@ class Single extends Base {
 		$meta_fields = $this->meta_box_fields();
 
 		if ( is_a( $order, 'WC_Order' ) ) {
-			$order_data   = $order->get_meta( $this->meta_name );
-			$option_map   = Mapping::option_available_list();
-			$from_country = Utils::get_base_country();
-			$to_country   = $order->get_shipping_country();
-			$destination  = Utils::get_shipping_zone( $to_country );
+			$order_data   			 = $order->get_meta( $this->meta_name );
+			$option_map   			 = Mapping::option_available_list();
+			$from_country 			 = Utils::get_base_country();
+			$to_country   			 = $order->get_shipping_country();
+			$destination  			 = Utils::get_shipping_zone( $to_country );
+			$total_qty_per_letterbox = 0;
 
 			foreach ( $meta_fields as $index => $field ) {
 				$field_name = Utils::remove_prefix_field( $this->prefix, $field['id'] );
@@ -146,7 +147,19 @@ class Single extends Base {
 				} else {
 					$meta_fields[ $index ]['standard_feat'] = false;
 				}
+				
+				foreach ( $order->get_items() as $item_id => $item ) {
+					$product 		   = wc_get_product( $item->get_product_id() );
+					$letterbox 		   = $product->get_meta( '_postnl_letterbox_parcel', true );
+					$qty_per_letterbox = $product->get_meta( '_postnl_max_qty_per_letterbox', true );
+					$total_qty_per_letterbox += $qty_per_letterbox;
+	
+					if ( 'letterbox' === $field_name && 'yes' === $letterbox && '10' <= $total_qty_per_letterbox ) {
+						$meta_fields[ $index ]['value'] = 'yes';
+					}
+				}
 			}
+
 		}
 
 		return $meta_fields;

@@ -15,6 +15,7 @@ use PostNLWooCommerce\Rest_API\Letterbox;
 use PostNLWooCommerce\Shipping_Method\Settings;
 use PostNLWooCommerce\Helper\Mapping;
 use PostNLWooCommerce\Library\CustomizedPDFMerger;
+use PostNLWooCommerce\Product;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -1120,6 +1121,36 @@ abstract class Base {
 				}
 			}
 		}
+	}
+
+	/**
+	 * Check if current order is eligible for automatically use letterbox.
+	 *
+	 * @param WC_Order $order Order object.
+	 *
+	 * @return boolean
+	 */
+	public function is_eligible_auto_letterbox( $order ) {
+		$total_ratio_letterbox_item = 0;
+
+		foreach ( $order->get_items() as $item_id => $item ) {
+			$product              = wc_get_product( $item->get_product_id() );
+			$is_letterbox_product = $product->get_meta( Product\Single::LETTERBOX_PARCEL );
+
+			// If one of the item is not letterbox product, then the order is not eligible automatic letterbox.
+			// Thus should return false immediately.
+			if ( 'yes' !== $is_letterbox_product ) {
+				return false;
+			}
+
+			$quantity                    = $item->get_quantity();
+			$qty_per_letterbox           = intval( $product->get_meta( Product\Single::MAX_QTY_PER_LETTERBOX ) );
+			$ratio_letterbox_item        = 1 / $qty_per_letterbox;
+			$total_ratio_letterbox_item += ( $ratio_letterbox_item * $quantity );
+		}
+
+		// If the total ratio is more than 1, that means order items cannot be packed using letterbox.
+		return ( $total_ratio_letterbox_item <= 1 ) ? true : false;
 	}
 
 	/**

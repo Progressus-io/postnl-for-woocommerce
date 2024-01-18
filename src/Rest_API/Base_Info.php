@@ -109,8 +109,6 @@ abstract class Base_Info {
 			'globalpack_customer_code' => $this->settings->get_globalpack_customer_code(),
 			'hs_tariff_code'           => $this->settings->get_hs_tariff_code(),
 			'country_origin'           => $this->settings->get_country_origin(),
-			'letterbox_parcel'		   => $this->settings->get_letterbox_parcel(),
-			'max_qty_per_letterbox'	   => $this->settings->get_qty_per_letterbox(),
 			'label_format'             => $this->settings->get_label_format(),
 			'woocommerce_email'        => $this->settings->is_woocommerce_email_enabled(),
 			'woocommerce_email_text'   => $this->settings->get_woocommerce_email_text(),

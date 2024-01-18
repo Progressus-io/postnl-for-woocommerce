@@ -229,7 +229,7 @@ class Item_Info extends Base_Info {
 			'subtotal'       => $order->get_subtotal(),
 		);
 
-		// Check mailbox weight limit
+		// Check mailbox weight limit.
 		$this->check_insurance_amount_limit( $this->api_args['backend_data'], $order->get_subtotal() );
 
 		foreach ( $order->get_items() as $item_id => $item ) {
@@ -239,22 +239,18 @@ class Item_Info extends Base_Info {
 				continue;
 			}
 
-			$hs_code   		   = ! empty( $product->get_meta( Single::HS_CODE_FIELD ) ) ? $product->get_meta( Single::HS_CODE_FIELD ) : $this->settings->get_hs_tariff_code();
-			$origin    		   = ! empty( $product->get_meta( Single::ORIGIN_FIELD ) ) ? $product->get_meta( Single::ORIGIN_FIELD ) : $this->settings->get_country_origin();
-			$letterbox 		   = ! empty( $product->get_meta( Single::LETTERBOX_PARCEL ) ) ? $product->get_meta( Single::LETTERBOX_PARCEL ) : $this->settings->get_letterbox_parcel();
-			$qty_per_letterbox = ! empty( $product->get_meta( Single::MAX_QTY_PER_LETTERBOX ) ) ? $product->get_meta( Single::MAX_QTY_PER_LETTERBOX ) : $this->settings->get_qty_per_letterbox();
+			$hs_code = ! empty( $product->get_meta( Single::HS_CODE_FIELD ) ) ? $product->get_meta( Single::HS_CODE_FIELD ) : $this->settings->get_hs_tariff_code();
+			$origin  = ! empty( $product->get_meta( Single::ORIGIN_FIELD ) ) ? $product->get_meta( Single::ORIGIN_FIELD ) : $this->settings->get_country_origin();
 
 			$content = array(
-				'product_id'       	=> $product->get_id(),
-				'qty'              	=> $item->get_quantity(),
-				'sku'              	=> $product->get_sku(),
-				'item_value'       	=> $item->get_subtotal(),
-				'item_description' 	=> $product->get_name(),
-				'item_weight'      	=> $product->get_weight(),
-				'hs_code'          	=> $hs_code,
-				'origin'           	=> $origin,
-				'letterbox'		   	=> $letterbox,
-				'qty_per_letterbox' => $qty_per_letterbox,
+				'product_id'       => $product->get_id(),
+				'qty'              => $item->get_quantity(),
+				'sku'              => $product->get_sku(),
+				'item_value'       => $item->get_subtotal(),
+				'item_description' => $product->get_name(),
+				'item_weight'      => $product->get_weight(),
+				'hs_code'          => $hs_code,
+				'origin'           => $origin,
 			);
 
 			$this->api_args['order_details']['contents'][] = $content;

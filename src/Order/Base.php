@@ -15,6 +15,7 @@ use PostNLWooCommerce\Rest_API\Letterbox;
 use PostNLWooCommerce\Shipping_Method\Settings;
 use PostNLWooCommerce\Helper\Mapping;
 use PostNLWooCommerce\Library\CustomizedPDFMerger;
+use PostNLWooCommerce\Product;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -424,20 +425,7 @@ abstract class Base {
 			$post_value = ! empty( $meta_values[ $field['id'] ] ) ? sanitize_text_field( wp_unslash( $meta_values[ $field['id'] ] ) ) : '';
 			$post_field = Utils::remove_prefix_field( $this->prefix, $field['id'] );
 
-			if ( ! empty( $post_value ) ) {
-				$saved_data['backend'][ $post_field ] = $post_value;
-			} else {
-				// Retrieves the default shipping options from the settings
-				$default_options = $this->settings->get_default_shipping_options();
-				// Retrieves the available shipping options for the order
-				$available_fields = $this->get_available_options( $order );
-				foreach ( $default_options as $default_option_key => $default_option_value ) {
-					// Checks if the current default option key exists in the available options for the order and has a value of true
-					if ( $default_option_value && in_array( $default_option_key, $available_fields ) ) {
-						$saved_data['backend'][ $default_option_key ] = 'yes';
-					}
-				}
-			}
+			$saved_data['backend'][ $post_field ] = $post_value;
 		}
 
 		$label_post_data = array(
@@ -1120,6 +1108,36 @@ abstract class Base {
 				}
 			}
 		}
+	}
+
+	/**
+	 * Check if current order is eligible for automatically use letterbox.
+	 *
+	 * @param WC_Order $order Order object.
+	 *
+	 * @return boolean
+	 */
+	public function is_eligible_auto_letterbox( $order ) {
+		$total_ratio_letterbox_item = 0;
+
+		foreach ( $order->get_items() as $item_id => $item ) {
+			$product              = wc_get_product( $item->get_product_id() );
+			$is_letterbox_product = $product->get_meta( Product\Single::LETTERBOX_PARCEL );
+
+			// If one of the item is not letterbox product, then the order is not eligible automatic letterbox.
+			// Thus should return false immediately.
+			if ( 'yes' !== $is_letterbox_product ) {
+				return false;
+			}
+
+			$quantity                    = $item->get_quantity();
+			$qty_per_letterbox           = intval( $product->get_meta( Product\Single::MAX_QTY_PER_LETTERBOX ) );
+			$ratio_letterbox_item        = 1 / $qty_per_letterbox;
+			$total_ratio_letterbox_item += ( $ratio_letterbox_item * $quantity );
+		}
+
+		// If the total ratio is more than 1, that means order items cannot be packed using letterbox.
+		return ( $total_ratio_letterbox_item <= 1 ) ? true : false;
 	}
 
 	/**

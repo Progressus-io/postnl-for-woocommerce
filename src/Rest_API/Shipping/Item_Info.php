@@ -229,7 +229,7 @@ class Item_Info extends Base_Info {
 			'subtotal'       => $order->get_subtotal(),
 		);
 
-		// Check mailbox weight limit
+		// Check mailbox weight limit.
 		$this->check_insurance_amount_limit( $this->api_args['backend_data'], $order->get_subtotal() );
 
 		foreach ( $order->get_items() as $item_id => $item ) {

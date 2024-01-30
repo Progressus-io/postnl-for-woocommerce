@@ -51,7 +51,10 @@ class Utils {
 	 * @return array.
 	 */
 	public static function get_available_currency() {
-		return array( 'EUR', 'USD', 'GBP', 'CNY' );
+		// Get all WooCommerce currencies
+		$woocommerce_currencies = array_keys( get_woocommerce_currencies() );
+
+		return $woocommerce_currencies;
 	}
 
 	/**

@@ -188,6 +188,13 @@ class OrdersList extends Base {
 		return wp_parse_args( array( 'postnl_delivery_date' => $meta_key ), $columns );
 	}
 
+	/**
+	 * Modify query to order by delivery date.
+	 *
+	 * @param \WP_Query $query.
+	 *
+	 * @return void
+	 */
 	public function sortable_orderby_delivery_date( $query ) {
 		global $pagenow;
 	
@@ -237,6 +244,14 @@ class OrdersList extends Base {
 		return $columns;
 	}
 
+	/**
+	 * Add eligible auto letterbox column content - tick or cross.
+	 *
+	 * @param string $column order column ID.
+	 * @param int $order_id \WC_Order ID.
+	 *
+	 * @return void
+	 */
 	public function add_eligible_auto_letterbox_column_content( $column, $order_id ) {
 		if ( 'postnl_eligible_auto_letterbox' === $column ) {
 			if ( $this->is_eligible_auto_letterbox( $order_id ) ) {

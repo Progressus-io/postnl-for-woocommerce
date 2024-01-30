@@ -80,6 +80,9 @@ Follow these instructions (https://www.postnl.nl/Images/aanvragen-api-key-stappe
 
 == Changelog ==
 
+= 5.3.4 (2024-01-30) =
+* Added: Logic to apply default shipping options when not explicitly set in post data.
+
 = 5.3.3 (2024-01-30) =
 * Updated: Function to check insurance amount limits for EU and non-EU shipments.
 * Updated: Currency utility to include all WooCommerce currencies.

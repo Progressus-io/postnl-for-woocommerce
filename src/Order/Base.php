@@ -416,26 +416,17 @@ abstract class Base {
 
 		// Loop through inputs within id 'shipment-postnl-label-form'.
 		foreach ( $this->meta_box_fields() as $field ) {
-			// Don't save nonce field.
-			if ( $nonce_fields[0]['id'] === $field['id'] ) {
-				continue;
-			}
-
 			$post_value = ! empty( $meta_values[ $field['id'] ] ) ? sanitize_text_field( wp_unslash( $meta_values[ $field['id'] ] ) ) : '';
 			$post_field = Utils::remove_prefix_field( $this->prefix, $field['id'] );
-
-			if ( ! empty( $post_value ) ) {
+		
+			// Check if a value is posted, if so, use it.
+			if ( isset( $meta_values[ $field['id'] ] ) ) {
 				$saved_data['backend'][ $post_field ] = $post_value;
 			} else {
-				// Retrieves the default shipping options from the settings
+				// Apply default settings only if the value is not set in the posted data.
 				$default_options = $this->settings->get_default_shipping_options();
-				// Retrieves the available shipping options for the order
-				$available_fields = $this->get_available_options( $order );
-				foreach ( $default_options as $default_option_key => $default_option_value ) {
-					// Checks if the current default option key exists in the available options for the order and has a value of true
-					if ( $default_option_value && in_array( $default_option_key, $available_fields ) ) {
-						$saved_data['backend'][ $default_option_key ] = 'yes';
-					}
+				if ( array_key_exists( $post_field, $default_options ) ) {
+					$saved_data['backend'][ $post_field ] = $default_options[ $post_field ];
 				}
 			}
 		}

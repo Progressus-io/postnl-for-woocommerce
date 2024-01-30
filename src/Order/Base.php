@@ -1132,7 +1132,7 @@ abstract class Base {
 
 			$quantity                    = $item->get_quantity();
 			$qty_per_letterbox           = intval( $product->get_meta( Product\Single::MAX_QTY_PER_LETTERBOX ) );
-			$ratio_letterbox_item        = 1 / $qty_per_letterbox;
+			$ratio_letterbox_item        = 0 != $qty_per_letterbox ? 1 / $qty_per_letterbox : 0;
 			$total_ratio_letterbox_item += ( $ratio_letterbox_item * $quantity );
 		}
 

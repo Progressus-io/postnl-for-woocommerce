@@ -17,3 +17,13 @@
 .postnl-action-download-label:after {
 	background: url(../images/post-download-label.png) no-repeat center center;
 }
+
+.postnl_eligible_auto_letterbox {
+	font-size: 18px;
+}
+.postnl_eligible_auto_letterbox.eligible {
+	color: green;
+}
+.postnl_eligible_auto_letterbox.non-eligible {
+	color: red;
+}

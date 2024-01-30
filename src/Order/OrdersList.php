@@ -53,6 +53,14 @@ class OrdersList extends Base {
 
 		// Make sorting work properly.
 		add_action( 'pre_get_posts', array( $this, 'sortable_orderby_delivery_date' ) );
+
+		// Add 'Eligible Auto Letterbox' orders page column header
+		add_filter( 'manage_edit-shop_order_columns', array( $this, 'add_eligible_auto_letterbox_column_header' ), 29, 3 );
+		add_filter( 'manage_woocommerce_page_wc-orders_columns', array( $this, 'add_eligible_auto_letterbox_column_header' ), 29, 3 );
+
+		// Add 'Eligible Auto Letterbox' orders page column content
+		add_action( 'manage_shop_order_posts_custom_column', array( $this, 'add_eligible_auto_letterbox_column_content' ), 10, 3 );
+		add_action( 'manage_woocommerce_page_wc-orders_custom_column', array( $this, 'add_eligible_auto_letterbox_column_content' ), 10, 3 );
 	}
 
 	/**
@@ -210,5 +218,36 @@ class OrdersList extends Base {
 				return $orderby;
 			});
 		}
-	}	
+	}
+
+	/**
+	 * Add eligible auto letterbox column header.
+	 *
+	 * @param array $columns Order table columns.
+	 *
+	 * @return array
+	 */
+	public function add_eligible_auto_letterbox_column_header( $columns ) {
+		$wc_actions = $columns['wc_actions'];
+		unset( $columns['wc_actions'] );
+
+		$columns['postnl_eligible_auto_letterbox'] = esc_html__( 'Fits through letterbox', 'postnl-for-woocommerce' );
+		$columns['wc_actions']           = $wc_actions;
+
+		return $columns;
+	}
+
+	public function add_eligible_auto_letterbox_column_content( $column, $order_id ) {
+		if ( 'postnl_eligible_auto_letterbox' === $column ) {
+			if ( $this->is_eligible_auto_letterbox( $order_id ) ) {
+				?>
+				<span class="postnl_eligible_auto_letterbox eligible">&#10003;</span>
+				<?php
+			} else {
+				?>
+				<span class="postnl_eligible_auto_letterbox non-eligible">&#215;</span>
+				<?php
+			}
+		}
+	}
 }

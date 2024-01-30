@@ -80,6 +80,10 @@ Follow these instructions (https://www.postnl.nl/Images/aanvragen-api-key-stappe
 
 == Changelog ==
 
+= 5.3.3 (2024-01-30) =
+* Updated: Function to check insurance amount limits for EU and non-EU shipments.
+* Updated: Currency utility to include all WooCommerce currencies.
+
 = 5.3.2 (2023-12-20) =
 * Fix: Bulk action does not work in HPOS.
 

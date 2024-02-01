@@ -263,15 +263,33 @@ class Container {
 	}
 
 	/**
+	 * Adds message under the shipping methods when order is eligible ror letterbox.
+	 *
+	 * @return void
+	 */
+	public function display_letterbox_message() {
+		$template_args = array(
+			'message' => apply_filters( 'postnl_checkout_letterbox_message', __( 'These items are eligible for letterbox delivery.', 'postnl-for-woocommerce' ) ),
+		);
+		wc_get_template( 'checkout/postnl-letterbox-message.php', $template_args, '', POSTNL_WC_PLUGIN_DIR_PATH . '/templates/' );
+	}
+
+	/**
 	 * Check address and display fields.
 	 *
 	 * @return void.
 	 */
 	public function postnl_fields() {
 		try {
+
 			$post_data = $this->get_checkout_post_data();
 
 			if ( empty( $post_data ) ) {
+				return;
+			}
+
+			if ( Utils::is_eligible_auto_letterbox( \WC() ) ) {
+				$this->display_letterbox_message();
 				return;
 			}
 

@@ -596,4 +596,42 @@ class Utils {
 				'packets'               => esc_html__( 'Packets', 'postnl-for-woocommerce' ),
 		);
 	}
+
+	/**
+	 * Check if current order is eligible for automatically use letterbox.
+	 *
+	 * @param \WC_Order|\WC_Cart $order Order or cart object.
+	 *
+	 * @return boolean
+	 */
+	public static function is_eligible_auto_letterbox( $order ) {
+
+		if ( is_a( $order, 'WC_Order' ) ) {
+			$products = $order->get_items();
+		}
+		if ( is_a( $order, 'WC_Cart' ) ) {
+			$products = $order->cart->get_cart();
+		}
+
+		$total_ratio_letterbox_item = 0;
+
+		foreach ( $products as $item_id => $item ) {
+			$product              = wc_get_product( $item['product_id'] ?? $item->get_product_id() );
+			$is_letterbox_product = $product->get_meta( Product\Single::LETTERBOX_PARCEL );
+
+			// If one of the item is not letterbox product, then the order is not eligible automatic letterbox.
+			// Thus should return false immediately.
+			if ( 'yes' !== $is_letterbox_product ) {
+				return false;
+			}
+
+			$quantity                    = $item->get_quantity();
+			$qty_per_letterbox           = intval( $product->get_meta( Product\Single::MAX_QTY_PER_LETTERBOX ) );
+			$ratio_letterbox_item        = 0 != $qty_per_letterbox ? 1 / $qty_per_letterbox : 0;
+			$total_ratio_letterbox_item += ( $ratio_letterbox_item * $quantity );
+		}
+
+		// If the total ratio is more than 1, that means order items cannot be packed using letterbox.
+		return ( $total_ratio_letterbox_item <= 1 ) ? true : false;
+	}
 }

@@ -93,12 +93,12 @@ abstract class Base {
 	/**
 	 * List of meta box fields.
 	 *
-	 * @param int $order_id WooCommerce order ID.
+	 * @param \WC_Order $order WooCommerce order ID.
 	 */
-	public function meta_box_fields( $order_id = false ) {
+	public function meta_box_fields( $order = false ) {
 
 		$default_options = $this->settings->get_default_shipping_options();
-		$default_options['letterbox'] = $order_id ?? $this->is_eligible_auto_letterbox( $order_id );
+		$default_options['letterbox'] = $order ?? Utils::is_eligible_auto_letterbox( $order );
 
 		return apply_filters(
 			'postnl_order_meta_box_fields',
@@ -1111,36 +1111,6 @@ abstract class Base {
 				}
 			}
 		}
-	}
-
-	/**
-	 * Check if current order is eligible for automatically use letterbox.
-	 *
-	 * @param WC_Order $order Order object.
-	 *
-	 * @return boolean
-	 */
-	public function is_eligible_auto_letterbox( $order ) {
-		$total_ratio_letterbox_item = 0;
-
-		foreach ( $order->get_items() as $item_id => $item ) {
-			$product              = wc_get_product( $item->get_product_id() );
-			$is_letterbox_product = $product->get_meta( Product\Single::LETTERBOX_PARCEL );
-
-			// If one of the item is not letterbox product, then the order is not eligible automatic letterbox.
-			// Thus should return false immediately.
-			if ( 'yes' !== $is_letterbox_product ) {
-				return false;
-			}
-
-			$quantity                    = $item->get_quantity();
-			$qty_per_letterbox           = intval( $product->get_meta( Product\Single::MAX_QTY_PER_LETTERBOX ) );
-			$ratio_letterbox_item        = 0 != $qty_per_letterbox ? 1 / $qty_per_letterbox : 0;
-			$total_ratio_letterbox_item += ( $ratio_letterbox_item * $quantity );
-		}
-
-		// If the total ratio is more than 1, that means order items cannot be packed using letterbox.
-		return ( $total_ratio_letterbox_item <= 1 ) ? true : false;
 	}
 
 	/**

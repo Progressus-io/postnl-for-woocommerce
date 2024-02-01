@@ -254,7 +254,7 @@ class OrdersList extends Base {
 	 */
 	public function add_eligible_auto_letterbox_column_content( $column, $order_id ) {
 		if ( 'postnl_eligible_auto_letterbox' === $column ) {
-			if ( $this->is_eligible_auto_letterbox( $order_id ) ) {
+			if ( Utils::is_eligible_auto_letterbox( wc_get_order( $order_id ) ) ) {
 				?>
 				<span class="postnl_eligible_auto_letterbox eligible">&#10003;</span>
 				<?php

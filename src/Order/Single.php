@@ -123,7 +123,7 @@ class Single extends Base {
 		if ( ! is_a( $order, 'WC_Order' ) ) {
 			return array();
 		}
-		$meta_fields = $this->meta_box_fields( $order->get_id() );
+		$meta_fields = $this->meta_box_fields( $order );
 
 		$order_data             = $order->get_meta( $this->meta_name );
 		$option_map              = Mapping::option_available_list();
@@ -131,14 +131,13 @@ class Single extends Base {
 		$to_country              = $order->get_shipping_country();
 		$destination             = Utils::get_shipping_zone( $to_country );
 		$default_option_keys     = array_keys( $this->settings->get_default_shipping_options() );
-		$eligible_auto_letterbox = $this->is_eligible_auto_letterbox( $order );
 
 		foreach ( $meta_fields as $index => $field ) {
 			$field_name = Utils::remove_prefix_field( $this->prefix, $field['id'] );
 
 			// If the order is eligible for automatic letterbox, Then it will tick the letterbox checkbox.
 			// FYI : 'letterbox' is part of $default_option_keys.
-			if ( empty( $order_data['barcodes'] ) && $eligible_auto_letterbox && ( in_array( $field_name, $default_option_keys, true ) ) ) {
+			if ( empty( $order_data['barcodes'] ) && Utils::is_eligible_auto_letterbox( $order ) && ( in_array( $field_name, $default_option_keys, true ) ) ) {
 				$meta_fields[ $index ]['value'] = ( 'letterbox' === $field_name ) ? 'yes' : 'no';
 			}
 

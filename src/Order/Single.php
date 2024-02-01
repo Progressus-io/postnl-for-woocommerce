@@ -120,39 +120,41 @@ class Single extends Base {
 	 * @return array
 	 */
 	public function add_meta_box_value( $order ) {
-		$meta_fields = $this->meta_box_fields();
+		if ( ! is_a( $order, 'WC_Order' ) ) {
+			return array();
+		}
+		$meta_fields = $this->meta_box_fields( $order->get_id() );
 
-		if ( is_a( $order, 'WC_Order' ) ) {
-			$order_data          = $order->get_meta( $this->meta_name );
-			$option_map          = Mapping::option_available_list();
-			$from_country        = Utils::get_base_country();
-			$to_country          = $order->get_shipping_country();
-			$destination         = Utils::get_shipping_zone( $to_country );
-			$default_option_keys = array_keys( $this->settings->get_default_shipping_options() );
+		$order_data             = $order->get_meta( $this->meta_name );
+		$option_map              = Mapping::option_available_list();
+		$from_country            = Utils::get_base_country();
+		$to_country              = $order->get_shipping_country();
+		$destination             = Utils::get_shipping_zone( $to_country );
+		$default_option_keys     = array_keys( $this->settings->get_default_shipping_options() );
+		$eligible_auto_letterbox = $this->is_eligible_auto_letterbox( $order );
 
-			foreach ( $meta_fields as $index => $field ) {
-				$field_name = Utils::remove_prefix_field( $this->prefix, $field['id'] );
+		foreach ( $meta_fields as $index => $field ) {
+			$field_name = Utils::remove_prefix_field( $this->prefix, $field['id'] );
 
-				// If the order is eligible for automatic letterbox, Then it will tick the letterbox checkbox.
-				// FYI : 'letterbox' is part of $default_option_keys.
-				if ( empty( $order_data['barcodes'] ) && $this->is_eligible_auto_letterbox( $order ) && ( in_array( $field_name, $default_option_keys, true ) ) ) {
-					$meta_fields[ $index ]['value'] = ( 'letterbox' === $field_name ) ? 'yes' : 'no';
-				}
+			// If the order is eligible for automatic letterbox, Then it will tick the letterbox checkbox.
+			// FYI : 'letterbox' is part of $default_option_keys.
+			if ( empty( $order_data['barcodes'] ) && $eligible_auto_letterbox && ( in_array( $field_name, $default_option_keys, true ) ) ) {
+				$meta_fields[ $index ]['value'] = ( 'letterbox' === $field_name ) ? 'yes' : 'no';
+			}
 
-				if ( ! empty( $order_data['frontend'][ $field_name ] ) ) {
-					$meta_fields[ $index ]['value'] = $order_data['frontend'][ $field_name ];
-				}
+			if ( ! empty( $order_data['frontend'][ $field_name ] ) ) {
+				$meta_fields[ $index ]['value'] = $order_data['frontend'][ $field_name ];
+			}
 
-				if ( isset( $order_data['backend'][ $field_name ] ) ) {
-					$meta_fields[ $index ]['custom_attributes']['disabled'] = 'disabled';
-					$meta_fields[ $index ]['value']                         = $order_data['backend'][ $field_name ];
-				}
+			if ( isset( $order_data['backend'][ $field_name ] ) ) {
+				$meta_fields[ $index ]['custom_attributes']['disabled'] = 'disabled';
+				$meta_fields[ $index ]['value']                         = $order_data['backend'][ $field_name ];
+			}
 
-				if ( isset( $option_map[ $from_country ][ $destination ] ) ) {
-					$meta_fields[ $index ]['standard_feat'] = in_array( $field_name, $option_map[ $from_country ][ $destination ] );
-				} else {
-					$meta_fields[ $index ]['standard_feat'] = false;
-				}
+			if ( isset( $option_map[ $from_country ][ $destination ] ) ) {
+				$meta_fields[ $index ]['standard_feat'] = in_array( $field_name, $option_map[ $from_country ][ $destination ] );
+			} else {
+				$meta_fields[ $index ]['standard_feat'] = false;
 			}
 		}
 
@@ -304,7 +306,7 @@ class Single extends Base {
 				?>
 			</div>
 		<?php
-	}		
+	}
 
 	/**
 	 * Generate the dropoff points html information.

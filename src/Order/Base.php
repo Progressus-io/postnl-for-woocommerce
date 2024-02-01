@@ -92,10 +92,13 @@ abstract class Base {
 
 	/**
 	 * List of meta box fields.
+	 *
+	 * @param int $order_id WooCommerce order ID.
 	 */
-	public function meta_box_fields() {
-		// Get the default shipping options.
+	public function meta_box_fields( $order_id = false ) {
+
 		$default_options = $this->settings->get_default_shipping_options();
+		$default_options['letterbox'] = $order_id ?? $this->is_eligible_auto_letterbox( $order_id );
 
 		return apply_filters(
 			'postnl_order_meta_box_fields',
@@ -416,7 +419,7 @@ abstract class Base {
 		$nonce_fields = array_values( $this->get_nonce_fields() );
 
 		// Loop through inputs within id 'shipment-postnl-label-form'.
-		foreach ( $this->meta_box_fields() as $field ) {
+		foreach ( $this->meta_box_fields( $order_id ) as $field ) {
 			// Don't save nonce field.
 			if ( $nonce_fields[0]['id'] === $field['id'] ) {
 				continue;

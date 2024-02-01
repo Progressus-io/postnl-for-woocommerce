@@ -55,22 +55,22 @@ class Order {
 	public function update_existing_orders() {
 		// Query orders that have _postnl_order_metadata but do not have _postnl_old_orders_delivery_date
 		$orders = wc_get_orders(
-			array(
-				'meta_query' => array(
+			[
+				'meta_query' => [
 					'relation' => 'AND',
-					array(
+					[
 						'key'     => $this->meta_name,
 						'compare' => 'EXISTS'
-					),
-					array(
+					],
+					[
 						'key'     => '_postnl_old_orders_delivery_date',
 						'compare' => 'NOT EXISTS'
-					)
-				),
-				'limit'    => -1,
-				'return'   => 'ids',
-				'status'   => array('on-hold', 'pending')
-			)
+					]
+				],
+				'limit'      => - 1,
+				'return'     => 'ids',
+				'status'     => [ 'on-hold', 'pending' ]
+			]
 		);
 
 		if ( ! empty( $orders ) ) {
@@ -86,7 +86,7 @@ class Order {
 				}
 			}
 		}
-	}		
+	}
 
 	/**
 	 * Handle a custom 'postnl_ordermeta' query var to get orders with the '_postnl_order_metadata' meta.

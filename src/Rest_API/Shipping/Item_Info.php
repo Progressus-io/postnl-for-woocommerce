@@ -436,9 +436,9 @@ class Item_Info extends Base_Info {
 				},
 			),
 			'printer_type'    => array(
-				'default'  => 'GraphicFile|PDF',
+				'default'  => $this->settings->get_printer_type(),
 				'sanitize' => function( $value ) use ( $self ) {
-					return 'GraphicFile|PDF';
+					return sanitize_text_field( $value );
 				},
 			),
 			'total_weight'    => array(

@@ -45,32 +45,32 @@ class Order {
 		$this->meta_name = '_' . $this->prefix . 'order_metadata';
 		add_filter( 'woocommerce_order_data_store_cpt_get_orders_query', array( $this, 'handle_custom_query_variable' ), 10, 2 );
 
-        if ( ! get_transient( 'updated_postnl_orders' ) ) {
-            $this->update_existing_orders();
+		if ( ! get_transient( 'updated_postnl_orders' ) ) {
+			$this->update_existing_orders();
 
-            set_transient( 'updated_postnl_orders', 'done', YEAR_IN_SECONDS );
-        }
+			set_transient( 'updated_postnl_orders', 'done', YEAR_IN_SECONDS );
+		}
 	}
 
 	public function update_existing_orders() {
 		// Query orders that have _postnl_order_metadata but do not have _postnl_old_orders_delivery_date
 		$orders = wc_get_orders(
-			[
-				'meta_query' => [
+			array(
+				'meta_query' => array(
 					'relation' => 'AND',
-					[
+					array(
 						'key'     => $this->meta_name,
 						'compare' => 'EXISTS'
-					],
-					[
+					),
+					array(
 						'key'     => '_postnl_old_orders_delivery_date',
 						'compare' => 'NOT EXISTS'
-					]
-				],
+					)
+				),
 				'limit'      => - 1,
 				'return'     => 'ids',
-				'status'     => [ 'on-hold', 'pending' ]
-			]
+				'status'     => array( 'on-hold', 'pending' )
+			)
 		);
 
 		if ( ! empty( $orders ) ) {

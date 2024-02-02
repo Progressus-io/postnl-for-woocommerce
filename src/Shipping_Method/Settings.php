@@ -443,6 +443,30 @@ class Settings extends \WC_Settings_API {
 				'type'        => 'title',
 				'description' => esc_html__( 'Please configure your printer and email preferences.', 'postnl-for-woocommerce' ),
 			),
+			'printer_type'              => array(
+				'title'       => esc_html__( 'Printer Type', 'postnl-for-woocommerce' ),
+				'type'        => 'select',
+				'description' => esc_html__( 'It is not recommended to send .pdf files/labels directly to a Zebra printer If you want to send it directly to your Zebra printer, please use .gif files or the native (generic) zpl printer type', 'postnl-for-woocommerce' ),
+				'desc_tip'    => true,
+				'default'     => 'GraphicFile|PDF',
+				'options'     => array(
+					'GraphicFile|GIF 200 dpi',
+					'GraphicFile|GIF 300 dpi',
+					'GraphicFile|GIF 600 dpi',
+					'GraphicFile|JPG 200 dpi',
+					'GraphicFile|JPG 300 dpi',
+					'GraphicFile|JPG 600 dpi',
+					'GraphicFile|PDF',
+					'GraphicFile|PDF|MergeA',
+					'GraphicFile|PDF|MergeB',
+					'GraphicFile|PDF|MergeC',
+					'GraphicFile|PDF|MergeD',
+					'Zebra|Generic ZPL II 200 dpi',
+					'Zebra|Generic ZPL II 300 dpi',
+					'Zebra|Generic ZPL II 600 dpi',
+				),
+				'class'       => 'wc-enhanced-select',
+			),
 			'label_format'              => array(
 				'title'       => esc_html__( 'Label Format', 'postnl-for-woocommerce' ),
 				'type'        => 'select',
@@ -1126,6 +1150,15 @@ class Settings extends \WC_Settings_API {
 	 */
 	public function get_country_origin() {
 		return $this->get_country_option( 'country_origin', '' );
+	}
+
+	/**
+	 * Get printer type from the settings.
+	 *
+	 * @return String
+	 */
+	public function get_printer_type() {
+		return $this->get_country_option( 'printer_type', '' );
 	}
 
 	/**

@@ -600,18 +600,19 @@ abstract class Base {
 						continue 3;
 					}
 
-					$label_type = ! empty( $label_contents['Labeltype'] ) ? sanitize_title( $label_contents['Labeltype'] ) : 'unknown-type';
-					$barcode    = $response[ $type ][ $shipment_idx ][ $content_type['barcode_key'] ];
-					$barcode    = is_array( $barcode ) ? array_shift( $barcode ) : $barcode;
-					$filename   = Utils::generate_label_name( $order->get_id(), $label_type, $barcode, 'A6' );
-					$filepath   = trailingslashit( POSTNL_UPLOADS_DIR ) . $filename;
+					$label_type      = ! empty( $label_contents['Labeltype'] ) ? sanitize_title( $label_contents['Labeltype'] ) : 'unknown-type';
+					$label_extension = ! empty( $label_contents['OutputType'] ) ? sanitize_title( $label_contents['OutputType'] ) : 'pdf';
+					$barcode         = $response[ $type ][ $shipment_idx ][ $content_type['barcode_key'] ];
+					$barcode         = is_array( $barcode ) ? array_shift( $barcode ) : $barcode;
+					$filename        = Utils::generate_label_name( $order->get_id(), $label_type, $barcode, 'A6', $label_extension );
+					$filepath        = trailingslashit( POSTNL_UPLOADS_DIR ) . $filename;
 
 					if ( wp_mkdir_p( POSTNL_UPLOADS_DIR ) && ! file_exists( $filepath ) ) {
 						$content  = base64_decode( $label_contents['Content'] );
 						$file_ret = file_put_contents( $filepath, $content );
 					}
 
-					$labels[] = array(
+					$labels[$label_type] = array(
 						'type'       => $label_type,
 						'barcode'    => $barcode,
 						'created_at' => current_time( 'timestamp' ),
@@ -621,7 +622,9 @@ abstract class Base {
 			}
 		}
 
-		$labels = $this->maybe_merge_labels( $labels, $order, $parent_barcode, $parent_label_type );
+		if ( 'pdf' === $label_contents['OutputType'] ) {
+			$labels = $this->maybe_merge_labels( $labels, $order, $parent_barcode, $parent_label_type );
+		}
 
 		return $labels;
 	}
@@ -760,11 +763,10 @@ abstract class Base {
 			if ( ! in_array( $label['type'], $available_type, true ) ) {
 				continue;
 			}
-
 			$file_paths[] = $label['filepath'];
 		}
 
-		$filename    = Utils::generate_label_name( $order->get_id(), $label_type, $barcode, $label_format );
+		$filename    = Utils::generate_label_name( $order->get_id(), $label_type, $barcode, $label_format, 'pdf' );
 		$merged_info = $this->merge_labels( $file_paths, $filename );
 
 		$merged_labels[ $label_type ] = array(
@@ -1140,7 +1142,6 @@ abstract class Base {
 	 */
 	public function have_label_file( $order ) {
 		$order_data = $order->get_meta( $this->meta_name );
-
 		return ! empty( $order_data['labels']['label']['filepath'] );
 	}
 }

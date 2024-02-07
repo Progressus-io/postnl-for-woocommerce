@@ -581,6 +581,21 @@ class Utils {
 	}
 
 	/**
+	 * Generate default shipping options from the Settings page > Default Shipping Option select.
+	 *
+	 * @param \PostNLWooCommerce\Shipping_Method\Settings $settings Settings obj.
+	 *
+	 * @return string
+	 */
+	public static function generate_default_shipping_options_html( $settings ) {
+		if ( $settings->settings['default_shipping_options'] ) {
+			$options_to_display = self::get_shipping_options();
+			return $options_to_display[ $settings->settings['default_shipping_options'] ];
+		}
+		return '';
+	}
+
+	/**
 	 * Get available shipping options.
 	 *
 	 * @return array.

@@ -42,7 +42,6 @@ class Client extends Base {
 	 * Function for composing API request.
 	 */
 	public function compose_body_request() {
-
 		return array(
 			'Customer'  => array(
 				'Address'            => $this->get_customer_address(),

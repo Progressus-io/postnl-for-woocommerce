@@ -104,19 +104,13 @@ abstract class Base {
 			'postnl_order_meta_box_fields',
 			array(
 				array(
-					'id'            => $this->prefix . 'break_1',
-					'standard_feat' => false,
-					'const_field'   => true,
-					'type'          => 'break',
-				),
-				array(
 					'id'            => $this->prefix . 'id_check',
 					'type'          => 'checkbox',
 					'label'         => __( 'ID Check: ', 'postnl-for-woocommerce' ),
 					'placeholder'   => '',
 					'description'   => '',
 					'value'         => $default_options['id_check'] ? 'yes' : '',
-					'show_in_bulk'  => true,
+					'show_in_bulk'  => false,
 					'standard_feat' => false,
 					'const_field'   => false,
 					'container'     => true,

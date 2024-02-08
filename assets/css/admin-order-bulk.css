@@ -1,8 +1,12 @@
-#postnl-action-create-label .form-field input.short {
+#postnl-modal .form-field input.short {
 	width:50px;
 }
 
-.postnl-action-create-label:after,
+.postnl-change-shipping-options-content > .international{
+    display: none;
+}
+
+.postnl-modal:after,
 .postnl-action-download-label:after {
 	content: "";
 	background-size: 20px !important;
@@ -10,7 +14,7 @@
 	margin: 0 !important;
 }
 
-.postnl-action-create-label:after {
+.postnl-modal:after {
 	background: url(../images/postnl-logo.png) no-repeat center center;
 }
 

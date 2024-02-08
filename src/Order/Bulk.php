@@ -38,7 +38,8 @@ class Bulk extends Base {
 		add_filter( 'handle_bulk_actions-woocommerce_page_wc-orders', array( $this, 'process_order_bulk_actions' ), 10, 3 );
 
 		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_bulk_assets' ) );
-		add_action( 'admin_footer', array( $this, 'model_content_fields_create_label' ) );
+		add_action( 'admin_footer', array( $this, 'modal_create_label' ) );
+		add_action( 'admin_footer', array( $this, 'modal_change_shipping_options' ) );
 		add_filter( 'postnl_order_meta_box_fields', array( $this, 'additional_meta_box' ), 10, 1 );
 
 		// Display admin notices for bulk actions.
@@ -58,7 +59,8 @@ class Bulk extends Base {
 	 * @return array
 	 */
 	public function add_order_bulk_actions( $bulk_actions ) {
-		$bulk_actions['postnl-create-label'] = esc_html__( 'PostNL Create Label', 'postnl-for-woocommerce' );
+		$bulk_actions['postnl-create-label']            = esc_html__( 'PostNL Create Label', 'postnl-for-woocommerce' );
+		$bulk_actions['postnl-change-shipping-options'] = esc_html__( 'PostNL Change Shipping Options', 'postnl-for-woocommerce' );
 
 		return $bulk_actions;
 	}
@@ -281,9 +283,14 @@ class Bulk extends Base {
 	}
 
 	/**
-	 * Collection of fields in create label bulk action.
+	 * Create modal wrapper with given id and fields definition.
+	 *
+	 * @param string $modal_id Modal id.
+	 * @param array $fields Fields to be added to the modal contend.
+	 *
+	 * @return void
 	 */
-	public function model_content_fields_create_label() {
+	protected function create_modal_content_wrapper( $modal_id, $fields ) {
 		global $thepostid, $post;
 
 		$screen = get_current_screen();
@@ -298,16 +305,142 @@ class Bulk extends Base {
 
 		if ( $is_legacy_order || $is_hpos_order ) {
 			?>
-			<div id="postnl-create-label-modal" style="display:none;">
-				<div id="postnl-action-create-label">
-					<?php Utils::fields_generator( $this->meta_box_fields() ); ?>
-
-					<br>
-					<button type="button" class="button button-primary" id="postnl_create_label_proceed"><?php esc_html_e( 'Submit', 'postnl-for-woocommerce' ); ?></button>
+			<div id="<?php echo esc_attr( $modal_id ); ?>-modal" style="display:none;">
+				<div class="postnl-modal <?php echo esc_attr( $modal_id . '-content' ) ?>">
+					<?php Utils::fields_generator( $fields ); ?>
+					<button type="button" class="button button-primary" id="<?php echo esc_attr( $modal_id ); ?>-proceed"><?php esc_html_e( 'Submit', 'postnl-for-woocommerce' ); ?></button>
 				</div>
 			</div>
 			<?php
 		}
+	}
+
+	/**
+	 * Prepare fields for the Change shipping options modal.
+	 *
+	 * @return array[]
+	 */
+	protected function create_label_fields() {
+		return array(
+			array(
+				'id'                => $this->prefix . 'num_labels',
+				'type'              => 'number',
+				'label'             => __( 'Number of Labels: ', 'postnl-for-woocommerce' ),
+				'placeholder'       => '',
+				'description'       => '',
+				'class'             => 'short',
+				'value'             => '',
+				'custom_attributes' =>
+					array(
+						'step' => 'any',
+						'min'  => '0',
+					),
+			),
+			array(
+				'id'            => $this->prefix . 'create_return_label',
+				'type'          => 'checkbox',
+				'label'         => __( 'Create Return Label: ', 'postnl-for-woocommerce' ),
+				'placeholder'   => '',
+				'description'   => '',
+				'value'         => $this->settings->get_return_address_default(),
+			),
+			array(
+				'id'            => $this->prefix . 'position_printing_labels',
+				'type'          => 'select',
+				'label'         => __( 'Start position printing label: ', 'postnl-for-woocommerce' ),
+				'placeholder'   => '',
+				'description'   => '',
+				'options'       => array(
+					'top-left'     => __( 'Top Left', 'postnl-for-woocommerce' ),
+					'top-right'    => __( 'Top Right', 'postnl-for-woocommerce' ),
+					'bottom-left'  => __( 'Bottom Left', 'postnl-for-woocommerce' ),
+					'bottom-right' => __( 'Bottom Right', 'postnl-for-woocommerce' ),
+				),
+			),
+		);
+	}
+
+	/**
+	 * Collection of fields in create label bulk action.
+	 */
+	public function modal_create_label() {
+		$this->create_modal_content_wrapper( 'postnl-create-label', $this->create_label_fields() );
+	}
+
+	/**
+	 * Prepare fields for the Change shipping options modal.
+	 *
+	 * @return array[]
+	 */
+	protected function change_shipping_options_fields() {
+		return array(
+			array(
+				'id'            => $this->prefix . 'shipping_options',
+				'type'          => 'select',
+				'label'         => __( 'Shipping options', 'postnl-for-woocommerce' ),
+				'options'       => array(
+					'domestic'      => __( 'Domestic', 'postnl-for-woocommerce' ),
+					'international' => __( 'International', 'postnl-for-woocommerce' ),
+				)
+			),
+			array(
+				'id' => $this->prefix . 'default_shipping_options',
+				'type'          => 'select',
+				'label'         => __( 'Default Shipping Option', 'postnl-for-woocommerce' ),
+				'wrapper_class' => 'conditional domestic',
+				'container'     => true,
+				'default'       => '',
+				'options'       => array(
+					''                                   => __( 'None', 'postnl-for-woocommerce' ),
+					'id_check'                           => __( 'ID Check', 'postnl-for-woocommerce' ),
+					'insured_shipping'                   => __( 'Insured Shipping', 'postnl-for-woocommerce' ),
+					'return_no_answer'                   => __( 'Return if no answer', 'postnl-for-woocommerce' ),
+					'signature_on_delivery'              => __( 'Signature on Delivery', 'postnl-for-woocommerce' ),
+					'only_home_address'                  => __( 'Only Home Address', 'postnl-for-woocommerce' ),
+					'letterbox'                          => __( 'Letterbox', 'postnl-for-woocommerce' ),
+					'signature_insured'                  => __( 'Signature on Delivery + Insured Shipping', 'postnl-for-woocommerce' ),
+					'signature_return_no_answer'         => __( 'Signature on Delivery + Return if no answer', 'postnl-for-woocommerce' ),
+					'signature_insured_return_no_answer' => __( 'Signature on Delivery + Insured Shipping + Return if no answer', 'postnl-for-woocommerce' ),
+					'only_home_address_return_no_answer' => __( 'Only Home Address + Return if no answer', 'postnl-for-woocommerce' ),
+					'only_home_address_return_signature' => __( 'Only Home Address + Return if no answer + Signature on Delivery', 'postnl-for-woocommerce' ),
+					'only_home_address_signature'        => __( 'Only Home Address + Signature on Delivery', 'postnl-for-woocommerce' ),
+				),
+			),
+			array(
+				'id'            => $this->prefix . 'packets',
+				'type'          => 'checkbox',
+				'label'         => __( 'Packets: ', 'postnl-for-woocommerce' ),
+				'placeholder'   => '',
+				'description'   => '',
+				'value'         => '',
+				'wrapper_class' => 'conditional international',
+			),
+			array(
+				'id'            => $this->prefix . 'mailboxpacket',
+				'type'          => 'checkbox',
+				'label'         => __( 'Mailbox Packet (International): ', 'postnl-for-woocommerce' ),
+				'placeholder'   => '',
+				'description'   => '',
+				'value'         => '',
+				'wrapper_class' => 'conditional international',
+			),
+			array(
+				'id'            => $this->prefix . 'track_and_trace',
+				'type'          => 'checkbox',
+				'label'         => __( 'Track & Trace: ', 'postnl-for-woocommerce' ),
+				'placeholder'   => '',
+				'description'   => '',
+				'value'         => '',
+				'wrapper_class' => 'conditional international',
+			),
+		);
+	}
+
+	/**
+	 * Collection of fields in create label bulk action.
+	 */
+	public function modal_change_shipping_options() {
+		$this->create_modal_content_wrapper( 'postnl-change-shipping-options', $this->change_shipping_options_fields() );
 	}
 
 	/**

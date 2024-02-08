@@ -2,7 +2,7 @@
 	width:50px;
 }
 
-.postnl-change-shipping-options-content > .international{
+.postnl-change-shipping-options-content .international{
     display: none;
 }
 

@@ -1137,4 +1137,18 @@ abstract class Base {
 
 		return ! empty( $order_data['labels']['label']['filepath'] );
 	}
+
+	/**
+	 * Save default shipping options to the order.
+	 *
+	 * @param int $order_id \WC_Order id.
+	 * @param array $options New shipping options.
+	 *
+	 * @return void
+	 */
+	public function set_order_default_shipping_options( $order_id, $options ) {
+		$order = wc_get_order( $order_id );
+		$order->update_meta_data( $this->meta_name, $options );
+		$order->save();
+	}
 }

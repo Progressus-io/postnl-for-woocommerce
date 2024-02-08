@@ -32,10 +32,12 @@ class Bulk extends Base {
 	 */
 	public function init_hooks() {
 		add_filter( 'bulk_actions-edit-shop_order', array( $this, 'add_order_bulk_actions' ), 10, 1 );
-		add_filter( 'handle_bulk_actions-edit-shop_order', array( $this, 'process_order_bulk_actions' ), 10, 3 );
+		add_filter( 'handle_bulk_actions-edit-shop_order', array( $this, 'bulk_action_create_label' ), 10, 3 );
+		add_filter( 'handle_bulk_actions-edit-shop_order', array( $this, 'bulk_action_change_shipping_options' ), 10, 3 );
 
 		add_filter( 'bulk_actions-woocommerce_page_wc-orders', array( $this, 'add_order_bulk_actions' ), 10, 1 );
-		add_filter( 'handle_bulk_actions-woocommerce_page_wc-orders', array( $this, 'process_order_bulk_actions' ), 10, 3 );
+		add_filter( 'handle_bulk_actions-woocommerce_page_wc-orders', array( $this, 'bulk_action_create_label' ), 10, 3 );
+		add_filter( 'handle_bulk_actions-woocommerce_page_wc-orders', array( $this, 'bulk_action_change_shipping_options' ), 10, 3 );
 
 		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_bulk_assets' ) );
 		add_action( 'admin_footer', array( $this, 'modal_create_label' ) );
@@ -74,13 +76,13 @@ class Bulk extends Base {
 	 *
 	 * @return string
 	 */
-	public function process_order_bulk_actions( $redirect, $doaction, $object_ids ) {
+	public function bulk_action_create_label( $redirect, $doaction, $object_ids ) {
 		if ( 'postnl-create-label' !== $doaction ) {
 			return $redirect;
 		}
 
 		$array_messages = array(
-				'user_id' => get_current_user_id(),
+			'user_id' => get_current_user_id(),
 		);
 
 		$gen_labels = array(); // Generated labels.
@@ -88,11 +90,9 @@ class Bulk extends Base {
 		if ( ! empty( $object_ids ) ) {
 			foreach ( $object_ids as $order_id ) {
 				$result = $this->generate_label_and_notes( $order_id, $_REQUEST );
-
 				if ( isset( $result['message'] ) ) {
 					$array_messages[] = $result['message'];
 				}
-
 				if ( isset( $result['labels_data']['labels'] ) ) {
 					$gen_labels[] = $result['labels_data']['labels'];
 				}
@@ -104,6 +104,38 @@ class Bulk extends Base {
 		}
 
 		update_option( $this->bulk_option_text_name, $array_messages );
+
+		return $redirect;
+	}
+
+	/**
+	 * Process PostNL in bulk.
+	 *
+	 * @param String $redirect Redirect URL after the bulk has been processed.
+	 * @param String $doaction Chosen action.
+	 * @param array  $object_ids Chose IDs.
+	 *
+	 * @return string
+	 */
+	public function bulk_action_change_shipping_options( $redirect, $doaction, $object_ids ) {
+		if ( 'postnl-change-shipping-options' !== $doaction ) {
+			return $redirect;
+		}
+
+		$default_options = array();
+
+		// Loop through requested settings saving only prefixed and not empty.
+		foreach( $_REQUEST as $option => $value ) {
+			if ( false !== strpos( $option, $this->prefix ) && ! empty( $value ) ) {
+				$default_options[ Utils::remove_prefix_field( $this->prefix, $option ) ] = $value;
+			}
+		}
+
+		if ( ! empty( $object_ids ) ) {
+			foreach ( $object_ids as $order_id ) {
+				$this->set_order_default_shipping_options( $order_id, array( 'backend' => $default_options ) );
+			}
+		}
 
 		return $redirect;
 	}
@@ -330,6 +362,7 @@ class Bulk extends Base {
 				'description'       => '',
 				'class'             => 'short',
 				'value'             => '',
+				'container'     => true,
 				'custom_attributes' =>
 					array(
 						'step' => 'any',
@@ -342,6 +375,7 @@ class Bulk extends Base {
 				'label'         => __( 'Create Return Label: ', 'postnl-for-woocommerce' ),
 				'placeholder'   => '',
 				'description'   => '',
+				'container'     => true,
 				'value'         => $this->settings->get_return_address_default(),
 			),
 			array(
@@ -350,6 +384,7 @@ class Bulk extends Base {
 				'label'         => __( 'Start position printing label: ', 'postnl-for-woocommerce' ),
 				'placeholder'   => '',
 				'description'   => '',
+				'container'     => true,
 				'options'       => array(
 					'top-left'     => __( 'Top Left', 'postnl-for-woocommerce' ),
 					'top-right'    => __( 'Top Right', 'postnl-for-woocommerce' ),
@@ -378,6 +413,8 @@ class Bulk extends Base {
 				'id'            => $this->prefix . 'shipping_options',
 				'type'          => 'select',
 				'label'         => __( 'Shipping options', 'postnl-for-woocommerce' ),
+				'value'         => 'domestic',
+				'container'     => true,
 				'options'       => array(
 					'domestic'      => __( 'Domestic', 'postnl-for-woocommerce' ),
 					'international' => __( 'International', 'postnl-for-woocommerce' ),
@@ -414,6 +451,7 @@ class Bulk extends Base {
 				'description'   => '',
 				'value'         => '',
 				'wrapper_class' => 'conditional international',
+				'container'     => true,
 			),
 			array(
 				'id'            => $this->prefix . 'mailboxpacket',
@@ -423,6 +461,7 @@ class Bulk extends Base {
 				'description'   => '',
 				'value'         => '',
 				'wrapper_class' => 'conditional international',
+				'container'     => true,
 			),
 			array(
 				'id'            => $this->prefix . 'track_and_trace',
@@ -432,6 +471,7 @@ class Bulk extends Base {
 				'description'   => '',
 				'value'         => '',
 				'wrapper_class' => 'conditional international',
+				'container'     => true,
 			),
 		);
 	}

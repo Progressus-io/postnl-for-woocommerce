@@ -21,7 +21,6 @@
 			var post_form 	= jQuery( this ).parents('#posts-filter, #wc-orders-filter');
 
 			if( 'postnl-create-label' == value ){
-				console.log('test' );
 				// Show thickbox modal.
 				tb_show( "", '/?TB_inline=true&width=460&height=280&inlineId=postnl-create-label-modal' );
 				var tb_window = jQuery( '#TB_window' );
@@ -57,14 +56,13 @@
 				});
 				tb_window.find( '#postnl-change-shipping-options-proceed' ).on( 'click', function( evt ) {
 					evt.preventDefault();
-
 					post_form.append( '<div id="postnl-field-container" style="display:none;"></div>' );
 					tb_window.find( '.shipment-postnl-row-container' ).each( function() {
 						var field_clone = jQuery( this ).clone();
 						post_form.find( '#postnl-field-container' ).append( field_clone );
 					} );
-					var selected_value = tb_window.find('#postnl_position_printing_labels').val();
-					post_form.find('#postnl-field-container').append('<input type="hidden" name="postnl_position_printing_labels" value="' + selected_value + '">');
+					post_form.find('#postnl-field-container').append('<input type="hidden" name="postnl_shipping_options" value="' + tb_window.find('#postnl_shipping_options').val() + '">');
+                    post_form.find('#postnl-field-container').append('<input type="hidden" name="postnl_default_shipping_options" value="' + tb_window.find('#postnl_default_shipping_options').val() + '">');
 					jQuery( this ).prop( 'disabled', true );
 					post_form.submit();
 				} );

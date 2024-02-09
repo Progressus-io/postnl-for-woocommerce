@@ -146,7 +146,9 @@ class Single extends Base {
 			}
 
 			if ( isset( $order_data['backend'][ $field_name ] ) ) {
-				$meta_fields[ $index ]['custom_attributes']['disabled'] = 'disabled';
+				if ( $this->have_label_file( $order ) ) {
+					$meta_fields[ $index ]['custom_attributes']['disabled'] = 'disabled';
+				}
 				$meta_fields[ $index ]['value']                         = $order_data['backend'][ $field_name ];
 			}
 

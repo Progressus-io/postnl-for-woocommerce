@@ -602,13 +602,49 @@ class Utils {
 	 */
 	public static function get_shipping_options() {
 		return array(
-				'id_check'              => esc_html__( 'ID Check', 'postnl-for-woocommerce' ),
-				'insured_shipping'      => esc_html__( 'Insured Shipping', 'postnl-for-woocommerce' ),
-				'return_no_answer'      => esc_html__( 'Return if no answer', 'postnl-for-woocommerce' ),
-				'signature_on_delivery' => esc_html__( 'Signature on Delivery', 'postnl-for-woocommerce' ),
-				'only_home_address'     => esc_html__( 'Only Home Address', 'postnl-for-woocommerce' ),
-				'letterbox'             => esc_html__( 'Letterbox', 'postnl-for-woocommerce' ),
-				'packets'               => esc_html__( 'Packets', 'postnl-for-woocommerce' ),
+			'id_check'              => esc_html__( 'ID Check', 'postnl-for-woocommerce' ),
+			'insured_shipping'      => esc_html__( 'Insured Shipping', 'postnl-for-woocommerce' ),
+			'return_no_answer'      => esc_html__( 'Return if no answer', 'postnl-for-woocommerce' ),
+			'signature_on_delivery' => esc_html__( 'Signature on Delivery', 'postnl-for-woocommerce' ),
+			'only_home_address'     => esc_html__( 'Only Home Address', 'postnl-for-woocommerce' ),
+			'letterbox'             => esc_html__( 'Letterbox', 'postnl-for-woocommerce' ),
+			'packets'               => esc_html__( 'Packets', 'postnl-for-woocommerce' ),
+		);
+	}
+
+	/**
+	 * Get combined shipping options, used in the bulk action menu.
+	 *
+	 * @return array
+	 */
+	public static function get_combined_shipping_options() {
+		return array(
+			'signature_insured'                  => array(
+				'insured_shipping',
+				'signature_on_delivery',
+			),
+			'signature_return_no_answer'         => array(
+				'return_no_answer',
+				'signature_on_delivery',
+			),
+			'signature_insured_return_no_answer' => array(
+				'insured_shipping',
+				'signature_on_delivery',
+				'return_no_answer',
+			),
+			'only_home_address_return_no_answer' => array(
+				'only_home_address',
+				'return_no_answer',
+			),
+			'only_home_address_return_signature' => array(
+				'signature_on_delivery',
+				'return_no_answer',
+				'signature_on_delivery'
+			),
+			'only_home_address_signature' => array(
+				'signature_on_delivery',
+				'signature_on_delivery'
+			)
 		);
 	}
 

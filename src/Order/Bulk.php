@@ -122,14 +122,7 @@ class Bulk extends Base {
 			return $redirect;
 		}
 
-		$default_options = array();
-
-		// Loop through requested settings saving only prefixed and not empty.
-		foreach( $_REQUEST as $option => $value ) {
-			if ( false !== strpos( $option, $this->prefix ) && ! empty( $value ) ) {
-				$default_options[ Utils::remove_prefix_field( $this->prefix, $option ) ] = $value;
-			}
-		}
+		$default_options = $this->prepare_default_options( $_REQUEST );
 
 		if ( ! empty( $object_ids ) ) {
 			foreach ( $object_ids as $order_id ) {
@@ -138,6 +131,43 @@ class Bulk extends Base {
 		}
 
 		return $redirect;
+	}
+
+	/**
+	 * Prepare default shipping options based on user selection from the bulk modal.
+	 *
+	 * @param array $options Selected options by the user.
+	 *
+	 * @return array
+	 */
+	protected function prepare_default_options( $options ) {
+
+		$final_options     = array();
+		$available_options = Utils::get_shipping_options();
+		$combined_options  = Utils::get_combined_shipping_options();
+
+
+		foreach( $options as $name => $value ) {
+			if ( false !== strpos( $name, $this->prefix ) && ! empty( $value ) ) {
+				$name = Utils::remove_prefix_field( $this->prefix, $name );
+				if ( in_array( $name, array_keys( $available_options ) ) ) {
+					$final_options[ $name ] = 'yes';
+				}
+				if ( 'default_shipping_options' === $name ) {
+					if ( in_array( $value, array_keys( $available_options ) ) ) {
+						$final_options[ $value ] = 'yes';
+					}
+					if ( in_array( $value, array_keys( $combined_options ) ) ) {
+						foreach( $combined_options[ $value ] as $child ) {
+							$final_options[ $child ] = 'yes';
+						}
+					}
+				}
+			}
+		}
+
+		return $final_options ;
+
 	}
 
 	/**

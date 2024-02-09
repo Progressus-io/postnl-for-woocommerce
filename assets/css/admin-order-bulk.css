@@ -6,7 +6,7 @@
     display: none;
 }
 
-.postnl-modal:after,
+.postnl-action-create-label:after,
 .postnl-action-download-label:after {
 	content: "";
 	background-size: 20px !important;
@@ -14,7 +14,7 @@
 	margin: 0 !important;
 }
 
-.postnl-modal:after {
+.postnl-action-create-label:after {
 	background: url(../images/postnl-logo.png) no-repeat center center;
 }
 

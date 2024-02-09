@@ -172,8 +172,9 @@ class OrdersList extends Base {
 		}
 
 		if ( 'postnl_shipping_options' === $column ) {
-			if ( $this->have_label_file( $order_id ) ) {
-				echo Utils::generate_shipping_options_html( $this->get_backend_data( $order_id ) );
+			$shipping_options = $this->get_backend_data( $order_id );
+			if ( $shipping_options ) {
+				echo Utils::generate_shipping_options_html( $shipping_options );
 			} else {
 				echo Utils::generate_default_shipping_options_html( $this->settings );
 			}

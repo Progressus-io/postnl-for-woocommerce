@@ -588,9 +588,16 @@ class Utils {
 	 * @return string
 	 */
 	public static function generate_default_shipping_options_html( $settings ) {
-		if ( $settings->settings['default_shipping_options'] ) {
-			$options_to_display = self::get_shipping_options();
-			return $options_to_display[ $settings->settings['default_shipping_options'] ];
+		$default_settings    = $settings->get_default_shipping_options();
+		$settings_to_display = array();
+		if ( $default_settings ) {
+			$settings_names = self::get_shipping_options();
+			foreach( $default_settings as $name => $value ) {
+				if ( true === $value ) {
+					$settings_to_display[] = $settings_names[ $name ];
+				}
+			}
+			return implode( ', ', $settings_to_display );
 		}
 		return '';
 	}

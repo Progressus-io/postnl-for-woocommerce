@@ -98,7 +98,7 @@ abstract class Base {
 	public function meta_box_fields( $order = false ) {
 
 		$default_options = $this->settings->get_default_shipping_options();
-		$default_options['letterbox'] = $order ?? Utils::is_eligible_auto_letterbox( $order );
+		$default_options['letterbox'] = is_a( $order, 'WC_Order' ) && Utils::is_eligible_auto_letterbox( $order );
 
 		return apply_filters(
 			'postnl_order_meta_box_fields',

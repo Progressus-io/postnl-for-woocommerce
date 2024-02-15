@@ -401,8 +401,6 @@ abstract class Base {
 	 */
 	public function save_meta_value( $order_id, $meta_values ) {
 
-		error_log( print_r( $meta_values, true ) );
-
 		$order = wc_get_order( $order_id );
 
 		if ( ! is_a( $order, 'WC_Order' ) ) {

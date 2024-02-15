@@ -581,24 +581,6 @@ class Utils {
 	}
 
 	/**
-	 * Generate default shipping options from the Settings page > Default Shipping Option select.
-	 *
-	 * @param array $default_settings Default settings from the settings page.
-	 *
-	 * @return string
-	 */
-	public static function generate_default_shipping_options_html( $default_settings ) {
-		$settings_to_display = array();
-		$settings_names = self::get_shipping_options();
-		foreach( $default_settings as $name => $value ) {
-			if ( 'yes' === $value ) {
-				$settings_to_display[] = $settings_names[ $name ];
-			}
-		}
-		return implode( ', ', $settings_to_display );
-	}
-
-	/**
 	 * Get available shipping options.
 	 *
 	 * @return array.

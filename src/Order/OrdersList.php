@@ -176,7 +176,8 @@ class OrdersList extends Base {
 			if ( $shipping_options ) {
 				echo Utils::generate_shipping_options_html( $shipping_options );
 			} else {
-				echo Utils::generate_default_shipping_options_html( $this->settings );
+				$default_settings = $this->settings->get_default_shipping_options();
+				echo Utils::generate_default_shipping_options_html( $default_settings, $order_id );
 			}
 		}
 	}

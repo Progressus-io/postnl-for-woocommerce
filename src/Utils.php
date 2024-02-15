@@ -583,23 +583,24 @@ class Utils {
 	/**
 	 * Generate default shipping options from the Settings page > Default Shipping Option select.
 	 *
-	 * @param \PostNLWooCommerce\Shipping_Method\Settings $settings Settings obj.
+	 * @param array $default_settings Default settings from the settings page.
+	 * @param int $order_id \WC_Order id.
 	 *
 	 * @return string
 	 */
-	public static function generate_default_shipping_options_html( $settings ) {
-		$default_settings    = $settings->get_default_shipping_options();
+	public static function generate_default_shipping_options_html( $default_settings, $order_id ) {
 		$settings_to_display = array();
-		if ( $default_settings ) {
-			$settings_names = self::get_shipping_options();
+		$settings_names = self::get_shipping_options();
+		if ( self::is_eligible_auto_letterbox( wc_get_order( $order_id ) ) ) {
+			$settings_to_display[] = $settings_names[ 'letterbox' ];
+		} else {
 			foreach( $default_settings as $name => $value ) {
 				if ( true === $value ) {
 					$settings_to_display[] = $settings_names[ $name ];
 				}
 			}
-			return implode( ', ', $settings_to_display );
 		}
-		return '';
+		return implode( ', ', $settings_to_display );
 	}
 
 	/**

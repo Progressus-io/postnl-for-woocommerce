@@ -170,15 +170,12 @@ class OrdersList extends Base {
 		if ( empty( $order_id ) ) {
 			return;
 		}
-
 		if ( 'postnl_shipping_options' === $column ) {
 			$shipping_options = $this->get_backend_data( $order_id );
-			if ( $shipping_options ) {
-				echo Utils::generate_shipping_options_html( $shipping_options );
-			} else {
-				$default_settings = $this->settings->get_default_shipping_options();
-				echo Utils::generate_default_shipping_options_html( $default_settings, $order_id );
+			if ( empty( $shipping_options ) ) {
+				$shipping_options = $this->settings->get_default_shipping_options( $order_id );
 			}
+			echo esc_html( Utils::generate_shipping_options_html( $shipping_options ) );
 		}
 	}
 
@@ -258,7 +255,7 @@ class OrdersList extends Base {
 	 */
 	public function add_eligible_auto_letterbox_column_content( $column, $order_id ) {
 		if ( 'postnl_eligible_auto_letterbox' === $column ) {
-			if ( Utils::is_eligible_auto_letterbox( wc_get_order( $order_id ) ) ) {
+			if ( Utils::is_eligible_auto_letterbox( $order_id ) ) {
 				?>
 				<span class="postnl_eligible_auto_letterbox eligible">&#10003;</span>
 				<?php

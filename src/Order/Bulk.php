@@ -617,6 +617,12 @@ class Bulk extends Base {
 		$result = array();
 
 		try {
+			$default_settings      = $this->settings->get_default_shipping_options( $order_id );
+			foreach( $default_settings as $name => $value ) {
+				if ( $value  ) {
+					$post_data[ $this->prefix . $name ] = $value;
+				}
+			}
 			$result['labels_data'] = $this->save_meta_value( $order_id, $post_data );
 			$tracking_note         = $this->get_tracking_note( $order_id );
 			$customer_note         = false;

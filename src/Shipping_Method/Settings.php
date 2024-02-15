@@ -1241,7 +1241,20 @@ class Settings extends \WC_Settings_API {
 	 *
 	 * @return array
 	 */
-	public function get_default_shipping_options() {
+	public function get_default_shipping_options( $order_id = false ) {
+
+		// Check if order is given and is eligible for the letterbox.
+		if ( ! empty( $order_id ) && Utils::is_eligible_auto_letterbox( $order_id ) ) {
+			return array(
+				'id_check'              => false,
+				'insured_shipping'      => false,
+				'return_no_answer'      => false,
+				'signature_on_delivery' => false,
+				'only_home_address'     => false,
+				'letterbox'             => 'yes',
+			);
+		}
+
 		$shipping_options = $this->get_country_option( 'default_shipping_options', '' );
 		$default_options  = array(
 			'id_check'              => false,
@@ -1254,34 +1267,34 @@ class Settings extends \WC_Settings_API {
 
 		switch ( $shipping_options ) {
 			case 'signature_insured':
-				$default_options['signature_on_delivery'] = true;
-				$default_options['insured_shipping']      = true;
+				$default_options['signature_on_delivery'] = 'yes';
+				$default_options['insured_shipping']      = 'yes';
 				break;
 			case 'signature_return_no_answer':
-				$default_options['signature_on_delivery'] = true;
-				$default_options['return_no_answer']      = true;
+				$default_options['signature_on_delivery'] = 'yes';
+				$default_options['return_no_answer']      = 'yes';
 				break;
 			case 'signature_insured_return_no_answer':
-				$default_options['signature_on_delivery'] = true;
-				$default_options['insured_shipping']      = true;
-				$default_options['return_no_answer']      = true;
+				$default_options['signature_on_delivery'] = 'yes';
+				$default_options['insured_shipping']      = 'yes';
+				$default_options['return_no_answer']      = 'yes';
 				break;
 			case 'only_home_address_return_no_answer':
-				$default_options['only_home_address'] = true;
-				$default_options['return_no_answer']  = true;
+				$default_options['only_home_address'] = 'yes';
+				$default_options['return_no_answer']  = 'yes';
 				break;
 			case 'only_home_address_return_signature':
-				$default_options['only_home_address']     = true;
-				$default_options['return_no_answer']      = true;
-				$default_options['signature_on_delivery'] = true;
+				$default_options['only_home_address']     = 'yes';
+				$default_options['return_no_answer']      = 'yes';
+				$default_options['signature_on_delivery'] = 'yes';
 				break;
 			case 'only_home_address_signature':
-				$default_options['only_home_address']     = true;
-				$default_options['signature_on_delivery'] = true;
+				$default_options['only_home_address']     = 'yes';
+				$default_options['signature_on_delivery'] = 'yes';
 				break;
 			default:
 				// Handle the individual options
-				$default_options[ $shipping_options ] = true;
+				$default_options[ $shipping_options ] = 'yes';
 		}
 
 		return $default_options;

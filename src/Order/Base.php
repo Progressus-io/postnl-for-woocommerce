@@ -97,8 +97,7 @@ abstract class Base {
 	 */
 	public function meta_box_fields( $order = false ) {
 
-		$default_options = $this->settings->get_default_shipping_options();
-		$default_options['letterbox'] = is_a( $order, 'WC_Order' ) && Utils::is_eligible_auto_letterbox( $order );
+		$default_options = $this->settings->get_default_shipping_options( $order );
 
 		return apply_filters(
 			'postnl_order_meta_box_fields',
@@ -109,7 +108,7 @@ abstract class Base {
 					'label'         => __( 'ID Check: ', 'postnl-for-woocommerce' ),
 					'placeholder'   => '',
 					'description'   => '',
-					'value'         => $default_options['id_check'] ? 'yes' : '',
+					'value'         => $default_options['id_check'],
 					'show_in_bulk'  => false,
 					'standard_feat' => false,
 					'const_field'   => false,
@@ -121,7 +120,7 @@ abstract class Base {
 					'label'         => __( 'Insured Shipping: ', 'postnl-for-woocommerce' ),
 					'placeholder'   => '',
 					'description'   => '',
-					'value'         => $default_options['insured_shipping'] ? 'yes' : '',
+					'value'         => $default_options['insured_shipping'],
 					'show_in_bulk'  => true,
 					'standard_feat' => false,
 					'const_field'   => false,
@@ -145,7 +144,7 @@ abstract class Base {
 					'label'         => __( 'Return if no answer: ', 'postnl-for-woocommerce' ),
 					'placeholder'   => '',
 					'description'   => '',
-					'value'         => $default_options['return_no_answer'] ? 'yes' : '',
+					'value'         => $default_options['return_no_answer'],
 					'show_in_bulk'  => true,
 					'standard_feat' => false,
 					'const_field'   => false,
@@ -157,7 +156,7 @@ abstract class Base {
 					'label'         => __( 'Signature on Delivery: ', 'postnl-for-woocommerce' ),
 					'placeholder'   => '',
 					'description'   => '',
-					'value'         => $default_options['signature_on_delivery'] ? 'yes' : '',
+					'value'         => $default_options['signature_on_delivery'],
 					'show_in_bulk'  => true,
 					'standard_feat' => false,
 					'const_field'   => false,
@@ -169,7 +168,7 @@ abstract class Base {
 					'label'         => __( 'Only Home Address: ', 'postnl-for-woocommerce' ),
 					'placeholder'   => '',
 					'description'   => '',
-					'value'         => $default_options['only_home_address'] ? 'yes' : '',
+					'value'         => $default_options['only_home_address'],
 					'show_in_bulk'  => true,
 					'standard_feat' => false,
 					'const_field'   => false,
@@ -181,7 +180,7 @@ abstract class Base {
 					'label'         => __( 'Letterbox: ', 'postnl-for-woocommerce' ),
 					'placeholder'   => '',
 					'description'   => '',
-					'value'         => $default_options['letterbox'] ? 'yes' : '',
+					'value'         => $default_options['letterbox'],
 					'show_in_bulk'  => true,
 					'standard_feat' => false,
 					'const_field'   => false,
@@ -401,6 +400,9 @@ abstract class Base {
 	 * @throws \Exception Throw error for invalid order id.
 	 */
 	public function save_meta_value( $order_id, $meta_values ) {
+
+		error_log( print_r( $meta_values, true ) );
+
 		$order = wc_get_order( $order_id );
 
 		if ( ! is_a( $order, 'WC_Order' ) ) {

@@ -584,20 +584,15 @@ class Utils {
 	 * Generate default shipping options from the Settings page > Default Shipping Option select.
 	 *
 	 * @param array $default_settings Default settings from the settings page.
-	 * @param int $order_id \WC_Order id.
 	 *
 	 * @return string
 	 */
-	public static function generate_default_shipping_options_html( $default_settings, $order_id ) {
+	public static function generate_default_shipping_options_html( $default_settings ) {
 		$settings_to_display = array();
 		$settings_names = self::get_shipping_options();
-		if ( self::is_eligible_auto_letterbox( wc_get_order( $order_id ) ) ) {
-			$settings_to_display[] = $settings_names[ 'letterbox' ];
-		} else {
-			foreach( $default_settings as $name => $value ) {
-				if ( true === $value ) {
-					$settings_to_display[] = $settings_names[ $name ];
-				}
+		foreach( $default_settings as $name => $value ) {
+			if ( 'yes' === $value ) {
+				$settings_to_display[] = $settings_names[ $name ];
 			}
 		}
 		return implode( ', ', $settings_to_display );
@@ -659,12 +654,15 @@ class Utils {
 	/**
 	 * Check if current order is eligible for automatically use letterbox.
 	 *
-	 * @param \WC_Order|\WC_Cart $order Order or cart object.
+	 * @param \WC_Order|\WC_Cart|int $order \WC_order, \WC_Cart or Order ID.
 	 *
 	 * @return boolean
 	 */
 	public static function is_eligible_auto_letterbox( $order ) {
 
+		if ( is_int( $order ) ) {
+			$order = wc_get_order( $order );
+		}
 		if ( is_a( $order, 'WC_Order' ) ) {
 			$products = $order->get_items();
 		}

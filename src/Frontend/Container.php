@@ -288,7 +288,7 @@ class Container {
 				return;
 			}
 
-			if ( Utils::is_eligible_auto_letterbox( $cart ) ) {
+			if ( Utils::is_eligible_auto_letterbox( $cart ) && 'NL' === $cart->get_customer()->get_shipping_country() ) {
 				$this->display_letterbox_message();
 				return;
 			}

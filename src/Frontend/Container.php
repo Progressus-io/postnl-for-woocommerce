@@ -281,14 +281,14 @@ class Container {
 	 */
 	public function postnl_fields() {
 		try {
-
+			$cart      = \WC()->cart;
 			$post_data = $this->get_checkout_post_data();
 
 			if ( empty( $post_data ) ) {
 				return;
 			}
 
-			if ( Utils::is_eligible_auto_letterbox( \WC() ) ) {
+			if ( Utils::is_eligible_auto_letterbox( $cart ) ) {
 				$this->display_letterbox_message();
 				return;
 			}

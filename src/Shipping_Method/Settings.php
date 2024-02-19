@@ -162,16 +162,12 @@ class Settings extends \WC_Settings_API {
 			'return_settings_title'               => array(
 				'title'       => esc_html__( 'Return Settings', 'postnl-for-woocommerce' ),
 				'type'        => 'title',
-				'description' => esc_html__( 'Please insert your return credentials.', 'postnl-for-woocommerce' ),
+				'description' => esc_html__( 'If you have a reply number, only fill in the Zip code, City and Return code. If you want to return your shipments to a home address, also provide the address line (Street, Housenumber and HouseNrExt) of your return address.', 'postnl-for-woocommerce' ),
 			),
-			'return_address_default'    => array(
-				'title'       => esc_html__( 'Always print returnlabel together with shipping label', 'postnl-for-woocommerce' ),
+			'return_home_address'      => array(
+				'title'       => esc_html__( 'Return to home address', 'postnl-for-woocommerce' ),
 				'type'        => 'checkbox',
-				'description' => esc_html__( 'With this setting enabled, the return-label of a shipment will automatically be downloaded and printed when the shipping label created.', 'postnl-for-woocommerce' ),
-				'desc_tip'    => true,
-				'default'     => '',
-				'label'       => esc_html__( 'Enable', 'postnl-for-woocommerce' ),
-				'placeholder' => '',
+				'label'       => esc_html__( 'Street and house number', 'postnl-for-woocommerce' ),
 			),
 			'return_replynumber'        => array(
 				'title'       => esc_html__( 'Replynumber', 'postnl-for-woocommerce' ),
@@ -188,8 +184,6 @@ class Settings extends \WC_Settings_API {
 				'description' => esc_html__( 'Enter Return Street Address.', 'postnl-for-woocommerce' ),
 				'desc_tip'    => true,
 				'default'     => '',
-				'for_country' => array( 'BE' ),
-				'class'       => 'country-be',
 			),
 			'return_address_no'         => array(
 				'title'       => esc_html__( 'House Number', 'postnl-for-woocommerce' ),
@@ -197,8 +191,6 @@ class Settings extends \WC_Settings_API {
 				'description' => esc_html__( 'Enter return house number.', 'postnl-for-woocommerce' ),
 				'desc_tip'    => true,
 				'default'     => '',
-				'for_country' => array( 'BE' ),
-				'class'       => 'country-be',
 			),
 			'return_address_zip'        => array(
 				'title'       => esc_html__( 'Zipcode', 'postnl-for-woocommerce' ),
@@ -221,6 +213,15 @@ class Settings extends \WC_Settings_API {
 				'desc_tip'    => true,
 				'default'     => '',
 			),
+			/*'return_shipment_and_labels' => array(
+				'title'       => esc_html__( 'Shipment & Return labels ', 'postnl-for-woocommerce' ),
+				'type'        => 'select',
+				'options'     => array(
+					'none'            => esc_html__( 'None', 'postnl-for-woocommerce' ),
+					'shipping_return' => esc_html__( 'Shipping & Return Label', 'postnl-for-woocommerce' ),
+					'in_box'          => esc_html__( 'In the box', 'postnl-for-woocommerce' ),
+				),
+			),*/
 
 			// Delivery Options Settings.
 			'delivery_options_title'    => array(

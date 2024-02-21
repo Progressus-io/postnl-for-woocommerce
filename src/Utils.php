@@ -648,7 +648,7 @@ class Utils {
 		}
 		if ( is_a( $order, 'WC_Order' ) ) {
 			if ( $order->meta_exists( '_postnl_letterbox' ) ) {
-				return $order->get_meta( '_postnl_letterbox', true );
+				return (bool) $order->get_meta( '_postnl_letterbox', true );
 			}
 			$products = $order->get_items();
 		}

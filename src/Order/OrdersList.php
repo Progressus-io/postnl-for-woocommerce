@@ -135,6 +135,11 @@ class OrdersList extends Base {
 				return;
 			}
 
+			if ( Utils::is_eligible_auto_letterbox( $order ) ) {
+				esc_html_e( 'As soon as possible', 'postnl-for-woocommerce' );
+				return;
+			}
+
 			$delivery_info = $this->get_order_frontend_info( $order, 'delivery_day_date' );
 
 			echo Utils::generate_delivery_date_html( $delivery_info );

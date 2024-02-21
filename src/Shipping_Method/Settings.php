@@ -185,10 +185,17 @@ class Settings extends \WC_Settings_API {
 				'desc_tip'    => true,
 				'default'     => '',
 			),
-			'return_address_no'         => array(
+			'return_address_house'         => array(
 				'title'       => esc_html__( 'House Number', 'postnl-for-woocommerce' ),
 				'type'        => 'text',
 				'description' => esc_html__( 'Enter return house number.', 'postnl-for-woocommerce' ),
+				'desc_tip'    => true,
+				'default'     => '',
+			),
+			'return_address_house_ext'         => array(
+				'title'       => esc_html__( 'House Number Extension', 'postnl-for-woocommerce' ),
+				'type'        => 'text',
+				'description' => esc_html__( 'Enter return house number extension.', 'postnl-for-woocommerce' ),
 				'desc_tip'    => true,
 				'default'     => '',
 			),

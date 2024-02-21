@@ -634,7 +634,7 @@ class Utils {
 	}
 
 	/**
-	 * Check if current order is eligible for automatically use letterbox.
+	 * Check if current order/cart is eligible for automatically use letterbox.
 	 *
 	 * @param \WC_Order|\WC_Cart|int $order \WC_order, \WC_Cart or Order ID.
 	 *
@@ -642,16 +642,40 @@ class Utils {
 	 */
 	public static function is_eligible_auto_letterbox( $order ) {
 
+		// Check order
 		if ( is_int( $order ) ) {
 			$order = wc_get_order( $order );
 		}
 		if ( is_a( $order, 'WC_Order' ) ) {
+			if ( $order->meta_exists( '_postnl_letterbox' ) ) {
+				return $order->get_meta( '_postnl_letterbox', true );
+			}
 			$products = $order->get_items();
 		}
+
+		// Check cart items
 		if ( is_a( $order, 'WC_Cart' ) ) {
 			$products = $order->get_cart();
 		}
 
+		$is_eligible = self::check_products_for_letterbox( $products );
+
+		// Save the state for the order.
+		if ( is_a( $order, 'WC_Order' ) ) {
+			$order->update_meta_data( '_postnl_letterbox', $is_eligible );
+			$order->save();
+		}
+		return $is_eligible;
+	}
+
+	/**
+	 * Check if given products are suitable for the letterbox.
+	 *
+	 * @param array $products WC_Products[] or order_item[].
+	 *
+	 * @return bool
+	 */
+	public static function check_products_for_letterbox( $products ) {
 		$total_ratio_letterbox_item = 0;
 
 		foreach ( $products as $item_id => $item ) {

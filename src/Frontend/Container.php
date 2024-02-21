@@ -32,13 +32,6 @@ class Container {
 	protected $settings;
 
 	/**
-	 * Template file name.
-	 *
-	 * @var string
-	 */
-	public $template_file;
-
-	/**
 	 * Tab field name.
 	 *
 	 * @var tab_field
@@ -51,7 +44,6 @@ class Container {
 	public function __construct() {
 		$this->settings = Settings::get_instance();
 
-		$this->set_template_file();
 		$this->init_hooks();
 	}
 
@@ -88,13 +80,6 @@ class Container {
 			POSTNL_WC_VERSION,
 			true
 		);
-	}
-
-	/**
-	 * Set the template filename.
-	 */
-	public function set_template_file() {
-		$this->template_file = 'checkout/postnl-container.php';
 	}
 
 	/**
@@ -148,10 +133,12 @@ class Container {
 		$item_info = new Checkout\Item_Info( $post_data );
 		$api_call  = new Checkout\Client( $item_info );
 		$response  = $api_call->send_request();
+		$letterbox = Utils::is_eligible_auto_letterbox( \WC()->cart );
 
 		return array(
 			'response'  => $response,
 			'post_data' => $post_data,
+			'letterbox' => $letterbox
 		);
 	}
 
@@ -251,6 +238,7 @@ class Container {
 			'response'    => $checkout_data['response'],
 			'post_data'   => $checkout_data['post_data'],
 			'default_val' => $this->get_default_value( $checkout_data['response'], $checkout_data['post_data'] ),
+			'letterbox'   => $checkout_data['letterbox'],
 			'fields'      => array(
 				array(
 					'name'  => $this->tab_field,
@@ -259,19 +247,7 @@ class Container {
 			),
 		);
 
-		wc_get_template( $this->template_file, $template_args, '', POSTNL_WC_PLUGIN_DIR_PATH . '/templates/' );
-	}
-
-	/**
-	 * Adds message under the shipping methods when order is eligible ror letterbox.
-	 *
-	 * @return void
-	 */
-	public function display_letterbox_message() {
-		$template_args = array(
-			'message' => apply_filters( 'postnl_checkout_letterbox_message', __( 'These items are eligible for letterbox delivery.', 'postnl-for-woocommerce' ) ),
-		);
-		wc_get_template( 'checkout/postnl-letterbox-message.php', $template_args, '', POSTNL_WC_PLUGIN_DIR_PATH . '/templates/' );
+		wc_get_template( 'checkout/postnl-container.php', $template_args, '', POSTNL_WC_PLUGIN_DIR_PATH . '/templates/' );
 	}
 
 	/**
@@ -281,15 +257,9 @@ class Container {
 	 */
 	public function postnl_fields() {
 		try {
-			$cart      = \WC()->cart;
 			$post_data = $this->get_checkout_post_data();
 
 			if ( empty( $post_data ) ) {
-				return;
-			}
-
-			if ( Utils::is_eligible_auto_letterbox( $cart ) && 'NL' === $cart->get_customer()->get_shipping_country() ) {
-				$this->display_letterbox_message();
 				return;
 			}
 

@@ -220,7 +220,7 @@ class Settings extends \WC_Settings_API {
 				'desc_tip'    => true,
 				'default'     => '',
 			),
-			/*'return_shipment_and_labels' => array(
+			'return_shipment_and_labels' => array(
 				'title'       => esc_html__( 'Shipment & Return labels ', 'postnl-for-woocommerce' ),
 				'type'        => 'select',
 				'options'     => array(
@@ -228,7 +228,7 @@ class Settings extends \WC_Settings_API {
 					'shipping_return' => esc_html__( 'Shipping & Return Label', 'postnl-for-woocommerce' ),
 					'in_box'          => esc_html__( 'In the box', 'postnl-for-woocommerce' ),
 				),
-			),*/
+			),
 
 			// Delivery Options Settings.
 			'delivery_options_title'    => array(

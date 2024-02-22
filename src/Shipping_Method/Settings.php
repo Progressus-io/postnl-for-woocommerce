@@ -164,7 +164,7 @@ class Settings extends \WC_Settings_API {
 				'type'        => 'title',
 				'description' => esc_html__( 'If you have a reply number, only fill in the Zip code, City and Return code. If you want to return your shipments to a home address, also provide the address line (Street, Housenumber and HouseNrExt) of your return address.', 'postnl-for-woocommerce' ),
 			),
-			'return_home_address'      => array(
+			'return_address_or_reply_no' => array(
 				'title'       => esc_html__( 'Return to home address', 'postnl-for-woocommerce' ),
 				'type'        => 'checkbox',
 				'label'       => esc_html__( 'Street and house number', 'postnl-for-woocommerce' ),
@@ -178,21 +178,21 @@ class Settings extends \WC_Settings_API {
 				'for_country' => array( 'NL' ),
 				'class'       => 'country-nl',
 			),
-			'return_address'            => array(
+			'return_address_street'            => array(
 				'title'       => esc_html__( 'Street Address', 'postnl-for-woocommerce' ),
 				'type'        => 'text',
 				'description' => esc_html__( 'Enter Return Street Address.', 'postnl-for-woocommerce' ),
 				'desc_tip'    => true,
 				'default'     => '',
 			),
-			'return_address_house'         => array(
+			'return_address_house_no'         => array(
 				'title'       => esc_html__( 'House Number', 'postnl-for-woocommerce' ),
 				'type'        => 'text',
 				'description' => esc_html__( 'Enter return house number.', 'postnl-for-woocommerce' ),
 				'desc_tip'    => true,
 				'default'     => '',
 			),
-			'return_address_house_ext'         => array(
+			'return_address_house_noext'         => array(
 				'title'       => esc_html__( 'House Number Extension', 'postnl-for-woocommerce' ),
 				'type'        => 'text',
 				'description' => esc_html__( 'Enter return house number extension.', 'postnl-for-woocommerce' ),
@@ -676,6 +676,18 @@ class Settings extends \WC_Settings_API {
 	}
 
 	/**
+	 * Get value of the return address or reply number.
+	 *
+	 * @return bool
+	 */
+	public function get_return_address_or_reply_no() {
+		if ( 'yes' === $this->get_country_option( 'return_address_or_reply_no', '' ) ) {
+			return true;
+		}
+		return false;
+	}
+
+	/**
 	 * Get return reply number from the settings.
 	 *
 	 * @return String
@@ -685,21 +697,30 @@ class Settings extends \WC_Settings_API {
 	}
 
 	/**
-	 * Get return address from the settings.
+	 * Get return street address from the settings.
 	 *
 	 * @return String
 	 */
-	public function get_return_address() {
-		return $this->get_country_option( 'return_address', '' );
+	public function get_return_address_street() {
+		return $this->get_country_option( 'return_address_street', '' );
 	}
 
 	/**
-	 * Get return address from the settings.
+	 * Get return house number address from the settings.
 	 *
 	 * @return String
 	 */
-	public function get_return_streetnumber() {
-		return $this->get_country_option( 'return_address_no', '' );
+	public function get_return_address_house_no() {
+		return $this->get_country_option( 'return_address_house_no', '' );
+	}
+
+	/**
+	 * Get return house number extension address from the settings.
+	 *
+	 * @return String
+	 */
+	public function get_return_address_house_noext() {
+		return $this->get_country_option( 'return_address_house_noext', '' );
 	}
 
 	/**

@@ -375,6 +375,9 @@ class Item_Info extends Base_Info {
 					return $self->string_length_sanitization( $value, 35 );
 				},
 			),
+			'return_address_house_noext' => array(
+				'default' => '',
+			),
 			'return_address_city'  => array(
 				'default' => '',
 			),

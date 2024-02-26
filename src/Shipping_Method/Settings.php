@@ -164,6 +164,21 @@ class Settings extends \WC_Settings_API {
 				'type'        => 'title',
 				'description' => esc_html__( 'If you have a reply number, only fill in the Zip code, City and Return code. If you want to return your shipments to a home address, also provide the address line (Street, Housenumber and HouseNrExt) of your return address.', 'postnl-for-woocommerce' ),
 			),
+			'return_shipment_and_labels' => array(
+				'title'       => esc_html__( 'Shipment & Return labels ', 'postnl-for-woocommerce' ),
+				'type'        => 'select',
+				'options'     => array(
+					'none'            => esc_html__( 'None', 'postnl-for-woocommerce' ),
+					'shipping_return' => esc_html__( 'Shipping & Return Label', 'postnl-for-woocommerce' ),
+					'in_box'          => esc_html__( 'In the box', 'postnl-for-woocommerce' ),
+				),
+			),
+			'return_shipment_and_labels_all' => array(
+				'title'       => esc_html__( 'Shipping & Return for all labels', 'postnl-for-woocommerce' ),
+				'type'        => 'checkbox',
+				'label'       => esc_html__( 'Enable', 'postnl-for-woocommerce' ),
+				'description' => esc_html__( 'Tick this box if you want all labels to be activated for returning immediately. If you do not tick this box the return function can be activated on an order-by-order basis.', 'postnl-for-woocommerce' ),
+			),
 			'return_address_or_reply_no' => array(
 				'title'       => esc_html__( 'Return to home address', 'postnl-for-woocommerce' ),
 				'type'        => 'checkbox',
@@ -220,16 +235,6 @@ class Settings extends \WC_Settings_API {
 				'desc_tip'    => true,
 				'default'     => '',
 			),
-			'return_shipment_and_labels' => array(
-				'title'       => esc_html__( 'Shipment & Return labels ', 'postnl-for-woocommerce' ),
-				'type'        => 'select',
-				'options'     => array(
-					'none'            => esc_html__( 'None', 'postnl-for-woocommerce' ),
-					'shipping_return' => esc_html__( 'Shipping & Return Label', 'postnl-for-woocommerce' ),
-					'in_box'          => esc_html__( 'In the box', 'postnl-for-woocommerce' ),
-				),
-			),
-
 			// Delivery Options Settings.
 			'delivery_options_title'    => array(
 				'title'       => esc_html__( 'Checkout Settings', 'postnl-for-woocommerce' ),
@@ -775,6 +780,24 @@ class Settings extends \WC_Settings_API {
 	 */
 	public function get_return_customer_code() {
 		return $this->get_country_option( 'return_customer_code', '' );
+	}
+
+	/**
+	 * Get return shipment and labels select value.
+	 *
+	 * @return String
+	 */
+	public function get_return_shipment_and_labels() {
+		return $this->get_country_option( 'return_shipment_and_labels', '' );
+	}
+
+	/**
+	 * Get value of the return shipment and labels all checkbox.
+	 *
+	 * @return String
+	 */
+	public function get_return_shipment_and_labels_all() {
+		return $this->get_country_option( 'return_shipment_and_labels_all', '' );
 	}
 
 	/**

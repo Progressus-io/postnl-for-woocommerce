@@ -167,6 +167,7 @@ class Settings extends \WC_Settings_API {
 			'return_shipment_and_labels' => array(
 				'title'       => esc_html__( 'Shipment & Return labels ', 'postnl-for-woocommerce' ),
 				'type'        => 'select',
+				'description' => esc_html__( 'Choose between using Shipment & Return labels or Label in the Box. The return function of the Shipment & Return label can only be used for the first 7 days after creation. If a customer wants to return a parcel with a Shipment & Return label after 7 days you can send them a Smart Return barcode.', 'postnl-for-woocommerce' ),
 				'options'     => array(
 					'none'            => esc_html__( 'None', 'postnl-for-woocommerce' ),
 					'shipping_return' => esc_html__( 'Shipping & Return Label', 'postnl-for-woocommerce' ),

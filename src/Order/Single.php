@@ -372,6 +372,23 @@ class Single extends Base {
 		</div>
 		<?php
 	}
+
+	/**
+	 * Adds an 'Activate return function' button.
+	 */
+	public function activate_return_function_html() {
+		if ( 'shipping_return' === $this->settings->get_return_shipment_and_labels() ) {
+			?>
+			<p class="form-field">
+				<button type="button" class="button button-activate-return"><?php esc_html_e( 'Activate return function', 'postnl-for-woocommerce' ); ?></button>
+				<div class="postnl-info">
+					<?php esc_html_e( 'Choose between Shipment & Return labels which can be used to return the parcel immediately after shipping, or for Shipment & Return labels which are blocked for returning the parcel until they are activated in the Label & Tracking menu', 'postnl-for-woocommerce' ); ?>
+				</div>
+			</p>
+			<?php
+		}
+	}
+
 	/**
 	 * Additional fields of the meta box for child class.
 	 *
@@ -403,18 +420,15 @@ class Single extends Base {
 			<?php $this->generate_delivery_date_html( $delivery_info ); ?>
 			<?php $this->generate_pickup_points_html( $pickup_info ); ?>
 			<?php Utils::fields_generator( $available_fields ); ?>
+			<?php $this->activate_return_function_html() ?>
 
-			<div class="button-container">
-				<button class="button button-primary button-save-form"><?php esc_html_e( 'Create Shipment', 'postnl-for-woocommerce' ); ?></button>
-				<a href="<?php echo esc_url( $this->get_download_label_url( $order->get_id() ) ); ?>" class="button button-primary button-download-label"><?php esc_html_e( 'Print Label', 'postnl-for-woocommerce' ); ?></a>
-				<a class="button button-secondary delete-label" href="#"><?php esc_html_e( 'Delete Label', 'postnl-for-woocommerce' ); ?></a>
-			</div>
+			<hr id="postnl_break_2">
 			<!-- 
 			<div class="button-container return-container">
 				<a href="<?php echo esc_url( $this->get_download_label_url( $order->get_id(), 'return-label' ) ); ?>" class="button button-primary button-download-label"><?php esc_html_e( 'Print Return Label', 'postnl-for-woocommerce' ); ?></a>
 			</div>
 			-->
-			<!-- 
+			<!--
 			<div class="button-container letterbox-container">
 				<a href="<?php echo esc_url( $this->get_download_label_url( $order->get_id(), 'buspakjeextra' ) ); ?>" class="button button-primary button-download-label"><?php esc_html_e( 'Print Letterbox', 'postnl-for-woocommerce' ); ?></a>
 			</div>

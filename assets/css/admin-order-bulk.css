@@ -1,8 +1,33 @@
 #postnl-modal .form-field input.short {
 	width:50px;
 }
-
-.postnl-change-shipping-options-content .international{
+.postnl-create-label-content .form-field,
+.postnl-change-shipping-options-content .form-field:not(.postnl_default_shipping_options_field) {
+    display: flex;
+    flex-flow: row nowrap;
+    justify-content: center;
+    align-items: center;
+}
+.postnl-create-label-content .form-field label,
+.postnl-change-shipping-options-content .form-field:not(.postnl_default_shipping_options_field) label{
+    flex-grow: 1;
+}
+.postnl-create-label-content .form-field input:not([type="radio"]):not([type="checkbox"]),
+.postnl-create-label-content .form-field select {
+    width: 100%;
+    max-width: 170px;
+}
+.postnl-change-shipping-options-content .form-field.postnl_default_shipping_options_field {
+    flex-flow: column nowrap;
+}
+.postnl-change-shipping-options-content .form-field.postnl_default_shipping_options_field label {
+    display: inline-block;
+    margin-bottom: 6px;
+}
+.postnl-change-shipping-options-content .form-field.postnl_default_shipping_options_field select {
+    max-width: 100%;
+}
+.postnl-change-shipping-options-content .form-field.international{
     display: none;
 }
 

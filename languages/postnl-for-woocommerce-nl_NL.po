@@ -2,28 +2,36 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PostNL for WooCommerce\n"
 "POT-Creation-Date: 2023-09-29 08:25+0300\n"
-"PO-Revision-Date: 2023-10-31 11:48-0300\n"
+"PO-Revision-Date: 2024-02-28 13:08+0000\n"
 "Last-Translator: \n"
-"Language-Team: \n"
+"Language-Team: Dutch\n"
 "Language: nl_NL\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-"X-Generator: Poedit 3.4.1\n"
+"X-Generator: Loco https://localise.biz/\n"
 "X-Poedit-Basepath: ..\n"
 "X-Poedit-Flags-xgettext: --add-comments=translators:\n"
 "X-Poedit-WPHeader: postnl-for-woocommerce.php\n"
 "X-Poedit-SourceCharset: UTF-8\n"
-"X-Poedit-KeywordsList: __;_e;_n:1,2;_x:1,2c;_ex:1,2c;_nx:4c,1,2;esc_attr__;esc_attr_e;esc_attr_x:1,2c;esc_html__;esc_html_e;esc_html_x:1,2c;_n_noop:1,2;_nx_noop:3c,1,2;__ngettext_noop:1,2\n"
+"X-Poedit-KeywordsList: __;_e;_n:1,2;_x:1,2c;_ex:1,2c;_nx:4c,1,2;esc_attr__;"
+"esc_attr_e;esc_attr_x:1,2c;esc_html__;esc_html_e;esc_html_x:1,2c;_n_noop:1,2;"
+"_nx_noop:3c,1,2;__ngettext_noop:1,2\n"
 "X-Poedit-SearchPath-0: .\n"
 "X-Poedit-SearchPathExcluded-0: *.min.js\n"
 "X-Poedit-SearchPathExcluded-1: vendor\n"
+"Report-Msgid-Bugs-To: \n"
+"X-Loco-Version: 2.6.6; wp-6.4.3"
 
 #: src/Frontend/Base.php:171
 #, php-format
-msgid "Sorry, your session has expired. <a href=\"%s\" class=\"wc-backward\">Return to shop</a>"
-msgstr "Uw sessie is verlopen. <a href=\"%s\" class=\"wc-backward\">Keer terug naar de winkel</a>"
+msgid ""
+"Sorry, your session has expired. <a href=\"%s\" class=\"wc-backward\">Return "
+"to shop</a>"
+msgstr ""
+"Uw sessie is verlopen. <a href=\"%s\" class=\"wc-backward\">Keer terug naar "
+"de winkel</a>"
 
 #: src/Frontend/Base.php:416
 msgid "PostNL Evening Fee"
@@ -108,12 +116,15 @@ msgid "PostNL plugin requires WooCommerce to be installed and activated!"
 msgstr "De PostNL plugin vereist het installeren en activeren van WooCommerce!"
 
 #: src/Main.php:309
-msgid "PostNL plugin requires store country to be Netherlands (NL) or Belgium (BE)!"
+msgid ""
+"PostNL plugin requires store country to be Netherlands (NL) or Belgium (BE)!"
 msgstr "De PostNL plugin vereist een winkellocatie in Nederland of België!"
 
 #: src/Main.php:322
 msgid "PostNL plugin requires store currency to be EUR, USD, GBP or CNY!"
-msgstr "De PostNL plugin vereist een van de volgende winkelvaluta: EUR, USD, GBP of CNY!"
+msgstr ""
+"De PostNL plugin vereist een van de volgende winkelvaluta: EUR, USD, GBP of "
+"CNY!"
 
 #: src/Order/Base.php:111
 msgid "ID Check: "
@@ -305,8 +316,12 @@ msgid "HS Tariff Code (%s)"
 msgstr "GS tarief code (%s)"
 
 #: src/Product/Single.php:83
-msgid "HS Tariff Code is a number assigned to every possible commodity that can be imported or exported from any country."
-msgstr "De GS tarief code is een code die wordt toegewezen aan ieder mogelijk product wat geïmporteerd en geëxporteerd kan worden naar iedere bestemming."
+msgid ""
+"HS Tariff Code is a number assigned to every possible commodity that can be "
+"imported or exported from any country."
+msgstr ""
+"De GS tarief code is een code die wordt toegewezen aan ieder mogelijk "
+"product wat geïmporteerd en geëxporteerd kan worden naar iedere bestemming."
 
 #: src/Product/Single.php:152
 msgid "Product ID does not exist!"
@@ -491,8 +506,16 @@ msgstr "Het maximale gewicht van een brievenbuspakje is 2kg!"
 
 #: src/Shipping_Method/PostNL.php:33
 #, php-format
-msgid "Below you will find all functions for controlling, preparing and processing your shipment with PostNL. Prerequisite is a valid PostNL business customer contract. If you are not yet a PostNL business customer, you can request a quote %1$shere%2$s."
-msgstr "Hieronder vind je alle functies voor het controleren, voorbereiden en verwerken van jouw zendingen met PostNL. Hiervoor heb je een zakelijk contract nodig met PostNL. Ben je nog geen klant van PostNL? Dan kan je %1$shier%2$s klant worden."
+msgid ""
+"Below you will find all functions for controlling, preparing and processing "
+"your shipment with PostNL. Prerequisite is a valid PostNL business customer "
+"contract. If you are not yet a PostNL business customer, you can request a "
+"quote %1$shere%2$s."
+msgstr ""
+"Hieronder vind je alle functies voor het controleren, voorbereiden en "
+"verwerken van jouw zendingen met PostNL. Hiervoor heb je een zakelijk "
+"contract nodig met PostNL. Ben je nog geen klant van PostNL? Dan kan je "
+"%1$shier%2$s klant worden."
 
 #: src/Shipping_Method/PostNL.php:93
 #, php-format
@@ -510,7 +533,9 @@ msgstr "Handleiding"
 #: src/Shipping_Method/Settings.php:70
 #, php-format
 msgid "Consult the %1$smanual%2$s for help installing the plug-in."
-msgstr "Raadpleeg de %1$shandleiding%2$s voor hulp bij het installeren van de plug-in."
+msgstr ""
+"Raadpleeg de %1$shandleiding%2$s voor hulp bij het installeren van de plug-"
+"in."
 
 #: src/Shipping_Method/Settings.php:74
 msgid "Account Settings"
@@ -518,8 +543,14 @@ msgstr "Account Instellingen"
 
 #: src/Shipping_Method/Settings.php:77
 #, php-format
-msgid "Please configure your shipping parameters and your access towards the PostNL APIs by means of authentication. You can find the details of your PostNL account in Mijn %1$sPostNL%2$s under \"My Account > API beheren\"."
-msgstr "Vul hier je klant gegevens in om de plug-in te koppelen aan jouw PostNL account. Jouw klantgegevens kan je vinden in de Mijn %1$sPostNL%2$s omgeving onder \"Mijn Account > API beheren\"."
+msgid ""
+"Please configure your shipping parameters and your access towards the PostNL "
+"APIs by means of authentication. You can find the details of your PostNL "
+"account in Mijn %1$sPostNL%2$s under \"My Account > API beheren\"."
+msgstr ""
+"Vul hier je klant gegevens in om de plug-in te koppelen aan jouw PostNL "
+"account. Jouw klantgegevens kan je vinden in de Mijn %1$sPostNL%2$s omgeving "
+"onder \"Mijn Account > API beheren\"."
 
 #: src/Shipping_Method/Settings.php:80
 msgid "Environment Mode"
@@ -543,8 +574,12 @@ msgstr "Productie API Key"
 
 #: src/Shipping_Method/Settings.php:96
 #, php-format
-msgid "Insert your PostNL production API-key. You can find your API-key on Mijn %1$sPostNL%2$s under \"My Account\"."
-msgstr "Voer jouw PostNL productie API-key in. Jouw productie en sandbox API-key is te vinden op Mijn %1$sPostNL%2$s onder \"My Account\"."
+msgid ""
+"Insert your PostNL production API-key. You can find your API-key on Mijn "
+"%1$sPostNL%2$s under \"My Account\"."
+msgstr ""
+"Voer jouw PostNL productie API-key in. Jouw productie en sandbox API-key is "
+"te vinden op Mijn %1$sPostNL%2$s onder \"My Account\"."
 
 #: src/Shipping_Method/Settings.php:102
 msgid "Sandbox API Key"
@@ -552,8 +587,12 @@ msgstr "Sandbox API Key"
 
 #: src/Shipping_Method/Settings.php:105
 #, php-format
-msgid "Insert your PostNL staging API-key. You can find your API-key on Mijn %1$sPostNL%2$s under \"My Account\"."
-msgstr "Voer jouw PostNL sandbox API-key in. Jouw productie en sandbox API-key is te vinden op Mijn %1$sPostNL%2$s onder \"My Account\"."
+msgid ""
+"Insert your PostNL staging API-key. You can find your API-key on Mijn "
+"%1$sPostNL%2$s under \"My Account\"."
+msgstr ""
+"Voer jouw PostNL sandbox API-key in. Jouw productie en sandbox API-key is te "
+"vinden op Mijn %1$sPostNL%2$s onder \"My Account\"."
 
 #: src/Shipping_Method/Settings.php:111
 msgid "Logging"
@@ -561,8 +600,15 @@ msgstr "Logging"
 
 #: src/Shipping_Method/Settings.php:115
 #, php-format
-msgid "A log file containing the communication to the PostNL server will be maintained if this option is checked. This can be used in case of technical issues and can be found %1$shere%2$s."
-msgstr "Als deze functie is ingeschakeld wordt er een log-bestand opgebouwd die communictie gegevens bevat naar de server van PostNL. Deze gegevens van toegevoegde waarde zijn in geval van technische issues en kunnen %1$shier%2$s gevonden worden."
+msgid ""
+"A log file containing the communication to the PostNL server will be "
+"maintained if this option is checked. This can be used in case of technical "
+"issues and can be found %1$shere%2$s."
+msgstr ""
+"Als deze functie is ingeschakeld wordt er een log-bestand opgebouwd die "
+"communictie gegevens bevat naar de server van PostNL. Deze gegevens van "
+"toegevoegde waarde zijn in geval van technische issues en kunnen "
+"%1$shier%2$s gevonden worden."
 
 #: src/Shipping_Method/Settings.php:119 src/Shipping_Method/Settings.php:173
 #: src/Shipping_Method/Settings.php:242 src/Shipping_Method/Settings.php:270
@@ -593,7 +639,8 @@ msgstr "Bedrijfsnaam"
 
 #: src/Shipping_Method/Settings.php:144
 msgid "Enter company name - this name will be noted as the sender on the label"
-msgstr "Vul bedrijfsnaam in - deze naam wordt genoteerd als afzender op het label"
+msgstr ""
+"Vul bedrijfsnaam in - deze naam wordt genoteerd als afzender op het label"
 
 #: src/Shipping_Method/Settings.php:163
 msgid "Return Settings"
@@ -608,8 +655,12 @@ msgid "Always print returnlabel together with shipping label"
 msgstr "Altijd retour-label printen met label heenzending"
 
 #: src/Shipping_Method/Settings.php:170
-msgid "With this setting enabled, the return-label of a shipment will automatically be downloaded and printed when the shipping label created."
-msgstr "Als deze instelling is ingeschakeld wordt het retourlabel tegelijk met het aanmaken van het verzendlabel van de heenzending gedownload en geprint."
+msgid ""
+"With this setting enabled, the return-label of a shipment will automatically "
+"be downloaded and printed when the shipping label created."
+msgstr ""
+"Als deze instelling is ingeschakeld wordt het retourlabel tegelijk met het "
+"aanmaken van het verzendlabel van de heenzending gedownload en geprint."
 
 #: src/Shipping_Method/Settings.php:177
 msgid "Replynumber"
@@ -656,8 +707,12 @@ msgid "Return Customer Code"
 msgstr "Klantcode Retouren"
 
 #: src/Shipping_Method/Settings.php:220
-msgid "Be aware that the Return Customer Code differs from the regular Customer Code. You can find your Return customer code in Mijn PostNL."
-msgstr "Let op, de klantcode voor retourzendingen is niet hetzelfde als de klantcode voor heenzendingen. De retour klantcode vind je in jouw Mijn PostNL omgeving."
+msgid ""
+"Be aware that the Return Customer Code differs from the regular Customer "
+"Code. You can find your Return customer code in Mijn PostNL."
+msgstr ""
+"Let op, de klantcode voor retourzendingen is niet hetzelfde als de klantcode "
+"voor heenzendingen. De retour klantcode vind je in jouw Mijn PostNL omgeving."
 
 #: src/Shipping_Method/Settings.php:227
 msgid "Checkout Settings"
@@ -673,23 +728,32 @@ msgstr "Verzendmethoden"
 
 #: src/Shipping_Method/Settings.php:234
 msgid "Select Shipping Methods can be associated with PostNL."
-msgstr "Selecteer de verzendmethode die gebruikt worden voor verzending met PostNL."
+msgstr ""
+"Selecteer de verzendmethode die gebruikt worden voor verzending met PostNL."
 
 #: src/Shipping_Method/Settings.php:240
 msgid "PostNL Pick-up Points"
 msgstr "Ophalen bij PostNL-punt"
 
 #: src/Shipping_Method/Settings.php:243
-msgid "Show PostNL pick-up points in the checkout so that your customers can choose to get their orders delivered at a PostNL pick-up point."
-msgstr "Toon de PostNL-punten in de checkout zodat jouw klanten kunnen kiezen om hun bestelling op te halen bij een PostNL-punt."
+msgid ""
+"Show PostNL pick-up points in the checkout so that your customers can choose "
+"to get their orders delivered at a PostNL pick-up point."
+msgstr ""
+"Toon de PostNL-punten in de checkout zodat jouw klanten kunnen kiezen om hun "
+"bestelling op te halen bij een PostNL-punt."
 
 #: src/Shipping_Method/Settings.php:268
 msgid "Delivery Days"
 msgstr "Bezorgdagen"
 
 #: src/Shipping_Method/Settings.php:271
-msgid "Show delivery days in the checkout so that your customers can choose which day to receive their order."
-msgstr "Laat jouw klanten kiezen wanneer zij hun bestelling ontvangen door de bezorgdagen in de checkout te tonen."
+msgid ""
+"Show delivery days in the checkout so that your customers can choose which "
+"day to receive their order."
+msgstr ""
+"Laat jouw klanten kiezen wanneer zij hun bestelling ontvangen door de "
+"bezorgdagen in de checkout te tonen."
 
 #: src/Shipping_Method/Settings.php:278
 msgid "Number of Delivery Days"
@@ -700,8 +764,12 @@ msgid "Number of delivery days displayed in the frontend. Maximum will be 12."
 msgstr "Aantal getoonde bezorgdagen in de checkout. Maximaal 12 dagen."
 
 #: src/Shipping_Method/Settings.php:295
-msgid "Enable morning delivery in the checkout so your customers can choose to receive their orders in the morning."
-msgstr "Activeer avondbezorging in de checkout zodat jouw klanten kunnen kiezen om ’s avonds de bestelling te ontvangen."
+msgid ""
+"Enable morning delivery in the checkout so your customers can choose to "
+"receive their orders in the morning."
+msgstr ""
+"Activeer avondbezorging in de checkout zodat jouw klanten kunnen kiezen om "
+"’s avonds de bestelling te ontvangen."
 
 #: src/Shipping_Method/Settings.php:302
 msgid "Morning Delivery Fee"
@@ -709,11 +777,16 @@ msgstr "Toeslag ochtend bezorging"
 
 #: src/Shipping_Method/Settings.php:304
 msgid "Fee for receiving orders in the morning."
-msgstr "De toeslag die jouw klanten betalen om ’s avonds de bestelling te ontvangen."
+msgstr ""
+"De toeslag die jouw klanten betalen om ’s avonds de bestelling te ontvangen."
 
 #: src/Shipping_Method/Settings.php:313
-msgid "Enable evening delivery in the checkout so your customers can choose to receive their orders in the evening."
-msgstr "Activeer avondbezorging in de checkout zodat jouw klanten kunnen kiezen om ’s avonds de bestelling te ontvangen."
+msgid ""
+"Enable evening delivery in the checkout so your customers can choose to "
+"receive their orders in the evening."
+msgstr ""
+"Activeer avondbezorging in de checkout zodat jouw klanten kunnen kiezen om "
+"’s avonds de bestelling te ontvangen."
 
 #: src/Shipping_Method/Settings.php:320
 msgid "Evening Delivery Fee"
@@ -721,23 +794,32 @@ msgstr "Toeslag avondbezorging"
 
 #: src/Shipping_Method/Settings.php:322
 msgid "Fee for receiving orders in the evening."
-msgstr "De toeslag die jouw klanten betalen om ’s avonds de bestelling te ontvangen."
+msgstr ""
+"De toeslag die jouw klanten betalen om ’s avonds de bestelling te ontvangen."
 
 #: src/Shipping_Method/Settings.php:329
 msgid "Transit Time"
 msgstr "Overkomstduur"
 
 #: src/Shipping_Method/Settings.php:331
-msgid "The number of days it takes for the order to be delivered after the order has been placed."
-msgstr "Het aantal dagen dat nodig is om de bestelling te bezorgen nadat de bestelling is geplaatst."
+msgid ""
+"The number of days it takes for the order to be delivered after the order "
+"has been placed."
+msgstr ""
+"Het aantal dagen dat nodig is om de bestelling te bezorgen nadat de "
+"bestelling is geplaatst."
 
 #: src/Shipping_Method/Settings.php:337
 msgid "Cut Off Time"
 msgstr "Cut off tijd"
 
 #: src/Shipping_Method/Settings.php:339
-msgid "If an order is ordered after this time, one day will be added to the transit time."
-msgstr "Als een bestelling na de cut off tijd wordt geplaatst, dan wordt er een dag bij de overkomstduur opgeteld."
+msgid ""
+"If an order is ordered after this time, one day will be added to the transit "
+"time."
+msgstr ""
+"Als een bestelling na de cut off tijd wordt geplaatst, dan wordt er een dag "
+"bij de overkomstduur opgeteld."
 
 #: src/Shipping_Method/Settings.php:345
 msgid "Drop off Days"
@@ -781,15 +863,23 @@ msgstr "Valideer Nederlandse adressen"
 
 #: src/Shipping_Method/Settings.php:385
 msgid "Based on zipcode and housenumber combination the address is checked."
-msgstr "Op basis van de combinatie postcode en huisnummer wordt het adres gecontroleerd."
+msgstr ""
+"Op basis van de combinatie postcode en huisnummer wordt het adres "
+"gecontroleerd."
 
 #: src/Shipping_Method/Settings.php:390
 msgid "Use PostNL address-field"
 msgstr "Gebruik PostNL adresvelden"
 
 #: src/Shipping_Method/Settings.php:393
-msgid "For zipcode, housenumber, housenumber extension and street separate address fields are displayed when this settings is enabled. This only applies for Dutch addresses."
-msgstr "Voor postcode, huisnummer, huisnummer toevoeging en straat voor losse velden getoond als deze instelling geactiveerd is. Dit geldt alleen voor Nederlandse adressen."
+msgid ""
+"For zipcode, housenumber, housenumber extension and street separate address "
+"fields are displayed when this settings is enabled. This only applies for "
+"Dutch addresses."
+msgstr ""
+"Voor postcode, huisnummer, huisnummer toevoeging en straat voor losse velden "
+"getoond als deze instelling geactiveerd is. Dit geldt alleen voor "
+"Nederlandse adressen."
 
 #: src/Shipping_Method/Settings.php:400
 msgid "Shipping Outside Europe Settings"
@@ -820,8 +910,13 @@ msgid "Default HS Tariff Code"
 msgstr "Standaard GS tarief code"
 
 #: src/Shipping_Method/Settings.php:425
-msgid "The HS tariff code is used by customs to classify goods. The HS tariff code can be found on the website of the Dutch Chamber of Commerce."
-msgstr "De GS tarief code wordt gebruikt door de douane om goederen te classificeren. De GS tarief code van goederen is te vinden op de website van de Nederlandse Kamer van Koophandel."
+msgid ""
+"The HS tariff code is used by customs to classify goods. The HS tariff code "
+"can be found on the website of the Dutch Chamber of Commerce."
+msgstr ""
+"De GS tarief code wordt gebruikt door de douane om goederen te classificeren."
+" De GS tarief code van goederen is te vinden op de website van de "
+"Nederlandse Kamer van Koophandel."
 
 #: src/Shipping_Method/Settings.php:431
 msgid "Default Country of Origin"
@@ -844,8 +939,12 @@ msgid "Label Format"
 msgstr "Labelformaat"
 
 #: src/Shipping_Method/Settings.php:449
-msgid "Use A6 format in case you use a labelprinter. Use A4 format for other regular printers."
-msgstr "Stel A6 formaat in indien je gebruik maakt van een label printen. Gebruik het A4 formaat voor gebruikelijke printers."
+msgid ""
+"Use A6 format in case you use a labelprinter. Use A4 format for other "
+"regular printers."
+msgstr ""
+"Stel A6 formaat in indien je gebruik maakt van een label printen. Gebruik "
+"het A4 formaat voor gebruikelijke printers."
 
 #: src/Shipping_Method/Settings.php:459
 msgid "WooCommerce Email"
@@ -877,11 +976,14 @@ msgstr "Selecteer hier standaard verzendopties."
 
 #: src/Shipping_Method/Settings.php:482
 msgid "Default Shipping Option"
-msgstr "Standaard verzendoptie"
+msgstr "Verzendoptie"
 
 #: src/Shipping_Method/Settings.php:484
-msgid "Select a default shipping option for all orders that are shipped with PostNL."
-msgstr "Selecteer een standaard verzendoptie voor alle zendingen die worden verstuurd met PostNL."
+msgid ""
+"Select a default shipping option for all orders that are shipped with PostNL."
+msgstr ""
+"Selecteer een standaard verzendoptie voor alle zendingen die worden "
+"verstuurd met PostNL."
 
 #: src/Shipping_Method/Settings.php:487
 msgid "None"
@@ -921,7 +1023,8 @@ msgstr "Handtekening voor ontvangst + Retour bij geen gehoor"
 
 #: src/Shipping_Method/Settings.php:496
 msgid "Signature on Delivery + Insured Shipping + Return if no answer"
-msgstr "Handtekening voor ontvangst + Verzekerd verzenden + Retour bij geen gehoor"
+msgstr ""
+"Handtekening voor ontvangst + Verzekerd verzenden + Retour bij geen gehoor"
 
 #: src/Shipping_Method/Settings.php:497
 msgid "Only Home Address + Return if no answer"
@@ -929,7 +1032,8 @@ msgstr "Alleen Huisadres + Retour bij geen gehoor"
 
 #: src/Shipping_Method/Settings.php:498
 msgid "Only Home Address + Return if no answer + Signature on Delivery"
-msgstr "Alleen Huisadres + Retour bij geen gehoor + Handtekening voor ontvangst"
+msgstr ""
+"Alleen Huisadres + Retour bij geen gehoor + Handtekening voor ontvangst"
 
 #: src/Shipping_Method/Settings.php:499
 msgid "Only Home Address + Signature on Delivery"
@@ -940,8 +1044,12 @@ msgid "Automatically change order status to Completed"
 msgstr "Automatische statuswijziging"
 
 #: src/Shipping_Method/Settings.php:505 src/Shipping_Method/Settings.php:506
-msgid "Automatically change order status to Completed once an order has been pre-alerted and printed"
-msgstr "Wijzig de status automatisch naar Afgerond nadat een order is aangemaakt en geprint"
+msgid ""
+"Automatically change order status to Completed once an order has been pre-"
+"alerted and printed"
+msgstr ""
+"Wijzig de status automatisch naar Afgerond nadat een order is aangemaakt en "
+"geprint"
 
 #: src/Utils.php:309
 #, php-format
@@ -966,8 +1074,11 @@ msgstr "Ochtend"
 
 #: templates/checkout/postnl-dropoff-points.php:103
 #, php-format
-msgid "Receive shipment at home? Continue %1$swithout%2$s selecting a Pick-up Point."
-msgstr "Zending thuis ontvangen? Ga door %1$szonder%2$s een PostNL-punt te selecteren."
+msgid ""
+"Receive shipment at home? Continue %1$swithout%2$s selecting a Pick-up Point."
+msgstr ""
+"Zending thuis ontvangen? Ga door %1$szonder%2$s een PostNL-punt te "
+"selecteren."
 
 #: templates/checkout/postnl-dropoff-points.php:137
 msgid "Vanaf"
@@ -982,8 +1093,14 @@ msgid "https://github.com/Progressus-io/postnl-for-woocommerce/"
 msgstr ""
 
 #. Description of the plugin/theme
-msgid "With this plug-in you can easily confirm your PostNL shipments and print shipping labels in no time. In addition, your customers are more in control because they choose where and when they receive their order."
-msgstr "Met deze plug-in meld je eenvoudig zendingen aan bij PostNL en print je met een handomdraai verzendlabels. Daarnaast zijn jouw klanten meer in control omdat zij zelf aangeven waar en wanneer zij hun bestelling ontvangen."
+msgid ""
+"With this plug-in you can easily confirm your PostNL shipments and print "
+"shipping labels in no time. In addition, your customers are more in control "
+"because they choose where and when they receive their order."
+msgstr ""
+"Met deze plug-in meld je eenvoudig zendingen aan bij PostNL en print je met "
+"een handomdraai verzendlabels. Daarnaast zijn jouw klanten meer in control "
+"omdat zij zelf aangeven waar en wanneer zij hun bestelling ontvangen."
 
 #. Author of the plugin/theme
 msgid "PostNL"
@@ -992,6 +1109,3 @@ msgstr ""
 #. Author URI of the plugin/theme
 msgid "https://postnl.post/"
 msgstr ""
-
-#~ msgid "Enter return company name."
-#~ msgstr "Vul bedrijfsnaam voor retour-zendingen in."

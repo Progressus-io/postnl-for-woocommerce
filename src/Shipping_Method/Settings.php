@@ -1241,21 +1241,8 @@ class Settings extends \WC_Settings_API {
 	 *
 	 * @return array
 	 */
-	public function get_default_shipping_options( $order_id = false ) {
+	public function get_default_shipping_options() {
 
-		// Check if order is given and is eligible for the letterbox.
-		if ( ! empty( $order_id ) && Utils::is_eligible_auto_letterbox( $order_id ) ) {
-			return array(
-				'id_check'              => false,
-				'insured_shipping'      => false,
-				'return_no_answer'      => false,
-				'signature_on_delivery' => false,
-				'only_home_address'     => false,
-				'letterbox'             => 'yes',
-			);
-		}
-
-		$shipping_options = $this->get_country_option( 'default_shipping_options', '' );
 		$default_options  = array(
 			'id_check'              => false,
 			'insured_shipping'      => false,
@@ -1264,6 +1251,8 @@ class Settings extends \WC_Settings_API {
 			'only_home_address'     => false,
 			'letterbox'             => false,
 		);
+
+		$shipping_options = $this->get_country_option( 'default_shipping_options', '' );
 
 		switch ( $shipping_options ) {
 			case 'signature_insured':

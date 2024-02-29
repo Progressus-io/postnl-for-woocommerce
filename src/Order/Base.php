@@ -91,13 +91,34 @@ abstract class Base {
 	}
 
 	/**
+	 * Get shipping options from the PostNL meta, if those no-exists then form the plugin settings.
+	 *
+	 * @param \WC_Order $order
+	 *
+	 * @return array
+	 */
+	public function get_shipping_options( $order ) {
+		if ( ! is_a( $order, 'WC_Order' ) ) {
+			return array();
+		}
+		$default_options = $this->get_backend_data( $order->get_id() );
+		if ( empty( $default_options ) ) {
+			$default_options = $this->settings->get_default_shipping_options();
+		}
+		if ( Utils::is_eligible_auto_letterbox( $order ) ) {
+			$default_options['letterbox'] = 'yes';
+		}
+		return $default_options;
+	}
+
+	/**
 	 * List of meta box fields.
 	 *
 	 * @param \WC_Order $order WooCommerce order ID.
 	 */
 	public function meta_box_fields( $order = false ) {
 
-		$default_options = $this->settings->get_default_shipping_options( $order );
+		$default_options = $this->get_shipping_options( $order );
 
 		return apply_filters(
 			'postnl_order_meta_box_fields',

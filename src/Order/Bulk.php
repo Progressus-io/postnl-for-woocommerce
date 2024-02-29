@@ -617,7 +617,8 @@ class Bulk extends Base {
 		$result = array();
 
 		try {
-			$default_settings      = $this->settings->get_default_shipping_options( $order_id );
+			$order            = wc_get_order( $order_id );
+			$default_settings = $this->get_shipping_options( $order );
 			foreach( $default_settings as $name => $value ) {
 				if ( $value  ) {
 					$post_data[ $this->prefix . $name ] = $value;
@@ -631,7 +632,6 @@ class Bulk extends Base {
 				$customer_note = true;
 			}
 
-			$order = wc_get_order( $order_id );
 			$order->add_order_note( $tracking_note, $customer_note );
 
 			$result['message'] = array(

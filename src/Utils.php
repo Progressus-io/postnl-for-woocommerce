@@ -46,6 +46,15 @@ class Utils {
 	}
 
 	/**
+	 * Get available country for the letterbox.
+	 *
+	 * @return array.
+	 */
+	public static function get_available_country_for_letterbox_on_frontend() {
+		return array( 'NL' );
+	}
+
+	/**
 	 * Get available country.
 	 *
 	 * @return array.
@@ -649,6 +658,9 @@ class Utils {
 		if ( is_a( $order, 'WC_Order' ) ) {
 			if ( $order->meta_exists( '_postnl_letterbox' ) ) {
 				return (bool) $order->get_meta( '_postnl_letterbox', true );
+			}
+			if ( ! in_array( $order->get_shipping_country(), self::get_available_country(), true ) ) {
+				return false;
 			}
 			$products = $order->get_items();
 		}

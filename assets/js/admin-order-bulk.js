@@ -41,7 +41,7 @@
 			}
 
 			if( 'postnl-change-shipping-options' == value ){
-				tb_show( "", '/?TB_inline=true&width=385&height=230&inlineId=postnl-change-shipping-options-modal' );
+				tb_show( "", '/?TB_inline=true&width=385&height=360&inlineId=postnl-change-shipping-options-modal' );
 				var tb_window = jQuery( '#TB_window' );
 				tb_window.find( '#TB_ajaxWindowTitle' ).text(title);
 				tb_window.find( '#postnl_shipping_options' ).on( 'change', function( event ) {

@@ -27,7 +27,7 @@
 .postnl-change-shipping-options-content .form-field.postnl_default_shipping_options_field select {
     max-width: 100%;
 }
-.postnl-change-shipping-options-content .form-field.international{
+.postnl-change-shipping-options-content .form-field.conditional:not(.domestic){
     display: none;
 }
 

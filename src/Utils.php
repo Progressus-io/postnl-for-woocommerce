@@ -50,7 +50,7 @@ class Utils {
 	 *
 	 * @return array.
 	 */
-	public static function get_available_country_for_letterbox_on_frontend() {
+	public static function get_available_country_for_letterbox() {
 		return array( 'NL' );
 	}
 
@@ -659,7 +659,9 @@ class Utils {
 			if ( $order->meta_exists( '_postnl_letterbox' ) ) {
 				return (bool) $order->get_meta( '_postnl_letterbox', true );
 			}
-			if ( ! in_array( $order->get_shipping_country(), self::get_available_country(), true ) ) {
+			if ( ! in_array( $order->get_shipping_country(), Utils::get_available_country_for_letterbox(), true ) ) {
+				$order->update_meta_data( '_postnl_letterbox', false );
+				$order->save();
 				return false;
 			}
 			$products = $order->get_items();
@@ -667,6 +669,9 @@ class Utils {
 
 		// Check cart items
 		if ( is_a( $order, 'WC_Cart' ) ) {
+			if( ! in_array( WC()->customer->get_shipping_country(), Utils::get_available_country_for_letterbox(), true ) ) {
+				return false;
+			}
 			$products = $order->get_cart();
 		}
 

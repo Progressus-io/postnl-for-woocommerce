@@ -177,7 +177,11 @@ class OrdersList extends Base {
 		}
 		if ( 'postnl_shipping_options' === $column ) {
 			$shipping_options = $this->get_shipping_options( $order_id );
-			echo esc_html( Utils::generate_shipping_options_html( $shipping_options ) );
+            if ( ! empty( $shipping_options ) ) {
+				echo esc_html( Utils::generate_shipping_options_html( $shipping_options ) );
+			} else {
+                echo $this->get_delivery_type( wc_get_order( $order_id ) );
+            }
 		}
 	}
 

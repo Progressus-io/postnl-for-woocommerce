@@ -214,37 +214,6 @@ class Single extends Base {
 	}
 
 	/**
-	 * Get delivery type string.
-	 *
-	 * @param WC_Order $order Order object.
-	 *
-	 * @return String.
-	 */
-	public function get_delivery_type( $order ) {
-		$from_country      = Utils::get_base_country();
-		$to_country        = $order->get_shipping_country();
-		$delivery_type_map = Mapping::delivery_type();
-		$filtered_frontend = $this->get_order_frontend_info( $order, '_type' );
-		$destination       = Utils::get_shipping_zone( $to_country );
-
-		if ( ! is_array( $delivery_type_map[ $from_country ][ $destination ] ) ) {
-			return ! empty( $delivery_type_map[ $from_country ][ $destination ] ) ? $delivery_type_map[ $from_country ][ $destination ] : '';
-		}
-
-		if ( empty( $filtered_frontend ) ) {
-			return '';
-		}
-
-		foreach ( $filtered_frontend as $frontend_key => $frontend_value ) {
-			if ( ! empty( $delivery_type_map[ $from_country ][ $destination ][ $frontend_key ][ $frontend_value ] ) ) {
-				return $delivery_type_map[ $from_country ][ $destination ][ $frontend_key ][ $frontend_value ];
-			}
-		}
-
-		return '';
-	}
-
-	/**
 	 * Generate the dropoff points html information.
 	 *
 	 * @param WC_Order $order Order object.

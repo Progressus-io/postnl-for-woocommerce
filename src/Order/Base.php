@@ -102,6 +102,9 @@ abstract class Base {
 			return array();
 		}
 		$default_options = $this->get_backend_data( $order->get_id() );
+		if ( 'NL' != $order->get_shipping_country() ) {
+			return $default_options;
+		}
 		if ( empty( $default_options ) ) {
 			$default_options = $this->settings->get_default_shipping_options();
 		}
@@ -555,6 +558,38 @@ abstract class Base {
 		}
 
 		return array();
+	}
+
+	/**
+	 * Get delivery type string.
+	 *
+	 * @param WC_Order $order Order object.
+	 *
+	 * @return String.
+	 */
+	public function get_delivery_type( $order ) {
+		$from_country      = Utils::get_base_country();
+		$to_country        = $order->get_shipping_country();
+		$delivery_type_map = Mapping::delivery_type();
+		$filtered_frontend = $this->get_order_frontend_info( $order, '_type' );
+		$destination       = Utils::get_shipping_zone( $to_country );
+
+
+		if ( ! is_array( $delivery_type_map[ $from_country ][ $destination ] ) ) {
+			return ! empty( $delivery_type_map[ $from_country ][ $destination ] ) ? $delivery_type_map[ $from_country ][ $destination ] : '';
+		}
+
+		if ( empty( $filtered_frontend ) ) {
+			return '';
+		}
+
+		foreach ( $filtered_frontend as $frontend_key => $frontend_value ) {
+			if ( ! empty( $delivery_type_map[ $from_country ][ $destination ][ $frontend_key ][ $frontend_value ] ) ) {
+				return $delivery_type_map[ $from_country ][ $destination ][ $frontend_key ][ $frontend_value ];
+			}
+		}
+
+		return '';
 	}
 
 	/**

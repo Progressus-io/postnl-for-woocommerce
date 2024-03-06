@@ -122,6 +122,7 @@ abstract class Base {
 	public function meta_box_fields( $order = false ) {
 
 		$default_options = $this->get_shipping_options( $order );
+		var_dump($default_options);
 
 		return apply_filters(
 			'postnl_order_meta_box_fields',
@@ -1204,6 +1205,7 @@ abstract class Base {
 	 */
 	public function set_order_default_shipping_options( $order_id, $options ) {
 		$order = wc_get_order( $order_id );
+		$order->delete_meta_data( $this->meta_name, $options );
 		$order->update_meta_data( $this->meta_name, $options );
 		$order->save();
 	}

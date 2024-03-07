@@ -7,7 +7,8 @@
 		init: function() {
 			jQuery( '#shipment-postnl-label-form' )
 				.on( 'click', 'a.delete-label', this.delete_label )
-				.on( 'click', 'button.button-save-form', this.save_form );
+				.on( 'click', 'button.button-save-form', this.save_form )
+                .on( 'click', 'button.button-activate-return', this.activate_return );
 		},
 
 		// When a user enters a new tracking item
@@ -194,9 +195,21 @@
 				}
 			});
 		},
+
+        activate_return: function() {
+            var data = {
+                action:   'postnl_activate_return_function',
+                order_id: woocommerce_admin_meta_boxes.post_id,
+            };
+
+            $.post( woocommerce_admin_meta_boxes.ajax_url, data, function( response ) {
+                console.log(response);
+            });
+        }
 	}
 
 	postnl_order_single.init();
 
 	window.postnl_order_single_refresh = postnl_order_single.refresh_items;
+
 } )( jQuery );

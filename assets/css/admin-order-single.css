@@ -4,8 +4,21 @@
 	padding: 5px 0 5px 55px;
 }
 
+#shipment-postnl-label-form .form-field {
+    display: flex;
+}
+
+#shipment-postnl-label-form .form-field label {
+    flex-grow: 1;
+}
+
+
 #shipment-postnl-label-form label {
 	font-weight:700;
+}
+
+#shipment-postnl-label-form select, #shipment-postnl-label-form input[type="number"] {
+    width: 120px!important;
 }
 
 #shipment-postnl-label-form .postnl-info-container .postnl-info {

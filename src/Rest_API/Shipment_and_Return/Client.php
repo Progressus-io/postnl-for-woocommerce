@@ -43,7 +43,7 @@ class Client extends Base {
 		return array(
 			'CustomerCode'   => $this->item_info->query_args['customer_code'],
 			'CustomerNumber' => $this->item_info->query_args['customer_num'],
-			'Barcode'        => $this->item_info->shipment['main_barcode'],
+			'Barcode'        => $this->item_info->query_args['barcode'],
 		);
 	}
 

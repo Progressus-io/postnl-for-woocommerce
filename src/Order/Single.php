@@ -8,6 +8,7 @@
 namespace PostNLWooCommerce\Order;
 
 use Automattic\WooCommerce\Internal\DataStores\Orders\CustomOrdersTableController;
+use PostNLWooCommerce\Rest_API\Shipment_and_Return\Item_Info;
 use PostNLWooCommerce\Utils;
 use PostNLWooCommerce\Helper\Mapping;
 
@@ -379,7 +380,7 @@ class Single extends Base {
 	/**
 	 * Adds an 'Activate return function' button.
 	 */
-	public function activate_return_function_html() {
+	public function activate_return_function_html( $order ) {
 		if ( 'shipping_return' === $this->settings->get_return_shipment_and_labels() ) {
 			?>
 			<hr id="postnl_break_2">
@@ -425,7 +426,7 @@ class Single extends Base {
 			<?php $this->generate_delivery_date_html( $delivery_info ); ?>
 			<?php $this->generate_pickup_points_html( $pickup_info ); ?>
 			<?php Utils::fields_generator( $available_fields ); ?>
-			<?php $this->activate_return_function_html() ?>
+			<?php $this->activate_return_function_html( $order ) ?>
 			<!-- 
 			<div class="button-container return-container">
 				<a href="<?php echo esc_url( $this->get_download_label_url( $order->get_id(), 'return-label' ) ); ?>" class="button button-primary button-download-label"><?php esc_html_e( 'Print Return Label', 'postnl-for-woocommerce' ); ?></a>
@@ -615,15 +616,9 @@ class Single extends Base {
 
 			$order_id = ! empty( $_REQUEST['order_id'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['order_id'] ) ) : 0;
 
-			// Check if order id is really an ID from shop_order post type.
-			$order = wc_get_order( $order_id );
-			if ( ! is_a( $order, 'WC_Order' ) ) {
-				throw new \Exception( esc_html__( 'Order does not exist!', 'postnl-for-woocommerce' ) );
-			}
+			$item_info = new Item_Info( $order_id );
 
-			// todo Make an api request.
-
-			wp_send_json_success( $order );
+			wp_send_json_success( $order_id );
 		} catch ( \Exception $e ) {
 			wp_send_json_error(
 				array( 'message' => $e->getMessage() ),

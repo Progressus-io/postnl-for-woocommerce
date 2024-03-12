@@ -42,6 +42,7 @@ class Single extends Base {
 		add_action( 'init', array( $this, 'get_label_file' ), 10 );
 
 		add_action( 'wp_ajax_postnl_activate_return_function', array( $this, 'postnl_activate_return_function' ) );
+		add_action( 'wp_ajax_nopriv_postnl_activate_return_function', array( $this, 'postnl_activate_return_function' ) );
 	}
 
 	/**
@@ -383,6 +384,7 @@ class Single extends Base {
 			?>
 			<hr id="postnl_break_2">
 			<p class="form-field">
+				<?php wp_nonce_field( 'postnl_activate_return_function', 'activate_return_function_nonce' ); ?>
 				<button type="button" class="button button-activate-return"><?php esc_html_e( 'Activate return function', 'postnl-for-woocommerce' ); ?></button>
 				<div class="postnl-info">
 					<?php esc_html_e( 'Click here to activate the return function of this label', 'postnl-for-woocommerce' ); ?>
@@ -602,17 +604,13 @@ class Single extends Base {
 	 */
 	public function postnl_activate_return_function() {
 		try {
-			//wp_send_json_success( $_POST );
-			// Get array of nonce fields.
-			$nonce_fields = array_values( $this->get_nonce_fields() );
-
-			if ( empty( $nonce_fields ) ) {
+			if ( ! isset( $_POST['security'] ) ) {
 				throw new \Exception( esc_html__( 'Cannot find nonce field!', 'postnl-for-woocommerce' ) );
 			}
+
 			// Check nonce before proceed.
-			$nonce_result = check_ajax_referer( 'activate_return_function' );
-			if ( false === $nonce_result ) {
-				throw new \Exception( esc_html__( 'Nonce is invalid!', 'postnl-for-woocommerce' ) );
+			if ( ! wp_verify_nonce( $_POST['security'], 'postnl_activate_return_function' ) ) {
+				throw new \Exception( esc_html__( 'Nonce is invalid', 'postnl-for-woocommerce' ) );
 			}
 
 			$order_id = ! empty( $_REQUEST['order_id'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['order_id'] ) ) : 0;
@@ -623,7 +621,7 @@ class Single extends Base {
 				throw new \Exception( esc_html__( 'Order does not exist!', 'postnl-for-woocommerce' ) );
 			}
 
-            // todo Make an api request.
+			// todo Make an api request.
 
 			wp_send_json_success( $order );
 		} catch ( \Exception $e ) {

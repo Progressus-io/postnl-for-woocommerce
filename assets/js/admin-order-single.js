@@ -199,6 +199,7 @@
         activate_return: function() {
             var data = {
                 action:   'postnl_activate_return_function',
+                security: $( '#activate_return_function_nonce' ).val(),
                 order_id: woocommerce_admin_meta_boxes.post_id,
             };
 

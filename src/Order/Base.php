@@ -122,7 +122,6 @@ abstract class Base {
 	public function meta_box_fields( $order = false ) {
 
 		$default_options = $this->get_shipping_options( $order );
-		var_dump($default_options);
 
 		return apply_filters(
 			'postnl_order_meta_box_fields',

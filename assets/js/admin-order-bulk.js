@@ -89,6 +89,4 @@
 
 	postnl_order_bulk.init();
 
-    alert('matt');
-
 } )( jQuery );

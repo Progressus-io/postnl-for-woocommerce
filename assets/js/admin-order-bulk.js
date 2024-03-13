@@ -38,6 +38,7 @@
 					jQuery( this ).prop( 'disabled', true );
 					post_form.submit();
 				} );
+                jQuery(this).val('-1');
 			}
 
 			if( 'postnl-change-shipping-options' == value ){
@@ -66,6 +67,7 @@
 					jQuery( this ).prop( 'disabled', true );
 					post_form.submit();
 				} );
+                jQuery(this).val('-1');
 			}
 
 		},
@@ -86,5 +88,7 @@
 	};
 
 	postnl_order_bulk.init();
+
+    alert('matt');
 
 } )( jQuery );

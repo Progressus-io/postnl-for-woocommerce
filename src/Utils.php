@@ -631,12 +631,12 @@ class Utils {
 				'return_no_answer',
 			),
 			'only_home_address_return_signature' => array(
-				'signature_on_delivery',
+				'only_home_address',
 				'return_no_answer',
 				'signature_on_delivery'
 			),
 			'only_home_address_signature' => array(
-				'signature_on_delivery',
+				'only_home_address',
 				'signature_on_delivery'
 			)
 		);

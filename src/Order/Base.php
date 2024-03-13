@@ -101,16 +101,25 @@ abstract class Base {
 		if ( ! is_a( $order, 'WC_Order' ) ) {
 			return array();
 		}
-		$default_options = $this->get_backend_data( $order->get_id() );
-		if ( 'NL' != $order->get_shipping_country() ) {
-			return $default_options;
+		if ( 'NL' === $order->get_shipping_country()  ) {
+
+			$default_options = $this->get_backend_data( $order->get_id() );
+
+			// Show default options selected by the user.
+			if ( ! empty( $default_options ) ) {
+				return $default_options;
+			}
+
+			if ( Utils::is_eligible_auto_letterbox( $order ) ) {
+				$default_options['letterbox'] = 'yes';
+			} else {
+				$default_options = $this->settings->get_default_shipping_options();
+			}
+
+		} else {
+			$default_options = array();
 		}
-		if ( empty( $default_options ) ) {
-			$default_options = $this->settings->get_default_shipping_options();
-		}
-		if ( Utils::is_eligible_auto_letterbox( $order ) ) {
-			$default_options['letterbox'] = 'yes';
-		}
+
 		return $default_options;
 	}
 

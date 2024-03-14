@@ -12,7 +12,20 @@
     flex-grow: 1;
 }
 
+#shipment-postnl-label-form hr {
+    display: block;
+    margin-top: 20px!important;
+    margin-bottom: 20px!important;
+}
+#shipment-postnl-label-form .button-container {
+    display: flex;
+    gap: 5px;
 
+}
+#shipment-postnl-label-form .button-container > * {
+    flex-grow: 1;
+    text-align: center;
+}
 #shipment-postnl-label-form label {
 	font-weight:700;
 }

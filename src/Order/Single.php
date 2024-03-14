@@ -9,6 +9,7 @@ namespace PostNLWooCommerce\Order;
 
 use Automattic\WooCommerce\Internal\DataStores\Orders\CustomOrdersTableController;
 use PostNLWooCommerce\Rest_API\Shipment_and_Return\Item_Info;
+use PostNLWooCommerce\Rest_API\Shipment_and_Return\Client;
 use PostNLWooCommerce\Utils;
 use PostNLWooCommerce\Helper\Mapping;
 
@@ -426,8 +427,13 @@ class Single extends Base {
 			<?php $this->generate_delivery_date_html( $delivery_info ); ?>
 			<?php $this->generate_pickup_points_html( $pickup_info ); ?>
 			<?php Utils::fields_generator( $available_fields ); ?>
+			<div class="button-container">
+				<button class="button button-primary button-save-form"><?php esc_html_e( 'Create Shipment', 'postnl-for-woocommerce' ); ?></button>
+				<a href="<?php echo esc_url( $this->get_download_label_url( $order->get_id() ) ); ?>" class="button button-primary button-download-label"><?php esc_html_e( 'Print Label', 'postnl-for-woocommerce' ); ?></a>
+				<a class="button button-secondary delete-label" href="#"><?php esc_html_e( 'Delete Label', 'postnl-for-woocommerce' ); ?></a>
+			</div>
 			<?php $this->activate_return_function_html( $order ) ?>
-			<!-- 
+			<!--
 			<div class="button-container return-container">
 				<a href="<?php echo esc_url( $this->get_download_label_url( $order->get_id(), 'return-label' ) ); ?>" class="button button-primary button-download-label"><?php esc_html_e( 'Print Return Label', 'postnl-for-woocommerce' ); ?></a>
 			</div>
@@ -617,6 +623,9 @@ class Single extends Base {
 			$order_id = ! empty( $_REQUEST['order_id'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['order_id'] ) ) : 0;
 
 			$item_info = new Item_Info( $order_id );
+			$api_call  = new Client( $item_info );
+			$response  = $api_call->send_request();
+            error_log( print_r( $response, true ) );
 
 			wp_send_json_success( $order_id );
 		} catch ( \Exception $e ) {

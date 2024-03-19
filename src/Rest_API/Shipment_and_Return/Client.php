@@ -32,7 +32,7 @@ class Client extends Base {
 	 *
 	 * @var string
 	 */
-	public $endpoint = '/parcels/v1/shipment/activatereturn';
+	public $endpoint = '/parcels/v1/shipment/activatereturn/';
 
 	/**
 	 * Function for composing API request in the URL for GET request.

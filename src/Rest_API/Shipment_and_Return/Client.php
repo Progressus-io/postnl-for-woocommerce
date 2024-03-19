@@ -35,15 +35,13 @@ class Client extends Base {
 	public $endpoint = '/parcels/v1/shipment/activatereturn/';
 
 	/**
-	 * Function for composing API request in the URL for GET request.
-	 *
-	 * @return array.
+	 * Function for composing API request.
 	 */
-	public function compose_url_params() {
+	public function compose_body_request() {
 		return array(
-			'CustomerCode'   => $this->item_info->query_args['customer_code'],
-			'CustomerNumber' => $this->item_info->query_args['customer_num'],
-			'Barcode'        => $this->item_info->query_args['barcode'],
+			'CustomerNumber' => $this->item_info->body['CustomerNumber'],
+			'CustomerCode'   => $this->item_info->body['CustomerCode'],
+			'Barcode'        => $this->item_info->body['Barcode'],
 		);
 	}
 

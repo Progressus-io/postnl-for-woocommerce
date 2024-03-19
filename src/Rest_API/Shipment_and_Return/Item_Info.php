@@ -21,6 +21,13 @@ if ( ! defined( 'ABSPATH' ) ) {
 class Item_Info extends Base_Info {
 
 	/**
+	 * Body of the item info.
+	 *
+	 * @var body
+	 */
+	public $body;
+
+	/**
 	 * Prefix for meta box fields.
 	 *
 	 * @var string
@@ -55,7 +62,7 @@ class Item_Info extends Base_Info {
 	 * Parses the arguments and sets the instance's properties.
 	 */
 	public function parse_args() {
-		return array(
+		$this->body = array(
 			'CustomerNumber' => $this->settings->get_customer_num(),
 			'CustomerCode'   => $this->settings->get_customer_code(),
 			'Barcode'        => $this->get_barcode(),
@@ -67,7 +74,7 @@ class Item_Info extends Base_Info {
 	 *
 	 * @return string.
 	 */
-	public function get_barcode() {
+	protected function get_barcode() {
 		try {
 			$order = wc_get_order( $this->order_id );
 			if ( ! is_a( $order, 'WC_Order' ) ) {

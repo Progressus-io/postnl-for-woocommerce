@@ -382,12 +382,13 @@ class Single extends Base {
 	 * Adds an 'Activate return function' button.
 	 */
 	public function activate_return_function_html( $order ) {
+		$check_for_barcode = empty( $this->get_backend_data( $order->get_ID() ) );
 		if ( 'shipping_return' === $this->settings->get_return_shipment_and_labels() ) {
 			?>
 			<hr id="postnl_break_2">
 			<p class="form-field">
 				<?php wp_nonce_field( 'postnl_activate_return_function', 'activate_return_function_nonce' ); ?>
-				<button type="button" class="button button-activate-return"><?php esc_html_e( 'Activate return function', 'postnl-for-woocommerce' ); ?></button>
+				<button type="button" class="button button-activate-return" <?php disabled( $check_for_barcode ); ?>><?php esc_html_e( 'Activate return function', 'postnl-for-woocommerce' ); ?></button>
 				<div class="postnl-info">
 					<?php esc_html_e( 'Click here to activate the return function of this label', 'postnl-for-woocommerce' ); ?>
 				</div>
@@ -621,13 +622,15 @@ class Single extends Base {
 			}
 
 			$order_id = ! empty( $_REQUEST['order_id'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['order_id'] ) ) : 0;
-
 			$item_info = new Item_Info( $order_id );
 			$api_call  = new Client( $item_info );
 			$response  = $api_call->send_request();
-            error_log( print_r( $response, true ) );
 
-			wp_send_json_success( $order_id );
+			if ( empty( $response ) ) {
+				wp_send_json_success();
+			} else {
+				wp_send_json_error();
+			}
 		} catch ( \Exception $e ) {
 			wp_send_json_error(
 				array( 'message' => $e->getMessage() ),

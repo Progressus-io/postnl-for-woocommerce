@@ -479,24 +479,73 @@ class Settings extends \WC_Settings_API {
 				'description' => esc_html__( 'Please select Default shipping Options.', 'postnl-for-woocommerce' ),
 			),
 			'default_shipping_options'       => array(
-				'title'       => __( 'Default Shipping Option', 'postnl-for-woocommerce' ),
+				'title'       => __( 'Domestic Default Shipping', 'postnl-for-woocommerce' ),
 				'type'        => 'select',
-				'description' => __( 'Select a default shipping option for all orders that are shipped with PostNL.', 'postnl-for-woocommerce' ),
+				'description' => __( 'Select a default shipping option for domestic orders that are shipped with PostNL.', 'postnl-for-woocommerce' ),
 				'default'     => '',
 				'options'     => array(
-					''                                   => __( 'None', 'postnl-for-woocommerce' ),
-					'id_check'                           => __( 'ID Check', 'postnl-for-woocommerce' ),
-					'insured_shipping'                   => __( 'Insured Shipping', 'postnl-for-woocommerce' ),
-					'return_no_answer'                   => __( 'Return if no answer', 'postnl-for-woocommerce' ),
-					'signature_on_delivery'              => __( 'Signature on Delivery', 'postnl-for-woocommerce' ),
-					'only_home_address'                  => __( 'Only Home Address', 'postnl-for-woocommerce' ),
-					'letterbox'                          => __( 'Letterbox', 'postnl-for-woocommerce' ),
-					'signature_insured'                  => __( 'Signature on Delivery + Insured Shipping', 'postnl-for-woocommerce' ),
-					'signature_return_no_answer'         => __( 'Signature on Delivery + Return if no answer', 'postnl-for-woocommerce' ),
-					'signature_insured_return_no_answer' => __( 'Signature on Delivery + Insured Shipping + Return if no answer', 'postnl-for-woocommerce' ),
-					'only_home_address_return_no_answer' => __( 'Only Home Address + Return if no answer', 'postnl-for-woocommerce' ),
-					'only_home_address_return_signature' => __( 'Only Home Address + Return if no answer + Signature on Delivery', 'postnl-for-woocommerce' ),
-					'only_home_address_signature'        => __( 'Only Home Address + Signature on Delivery', 'postnl-for-woocommerce' ),
+					'standard_shipment'                                        => __( 'Standard shipment', 'postnl-for-woocommerce' ),
+					'id_check'                                                 => __( 'ID Check', 'postnl-for-woocommerce' ),
+					'insured_shipping'                                         => __( 'Insured Shipping', 'postnl-for-woocommerce' ),
+					'return_no_answer'                                         => __( 'Return if no answer', 'postnl-for-woocommerce' ),
+					'signature_on_delivery'                                    => __( 'Signature on Delivery', 'postnl-for-woocommerce' ),
+					'only_home_address'                                        => __( 'Only Home Address', 'postnl-for-woocommerce' ),
+					'letterbox'                                                => __( 'Letterbox', 'postnl-for-woocommerce' ),
+					'signature_on_delivery|insured_shipping'                   => __( 'Signature on Delivery + Insured Shipping', 'postnl-for-woocommerce' ),
+					'signature_on_delivery|return_no_answer'                   => __( 'Signature on Delivery + Return if no answer', 'postnl-for-woocommerce' ),
+					'signature_on_delivery|insured_shipping|return_no_answer'  => __( 'Signature on Delivery + Insured Shipping + Return if no answer', 'postnl-for-woocommerce' ),
+					'only_home_address|return_no_answer'                       => __( 'Only Home Address + Return if no answer', 'postnl-for-woocommerce' ),
+					'only_home_address|return_no_answer|signature_on_delivery' => __( 'Only Home Address + Return if no answer + Signature on Delivery', 'postnl-for-woocommerce' ),
+					'only_home_address|signature_on_delivery'                  => __( 'Only Home Address + Signature on Delivery', 'postnl-for-woocommerce' ),
+				),
+			),
+			'default_shipping_options_belgium'       => array(
+				'title'       => __( 'Default Shipping to Belgium', 'postnl-for-woocommerce' ),
+				'type'        => 'select',
+				'description' => __( 'Select a default shipping option for the orders shipped to Belgium with PostNL.', 'postnl-for-woocommerce' ),
+				'default'     => 'standard_belgium',
+				'options'     => array(
+					'standard_belgium'                        => __( 'Standard Shipment Belgium', 'postnl-for-woocommerce' ),
+					'standard_belgium|only_home_address'      => __( 'Standard Shipment Belgium + Only Home Address', 'postnl-for-woocommerce' ),
+					'standard_belgium|signature_on_delivery'  => __( 'Standard Shipment Belgium + Signature on Delivery', 'postnl-for-woocommerce' ),
+					'standard_belgium|increased_liability'    => __( 'Standard Shipment Belgium + Increased Liability', 'postnl-for-woocommerce' ),
+					'mailboxpacket'                           => __( 'Boxable Packet', 'postnl-for-woocommerce' ),
+					'mailboxpacket|track_and_trace'           => __( 'Boxable Packet + Track & Trace', 'postnl-for-woocommerce' ),
+					'packet'                                  => __( 'Packet', 'postnl-for-woocommerce' ),
+					'packet|track_and_trace'                  => __( 'Packet + Track & Trace', 'postnl-for-woocommerce' ),
+					'packet|track_and_trace|insured_shipping' => __( 'Packet + Track & Trace + Insured', 'postnl-for-woocommerce' ),
+				),
+			),
+			'default_shipping_options_eu'       => array(
+				'title'       => __( 'Default Shipping to European Union', 'postnl-for-woocommerce' ),
+				'type'        => 'select',
+				'description' => __( 'Select a default shipping option for the orders shipped within European Union zone.', 'postnl-for-woocommerce' ),
+				'default'     => 'eu_parcel|track_and_trace',
+				'options'     => array(
+					'eu_parcel|track_and_trace'                  => __( 'EU Parcel + Track & Trace', 'postnl-for-woocommerce' ),
+					'eu_parcel|track_and_trace|insured_shipping' => __( 'EU Parcel + Track & Trace + Insured', 'postnl-for-woocommerce' ),
+					'eu_parcel|track_and_trace|insured_plus'     => __( 'EU Parcel + Track & Trace + Insured Plus', 'postnl-for-woocommerce' ),
+					'mailboxpacket'                              => __( 'Boxable Packet', 'postnl-for-woocommerce' ),
+					'mailboxpacket|track_and_trace'              => __( 'Boxable Packet + Track & Trace', 'postnl-for-woocommerce' ),
+					'packet'                                     => __( 'Packet', 'postnl-for-woocommerce' ),
+					'packet|track_and_trace'                     => __( 'Packet + Track & Trace', 'postnl-for-woocommerce' ),
+					'packet|track_and_trace|insured_shipping'    => __( 'Packet + Track & Trace + Insured', 'postnl-for-woocommerce' ),
+				),
+			),
+			'default_shipping_options_international'       => array(
+				'title'       => __( 'Default Shipping to European Union', 'postnl-for-woocommerce' ),
+				'type'        => 'select',
+				'description' => __( 'Select a default shipping option for the orders shipped internationally (outside the EU borders).', 'postnl-for-woocommerce' ),
+				'default'     => 'parcel_non_eu|track_and_trace',
+				'options'     => array(
+					'parcel_non_eu|track_and_trace'                  => __( 'Parcel non-EU + Track & Trace', 'postnl-for-woocommerce' ),
+					'parcel_non_eu|track_and_trace|insured_shipping' => __( 'Parcel non-EU + Track & Trace + Insured', 'postnl-for-woocommerce' ),
+					'parcel_non_eu|track_and_trace|insured_plus'     => __( 'Parcel non-EU + Track & Trace + Insured Plus', 'postnl-for-woocommerce' ),
+					'mailboxpacket'                                  => __( 'Boxable Packet', 'postnl-for-woocommerce' ),
+					'mailboxpacket|track_and_trace'                  => __( 'Boxable Packet + Track & Trace', 'postnl-for-woocommerce' ),
+					'packet'                                         => __( 'Packet', 'postnl-for-woocommerce' ),
+					'packet|track_and_trace'                         => __( 'Packet + Track & Trace', 'postnl-for-woocommerce' ),
+					'packet|track_and_trace|insured_shipping'        => __( 'Packet + Track & Trace + Insured', 'postnl-for-woocommerce' ),
 				),
 			),
 			'auto_complete_order'         => array(
@@ -1243,50 +1292,11 @@ class Settings extends \WC_Settings_API {
 	 */
 	public function get_default_shipping_options() {
 
-		$default_options  = array(
-			'id_check'              => false,
-			'insured_shipping'      => false,
-			'return_no_answer'      => false,
-			'signature_on_delivery' => false,
-			'only_home_address'     => false,
-			'letterbox'             => false,
-		);
-
 		$shipping_options = $this->get_country_option( 'default_shipping_options', '' );
+		$shipping_options = explode( '|', $shipping_options );
+		$shipping_options = array_fill_keys( $shipping_options, 'yes' );
 
-		switch ( $shipping_options ) {
-			case 'signature_insured':
-				$default_options['signature_on_delivery'] = 'yes';
-				$default_options['insured_shipping']      = 'yes';
-				break;
-			case 'signature_return_no_answer':
-				$default_options['signature_on_delivery'] = 'yes';
-				$default_options['return_no_answer']      = 'yes';
-				break;
-			case 'signature_insured_return_no_answer':
-				$default_options['signature_on_delivery'] = 'yes';
-				$default_options['insured_shipping']      = 'yes';
-				$default_options['return_no_answer']      = 'yes';
-				break;
-			case 'only_home_address_return_no_answer':
-				$default_options['only_home_address'] = 'yes';
-				$default_options['return_no_answer']  = 'yes';
-				break;
-			case 'only_home_address_return_signature':
-				$default_options['only_home_address']     = 'yes';
-				$default_options['return_no_answer']      = 'yes';
-				$default_options['signature_on_delivery'] = 'yes';
-				break;
-			case 'only_home_address_signature':
-				$default_options['only_home_address']     = 'yes';
-				$default_options['signature_on_delivery'] = 'yes';
-				break;
-			default:
-				// Handle the individual options
-				$default_options[ $shipping_options ] = 'yes';
-		}
-
-		return $default_options;
+		return $shipping_options;
 	}
 
 	/**

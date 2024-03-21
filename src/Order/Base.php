@@ -96,31 +96,45 @@ abstract class Base {
 	 * @param \WC_Order $order
 	 *
 	 * @return array
+	 *
+	 * @internal
 	 */
 	public function get_shipping_options( $order ) {
+
 		if ( ! is_a( $order, 'WC_Order' ) ) {
 			return array();
 		}
-		if ( 'NL' === $order->get_shipping_country()  ) {
 
-			$default_options = $this->get_backend_data( $order->get_id() );
-
-			// Show default options selected by the user.
-			if ( ! empty( $default_options ) ) {
-				return $default_options;
-			}
-
-			if ( Utils::is_eligible_auto_letterbox( $order ) ) {
-				$default_options['letterbox'] = 'yes';
-			} else {
-				$default_options = $this->settings->get_default_shipping_options();
-			}
-
-		} else {
-			$default_options = array();
+		// Return shipping options already selected by the user.
+		$default_options = $this->get_backend_data( $order->get_id() );
+		if ( ! empty( $default_options ) ) {
+			return $default_options;
 		}
 
-		return $default_options;
+		// Get from the plugin settings
+		$delivery_zone = $this->get_delivery_zone( $order );
+		if ( 'NL' === $delivery_zone && Utils::is_eligible_auto_letterbox( $order ) ) {
+			return array( 'letterbox' => 'yes' );
+		}
+		return $this->settings->get_default_shipping_options( $delivery_zone );
+	}
+
+	/**
+	 * Get delivery zone out of the given order ( 1 of 4 - nl, be, eu, row )
+	 *
+	 * @param \WC_Order $order
+	 *
+	 * @return string
+	 */
+	public function get_delivery_zone( $order ) {
+		$shipping_destination = $order->get_shipping_country();
+		if ( in_array( $shipping_destination, array( 'NL', 'BE' ) ) ) {
+			return strtolower( $shipping_destination );
+		}
+		if ( in_array( $shipping_destination, WC()->countries->get_european_union_countries() ) ) {
+			return 'eu';
+		}
+		return 'row';
 	}
 
 	/**
@@ -225,7 +239,7 @@ abstract class Base {
 					'label'         => __( 'Packets: ', 'postnl-for-woocommerce' ),
 					'placeholder'   => '',
 					'description'   => '',
-					'value'         => '',
+					'value'         => $default_options['packets'],
 					'show_in_bulk'  => true,
 					'standard_feat' => false,
 					'const_field'   => false,
@@ -237,7 +251,7 @@ abstract class Base {
 					'label'         => __( 'Mailbox Packet (International): ', 'postnl-for-woocommerce' ),
 					'placeholder'   => '',
 					'description'   => '',
-					'value'         => '',
+					'value'         => $default_options['mailboxpacket'],
 					'show_in_bulk'  => true,
 					'standard_feat' => false,
 					'const_field'   => false,
@@ -249,7 +263,7 @@ abstract class Base {
 					'label'         => __( 'Track & Trace: ', 'postnl-for-woocommerce' ),
 					'placeholder'   => '',
 					'description'   => '',
-					'value'         => '',
+					'value'         => $default_options['track_and_trace'],
 					'show_in_bulk'  => true,
 					'standard_feat' => false,
 					'const_field'   => false,

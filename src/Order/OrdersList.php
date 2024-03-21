@@ -176,13 +176,8 @@ class OrdersList extends Base {
 			return;
 		}
 		if ( 'postnl_shipping_options' === $column ) {
-			$order = wc_get_order( $order_id );
-			if ( 'NL' === $order->get_shipping_country() ) {
-				$shipping_options = $this->get_shipping_options( $order_id );
-				echo esc_html( Utils::generate_shipping_options_html( $shipping_options ) );
-			} else {
-				echo $this->get_delivery_type( $order );
-			}
+			$shipping_options = $this->get_shipping_options( $order_id );
+			echo esc_html( Utils::generate_shipping_options_html( $shipping_options ) );
 		}
 	}
 

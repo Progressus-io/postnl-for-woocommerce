@@ -52,15 +52,6 @@ class Settings extends \WC_Settings_API {
 	 * @return array
 	 */
 	public function get_setting_fields() {
-		// Filter to only get Netherlands and Belgium.
-		$available_countries = array_filter(
-			WC()->countries->get_countries(),
-			function( $key ) {
-				return ( 'NL' === $key || 'BE' === $key );
-			},
-			ARRAY_FILTER_USE_KEY
-		);
-
 		return array(
 			// Manual.
 			'user_manual'    => array(
@@ -478,11 +469,11 @@ class Settings extends \WC_Settings_API {
 				'type'        => 'title',
 				'description' => esc_html__( 'Please select Default shipping Options.', 'postnl-for-woocommerce' ),
 			),
-			'default_shipping_options'       => array(
+			'default_shipping_options_nl'       => array(
 				'title'       => __( 'Domestic Default Shipping', 'postnl-for-woocommerce' ),
 				'type'        => 'select',
 				'description' => __( 'Select a default shipping option for domestic orders that are shipped with PostNL.', 'postnl-for-woocommerce' ),
-				'default'     => '',
+				'default'     => 'standard_shipment',
 				'options'     => array(
 					'standard_shipment'                                        => __( 'Standard shipment', 'postnl-for-woocommerce' ),
 					'id_check'                                                 => __( 'ID Check', 'postnl-for-woocommerce' ),
@@ -499,21 +490,21 @@ class Settings extends \WC_Settings_API {
 					'only_home_address|signature_on_delivery'                  => __( 'Only Home Address + Signature on Delivery', 'postnl-for-woocommerce' ),
 				),
 			),
-			'default_shipping_options_belgium'       => array(
+			'default_shipping_options_be'       => array(
 				'title'       => __( 'Default Shipping to Belgium', 'postnl-for-woocommerce' ),
 				'type'        => 'select',
 				'description' => __( 'Select a default shipping option for the orders shipped to Belgium with PostNL.', 'postnl-for-woocommerce' ),
 				'default'     => 'standard_belgium',
 				'options'     => array(
-					'standard_belgium'                        => __( 'Standard Shipment Belgium', 'postnl-for-woocommerce' ),
-					'standard_belgium|only_home_address'      => __( 'Standard Shipment Belgium + Only Home Address', 'postnl-for-woocommerce' ),
-					'standard_belgium|signature_on_delivery'  => __( 'Standard Shipment Belgium + Signature on Delivery', 'postnl-for-woocommerce' ),
-					'standard_belgium|increased_liability'    => __( 'Standard Shipment Belgium + Increased Liability', 'postnl-for-woocommerce' ),
-					'mailboxpacket'                           => __( 'Boxable Packet', 'postnl-for-woocommerce' ),
-					'mailboxpacket|track_and_trace'           => __( 'Boxable Packet + Track & Trace', 'postnl-for-woocommerce' ),
-					'packet'                                  => __( 'Packet', 'postnl-for-woocommerce' ),
-					'packet|track_and_trace'                  => __( 'Packet + Track & Trace', 'postnl-for-woocommerce' ),
-					'packet|track_and_trace|insured_shipping' => __( 'Packet + Track & Trace + Insured', 'postnl-for-woocommerce' ),
+					'standard_belgium'                         => __( 'Standard Shipment Belgium', 'postnl-for-woocommerce' ),
+					'standard_belgium|only_home_address'       => __( 'Standard Shipment Belgium + Only Home Address', 'postnl-for-woocommerce' ),
+					'standard_belgium|signature_on_delivery'   => __( 'Standard Shipment Belgium + Signature on Delivery', 'postnl-for-woocommerce' ),
+					'standard_belgium|insured_shipping'        => __( 'Standard Shipment Belgium + Insured Shipping', 'postnl-for-woocommerce' ),
+					'mailboxpacket'                            => __( 'Boxable Packet', 'postnl-for-woocommerce' ),
+					'mailboxpacket|track_and_trace'            => __( 'Boxable Packet + Track & Trace', 'postnl-for-woocommerce' ),
+					'packets'                                  => __( 'Packets', 'postnl-for-woocommerce' ),
+					'packets|track_and_trace'                  => __( 'Packets + Track & Trace', 'postnl-for-woocommerce' ),
+					'packets|track_and_trace|insured_shipping' => __( 'Packets + Track & Trace + Insured', 'postnl-for-woocommerce' ),
 				),
 			),
 			'default_shipping_options_eu'       => array(
@@ -527,13 +518,13 @@ class Settings extends \WC_Settings_API {
 					'eu_parcel|track_and_trace|insured_plus'     => __( 'EU Parcel + Track & Trace + Insured Plus', 'postnl-for-woocommerce' ),
 					'mailboxpacket'                              => __( 'Boxable Packet', 'postnl-for-woocommerce' ),
 					'mailboxpacket|track_and_trace'              => __( 'Boxable Packet + Track & Trace', 'postnl-for-woocommerce' ),
-					'packet'                                     => __( 'Packet', 'postnl-for-woocommerce' ),
-					'packet|track_and_trace'                     => __( 'Packet + Track & Trace', 'postnl-for-woocommerce' ),
-					'packet|track_and_trace|insured_shipping'    => __( 'Packet + Track & Trace + Insured', 'postnl-for-woocommerce' ),
+					'packets'                                    => __( 'Packets', 'postnl-for-woocommerce' ),
+					'packets|track_and_trace'                    => __( 'Packets + Track & Trace', 'postnl-for-woocommerce' ),
+					'packets|track_and_trace|insured_shipping'   => __( 'Packets + Track & Trace + Insured', 'postnl-for-woocommerce' ),
 				),
 			),
-			'default_shipping_options_international'       => array(
-				'title'       => __( 'Default Shipping to European Union', 'postnl-for-woocommerce' ),
+			'default_shipping_options_row'       => array(
+				'title'       => __( 'Default Shipping International', 'postnl-for-woocommerce' ),
 				'type'        => 'select',
 				'description' => __( 'Select a default shipping option for the orders shipped internationally (outside the EU borders).', 'postnl-for-woocommerce' ),
 				'default'     => 'parcel_non_eu|track_and_trace',
@@ -543,9 +534,9 @@ class Settings extends \WC_Settings_API {
 					'parcel_non_eu|track_and_trace|insured_plus'     => __( 'Parcel non-EU + Track & Trace + Insured Plus', 'postnl-for-woocommerce' ),
 					'mailboxpacket'                                  => __( 'Boxable Packet', 'postnl-for-woocommerce' ),
 					'mailboxpacket|track_and_trace'                  => __( 'Boxable Packet + Track & Trace', 'postnl-for-woocommerce' ),
-					'packet'                                         => __( 'Packet', 'postnl-for-woocommerce' ),
-					'packet|track_and_trace'                         => __( 'Packet + Track & Trace', 'postnl-for-woocommerce' ),
-					'packet|track_and_trace|insured_shipping'        => __( 'Packet + Track & Trace + Insured', 'postnl-for-woocommerce' ),
+					'packets'                                        => __( 'Packets', 'postnl-for-woocommerce' ),
+					'packets|track_and_trace'                        => __( 'Packets + Track & Trace', 'postnl-for-woocommerce' ),
+					'packets|track_and_trace|insured_shipping'       => __( 'Packets + Track & Trace + Insured', 'postnl-for-woocommerce' ),
 				),
 			),
 			'auto_complete_order'         => array(
@@ -1288,11 +1279,13 @@ class Settings extends \WC_Settings_API {
 	/**
 	 * Get all shipping options.
 	 *
+	 * @param string $zone Shipping zone, available options: 'ne' - to Netherlands, 'be' - to Belgium, 'eu' - to European Union, 'row' - international shipping.
+	 *
 	 * @return array
 	 */
-	public function get_default_shipping_options() {
+	public function get_default_shipping_options( $zone ) {
 
-		$shipping_options = $this->get_country_option( 'default_shipping_options', '' );
+		$shipping_options = $this->get_country_option( 'default_shipping_options_' . $zone, '' );
 		$shipping_options = explode( '|', $shipping_options );
 		$shipping_options = array_fill_keys( $shipping_options, 'yes' );
 

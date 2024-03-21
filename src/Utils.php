@@ -603,6 +603,10 @@ class Utils {
 			'only_home_address'     => esc_html__( 'Only Home Address', 'postnl-for-woocommerce' ),
 			'letterbox'             => esc_html__( 'Letterbox', 'postnl-for-woocommerce' ),
 			'packets'               => esc_html__( 'Packets', 'postnl-for-woocommerce' ),
+			'standard_belgium'      => esc_html__( 'Standard Shipment Belgium', 'postnl-for-woocommerce' ),
+			'mailboxpacket'         => esc_html__( 'Boxable Packet', 'postnl-for-woocommerce' ),
+			'eu_parcel'             => esc_html__( 'EU Parcel', 'postnl-for-woocommerce' ),
+			'parcel_non_eu'         => esc_html__( 'EU Parcel', 'postnl-for-woocommerce' ),
 		);
 	}
 

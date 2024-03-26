@@ -121,15 +121,12 @@ class Bulk extends Base {
 		if ( 'postnl-change-shipping-options' !== $doaction ) {
 			return $redirect;
 		}
-
 		$default_options = $this->prepare_default_options( $_REQUEST );
-
 		if ( ! empty( $object_ids ) ) {
 			foreach ( $object_ids as $order_id ) {
 				$this->set_order_default_shipping_options( $order_id, array( 'backend' => $default_options ) );
 			}
 		}
-
 		return $redirect;
 	}
 
@@ -141,33 +138,9 @@ class Bulk extends Base {
 	 * @return array
 	 */
 	protected function prepare_default_options( $options ) {
-
-		$final_options     = array();
-		$available_options = Utils::get_shipping_options();
-		$combined_options  = Utils::get_combined_shipping_options();
-
-
-		foreach( $options as $name => $value ) {
-			if ( false !== strpos( $name, $this->prefix ) && ! empty( $value ) ) {
-				$name = Utils::remove_prefix_field( $this->prefix, $name );
-				if ( in_array( $name, array_keys( $available_options ) ) ) {
-					$final_options[ $name ] = 'yes';
-				}
-				if ( 'default_shipping_options' === $name ) {
-					if ( in_array( $value, array_keys( $available_options ) ) ) {
-						$final_options[ $value ] = 'yes';
-					}
-					if ( in_array( $value, array_keys( $combined_options ) ) ) {
-						foreach( $combined_options[ $value ] as $child ) {
-							$final_options[ $child ] = 'yes';
-						}
-					}
-				}
-			}
-		}
-
-		return $final_options ;
-
+		$zone            = $options['postnl_shipping_zone'];
+		$selected_option = $options[ 'postnl_default_shipping_options_' . $zone ];
+		return Utils::prepare_shipping_options( $selected_option );
 	}
 
 	/**
@@ -433,6 +406,17 @@ class Bulk extends Base {
 	}
 
 	/**
+	 * Get shipping options per given zone from the plugin settings.
+	 *
+	 * @param string $zone Zone you want shipping options to, available nl, be, eu, row.
+	 *
+	 * @return array
+	 */
+	protected function get_available_shipping_options_per_zone( $zone ) {
+		return $this->settings->get_setting_fields()['default_shipping_options_' . $zone ]['options'];
+	}
+
+	/**
 	 * Prepare fields for the Change shipping options modal.
 	 *
 	 * @return array[]
@@ -440,89 +424,53 @@ class Bulk extends Base {
 	protected function change_shipping_options_fields() {
 		return array(
 			array(
-				'id'            => $this->prefix . 'shipping_options',
+				'id'            => $this->prefix . 'shipping_zone',
 				'type'          => 'select',
-				'label'         => __( 'Shipping options', 'postnl-for-woocommerce' ),
-				'value'         => 'domestic',
+				'label'         => __( 'Shipping zone', 'postnl-for-woocommerce' ),
+				'value'         => 'nl',
 				'container'     => true,
 				'options'       => array(
-					'domestic'         => __( 'Domestic', 'postnl-for-woocommerce' ),
-					'standard_belgium' => __( 'Standard Shipment Belgium', 'postnl-for-woocommerce' ),
-					'eu_parcel'        => __( 'EU Parcel', 'postnl-for-woocommerce' ),
-					'international'    => __( 'Non-EU Shipment', 'postnl-for-woocommerce' ),
+					'nl'  => __( 'Domestic', 'postnl-for-woocommerce' ),
+					'be'  => __( 'Standard Shipment Belgium', 'postnl-for-woocommerce' ),
+					'eu'  => __( 'EU Parcel', 'postnl-for-woocommerce' ),
+					'row' => __( 'Non-EU Shipment', 'postnl-for-woocommerce' ),
 				)
 			),
 			array(
-				'id' => $this->prefix . 'default_shipping_options',
+				'id' => $this->prefix . 'default_shipping_options_nl',
 				'type'          => 'select',
-				'label'         => __( 'Default Shipping Option', 'postnl-for-woocommerce' ),
-				'wrapper_class' => 'conditional domestic',
+				'label'         => __( 'Domestic Default Shipping', 'postnl-for-woocommerce' ),
+				'wrapper_class' => 'conditional nl',
 				'container'     => true,
-				'default'       => '',
-				'options'       => array(
-					''                                   => __( 'None', 'postnl-for-woocommerce' ),
-					'id_check'                           => __( 'ID Check', 'postnl-for-woocommerce' ),
-					'insured_shipping'                   => __( 'Insured Shipping', 'postnl-for-woocommerce' ),
-					'return_no_answer'                   => __( 'Return if no answer', 'postnl-for-woocommerce' ),
-					'signature_on_delivery'              => __( 'Signature on Delivery', 'postnl-for-woocommerce' ),
-					'only_home_address'                  => __( 'Only Home Address', 'postnl-for-woocommerce' ),
-					'letterbox'                          => __( 'Letterbox', 'postnl-for-woocommerce' ),
-					'signature_insured'                  => __( 'Signature on Delivery + Insured Shipping', 'postnl-for-woocommerce' ),
-					'signature_return_no_answer'         => __( 'Signature on Delivery + Return if no answer', 'postnl-for-woocommerce' ),
-					'signature_insured_return_no_answer' => __( 'Signature on Delivery + Insured Shipping + Return if no answer', 'postnl-for-woocommerce' ),
-					'only_home_address_return_no_answer' => __( 'Only Home Address + Return if no answer', 'postnl-for-woocommerce' ),
-					'only_home_address_return_signature' => __( 'Only Home Address + Return if no answer + Signature on Delivery', 'postnl-for-woocommerce' ),
-					'only_home_address_signature'        => __( 'Only Home Address + Signature on Delivery', 'postnl-for-woocommerce' ),
-				),
+				'default'       => $this->settings->get_country_option( 'default_shipping_options_' . 'nl' ),
+				'options'       => $this->get_available_shipping_options_per_zone( 'nl' ),
 			),
 			array(
-				'id'            => $this->prefix . 'insured_shipping',
-				'type'          => 'checkbox',
-				'label'         => __( 'Insured Shipping: ', 'postnl-for-woocommerce' ),
-				'wrapper_class' => 'conditional standard_belgium eu_parcel international',
+				'id' => $this->prefix . 'default_shipping_options_be',
+				'type'          => 'select',
+				'label'         => __( 'Default Shipping to Belgium', 'postnl-for-woocommerce' ),
+				'wrapper_class' => 'conditional be',
 				'container'     => true,
+				'default'       => $this->settings->get_country_option( 'default_shipping_options_' . 'be' ),
+				'options'       => $this->get_available_shipping_options_per_zone( 'be' ),
 			),
 			array(
-				'id'            => $this->prefix . 'insured_plus',
-				'type'          => 'checkbox',
-				'label'         => __( 'Insured Plus: ', 'postnl-for-woocommerce' ),
-				'wrapper_class' => 'conditional eu_parcel international',
+				'id' => $this->prefix . 'default_shipping_options_eu',
+				'type'          => 'select',
+				'label'         => __( 'Default Shipping to European Union', 'postnl-for-woocommerce' ),
+				'wrapper_class' => 'conditional eu',
 				'container'     => true,
+				'default'       => $this->settings->get_country_option( 'default_shipping_options_' . 'eu' ),
+				'options'       => $this->get_available_shipping_options_per_zone( 'eu' ),
 			),
 			array(
-				'id'            => $this->prefix . 'signature_on_delivery',
-				'type'          => 'checkbox',
-				'label'         => __( 'Signature on Delivery: ', 'postnl-for-woocommerce' ),
-				'wrapper_class' => 'conditional standard_belgium',
+				'id' => $this->prefix . 'default_shipping_options_row',
+				'type'          => 'select',
+				'label'         => __( 'Select a default shipping option for the orders shipped internationally (outside the EU borders).', 'postnl-for-woocommerce' ),
+				'wrapper_class' => 'conditional row',
 				'container'     => true,
-			),
-			array(
-				'id'            => $this->prefix . 'only_home_address',
-				'type'          => 'checkbox',
-				'label'         => __( 'Only Home Address: ', 'postnl-for-woocommerce' ),
-				'wrapper_class' => 'conditional standard_belgium',
-				'container'     => true,
-			),
-			array(
-				'id'            => $this->prefix . 'packets',
-				'type'          => 'checkbox',
-				'label'         => __( 'Packets: ', 'postnl-for-woocommerce' ),
-				'wrapper_class' => 'conditional standard_belgium eu_parcel international',
-				'container'     => true,
-			),
-			array(
-				'id'            => $this->prefix . 'mailboxpacket',
-				'type'          => 'checkbox',
-				'label'         => __( 'Mailbox Packet (International): ', 'postnl-for-woocommerce' ),
-				'wrapper_class' => 'conditional standard_belgium eu_parcel international',
-				'container'     => true,
-			),
-			array(
-				'id'            => $this->prefix . 'track_and_trace',
-				'type'          => 'checkbox',
-				'label'         => __( 'Track & Trace: ', 'postnl-for-woocommerce' ),
-				'wrapper_class' => 'conditional standard_belgium eu_parcel international',
-				'container'     => true,
+				'default'       => $this->settings->get_country_option( 'default_shipping_options_' . 'row' ),
+				'options'       => $this->get_available_shipping_options_per_zone( 'row' ),
 			),
 		);
 	}

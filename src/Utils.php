@@ -611,42 +611,6 @@ class Utils {
 	}
 
 	/**
-	 * Get combined shipping options, used in the bulk action menu.
-	 *
-	 * @return array
-	 */
-	public static function get_combined_shipping_options() {
-		return array(
-			'signature_insured'                  => array(
-				'insured_shipping',
-				'signature_on_delivery',
-			),
-			'signature_return_no_answer'         => array(
-				'return_no_answer',
-				'signature_on_delivery',
-			),
-			'signature_insured_return_no_answer' => array(
-				'insured_shipping',
-				'signature_on_delivery',
-				'return_no_answer',
-			),
-			'only_home_address_return_no_answer' => array(
-				'only_home_address',
-				'return_no_answer',
-			),
-			'only_home_address_return_signature' => array(
-				'only_home_address',
-				'return_no_answer',
-				'signature_on_delivery'
-			),
-			'only_home_address_signature' => array(
-				'only_home_address',
-				'signature_on_delivery'
-			)
-		);
-	}
-
-	/**
 	 * Check if current order/cart is eligible for automatically use letterbox.
 	 *
 	 * @param \WC_Order|\WC_Cart|int $order \WC_order, \WC_Cart or Order ID.
@@ -717,5 +681,18 @@ class Utils {
 
 		// If the total ratio is more than 1, that means order items cannot be packed using letterbox.
 		return ( $total_ratio_letterbox_item <= 1 ) ? true : false;
+	}
+
+	/**
+	 * Prepare array of selected by the user shipping option.
+	 *
+	 * @param string $selected_value Selected default shipping option value.
+	 *
+	 * @return array
+	 */
+	public static function prepare_shipping_options( $selected_value ) {
+		$shipping_options = explode( '|', $selected_value );
+		$shipping_options = array_fill_keys( $shipping_options, 'yes' );
+		return $shipping_options;
 	}
 }

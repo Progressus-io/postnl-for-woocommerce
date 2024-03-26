@@ -118,15 +118,44 @@ class Bulk extends Base {
 	 * @return string
 	 */
 	public function bulk_action_change_shipping_options( $redirect, $doaction, $object_ids ) {
+
 		if ( 'postnl-change-shipping-options' !== $doaction ) {
 			return $redirect;
 		}
-		$default_options = $this->prepare_default_options( $_REQUEST );
+
+		$array_messages = array(
+			'user_id' => get_current_user_id(),
+		);
+
+		$selected_shipping_options = $this->prepare_default_options( $_REQUEST );
+		$zone                      = sanitize_text_field( $_REQUEST['postnl_shipping_zone'] );
 		if ( ! empty( $object_ids ) ) {
 			foreach ( $object_ids as $order_id ) {
-				$this->set_order_default_shipping_options( $order_id, array( 'backend' => $default_options ) );
+				$order = wc_get_order( $order_id );
+				$have_label_file      = $this->have_label_file( $order );
+				$match_shipping_zones = $zone === $this->get_shipping_zone( $order );
+				if ( $have_label_file ) {
+					$array_messages[] = array(
+						'message' => sprintf( esc_html__( 'Order #%1$d already has a label.', 'postnl-for-woocommerce' ), $order_id ),
+						'type'    => 'error',
+					);
+				}
+				if ( ! $match_shipping_zones ) {
+					$array_messages[] = array(
+						'message' => sprintf( esc_html__( 'Order #%1$d is from another shipping zone.', 'postnl-for-woocommerce' ), $order_id ),
+						'type'    => 'error',
+					);
+				}
+				if ( ! $have_label_file && $match_shipping_zones ) {
+					$order->delete_meta_data( $this->meta_name );
+					$order->update_meta_data( $this->meta_name, array( 'backend' => $selected_shipping_options ) );
+					$order->save();
+				}
 			}
 		}
+
+		update_option( $this->bulk_option_text_name, $array_messages );
+
 		return $redirect;
 	}
 
@@ -138,8 +167,8 @@ class Bulk extends Base {
 	 * @return array
 	 */
 	protected function prepare_default_options( $options ) {
-		$zone            = $options['postnl_shipping_zone'];
-		$selected_option = $options[ 'postnl_default_shipping_options_' . $zone ];
+		$zone            = sanitize_text_field( $options['postnl_shipping_zone'] );
+		$selected_option = sanitize_text_field( $options[ 'postnl_default_shipping_options_' . $zone ] );
 		return Utils::prepare_shipping_options( $selected_option );
 	}
 
@@ -365,7 +394,7 @@ class Bulk extends Base {
 				'description'       => '',
 				'class'             => 'short',
 				'value'             => '',
-				'container'     => true,
+				'container'         => true,
 				'custom_attributes' =>
 					array(
 						'step' => 'any',
@@ -442,7 +471,7 @@ class Bulk extends Base {
 				'label'         => __( 'Domestic Default Shipping', 'postnl-for-woocommerce' ),
 				'wrapper_class' => 'conditional nl',
 				'container'     => true,
-				'default'       => $this->settings->get_country_option( 'default_shipping_options_' . 'nl' ),
+				'value'         => $this->settings->get_country_option( 'default_shipping_options_' . 'nl' ),
 				'options'       => $this->get_available_shipping_options_per_zone( 'nl' ),
 			),
 			array(
@@ -451,7 +480,7 @@ class Bulk extends Base {
 				'label'         => __( 'Default Shipping to Belgium', 'postnl-for-woocommerce' ),
 				'wrapper_class' => 'conditional be',
 				'container'     => true,
-				'default'       => $this->settings->get_country_option( 'default_shipping_options_' . 'be' ),
+				'value'         => $this->settings->get_country_option( 'default_shipping_options_' . 'be' ),
 				'options'       => $this->get_available_shipping_options_per_zone( 'be' ),
 			),
 			array(
@@ -460,7 +489,7 @@ class Bulk extends Base {
 				'label'         => __( 'Default Shipping to European Union', 'postnl-for-woocommerce' ),
 				'wrapper_class' => 'conditional eu',
 				'container'     => true,
-				'default'       => $this->settings->get_country_option( 'default_shipping_options_' . 'eu' ),
+				'value'         => $this->settings->get_country_option( 'default_shipping_options_' . 'eu' ),
 				'options'       => $this->get_available_shipping_options_per_zone( 'eu' ),
 			),
 			array(
@@ -469,7 +498,7 @@ class Bulk extends Base {
 				'label'         => __( 'Select a default shipping option for the orders shipped internationally (outside the EU borders).', 'postnl-for-woocommerce' ),
 				'wrapper_class' => 'conditional row',
 				'container'     => true,
-				'default'       => $this->settings->get_country_option( 'default_shipping_options_' . 'row' ),
+				'value'         => $this->settings->get_country_option( 'default_shipping_options_' . 'row' ),
 				'options'       => $this->get_available_shipping_options_per_zone( 'row' ),
 			),
 		);

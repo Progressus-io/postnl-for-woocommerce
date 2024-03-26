@@ -112,7 +112,7 @@ abstract class Base {
 		}
 
 		// Get from the plugin settings
-		$delivery_zone = $this->get_delivery_zone( $order );
+		$delivery_zone = $this->get_shipping_zone( $order );
 		if ( 'NL' === $delivery_zone && Utils::is_eligible_auto_letterbox( $order ) ) {
 			return array( 'letterbox' => 'yes' );
 		}
@@ -126,7 +126,7 @@ abstract class Base {
 	 *
 	 * @return string
 	 */
-	public function get_delivery_zone( $order ) {
+	public function get_shipping_zone( $order ) {
 		$shipping_destination = $order->get_shipping_country();
 		if ( in_array( $shipping_destination, array( 'NL', 'BE' ) ) ) {
 			return strtolower( $shipping_destination );
@@ -1215,20 +1215,5 @@ abstract class Base {
 		$order_data = $order->get_meta( $this->meta_name );
 
 		return ! empty( $order_data['labels']['label']['filepath'] );
-	}
-
-	/**
-	 * Save default shipping options to the order.
-	 *
-	 * @param int $order_id \WC_Order id.
-	 * @param array $options New shipping options.
-	 *
-	 * @return void
-	 */
-	public function set_order_default_shipping_options( $order_id, $options ) {
-		$order = wc_get_order( $order_id );
-		$order->delete_meta_data( $this->meta_name, $options );
-		$order->update_meta_data( $this->meta_name, $options );
-		$order->save();
 	}
 }

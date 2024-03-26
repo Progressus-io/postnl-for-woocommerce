@@ -44,7 +44,7 @@
 				tb_show( "", '/?TB_inline=true&width=385&height=230&inlineId=postnl-change-shipping-options-modal' );
 				var tb_window = jQuery( '#TB_window' );
 				tb_window.find( '#TB_ajaxWindowTitle' ).text(title);
-				tb_window.find( '#postnl_shipping_options' ).on( 'change', function( event ) {
+				tb_window.find( '#postnl_shipping_zone' ).on( 'change', function( event ) {
 					var current = this.value;
 					$('.conditional').each(function() {
 						if ( $(this).hasClass(current) ) {

@@ -596,6 +596,7 @@ class Utils {
 	 */
 	public static function get_shipping_options() {
 		return array(
+			'standard_shipment'     => esc_html__( 'Standard shipment', 'postnl-for-woocommerce' ),
 			'id_check'              => esc_html__( 'ID Check', 'postnl-for-woocommerce' ),
 			'insured_shipping'      => esc_html__( 'Insured Shipping', 'postnl-for-woocommerce' ),
 			'return_no_answer'      => esc_html__( 'Return if no answer', 'postnl-for-woocommerce' ),

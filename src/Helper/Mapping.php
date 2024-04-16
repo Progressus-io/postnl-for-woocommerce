@@ -80,11 +80,11 @@ class Mapping {
 							'code'        => '3090',
 							'options'     => array(),
 						),
-						array(
-							'combination' => array( 'insured_shipping' ),
-							'code'        => '3087',
-							'options'     => array(),
-						),
+						// array(
+						// 	'combination' => array( 'insured_shipping' ),
+						// 	'code'        => '3087',
+						// 	'options'     => array(),
+						// ),
 						array(
 							'combination' => array( 'signature_on_delivery' ),
 							'code'        => '3189',
@@ -96,7 +96,7 @@ class Mapping {
 							'options'     => array(),
 						),
 						array(
-							'combination' => array( 'insured_shipping', 'return_no_answer' ),
+							'combination' => array( 'signature_on_delivery', 'insured_shipping', 'return_no_answer' ),
 							'code'        => '3094',
 							'options'     => array(),
 						),

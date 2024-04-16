@@ -484,7 +484,7 @@ class Settings extends \WC_Settings_API {
 					'letterbox'                                                => __( 'Letterbox', 'postnl-for-woocommerce' ),
 					'signature_on_delivery|insured_shipping'                   => __( 'Signature on Delivery + Insured Shipping', 'postnl-for-woocommerce' ),
 					'signature_on_delivery|return_no_answer'                   => __( 'Signature on Delivery + Return if no answer', 'postnl-for-woocommerce' ),
-					'signature_on_delivery|insured_shipping|return_no_answer'  => __( 'Signature on Delivery + Insured Shipping + Return if no answer', 'postnl-for-woocommerce' ),
+					'insured_shipping|return_no_answer|signature_on_delivery'  => __( 'Insured Shipping + Return if no answer + Signature on Delivery', 'postnl-for-woocommerce' ),
 					'only_home_address|return_no_answer'                       => __( 'Only Home Address + Return if no answer', 'postnl-for-woocommerce' ),
 					'only_home_address|return_no_answer|signature_on_delivery' => __( 'Only Home Address + Return if no answer + Signature on Delivery', 'postnl-for-woocommerce' ),
 					'only_home_address|signature_on_delivery'                  => __( 'Only Home Address + Signature on Delivery', 'postnl-for-woocommerce' ),

@@ -128,7 +128,12 @@ class Mapping {
 						array(
 							'combination' => array( 'id_check' ),
 							'code'        => '3438',
-							'options'     => array(),
+							'options'     => array(
+								array(
+									'characteristic' => '002',
+									'option'         => '014',
+								),
+							),
 						)
 					),
 					'pickup_points' => array(

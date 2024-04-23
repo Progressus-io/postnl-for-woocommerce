@@ -5,10 +5,10 @@
 * Tags: PostNL, Shipping
 * Requires at least: 4.6
 * Requires PHP: 5.6
-* Tested up to: 6.3
-* Stable tag: 5.3.4
+* Tested up to: 6.5
+* Stable tag: 5.3.5
 * WC requires at least: 4.0
-* WC tested up to: 8.4
+* WC tested up to: 8.8
 * License: GPLv2 or later
 * License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -35,6 +35,9 @@ PostNL’s official extension for WooCommerce on WordPress. Manage your national
 
 
 ## Changelog
+
+### 5.3.5
+* Fix: Correct CustomerCode in non-EU calls.
 
 ### 5.3.4
 * Added: Logic to apply default shipping options when not explicitly set in post data.

@@ -4,7 +4,7 @@ Tags: woocommerce, export, delivery, packages, PostNL, Shipping
 Requires at least: 4.6
 Requires PHP: 5.6
 Tested up to: 6.5
-Stable tag: 5.3.5
+Stable tag: 5.3.6
 WC requires at least: 4.0
 WC tested up to: 8.8
 License: GPLv2 or later
@@ -79,6 +79,9 @@ Follow these instructions (https://www.postnl.nl/Images/aanvragen-api-key-stappe
 5. PostNL information on the order details page
 
 == Changelog ==
+
+= 5.3.6 (2024-04-24) =
+* Fix: Correct CustomerCode in non-EU calls, in Shipping call.
 
 = 5.3.5 (2024-04-22) =
 * Fix: Correct CustomerCode in non-EU calls.

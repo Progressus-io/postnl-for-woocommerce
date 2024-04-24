@@ -93,7 +93,7 @@ class Item_Info extends Base_Info {
 	 * Set extra API args.
 	 */
 	public function set_extra_data_to_api_args() {
-		// $this->set_rest_of_world_args();
+		$this->set_rest_of_world_args();
 		$this->set_custom_customer_code();
 	}
 

@@ -6,7 +6,7 @@
 * Requires at least: 4.6
 * Requires PHP: 5.6
 * Tested up to: 6.5
-* Stable tag: 5.3.5
+* Stable tag: 5.3.6
 * WC requires at least: 4.0
 * WC tested up to: 8.8
 * License: GPLv2 or later
@@ -35,6 +35,9 @@ PostNL’s official extension for WooCommerce on WordPress. Manage your national
 
 
 ## Changelog
+
+### 5.3.6
+* Fix: Correct CustomerCode in non-EU calls, in Shipping call.
 
 ### 5.3.5
 * Fix: Correct CustomerCode in non-EU calls.

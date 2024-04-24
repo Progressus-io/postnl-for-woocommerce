@@ -874,6 +874,11 @@ class Item_Info extends Base_Info {
 			foreach ( $features as $feature ) {
 				if ( ! in_array( $feature,  $product['combination']) ) {
 					$is_this_it = false;
+				}				
+			}
+			foreach($product['combination'] as $combination){
+				if ( ! in_array( $combination,  $features) ) {
+					$is_this_it = false;
 				}
 			}
 

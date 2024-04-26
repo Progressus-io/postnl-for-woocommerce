@@ -82,7 +82,7 @@ class Single {
 				'type'        => 'checkbox',
 				// translators: %s will be replaced by service name.
 				'label'       => sprintf( esc_html__( 'Enable Letterbox Parcel (%s)', 'postnl-for-woocommerce' ), $service ),
-				'description' => esc_html__( 'Check this box to enable Letterbox Parcel.', 'postnl-for-woocommerce' ),
+				'description' => esc_html__( 'When this setting is enabled the PostNL plug-in automatically determines whether a shipment fits through a letterbox. This choice can be overridden when creating a shipment manually via the Label & Tracking menu. This only works for orders with destination Netherlands.', 'postnl-for-woocommerce' ),
 				'desc_tip'    => 'true',
 			),
 			array(

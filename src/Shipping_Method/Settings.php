@@ -468,12 +468,14 @@ class Settings extends \WC_Settings_API {
 				'title'       => esc_html__( 'Default shipping Options Settings', 'postnl-for-woocommerce' ),
 				'type'        => 'title',
 				'description' => esc_html__( 'Please select Default shipping Options.', 'postnl-for-woocommerce' ),
+				'for_country' => array( 'NL' ),
 			),
 			'default_shipping_options_nl'       => array(
 				'title'       => __( 'Domestic Default Shipping', 'postnl-for-woocommerce' ),
 				'type'        => 'select',
 				'description' => __( 'Select a default shipping option for domestic orders that are shipped with PostNL.', 'postnl-for-woocommerce' ),
 				'default'     => 'standard_shipment',
+				'for_country' => array( 'NL' ),
 				'options'     => array(
 					'standard_shipment'                                        => __( 'Standard shipment', 'postnl-for-woocommerce' ),
 					'id_check'                                                 => __( 'ID Check', 'postnl-for-woocommerce' ),
@@ -495,6 +497,7 @@ class Settings extends \WC_Settings_API {
 				'type'        => 'select',
 				'description' => __( 'Select a default shipping option for the orders shipped to Belgium with PostNL.', 'postnl-for-woocommerce' ),
 				'default'     => 'standard_belgium',
+				'for_country' => array( 'NL' ),
 				'options'     => array(
 					'standard_belgium'                         => __( 'Standard Shipment Belgium', 'postnl-for-woocommerce' ),
 					'standard_belgium|only_home_address'       => __( 'Standard Shipment Belgium + Only Home Address', 'postnl-for-woocommerce' ),
@@ -512,6 +515,7 @@ class Settings extends \WC_Settings_API {
 				'type'        => 'select',
 				'description' => __( 'Select a default shipping option for the orders shipped within European Union zone.', 'postnl-for-woocommerce' ),
 				'default'     => 'eu_parcel|track_and_trace',
+				'for_country' => array( 'NL' ),
 				'options'     => array(
 					'eu_parcel|track_and_trace'                  => __( 'EU Parcel + Track & Trace', 'postnl-for-woocommerce' ),
 					'eu_parcel|track_and_trace|insured_shipping' => __( 'EU Parcel + Track & Trace + Insured', 'postnl-for-woocommerce' ),
@@ -528,6 +532,7 @@ class Settings extends \WC_Settings_API {
 				'type'        => 'select',
 				'description' => __( 'Select a default shipping option for the orders shipped internationally (outside the EU borders).', 'postnl-for-woocommerce' ),
 				'default'     => 'parcel_non_eu|track_and_trace',
+				'for_country' => array( 'NL' ),
 				'options'     => array(
 					'parcel_non_eu|track_and_trace'                  => __( 'Parcel non-EU + Track & Trace', 'postnl-for-woocommerce' ),
 					'parcel_non_eu|track_and_trace|insured_shipping' => __( 'Parcel non-EU + Track & Trace + Insured', 'postnl-for-woocommerce' ),

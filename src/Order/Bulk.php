@@ -61,9 +61,9 @@ class Bulk extends Base {
 	 * @return array
 	 */
 	public function add_order_bulk_actions( $bulk_actions ) {
-		$base_country = Utils::get_base_country();
+		$base_country = Utils::get_base_country();		
+		$bulk_actions['postnl-create-label']            = esc_html__( 'PostNL Create Label', 'postnl-for-woocommerce' );
 		if($base_country != 'BE'){
-			$bulk_actions['postnl-create-label']            = esc_html__( 'PostNL Create Label', 'postnl-for-woocommerce' );
 			$bulk_actions['postnl-change-shipping-options'] = esc_html__( 'PostNL Change Shipping Options', 'postnl-for-woocommerce' );
 		}
 		return $bulk_actions;

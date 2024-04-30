@@ -55,9 +55,10 @@ class OrdersList extends Base {
 		add_action( 'pre_get_posts', array( $this, 'sortable_orderby_delivery_date' ) );
 
 		// Add 'Eligible Auto Letterbox' orders page column header
-		add_filter( 'manage_edit-shop_order_columns', array( $this, 'add_eligible_auto_letterbox_column_header' ), 29, 3 );
-		add_filter( 'manage_woocommerce_page_wc-orders_columns', array( $this, 'add_eligible_auto_letterbox_column_header' ), 29, 3 );
-
+		if(wc_get_base_location()['country'] != 'BE'){
+			add_filter( 'manage_edit-shop_order_columns', array( $this, 'add_eligible_auto_letterbox_column_header' ), 29, 3 );
+			add_filter( 'manage_woocommerce_page_wc-orders_columns', array( $this, 'add_eligible_auto_letterbox_column_header' ), 29, 3 );
+		}
 		// Add 'Eligible Auto Letterbox' orders page column content
 		add_action( 'manage_shop_order_posts_custom_column', array( $this, 'add_eligible_auto_letterbox_column_content' ), 10, 3 );
 		add_action( 'manage_woocommerce_page_wc-orders_custom_column', array( $this, 'add_eligible_auto_letterbox_column_content' ), 10, 3 );

@@ -624,6 +624,9 @@ class Utils {
 		if ( is_int( $order ) ) {
 			$order = wc_get_order( $order );
 		}
+		if(wc_get_base_location()['country'] == 'BE'){
+			return false;
+		}
 		if ( is_a( $order, 'WC_Order' ) ) {
 			if ( $order->meta_exists( '_postnl_letterbox' ) ) {
 				return (bool) $order->get_meta( '_postnl_letterbox', true );

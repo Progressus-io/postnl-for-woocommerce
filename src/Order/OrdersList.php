@@ -178,7 +178,7 @@ class OrdersList extends Base {
 		}
 		if ( 'postnl_shipping_options' === $column ) {
 			$shipping_options = $this->get_shipping_options( $order_id );
-			echo esc_html( Utils::generate_shipping_options_html( $shipping_options ) );
+			echo esc_html( Utils::generate_shipping_options_html( $shipping_options, $order_id ) );
 		}
 	}
 

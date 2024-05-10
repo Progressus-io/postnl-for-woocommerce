@@ -567,6 +567,27 @@ class Settings extends \WC_Settings_API {
 	 */
 	public function filter_setting_fields( $country, $only_field_country = false ) {
 		$setting_fields = $this->get_setting_fields();
+		if($country == 'BE'){
+			$setting_fields['default_shipping_options_title'] =
+				array(
+					'title'       => esc_html__( 'Default shipping Options Settings', 'postnl-for-woocommerce' ),
+					'type'        => 'title',
+					'description' => esc_html__( 'Please select Default shipping Options.', 'postnl-for-woocommerce' ),
+					'for_country' => array( 'BE' ),
+				);
+			
+			$setting_fields['default_shipping_options_row']  =
+				array(
+					'title'       => __( 'Default Shipping International', 'postnl-for-woocommerce' ),
+					'type'        => 'select',
+					'description' => __( 'Select a default shipping option for the orders shipped internationally (outside the EU borders).', 'postnl-for-woocommerce' ),
+					'default'     => 'parcel_non_eu|track_and_trace|insured_plus',
+					'for_country' => array( 'BE' ),
+					'options'     => array(
+						'parcel_non_eu|track_and_trace|insured_plus'     => __( 'Parcel non-EU + Track & Trace + Insured Plus', 'postnl-for-woocommerce' ),
+					),
+				);
+		}
 		$country_fields = array_filter(
 			$setting_fields,
 			function ( $field ) use ( $country, $only_field_country ) {

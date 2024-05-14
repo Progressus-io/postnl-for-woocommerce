@@ -565,9 +565,9 @@ class Settings extends \WC_Settings_API {
 	 *
 	 * @return array
 	 */
-	public function filter_setting_fields( $country, $only_field_country = false ) {
+	public function filter_setting_fields( $country, $only_field_country = false, $settings = false ) {
 		$setting_fields = $this->get_setting_fields();
-		if($country == 'BE'){
+		if($country == 'BE' && !$settings){
 			$setting_fields['default_shipping_options_title'] =
 				array(
 					'title'       => esc_html__( 'Default shipping Options Settings', 'postnl-for-woocommerce' ),
@@ -629,7 +629,7 @@ class Settings extends \WC_Settings_API {
 	 * @return array
 	 */
 	public function be_setting_fields( $only_field_country = false ) {
-		return $this->filter_setting_fields( 'BE', $only_field_country );
+		return $this->filter_setting_fields( 'BE', $only_field_country, true);
 	}
 
 	/**

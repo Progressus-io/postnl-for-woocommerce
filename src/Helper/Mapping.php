@@ -330,6 +330,11 @@ class Mapping {
 							'combination' => array( 'signature_on_delivery' ),
 							'code'        => '4898',
 							'options'     => array(),
+						),
+						array(
+							'combination' => array(),
+							'code'        => '4898',
+							'options'     => array(),
 						)
 					),
 

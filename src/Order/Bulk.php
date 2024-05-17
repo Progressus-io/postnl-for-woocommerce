@@ -470,7 +470,7 @@ class Bulk extends Base {
 			array(
 				'id' => $this->prefix . 'default_shipping_options_nl',
 				'type'          => 'select',
-				'label'         => __( 'Domestic Default Shipping', 'postnl-for-woocommerce' ),
+				'label'         => __( 'Shipping options domestic', 'postnl-for-woocommerce' ),
 				'wrapper_class' => 'conditional nl',
 				'container'     => true,
 				'value'         => $this->settings->get_country_option( 'default_shipping_options_' . 'nl' ),
@@ -479,7 +479,7 @@ class Bulk extends Base {
 			array(
 				'id' => $this->prefix . 'default_shipping_options_be',
 				'type'          => 'select',
-				'label'         => __( 'Default Shipping to Belgium', 'postnl-for-woocommerce' ),
+				'label'         => __( 'Belgium', 'postnl-for-woocommerce' ),
 				'wrapper_class' => 'conditional be',
 				'container'     => true,
 				'value'         => $this->settings->get_country_option( 'default_shipping_options_' . 'be' ),
@@ -488,7 +488,7 @@ class Bulk extends Base {
 			array(
 				'id' => $this->prefix . 'default_shipping_options_eu',
 				'type'          => 'select',
-				'label'         => __( 'Default Shipping to European Union', 'postnl-for-woocommerce' ),
+				'label'         => __( 'Shipping options EU', 'postnl-for-woocommerce' ),
 				'wrapper_class' => 'conditional eu',
 				'container'     => true,
 				'value'         => $this->settings->get_country_option( 'default_shipping_options_' . 'eu' ),
@@ -497,7 +497,7 @@ class Bulk extends Base {
 			array(
 				'id' => $this->prefix . 'default_shipping_options_row',
 				'type'          => 'select',
-				'label'         => __( 'Select a default shipping option for the orders shipped internationally (outside the EU borders).', 'postnl-for-woocommerce' ),
+				'label'         => __( 'Shipping options non-EU', 'postnl-for-woocommerce' ),
 				'wrapper_class' => 'conditional row',
 				'container'     => true,
 				'value'         => $this->settings->get_country_option( 'default_shipping_options_' . 'row' ),

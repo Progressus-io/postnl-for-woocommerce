@@ -6,7 +6,7 @@ msgstr ""
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/postnl-for-"
 "woocommerce\n"
 "POT-Creation-Date: 2024-05-16T18:07:00+00:00\n"
-"PO-Revision-Date: 2024-05-16 22:39+0300\n"
+"PO-Revision-Date: 2024-05-17 14:50+0300\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: nl\n"
@@ -99,7 +99,7 @@ msgstr "Ophalen PostNL Punt"
 #: src/Helper/Mapping.php:40 src/Order/Bulk.php:465
 #: src/Shipping_Method/Settings.php:502 src/Utils.php:618 src/Utils.php:633
 #: src/Utils.php:647 src/Utils.php:662
-msgid "Standard Shipment Belgium"
+msgid "Belgium"
 msgstr "Standaardzending België"
 
 #: src/Helper/Mapping.php:43
@@ -136,55 +136,55 @@ msgstr ""
 
 #: src/Order/Base.php:155
 msgid "ID Check: "
-msgstr "Leeftijdscheck:"
+msgstr "Leeftijdscheck: "
 
 #: src/Order/Base.php:167
 msgid "Insured Shipping: "
-msgstr "Verzekerd verzenden:"
+msgstr "Verzekerd verzenden: "
 
 #: src/Order/Base.php:179
 msgid "Insured Plus: "
-msgstr "Verzekerd Plus:"
+msgstr "Verzekerd Plus: "
 
 #: src/Order/Base.php:191
 msgid "Return if no answer: "
-msgstr "Retour bij geen gehoor:"
+msgstr "Retour bij geen gehoor: "
 
 #: src/Order/Base.php:203
 msgid "Signature on Delivery: "
-msgstr "Handtekening voor ontvangst:"
+msgstr "Handtekening voor ontvangst: "
 
 #: src/Order/Base.php:215
 msgid "Only Home Address: "
-msgstr "Alleen huisadres:"
+msgstr "Alleen huisadres: "
 
 #: src/Order/Base.php:227
 msgid "Letterbox: "
-msgstr "Brievenbuspakje:"
+msgstr "Brievenbuspakje: "
 
 #: src/Order/Base.php:239
 msgid "Packets: "
-msgstr "Pakje:"
+msgstr "Pakje: "
 
 #: src/Order/Base.php:251
 msgid "Mailbox Packet (International): "
-msgstr "Brievenbuspakje (Internationaal):"
+msgstr "Brievenbuspakje (Internationaal): "
 
 #: src/Order/Base.php:263
 msgid "Track & Trace: "
-msgstr "Track & Trace:"
+msgstr "Track & Trace: "
 
 #: src/Order/Base.php:281 src/Order/Bulk.php:394
 msgid "Number of Labels: "
-msgstr "Aantal labels:"
+msgstr "Aantal labels: "
 
 #: src/Order/Base.php:299 src/Order/Bulk.php:409
 msgid "Create Return Label: "
-msgstr "Creëer retourlabel:"
+msgstr "Creëer retourlabel: "
 
 #: src/Order/Base.php:311 src/Order/Bulk.php:418
 msgid "Start position printing label: "
-msgstr "Startpositie printen van labels"
+msgstr "Startpositie printen van labels "
 
 #: src/Order/Base.php:315 src/Order/Bulk.php:423
 msgid "Top Left"
@@ -273,22 +273,20 @@ msgid "Domestic"
 msgstr "Nederland"
 
 #: src/Order/Bulk.php:473 src/Shipping_Method/Settings.php:474
-msgid "Domestic Default Shipping"
+msgid "Shipping options domestic"
 msgstr "Standaard verzendopties Nederland"
 
 #: src/Order/Bulk.php:482 src/Shipping_Method/Settings.php:496
-msgid "Default Shipping to Belgium"
+msgid "Shipping options Belgium"
 msgstr "Standaard verzendopties België"
 
 #: src/Order/Bulk.php:491 src/Shipping_Method/Settings.php:514
-msgid "Default Shipping to European Union"
+msgid "Shipping options EU"
 msgstr "Standaard verzendopties EU"
 
 #: src/Order/Bulk.php:500 src/Shipping_Method/Settings.php:533
 #: src/Shipping_Method/Settings.php:583
-msgid ""
-"Select a default shipping option for the orders shipped internationally "
-"(outside the EU borders)."
+msgid "Shipping options non-EU (outside the EU borders)."
 msgstr ""
 "Selecteer een standaard verzendoptie voor alle zendingen die worden "
 "verstuurd met PostNL."
@@ -629,7 +627,7 @@ msgid ""
 "5000). Your total is: "
 msgstr ""
 "Verzekerde waarde is verplicht en kan niet meer zijn dan het maximaal "
-"toegestane bedrag (€5000). Het totaal is:"
+"toegestane bedrag (€5000). Het totaal is: "
 
 #. translators: %1$s & %2$s is replaced with <a> tag.
 #: src/Shipping_Method/PostNL.php:33

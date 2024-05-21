@@ -629,7 +629,7 @@ class Settings extends \WC_Settings_API {
 	 * @return array
 	 */
 	public function be_setting_fields( $only_field_country = false ) {
-		return $this->filter_setting_fields( 'BE', $only_field_country, true);
+		return $this->filter_setting_fields( 'BE', $only_field_country, true );
 	}
 
 	/**

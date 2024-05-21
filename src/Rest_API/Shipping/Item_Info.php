@@ -863,7 +863,6 @@ class Item_Info extends Base_Info {
 		if ( empty( $code_map[ $from_country ][ $destination ][ $shipping_feature ] ) ) {
 			return $selected_product;
 		}
-		
 		foreach ( $code_map[ $from_country ][ $destination ][ $shipping_feature ] as $product ) {
 			if ( empty( $product['combination'] ) && empty( $selected_product ) ) {
 				$selected_product = $product;

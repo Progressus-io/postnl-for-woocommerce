@@ -576,7 +576,7 @@ class Utils {
 	 * @return string.
 	 */
 	public static function generate_shipping_options_html( $backend_data, $order_id ) {
-		$options_to_display = self::get_shipping_options($order_id);
+		$options_to_display = self::get_shipping_options( $order_id );
 		$selected_options   = array();
 
 		foreach ( $backend_data as $option_key => $value ) {

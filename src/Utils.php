@@ -631,7 +631,7 @@ class Utils {
 				'eu_parcel'             => esc_html__( 'Parcels Non-EU Insured', 'postnl-for-woocommerce' ),
 				'parcel_non_eu'         => esc_html__( 'Parcels non-EU Insured Plus', 'postnl-for-woocommerce' ),
 			);
-		}elseif($country == 'eu'){
+		} elseif ( 'EU' === $shipping_destination ) {
 			return array(
 				'standard_shipment'     => esc_html__( 'Standard shipment', 'postnl-for-woocommerce' ),
 				'id_check'              => esc_html__( 'ID Check', 'postnl-for-woocommerce' ),

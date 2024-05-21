@@ -653,7 +653,7 @@ class Utils {
 				'insured_shipping'      => esc_html__( 'Insured Shipping', 'postnl-for-woocommerce' ),
 				'insured_plus'          => esc_html__( 'Insured Plus', 'postnl-for-woocommerce' ),
 			);
-		}else{ 
+		} else {
 			return array(
 				'standard_shipment'     => esc_html__( 'Standard shipment', 'postnl-for-woocommerce' ),
 				'id_check'              => esc_html__( 'ID Check', 'postnl-for-woocommerce' ),

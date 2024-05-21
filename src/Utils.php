@@ -599,14 +599,7 @@ class Utils {
 	 */
 	public static function get_shipping_options($order_id) {
 		$order = wc_get_order( $order_id );
-		$shipping_destination = $order->get_shipping_country();
-		if ( in_array( $shipping_destination, array( 'NL', 'BE' ) ) ) {
-			$country = strtolower( $shipping_destination );
-		}
-		if ( in_array( $shipping_destination, WC()->countries->get_european_union_countries() ) ) {
-			$country = 'eu';
-		}
-		$country = 'row';
+		$shipping_destination = Utils::get_shipping_zone( $order->get_shipping_country() );
 
 		if ( 'NL' === $shipping_destination ) {
 			return array(

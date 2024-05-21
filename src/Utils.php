@@ -608,7 +608,7 @@ class Utils {
 		}
 		$country = 'row';
 
-		if($country == 'NL'){
+		if ( 'NL' === $shipping_destination ) {
 			return array(
 				'standard_shipment'     => esc_html__( 'Standard shipment', 'postnl-for-woocommerce' ),
 				'id_check'              => esc_html__( 'ID Check', 'postnl-for-woocommerce' ),

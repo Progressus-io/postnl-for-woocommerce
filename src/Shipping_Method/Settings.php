@@ -1293,7 +1293,7 @@ class Settings extends \WC_Settings_API {
 	 * @return array.
 	 */
 	public function get_shipping_methods() {
-		return  wp_list_pluck( WC()->shipping->get_shipping_methods(), 'method_title', 'id' );
+		return  wp_list_pluck( WC()->shipping()->shipping_methods, 'method_title', 'id' );
 	}
 
 	/**

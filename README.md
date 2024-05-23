@@ -6,7 +6,7 @@
 * Requires at least: 4.6
 * Requires PHP: 5.6
 * Tested up to: 6.5
-* Stable tag: 5.3.7
+* Stable tag: 5.4.0
 * WC requires at least: 4.0
 * WC tested up to: 8.9
 * License: GPLv2 or later
@@ -36,7 +36,7 @@ PostNL’s official extension for WooCommerce on WordPress. Manage your national
 
 ## Changelog
 
-### 5.3.7
+### 5.4.0
 * Fix: Plugin settings translation.
 
 ### 5.3.6

@@ -471,7 +471,7 @@ class Settings extends \WC_Settings_API {
 				'for_country' => array( 'NL' ),
 			),
 			'default_shipping_options_nl'       => array(
-				'title'       => __( 'Domestic Default Shipping', 'postnl-for-woocommerce' ),
+				'title'       => __( 'Shipping options domestic', 'postnl-for-woocommerce' ),
 				'type'        => 'select',
 				'description' => __( 'Select a default shipping option for domestic orders that are shipped with PostNL.', 'postnl-for-woocommerce' ),
 				'default'     => 'standard_shipment',
@@ -493,7 +493,7 @@ class Settings extends \WC_Settings_API {
 				),
 			),
 			'default_shipping_options_be'       => array(
-				'title'       => __( 'Default Shipping to Belgium', 'postnl-for-woocommerce' ),
+				'title'       => __( 'Shipping options Belgium', 'postnl-for-woocommerce' ),
 				'type'        => 'select',
 				'description' => __( 'Select a default shipping option for the orders shipped to Belgium with PostNL.', 'postnl-for-woocommerce' ),
 				'default'     => 'standard_belgium',
@@ -511,7 +511,7 @@ class Settings extends \WC_Settings_API {
 				),
 			),
 			'default_shipping_options_eu'       => array(
-				'title'       => __( 'Default Shipping to European Union', 'postnl-for-woocommerce' ),
+				'title'       => __( 'Shipping options EU', 'postnl-for-woocommerce' ),
 				'type'        => 'select',
 				'description' => __( 'Select a default shipping option for the orders shipped within European Union zone.', 'postnl-for-woocommerce' ),
 				'default'     => 'eu_parcel|track_and_trace',
@@ -530,7 +530,7 @@ class Settings extends \WC_Settings_API {
 			'default_shipping_options_row'       => array(
 				'title'       => __( 'Default Shipping International', 'postnl-for-woocommerce' ),
 				'type'        => 'select',
-				'description' => __( 'Select a default shipping option for the orders shipped internationally (outside the EU borders).', 'postnl-for-woocommerce' ),
+				'description' => __( 'Shipping options non-EU (outside the EU borders).', 'postnl-for-woocommerce' ),
 				'default'     => 'parcel_non_eu|track_and_trace',
 				'for_country' => array( 'NL' ),
 				'options'     => array(

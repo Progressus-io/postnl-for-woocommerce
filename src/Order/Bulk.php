@@ -462,7 +462,7 @@ class Bulk extends Base {
 				'container'     => true,
 				'options'       => array(
 					'nl'  => __( 'Domestic', 'postnl-for-woocommerce' ),
-					'be'  => __( 'Standard Shipment Belgium', 'postnl-for-woocommerce' ),
+					'be'  => __( 'Belgium', 'postnl-for-woocommerce' ),
 					'eu'  => __( 'EU Parcel', 'postnl-for-woocommerce' ),
 					'row' => __( 'Non-EU Shipment', 'postnl-for-woocommerce' ),
 				)

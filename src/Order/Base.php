@@ -128,13 +128,16 @@ abstract class Base {
 	 */
 	public function get_shipping_zone( $order ) {
 		$shipping_destination = $order->get_shipping_country();
+
 		if ( in_array( $shipping_destination, array( 'NL', 'BE' ) ) ) {
-			return strtolower( $shipping_destination );
+			return $shipping_destination;
 		}
+
 		if ( in_array( $shipping_destination, WC()->countries->get_european_union_countries() ) ) {
-			return 'eu';
+			return 'EU';
 		}
-		return 'row';
+
+		return 'ROW';
 	}
 
 	/**

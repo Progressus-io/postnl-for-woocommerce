@@ -130,24 +130,28 @@ class Bulk extends Base {
 		);
 
 		$selected_shipping_options = $this->prepare_default_options( $_REQUEST );
-		$zone                      = sanitize_text_field( $_REQUEST['postnl_shipping_zone'] );
+		$zone                      = strtoupper( sanitize_text_field( $_REQUEST['postnl_shipping_zone'] ) );
+
 		if ( ! empty( $object_ids ) ) {
 			foreach ( $object_ids as $order_id ) {
-				$order = wc_get_order( $order_id );
+				$order                = wc_get_order( $order_id );
 				$have_label_file      = $this->have_label_file( $order );
 				$match_shipping_zones = $zone === $this->get_shipping_zone( $order );
+
 				if ( $have_label_file ) {
 					$array_messages[] = array(
 						'message' => sprintf( esc_html__( 'Order #%1$d already has a label.', 'postnl-for-woocommerce' ), $order_id ),
 						'type'    => 'error',
 					);
 				}
+
 				if ( ! $match_shipping_zones ) {
 					$array_messages[] = array(
 						'message' => sprintf( esc_html__( 'Order #%1$d is from another shipping zone.', 'postnl-for-woocommerce' ), $order_id ),
 						'type'    => 'error',
 					);
 				}
+
 				if ( ! $have_label_file && $match_shipping_zones ) {
 					$order->delete_meta_data( $this->meta_name );
 					$order->update_meta_data( $this->meta_name, array( 'backend' => $selected_shipping_options ) );

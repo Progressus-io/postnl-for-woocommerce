@@ -174,7 +174,8 @@ class Bulk extends Base {
 	 */
 	protected function prepare_default_options( $options ) {
 		$zone            = sanitize_text_field( $options['postnl_shipping_zone'] );
-		$selected_option = sanitize_text_field( $options[ 'postnl_default_shipping_options_' . $zone ] );
+		$selected_option = sanitize_text_field( $options[ 'postnl_default_shipping_options_' . strtolower( $zone ) ] );
+
 		return Utils::prepare_shipping_options( $selected_option );
 	}
 
@@ -448,7 +449,7 @@ class Bulk extends Base {
 	 * @return array
 	 */
 	protected function get_available_shipping_options_per_zone( $zone ) {
-		return $this->settings->get_setting_fields()['default_shipping_options_' . $zone ]['options'];
+		return $this->settings->get_setting_fields()[ 'default_shipping_options_' . strtolower( $zone ) ]['options'];
 	}
 
 	/**
@@ -469,7 +470,7 @@ class Bulk extends Base {
 					'be'  => __( 'Belgium', 'postnl-for-woocommerce' ),
 					'eu'  => __( 'EU Parcel', 'postnl-for-woocommerce' ),
 					'row' => __( 'Non-EU Shipment', 'postnl-for-woocommerce' ),
-				)
+				),
 			),
 			array(
 				'id' => $this->prefix . 'default_shipping_options_nl',

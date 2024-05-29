@@ -1310,7 +1310,8 @@ class Settings extends \WC_Settings_API {
 	 * @return array
 	 */
 	public function get_default_shipping_options( $zone ) {
-		$shipping_options = $this->get_country_option( 'default_shipping_options_' . strtolower($zone), '' );
+		$shipping_options = $this->get_country_option( 'default_shipping_options_' . strtolower( $zone ), '' );
+
 		return Utils::prepare_shipping_options( $shipping_options );
 	}
 

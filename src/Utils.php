@@ -578,7 +578,16 @@ class Utils {
 	public static function generate_shipping_options_html( $backend_data, $order_id ) {
 		$options_to_display = self::get_shipping_options( $order_id );
 		$selected_options   = array();
-
+		
+		if (isset($backend_data['packets']) && 'yes' == $backend_data['packets'] 
+		&& isset($backend_data['track_and_trace']) && 'yes' == $backend_data['track_and_trace']) {
+			$options_to_display['packets'] = esc_html__( 'Packets', 'postnl-for-woocommerce' );
+		}
+		if (isset($backend_data['mailboxpacket']) && 'yes' == $backend_data['mailboxpacket']  
+		&& isset($backend_data['track_and_trace']) && 'yes' == $backend_data['track_and_trace']) {
+			$options_to_display['mailboxpacket'] = esc_html__( 'Boxable Packet', 'postnl-for-woocommerce' );
+		}
+		
 		foreach ( $backend_data as $option_key => $value ) {
 			if ( isset( $options_to_display[ $option_key ] ) && 'yes' === $value ) {
 				$selected_options[] = $options_to_display[ $option_key ];
@@ -610,9 +619,10 @@ class Utils {
 				'signature_on_delivery' => esc_html__( 'Signature on Delivery', 'postnl-for-woocommerce' ),
 				'only_home_address'     => esc_html__( 'Only Home Address', 'postnl-for-woocommerce' ),
 				'letterbox'             => esc_html__( 'Letterbox', 'postnl-for-woocommerce' ),
-				'packets'               => esc_html__( 'Packets Track & Trace', 'postnl-for-woocommerce' ),
+				'packets'               => esc_html__( 'Packets', 'postnl-for-woocommerce' ),
 				'standard_belgium'      => esc_html__( 'Standard Shipment Belgium', 'postnl-for-woocommerce' ),
-				'mailboxpacket'         => esc_html__( 'Boxable Packet track & trace', 'postnl-for-woocommerce' ),
+				'mailboxpacket'         => esc_html__( 'Boxable Packet', 'postnl-for-woocommerce' ),
+				'track_and_trace'		=> esc_html__( 'Track & Trace', 'postnl-for-woocommerce' ),
 				'eu_parcel'             => esc_html__( 'Parcels Non-EU Insured', 'postnl-for-woocommerce' ),
 				'parcel_non_eu'         => esc_html__( 'Parcels non-EU Insured Plus', 'postnl-for-woocommerce' ),
 			);
@@ -627,6 +637,7 @@ class Utils {
 				'packets'               => esc_html__( 'Packet Untracked', 'postnl-for-woocommerce' ),
 				'standard_belgium'      => esc_html__( 'Standard Shipment Belgium', 'postnl-for-woocommerce' ),
 				'mailboxpacket'         => esc_html__( 'Boxable Packet Untracked', 'postnl-for-woocommerce' ),
+				'track_and_trace'		=> esc_html__( 'Track & Trace', 'postnl-for-woocommerce' ),
 				'eu_parcel'             => esc_html__( 'Parcels Non-EU Insured', 'postnl-for-woocommerce' ),
 				'insured_shipping'      => esc_html__( 'Insured Shipping', 'postnl-for-woocommerce' ),
 				'parcel_non_eu'         => esc_html__( 'Parcels non-EU Insured Plus', 'postnl-for-woocommerce' ),
@@ -642,7 +653,8 @@ class Utils {
 				'packets'               => esc_html__( 'Packet Untracked', 'postnl-for-woocommerce' ),
 				'standard_belgium'      => esc_html__( 'Standard Shipment Belgium', 'postnl-for-woocommerce' ),
 				'mailboxpacket'         => esc_html__( 'Boxable Packet Untracked', 'postnl-for-woocommerce' ),
-				'eu_parcel'             => esc_html__( 'Parcels EU Track & Trace', 'postnl-for-woocommerce' ),
+				'eu_parcel'             => esc_html__( 'Parcels EU', 'postnl-for-woocommerce' ),
+				'track_and_trace'		=> esc_html__( 'Track & Trace', 'postnl-for-woocommerce' ),
 				'insured_shipping'      => esc_html__( 'Insured Shipping', 'postnl-for-woocommerce' ),
 				'insured_plus'          => esc_html__( 'Insured Plus', 'postnl-for-woocommerce' ),
 			);
@@ -657,7 +669,8 @@ class Utils {
 				'packets'               => esc_html__( 'Packet Untracked', 'postnl-for-woocommerce' ),
 				'standard_belgium'      => esc_html__( 'Standard Shipment Belgium', 'postnl-for-woocommerce' ),
 				'mailboxpacket'         => esc_html__( 'Boxable Packet Untracked', 'postnl-for-woocommerce' ),
-				'parcel_non_eu'         => esc_html__( 'Parcels Non-EU Track & Trace', 'postnl-for-woocommerce' ),
+				'parcel_non_eu'         => esc_html__( 'Parcels Non-EU', 'postnl-for-woocommerce' ),
+				'track_and_trace'		=> esc_html__( 'Track & Trace', 'postnl-for-woocommerce' ),
 				'insured_shipping'      => esc_html__( 'Insured Shipping', 'postnl-for-woocommerce' ),
 				'insured_plus'          => esc_html__( 'Insured Plus', 'postnl-for-woocommerce' ),
 			);

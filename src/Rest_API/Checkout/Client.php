@@ -111,7 +111,7 @@ class Client extends Base {
 			$options[] = 'Pickup';
 		}
 
-		// Optional options.
+		// Optional options - Options available for specific countries only.
 		$checkout_options = Mapping::available_country_for_checkout_feature();
 
 		if ( ! isset( $checkout_options[ $this->item_info->shipper['country'] ][ $this->item_info->receiver['country'] ] ) ) {

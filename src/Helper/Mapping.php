@@ -565,7 +565,7 @@ class Mapping {
 	public static function available_country_for_checkout_feature() {
 		return array(
 			'NL' => array(
-				'NL' => array( 'pickup_points', 'delivery_day', 'evening_delivery' ),
+				'NL' => array( 'pickup_points', 'delivery_day', 'evening_delivery', '08:00-12:00' ),
 				'BE' => array( 'pickup_points', 'delivery_day' ),
 			),
 			'BE' => array(

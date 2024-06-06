@@ -7,6 +7,7 @@
 
 namespace PostNLWooCommerce\Rest_API\Checkout;
 
+use PostNLWooCommerce\Helper\Mapping;
 use PostNLWooCommerce\Rest_API\Base;
 use PostNLWooCommerce\Utils;
 
@@ -101,19 +102,29 @@ class Client extends Base {
 	public function get_checkout_options() {
 		$options = array();
 
-		if ( $this->item_info->body['pickup_points_enabled'] ) {
-			$options[] = 'Pickup';
-		}
-
-		if ( $this->item_info->body['morning_delivery_enabled'] ) {
-			$options[] = '08:00-12:00';
-		}
-
+		// Required options.
 		if ( $this->item_info->body['delivery_days_enabled'] ) {
 			$options[] = 'Daytime';
 		}
 
-		if ( $this->item_info->body['evening_delivery_enabled'] ) {
+		if ( $this->item_info->body['pickup_points_enabled'] ) {
+			$options[] = 'Pickup';
+		}
+
+		// Optional options.
+		$checkout_options = Mapping::available_country_for_checkout_feature();
+
+		if ( ! isset( $checkout_options[ $this->item_info->shipper['country'] ][ $this->item_info->receiver['country'] ] ) ) {
+			return $options;
+		}
+
+		$available_checkout_options = $checkout_options[ $this->item_info->shipper['country'] ][ $this->item_info->receiver['country'] ];
+
+		if ( in_array( '08:00-12:00', $available_checkout_options ) && $this->item_info->body['morning_delivery_enabled'] ) {
+			$options[] = '08:00-12:00';
+		}
+
+		if ( in_array( 'evening_delivery', $available_checkout_options ) && $this->item_info->body['evening_delivery_enabled'] ) {
 			$options[] = 'Evening';
 		}
 

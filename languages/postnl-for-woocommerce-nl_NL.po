@@ -1094,11 +1094,11 @@ msgstr "Selecteer een standaard verzendoptie voor alle zendingen die naar Belgi�
 
 #: src/Shipping_Method/Settings.php:503
 msgid "Standard Shipment Belgium + Only Home Address"
-msgstr "Standaardzending België"
+msgstr "Standaardzending België + Alleen Huisadres"
 
 #: src/Shipping_Method/Settings.php:504
 msgid "Standard Shipment Belgium + Signature on Delivery"
-msgstr "Standaardzending België + Alleen Huisadres"
+msgstr "Standaardzending België + Handtekening voor ontvangst"
 
 #: src/Shipping_Method/Settings.php:505
 msgid "Standard Shipment Belgium + Insured Shipping"

@@ -284,8 +284,14 @@ class Container {
 			}
 
 			$available_country = Mapping::available_country_for_checkout_feature();
-			$receiver_country  = ! empty( $post_data['shipping_country'] ) ? $post_data['shipping_country'] : '';
 			$store_country     = Utils::get_base_country();
+
+			// To fix cache issues, check billing country if it is the same address for shipping.
+			if ( ! empty( $post_data['ship_to_different_address'] ) ) {
+				$receiver_country = ! empty( $post_data['shipping_country'] ) ? $post_data['shipping_country'] : '';
+			} else {
+				$receiver_country = ! empty( $post_data['billing_country'] ) ? $post_data['billing_country'] : '';
+			}
 
 			if ( ! isset( $available_country[ $store_country ][ $receiver_country ] ) ) {
 				return;

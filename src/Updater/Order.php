@@ -11,8 +11,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-use PostNLWooCommerce\Utils;
-
 /**
  * Class Order
  *
@@ -60,16 +58,16 @@ class Order {
 					'relation' => 'AND',
 					array(
 						'key'     => $this->meta_name,
-						'compare' => 'EXISTS'
+						'compare' => 'EXISTS',
 					),
 					array(
 						'key'     => '_postnl_old_orders_delivery_date',
-						'compare' => 'NOT EXISTS'
+						'compare' => 'NOT EXISTS',
 					)
 				),
-				'limit'    => -1,
-				'return'   => 'ids',
-				'status'   => array('on-hold', 'pending')
+				'limit'      => - 1,
+				'return'     => 'ids',
+				'status'     => array( 'on-hold', 'pending' ),
 			)
 		);
 
@@ -86,7 +84,7 @@ class Order {
 				}
 			}
 		}
-	}		
+	}
 
 	/**
 	 * Handle a custom 'postnl_ordermeta' query var to get orders with the '_postnl_order_metadata' meta.

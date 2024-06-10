@@ -32,13 +32,6 @@ class Container {
 	protected $settings;
 
 	/**
-	 * Template file name.
-	 *
-	 * @var string
-	 */
-	public $template_file;
-
-	/**
 	 * Tab field name.
 	 *
 	 * @var tab_field
@@ -51,7 +44,6 @@ class Container {
 	public function __construct() {
 		$this->settings = Settings::get_instance();
 
-		$this->set_template_file();
 		$this->init_hooks();
 	}
 
@@ -88,13 +80,6 @@ class Container {
 			POSTNL_WC_VERSION,
 			true
 		);
-	}
-
-	/**
-	 * Set the template filename.
-	 */
-	public function set_template_file() {
-		$this->template_file = 'checkout/postnl-container.php';
 	}
 
 	/**
@@ -148,10 +133,12 @@ class Container {
 		$item_info = new Checkout\Item_Info( $post_data );
 		$api_call  = new Checkout\Client( $item_info );
 		$response  = $api_call->send_request();
+		$letterbox = Utils::is_eligible_auto_letterbox( \WC()->cart );
 
 		return array(
 			'response'  => $response,
 			'post_data' => $post_data,
+			'letterbox' => $letterbox
 		);
 	}
 
@@ -203,7 +190,7 @@ class Container {
 			$options = array_filter(
 				$options,
 				function( $option ) use ( $non_standard_fees ) {
-					return isset( $non_standard_fees[ $option['type'] ] );
+					return ! isset( $non_standard_fees[ $option['type'] ] );
 				}
 			);
 
@@ -251,6 +238,7 @@ class Container {
 			'response'    => $checkout_data['response'],
 			'post_data'   => $checkout_data['post_data'],
 			'default_val' => $this->get_default_value( $checkout_data['response'], $checkout_data['post_data'] ),
+			'letterbox'   => $checkout_data['letterbox'],
 			'fields'      => array(
 				array(
 					'name'  => $this->tab_field,
@@ -259,7 +247,7 @@ class Container {
 			),
 		);
 
-		wc_get_template( $this->template_file, $template_args, '', POSTNL_WC_PLUGIN_DIR_PATH . '/templates/' );
+		wc_get_template( 'checkout/postnl-container.php', $template_args, '', POSTNL_WC_PLUGIN_DIR_PATH . '/templates/' );
 	}
 
 	/**
@@ -284,8 +272,14 @@ class Container {
 			}
 
 			$available_country = Mapping::available_country_for_checkout_feature();
-			$receiver_country  = ! empty( $post_data['shipping_country'] ) ? $post_data['shipping_country'] : '';
 			$store_country     = Utils::get_base_country();
+
+			// To fix cache issues, check billing country if it is the same address for shipping.
+			if ( ! empty( $post_data['ship_to_different_address'] ) ) {
+				$receiver_country = ! empty( $post_data['shipping_country'] ) ? $post_data['shipping_country'] : '';
+			} else {
+				$receiver_country = ! empty( $post_data['billing_country'] ) ? $post_data['billing_country'] : '';
+			}
 
 			if ( ! isset( $available_country[ $store_country ][ $receiver_country ] ) ) {
 				return;

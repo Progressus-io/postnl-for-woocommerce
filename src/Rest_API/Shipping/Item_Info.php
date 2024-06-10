@@ -100,7 +100,7 @@ class Item_Info extends Base_Info {
 	 * @var weight_uom
 	 */
 	public $weight_uom;
-
+	
 	/**
 	 * Parses the arguments and sets the instance's properties.
 	 *
@@ -229,7 +229,7 @@ class Item_Info extends Base_Info {
 			'subtotal'       => $order->get_subtotal(),
 		);
 
-		// Check mailbox weight limit
+		// Check mailbox weight limit.
 		$this->check_insurance_amount_limit( $this->api_args['backend_data'], $order->get_subtotal() );
 
 		foreach ( $order->get_items() as $item_id => $item ) {
@@ -863,16 +863,19 @@ class Item_Info extends Base_Info {
 		if ( empty( $code_map[ $from_country ][ $destination ][ $shipping_feature ] ) ) {
 			return $selected_product;
 		}
-
 		foreach ( $code_map[ $from_country ][ $destination ][ $shipping_feature ] as $product ) {
 			if ( empty( $product['combination'] ) && empty( $selected_product ) ) {
 				$selected_product = $product;
 				continue;
 			}
-
 			$is_this_it = true;
-			foreach ( $product['combination'] as $feature ) {
-				if ( ! in_array( $feature, $features ) ) {
+			foreach ( $features as $feature ) {
+				if ( ! in_array( $feature,  $product['combination']) ) {
+					$is_this_it = false;
+				}				
+			}
+			foreach($product['combination'] as $combination){
+				if ( ! in_array( $combination,  $features) ) {
 					$is_this_it = false;
 				}
 			}

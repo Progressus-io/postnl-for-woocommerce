@@ -23,6 +23,10 @@ tr.postnl-co-tr-container > td {
 	font-size:14px;
 }
 
+.postnl_checkout_container.is-hidden {
+    display: none;
+}
+
 .postnl_checkout_tab_list {
 	margin:0px;
 	padding:0px;

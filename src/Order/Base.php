@@ -15,6 +15,7 @@ use PostNLWooCommerce\Rest_API\Letterbox;
 use PostNLWooCommerce\Shipping_Method\Settings;
 use PostNLWooCommerce\Helper\Mapping;
 use PostNLWooCommerce\Library\CustomizedPDFMerger;
+use PostNLWooCommerce\Product;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -90,29 +91,75 @@ abstract class Base {
 	}
 
 	/**
-	 * List of meta box fields.
+	 * Get shipping options from the PostNL meta, if those no-exists then form the plugin settings.
+	 *
+	 * @param \WC_Order $order
+	 *
+	 * @return array
+	 *
+	 * @internal
 	 */
-	public function meta_box_fields() {
-		// Get the default shipping options.
-		$default_options = $this->settings->get_default_shipping_options();
+	public function get_shipping_options( $order ) {
+
+		if ( ! is_a( $order, 'WC_Order' ) ) {
+			return array();
+		}
+
+		// Return shipping options already selected by the user.
+		$default_options = $this->get_backend_data( $order->get_id() );
+		if ( ! empty( $default_options ) ) {
+			return $default_options;
+		}
+
+		// Get from the plugin settings
+		$delivery_zone = $this->get_shipping_zone( $order );
+		if ( 'NL' === $delivery_zone && Utils::is_eligible_auto_letterbox( $order ) ) {
+			return array( 'letterbox' => 'yes' );
+		}
+		return $this->settings->get_default_shipping_options( $delivery_zone );
+	}
+
+	/**
+	 * Get delivery zone out of the given order ( 1 of 4 - nl, be, eu, row )
+	 *
+	 * @param \WC_Order $order
+	 *
+	 * @return string
+	 */
+	public function get_shipping_zone( $order ) {
+		$shipping_destination = $order->get_shipping_country();
+
+		if ( in_array( $shipping_destination, array( 'NL', 'BE' ) ) ) {
+			return $shipping_destination;
+		}
+
+		if ( in_array( $shipping_destination, WC()->countries->get_european_union_countries() ) ) {
+			return 'EU';
+		}
+
+		return 'ROW';
+	}
+
+	/**
+	 * List of meta box fields.
+	 *
+	 * @param \WC_Order $order WooCommerce order ID.
+	 */
+	public function meta_box_fields( $order = false ) {
+
+		$default_options = $this->get_shipping_options( $order );
 
 		return apply_filters(
 			'postnl_order_meta_box_fields',
 			array(
-				array(
-					'id'            => $this->prefix . 'break_1',
-					'standard_feat' => false,
-					'const_field'   => true,
-					'type'          => 'break',
-				),
 				array(
 					'id'            => $this->prefix . 'id_check',
 					'type'          => 'checkbox',
 					'label'         => __( 'ID Check: ', 'postnl-for-woocommerce' ),
 					'placeholder'   => '',
 					'description'   => '',
-					'value'         => $default_options['id_check'] ? 'yes' : '',
-					'show_in_bulk'  => true,
+					'value'         => $default_options['id_check'] ?? '',
+					'show_in_bulk'  => false,
 					'standard_feat' => false,
 					'const_field'   => false,
 					'container'     => true,
@@ -123,7 +170,7 @@ abstract class Base {
 					'label'         => __( 'Insured Shipping: ', 'postnl-for-woocommerce' ),
 					'placeholder'   => '',
 					'description'   => '',
-					'value'         => $default_options['insured_shipping'] ? 'yes' : '',
+					'value'         => $default_options['insured_shipping'] ?? '',
 					'show_in_bulk'  => true,
 					'standard_feat' => false,
 					'const_field'   => false,
@@ -147,7 +194,7 @@ abstract class Base {
 					'label'         => __( 'Return if no answer: ', 'postnl-for-woocommerce' ),
 					'placeholder'   => '',
 					'description'   => '',
-					'value'         => $default_options['return_no_answer'] ? 'yes' : '',
+					'value'         => $default_options['return_no_answer'] ?? '',
 					'show_in_bulk'  => true,
 					'standard_feat' => false,
 					'const_field'   => false,
@@ -159,7 +206,7 @@ abstract class Base {
 					'label'         => __( 'Signature on Delivery: ', 'postnl-for-woocommerce' ),
 					'placeholder'   => '',
 					'description'   => '',
-					'value'         => $default_options['signature_on_delivery'] ? 'yes' : '',
+					'value'         => $default_options['signature_on_delivery'] ?? '',
 					'show_in_bulk'  => true,
 					'standard_feat' => false,
 					'const_field'   => false,
@@ -171,7 +218,7 @@ abstract class Base {
 					'label'         => __( 'Only Home Address: ', 'postnl-for-woocommerce' ),
 					'placeholder'   => '',
 					'description'   => '',
-					'value'         => $default_options['only_home_address'] ? 'yes' : '',
+					'value'         => $default_options['only_home_address'] ?? '',
 					'show_in_bulk'  => true,
 					'standard_feat' => false,
 					'const_field'   => false,
@@ -183,7 +230,7 @@ abstract class Base {
 					'label'         => __( 'Letterbox: ', 'postnl-for-woocommerce' ),
 					'placeholder'   => '',
 					'description'   => '',
-					'value'         => $default_options['letterbox'] ? 'yes' : '',
+					'value'         => $default_options['letterbox'] ?? '',
 					'show_in_bulk'  => true,
 					'standard_feat' => false,
 					'const_field'   => false,
@@ -195,7 +242,7 @@ abstract class Base {
 					'label'         => __( 'Packets: ', 'postnl-for-woocommerce' ),
 					'placeholder'   => '',
 					'description'   => '',
-					'value'         => '',
+					'value'         => $default_options['packets'] ?? '',
 					'show_in_bulk'  => true,
 					'standard_feat' => false,
 					'const_field'   => false,
@@ -207,7 +254,7 @@ abstract class Base {
 					'label'         => __( 'Mailbox Packet (International): ', 'postnl-for-woocommerce' ),
 					'placeholder'   => '',
 					'description'   => '',
-					'value'         => '',
+					'value'         => $default_options['mailboxpacket'] ?? '',
 					'show_in_bulk'  => true,
 					'standard_feat' => false,
 					'const_field'   => false,
@@ -219,7 +266,7 @@ abstract class Base {
 					'label'         => __( 'Track & Trace: ', 'postnl-for-woocommerce' ),
 					'placeholder'   => '',
 					'description'   => '',
-					'value'         => '',
+					'value'         => $default_options['track_and_trace'] ?? '',
 					'show_in_bulk'  => true,
 					'standard_feat' => false,
 					'const_field'   => false,
@@ -403,6 +450,7 @@ abstract class Base {
 	 * @throws \Exception Throw error for invalid order id.
 	 */
 	public function save_meta_value( $order_id, $meta_values ) {
+
 		$order = wc_get_order( $order_id );
 
 		if ( ! is_a( $order, 'WC_Order' ) ) {
@@ -415,20 +463,16 @@ abstract class Base {
 		$nonce_fields = array_values( $this->get_nonce_fields() );
 
 		// Loop through inputs within id 'shipment-postnl-label-form'.
-		foreach ( $this->meta_box_fields() as $field ) {
+		foreach ( $this->meta_box_fields( $order_id ) as $field ) {
+			// Don't save nonce field.
+			if ( $nonce_fields[0]['id'] === $field['id'] ) {
+				continue;
+			}
+
 			$post_value = ! empty( $meta_values[ $field['id'] ] ) ? sanitize_text_field( wp_unslash( $meta_values[ $field['id'] ] ) ) : '';
 			$post_field = Utils::remove_prefix_field( $this->prefix, $field['id'] );
-		
-			// Check if a value is posted, if so, use it.
-			if ( isset( $meta_values[ $field['id'] ] ) ) {
-				$saved_data['backend'][ $post_field ] = $post_value;
-			} else {
-				// Apply default settings only if the value is not set in the posted data.
-				$default_options = $this->settings->get_default_shipping_options();
-				if ( array_key_exists( $post_field, $default_options ) ) {
-					$saved_data['backend'][ $post_field ] = $default_options[ $post_field ];
-				}
-			}
+
+			$saved_data['backend'][ $post_field ] = $post_value;
 		}
 
 		$label_post_data = array(
@@ -540,6 +584,38 @@ abstract class Base {
 		}
 
 		return array();
+	}
+
+	/**
+	 * Get delivery type string.
+	 *
+	 * @param WC_Order $order Order object.
+	 *
+	 * @return String.
+	 */
+	public function get_delivery_type( $order ) {
+		$from_country      = Utils::get_base_country();
+		$to_country        = $order->get_shipping_country();
+		$delivery_type_map = Mapping::delivery_type();
+		$filtered_frontend = $this->get_order_frontend_info( $order, '_type' );
+		$destination       = Utils::get_shipping_zone( $to_country );
+
+
+		if ( ! is_array( $delivery_type_map[ $from_country ][ $destination ] ) ) {
+			return ! empty( $delivery_type_map[ $from_country ][ $destination ] ) ? $delivery_type_map[ $from_country ][ $destination ] : '';
+		}
+
+		if ( empty( $filtered_frontend ) ) {
+			return '';
+		}
+
+		foreach ( $filtered_frontend as $frontend_key => $frontend_value ) {
+			if ( ! empty( $delivery_type_map[ $from_country ][ $destination ][ $frontend_key ][ $frontend_value ] ) ) {
+				return $delivery_type_map[ $from_country ][ $destination ][ $frontend_key ][ $frontend_value ];
+			}
+		}
+
+		return '';
 	}
 
 	/**

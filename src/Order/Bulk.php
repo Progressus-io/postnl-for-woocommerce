@@ -32,13 +32,16 @@ class Bulk extends Base {
 	 */
 	public function init_hooks() {
 		add_filter( 'bulk_actions-edit-shop_order', array( $this, 'add_order_bulk_actions' ), 10, 1 );
-		add_filter( 'handle_bulk_actions-edit-shop_order', array( $this, 'process_order_bulk_actions' ), 10, 3 );
+		add_filter( 'handle_bulk_actions-edit-shop_order', array( $this, 'bulk_action_create_label' ), 10, 3 );
+		add_filter( 'handle_bulk_actions-edit-shop_order', array( $this, 'bulk_action_change_shipping_options' ), 10, 3 );
 
 		add_filter( 'bulk_actions-woocommerce_page_wc-orders', array( $this, 'add_order_bulk_actions' ), 10, 1 );
-		add_filter( 'handle_bulk_actions-woocommerce_page_wc-orders', array( $this, 'process_order_bulk_actions' ), 10, 3 );
+		add_filter( 'handle_bulk_actions-woocommerce_page_wc-orders', array( $this, 'bulk_action_create_label' ), 10, 3 );
+		add_filter( 'handle_bulk_actions-woocommerce_page_wc-orders', array( $this, 'bulk_action_change_shipping_options' ), 10, 3 );
 
 		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_bulk_assets' ) );
-		add_action( 'admin_footer', array( $this, 'model_content_fields_create_label' ) );
+		add_action( 'admin_footer', array( $this, 'modal_create_label' ) );
+		add_action( 'admin_footer', array( $this, 'modal_change_shipping_options' ) );
 		add_filter( 'postnl_order_meta_box_fields', array( $this, 'additional_meta_box' ), 10, 1 );
 
 		// Display admin notices for bulk actions.
@@ -58,8 +61,11 @@ class Bulk extends Base {
 	 * @return array
 	 */
 	public function add_order_bulk_actions( $bulk_actions ) {
-		$bulk_actions['postnl-create-label'] = esc_html__( 'PostNL Create Label', 'postnl-for-woocommerce' );
-
+		$base_country = Utils::get_base_country();		
+		$bulk_actions['postnl-create-label']            = esc_html__( 'PostNL Create Label', 'postnl-for-woocommerce' );
+		if($base_country != 'BE'){
+			$bulk_actions['postnl-change-shipping-options'] = esc_html__( 'PostNL Change Shipping Options', 'postnl-for-woocommerce' );
+		}
 		return $bulk_actions;
 	}
 
@@ -72,13 +78,13 @@ class Bulk extends Base {
 	 *
 	 * @return string
 	 */
-	public function process_order_bulk_actions( $redirect, $doaction, $object_ids ) {
+	public function bulk_action_create_label( $redirect, $doaction, $object_ids ) {
 		if ( 'postnl-create-label' !== $doaction ) {
 			return $redirect;
 		}
 
 		$array_messages = array(
-				'user_id' => get_current_user_id(),
+			'user_id' => get_current_user_id(),
 		);
 
 		$gen_labels = array(); // Generated labels.
@@ -86,11 +92,9 @@ class Bulk extends Base {
 		if ( ! empty( $object_ids ) ) {
 			foreach ( $object_ids as $order_id ) {
 				$result = $this->generate_label_and_notes( $order_id, $_REQUEST );
-
 				if ( isset( $result['message'] ) ) {
 					$array_messages[] = $result['message'];
 				}
-
 				if ( isset( $result['labels_data']['labels'] ) ) {
 					$gen_labels[] = $result['labels_data']['labels'];
 				}
@@ -104,6 +108,75 @@ class Bulk extends Base {
 		update_option( $this->bulk_option_text_name, $array_messages );
 
 		return $redirect;
+	}
+
+	/**
+	 * Process PostNL in bulk.
+	 *
+	 * @param String $redirect Redirect URL after the bulk has been processed.
+	 * @param String $doaction Chosen action.
+	 * @param array  $object_ids Chose IDs.
+	 *
+	 * @return string
+	 */
+	public function bulk_action_change_shipping_options( $redirect, $doaction, $object_ids ) {
+
+		if ( 'postnl-change-shipping-options' !== $doaction ) {
+			return $redirect;
+		}
+
+		$array_messages = array(
+			'user_id' => get_current_user_id(),
+		);
+
+		$selected_shipping_options = $this->prepare_default_options( $_REQUEST );
+		$zone                      = strtoupper( sanitize_text_field( $_REQUEST['postnl_shipping_zone'] ) );
+
+		if ( ! empty( $object_ids ) ) {
+			foreach ( $object_ids as $order_id ) {
+				$order                = wc_get_order( $order_id );
+				$have_label_file      = $this->have_label_file( $order );
+				$match_shipping_zones = $zone === $this->get_shipping_zone( $order );
+
+				if ( $have_label_file ) {
+					$array_messages[] = array(
+						'message' => sprintf( esc_html__( 'Order #%1$d already has a label.', 'postnl-for-woocommerce' ), $order_id ),
+						'type'    => 'error',
+					);
+				}
+
+				if ( ! $match_shipping_zones ) {
+					$array_messages[] = array(
+						'message' => sprintf( esc_html__( 'Order #%1$d is from another shipping zone.', 'postnl-for-woocommerce' ), $order_id ),
+						'type'    => 'error',
+					);
+				}
+
+				if ( ! $have_label_file && $match_shipping_zones ) {
+					$order->delete_meta_data( $this->meta_name );
+					$order->update_meta_data( $this->meta_name, array( 'backend' => $selected_shipping_options ) );
+					$order->save();
+				}
+			}
+		}
+
+		update_option( $this->bulk_option_text_name, $array_messages );
+
+		return $redirect;
+	}
+
+	/**
+	 * Prepare default shipping options based on user selection from the bulk modal.
+	 *
+	 * @param array $options Selected options by the user.
+	 *
+	 * @return array
+	 */
+	protected function prepare_default_options( $options ) {
+		$zone            = sanitize_text_field( $options['postnl_shipping_zone'] );
+		$selected_option = sanitize_text_field( $options[ 'postnl_default_shipping_options_' . strtolower( $zone ) ] );
+
+		return Utils::prepare_shipping_options( $selected_option );
 	}
 
 	/**
@@ -281,9 +354,14 @@ class Bulk extends Base {
 	}
 
 	/**
-	 * Collection of fields in create label bulk action.
+	 * Create modal wrapper with given id and fields definition.
+	 *
+	 * @param string $modal_id Modal id.
+	 * @param array $fields Fields to be added to the modal contend.
+	 *
+	 * @return void
 	 */
-	public function model_content_fields_create_label() {
+	protected function create_modal_content_wrapper( $modal_id, $fields ) {
 		global $thepostid, $post;
 
 		$screen = get_current_screen();
@@ -298,16 +376,146 @@ class Bulk extends Base {
 
 		if ( $is_legacy_order || $is_hpos_order ) {
 			?>
-			<div id="postnl-create-label-modal" style="display:none;">
-				<div id="postnl-action-create-label">
-					<?php Utils::fields_generator( $this->meta_box_fields() ); ?>
-
-					<br>
-					<button type="button" class="button button-primary" id="postnl_create_label_proceed"><?php esc_html_e( 'Submit', 'postnl-for-woocommerce' ); ?></button>
+			<div id="<?php echo esc_attr( $modal_id ); ?>-modal" style="display:none;">
+				<div class="postnl-modal <?php echo esc_attr( $modal_id . '-content' ) ?>">
+					<?php Utils::fields_generator( $fields ); ?>
+					<button type="button" class="button button-primary" id="<?php echo esc_attr( $modal_id ); ?>-proceed"><?php esc_html_e( 'Submit', 'postnl-for-woocommerce' ); ?></button>
 				</div>
 			</div>
 			<?php
 		}
+	}
+
+	/**
+	 * Prepare fields for the Change shipping options modal.
+	 *
+	 * @return array[]
+	 */
+	protected function create_label_fields() {
+		return array(
+			array(
+				'id'                => $this->prefix . 'num_labels',
+				'type'              => 'number',
+				'label'             => __( 'Number of Labels: ', 'postnl-for-woocommerce' ),
+				'placeholder'       => '',
+				'description'       => '',
+				'class'             => 'short',
+				'value'             => '',
+				'container'         => true,
+				'custom_attributes' =>
+					array(
+						'step' => 'any',
+						'min'  => '0',
+					),
+			),
+			array(
+				'id'            => $this->prefix . 'create_return_label',
+				'type'          => 'checkbox',
+				'label'         => __( 'Create Return Label: ', 'postnl-for-woocommerce' ),
+				'placeholder'   => '',
+				'description'   => '',
+				'container'     => true,
+				'value'         => $this->settings->get_return_address_default(),
+			),
+			array(
+				'id'            => $this->prefix . 'position_printing_labels',
+				'type'          => 'select',
+				'label'         => __( 'Start position printing label: ', 'postnl-for-woocommerce' ),
+				'placeholder'   => '',
+				'description'   => '',
+				'container'     => true,
+				'options'       => array(
+					'top-left'     => __( 'Top Left', 'postnl-for-woocommerce' ),
+					'top-right'    => __( 'Top Right', 'postnl-for-woocommerce' ),
+					'bottom-left'  => __( 'Bottom Left', 'postnl-for-woocommerce' ),
+					'bottom-right' => __( 'Bottom Right', 'postnl-for-woocommerce' ),
+				),
+			),
+		);
+	}
+
+	/**
+	 * Collection of fields in create label bulk action.
+	 */
+	public function modal_create_label() {
+		$this->create_modal_content_wrapper( 'postnl-create-label', $this->create_label_fields() );
+	}
+
+	/**
+	 * Get shipping options per given zone from the plugin settings.
+	 *
+	 * @param string $zone Zone you want shipping options to, available nl, be, eu, row.
+	 *
+	 * @return array
+	 */
+	protected function get_available_shipping_options_per_zone( $zone ) {
+		return $this->settings->get_setting_fields()[ 'default_shipping_options_' . strtolower( $zone ) ]['options'];
+	}
+
+	/**
+	 * Prepare fields for the Change shipping options modal.
+	 *
+	 * @return array[]
+	 */
+	protected function change_shipping_options_fields() {
+		return array(
+			array(
+				'id'            => $this->prefix . 'shipping_zone',
+				'type'          => 'select',
+				'label'         => __( 'Shipping zone', 'postnl-for-woocommerce' ),
+				'value'         => 'nl',
+				'container'     => true,
+				'options'       => array(
+					'nl'  => __( 'Domestic', 'postnl-for-woocommerce' ),
+					'be'  => __( 'Belgium', 'postnl-for-woocommerce' ),
+					'eu'  => __( 'EU Parcel', 'postnl-for-woocommerce' ),
+					'row' => __( 'Non-EU Shipment', 'postnl-for-woocommerce' ),
+				),
+			),
+			array(
+				'id' => $this->prefix . 'default_shipping_options_nl',
+				'type'          => 'select',
+				'label'         => __( 'Shipping options domestic', 'postnl-for-woocommerce' ),
+				'wrapper_class' => 'conditional nl',
+				'container'     => true,
+				'value'         => $this->settings->get_country_option( 'default_shipping_options_' . 'nl' ),
+				'options'       => $this->get_available_shipping_options_per_zone( 'nl' ),
+			),
+			array(
+				'id' => $this->prefix . 'default_shipping_options_be',
+				'type'          => 'select',
+				'label'         => __( 'Belgium', 'postnl-for-woocommerce' ),
+				'wrapper_class' => 'conditional be',
+				'container'     => true,
+				'value'         => $this->settings->get_country_option( 'default_shipping_options_' . 'be' ),
+				'options'       => $this->get_available_shipping_options_per_zone( 'be' ),
+			),
+			array(
+				'id' => $this->prefix . 'default_shipping_options_eu',
+				'type'          => 'select',
+				'label'         => __( 'Shipping options EU', 'postnl-for-woocommerce' ),
+				'wrapper_class' => 'conditional eu',
+				'container'     => true,
+				'value'         => $this->settings->get_country_option( 'default_shipping_options_' . 'eu' ),
+				'options'       => $this->get_available_shipping_options_per_zone( 'eu' ),
+			),
+			array(
+				'id' => $this->prefix . 'default_shipping_options_row',
+				'type'          => 'select',
+				'label'         => __( 'Shipping options non-EU', 'postnl-for-woocommerce' ),
+				'wrapper_class' => 'conditional row',
+				'container'     => true,
+				'value'         => $this->settings->get_country_option( 'default_shipping_options_' . 'row' ),
+				'options'       => $this->get_available_shipping_options_per_zone( 'row' ),
+			),
+		);
+	}
+
+	/**
+	 * Collection of fields in create label bulk action.
+	 */
+	public function modal_change_shipping_options() {
+		$this->create_modal_content_wrapper( 'postnl-change-shipping-options', $this->change_shipping_options_fields() );
 	}
 
 	/**
@@ -414,6 +622,13 @@ class Bulk extends Base {
 		$result = array();
 
 		try {
+			$order            = wc_get_order( $order_id );
+			$default_settings = $this->get_shipping_options( $order );
+			foreach( $default_settings as $name => $value ) {
+				if ( $value  ) {
+					$post_data[ $this->prefix . $name ] = $value;
+				}
+			}
 			$result['labels_data'] = $this->save_meta_value( $order_id, $post_data );
 			$tracking_note         = $this->get_tracking_note( $order_id );
 			$customer_note         = false;
@@ -422,7 +637,6 @@ class Bulk extends Base {
 				$customer_note = true;
 			}
 
-			$order = wc_get_order( $order_id );
 			$order->add_order_note( $tracking_note, $customer_note );
 
 			$result['message'] = array(

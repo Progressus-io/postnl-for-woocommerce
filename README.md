@@ -37,7 +37,10 @@ PostNL’s official extension for WooCommerce on WordPress. Manage your national
 ## Changelog
 
 ### 5.4.0
-* Fix: Plugin settings translation.
+* Add: Assign Letterbox Parcels automatically based on purchased products.
+* Add: Ability to assign default shipping product options for every shipping zone, per settings and bulk actions.
+* Fix: Checkout delivery options display on the Checkout page for Belgium merchants.
+* Added and fixed Dutch translations.
 
 ### 5.3.6
 * Fix: Correct CustomerCode in non-EU calls, in Shipping call.

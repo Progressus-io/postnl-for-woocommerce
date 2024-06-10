@@ -80,8 +80,11 @@ Follow these instructions (https://www.postnl.nl/Images/aanvragen-api-key-stappe
 
 == Changelog ==
 
-= 5.4.0 (2024-xx-xx) =
-* Fix: Plugin settings translation.
+= 5.4.0 (2024-06-10) =
+* Add: Assign Letterbox Parcels automatically based on purchased products.
+* Add: Ability to assign default shipping product options for every shipping zone, per settings and bulk actions.
+* Fix: Checkout delivery options display on the Checkout page for Belgium merchants.
+* Added and fixed Dutch translations.
 
 = 5.3.6 (2024-04-24) =
 * Fix: Correct CustomerCode in non-EU calls, in Shipping call.

@@ -128,7 +128,7 @@ class Delivery_Day extends Base {
 			$options = array_map(
 				function( $timeframe ) use ( $non_standard_fees ) {
 					$type  = array_shift( $timeframe['Options'] );
-					$price = $non_standard_fees[ $type ] ? $non_standard_fees[ $type ]['fee_price'] : 0;
+					$price = isset( $non_standard_fees[ $type ] ) ? $non_standard_fees[ $type ]['fee_price'] : 0;
 
 					return array(
 						'from'  => Utils::get_hour_min( $timeframe['From'] ),

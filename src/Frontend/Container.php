@@ -138,7 +138,7 @@ class Container {
 		return array(
 			'response'  => $response,
 			'post_data' => $post_data,
-			'letterbox' => $letterbox,
+			'letterbox' => $letterbox
 		);
 	}
 
@@ -190,7 +190,7 @@ class Container {
 			$options = array_filter(
 				$options,
 				function( $option ) use ( $non_standard_fees ) {
-					return isset( $non_standard_fees[ $option['type'] ] );
+					return ! isset( $non_standard_fees[ $option['type'] ] );
 				}
 			);
 

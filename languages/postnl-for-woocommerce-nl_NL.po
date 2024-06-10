@@ -1106,7 +1106,7 @@ msgstr "Standaardzending België + Verzekerd Verzenden"
 
 #: src/Shipping_Method/Settings.php:506 src/Shipping_Method/Settings.php:523 src/Shipping_Method/Settings.php:540
 msgid "Boxable Packet"
-msgstr "Brievenbuspakje Internationaal (untracked)"
+msgstr "Brievenbuspakje Internationaal"
 
 #: src/Shipping_Method/Settings.php:507 src/Shipping_Method/Settings.php:524 src/Shipping_Method/Settings.php:541
 msgid "Boxable Packet + Track & Trace"
@@ -1114,7 +1114,7 @@ msgstr "Brievenbuspakje Internationaal + Track & Trace"
 
 #: src/Shipping_Method/Settings.php:508 src/Shipping_Method/Settings.php:525 src/Shipping_Method/Settings.php:542
 msgid "Packets"
-msgstr "Pakje (untracked)"
+msgstr "Pakje"
 
 #: src/Shipping_Method/Settings.php:509 src/Shipping_Method/Settings.php:526 src/Shipping_Method/Settings.php:543
 msgid "Packets + Track & Trace"

@@ -138,7 +138,7 @@ class Container {
 		return array(
 			'response'  => $response,
 			'post_data' => $post_data,
-			'letterbox' => $letterbox
+			'letterbox' => $letterbox,
 		);
 	}
 

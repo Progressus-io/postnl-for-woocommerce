@@ -54,20 +54,20 @@ class Settings extends \WC_Settings_API {
 	public function get_setting_fields() {
 		return array(
 			// Manual.
-			'user_manual'    => array(
+			'user_manual'                    => array(
 				'title'       => esc_html__( 'Manual', 'postnl-for-woocommerce' ),
 				'type'        => 'title',
 				// translators: %1$s & %2$s is replaced with <a> tag.
 				'description' => sprintf( __( 'Consult the %1$smanual%2$s for help installing the plug-in.', 'postnl-for-woocommerce' ), '<a href="https://postnl.github.io/woocommerce/new-manual/?lang=nl" target="_blank">', '</a>' ),
 			),
 			// Account Settings.
-			'account_settings_title'    => array(
+			'account_settings_title'         => array(
 				'title'       => esc_html__( 'Account Settings', 'postnl-for-woocommerce' ),
 				'type'        => 'title',
 				// translators: %1$s & %2$s is replaced with <a> tag.
 				'description' => sprintf( __( 'Please configure your shipping parameters and your access towards the PostNL APIs by means of authentication. You can find the details of your PostNL account in Mijn %1$sPostNL%2$s under "My Account > API beheren".', 'postnl-for-woocommerce' ), '<a href="https://mijn.postnl.nl/c/BP2_Mod_Login.app" target="_blank">', '</a>' ),
 			),
-			'environment_mode'          => array(
+			'environment_mode'               => array(
 				'title'       => esc_html__( 'Environment Mode', 'postnl-for-woocommerce' ),
 				'type'        => 'select',
 				'description' => __( 'Choose the environment mode.', 'postnl-for-woocommerce' ),
@@ -80,7 +80,7 @@ class Settings extends \WC_Settings_API {
 				'default'     => 'production',
 				'placeholder' => '',
 			),
-			'api_keys'                  => array(
+			'api_keys'                       => array(
 				'title'       => esc_html__( 'Production API Key', 'postnl-for-woocommerce' ),
 				'type'        => 'text',
 				// translators: %1$s & %2$s is replaced with <a> tag.
@@ -89,7 +89,7 @@ class Settings extends \WC_Settings_API {
 				'default'     => '',
 				'placeholder' => '',
 			),
-			'api_keys_sandbox'          => array(
+			'api_keys_sandbox'               => array(
 				'title'       => esc_html__( 'Sandbox API Key', 'postnl-for-woocommerce' ),
 				'type'        => 'text',
 				// translators: %1$s & %2$s is replaced with <a> tag.
@@ -98,11 +98,11 @@ class Settings extends \WC_Settings_API {
 				'default'     => '',
 				'placeholder' => '',
 			),
-			'enable_logging'            => array(
+			'enable_logging'                 => array(
 				'title'       => esc_html__( 'Logging', 'postnl-for-woocommerce' ),
 				'type'        => 'checkbox',
 				'description' => sprintf(
-					// translators: %1$s is anchor opener tag and %2$s is anchor closer tag.
+				// translators: %1$s is anchor opener tag and %2$s is anchor closer tag.
 					esc_html__( 'A log file containing the communication to the PostNL server will be maintained if this option is checked. This can be used in case of technical issues and can be found %1$shere%2$s.', 'postnl-for-woocommerce' ),
 					'<a href="' . esc_url( Utils::get_log_url() ) . '" target="_blank">',
 					'</a>'
@@ -112,15 +112,15 @@ class Settings extends \WC_Settings_API {
 				'default'     => '',
 				'placeholder' => '',
 			),
-			'customer_num'              => array(
-				'title'             => esc_html__( 'Customer Number', 'postnl-for-woocommerce' ),
-				'type'              => 'text',
-				'description'       => esc_html__( 'e.g. "11223344"', 'postnl-for-woocommerce' ),
-				'desc_tip'          => true,
-				'default'           => '',
-				'placeholder'       => '11223344',
+			'customer_num'                   => array(
+				'title'       => esc_html__( 'Customer Number', 'postnl-for-woocommerce' ),
+				'type'        => 'text',
+				'description' => esc_html__( 'e.g. "11223344"', 'postnl-for-woocommerce' ),
+				'desc_tip'    => true,
+				'default'     => '',
+				'placeholder' => '11223344',
 			),
-			'customer_code'             => array(
+			'customer_code'                  => array(
 				'title'             => esc_html__( 'Customer Code', 'postnl-for-woocommerce' ),
 				'type'              => 'text',
 				'description'       => esc_html__( 'e.g. "DEVC"', 'postnl-for-woocommerce' ),
@@ -129,12 +129,12 @@ class Settings extends \WC_Settings_API {
 				'placeholder'       => 'DEVC',
 				'custom_attributes' => array( 'maxlength' => '10' ),
 			),
-			'return_company'            => array(
-				'title'             => esc_html__( 'Company Name', 'postnl-for-woocommerce' ),
-				'type'              => 'text',
-				'description'       => esc_html__( 'Enter company name - this name will be noted as the sender on the label', 'postnl-for-woocommerce' ),
-				'desc_tip'          => true,
-				'default'           => '',
+			'return_company'                 => array(
+				'title'       => esc_html__( 'Company Name', 'postnl-for-woocommerce' ),
+				'type'        => 'text',
+				'description' => esc_html__( 'Enter company name - this name will be noted as the sender on the label', 'postnl-for-woocommerce' ),
+				'desc_tip'    => true,
+				'default'     => '',
 			),
 			/*
 			Temporarily hardcoded.
@@ -150,12 +150,12 @@ class Settings extends \WC_Settings_API {
 			*/
 
 			// Return Settings.
-			'return_settings_title'               => array(
+			'return_settings_title'          => array(
 				'title'       => esc_html__( 'Return Settings', 'postnl-for-woocommerce' ),
 				'type'        => 'title',
 				'description' => esc_html__( 'Please insert your return credentials.', 'postnl-for-woocommerce' ),
 			),
-			'return_address_default'    => array(
+			'return_address_default'         => array(
 				'title'       => esc_html__( 'Always print returnlabel together with shipping label', 'postnl-for-woocommerce' ),
 				'type'        => 'checkbox',
 				'description' => esc_html__( 'With this setting enabled, the return-label of a shipment will automatically be downloaded and printed when the shipping label created.', 'postnl-for-woocommerce' ),
@@ -164,7 +164,7 @@ class Settings extends \WC_Settings_API {
 				'label'       => esc_html__( 'Enable', 'postnl-for-woocommerce' ),
 				'placeholder' => '',
 			),
-			'return_replynumber'        => array(
+			'return_replynumber'             => array(
 				'title'       => esc_html__( 'Replynumber', 'postnl-for-woocommerce' ),
 				'type'        => 'text',
 				'description' => esc_html__( 'Enter replynumber.', 'postnl-for-woocommerce' ),
@@ -173,7 +173,7 @@ class Settings extends \WC_Settings_API {
 				'for_country' => array( 'NL' ),
 				'class'       => 'country-nl',
 			),
-			'return_address'            => array(
+			'return_address'                 => array(
 				'title'       => esc_html__( 'Street Address', 'postnl-for-woocommerce' ),
 				'type'        => 'text',
 				'description' => esc_html__( 'Enter Return Street Address.', 'postnl-for-woocommerce' ),
@@ -182,7 +182,7 @@ class Settings extends \WC_Settings_API {
 				'for_country' => array( 'BE' ),
 				'class'       => 'country-be',
 			),
-			'return_address_no'         => array(
+			'return_address_no'              => array(
 				'title'       => esc_html__( 'House Number', 'postnl-for-woocommerce' ),
 				'type'        => 'text',
 				'description' => esc_html__( 'Enter return house number.', 'postnl-for-woocommerce' ),
@@ -191,21 +191,21 @@ class Settings extends \WC_Settings_API {
 				'for_country' => array( 'BE' ),
 				'class'       => 'country-be',
 			),
-			'return_address_zip'        => array(
+			'return_address_zip'             => array(
 				'title'       => esc_html__( 'Zipcode', 'postnl-for-woocommerce' ),
 				'type'        => 'text',
 				'description' => esc_html__( 'Enter Return Zipcode.', 'postnl-for-woocommerce' ),
 				'desc_tip'    => true,
 				'default'     => '',
 			),
-			'return_address_city'       => array(
+			'return_address_city'            => array(
 				'title'       => esc_html__( 'City', 'postnl-for-woocommerce' ),
 				'type'        => 'text',
 				'description' => esc_html__( 'Enter Return City.', 'postnl-for-woocommerce' ),
 				'desc_tip'    => true,
 				'default'     => '',
 			),
-			'return_customer_code'      => array(
+			'return_customer_code'           => array(
 				'title'       => esc_html__( 'Return Customer Code', 'postnl-for-woocommerce' ),
 				'type'        => 'text',
 				'description' => esc_html__( 'Be aware that the Return Customer Code differs from the regular Customer Code. You can find your Return customer code in Mijn PostNL.', 'postnl-for-woocommerce' ),
@@ -214,12 +214,12 @@ class Settings extends \WC_Settings_API {
 			),
 
 			// Delivery Options Settings.
-			'delivery_options_title'    => array(
+			'delivery_options_title'         => array(
 				'title'       => esc_html__( 'Checkout Settings', 'postnl-for-woocommerce' ),
 				'type'        => 'title',
 				'description' => esc_html__( 'Please configure your checkout preferences.', 'postnl-for-woocommerce' ),
 			),
-			'supported_shipping_methods' => array(
+			'supported_shipping_methods'     => array(
 				'title'       => esc_html__( 'Shipping Methods', 'postnl-for-woocommerce' ),
 				'type'        => 'multiselect',
 				'description' => esc_html__( 'Select Shipping Methods can be associated with PostNL.', 'postnl-for-woocommerce' ),
@@ -227,7 +227,7 @@ class Settings extends \WC_Settings_API {
 				'options'     => $this->get_shipping_methods(),
 				'class'       => 'wc-enhanced-select',
 			),
-			'enable_pickup_points'      => array(
+			'enable_pickup_points'           => array(
 				'title'       => __( 'PostNL Pick-up Points', 'postnl-for-woocommerce' ),
 				'type'        => 'checkbox',
 				'label'       => __( 'Enable', 'postnl-for-woocommerce' ),
@@ -255,7 +255,7 @@ class Settings extends \WC_Settings_API {
 				'class'             => 'country-nl country-be',
 			),
 			*/
-			'enable_delivery_days'      => array(
+			'enable_delivery_days'           => array(
 				'title'       => __( 'Delivery Days', 'postnl-for-woocommerce' ),
 				'type'        => 'checkbox',
 				'label'       => __( 'Enable', 'postnl-for-woocommerce' ),
@@ -265,12 +265,11 @@ class Settings extends \WC_Settings_API {
 				'for_country' => array( 'NL' ),
 				'class'       => 'country-nl',
 			),
-			'number_delivery_days'      => array(
+			'number_delivery_days'           => array(
 				'title'             => __( 'Number of Delivery Days', 'postnl-for-woocommerce' ),
 				'type'              => 'number',
 				'description'       => __( 'Number of delivery days displayed in the frontend. Maximum will be 12.', 'postnl-for-woocommerce' ),
 				'desc_tip'          => true,
-				'class'             => '',
 				'default'           => '10',
 				'for_country'       => array( 'NL' ),
 				'custom_attributes' => array(
@@ -279,7 +278,7 @@ class Settings extends \WC_Settings_API {
 				),
 				'class'             => 'country-nl',
 			),
-			'enable_morning_delivery'   => array(
+			'enable_morning_delivery'        => array(
 				'title'       => __( 'Morning Delivery', 'postnl-for-woocommerce' ),
 				'type'        => 'checkbox',
 				'label'       => __( 'Enable', 'postnl-for-woocommerce' ),
@@ -289,7 +288,7 @@ class Settings extends \WC_Settings_API {
 				'for_country' => array( 'NL' ),
 				'class'       => 'country-nl',
 			),
-			'morning_delivery_fee'      => array(
+			'morning_delivery_fee'           => array(
 				'title'       => __( 'Morning Delivery Fee', 'postnl-for-woocommerce' ),
 				'type'        => 'text',
 				'description' => __( 'Fee for receiving orders in the morning.', 'postnl-for-woocommerce' ),
@@ -297,7 +296,7 @@ class Settings extends \WC_Settings_API {
 				'for_country' => array( 'NL' ),
 				'class'       => 'wc_input_price country-nl',
 			),
-			'enable_evening_delivery'   => array(
+			'enable_evening_delivery'        => array(
 				'title'       => __( 'Evening Delivery', 'postnl-for-woocommerce' ),
 				'type'        => 'checkbox',
 				'label'       => __( 'Enable', 'postnl-for-woocommerce' ),
@@ -307,16 +306,15 @@ class Settings extends \WC_Settings_API {
 				'for_country' => array( 'NL' ),
 				'class'       => 'country-nl',
 			),
-			'evening_delivery_fee'      => array(
+			'evening_delivery_fee'           => array(
 				'title'       => __( 'Evening Delivery Fee', 'postnl-for-woocommerce' ),
 				'type'        => 'text',
 				'description' => __( 'Fee for receiving orders in the evening.', 'postnl-for-woocommerce' ),
 				'desc_tip'    => true,
-				'class'       => 'wc_input_price',
 				'for_country' => array( 'NL' ),
-				'class'       => 'country-nl',
+				'class'       => 'wc_input_price country-nl',
 			),
-			'transit_time'             => array(
+			'transit_time'                   => array(
 				'title'       => esc_html__( 'Transit Time', 'postnl-for-woocommerce' ),
 				'type'        => 'number',
 				'description' => esc_html__( 'The number of days it takes for the order to be delivered after the order has been placed.', 'postnl-for-woocommerce' ),
@@ -324,7 +322,7 @@ class Settings extends \WC_Settings_API {
 				'default'     => '1',
 				'placeholder' => '',
 			),
-			'cut_off_time'              => array(
+			'cut_off_time'                   => array(
 				'title'       => esc_html__( 'Cut Off Time', 'postnl-for-woocommerce' ),
 				'type'        => 'time',
 				'description' => esc_html__( 'If an order is ordered after this time, one day will be added to the transit time.', 'postnl-for-woocommerce' ),
@@ -332,7 +330,7 @@ class Settings extends \WC_Settings_API {
 				'default'     => '18',
 				'placeholder' => '',
 			),
-			'dropoff_day_mon'           => array(
+			'dropoff_day_mon'                => array(
 				'title'       => __( 'Drop off Days', 'postnl-for-woocommerce' ),
 				'type'        => 'checkbox',
 				'label'       => __( 'Monday', 'postnl-for-woocommerce' ),
@@ -340,36 +338,36 @@ class Settings extends \WC_Settings_API {
 				'default'     => 'yes',
 				'desc_tip'    => true,
 			),
-			'dropoff_day_tue'           => array(
+			'dropoff_day_tue'                => array(
 				'type'    => 'checkbox',
 				'label'   => __( 'Tuesday', 'postnl-for-woocommerce' ),
 				'default' => 'yes',
 			),
-			'dropoff_day_wed'           => array(
+			'dropoff_day_wed'                => array(
 				'type'    => 'checkbox',
 				'label'   => __( 'Wednesday', 'postnl-for-woocommerce' ),
 				'default' => 'yes',
 			),
-			'dropoff_day_thu'           => array(
+			'dropoff_day_thu'                => array(
 				'type'    => 'checkbox',
 				'label'   => __( 'Thursday', 'postnl-for-woocommerce' ),
 				'default' => 'yes',
 			),
-			'dropoff_day_fri'           => array(
+			'dropoff_day_fri'                => array(
 				'type'    => 'checkbox',
 				'label'   => __( 'Friday', 'postnl-for-woocommerce' ),
 				'default' => 'yes',
 			),
-			'dropoff_day_sat'           => array(
+			'dropoff_day_sat'                => array(
 				'type'    => 'checkbox',
 				'label'   => __( 'Saturday', 'postnl-for-woocommerce' ),
 				'default' => 'yes',
 			),
-			'dropoff_day_sun'           => array(
+			'dropoff_day_sun'                => array(
 				'type'  => 'checkbox',
 				'label' => __( 'Sunday', 'postnl-for-woocommerce' ),
 			),
-			'validate_nl_address'       => array(
+			'validate_nl_address'            => array(
 				'title'       => __( 'Validate Dutch addresses', 'postnl-for-woocommerce' ),
 				'type'        => 'checkbox',
 				'label'       => __( 'Enable', 'postnl-for-woocommerce' ),
@@ -377,7 +375,7 @@ class Settings extends \WC_Settings_API {
 				'desc_tip'    => true,
 				'default'     => 'yes',
 			),
-			'reorder_nl_address'       => array(
+			'reorder_nl_address'             => array(
 				'title'       => __( 'Use PostNL address-field', 'postnl-for-woocommerce' ),
 				'type'        => 'checkbox',
 				'label'       => __( 'Enable', 'postnl-for-woocommerce' ),
@@ -387,12 +385,12 @@ class Settings extends \WC_Settings_API {
 			),
 
 			// Shipping Outside Europe Settings.
-			'shipping_outside_eu_title' => array(
+			'shipping_outside_eu_title'      => array(
 				'title'       => esc_html__( 'Shipping Outside Europe Settings', 'postnl-for-woocommerce' ),
 				'type'        => 'title',
 				'description' => esc_html__( 'Please insert your Globalpack credentials.', 'postnl-for-woocommerce' ),
 			),
-			'globalpack_barcode_type'   => array(
+			'globalpack_barcode_type'        => array(
 				'title'             => esc_html__( 'GlobalPack Barcode Type', 'postnl-for-woocommerce' ),
 				'type'              => 'text',
 				'description'       => '',
@@ -401,7 +399,7 @@ class Settings extends \WC_Settings_API {
 				'placeholder'       => esc_html__( 'CD', 'postnl-for-woocommerce' ),
 				'custom_attributes' => array( 'maxlength' => '10' ),
 			),
-			'globalpack_customer_code'  => array(
+			'globalpack_customer_code'       => array(
 				'title'             => esc_html__( 'GlobalPack Customer Code', 'postnl-for-woocommerce' ),
 				'type'              => 'text',
 				'description'       => '',
@@ -410,7 +408,7 @@ class Settings extends \WC_Settings_API {
 				'placeholder'       => esc_html__( '1234', 'postnl-for-woocommerce' ),
 				'custom_attributes' => array( 'maxlength' => '10' ),
 			),
-			'hs_tariff_code'            => array(
+			'hs_tariff_code'                 => array(
 				'title'       => esc_html__( 'Default HS Tariff Code', 'postnl-for-woocommerce' ),
 				'type'        => 'text',
 				'description' => esc_html__( 'The HS tariff code is used by customs to classify goods. The HS tariff code can be found on the website of the Dutch Chamber of Commerce.', 'postnl-for-woocommerce' ),
@@ -418,7 +416,7 @@ class Settings extends \WC_Settings_API {
 				'default'     => '',
 				'placeholder' => '',
 			),
-			'country_origin'            => array(
+			'country_origin'                 => array(
 				'title'       => esc_html__( 'Default Country of Origin', 'postnl-for-woocommerce' ),
 				'type'        => 'select',
 				'description' => esc_html__( 'Default country of origin is used by customs.', 'postnl-for-woocommerce' ),
@@ -429,12 +427,12 @@ class Settings extends \WC_Settings_API {
 			),
 
 			// Shipping Outside Europe Settings.
-			'printer_email_title'       => array(
+			'printer_email_title'            => array(
 				'title'       => esc_html__( 'Printer &amp; Email Settings', 'postnl-for-woocommerce' ),
 				'type'        => 'title',
 				'description' => esc_html__( 'Please configure your printer and email preferences.', 'postnl-for-woocommerce' ),
 			),
-			'label_format'              => array(
+			'label_format'                   => array(
 				'title'       => esc_html__( 'Label Format', 'postnl-for-woocommerce' ),
 				'type'        => 'select',
 				'description' => esc_html__( 'Use A6 format in case you use a labelprinter. Use A4 format for other regular printers.', 'postnl-for-woocommerce' ),
@@ -446,7 +444,7 @@ class Settings extends \WC_Settings_API {
 				),
 				'class'       => 'wc-enhanced-select',
 			),
-			'woocommerce_email'         => array(
+			'woocommerce_email'              => array(
 				'title'       => esc_html__( 'WooCommerce Email', 'postnl-for-woocommerce' ),
 				'type'        => 'checkbox',
 				'label'       => esc_html__( 'When PostNL label is created send email to customer.', 'postnl-for-woocommerce' ),
@@ -455,7 +453,7 @@ class Settings extends \WC_Settings_API {
 				'default'     => '',
 				'placeholder' => '',
 			),
-			'woocommerce_email_text'    => array(
+			'woocommerce_email_text'         => array(
 				'title'       => esc_html__( 'WooCommerce Email Text', 'postnl-for-woocommerce' ),
 				'type'        => 'text',
 				'description' => esc_html__( 'Text added for tracking note email.', 'postnl-for-woocommerce' ),
@@ -470,7 +468,7 @@ class Settings extends \WC_Settings_API {
 				'description' => esc_html__( 'Please select Default shipping Options.', 'postnl-for-woocommerce' ),
 				'for_country' => array( 'NL' ),
 			),
-			'default_shipping_options_nl'       => array(
+			'default_shipping_options_nl'    => array(
 				'title'       => __( 'Shipping options domestic', 'postnl-for-woocommerce' ),
 				'type'        => 'select',
 				'description' => __( 'Select a default shipping option for domestic orders that are shipped with PostNL.', 'postnl-for-woocommerce' ),
@@ -492,7 +490,7 @@ class Settings extends \WC_Settings_API {
 					'only_home_address|signature_on_delivery'                  => __( 'Only Home Address + Signature on Delivery', 'postnl-for-woocommerce' ),
 				),
 			),
-			'default_shipping_options_be'       => array(
+			'default_shipping_options_be'    => array(
 				'title'       => __( 'Shipping options Belgium', 'postnl-for-woocommerce' ),
 				'type'        => 'select',
 				'description' => __( 'Select a default shipping option for the orders shipped to Belgium with PostNL.', 'postnl-for-woocommerce' ),
@@ -510,7 +508,7 @@ class Settings extends \WC_Settings_API {
 					'packets|track_and_trace|insured_shipping' => __( 'Packets + Track & Trace + Insured', 'postnl-for-woocommerce' ),
 				),
 			),
-			'default_shipping_options_eu'       => array(
+			'default_shipping_options_eu'    => array(
 				'title'       => __( 'Shipping options EU', 'postnl-for-woocommerce' ),
 				'type'        => 'select',
 				'description' => __( 'Select a default shipping option for the orders shipped within European Union zone.', 'postnl-for-woocommerce' ),
@@ -527,7 +525,7 @@ class Settings extends \WC_Settings_API {
 					'packets|track_and_trace|insured_shipping'   => __( 'Packets + Track & Trace + Insured', 'postnl-for-woocommerce' ),
 				),
 			),
-			'default_shipping_options_row'       => array(
+			'default_shipping_options_row'   => array(
 				'title'       => __( 'Default Shipping International', 'postnl-for-woocommerce' ),
 				'type'        => 'select',
 				'description' => __( 'Shipping options non-EU (outside the EU borders).', 'postnl-for-woocommerce' ),
@@ -544,7 +542,7 @@ class Settings extends \WC_Settings_API {
 					'packets|track_and_trace|insured_shipping'       => __( 'Packets + Track & Trace + Insured', 'postnl-for-woocommerce' ),
 				),
 			),
-			'auto_complete_order'         => array(
+			'auto_complete_order'            => array(
 				'title'       => esc_html__( 'Automatically change order status to Completed', 'postnl-for-woocommerce' ),
 				'type'        => 'checkbox',
 				'label'       => esc_html__( 'Automatically change order status to Completed once an order has been pre-alerted and printed', 'postnl-for-woocommerce' ),
@@ -561,7 +559,7 @@ class Settings extends \WC_Settings_API {
 	 * Filter the setting fields based on store country.
 	 *
 	 * @param String $country Two characters country code.
-	 * @param bool   $only_field_country Flag to check if it only return for the field with 'for_country' array exists.
+	 * @param bool $only_field_country Flag to check if it only return for the field with 'for_country' array exists.
 	 *
 	 * @return array
 	 */
@@ -1321,7 +1319,7 @@ class Settings extends \WC_Settings_API {
 	 * @return array.
 	 */
 	public function get_shipping_methods() {
-		return  wp_list_pluck( WC()->shipping()->shipping_methods, 'method_title', 'id' );
+		return wp_list_pluck( WC()->shipping()->shipping_methods, 'method_title', 'id' );
 	}
 
 	/**

@@ -80,7 +80,7 @@ Follow these instructions (https://www.postnl.nl/Images/aanvragen-api-key-stappe
 
 == Changelog ==
 
-= 5.4.1 (2024-06-10) =
+= 5.4.1 (2024-06-11) =
 * Fix: Display shipping options within the order list for legacy orders storage.
 
 = 5.4.0 (2024-06-10) =

@@ -4,7 +4,7 @@ Tags: woocommerce, export, delivery, packages, PostNL, Shipping
 Requires at least: 4.6
 Requires PHP: 5.6
 Tested up to: 6.5
-Stable tag: 5.4.0
+Stable tag: 5.4.1
 WC requires at least: 4.0
 WC tested up to: 8.9
 License: GPLv2 or later
@@ -79,6 +79,9 @@ Follow these instructions (https://www.postnl.nl/Images/aanvragen-api-key-stappe
 5. PostNL information on the order details page
 
 == Changelog ==
+
+= 5.4.1 (2024-06-11) =
+* Fix: Display shipping options within the order list for legacy orders storage.
 
 = 5.4.0 (2024-06-10) =
 * Add: Assign Letterbox Parcels automatically based on purchased products.

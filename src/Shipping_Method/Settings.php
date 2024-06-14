@@ -457,6 +457,29 @@ class Settings extends \WC_Settings_API {
 				'type'        => 'title',
 				'description' => esc_html__( 'Please configure your printer and email preferences.', 'postnl-for-woocommerce' ),
 			),
+			'printer_type'     => array(
+				'title'        => esc_html__( 'Printer Type', 'postnl-for-woocommerce' ),
+				'type'         => 'select',
+				'description'  => esc_html__( 'It is not recommended to send .pdf files/labels directly to a Zebra printer If you want to send it directly to your Zebra printer, please use .gif files or the native (generic) zpl printer type', 'postnl-for-woocommerce' ),
+				'desc_tip'     => true,
+				'default'      => 'PDF',
+				'options'      => array(
+					'PDF' => 'PDF',
+					'GIF' => 'GIF',
+					'JPG' => 'JPG',
+					'ZPL' => 'ZPL',
+				),
+			),
+			'printer_type_resolution' => array(
+				'title'       => esc_html__( 'DPI', 'postnl-for-woocommerce' ),
+				'type'        => 'select',
+				'default'     => '600',
+				'options'     => array(
+					'600' => '600',
+					'300' => '300',
+					'200' => '200',
+				),
+			),
 			'label_format'              => array(
 				'title'       => esc_html__( 'Label Format', 'postnl-for-woocommerce' ),
 				'type'        => 'select',
@@ -1190,6 +1213,26 @@ class Settings extends \WC_Settings_API {
 		return $this->get_country_option( 'label_format', '' );
 	}
 
+	/**
+	 * Get printer type from the settings.
+	 *
+	 * @return String
+	 */
+	public function get_printer_type() {
+		$printer_type = $this->get_country_option( 'printer_type', '' );
+		$resolution   = (int) $this->get_country_option( 'printer_type_resolution', '' );
+		switch ( $printer_type ) {
+			case 'PDF':
+				return 'GraphicFile|PDF';
+			case 'JPG':
+				return sprintf( "GraphicFile|JPG %d dpi", $resolution );
+			case 'GIF':
+				return sprintf( "GraphicFile|GIF %d dpi", $resolution );
+			case 'ZPL':
+				return sprintf( "Zebra|Generic ZPL II %d dpi", $resolution );
+		}
+	}
+	
 	/**
 	 * Get ask position A4 from the settings.
 	 *

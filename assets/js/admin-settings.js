@@ -9,6 +9,7 @@
             this.switch_return_home_address();
             jQuery( '#woocommerce_postnl_return_shipment_and_labels' ).on( 'change', this.display_return_shipment_and_labels_all );
             this.display_return_shipment_and_labels_all();
+			this.display_printer_type_resolution_field();
 		},
 
 
@@ -23,7 +24,23 @@
 			}
 		},
 
+		display_printer_type_resolution_field: function () {
+            var select = jQuery( '#woocommerce_postnl_printer_type' );
+            var parent = this;
+            this.checkValue( select )
+            select.on('change', function() {
+                parent.checkValue( select );
+            });
+        },
 
+        checkValue: function ( select ) {
+            if ( select[0].value == 'PDF' ) {
+                jQuery('#woocommerce_postnl_printer_type_resolution').closest('tr').hide();
+            } else {
+                jQuery('#woocommerce_postnl_printer_type_resolution').closest('tr').show();
+            }
+        },
+		
         display_return_shipment_and_labels_all: function() {
             var value = jQuery( '#woocommerce_postnl_return_shipment_and_labels' ).val();
             if ( 'shipping_return' === value ) {

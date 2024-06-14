@@ -16,6 +16,7 @@ use PostNLWooCommerce\Shipping_Method\Settings;
 use PostNLWooCommerce\Helper\Mapping;
 use PostNLWooCommerce\Library\CustomizedPDFMerger;
 use PostNLWooCommerce\Product;
+use \Imagick;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -595,9 +596,10 @@ abstract class Base {
 					}
 
 					$label_type = ! empty( $label_contents['Labeltype'] ) ? sanitize_title( $label_contents['Labeltype'] ) : 'unknown-type';
+					$label_extension = ! empty( $label_contents['OutputType'] ) ? sanitize_title( $label_contents['OutputType'] ) : 'pdf';
 					$barcode    = $response[ $type ][ $shipment_idx ][ $content_type['barcode_key'] ];
 					$barcode    = is_array( $barcode ) ? array_shift( $barcode ) : $barcode;
-					$filename   = Utils::generate_label_name( $order->get_id(), $label_type, $barcode, 'A6' );
+					$filename   = Utils::generate_label_name( $order->get_id(), $label_type, $barcode, 'A6', $label_extension );
 					$filepath   = trailingslashit( POSTNL_UPLOADS_DIR ) . $filename;
 
 					if ( wp_mkdir_p( POSTNL_UPLOADS_DIR ) && ! file_exists( $filepath ) ) {
@@ -605,7 +607,7 @@ abstract class Base {
 						$file_ret = file_put_contents( $filepath, $content );
 					}
 
-					$labels[] = array(
+					$labels[$label_type] = array(
 						'type'       => $label_type,
 						'barcode'    => $barcode,
 						'created_at' => current_time( 'timestamp' ),
@@ -615,8 +617,9 @@ abstract class Base {
 			}
 		}
 
-		$labels = $this->maybe_merge_labels( $labels, $order, $parent_barcode, $parent_label_type );
-
+		if ( 'pdf' === $label_contents['OutputType'] ) {
+			$labels = $this->maybe_merge_labels( $labels, $order, $parent_barcode, $parent_label_type );
+		}
 		return $labels;
 	}
 
@@ -758,7 +761,7 @@ abstract class Base {
 			$file_paths[] = $label['filepath'];
 		}
 
-		$filename    = Utils::generate_label_name( $order->get_id(), $label_type, $barcode, $label_format );
+		$filename    = Utils::generate_label_name( $order->get_id(), $label_type, $barcode, $label_format, 'pdf' );
 		$merged_info = $this->merge_labels( $file_paths, $filename );
 
 		$merged_labels[ $label_type ] = array(
@@ -773,6 +776,33 @@ abstract class Base {
 	}
 
 	/**
+	 * Merge given files into the single one.
+	 *
+	 * @param array $label_paths Array of files to be merged.
+	 * @param string $merge_filename The final/merged filename with extension.
+	 * @param string $start_position Start position for the pdf file only.
+	 *
+	 * @return array|\PostNLWooCommerce\Order\Array|void
+	 */
+	protected function merge_labels( $label_paths, $merge_filename, $start_position = 'top-left' ) {
+		$extension = pathinfo( $label_paths[0], PATHINFO_EXTENSION );
+		switch ( $extension ) {
+			case 'pdf':
+				return $this->merge_pdf_labels( $label_paths, $merge_filename, $start_position );
+			case 'jpg':
+				return $this->merge_jpg_files( $label_paths, $merge_filename, 'horizontal' );
+			case 'gif':
+				try {
+					return $this->merge_graphic_labels( $label_paths, $merge_filename );
+				} catch ( \Exception $e ) {
+					wc_add_notice( $e->getMessage(), 'error' );
+				}
+			case 'zpl_rle':
+				return $this->merge_text_files( $label_paths, $merge_filename );
+		}
+	}
+
+	/**
 	 * Merge PDF Labels.
 	 *
 	 * @param Array  $label_paths List of label path.
@@ -780,7 +810,7 @@ abstract class Base {
 	 *
 	 * @return Array List of filepath that has been merged.
 	 */
-	protected function merge_labels( $label_paths, $merge_filename, $start_position = 'top-left' ) {
+	protected function merge_pdf_labels( $label_paths, $merge_filename, $start_position = 'top-left' ) {
 		$pdf          = new CustomizedPDFMerger();
 		$merged_paths = array();
 
@@ -796,6 +826,133 @@ abstract class Base {
 		}
 
 		$pdf->merge( 'file', $filepath, 'A', $start_position );
+
+		return array(
+			'merged_filepaths' => $merged_paths,
+			'filepath'         => $filepath,
+		);
+	}
+
+	/**
+	 * Merge JPG Labels.
+	 *
+	 * @param Array  $label_paths List of label path.
+	 * @param String $merge_filename Name of the file after the merge process.
+	 *
+	 * @return Array List of filepath that has been merged.
+	 */
+	protected function merge_jpg_files($image_paths, $merge_filename, $direction = 'vertical') {
+		$images = [];
+		$width = 0;
+		$height = 0;
+
+		// Load images and calculate dimensions
+		foreach ($image_paths as $path) {
+			$img = imagecreatefromjpeg($path);
+			$images[] = $img;
+			$width = max($width, imagesx($img));
+			$height += imagesy($img);
+		}
+
+		// Create a blank canvas for the merged image
+		if ($direction == 'horizontal') {
+			$canvas = imagecreatetruecolor($width * count($images), $height);
+		} else {
+			$canvas = imagecreatetruecolor($width, $height);
+		}
+
+		// Set white background
+		$white = imagecolorallocate($canvas, 255, 255, 255);
+		imagefill($canvas, 0, 0, $white);
+
+		// Copy each image onto the canvas
+		$offset = 0;
+		foreach ($images as $img) {
+			if ($direction == 'horizontal') {
+				imagecopy($canvas, $img, $offset, 0, 0, 0, imagesx($img), imagesy($img));
+				$offset += imagesx($img);
+			} else {
+				imagecopy($canvas, $img, 0, $offset, 0, 0, imagesx($img), imagesy($img));
+				$offset += imagesy($img);
+			}
+			imagedestroy($img);
+		}
+
+		// Set the output file path
+		$filepath = trailingslashit(POSTNL_UPLOADS_DIR) . $merge_filename;
+
+		// Save the merged image
+		imagejpeg($canvas, $filepath);
+		imagedestroy($canvas);
+
+		return array(
+			'merged_filepaths' => $image_paths,
+			'filepath'         => $filepath,
+		);
+	}
+
+	/**
+	 * Merge graphic labels.
+	 *
+	 * @param Array  $label_paths List of label path.
+	 * @param String $merge_filename Name of the file after the merge process.
+	 *
+	 * @return array
+	 * @throws \ImagickException
+	 */
+	protected function merge_graphic_labels( $label_paths, $merge_filename ) {
+
+		if ( empty( $label_paths ) ) {
+			throw new Exception( __('There are no files to merge.', 'postnl-for-woocommerce') );
+		}
+
+		if ( ! class_exists( 'Imagick' ) ) {
+			throw new Exception( __( '"Imagick" must be installed on the server to merge png files.', 'postnl-for-woocommerce' ) );
+		}
+		$merged_paths     = array();
+		$final_label_path = trailingslashit( POSTNL_UPLOADS_DIR ) . $merge_filename;
+		$final_label      = new \Imagick();
+		foreach ( $label_paths as $path ) {
+			$final_label->addImage( new \Imagick( $path ) );
+			$merged_paths[] = $path;
+		}
+
+		/* Append the images into one */
+		$final_label->resetIterator();
+		$combined = $final_label->appendImages( true );
+		$combined->setImageFormat( pathinfo( $final_label_path, PATHINFO_EXTENSION ) );
+		$combined->writeimage( $final_label_path );
+
+		return array(
+			'merged_filepaths' => $merged_paths,
+			'filepath'         => $final_label_path,
+		);
+
+	}
+
+	/**
+	 * Merge text files, for the ZEBRA printer.
+	 *
+	 * @param Array  $label_paths List of label path.
+	 * @param String $merge_filename Name of the file after the merge process.
+	 *
+	 * @return array
+	 */
+	protected function merge_text_files( $label_paths, $merge_filename ) {
+		$merged_paths = array();
+		$filepath     = trailingslashit( POSTNL_UPLOADS_DIR ) . $merge_filename;
+
+		$output = fopen( $filepath, "w" );
+		foreach ( $label_paths as $path ) {
+			$input = fopen( $path, "r" );
+			while ( $line = fgets( $input ) ){
+				print $path;
+				fwrite( $output, $line );
+			}
+			fclose( $input );
+			$merged_paths[] = $path;
+		}
+		fclose( $output );
 
 		return array(
 			'merged_filepaths' => $merged_paths,
@@ -1130,7 +1287,7 @@ abstract class Base {
 	 *
 	 * @param  \WC_Order  $order  current order object.
 	 *
-	 * @return boolean
+	 * @return booleanCancel
 	 */
 	public function have_label_file( $order ) {
 		$order_data = $order->get_meta( $this->meta_name );

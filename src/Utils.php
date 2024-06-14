@@ -235,11 +235,12 @@ class Utils {
 	 * @param String $label_type Type of label.
 	 * @param String $barcode Barcode string.
 	 * @param String $label_format Label Format whether A4 or A6.
+	 * @param String $extension Label extension format given from API response. The extension could be change by the settings page.
 	 *
 	 * @return String.
 	 */
-	public static function generate_label_name( $order_id, $label_type, $barcode, $label_format ) {
-		return 'postnl-' . $order_id . '-' . $label_type . '-' . $barcode . '-' . $label_format . '.pdf';
+	public static function generate_label_name( $order_id, $label_type, $barcode, $label_format, $extension ) {
+		return 'postnl-' . $order_id . '-' . $label_type . '-' . $barcode . '-' . $label_format . '.' . $extension;
 	}
 	/**
 	 * Get the type of label response.

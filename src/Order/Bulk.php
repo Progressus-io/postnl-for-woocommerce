@@ -186,7 +186,7 @@ class Bulk extends Base {
 					continue 2;
 				}
 
-				if ( 'A6' === $label_format ) {
+				if ( 'A6' === $label_format && 'pdf' === pathinfo( $label_info['filepath'], PATHINFO_EXTENSION ) || 'pdf' !== pathinfo( $label_info['filepath'], PATHINFO_EXTENSION ) ) {
 					$label_paths[] = $label_info['filepath'];
 					continue 2;
 				}
@@ -201,7 +201,7 @@ class Bulk extends Base {
 			}
 		}
 
-		$filename    = 'postnl-bulk-' . get_current_user_id() . '.pdf';
+		$filename = 'postnl-bulk-' . get_current_user_id() . '.' . pathinfo( $label_paths[0], PATHINFO_EXTENSION );
 
 		if ( isset( $_GET['postnl_position_printing_labels'] ) ) {
 			$start_position = sanitize_text_field( $_GET['postnl_position_printing_labels'] );

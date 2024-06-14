@@ -110,7 +110,7 @@ class Item_Info extends Base_Info {
 		$this->weight_uom = Utils::get_uom();
 
 		$customer_info = $this->api_args['settings'] + $this->api_args['store_address'];
-		$shipment      = $this->api_args['billing_address'] + $this->api_args['order_details'];
+		$shipment      = $this->api_args['billing_address'] + $this->api_args['order_details'] + $this->api_args['settings'];
 
 		$this->shipment      = Utils::parse_args( $shipment, $this->get_shipment_info_schema() );
 		$this->receiver      = Utils::parse_args( $this->api_args['shipping_address'], $this->get_receiver_info_schema() );
@@ -439,9 +439,9 @@ class Item_Info extends Base_Info {
 				},
 			),
 			'printer_type'    => array(
-				'default'  => 'GraphicFile|PDF',
+				'default'  => $this->settings->get_printer_type(),
 				'sanitize' => function( $value ) use ( $self ) {
-					return 'GraphicFile|PDF';
+					return sanitize_text_field( $value );
 				},
 			),
 			'total_weight'    => array(

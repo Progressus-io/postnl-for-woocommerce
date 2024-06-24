@@ -176,19 +176,20 @@ class Item_Info extends Base_Info {
 		$this->api_args['shipping_address'] = Address_Utils::split_address( $shipping_address );
 
 		$this->api_args['backend_data'] = array(
-			'delivery_type'         => $saved_data['backend']['delivery_type'] ?? '',
-			'insured_shipping'      => $saved_data['backend']['insured_shipping'] ?? '',
-			'return_no_answer'      => $saved_data['backend']['return_no_answer'] ?? '',
-			'signature_on_delivery' => $saved_data['backend']['signature_on_delivery'] ?? '',
-			'only_home_address'     => $saved_data['backend']['only_home_address'] ?? '',
-			'num_labels'            => $saved_data['backend']['num_labels'] ?? '',
-			'create_return_label'   => $saved_data['backend']['create_return_label'] ?? '',
-			'letterbox'             => $saved_data['backend']['letterbox'] ?? '',
-			'id_check'              => $saved_data['backend']['id_check'] ?? '',
-			'packets'               => $saved_data['backend']['packets'] ?? '',
-			'mailboxpacket'         => $saved_data['backend']['mailboxpacket'] ?? '',
-			'track_and_trace'       => $saved_data['backend']['track_and_trace'] ?? '',
-			'insured_plus'          => $saved_data['backend']['insured_plus'] ?? '',
+			'delivery_type'         		 => $saved_data['backend']['delivery_type'] ?? '',
+			'insured_shipping'      		 => $saved_data['backend']['insured_shipping'] ?? '',
+			'return_no_answer'      		 => $saved_data['backend']['return_no_answer'] ?? '',
+			'signature_on_delivery' 		 => $saved_data['backend']['signature_on_delivery'] ?? '',
+			'only_home_address'     		 => $saved_data['backend']['only_home_address'] ?? '',
+			'num_labels'            		 => $saved_data['backend']['num_labels'] ?? '',
+			'create_return_label'   		 => $saved_data['backend']['create_return_label'] ?? '',
+			'create_shipment_return_label'   => $saved_data['backend']['create_shipment_return_label'] ?? '',
+			'letterbox'             		 => $saved_data['backend']['letterbox'] ?? '',
+			'id_check'              		 => $saved_data['backend']['id_check'] ?? '',
+			'packets'               		 => $saved_data['backend']['packets'] ?? '',
+			'mailboxpacket'         		 => $saved_data['backend']['mailboxpacket'] ?? '',
+			'track_and_trace'       		 => $saved_data['backend']['track_and_trace'] ?? '',
+			'insured_plus'          		 => $saved_data['backend']['insured_plus'] ?? '',
 		);
 
 		// Check mailbox weight limit
@@ -399,7 +400,12 @@ class Item_Info extends Base_Info {
 		// Closures in PHP 5.3 do not inherit class context
 		// So we need to copy $this into a lexical variable and pass it to closures manually.
 		$self = $this;
-
+		if($this->settings->get_return_shipment_and_labels_all()){
+			$product_options_for_return_shipment = array(
+					'characteristic' => '152',
+					'option'         => '026',
+			);
+		}
 		return array(
 			'order_id'         => array(
 				'error' => __( 'Order ID is empty!', 'postnl-for-woocommerce' ),
@@ -432,6 +438,12 @@ class Item_Info extends Base_Info {
 					'option'         => '',
 				),
 				'sanitize' => function ( $value ) use ( $self ) {
+					if($this->settings->get_return_shipment_and_labels_all()){
+						return array(
+							'characteristic' => '152',
+							'option'         => '026',
+						);
+					}
 					return array(
 						'characteristic' => ! empty( $value['characteristic'] ) ? $self->string_length_sanitization( $value['characteristic'], 3 ) : '',
 						'option'         => ! empty( $value['option'] ) ? $self->string_length_sanitization( $value['option'], 3 ) : '',
@@ -440,6 +452,12 @@ class Item_Info extends Base_Info {
 			),
 			'printer_type'    => array(
 				'default'  => $this->settings->get_printer_type(),
+				'sanitize' => function( $value ) use ( $self ) {
+					return sanitize_text_field( $value );
+				},
+			),
+			'shipment_return_label'    => array(
+				'default'  => $this->settings->get_return_shipment_and_labels_all(),
 				'sanitize' => function( $value ) use ( $self ) {
 					return sanitize_text_field( $value );
 				},

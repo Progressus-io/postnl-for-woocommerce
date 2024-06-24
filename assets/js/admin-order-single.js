@@ -205,6 +205,19 @@
 
             $.post( woocommerce_admin_meta_boxes.ajax_url, data, function( response ) {
                 console.log(response);
+				if ( true === response.success ) {
+					var label_form = jQuery( '#shipment-postnl-label-form' );
+					var error_cont = label_form.find( '#shipment-postnl-error-text' );
+					error_cont.empty();
+					var error_text = response.data.errorsPerBarcode[0].errors[0] ? response.data.errorsPerBarcode[0].errors[0].description : response.data.successFulBarcodes[0];
+					error_cont.html( error_text );
+				} else {
+					var label_form = jQuery( '#shipment-postnl-label-form' );
+					var error_cont = label_form.find( '#shipment-postnl-error-text' );
+					error_cont.empty();
+					var error_text = response.data.hasOwnProperty( 'message' ) ? response.data.message : 'Unknown error!';
+					error_cont.html( error_text );
+				}
             });
         }
 	}

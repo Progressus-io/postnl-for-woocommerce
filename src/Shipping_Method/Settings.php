@@ -173,12 +173,14 @@ class Settings extends \WC_Settings_API {
 					'shipping_return' => esc_html__( 'Shipping & Return Label', 'postnl-for-woocommerce' ),
 					'in_box'          => esc_html__( 'In the box', 'postnl-for-woocommerce' ),
 				),
+				'for_country' => array('NL'),
 			),
 			'return_shipment_and_labels_all' => array(
 				'title'       => esc_html__( 'Shipping & Return for all labels', 'postnl-for-woocommerce' ),
 				'type'        => 'checkbox',
 				'label'       => esc_html__( 'Enable', 'postnl-for-woocommerce' ),
 				'description' => esc_html__( 'Tick this box if you want all labels to be activated for returning immediately. If you do not tick this box the return function can be activated on an order-by-order basis.', 'postnl-for-woocommerce' ),
+				'for_country' => array('NL'),
 			),
 			'return_address_or_reply_no' => array(
 				'title'       => esc_html__( 'Return to home address', 'postnl-for-woocommerce' ),

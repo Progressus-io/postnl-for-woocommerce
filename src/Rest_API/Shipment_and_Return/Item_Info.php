@@ -90,4 +90,28 @@ class Item_Info extends Base_Info {
 		}
 	}
 
+	/**
+	 * Get product options from api args.
+	 *
+	 * @return String.
+	 */
+	public function get_product_options() {
+		return array(
+			'characteristic' => '152',
+			'option'         => '026',
+		);
+	}
+
+	/**
+	 * Get blocked product options from api args.
+	 *
+	 * @return String.
+	 */
+	public function get_blocked_product_options() {
+		return array(
+			'characteristic' => '191',
+			'option'         => '004',
+		);
+	}
+
 }

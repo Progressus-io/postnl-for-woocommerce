@@ -126,6 +126,7 @@ class Client extends Base {
 					'Characteristic' => $option['characteristic'],
 					'Option'         => $option['option'],
 				);
+		
 			}
 		}
 
@@ -236,7 +237,7 @@ class Client extends Base {
 			);
 		}
 
-		if ( $this->item_info->shipment['return_barcode'] ) {
+		if ( $this->item_info->shipment['return_barcode'] || $this->item_info->shipment['shipment_return_label']) {
 			$addresses[] = array(
 				'AddressType' => '08',
 				'City'        => $this->item_info->customer['return_address_city'],

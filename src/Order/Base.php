@@ -260,6 +260,18 @@ abstract class Base {
 					'container'     => true,
 				),
 				array(
+					'id'            => $this->prefix . 'create_shipment_return_label',
+					'type'          => 'checkbox',
+					'label'         => __( 'Create Shipment and Return Label: ', 'postnl-for-woocommerce' ),
+					'placeholder'   => '',
+					'description'   => '',
+					'value'         => $this->settings->get_return_shipment_and_labels_all(),
+					'show_in_bulk'  => true,
+					'standard_feat' => true,
+					'const_field'   => false,
+					'container'     => true,
+				),
+				array(
 					'id'            => $this->prefix . 'position_printing_labels',
 					'type'          => 'select',
 					'label'         => __( 'Start position printing label: ', 'postnl-for-woocommerce' ),
@@ -436,6 +448,7 @@ abstract class Base {
 		$label_post_data['barcodes']     = $barcodes;
 
 		$label_post_data['return_barcode'] = $this->maybe_create_return_barcode( $label_post_data );
+		$label_post_data['shipment_return_barcode'] = $this->maybe_create_shipment_return_barcode( $label_post_data );
 
 		$labels = $this->create_label( $label_post_data );
 
@@ -685,6 +698,41 @@ abstract class Base {
 		}
 
 		return $barcodes;
+	}
+	
+
+	/**
+	 * Create PostNL return barcode for current order
+	 *
+	 * @param array $post_data Order post data.
+	 *
+	 * @return array|Boolean
+	 *
+	 * @throws \Exception Error when response has an error.
+	 */
+	public function maybe_create_shipment_return_barcode( $post_data ) {
+		if ( ! isset( $post_data['saved_data']['backend']['create_shipment_return_label'] ) || 'yes' !== $post_data['saved_data']['backend']['create_shipment_return_label'] ) {
+			return '';
+		}
+
+		$return_code = $this->settings->get_customer_code();
+
+		$data = array(
+			'order'         => $post_data['order'],
+			'customer_code' => $return_code,
+		);
+
+		$item_info = new Barcode\Item_Info( $data );
+		$barcode   = new Barcode\Client( $item_info );
+		$response  = $barcode->send_request();
+
+		if ( empty( $response['Barcode'] ) ) {
+			throw new \Exception(
+				esc_html__( 'Cannot create shipment return barcode.', 'postnl-for-woocommerce' )
+			);
+		}
+
+		return $response['Barcode'];
 	}
 
 	/**

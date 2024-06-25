@@ -438,11 +438,17 @@ class Item_Info extends Base_Info {
 					'option'         => '',
 				),
 				'sanitize' => function ( $value ) use ( $self ) {
-					if($this->settings->get_return_shipment_and_labels_all()){
+					if($this->settings->get_return_shipment_and_labels_all() == 'yes' && $this->settings->get_return_shipment_and_labels() == 'shipping_return'){
 						return array(
 							'characteristic' => '152',
 							'option'         => '026',
 						);
+					}
+					if($this->settings->get_return_shipment_and_labels_all() == 'no' && $this->settings->get_return_shipment_and_labels() == 'shipping_return'){
+						return array(
+							'characteristic' => '191',
+							'option'         => '400',
+						);	
 					}
 					return array(
 						'characteristic' => ! empty( $value['characteristic'] ) ? $self->string_length_sanitization( $value['characteristic'], 3 ) : '',

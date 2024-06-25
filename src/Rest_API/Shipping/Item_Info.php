@@ -400,12 +400,6 @@ class Item_Info extends Base_Info {
 		// Closures in PHP 5.3 do not inherit class context
 		// So we need to copy $this into a lexical variable and pass it to closures manually.
 		$self = $this;
-		if($this->settings->get_return_shipment_and_labels_all()){
-			$product_options_for_return_shipment = array(
-					'characteristic' => '152',
-					'option'         => '026',
-			);
-		}
 		return array(
 			'order_id'         => array(
 				'error' => __( 'Order ID is empty!', 'postnl-for-woocommerce' ),

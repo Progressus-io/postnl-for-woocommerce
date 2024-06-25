@@ -260,18 +260,6 @@ abstract class Base {
 					'container'     => true,
 				),
 				array(
-					'id'            => $this->prefix . 'create_shipment_return_label',
-					'type'          => 'checkbox',
-					'label'         => __( 'Create Shipment and Return Label: ', 'postnl-for-woocommerce' ),
-					'placeholder'   => '',
-					'description'   => '',
-					'value'         => $this->settings->get_return_shipment_and_labels_all(),
-					'show_in_bulk'  => true,
-					'standard_feat' => true,
-					'const_field'   => false,
-					'container'     => true,
-				),
-				array(
 					'id'            => $this->prefix . 'position_printing_labels',
 					'type'          => 'select',
 					'label'         => __( 'Start position printing label: ', 'postnl-for-woocommerce' ),

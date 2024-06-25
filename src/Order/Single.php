@@ -383,12 +383,12 @@ class Single extends Base {
 	 */
 	public function activate_return_function_html( $order ) {
 		$check_for_barcode = empty( $this->get_backend_data( $order->get_ID() ) );
-		if ( 'shipping_return' === $this->settings->get_return_shipment_and_labels() ) {
+		if ( 'shipping_return' === $this->settings->get_return_shipment_and_labels() && $this->settings->get_return_shipment_and_labels_all() == 'no' ) {
 			?>
 			<hr id="postnl_break_2">
 			<p class="form-field">
 				<?php wp_nonce_field( 'postnl_activate_return_function', 'activate_return_function_nonce' ); ?>
-				<button type="button" class="button button-activate-return" <?php disabled( $check_for_barcode ); ?>><?php esc_html_e( 'Activate return function', 'postnl-for-woocommerce' ); ?></button>
+				<button type="button" class="button button-activate-return" <?php //disabled( $check_for_barcode ); ?>><?php esc_html_e( 'Activate return function', 'postnl-for-woocommerce' ); ?></button>
 				<div class="postnl-info">
 					<?php esc_html_e( 'Click here to activate the return function of this label', 'postnl-for-woocommerce' ); ?>
 				</div>

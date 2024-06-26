@@ -123,13 +123,13 @@ class Single extends Base {
 		if ( ! is_a( $order, 'WC_Order' ) ) {
 			return array();
 		}
-		$meta_fields = $this->meta_box_fields( $order );
 
-		$order_data             = $order->get_meta( $this->meta_name );
-		$option_map              = Mapping::option_available_list();
-		$from_country            = Utils::get_base_country();
-		$to_country              = $order->get_shipping_country();
-		$destination             = Utils::get_shipping_zone( $to_country );
+		$meta_fields  = $this->meta_box_fields( $order );
+		$order_data   = $order->get_meta( $this->meta_name );
+		$option_map   = Mapping::option_available_list();
+		$from_country = Utils::get_base_country();
+		$to_country   = $order->get_shipping_country();
+		$destination  = Utils::get_shipping_zone( $to_country );
 
 		foreach ( $meta_fields as $index => $field ) {
 			if ( isset( $field['nonce'] ) && $field['nonce'] ) {

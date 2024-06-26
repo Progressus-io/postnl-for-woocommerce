@@ -735,6 +735,11 @@ class Utils {
 
 		foreach ( $products as $item_id => $item ) {
 			$product              = wc_get_product( $item['product_id'] ?? $item->get_product_id() );
+			if ( ! $product ) {
+				// If the product is not found, consider the order not eligible.
+				return false;
+			}
+
 			$is_letterbox_product = $product->get_meta( Product\Single::LETTERBOX_PARCEL );
 
 			// If one of the item is not letterbox product, then the order is not eligible automatic letterbox.

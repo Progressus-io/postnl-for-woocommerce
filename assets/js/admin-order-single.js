@@ -8,7 +8,8 @@
 			jQuery( '#shipment-postnl-label-form' )
 				.on( 'click', 'a.delete-label', this.delete_label )
 				.on( 'click', 'button.button-save-form', this.save_form )
-                .on( 'click', 'button.button-activate-return', this.activate_return );
+				.on( 'click', 'button.button-activate-return', this.activate_return )
+				.on( 'click', 'button.button-send-smart-return', this.send_smart_return );
 		},
 
 		// When a user enters a new tracking item
@@ -196,7 +197,7 @@
 			});
 		},
 
-        activate_return: function() {
+		activate_return: function() {
             var data = {
                 action:   'postnl_activate_return_function',
                 security: $( '#activate_return_function_nonce' ).val(),
@@ -219,11 +220,30 @@
 					error_cont.html( error_text );
 				}
             });
+        },
+
+		send_smart_return: function() {
+            var error_cont = jQuery( '#shipment-postnl-error-text' );
+            var data = {
+                action:   'postnl_send_smart_return_email',
+                security: $( '#send_smart_return_email_nonce' ).val(),
+                order_id: woocommerce_admin_meta_boxes.post_id,
+            };
+
+            $.post( woocommerce_admin_meta_boxes.ajax_url, data, function( response ) {
+                if ( ! response.success ) {
+                    response.data.message
+                    error_cont.html(  response.data.message );
+                }else{
+					console.log(response);
+					error_cont.html( 'Email sent successfully' );					
+				}
+            });
         }
 	}
 
+	
 	postnl_order_single.init();
 
 	window.postnl_order_single_refresh = postnl_order_single.refresh_items;
-
 } )( jQuery );

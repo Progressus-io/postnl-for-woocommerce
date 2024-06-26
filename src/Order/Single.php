@@ -10,6 +10,8 @@ namespace PostNLWooCommerce\Order;
 use Automattic\WooCommerce\Internal\DataStores\Orders\CustomOrdersTableController;
 use PostNLWooCommerce\Rest_API\Shipment_and_Return\Item_Info;
 use PostNLWooCommerce\Rest_API\Shipment_and_Return\Client;
+use PostNLWooCommerce\Rest_API\Smart_Returns\Item_Info as smart_info;
+use PostNLWooCommerce\Rest_API\Smart_Returns\Client as smart_client;
 use PostNLWooCommerce\Utils;
 use PostNLWooCommerce\Helper\Mapping;
 
@@ -45,6 +47,9 @@ class Single extends Base {
 
 		add_action( 'wp_ajax_postnl_activate_return_function', array( $this, 'postnl_activate_return_function' ) );
 		add_action( 'wp_ajax_nopriv_postnl_activate_return_function', array( $this, 'postnl_activate_return_function' ) );
+
+		add_action( 'wp_ajax_postnl_send_smart_return_email', array( $this, 'postnl_send_smart_return_email' ) );
+		add_action( 'wp_ajax_nopriv_postnl_send_smart_return_email', array( $this, 'postnl_send_smart_return_email' ) );
 	}
 
 	/**
@@ -135,7 +140,7 @@ class Single extends Base {
 		$from_country            = Utils::get_base_country();
 		$to_country              = $order->get_shipping_country();
 		$destination             = Utils::get_shipping_zone( $to_country );
-		$default_option_keys     = array_keys( $this->settings->get_default_shipping_options() );
+		$default_option_keys     = array_keys( $this->settings->get_default_shipping_options($order) );
 
 		foreach ( $meta_fields as $index => $field ) {
 			$field_name = Utils::remove_prefix_field( $this->prefix, $field['id'] );
@@ -398,6 +403,22 @@ class Single extends Base {
 	}
 
 	/**
+	 * Adds an 'Send Smart Return' button.
+	 */
+	public function send_smart_return_email_html( $order ) {
+		if ( 'NL' === $order->get_shipping_country() ) {
+			$check_for_barcode = empty( $this->get_backend_data( $order->get_ID() ) );
+			?>
+			<hr id="postnl_break_2">
+			<p class="form-field">
+				<?php wp_nonce_field( 'postnl_send_smart_return_email', 'send_smart_return_email_nonce' ); ?>
+				<button type="button" class="button button-send-smart-return"  <?php disabled( $check_for_barcode ); ?>><?php esc_html_e( 'Send email with Smart Return', 'postnl-for-woocommerce' ); ?></button>
+			</p>
+			<?php
+		}
+	}
+	
+	/**
 	 * Additional fields of the meta box for child class.
 	 *
 	 * @param WP_Post|WC_Order $post_or_order_object current order object.
@@ -434,6 +455,7 @@ class Single extends Base {
 				<a class="button button-secondary delete-label" href="#"><?php esc_html_e( 'Delete Label', 'postnl-for-woocommerce' ); ?></a>
 			</div>
 			<?php $this->activate_return_function_html( $order ) ?>
+			<?php $this->send_smart_return_email_html( $order ) ?>
 			<!--
 			<div class="button-container return-container">
 				<a href="<?php echo esc_url( $this->get_download_label_url( $order->get_id(), 'return-label' ) ); ?>" class="button button-primary button-download-label"><?php esc_html_e( 'Print Return Label', 'postnl-for-woocommerce' ); ?></a>
@@ -630,6 +652,88 @@ class Single extends Base {
 				wp_send_json_success();
 			} else {
 				wp_send_json_error();
+			}
+		} catch ( \Exception $e ) {
+			wp_send_json_error(
+				array( 'message' => $e->getMessage() ),
+			);
+		}
+	}
+
+	/**
+	 * Ajax action to send smart return email.
+	 *
+	 * @return void
+	 */
+	public function postnl_send_smart_return_email() {
+		try {
+			if ( ! isset( $_POST['security'] ) ) {
+				throw new \Exception( esc_html__( 'Cannot find nonce field!', 'postnl-for-woocommerce' ) );
+			}
+
+			// Check nonce before proceed.
+			if ( ! wp_verify_nonce( $_POST['security'], 'postnl_send_smart_return_email' ) ) {
+				throw new \Exception( esc_html__( 'Nonce is invalid', 'postnl-for-woocommerce' ) );
+			}
+
+			$order_id = ! empty( $_REQUEST['order_id'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['order_id'] ) ) : 0;
+
+			// Check if order id is really an ID from shop_order post type.
+			$order = wc_get_order( $order_id );
+			if ( ! is_a( $order, 'WC_Order' ) ) {
+				throw new \Exception( esc_html__( 'Order does not exist!', 'postnl-for-woocommerce' ) );
+			}
+
+			$item_info = new smart_info( $order );
+			$api_call  = new smart_client( $item_info );
+			$response  = $api_call->send_request();
+			if ( !empty( $response ) ) {
+				$printcodeLabelContent = null;
+
+				// Iterate through the ResponseShipments
+				if (isset($response['ResponseShipments'])) {
+					foreach ($response['ResponseShipments'] as $shipment) {
+						// Iterate through the Labels
+						if (isset($shipment['Labels'])) {
+							foreach ($shipment['Labels'] as $label) {
+								// Check if the Labeltype is "PrintcodeLabel"
+								if (isset($label['Labeltype']) && $label['Labeltype'] === 'PrintcodeLabel') {
+									// Save the Content to a PHP variable
+									$printcodeLabelContent = $label['Content'];
+									break 2; // Exit both loops once the label is found
+								}
+							}
+						}
+					}
+				}
+				//wp_send_json_success($printcodeLabelContent);
+			} else {
+				throw new \Exception( esc_html__( 'PrintcodeLabel could not found', 'postnl-for-woocommerce' ) );
+			}
+			if($printcodeLabelContent){
+				$pdf_content = base64_decode($printcodeLabelContent);
+
+				// Save the PDF content to a file
+				$upload_dir = wp_upload_dir();
+				$file_path = $upload_dir['path'] . '/printcode_label.pdf';
+			
+				// Write the content to the file
+				file_put_contents($file_path, $pdf_content);
+			}
+			$to           = $order->get_billing_email();
+			$subject      = apply_filters( 'postnl_smart_return_email_subject', esc_html__( 'PostNL Smart Returns', 'postnl-for-woocommerce' ) );
+			$message      = apply_filters( 'postnl_smart_return_email_message', esc_html__( 'In this email you will find the barcode you need to return your order. Scan this barcode at a PostNL point to print your return label. Please note, wait at least 10 minutes before scanning the barcode after receipt of this mail.', 'postnl-for-woocommerce' ) );
+			//$message     .= $printcodeLabelContent;
+			$headers = array('Content-Type: text/html; charset=UTF-8');
+    		$attachments = array($file_path);
+
+			$is_successful = wp_mail( $to, $subject, $message, $headers, $attachments );
+
+			if ( $is_successful ) {
+				wp_send_json_success( $to );
+			} else {
+				
+				throw new \Exception( esc_html__( 'Email could not be send', 'postnl-for-woocommerce' ) );
 			}
 		} catch ( \Exception $e ) {
 			wp_send_json_error(

@@ -132,7 +132,7 @@ class Single extends Base {
 		$destination  = Utils::get_shipping_zone( $to_country );
 
 		foreach ( $meta_fields as $index => $field ) {
-			if ( isset( $field['nonce'] ) && $field['nonce'] ) {
+			if ( isset( $field['nonce'] ) && true === $field['nonce'] ) {
 				continue;
 			}
 

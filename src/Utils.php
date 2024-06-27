@@ -735,7 +735,7 @@ class Utils {
 
 		foreach ( $products as $item_id => $item ) {
 			$product              = wc_get_product( $item['product_id'] ?? $item->get_product_id() );
-			if ( ! $product ) {
+			if ( ! is_a( $product, 'WC_Product' ) ) {
 				// If the product is not found, consider the order not eligible.
 				return false;
 			}

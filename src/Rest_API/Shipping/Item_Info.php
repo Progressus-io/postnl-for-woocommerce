@@ -444,6 +444,12 @@ class Item_Info extends Base_Info {
 							'option'         => '400',
 						);	
 					}
+					if($this->settings->get_return_shipment_and_labels() == 'in_box'){
+						return array(
+							'characteristic' => '152',
+							'option'         => '028',
+						);	
+					}
 					return array(
 						'characteristic' => ! empty( $value['characteristic'] ) ? $self->string_length_sanitization( $value['characteristic'], 3 ) : '',
 						'option'         => ! empty( $value['option'] ) ? $self->string_length_sanitization( $value['option'], 3 ) : '',

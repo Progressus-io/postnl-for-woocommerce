@@ -36,8 +36,11 @@
         checkValue: function ( select ) {
             if ( select[0].value == 'PDF' ) {
                 jQuery('#woocommerce_postnl_printer_type_resolution').closest('tr').hide();
+                jQuery('#woocommerce_postnl_label_format').closest('tr').show();
             } else {
                 jQuery('#woocommerce_postnl_printer_type_resolution').closest('tr').show();
+                jQuery('#woocommerce_postnl_label_format').closest('tr').hide();
+                jQuery('#woocommerce_postnl_label_format').val('A6').trigger('change');
             }
         },
 		

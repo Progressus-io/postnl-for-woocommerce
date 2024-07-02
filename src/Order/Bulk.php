@@ -99,7 +99,7 @@ class Bulk extends Base {
 			}
 		}
 
-		if ( ! empty( $gen_labels ) ) {
+		if ( ! empty( $gen_labels )  ) {
 			$array_messages[] = $this->merge_bulk_labels( $gen_labels );
 		}
 
@@ -180,23 +180,25 @@ class Bulk extends Base {
 		$label_paths   = array();
 		$array_messags = array();
 
-		foreach ( $gen_labels as $idx => $label ) {
-			foreach ( $label as $label_type => $label_info ) {
-				if ( empty( $label_info['filepath'] ) ) {
-					continue 2;
-				}
+		if('A6' !== $label_format){
+			foreach ( $gen_labels as $idx => $label ) {
+				foreach ( $label as $label_type => $label_info ) {
+					if ( empty( $label_info['filepath'] ) ) {
+						continue 2;
+					}
 
-				if ( 'A6' === $label_format && 'pdf' === pathinfo( $label_info['filepath'], PATHINFO_EXTENSION ) || 'pdf' !== pathinfo( $label_info['filepath'], PATHINFO_EXTENSION ) ) {
-					$label_paths[] = $label_info['filepath'];
-					continue 2;
-				}
+					if ( 'A6' === $label_format && 'pdf' === pathinfo( $label_info['filepath'], PATHINFO_EXTENSION ) || 'pdf' !== pathinfo( $label_info['filepath'], PATHINFO_EXTENSION ) ) {
+						$label_paths[] = $label_info['filepath'];
+						continue 2;
+					}
 
-				if ( empty( $label_info['merged_files'] ) ) {
-					continue 2;
-				}
+					if ( empty( $label_info['merged_files'] ) ) {
+						continue 2;
+					}
 
-				foreach ( $label_info['merged_files'] as $path ) {
-					$label_paths[] = $path;
+					foreach ( $label_info['merged_files'] as $path ) {
+						$label_paths[] = $path;
+					}
 				}
 			}
 		}

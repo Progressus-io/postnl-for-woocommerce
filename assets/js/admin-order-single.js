@@ -205,7 +205,6 @@
             };
 
             $.post( woocommerce_admin_meta_boxes.ajax_url, data, function( response ) {
-                console.log(response);
 				if ( true === response.success ) {
 					var label_form = jQuery( '#shipment-postnl-label-form' );
 					var error_cont = label_form.find( '#shipment-postnl-error-text' );

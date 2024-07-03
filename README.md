@@ -38,6 +38,7 @@ PostNL’s official extension for WooCommerce on WordPress. Manage your national
 
 ### 5.4.2
 * Fix: Error "Invalid nonce" when trying to delete labels.
+* Fix: Orders list fetal error if order have deleted product.
 
 ### 5.4.1
 * Fix: Display shipping options within the order list for legacy orders storage.

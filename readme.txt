@@ -80,7 +80,7 @@ Follow these instructions (https://www.postnl.nl/Images/aanvragen-api-key-stappe
 
 == Changelog ==
 
-= 5.4.2 (2024-xx-xx) =
+= 5.4.2 (2024-07-03) =
 * Fix: Error "Invalid nonce" when trying to delete labels.
 * Fix: Orders list fetal error if order have deleted product.
 

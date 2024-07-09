@@ -82,7 +82,7 @@ Follow these instructions (https://www.postnl.nl/Images/aanvragen-api-key-stappe
 
 = 5.4.2 (2024-07-03) =
 * Fix: Error "Invalid nonce" when trying to delete labels.
-* Fix: Orders list fetal error if order have deleted product.
+* Fix: Orders list fatal error if order have deleted product.
 
 = 5.4.1 (2024-06-11) =
 * Fix: Display shipping options within the order list for legacy orders storage.

@@ -642,6 +642,7 @@ class Bulk extends Base {
 				}
 			}
 			$result['labels_data'] = $this->save_meta_value( $order_id, $post_data );
+
 			$tracking_note         = $this->get_tracking_note( $order_id );
 			$customer_note         = false;
 
@@ -650,10 +651,10 @@ class Bulk extends Base {
 			}
 
 			$order->add_order_note( $tracking_note, $customer_note );
-
+			$label_link = esc_url( $this->get_download_label_url( $order_id ) ); 
 			$result['message'] = array(
-				'message' => sprintf( esc_html__( '#%1$s : PostNL label has been created.', 'postnl-for-woocommerce' ),
-					$order_id ),
+				'message' => sprintf( esc_html__( '#%1$s : PostNL label has been created - %2$sdownload file%3$s', 'postnl-for-woocommerce' ),
+					$order_id, '<a href="' . $label_link . '" download>', '</a>' ),
 				'type'    => 'success',
 			);
 		} catch ( \Exception $e ) {

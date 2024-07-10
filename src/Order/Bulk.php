@@ -394,7 +394,7 @@ class Bulk extends Base {
 	 * @return array[]
 	 */
 	protected function create_label_fields() {
-		return array(
+		$fields = array(
 			array(
 				'id'                => $this->prefix . 'num_labels',
 				'type'              => 'number',
@@ -409,17 +409,24 @@ class Bulk extends Base {
 						'step' => 'any',
 						'min'  => '0',
 					),
-			),
-			array(
-				'id'            => $this->prefix . 'create_return_label',
-				'type'          => 'checkbox',
-				'label'         => __( 'Create Return Label: ', 'postnl-for-woocommerce' ),
-				'placeholder'   => '',
-				'description'   => '',
-				'container'     => true,
-				'value'         => $this->settings->get_return_address_default(),
-			),
-			array(
+			)
+			
+		);
+
+		if('in_box' == $this->settings->get_return_shipment_and_labels()){
+			$fields[] = array(
+					'id'            => $this->prefix . 'create_return_label',
+					'type'          => 'checkbox',
+					'label'         => __( 'Create Return Label: ', 'postnl-for-woocommerce' ),
+					'placeholder'   => '',
+					'description'   => '',
+					'container'     => true,
+					'value'         => $this->settings->get_return_address_default(),
+				);
+		}
+				
+		if('A6' !== $this->settings->get_label_format()){
+			$fields[] = array(
 				'id'            => $this->prefix . 'position_printing_labels',
 				'type'          => 'select',
 				'label'         => __( 'Start position printing label: ', 'postnl-for-woocommerce' ),
@@ -432,8 +439,11 @@ class Bulk extends Base {
 					'bottom-left'  => __( 'Bottom Left', 'postnl-for-woocommerce' ),
 					'bottom-right' => __( 'Bottom Right', 'postnl-for-woocommerce' ),
 				),
-			),
-		);
+			);
+		}
+
+		return $fields;
+		
 	}
 
 	/**

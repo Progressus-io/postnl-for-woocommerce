@@ -61,9 +61,11 @@ class Bulk extends Base {
 	 * @return array
 	 */
 	public function add_order_bulk_actions( $bulk_actions ) {
+		$base_country = Utils::get_base_country();		
 		$bulk_actions['postnl-create-label']            = esc_html__( 'PostNL Create Label', 'postnl-for-woocommerce' );
-		$bulk_actions['postnl-change-shipping-options'] = esc_html__( 'PostNL Change Shipping Options', 'postnl-for-woocommerce' );
-
+		if($base_country != 'BE'){
+			$bulk_actions['postnl-change-shipping-options'] = esc_html__( 'PostNL Change Shipping Options', 'postnl-for-woocommerce' );
+		}
 		return $bulk_actions;
 	}
 
@@ -118,17 +120,47 @@ class Bulk extends Base {
 	 * @return string
 	 */
 	public function bulk_action_change_shipping_options( $redirect, $doaction, $object_ids ) {
+
 		if ( 'postnl-change-shipping-options' !== $doaction ) {
 			return $redirect;
 		}
 
-		$default_options = $this->prepare_default_options( $_REQUEST );
+		$array_messages = array(
+			'user_id' => get_current_user_id(),
+		);
+
+		$selected_shipping_options = $this->prepare_default_options( $_REQUEST );
+		$zone                      = strtoupper( sanitize_text_field( $_REQUEST['postnl_shipping_zone'] ) );
 
 		if ( ! empty( $object_ids ) ) {
 			foreach ( $object_ids as $order_id ) {
-				$this->set_order_default_shipping_options( $order_id, array( 'backend' => $default_options ) );
+				$order                = wc_get_order( $order_id );
+				$have_label_file      = $this->have_label_file( $order );
+				$match_shipping_zones = $zone === $this->get_shipping_zone( $order );
+
+				if ( $have_label_file ) {
+					$array_messages[] = array(
+						'message' => sprintf( esc_html__( 'Order #%1$d already has a label.', 'postnl-for-woocommerce' ), $order_id ),
+						'type'    => 'error',
+					);
+				}
+
+				if ( ! $match_shipping_zones ) {
+					$array_messages[] = array(
+						'message' => sprintf( esc_html__( 'Order #%1$d is from another shipping zone.', 'postnl-for-woocommerce' ), $order_id ),
+						'type'    => 'error',
+					);
+				}
+
+				if ( ! $have_label_file && $match_shipping_zones ) {
+					$order->delete_meta_data( $this->meta_name );
+					$order->update_meta_data( $this->meta_name, array( 'backend' => $selected_shipping_options ) );
+					$order->save();
+				}
 			}
 		}
+
+		update_option( $this->bulk_option_text_name, $array_messages );
 
 		return $redirect;
 	}
@@ -141,33 +173,10 @@ class Bulk extends Base {
 	 * @return array
 	 */
 	protected function prepare_default_options( $options ) {
+		$zone            = sanitize_text_field( $options['postnl_shipping_zone'] );
+		$selected_option = sanitize_text_field( $options[ 'postnl_default_shipping_options_' . strtolower( $zone ) ] );
 
-		$final_options     = array();
-		$available_options = Utils::get_shipping_options();
-		$combined_options  = Utils::get_combined_shipping_options();
-
-
-		foreach( $options as $name => $value ) {
-			if ( false !== strpos( $name, $this->prefix ) && ! empty( $value ) ) {
-				$name = Utils::remove_prefix_field( $this->prefix, $name );
-				if ( in_array( $name, array_keys( $available_options ) ) ) {
-					$final_options[ $name ] = 'yes';
-				}
-				if ( 'default_shipping_options' === $name ) {
-					if ( in_array( $value, array_keys( $available_options ) ) ) {
-						$final_options[ $value ] = 'yes';
-					}
-					if ( in_array( $value, array_keys( $combined_options ) ) ) {
-						foreach( $combined_options[ $value ] as $child ) {
-							$final_options[ $child ] = 'yes';
-						}
-					}
-				}
-			}
-		}
-
-		return $final_options ;
-
+		return Utils::prepare_shipping_options( $selected_option );
 	}
 
 	/**
@@ -394,7 +403,7 @@ class Bulk extends Base {
 				'description'       => '',
 				'class'             => 'short',
 				'value'             => '',
-				'container'     => true,
+				'container'         => true,
 				'custom_attributes' =>
 					array(
 						'step' => 'any',
@@ -435,6 +444,17 @@ class Bulk extends Base {
 	}
 
 	/**
+	 * Get shipping options per given zone from the plugin settings.
+	 *
+	 * @param string $zone Zone you want shipping options to, available nl, be, eu, row.
+	 *
+	 * @return array
+	 */
+	protected function get_available_shipping_options_per_zone( $zone ) {
+		return $this->settings->get_setting_fields()[ 'default_shipping_options_' . strtolower( $zone ) ]['options'];
+	}
+
+	/**
 	 * Prepare fields for the Change shipping options modal.
 	 *
 	 * @return array[]
@@ -442,68 +462,53 @@ class Bulk extends Base {
 	protected function change_shipping_options_fields() {
 		return array(
 			array(
-				'id'            => $this->prefix . 'shipping_options',
+				'id'            => $this->prefix . 'shipping_zone',
 				'type'          => 'select',
-				'label'         => __( 'Shipping options', 'postnl-for-woocommerce' ),
-				'value'         => 'domestic',
+				'label'         => __( 'Shipping zone', 'postnl-for-woocommerce' ),
+				'value'         => 'nl',
 				'container'     => true,
 				'options'       => array(
-					'domestic'      => __( 'Domestic', 'postnl-for-woocommerce' ),
-					'international' => __( 'International', 'postnl-for-woocommerce' ),
-				)
-			),
-			array(
-				'id' => $this->prefix . 'default_shipping_options',
-				'type'          => 'select',
-				'label'         => __( 'Default Shipping Option', 'postnl-for-woocommerce' ),
-				'wrapper_class' => 'conditional domestic',
-				'container'     => true,
-				'default'       => '',
-				'options'       => array(
-					''                                   => __( 'None', 'postnl-for-woocommerce' ),
-					'id_check'                           => __( 'ID Check', 'postnl-for-woocommerce' ),
-					'insured_shipping'                   => __( 'Insured Shipping', 'postnl-for-woocommerce' ),
-					'return_no_answer'                   => __( 'Return if no answer', 'postnl-for-woocommerce' ),
-					'signature_on_delivery'              => __( 'Signature on Delivery', 'postnl-for-woocommerce' ),
-					'only_home_address'                  => __( 'Only Home Address', 'postnl-for-woocommerce' ),
-					'letterbox'                          => __( 'Letterbox', 'postnl-for-woocommerce' ),
-					'signature_insured'                  => __( 'Signature on Delivery + Insured Shipping', 'postnl-for-woocommerce' ),
-					'signature_return_no_answer'         => __( 'Signature on Delivery + Return if no answer', 'postnl-for-woocommerce' ),
-					'signature_insured_return_no_answer' => __( 'Signature on Delivery + Insured Shipping + Return if no answer', 'postnl-for-woocommerce' ),
-					'only_home_address_return_no_answer' => __( 'Only Home Address + Return if no answer', 'postnl-for-woocommerce' ),
-					'only_home_address_return_signature' => __( 'Only Home Address + Return if no answer + Signature on Delivery', 'postnl-for-woocommerce' ),
-					'only_home_address_signature'        => __( 'Only Home Address + Signature on Delivery', 'postnl-for-woocommerce' ),
+					'nl'  => __( 'Domestic', 'postnl-for-woocommerce' ),
+					'be'  => __( 'Belgium', 'postnl-for-woocommerce' ),
+					'eu'  => __( 'EU Parcel', 'postnl-for-woocommerce' ),
+					'row' => __( 'Non-EU Shipment', 'postnl-for-woocommerce' ),
 				),
 			),
 			array(
-				'id'            => $this->prefix . 'packets',
-				'type'          => 'checkbox',
-				'label'         => __( 'Packets: ', 'postnl-for-woocommerce' ),
-				'placeholder'   => '',
-				'description'   => '',
-				'value'         => '',
-				'wrapper_class' => 'conditional international',
+				'id' => $this->prefix . 'default_shipping_options_nl',
+				'type'          => 'select',
+				'label'         => __( 'Shipping options domestic', 'postnl-for-woocommerce' ),
+				'wrapper_class' => 'conditional nl',
 				'container'     => true,
+				'value'         => $this->settings->get_country_option( 'default_shipping_options_' . 'nl' ),
+				'options'       => $this->get_available_shipping_options_per_zone( 'nl' ),
 			),
 			array(
-				'id'            => $this->prefix . 'mailboxpacket',
-				'type'          => 'checkbox',
-				'label'         => __( 'Mailbox Packet (International): ', 'postnl-for-woocommerce' ),
-				'placeholder'   => '',
-				'description'   => '',
-				'value'         => '',
-				'wrapper_class' => 'conditional international',
+				'id' => $this->prefix . 'default_shipping_options_be',
+				'type'          => 'select',
+				'label'         => __( 'Belgium', 'postnl-for-woocommerce' ),
+				'wrapper_class' => 'conditional be',
 				'container'     => true,
+				'value'         => $this->settings->get_country_option( 'default_shipping_options_' . 'be' ),
+				'options'       => $this->get_available_shipping_options_per_zone( 'be' ),
 			),
 			array(
-				'id'            => $this->prefix . 'track_and_trace',
-				'type'          => 'checkbox',
-				'label'         => __( 'Track & Trace: ', 'postnl-for-woocommerce' ),
-				'placeholder'   => '',
-				'description'   => '',
-				'value'         => '',
-				'wrapper_class' => 'conditional international',
+				'id' => $this->prefix . 'default_shipping_options_eu',
+				'type'          => 'select',
+				'label'         => __( 'Shipping options EU', 'postnl-for-woocommerce' ),
+				'wrapper_class' => 'conditional eu',
 				'container'     => true,
+				'value'         => $this->settings->get_country_option( 'default_shipping_options_' . 'eu' ),
+				'options'       => $this->get_available_shipping_options_per_zone( 'eu' ),
+			),
+			array(
+				'id' => $this->prefix . 'default_shipping_options_row',
+				'type'          => 'select',
+				'label'         => __( 'Shipping options non-EU', 'postnl-for-woocommerce' ),
+				'wrapper_class' => 'conditional row',
+				'container'     => true,
+				'value'         => $this->settings->get_country_option( 'default_shipping_options_' . 'row' ),
+				'options'       => $this->get_available_shipping_options_per_zone( 'row' ),
 			),
 		);
 	}
@@ -619,7 +624,8 @@ class Bulk extends Base {
 		$result = array();
 
 		try {
-			$default_settings      = $this->settings->get_default_shipping_options( $order_id );
+			$order            = wc_get_order( $order_id );
+			$default_settings = $this->get_shipping_options( $order );
 			foreach( $default_settings as $name => $value ) {
 				if ( $value  ) {
 					$post_data[ $this->prefix . $name ] = $value;
@@ -633,7 +639,6 @@ class Bulk extends Base {
 				$customer_note = true;
 			}
 
-			$order = wc_get_order( $order_id );
 			$order->add_order_note( $tracking_note, $customer_note );
 
 			$result['message'] = array(

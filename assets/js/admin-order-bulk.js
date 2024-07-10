@@ -22,7 +22,7 @@
 
 			if( 'postnl-create-label' == value ){
 				// Show thickbox modal.
-				tb_show( "", '/?TB_inline=true&width=460&height=280&inlineId=postnl-create-label-modal' );
+				tb_show( "", '/?TB_inline=true&width=385&height=200&inlineId=postnl-create-label-modal' );
 				var tb_window = jQuery( '#TB_window' );
 				tb_window.find( '#TB_ajaxWindowTitle' ).text(title); // Set title
 				tb_window.find( '#postnl-create-label-proceed' ).on( 'click', function( evt ) {
@@ -41,10 +41,10 @@
 			}
 
 			if( 'postnl-change-shipping-options' == value ){
-				tb_show( "", '/?TB_inline=true&width=460&height=280&inlineId=postnl-change-shipping-options-modal' );
+				tb_show( "", '/?TB_inline=true&width=385&height=230&inlineId=postnl-change-shipping-options-modal' );
 				var tb_window = jQuery( '#TB_window' );
 				tb_window.find( '#TB_ajaxWindowTitle' ).text(title);
-				tb_window.find( '#postnl_shipping_options' ).on( 'change', function( event ) {
+				tb_window.find( '#postnl_shipping_zone' ).on( 'change', function( event ) {
 					var current = this.value;
 					$('.conditional').each(function() {
 						if ( $(this).hasClass(current) ) {
@@ -61,8 +61,11 @@
 						var field_clone = jQuery( this ).clone();
 						post_form.find( '#postnl-field-container' ).append( field_clone );
 					} );
-					post_form.find('#postnl-field-container').append('<input type="hidden" name="postnl_shipping_options" value="' + tb_window.find('#postnl_shipping_options').val() + '">');
-                    post_form.find('#postnl-field-container').append('<input type="hidden" name="postnl_default_shipping_options" value="' + tb_window.find('#postnl_default_shipping_options').val() + '">');
+					post_form.find('#postnl-field-container').append('<input type="hidden" name="postnl_shipping_zone" value="' + tb_window.find('#postnl_shipping_zone').val() + '">');
+                    post_form.find('#postnl-field-container').append('<input type="hidden" name="postnl_default_shipping_options_nl" value="' + tb_window.find('#postnl_default_shipping_options_nl').val() + '">');
+                    post_form.find('#postnl-field-container').append('<input type="hidden" name="postnl_default_shipping_options_be" value="' + tb_window.find('#postnl_default_shipping_options_be').val() + '">');
+                    post_form.find('#postnl-field-container').append('<input type="hidden" name="postnl_default_shipping_options_eu" value="' + tb_window.find('#postnl_default_shipping_options_eu').val() + '">');
+                    post_form.find('#postnl-field-container').append('<input type="hidden" name="postnl_default_shipping_options_row" value="' + tb_window.find('#postnl_default_shipping_options_row').val() + '">');
 					jQuery( this ).prop( 'disabled', true );
 					post_form.submit();
 				} );
@@ -84,7 +87,6 @@
 			}
 		},
 	};
-
 	postnl_order_bulk.init();
 
 } )( jQuery );

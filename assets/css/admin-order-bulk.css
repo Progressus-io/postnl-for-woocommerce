@@ -1,11 +1,32 @@
 #postnl-modal .form-field input.short {
 	width:50px;
 }
-
-.postnl-change-shipping-options-content .international{
+.postnl-create-label-content .form-field {
+    display: flex;
+    flex-flow: row nowrap;
+    justify-content: center;
+    align-items: center;
+}
+.postnl-create-label-content .form-field label {
+    flex-grow: 1;
+}
+.postnl-create-label-content .form-field input:not([type="radio"]):not([type="checkbox"]),
+.postnl-create-label-content .form-field select {
+    width: 100%;
+    max-width: 170px;
+}
+.postnl-change-shipping-options-content .form-field label {
+    display: block;
+    margin-bottom: 5px;
+}
+.postnl-change-shipping-options-content .form-field select {
+    display: block;
+    width: 100%;
+    max-width: unset;
+}
+.postnl-change-shipping-options-content .form-field.conditional:not(.nl){
     display: none;
 }
-
 .postnl-action-create-label:after,
 .postnl-action-download-label:after {
 	content: "";
@@ -13,15 +34,12 @@
 	display: inline-block;
 	margin: 0 !important;
 }
-
 .postnl-action-create-label:after {
 	background: url(../images/postnl-logo.png) no-repeat center center;
 }
-
 .postnl-action-download-label:after {
 	background: url(../images/post-download-label.png) no-repeat center center;
 }
-
 .postnl_eligible_auto_letterbox {
 	font-size: 18px;
 }

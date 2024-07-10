@@ -92,6 +92,56 @@ abstract class Base {
 	}
 
 	/**
+	 * Get shipping options from the PostNL meta, if those no-exists then form the plugin settings.
+	 *
+	 * @param \WC_Order $order
+	 *
+	 * @return array
+	 *
+	 * @internal
+	 */
+	public function get_shipping_options( $order ) {
+
+		if ( ! is_a( $order, 'WC_Order' ) ) {
+			return array();
+		}
+
+		// Return shipping options already selected by the user.
+		$default_options = $this->get_backend_data( $order->get_id() );
+		if ( ! empty( $default_options ) ) {
+			return $default_options;
+		}
+
+		// Get from the plugin settings
+		$delivery_zone = $this->get_shipping_zone( $order );
+		if ( 'NL' === $delivery_zone && Utils::is_eligible_auto_letterbox( $order ) ) {
+			return array( 'letterbox' => 'yes' );
+		}
+		return $this->settings->get_default_shipping_options( $delivery_zone );
+	}
+
+	/**
+	 * Get delivery zone out of the given order ( 1 of 4 - nl, be, eu, row )
+	 *
+	 * @param \WC_Order $order
+	 *
+	 * @return string
+	 */
+	public function get_shipping_zone( $order ) {
+		$shipping_destination = $order->get_shipping_country();
+
+		if ( in_array( $shipping_destination, array( 'NL', 'BE' ) ) ) {
+			return $shipping_destination;
+		}
+
+		if ( in_array( $shipping_destination, WC()->countries->get_european_union_countries() ) ) {
+			return 'EU';
+		}
+
+		return 'ROW';
+	}
+
+	/**
 	 * List of meta box fields.
 	 *
 	 * @param \WC_Order $order WooCommerce order ID.
@@ -99,201 +149,195 @@ abstract class Base {
 	public function meta_box_fields( $order = false ) {
 
 		$default_options = $this->settings->get_default_shipping_options( $order );
-		$fields = array(
-			array(
-				'id'            => $this->prefix . 'id_check',
-				'type'          => 'checkbox',
-				'label'         => __( 'ID Check: ', 'postnl-for-woocommerce' ),
-				'placeholder'   => '',
-				'description'   => '',
-				'value'         => $default_options['id_check'],
-				'show_in_bulk'  => false,
-				'standard_feat' => false,
-				'const_field'   => false,
-				'container'     => true,
-			),
-			array(
-				'id'            => $this->prefix . 'insured_shipping',
-				'type'          => 'checkbox',
-				'label'         => __( 'Insured Shipping: ', 'postnl-for-woocommerce' ),
-				'placeholder'   => '',
-				'description'   => '',
-				'value'         => $default_options['insured_shipping'],
-				'show_in_bulk'  => true,
-				'standard_feat' => false,
-				'const_field'   => false,
-				'container'     => true,
-			),
-			array(
-				'id'            => $this->prefix . 'insured_plus',
-				'type'          => 'checkbox',
-				'label'         => __( 'Insured Plus: ', 'postnl-for-woocommerce' ),
-				'placeholder'   => '',
-				'description'   => '',
-				'value'         => '',
-				'show_in_bulk'  => true,
-				'standard_feat' => false,
-				'const_field'   => false,
-				'container'     => true,
-			),
-			array(
-				'id'            => $this->prefix . 'return_no_answer',
-				'type'          => 'checkbox',
-				'label'         => __( 'Return if no answer: ', 'postnl-for-woocommerce' ),
-				'placeholder'   => '',
-				'description'   => '',
-				'value'         => $default_options['return_no_answer'],
-				'show_in_bulk'  => true,
-				'standard_feat' => false,
-				'const_field'   => false,
-				'container'     => true,
-			),
-			array(
-				'id'            => $this->prefix . 'signature_on_delivery',
-				'type'          => 'checkbox',
-				'label'         => __( 'Signature on Delivery: ', 'postnl-for-woocommerce' ),
-				'placeholder'   => '',
-				'description'   => '',
-				'value'         => $default_options['signature_on_delivery'],
-				'show_in_bulk'  => true,
-				'standard_feat' => false,
-				'const_field'   => false,
-				'container'     => true,
-			),
-			array(
-				'id'            => $this->prefix . 'only_home_address',
-				'type'          => 'checkbox',
-				'label'         => __( 'Only Home Address: ', 'postnl-for-woocommerce' ),
-				'placeholder'   => '',
-				'description'   => '',
-				'value'         => $default_options['only_home_address'],
-				'show_in_bulk'  => true,
-				'standard_feat' => false,
-				'const_field'   => false,
-				'container'     => true,
-			),
-			array(
-				'id'            => $this->prefix . 'letterbox',
-				'type'          => 'checkbox',
-				'label'         => __( 'Letterbox: ', 'postnl-for-woocommerce' ),
-				'placeholder'   => '',
-				'description'   => '',
-				'value'         => $default_options['letterbox'],
-				'show_in_bulk'  => true,
-				'standard_feat' => false,
-				'const_field'   => false,
-				'container'     => true,
-			),
-			array(
-				'id'            => $this->prefix . 'packets',
-				'type'          => 'checkbox',
-				'label'         => __( 'Packets: ', 'postnl-for-woocommerce' ),
-				'placeholder'   => '',
-				'description'   => '',
-				'value'         => '',
-				'show_in_bulk'  => true,
-				'standard_feat' => false,
-				'const_field'   => false,
-				'container'     => true,
-			),
-			array(
-				'id'            => $this->prefix . 'mailboxpacket',
-				'type'          => 'checkbox',
-				'label'         => __( 'Mailbox Packet (International): ', 'postnl-for-woocommerce' ),
-				'placeholder'   => '',
-				'description'   => '',
-				'value'         => '',
-				'show_in_bulk'  => true,
-				'standard_feat' => false,
-				'const_field'   => false,
-				'container'     => true,
-			),
-			array(
-				'id'            => $this->prefix . 'track_and_trace',
-				'type'          => 'checkbox',
-				'label'         => __( 'Track & Trace: ', 'postnl-for-woocommerce' ),
-				'placeholder'   => '',
-				'description'   => '',
-				'value'         => '',
-				'show_in_bulk'  => true,
-				'standard_feat' => false,
-				'const_field'   => false,
-				'container'     => true,
-			),
-			array(
-				'id'            => $this->prefix . 'break_2',
-				'standard_feat' => false,
-				'const_field'   => true,
-				'type'          => 'break',
-			),
-			array(
-				'id'                => $this->prefix . 'num_labels',
-				'type'              => 'number',
-				'label'             => __( 'Number of Labels: ', 'postnl-for-woocommerce' ),
-				'placeholder'       => '',
-				'description'       => '',
-				'class'             => 'short',
-				'value'             => '',
-				'custom_attributes' =>
-					array(
-						'step' => 'any',
-						'min'  => '0',
-					),
-				'show_in_bulk'      => true,
-				'standard_feat'     => true,
-				'const_field'       => false,
-				'container'         => true,
-			),
-			array(
-				'id'            => $this->prefix . 'label_nonce',
-				'type'          => 'hidden',
-				'nonce'         => true,
-				'value'         => wp_create_nonce( $this->nonce_key ),
-				'show_in_bulk'  => true,
-				'standard_feat' => false,
-				'const_field'   => true,
-				'container'     => true,
-			),
-		);
 
-		if('in_box' == $this->settings->get_return_shipment_and_labels()){
-			$fields[] = array(
-				'id'            => $this->prefix . 'create_return_label',
-				'type'          => 'checkbox',
-				'label'         => __( 'Create Return Label: ', 'postnl-for-woocommerce' ),
-				'placeholder'   => '',
-				'description'   => '',
-				'value'         => $this->settings->get_return_address_default(),
-				'show_in_bulk'  => true,
-				'standard_feat' => true,
-				'const_field'   => false,
-				'container'     => true,
-			);
-		}
-		
-		if('A6' !== $this->settings->get_label_format()){
-			$fields[] = array(
-				'id'            => $this->prefix . 'position_printing_labels',
-				'type'          => 'select',
-				'label'         => __( 'Start position printing label: ', 'postnl-for-woocommerce' ),
-				'placeholder'   => '',
-				'description'   => '',
-				'options'       => array(
-					'top-left'     => __( 'Top Left', 'postnl-for-woocommerce' ),
-					'top-right'    => __( 'Top Right', 'postnl-for-woocommerce' ),
-					'bottom-left'  => __( 'Bottom Left', 'postnl-for-woocommerce' ),
-					'bottom-right' => __( 'Bottom Right', 'postnl-for-woocommerce' ),
-				),
-				'value'         => '',
-				'show_in_bulk'  => true,
-				'standard_feat' => false,
-				'const_field'   => true,
-				'container'     => true,
-			);
-		}
 		return apply_filters(
 			'postnl_order_meta_box_fields',
-			$fields
+			array(
+				array(
+					'id'            => $this->prefix . 'id_check',
+					'type'          => 'checkbox',
+					'label'         => __( 'ID Check: ', 'postnl-for-woocommerce' ),
+					'placeholder'   => '',
+					'description'   => '',
+					'value'         => $default_options['id_check'],
+					'show_in_bulk'  => false,
+					'standard_feat' => false,
+					'const_field'   => false,
+					'container'     => true,
+				),
+				array(
+					'id'            => $this->prefix . 'insured_shipping',
+					'type'          => 'checkbox',
+					'label'         => __( 'Insured Shipping: ', 'postnl-for-woocommerce' ),
+					'placeholder'   => '',
+					'description'   => '',
+					'value'         => $default_options['insured_shipping'],
+					'show_in_bulk'  => true,
+					'standard_feat' => false,
+					'const_field'   => false,
+					'container'     => true,
+				),
+				array(
+					'id'            => $this->prefix . 'insured_plus',
+					'type'          => 'checkbox',
+					'label'         => __( 'Insured Plus: ', 'postnl-for-woocommerce' ),
+					'placeholder'   => '',
+					'description'   => '',
+					'value'         => '',
+					'show_in_bulk'  => true,
+					'standard_feat' => false,
+					'const_field'   => false,
+					'container'     => true,
+				),
+				array(
+					'id'            => $this->prefix . 'return_no_answer',
+					'type'          => 'checkbox',
+					'label'         => __( 'Return if no answer: ', 'postnl-for-woocommerce' ),
+					'placeholder'   => '',
+					'description'   => '',
+					'value'         => $default_options['return_no_answer'],
+					'show_in_bulk'  => true,
+					'standard_feat' => false,
+					'const_field'   => false,
+					'container'     => true,
+				),
+				array(
+					'id'            => $this->prefix . 'signature_on_delivery',
+					'type'          => 'checkbox',
+					'label'         => __( 'Signature on Delivery: ', 'postnl-for-woocommerce' ),
+					'placeholder'   => '',
+					'description'   => '',
+					'value'         => $default_options['signature_on_delivery'],
+					'show_in_bulk'  => true,
+					'standard_feat' => false,
+					'const_field'   => false,
+					'container'     => true,
+				),
+				array(
+					'id'            => $this->prefix . 'only_home_address',
+					'type'          => 'checkbox',
+					'label'         => __( 'Only Home Address: ', 'postnl-for-woocommerce' ),
+					'placeholder'   => '',
+					'description'   => '',
+					'value'         => $default_options['only_home_address'],
+					'show_in_bulk'  => true,
+					'standard_feat' => false,
+					'const_field'   => false,
+					'container'     => true,
+				),
+				array(
+					'id'            => $this->prefix . 'letterbox',
+					'type'          => 'checkbox',
+					'label'         => __( 'Letterbox: ', 'postnl-for-woocommerce' ),
+					'placeholder'   => '',
+					'description'   => '',
+					'value'         => $default_options['letterbox'],
+					'show_in_bulk'  => true,
+					'standard_feat' => false,
+					'const_field'   => false,
+					'container'     => true,
+				),
+				array(
+					'id'            => $this->prefix . 'packets',
+					'type'          => 'checkbox',
+					'label'         => __( 'Packets: ', 'postnl-for-woocommerce' ),
+					'placeholder'   => '',
+					'description'   => '',
+					'value'         => '',
+					'show_in_bulk'  => true,
+					'standard_feat' => false,
+					'const_field'   => false,
+					'container'     => true,
+				),
+				array(
+					'id'            => $this->prefix . 'mailboxpacket',
+					'type'          => 'checkbox',
+					'label'         => __( 'Mailbox Packet (International): ', 'postnl-for-woocommerce' ),
+					'placeholder'   => '',
+					'description'   => '',
+					'value'         => '',
+					'show_in_bulk'  => true,
+					'standard_feat' => false,
+					'const_field'   => false,
+					'container'     => true,
+				),
+				array(
+					'id'            => $this->prefix . 'track_and_trace',
+					'type'          => 'checkbox',
+					'label'         => __( 'Track & Trace: ', 'postnl-for-woocommerce' ),
+					'placeholder'   => '',
+					'description'   => '',
+					'value'         => '',
+					'show_in_bulk'  => true,
+					'standard_feat' => false,
+					'const_field'   => false,
+					'container'     => true,
+				),
+				array(
+					'id'            => $this->prefix . 'break_2',
+					'standard_feat' => false,
+					'const_field'   => true,
+					'type'          => 'break',
+				),
+				array(
+					'id'                => $this->prefix . 'num_labels',
+					'type'              => 'number',
+					'label'             => __( 'Number of Labels: ', 'postnl-for-woocommerce' ),
+					'placeholder'       => '',
+					'description'       => '',
+					'class'             => 'short',
+					'value'             => '',
+					'custom_attributes' =>
+						array(
+							'step' => 'any',
+							'min'  => '0',
+						),
+					'show_in_bulk'      => true,
+					'standard_feat'     => true,
+					'const_field'       => false,
+					'container'         => true,
+				),
+				array(
+					'id'            => $this->prefix . 'create_return_label',
+					'type'          => 'checkbox',
+					'label'         => __( 'Create Return Label: ', 'postnl-for-woocommerce' ),
+					'placeholder'   => '',
+					'description'   => '',
+					'value'         => $this->settings->get_return_address_default(),
+					'show_in_bulk'  => true,
+					'standard_feat' => true,
+					'const_field'   => false,
+					'container'     => true,
+				),
+				array(
+					'id'            => $this->prefix . 'position_printing_labels',
+					'type'          => 'select',
+					'label'         => __( 'Start position printing label: ', 'postnl-for-woocommerce' ),
+					'placeholder'   => '',
+					'description'   => '',
+					'options'       => array(
+						'top-left'     => __( 'Top Left', 'postnl-for-woocommerce' ),
+						'top-right'    => __( 'Top Right', 'postnl-for-woocommerce' ),
+						'bottom-left'  => __( 'Bottom Left', 'postnl-for-woocommerce' ),
+						'bottom-right' => __( 'Bottom Right', 'postnl-for-woocommerce' ),
+					),
+					'value'         => '',
+					'show_in_bulk'  => true,
+					'standard_feat' => false,
+					'const_field'   => true,
+					'container'     => true,
+				),
+				array(
+					'id'            => $this->prefix . 'label_nonce',
+					'type'          => 'hidden',
+					'nonce'         => true,
+					'value'         => wp_create_nonce( $this->nonce_key ),
+					'show_in_bulk'  => true,
+					'standard_feat' => false,
+					'const_field'   => true,
+					'container'     => true,
+				),
+			)
 		);
 	}
 
@@ -542,6 +586,38 @@ abstract class Base {
 		}
 
 		return array();
+	}
+
+	/**
+	 * Get delivery type string.
+	 *
+	 * @param WC_Order $order Order object.
+	 *
+	 * @return String.
+	 */
+	public function get_delivery_type( $order ) {
+		$from_country      = Utils::get_base_country();
+		$to_country        = $order->get_shipping_country();
+		$delivery_type_map = Mapping::delivery_type();
+		$filtered_frontend = $this->get_order_frontend_info( $order, '_type' );
+		$destination       = Utils::get_shipping_zone( $to_country );
+
+
+		if ( ! is_array( $delivery_type_map[ $from_country ][ $destination ] ) ) {
+			return ! empty( $delivery_type_map[ $from_country ][ $destination ] ) ? $delivery_type_map[ $from_country ][ $destination ] : '';
+		}
+
+		if ( empty( $filtered_frontend ) ) {
+			return '';
+		}
+
+		foreach ( $filtered_frontend as $frontend_key => $frontend_value ) {
+			if ( ! empty( $delivery_type_map[ $from_country ][ $destination ][ $frontend_key ][ $frontend_value ] ) ) {
+				return $delivery_type_map[ $from_country ][ $destination ][ $frontend_key ][ $frontend_value ];
+			}
+		}
+
+		return '';
 	}
 
 	/**
@@ -1335,19 +1411,5 @@ abstract class Base {
 		$order_data = $order->get_meta( $this->meta_name );
 
 		return ! empty( $order_data['labels']['label']['filepath'] );
-	}
-
-	/**
-	 * Save default shipping options to the order.
-	 *
-	 * @param int $order_id \WC_Order id.
-	 * @param array $options New shipping options.
-	 *
-	 * @return void
-	 */
-	public function set_order_default_shipping_options( $order_id, $options ) {
-		$order = wc_get_order( $order_id );
-		$order->update_meta_data( $this->meta_name, $options );
-		$order->save();
 	}
 }

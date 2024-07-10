@@ -145,12 +145,6 @@ class Single extends Base {
 		foreach ( $meta_fields as $index => $field ) {
 			$field_name = Utils::remove_prefix_field( $this->prefix, $field['id'] );
 
-			// If the order is eligible for automatic letterbox, Then it will tick the letterbox checkbox.
-			// FYI : 'letterbox' is part of $default_option_keys.
-			if ( empty( $order_data['barcodes'] ) && Utils::is_eligible_auto_letterbox( $order ) && ( in_array( $field_name, $default_option_keys, true ) ) ) {
-				$meta_fields[ $index ]['value'] = ( 'letterbox' === $field_name ) ? 'yes' : 'no';
-			}
-
 			if ( ! empty( $order_data['frontend'][ $field_name ] ) ) {
 				$meta_fields[ $index ]['value'] = $order_data['frontend'][ $field_name ];
 			}
@@ -221,37 +215,6 @@ class Single extends Base {
 	 */
 	public function get_delivery_day_info( $order ) {
 		return $this->get_order_frontend_info( $order, 'delivery_day_' );
-	}
-
-	/**
-	 * Get delivery type string.
-	 *
-	 * @param WC_Order $order Order object.
-	 *
-	 * @return String.
-	 */
-	public function get_delivery_type( $order ) {
-		$from_country      = Utils::get_base_country();
-		$to_country        = $order->get_shipping_country();
-		$delivery_type_map = Mapping::delivery_type();
-		$filtered_frontend = $this->get_order_frontend_info( $order, '_type' );
-		$destination       = Utils::get_shipping_zone( $to_country );
-
-		if ( ! is_array( $delivery_type_map[ $from_country ][ $destination ] ) ) {
-			return ! empty( $delivery_type_map[ $from_country ][ $destination ] ) ? $delivery_type_map[ $from_country ][ $destination ] : '';
-		}
-
-		if ( empty( $filtered_frontend ) ) {
-			return '';
-		}
-
-		foreach ( $filtered_frontend as $frontend_key => $frontend_value ) {
-			if ( ! empty( $delivery_type_map[ $from_country ][ $destination ][ $frontend_key ][ $frontend_value ] ) ) {
-				return $delivery_type_map[ $from_country ][ $destination ][ $frontend_key ][ $frontend_value ];
-			}
-		}
-
-		return '';
 	}
 
 	/**

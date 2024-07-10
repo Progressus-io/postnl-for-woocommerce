@@ -100,7 +100,7 @@ class Item_Info extends Base_Info {
 	 * @var weight_uom
 	 */
 	public $weight_uom;
-
+	
 	/**
 	 * Parses the arguments and sets the instance's properties.
 	 *
@@ -281,7 +281,7 @@ class Item_Info extends Base_Info {
 	 */
 	public function set_extra_data_to_api_args() {
 		$this->set_order_shipping_product();
-		$this->set_rest_of_world_args();
+		// $this->set_rest_of_world_args();
 	}
 
 	/**
@@ -890,16 +890,19 @@ class Item_Info extends Base_Info {
 		if ( empty( $code_map[ $from_country ][ $destination ][ $shipping_feature ] ) ) {
 			return $selected_product;
 		}
-
 		foreach ( $code_map[ $from_country ][ $destination ][ $shipping_feature ] as $product ) {
 			if ( empty( $product['combination'] ) && empty( $selected_product ) ) {
 				$selected_product = $product;
 				continue;
 			}
-
 			$is_this_it = true;
-			foreach ( $product['combination'] as $feature ) {
-				if ( ! in_array( $feature, $features ) ) {
+			foreach ( $features as $feature ) {
+				if ( ! in_array( $feature,  $product['combination']) ) {
+					$is_this_it = false;
+				}				
+			}
+			foreach($product['combination'] as $combination){
+				if ( ! in_array( $combination,  $features) ) {
 					$is_this_it = false;
 				}
 			}
@@ -985,9 +988,17 @@ class Item_Info extends Base_Info {
 	 * @throws \Exception if the order weight exceeds € 5000.
 	 */
 	protected function check_insurance_amount_limit( $backend_data, $order_total ) {
-		if ( 'yes' === $backend_data['insured_shipping'] && $order_total > 5000 ) {
+		$is_non_eu_shipment = $this->is_rest_of_world();
+	
+		// For non-EU shipments, set the insured amount to €500 if insurance is selected
+		if ( $is_non_eu_shipment && 'yes' === $backend_data['insured_shipping'] ) {
+			$insured_amount = 500;
+		}
+	
+		// For EU shipments, validate that insurance does not exceed €5000
+		elseif ( !$is_non_eu_shipment && 'yes' === $backend_data['insured_shipping'] && $order_total > 5000 ) {
 			throw new \Exception(
-				__( 'Insurance amount is required and cannot exceed the maximum allowed amount (€ 5000). Your total is: ' . $order_total, 'postnl-for-woocommerce' )
+				__( 'Insurance amount for EU shipments cannot exceed €5000. Your total is: ' . $order_total, 'postnl-for-woocommerce' )
 			);
 		}
 	}

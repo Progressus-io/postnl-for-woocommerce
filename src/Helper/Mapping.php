@@ -80,11 +80,11 @@ class Mapping {
 							'code'        => '3090',
 							'options'     => array(),
 						),
-						array(
-							'combination' => array( 'insured_shipping' ),
-							'code'        => '3087',
-							'options'     => array(),
-						),
+						// array(
+						// 	'combination' => array( 'insured_shipping' ),
+						// 	'code'        => '3087',
+						// 	'options'     => array(),
+						// ),
 						array(
 							'combination' => array( 'signature_on_delivery' ),
 							'code'        => '3189',
@@ -96,7 +96,7 @@ class Mapping {
 							'options'     => array(),
 						),
 						array(
-							'combination' => array( 'insured_shipping', 'return_no_answer' ),
+							'combination' => array( 'signature_on_delivery', 'insured_shipping', 'return_no_answer' ),
 							'code'        => '3094',
 							'options'     => array(),
 						),
@@ -128,7 +128,12 @@ class Mapping {
 						array(
 							'combination' => array( 'id_check' ),
 							'code'        => '3438',
-							'options'     => array(),
+							'options'     => array(
+								array(
+									'characteristic' => '002',
+									'option'         => '014',
+								),
+							),
 						)
 					),
 					'pickup_points' => array(
@@ -323,6 +328,11 @@ class Mapping {
 					'pickup_points' => array(
 						array(
 							'combination' => array( 'signature_on_delivery' ),
+							'code'        => '4898',
+							'options'     => array(),
+						),
+						array(
+							'combination' => array(),
 							'code'        => '4898',
 							'options'     => array(),
 						)
@@ -565,7 +575,7 @@ class Mapping {
 	public static function available_country_for_checkout_feature() {
 		return array(
 			'NL' => array(
-				'NL' => array( 'pickup_points', 'delivery_day', 'evening_delivery' ),
+				'NL' => array( 'pickup_points', 'delivery_day', 'evening_delivery', '08:00-12:00' ),
 				'BE' => array( 'pickup_points', 'delivery_day' ),
 			),
 			'BE' => array(

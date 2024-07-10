@@ -1,33 +1,15 @@
 #woocommerce-shipment-postnl-label h2.hndle.ui-sortable-handle {
-	background: url(../images/postnl-logo.png) no-repeat left 14px top / contain;
-	height: 20px;
-	padding: 5px 0 5px 55px;
+    background: url(../images/postnl-logo.png) no-repeat left 14px top / contain;
+    height: 20px;
+    padding: 5px 0 5px 55px;
 }
 
-#shipment-postnl-label-form .form-field {
-    display: flex;
-}
-
-#shipment-postnl-label-form .form-field label {
-    flex-grow: 1;
-}
-
-#shipment-postnl-label-form hr {
-    display: block;
-    margin-top: 20px!important;
-    margin-bottom: 20px!important;
-}
-#shipment-postnl-label-form .button-container {
-    display: flex;
-    gap: 5px;
-
-}
-#shipment-postnl-label-form .button-container > * {
-    flex-grow: 1;
-    text-align: center;
-}
 #shipment-postnl-label-form label {
-	font-weight:700;
+    font-weight:700;
+}
+
+#shipment-postnl-label-form select, #shipment-postnl-label-form input[type="number"] {
+    width: 120px!important;
 }
 
 #shipment-postnl-label-form select, #shipment-postnl-label-form input[type="number"] {
@@ -35,57 +17,57 @@
 }
 
 #shipment-postnl-label-form .postnl-info-container .postnl-info {
-	margin-bottom:3px;
+    margin-bottom:3px;
 }
 
 #shipment-postnl-label-form .form-field input.short {
-	width:50px;
+    width:50px;
 }
 
 #shipment-postnl-label-form.generated .button-save-form {
-	display:none;
+    display:none;
 }
 
 #shipment-postnl-label-form .button-download-label {
-	display:none;
+    display:none;
 }
 
 #shipment-postnl-label-form.generated .button-download-label {
-	display:inline-block;
+    display:inline-block;
 }
 
 #shipment-postnl-label-form .delete-label {
-	display:none;
+    display:none;
 }
 
 #shipment-postnl-label-form .return-container {
-	margin-top:3px;
-	display:none;
+    margin-top:3px;
+    display:none;
 }
 
 #shipment-postnl-label-form.generated.has-return .return-container {
-	display:block;
+    display:block;
 }
 
 #shipment-postnl-label-form .letterbox-container {
-	margin-top:3px;
-	display:none;
+    margin-top:3px;
+    display:none;
 }
 
 #shipment-postnl-label-form.generated.has-letterbox .letterbox-container {
-	display:block;
+    display:block;
 }
 
 #shipment-postnl-label-form .postnl-break-line.postnl_break_2 {
-	margin-top:-9px;
+    margin-top:-9px;
 }
 
 #shipment-postnl-label-form.generated .delete-label {
-	display:inline-block;
+    display:inline-block;
 }
 
 #shipment-postnl-label-form #shipment-postnl-error-text {
-	margin-top:15px;
-	color:#ff0000;
-	font-weight:700;
+    margin-top:15px;
+    color:#ff0000;
+    font-weight:700;
 }

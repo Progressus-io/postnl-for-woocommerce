@@ -11,8 +11,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-use PostNLWooCommerce\Utils;
-
 /**
  * Class Order
  *
@@ -55,22 +53,22 @@ class Order {
 	public function update_existing_orders() {
 		// Query orders that have _postnl_order_metadata but do not have _postnl_old_orders_delivery_date
 		$orders = wc_get_orders(
-			[
-				'meta_query' => [
+			array(
+				'meta_query' => array(
 					'relation' => 'AND',
-					[
+					array(
 						'key'     => $this->meta_name,
-						'compare' => 'EXISTS'
-					],
-					[
+						'compare' => 'EXISTS',
+					),
+					array(
 						'key'     => '_postnl_old_orders_delivery_date',
-						'compare' => 'NOT EXISTS'
-					]
-				],
+						'compare' => 'NOT EXISTS',
+					)
+				),
 				'limit'      => - 1,
 				'return'     => 'ids',
-				'status'     => [ 'on-hold', 'pending' ]
-			]
+				'status'     => array( 'on-hold', 'pending' ),
+			)
 		);
 
 		if ( ! empty( $orders ) ) {

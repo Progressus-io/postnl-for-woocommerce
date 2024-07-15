@@ -706,9 +706,9 @@ abstract class Base {
 			}
 		}
 
-		if ( 'pdf' === $label_contents['OutputType'] ) {
+		// if ( 'pdf' === $label_contents['OutputType'] ) {
 			$labels = $this->maybe_merge_labels( $labels, $order, $parent_barcode, $parent_label_type );
-		}
+		// }
 		return $labels;
 	}
 

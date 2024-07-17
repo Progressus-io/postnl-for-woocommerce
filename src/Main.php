@@ -48,13 +48,6 @@ class Main {
 	public $shipping_product = null;
 
 	/**
-	 * Product Editor.
-	 *
-	 * @var PostNLWooCommerce\Product\Product_Editor
-	 */
-	public $product_editor = null;
-
-	/**
 	 * Shipping Order.
 	 *
 	 * @var PostNLWooCommerce\Order\Single
@@ -81,6 +74,7 @@ class Main {
 	 * @var PostNLWooCommerce\Shipping_Method\Settings
 	 */
 	public $shipping_settings = null;
+	
 
 	/**
 	 * Instance to call certain functions globally within the plugin
@@ -88,6 +82,13 @@ class Main {
 	 * @var _instance
 	 */
 	protected static $instance = null;
+
+	/**
+	 * Product Editor.
+	 *
+	 * @var PostNLWooCommerce\Product\Product_Editor
+	 */
+	public $product_editor = null;
 
 	/**
 	 * Construct the plugin.
@@ -233,6 +234,19 @@ class Main {
 	}
 
 	/**
+	 * Get product editor class.
+	 *
+	 * @return Product\Product_Editor
+	 */
+	public function get_product_editor() {
+		if ( empty( $this->product_editor ) ) {
+			$this->product_editor = new Product\Product_Editor();
+		}
+
+		return $this->product_editor;
+	}
+
+	/**
 	 * Get order bulk class.
 	 *
 	 * @return Order\Bulk
@@ -269,19 +283,6 @@ class Main {
 		}
 
 		return $this->shipping_product;
-	}
-
-	/**
-	 * Get product editor class.
-	 *
-	 * @return Product\Product_Editor
-	 */
-	public function get_product_editor() {
-		if ( empty( $this->product_editor ) ) {
-			$this->product_editor = new Product\Product_Editor();
-		}
-
-		return $this->product_editor;
 	}
 
 	/**

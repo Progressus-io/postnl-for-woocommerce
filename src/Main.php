@@ -11,6 +11,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+use PostNLWooCommerce\Product\Product_Editor;
+
 /**
  * Class Main
  *
@@ -44,6 +46,13 @@ class Main {
 	 * @var PostNLWooCommerce\Product\PostNL
 	 */
 	public $shipping_product = null;
+
+	/**
+	 * Product Editor.
+	 *
+	 * @var PostNLWooCommerce\Product\Product_Editor
+	 */
+	public $product_editor = null;
 
 	/**
 	 * Shipping Order.
@@ -86,6 +95,7 @@ class Main {
 	public function __construct() {
 		add_action( 'init', array( $this, 'load_plugin' ), 1 );
 		add_action( 'before_woocommerce_init', array( $this, 'declare_wc_hpos_compatibility' ), 10 );
+		add_action( 'before_woocommerce_init', array( $this, 'declare_product_editor_compatibility' ), 10 );
 	}
 
 	/**
@@ -94,6 +104,15 @@ class Main {
 	public function declare_wc_hpos_compatibility() {
 		if ( class_exists( '\Automattic\WooCommerce\Utilities\FeaturesUtil' ) ) {
 			\Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility( 'custom_order_tables', 'postnl-for-woocommerce/postnl-for-woocommerce.php', true );
+		}
+	}
+
+	/**
+	 * Declare Product Editor compatibility.
+	 */
+	public function declare_product_editor_compatibility() {
+		if ( class_exists( '\Automattic\WooCommerce\Utilities\FeaturesUtil' ) ) {
+			\Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility( 'product_block_editor', 'postnl-for-woocommerce/postnl-for-woocommerce.php', true );
 		}
 	}
 
@@ -162,6 +181,7 @@ class Main {
 		$this->get_orders_list();
 		$this->get_shipping_product();
 		$this->get_frontend();
+		$this->get_product_editor();
 	}
 
 	/**
@@ -249,6 +269,19 @@ class Main {
 		}
 
 		return $this->shipping_product;
+	}
+
+	/**
+	 * Get product editor class.
+	 *
+	 * @return Product\Product_Editor
+	 */
+	public function get_product_editor() {
+		if ( empty( $this->product_editor ) ) {
+			$this->product_editor = new Product\Product_Editor();
+		}
+
+		return $this->product_editor;
 	}
 
 	/**

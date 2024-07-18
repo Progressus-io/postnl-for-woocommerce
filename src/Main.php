@@ -93,7 +93,7 @@ class Main {
 	 */
 	public function declare_wc_hpos_compatibility() {
 		if ( class_exists( '\Automattic\WooCommerce\Utilities\FeaturesUtil' ) ) {
-			\Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility( 'custom_order_tables', 'postnl-for-woocommerce/postnl-for-woocommerce.php', true );
+			\Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility( 'custom_order_tables', POSTNL_WC_PLUGIN_BASENAME, true );
 		}
 	}
 

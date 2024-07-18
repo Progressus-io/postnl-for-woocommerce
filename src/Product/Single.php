@@ -34,6 +34,20 @@ class Single {
 	protected $service = POSTNL_SERVICE_NAME;
 
 	/**
+	 * Letterbox field name.
+	 *
+	 * @var letterbox_parcel
+	 */
+	const LETTERBOX_PARCEL = '_postnl_letterbox_parcel';
+
+	/**
+	 * Letterbox field name.
+	 *
+	 * @var max_qty_per_letterbox
+	 */
+	const MAX_QTY_PER_LETTERBOX = '_postnl_max_qty_per_letterbox';
+
+	/**
 	 * Origin field name.
 	 *
 	 * @var origin_field
@@ -59,10 +73,30 @@ class Single {
 	 *
 	 * @param String $service Service name for the product fields.
 	 *
-	 * @return Array.
+	 * @return array
 	 */
 	public static function product_field_maps( $service ) {
 		return array(
+			array(
+				'id'          => self::LETTERBOX_PARCEL,
+				'type'        => 'checkbox',
+				// translators: %s will be replaced by service name.
+				'label'       => sprintf( esc_html__( 'Enable Letterbox Parcel (%s)', 'postnl-for-woocommerce' ), $service ),
+				'description' => esc_html__( 'When this setting is enabled the PostNL plug-in automatically determines whether a shipment fits through a letterbox. This choice can be overridden when creating a shipment manually via the Label & Tracking menu. This only works for orders with destination Netherlands.', 'postnl-for-woocommerce' ),
+				'desc_tip'    => 'true',
+			),
+			array(
+				'id'                => self::MAX_QTY_PER_LETTERBOX,
+				'type'              => 'number',
+				// translators: %s will be replaced by service name.
+				'label'             => sprintf( esc_html__( 'Maximum amount per letterbox parcel (%s)', 'postnl-for-woocommerce' ), $service ),
+				'description'       => esc_html__( 'Please fill in how many times this product fits in a letterbox parcel. A letterbox parcel may weigh a maximum of 2 kilograms and has the following maximum dimensions: 38x26.5x3.2 cm', 'postnl-for-woocommerce' ),
+				'desc_tip'          => 'true',
+				'placeholder'       => esc_html__( 'Enter max quantity', 'postnl-for-woocommerce' ),
+				'custom_attributes' => array(
+					'min' => 1
+				),
+			),
 			array(
 				'id'          => self::ORIGIN_FIELD,
 				'type'        => 'select',
@@ -82,7 +116,7 @@ class Single {
 				'label'       => sprintf( esc_html__( 'HS Tariff Code (%s)', 'postnl-for-woocommerce' ), $service ),
 				'description' => esc_html__( 'HS Tariff Code is a number assigned to every possible commodity that can be imported or exported from any country.', 'postnl-for-woocommerce' ),
 				'desc_tip'    => 'true',
-				'placeholder' => 'HS Code',
+				'placeholder' => esc_html__( 'HS Code', 'postnl-for-woocommerce' ),
 			),
 		);
 	}

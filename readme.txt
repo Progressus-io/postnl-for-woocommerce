@@ -3,10 +3,10 @@ Contributors: PostNL, shadim, abdalsalaam
 Tags: woocommerce, export, delivery, packages, PostNL, Shipping
 Requires at least: 4.6
 Requires PHP: 5.6
-Tested up to: 6.3
-Stable tag: 5.3.1
+Tested up to: 6.5
+Stable tag: 5.4.2
 WC requires at least: 4.0
-WC tested up to: 8.2
+WC tested up to: 9.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -80,8 +80,38 @@ Follow these instructions (https://www.postnl.nl/Images/aanvragen-api-key-stappe
 
 == Changelog ==
 
-= 5.3.2 (2023-xx-xx) =
+
+= 5.4.3 (2023-xx-xx) =
 * Fix: HPOS declaration path.
+
+= 5.4.2 (2024-07-03) =
+* Fix: Error "Invalid nonce" when trying to delete labels.
+* Fix: Orders list fatal error if order have deleted product.
+
+= 5.4.1 (2024-06-11) =
+* Fix: Display shipping options within the order list for legacy orders storage.
+
+= 5.4.0 (2024-06-10) =
+* Add: Assign Letterbox Parcels automatically based on purchased products.
+* Add: Ability to assign default shipping product options for every shipping zone, per settings and bulk actions.
+* Fix: Checkout delivery options display on the Checkout page for Belgium merchants.
+* Added and fixed Dutch translations.
+
+= 5.3.6 (2024-04-24) =
+* Fix: Correct CustomerCode in non-EU calls, in Shipping call.
+
+= 5.3.5 (2024-04-22) =
+* Fix: Correct CustomerCode in non-EU calls.
+
+= 5.3.4 (2024-01-30) =
+* Added: Logic to apply default shipping options when not explicitly set in post data.
+
+= 5.3.3 (2024-01-30) =
+* Updated: Function to check insurance amount limits for EU and non-EU shipments.
+* Updated: Currency utility to include all WooCommerce currencies.
+
+= 5.3.2 (2023-12-20) =
+* Fix: Bulk action does not work in HPOS.
 
 = 5.3.1 (2023-11-21) =
 * Fix: Change store address error text.

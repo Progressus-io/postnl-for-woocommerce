@@ -56,11 +56,19 @@ abstract class Base {
 	protected $meta_name;
 
 	/**
+	 * Prefix for meta box fields.
+	 *
+	 * @var meta_name
+	 */
+	protected $letterbox_meta_name;
+
+	/**
 	 * Init and hook in the integration.
 	 */
 	public function __construct() {
-		$this->settings  = Settings::get_instance();
-		$this->meta_name = '_' . $this->prefix . 'order_metadata';
+		$this->settings            = Settings::get_instance();
+		$this->meta_name           = '_' . $this->prefix . 'order_metadata';
+		$this->letterbox_meta_name = '_' . $this->prefix . 'letterbox';
 		$this->set_template_file();
 		$this->set_primary_field_name();
 		$this->init_hooks();
@@ -98,6 +106,7 @@ abstract class Base {
 
 		add_filter( 'woocommerce_checkout_posted_data', array( $this, 'validate_posted_data' ) );
 		add_action( 'woocommerce_checkout_update_order_meta', array( $this, 'save_data' ), 10, 2 );
+		add_action( 'woocommerce_checkout_update_order_meta', array( $this, 'save_letterbox_data' ), 13, 2 );
 		add_action( 'woocommerce_checkout_update_order_meta', array( $this, 'save_default_data' ), 15, 2 );
 		add_action( 'woocommerce_checkout_update_order_meta', array( $this, 'calculate_non_standard_fee' ), 20, 2 );
 		add_filter( 'postnl_frontend_checkout_tab', array( $this, 'add_checkout_tab' ), 10, 2 );
@@ -401,6 +410,27 @@ abstract class Base {
 
 		$order->update_meta_data( $this->meta_name, $data );
 		$order->save();
+	}
+
+	/**
+	 * Check if order is eligible for the letterbox and save it as order meta.
+	 *
+	 * @param int   $order_id ID of the order.
+	 * @param array $posted_data Posted values.
+	 */
+	public function save_letterbox_data( $order_id, $posted_data ) {
+		$order = wc_get_order( $order_id );
+
+		if ( ! is_a( $order, 'WC_Order' ) ) {
+			return;
+		}
+
+		$eligible_for_letterbox = Utils::is_eligible_auto_letterbox( $order );
+
+		if ( $eligible_for_letterbox ) {
+			$order->update_meta_data( $this->letterbox_meta_name, 1 );
+			$order->save();
+		}
 	}
 
 	/**

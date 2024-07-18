@@ -120,32 +120,39 @@ class Single extends Base {
 	 * @return array
 	 */
 	public function add_meta_box_value( $order ) {
-		$meta_fields = $this->meta_box_fields();
+		if ( ! is_a( $order, 'WC_Order' ) ) {
+			return array();
+		}
 
-		if ( is_a( $order, 'WC_Order' ) ) {
-			$order_data   = $order->get_meta( $this->meta_name );
-			$option_map   = Mapping::option_available_list();
-			$from_country = Utils::get_base_country();
-			$to_country   = $order->get_shipping_country();
-			$destination  = Utils::get_shipping_zone( $to_country );
+		$meta_fields  = $this->meta_box_fields( $order );
+		$order_data   = $order->get_meta( $this->meta_name );
+		$option_map   = Mapping::option_available_list();
+		$from_country = Utils::get_base_country();
+		$to_country   = $order->get_shipping_country();
+		$destination  = Utils::get_shipping_zone( $to_country );
 
-			foreach ( $meta_fields as $index => $field ) {
-				$field_name = Utils::remove_prefix_field( $this->prefix, $field['id'] );
+		foreach ( $meta_fields as $index => $field ) {
+			if ( isset( $field['nonce'] ) && true === $field['nonce'] ) {
+				continue;
+			}
 
-				if ( ! empty( $order_data['frontend'][ $field_name ] ) ) {
-					$meta_fields[ $index ]['value'] = $order_data['frontend'][ $field_name ];
-				}
+			$field_name = Utils::remove_prefix_field( $this->prefix, $field['id'] );
 
-				if ( isset( $order_data['backend'][ $field_name ] ) ) {
+			if ( ! empty( $order_data['frontend'][ $field_name ] ) ) {
+				$meta_fields[ $index ]['value'] = $order_data['frontend'][ $field_name ];
+			}
+
+			if ( isset( $order_data['backend'][ $field_name ] ) ) {
+				if ( $this->have_label_file( $order ) ) {
 					$meta_fields[ $index ]['custom_attributes']['disabled'] = 'disabled';
-					$meta_fields[ $index ]['value']                         = $order_data['backend'][ $field_name ];
 				}
+				$meta_fields[ $index ]['value'] = $order_data['backend'][ $field_name ];
+			}
 
-				if ( isset( $option_map[ $from_country ][ $destination ] ) ) {
-					$meta_fields[ $index ]['standard_feat'] = in_array( $field_name, $option_map[ $from_country ][ $destination ] );
-				} else {
-					$meta_fields[ $index ]['standard_feat'] = false;
-				}
+			if ( isset( $option_map[ $from_country ][ $destination ] ) ) {
+				$meta_fields[ $index ]['standard_feat'] = in_array( $field_name, $option_map[ $from_country ][ $destination ] );
+			} else {
+				$meta_fields[ $index ]['standard_feat'] = false;
 			}
 		}
 
@@ -201,37 +208,6 @@ class Single extends Base {
 	 */
 	public function get_delivery_day_info( $order ) {
 		return $this->get_order_frontend_info( $order, 'delivery_day_' );
-	}
-
-	/**
-	 * Get delivery type string.
-	 *
-	 * @param WC_Order $order Order object.
-	 *
-	 * @return String.
-	 */
-	public function get_delivery_type( $order ) {
-		$from_country      = Utils::get_base_country();
-		$to_country        = $order->get_shipping_country();
-		$delivery_type_map = Mapping::delivery_type();
-		$filtered_frontend = $this->get_order_frontend_info( $order, '_type' );
-		$destination       = Utils::get_shipping_zone( $to_country );
-
-		if ( ! is_array( $delivery_type_map[ $from_country ][ $destination ] ) ) {
-			return ! empty( $delivery_type_map[ $from_country ][ $destination ] ) ? $delivery_type_map[ $from_country ][ $destination ] : '';
-		}
-
-		if ( empty( $filtered_frontend ) ) {
-			return '';
-		}
-
-		foreach ( $filtered_frontend as $frontend_key => $frontend_value ) {
-			if ( ! empty( $delivery_type_map[ $from_country ][ $destination ][ $frontend_key ][ $frontend_value ] ) ) {
-				return $delivery_type_map[ $from_country ][ $destination ][ $frontend_key ][ $frontend_value ];
-			}
-		}
-
-		return '';
 	}
 
 	/**
@@ -297,7 +273,7 @@ class Single extends Base {
 				?>
 			</div>
 		<?php
-	}		
+	}
 
 	/**
 	 * Generate the dropoff points html information.

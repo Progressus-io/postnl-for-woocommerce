@@ -39,6 +39,9 @@ PostNL’s official extension for WooCommerce on WordPress. Manage your national
 ### 5.5.0
 * Add: Compatibility with the new WooCommerce Product Editor.
 
+### 5.4.3
+* Fix: HPOS declaration path.
+
 ### 5.4.2
 * Fix: Error "Invalid nonce" when trying to delete labels.
 * Fix: Orders list fatal error if order have deleted product.

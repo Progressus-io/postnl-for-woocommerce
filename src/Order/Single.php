@@ -133,7 +133,7 @@ class Single extends Base {
 		if ( ! is_a( $order, 'WC_Order' ) ) {
 			return array();
 		}
-    $meta_fields  = $this->meta_box_fields( $order );
+		$meta_fields = $this->meta_box_fields( $order );
 
 		$order_data             = $order->get_meta( $this->meta_name );
 		$option_map              = Mapping::option_available_list();

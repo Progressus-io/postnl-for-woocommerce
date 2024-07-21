@@ -82,8 +82,6 @@ Follow these instructions (https://www.postnl.nl/Images/aanvragen-api-key-stappe
 
 = 5.5.0 (2024-xx-xx) =
 * Add: Compatibility with the new WooCommerce Product Editor.
-
-= 5.4.3 (2023-xx-xx) =
 * Fix: HPOS declaration path.
 
 = 5.4.2 (2024-07-03) =

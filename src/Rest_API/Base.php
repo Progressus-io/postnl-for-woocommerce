@@ -233,7 +233,6 @@ class Base {
 
 			if ( ! is_wp_error( $response ) ) {
 				$this->logger->write( sprintf( 'Get response after %1$d attempts.', $i ) );
-
 				break;
 			}
 		}

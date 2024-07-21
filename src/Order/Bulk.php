@@ -101,7 +101,7 @@ class Bulk extends Base {
 			}
 		}
 
-		if ( ! empty( $gen_labels ) ) {
+		if ( ! empty( $gen_labels )  ) {
 			$array_messages[] = $this->merge_bulk_labels( $gen_labels );
 		}
 
@@ -189,28 +189,30 @@ class Bulk extends Base {
 		$label_paths   = array();
 		$array_messags = array();
 
-		foreach ( $gen_labels as $idx => $label ) {
-			foreach ( $label as $label_type => $label_info ) {
-				if ( empty( $label_info['filepath'] ) ) {
-					continue 2;
-				}
+		if('A6' !== $label_format){
+			foreach ( $gen_labels as $idx => $label ) {
+				foreach ( $label as $label_type => $label_info ) {
+					if ( empty( $label_info['filepath'] ) ) {
+						continue 2;
+					}
 
-				if ( 'A6' === $label_format ) {
-					$label_paths[] = $label_info['filepath'];
-					continue 2;
-				}
+					if ( 'A6' === $label_format && 'pdf' === pathinfo( $label_info['filepath'], PATHINFO_EXTENSION ) || 'pdf' !== pathinfo( $label_info['filepath'], PATHINFO_EXTENSION ) ) {
+						$label_paths[] = $label_info['filepath'];
+						continue 2;
+					}
 
-				if ( empty( $label_info['merged_files'] ) ) {
-					continue 2;
-				}
+					if ( empty( $label_info['merged_files'] ) ) {
+						continue 2;
+					}
 
-				foreach ( $label_info['merged_files'] as $path ) {
-					$label_paths[] = $path;
+					foreach ( $label_info['merged_files'] as $path ) {
+						$label_paths[] = $path;
+					}
 				}
 			}
 		}
 
-		$filename    = 'postnl-bulk-' . get_current_user_id() . '.pdf';
+		$filename = 'postnl-bulk-' . get_current_user_id() . '.' . pathinfo( $label_paths[0], PATHINFO_EXTENSION );
 
 		if ( isset( $_GET['postnl_position_printing_labels'] ) ) {
 			$start_position = sanitize_text_field( $_GET['postnl_position_printing_labels'] );
@@ -392,7 +394,7 @@ class Bulk extends Base {
 	 * @return array[]
 	 */
 	protected function create_label_fields() {
-		return array(
+		$fields = array(
 			array(
 				'id'                => $this->prefix . 'num_labels',
 				'type'              => 'number',
@@ -407,17 +409,24 @@ class Bulk extends Base {
 						'step' => 'any',
 						'min'  => '0',
 					),
-			),
-			array(
-				'id'            => $this->prefix . 'create_return_label',
-				'type'          => 'checkbox',
-				'label'         => __( 'Create Return Label: ', 'postnl-for-woocommerce' ),
-				'placeholder'   => '',
-				'description'   => '',
-				'container'     => true,
-				'value'         => $this->settings->get_return_address_default(),
-			),
-			array(
+			)
+			
+		);
+
+		if('in_box' == $this->settings->get_return_shipment_and_labels()){
+			$fields[] = array(
+					'id'            => $this->prefix . 'create_return_label',
+					'type'          => 'checkbox',
+					'label'         => __( 'Create Return Label: ', 'postnl-for-woocommerce' ),
+					'placeholder'   => '',
+					'description'   => '',
+					'container'     => true,
+					'value'         => $this->settings->get_return_address_default(),
+				);
+		}
+				
+		if('A6' !== $this->settings->get_label_format()){
+			$fields[] = array(
 				'id'            => $this->prefix . 'position_printing_labels',
 				'type'          => 'select',
 				'label'         => __( 'Start position printing label: ', 'postnl-for-woocommerce' ),
@@ -430,8 +439,11 @@ class Bulk extends Base {
 					'bottom-left'  => __( 'Bottom Left', 'postnl-for-woocommerce' ),
 					'bottom-right' => __( 'Bottom Right', 'postnl-for-woocommerce' ),
 				),
-			),
-		);
+			);
+		}
+
+		return $fields;
+		
 	}
 
 	/**
@@ -630,6 +642,7 @@ class Bulk extends Base {
 				}
 			}
 			$result['labels_data'] = $this->save_meta_value( $order_id, $post_data );
+
 			$tracking_note         = $this->get_tracking_note( $order_id );
 			$customer_note         = false;
 
@@ -638,10 +651,10 @@ class Bulk extends Base {
 			}
 
 			$order->add_order_note( $tracking_note, $customer_note );
-
+			$label_link = esc_url( $this->get_download_label_url( $order_id ) ); 
 			$result['message'] = array(
-				'message' => sprintf( esc_html__( '#%1$s : PostNL label has been created.', 'postnl-for-woocommerce' ),
-					$order_id ),
+				'message' => sprintf( esc_html__( '#%1$s : PostNL label has been created - %2$sdownload file%3$s', 'postnl-for-woocommerce' ),
+					$order_id, '<a href="' . $label_link . '" download>', '</a>' ),
 				'type'    => 'success',
 			);
 		} catch ( \Exception $e ) {

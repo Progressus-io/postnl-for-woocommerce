@@ -153,16 +153,30 @@ class Settings extends \WC_Settings_API {
 			'return_settings_title'          => array(
 				'title'       => esc_html__( 'Return Settings', 'postnl-for-woocommerce' ),
 				'type'        => 'title',
-				'description' => esc_html__( 'Please insert your return credentials.', 'postnl-for-woocommerce' ),
+				'description' => esc_html__( 'If you have a reply number, only fill in the Zip code, City and Return code. If you want to return your shipments to a home address, also provide the address line (Street, Housenumber and HouseNrExt) of your return address.', 'postnl-for-woocommerce' ),
 			),
-			'return_address_default'         => array(
-				'title'       => esc_html__( 'Always print returnlabel together with shipping label', 'postnl-for-woocommerce' ),
+			'return_shipment_and_labels' => array(
+				'title'       => esc_html__( 'Shipment & Return labels ', 'postnl-for-woocommerce' ),
+				'type'        => 'select',
+				'description' => esc_html__( 'Choose between using Shipment & Return labels or Label in the Box. The return function of the Shipment & Return label can only be used for the first 7 days after creation. If a customer wants to return a parcel with a Shipment & Return label after 7 days you can send them a Smart Return barcode.', 'postnl-for-woocommerce' ),
+				'options'     => array(
+					'none'            => esc_html__( 'None', 'postnl-for-woocommerce' ),
+					'shipping_return' => esc_html__( 'Shipping & Return Label', 'postnl-for-woocommerce' ),
+					'in_box'          => esc_html__( 'In the box', 'postnl-for-woocommerce' ),
+				),
+				'for_country' => array('NL'),
+			),
+			'return_shipment_and_labels_all' => array(
+				'title'       => esc_html__( 'Shipping & Return for all labels', 'postnl-for-woocommerce' ),
 				'type'        => 'checkbox',
-				'description' => esc_html__( 'With this setting enabled, the return-label of a shipment will automatically be downloaded and printed when the shipping label created.', 'postnl-for-woocommerce' ),
-				'desc_tip'    => true,
-				'default'     => '',
 				'label'       => esc_html__( 'Enable', 'postnl-for-woocommerce' ),
-				'placeholder' => '',
+				'description' => esc_html__( 'Tick this box if you want all labels to be activated for returning immediately. If you do not tick this box the return function can be activated on an order-by-order basis.', 'postnl-for-woocommerce' ),
+				'for_country' => array('NL'),
+			),
+			'return_address_or_reply_no' => array(
+				'title'       => esc_html__( 'Return to home address', 'postnl-for-woocommerce' ),
+				'type'        => 'checkbox',
+				'label'       => esc_html__( 'Street and house number', 'postnl-for-woocommerce' ),
 			),
 			'return_replynumber'             => array(
 				'title'       => esc_html__( 'Replynumber', 'postnl-for-woocommerce' ),
@@ -173,23 +187,26 @@ class Settings extends \WC_Settings_API {
 				'for_country' => array( 'NL' ),
 				'class'       => 'country-nl',
 			),
-			'return_address'                 => array(
+			'return_address_street'            => array(
 				'title'       => esc_html__( 'Street Address', 'postnl-for-woocommerce' ),
 				'type'        => 'text',
 				'description' => esc_html__( 'Enter Return Street Address.', 'postnl-for-woocommerce' ),
 				'desc_tip'    => true,
 				'default'     => '',
-				'for_country' => array( 'BE' ),
-				'class'       => 'country-be',
 			),
-			'return_address_no'              => array(
+			'return_address_house_no'         => array(
 				'title'       => esc_html__( 'House Number', 'postnl-for-woocommerce' ),
 				'type'        => 'text',
 				'description' => esc_html__( 'Enter return house number.', 'postnl-for-woocommerce' ),
 				'desc_tip'    => true,
 				'default'     => '',
-				'for_country' => array( 'BE' ),
-				'class'       => 'country-be',
+			),
+			'return_address_house_noext'         => array(
+				'title'       => esc_html__( 'House Number Extension', 'postnl-for-woocommerce' ),
+				'type'        => 'text',
+				'description' => esc_html__( 'Enter return house number extension.', 'postnl-for-woocommerce' ),
+				'desc_tip'    => true,
+				'default'     => '',
 			),
 			'return_address_zip'             => array(
 				'title'       => esc_html__( 'Zipcode', 'postnl-for-woocommerce' ),
@@ -212,7 +229,6 @@ class Settings extends \WC_Settings_API {
 				'desc_tip'    => true,
 				'default'     => '',
 			),
-
 			// Delivery Options Settings.
 			'delivery_options_title'         => array(
 				'title'       => esc_html__( 'Checkout Settings', 'postnl-for-woocommerce' ),
@@ -432,7 +448,30 @@ class Settings extends \WC_Settings_API {
 				'type'        => 'title',
 				'description' => esc_html__( 'Please configure your printer and email preferences.', 'postnl-for-woocommerce' ),
 			),
-			'label_format'                   => array(
+			'printer_type'     => array(
+				'title'        => esc_html__( 'Printer Type', 'postnl-for-woocommerce' ),
+				'type'         => 'select',
+				'description'  => esc_html__( 'It is not recommended to send .pdf files/labels directly to a Zebra printer If you want to send it directly to your Zebra printer, please use .gif files or the native (generic) zpl printer type', 'postnl-for-woocommerce' ),
+				'desc_tip'     => true,
+				'default'      => 'PDF',
+				'options'      => array(
+					'PDF' => 'PDF',
+					'GIF' => 'GIF',
+					'JPG' => 'JPG',
+					'ZPL' => 'ZPL',
+				),
+			),
+			'printer_type_resolution' => array(
+				'title'       => esc_html__( 'DPI', 'postnl-for-woocommerce' ),
+				'type'        => 'select',
+				'default'     => '600',
+				'options'     => array(
+					'600' => '600',
+					'300' => '300',
+					'200' => '200',
+				),
+			),
+			'label_format'              => array(
 				'title'       => esc_html__( 'Label Format', 'postnl-for-woocommerce' ),
 				'type'        => 'select',
 				'description' => esc_html__( 'Use A6 format in case you use a labelprinter. Use A4 format for other regular printers.', 'postnl-for-woocommerce' ),
@@ -732,6 +771,18 @@ class Settings extends \WC_Settings_API {
 	}
 
 	/**
+	 * Get value of the return address or reply number.
+	 *
+	 * @return bool
+	 */
+	public function get_return_address_or_reply_no() {
+		if ( 'yes' === $this->get_country_option( 'return_address_or_reply_no', '' ) ) {
+			return true;
+		}
+		return false;
+	}
+
+	/**
 	 * Get return reply number from the settings.
 	 *
 	 * @return String
@@ -741,21 +792,30 @@ class Settings extends \WC_Settings_API {
 	}
 
 	/**
-	 * Get return address from the settings.
+	 * Get return street address from the settings.
 	 *
 	 * @return String
 	 */
-	public function get_return_address() {
-		return $this->get_country_option( 'return_address', '' );
+	public function get_return_address_street() {
+		return $this->get_country_option( 'return_address_street', '' );
 	}
 
 	/**
-	 * Get return address from the settings.
+	 * Get return house number address from the settings.
 	 *
 	 * @return String
 	 */
-	public function get_return_streetnumber() {
-		return $this->get_country_option( 'return_address_no', '' );
+	public function get_return_address_house_no() {
+		return $this->get_country_option( 'return_address_house_no', '' );
+	}
+
+	/**
+	 * Get return house number extension address from the settings.
+	 *
+	 * @return String
+	 */
+	public function get_return_address_house_noext() {
+		return $this->get_country_option( 'return_address_house_noext', '' );
 	}
 
 	/**
@@ -810,6 +870,24 @@ class Settings extends \WC_Settings_API {
 	 */
 	public function get_return_customer_code() {
 		return $this->get_country_option( 'return_customer_code', '' );
+	}
+
+	/**
+	 * Get return shipment and labels select value.
+	 *
+	 * @return String
+	 */
+	public function get_return_shipment_and_labels() {
+		return $this->get_country_option( 'return_shipment_and_labels', '' );
+	}
+
+	/**
+	 * Get value of the return shipment and labels all checkbox.
+	 *
+	 * @return String
+	 */
+	public function get_return_shipment_and_labels_all() {
+		return $this->get_country_option( 'return_shipment_and_labels_all', '' );
 	}
 
 	/**
@@ -1201,6 +1279,26 @@ class Settings extends \WC_Settings_API {
 		return $this->get_country_option( 'label_format', '' );
 	}
 
+	/**
+	 * Get printer type from the settings.
+	 *
+	 * @return String
+	 */
+	public function get_printer_type() {
+		$printer_type = $this->get_country_option( 'printer_type', '' );
+		$resolution   = (int) $this->get_country_option( 'printer_type_resolution', '' );
+		switch ( $printer_type ) {
+			case 'PDF':
+				return 'GraphicFile|PDF';
+			case 'JPG':
+				return sprintf( "GraphicFile|JPG %d dpi", $resolution );
+			case 'GIF':
+				return sprintf( "GraphicFile|GIF %d dpi", $resolution );
+			case 'ZPL':
+				return sprintf( "Zebra|Generic ZPL II %d dpi", $resolution );
+		}
+	}
+	
 	/**
 	 * Get ask position A4 from the settings.
 	 *

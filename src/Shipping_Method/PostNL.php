@@ -51,6 +51,7 @@ class PostNL extends \WC_Shipping_Flat_Rate {
 
 		add_filter( 'woocommerce_shipping_instance_form_fields_' . $this->id, array( $this, 'instance_form_fields' ), 10, 1 );
 		add_action( 'woocommerce_update_options_shipping_' . $this->id, array( $this, 'process_admin_options' ) );
+		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_shipping_method_assets' ) );
 	}
 
 	/**
@@ -90,10 +91,10 @@ class PostNL extends \WC_Shipping_Flat_Rate {
 		$currency_symbol =  get_woocommerce_currency_symbol();
 
 		$form_fields['minimum_for_free_shipping'] = array(
-			'title' 		=> sprintf( esc_html__( 'Free shipping from %s', 'postnl-for-woocommerce' ), $currency_symbol ),
-			'type' 			=> 'number',
-			'desc_tip'      => esc_html__( 'Keep empty if you don’t want to use Free shipping', 'postnl-for-woocommerce' ),
-			'default' 		=> 0,
+			'title'    => sprintf( esc_html__( 'Free shipping from %s', 'postnl-for-woocommerce' ), $currency_symbol ),
+			'type'     => 'number',
+			'desc_tip' => esc_html__( 'Keep empty if you don’t want to use Free shipping', 'postnl-for-woocommerce' ),
+			'default'  => 0,
 		);
 
 		return $form_fields;
@@ -117,5 +118,21 @@ class PostNL extends \WC_Shipping_Flat_Rate {
 		}
 
 		$this->form_fields = $form_fields;
+	}
+
+	/**
+	 * Enqueue js file in shipping method settings page.
+	 */
+	public function enqueue_shipping_method_assets() {
+		$screen = get_current_screen();
+		if ( ! empty( $screen->id ) && 'woocommerce_page_wc-settings' === $screen->id && ! empty( $_GET['section'] ) && POSTNL_SETTINGS_ID === wp_unslash( $_GET['section'] ) ) {
+			wp_enqueue_script(
+				'postnl-admin-settings',
+				POSTNL_WC_PLUGIN_DIR_URL . '/assets/js/admin-settings.js',
+				array( 'jquery' ),
+				POSTNL_WC_VERSION,
+				true
+			);
+		}
 	}
 }

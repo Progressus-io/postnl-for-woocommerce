@@ -140,7 +140,6 @@ class Single extends Base {
 		$from_country            = Utils::get_base_country();
 		$to_country              = $order->get_shipping_country();
 		$destination             = Utils::get_shipping_zone( $to_country );
-		$default_option_keys     = array_keys( $this->settings->get_default_shipping_options($order) );
 
 		foreach ( $meta_fields as $index => $field ) {
 			$field_name = Utils::remove_prefix_field( $this->prefix, $field['id'] );

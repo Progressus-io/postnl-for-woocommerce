@@ -148,7 +148,7 @@ abstract class Base {
 	 */
 	public function meta_box_fields( $order = false ) {
 
-		$default_options = $this->settings->get_default_shipping_options( $order );
+		$default_options = $this->get_shipping_options( $order );
 		$fields = array(
 			array(
 				'id'            => $this->prefix . 'id_check',

@@ -744,7 +744,8 @@ class Utils {
 
 			// If one of the item is not letterbox product, then the order is not eligible automatic letterbox.
 			// Thus should return false immediately.
-			if ( 'yes' !== $is_letterbox_product ) {
+			$is_digital = $product->is_virtual() || $product->is_downloadable();
+			if ( 'yes' !== $is_letterbox_product && !$is_digital ) {
 				return false;
 			}
 

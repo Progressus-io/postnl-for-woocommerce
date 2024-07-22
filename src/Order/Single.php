@@ -142,6 +142,10 @@ class Single extends Base {
 		$destination             = Utils::get_shipping_zone( $to_country );
 
 		foreach ( $meta_fields as $index => $field ) {
+			if ( isset( $field['nonce'] ) && true === $field['nonce'] ) {
+				continue;
+			}
+
 			$field_name = Utils::remove_prefix_field( $this->prefix, $field['id'] );
 
 			if ( ! empty( $order_data['frontend'][ $field_name ] ) ) {
@@ -152,7 +156,7 @@ class Single extends Base {
 				if ( $this->have_label_file( $order ) ) {
 					$meta_fields[ $index ]['custom_attributes']['disabled'] = 'disabled';
 				}
-				$meta_fields[ $index ]['value']                         = $order_data['backend'][ $field_name ];
+				$meta_fields[ $index ]['value'] = $order_data['backend'][ $field_name ];
 			}
 
 			if ( isset( $option_map[ $from_country ][ $destination ] ) ) {

@@ -176,7 +176,7 @@ class Settings extends \WC_Settings_API {
 			'return_address_or_reply_no' => array(
 				'title'       => esc_html__( 'Return to home address', 'postnl-for-woocommerce' ),
 				'type'        => 'checkbox',
-				'label'       => esc_html__( 'Street and house number', 'postnl-for-woocommerce' ),
+				'label'       => esc_html__( 'Activate', 'postnl-for-woocommerce' ),
 			),
 			'return_replynumber'             => array(
 				'title'       => esc_html__( 'Replynumber', 'postnl-for-woocommerce' ),

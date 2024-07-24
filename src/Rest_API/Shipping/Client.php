@@ -244,6 +244,7 @@ class Client extends Base {
 				'CompanyName' => $this->item_info->customer['return_company'],
 				'Countrycode' => $this->item_info->shipper['country'],
 				'HouseNr'     => $this->item_info->customer['return_address_2'],
+				'HouseNrExt'  => '',
 				'Street'      => $this->item_info->customer['return_address_1'],
 				'Zipcode'     => $this->item_info->customer['return_address_zip'],
 			);

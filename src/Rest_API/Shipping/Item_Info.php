@@ -360,7 +360,7 @@ class Item_Info extends Base_Info {
 				'default'  => '',
 				'sanitize' => function( $value ) use ( $self ) {
 					if ( 'NL' === $self->api_args['store_address']['country'] ) {
-						return 'Antwoordnummer';
+						return ($self->api_args['settings']['return_address_or_reply_no'] || $this->get_product_code() == '2928')?$self->api_args['settings']['return_address_street']:'Antwoordnummer';
 					}
 
 					return $self->string_length_sanitization( $value, 95 );
@@ -370,7 +370,7 @@ class Item_Info extends Base_Info {
 				'default'  => '',
 				'sanitize' => function( $value ) use ( $self ) {
 					if ( 'NL' === $self->api_args['store_address']['country'] ) {
-						$value = $self->api_args['settings']['return_replynumber'];
+						$value = ($self->api_args['settings']['return_address_or_reply_no'] || $this->get_product_code() == '2928')?$self->api_args['settings']['return_address_house_no']:$self->api_args['settings']['return_replynumber'];
 					}
 
 					return $self->string_length_sanitization( $value, 35 );
@@ -441,7 +441,7 @@ class Item_Info extends Base_Info {
 					if($this->settings->get_return_shipment_and_labels_all() == 'no' && $this->settings->get_return_shipment_and_labels() == 'shipping_return'){
 						return array(
 							'characteristic' => '191',
-							'option'         => '400',
+							'option'         => '004',
 						);	
 					}
 					if($this->settings->get_return_shipment_and_labels() == 'in_box'){
@@ -457,7 +457,7 @@ class Item_Info extends Base_Info {
 				},
 			),
 			'printer_type'    => array(
-				'default'  => $this->settings->get_printer_type(),
+				'default'  => $this->get_product_code() == '4909' ? 'GraphicFile|PDF':$this->settings->get_printer_type(),
 				'sanitize' => function( $value ) use ( $self ) {
 					return sanitize_text_field( $value );
 				},

@@ -66,6 +66,7 @@ class Item_Info extends Base_Info {
 			'CustomerNumber' => $this->settings->get_customer_num(),
 			'CustomerCode'   => $this->settings->get_customer_code(),
 			'Barcode'        => $this->get_barcode(),
+			'ReturnBarcode'  => $this->get_barcode(),
 		);
 	}
 

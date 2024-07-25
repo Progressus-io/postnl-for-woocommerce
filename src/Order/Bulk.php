@@ -241,7 +241,12 @@ class Bulk extends Base {
 				'type'    => 'success',
 			);
 		}
-
+		if ( 'A6' === $label_format ){
+			return array(
+				'message' => esc_html__( 'Could not create bulk PostNL label file while label format is set to A6, download individually.', 'postnl-for-woocommerce' ),
+				'type'    => 'error',
+			);
+		}
 		return array(
 			'message' => esc_html__( 'Could not create bulk PostNL label file, download individually.', 'postnl-for-woocommerce' ),
 			'type'    => 'error',
@@ -413,7 +418,7 @@ class Bulk extends Base {
 			
 		);
 
-		if('in_box' == $this->settings->get_return_shipment_and_labels()){
+		// if('in_box' == $this->settings->get_return_shipment_and_labels()){
 			$fields[] = array(
 					'id'            => $this->prefix . 'create_return_label',
 					'type'          => 'checkbox',
@@ -423,7 +428,7 @@ class Bulk extends Base {
 					'container'     => true,
 					'value'         => $this->settings->get_return_address_default(),
 				);
-		}
+		// }
 				
 		if('A6' !== $this->settings->get_label_format()){
 			$fields[] = array(

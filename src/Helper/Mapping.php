@@ -504,7 +504,7 @@ class Mapping {
 				// Return label is added here since smart return is not implemented yet.
 				// If smart return is implemented, we might need to remove return-label from this list.
 				'NL'  => array( 'label', 'return-label', 'buspakjeextra', 'printcodelabel' ),
-				'BE'  => array( 'label' ),
+				'BE'  => array( 'label', 'return-label' ),
 				'EU'  => array( 'label' ),
 				'ROW' => array( 'cn23', 'cp71', 'label', 'commercialinvoice' ),
 			),

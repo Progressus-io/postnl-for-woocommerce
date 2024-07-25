@@ -42,6 +42,7 @@ class Client extends Base {
 			'CustomerNumber' => $this->item_info->body['CustomerNumber'],
 			'CustomerCode'   => $this->item_info->body['CustomerCode'],
 			'Barcode'        => $this->item_info->body['Barcode'],
+			'ReturnBarcode'  => $this->item_info->body['Barcode'],
 		);
 	}
 

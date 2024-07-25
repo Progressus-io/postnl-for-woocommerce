@@ -77,7 +77,7 @@ class Client extends Base {
 				'Dimension'           => array(
 					'Weight' => $this->item_info->order_weight,
 				),
-				'ProductCodeDelivery' => '3285',
+				'ProductCodeDelivery' => $this->settings->get_return_address_or_reply_no()?'3285':'2285',
 				'ProductOptions'      => array(
 					'Characteristic'  => '152',
 					'Option'          => '025',

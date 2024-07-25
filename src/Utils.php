@@ -739,13 +739,17 @@ class Utils {
 				// If the product is not found, consider the order not eligible.
 				return false;
 			}
+			
+			$is_digital = $product->is_virtual() || $product->is_downloadable();
+			if( !$is_digital ) {
+				return false;
+			}
 
 			$is_letterbox_product = $product->get_meta( Product\Single::LETTERBOX_PARCEL );
 
 			// If one of the item is not letterbox product, then the order is not eligible automatic letterbox.
 			// Thus should return false immediately.
-			$is_digital = $product->is_virtual() || $product->is_downloadable();
-			if ( 'yes' !== $is_letterbox_product && !$is_digital ) {
+			if ( 'yes' !== $is_letterbox_product ) {
 				return false;
 			}
 

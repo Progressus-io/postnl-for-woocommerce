@@ -732,17 +732,17 @@ class Utils {
 	 */
 	public static function check_products_for_letterbox( $products ) {
 		$total_ratio_letterbox_item = 0;
-
+		$has_letterbox_product = false;
 		foreach ( $products as $item_id => $item ) {
 			$product              = wc_get_product( $item['product_id'] ?? $item->get_product_id() );
 			if ( ! is_a( $product, 'WC_Product' ) ) {
 				// If the product is not found, consider the order not eligible.
 				return false;
 			}
-			
+
 			$is_digital = $product->is_virtual() || $product->is_downloadable();
-			if( !$is_digital ) {
-				return false;
+			if( $is_digital ) {
+				continue;
 			}
 
 			$is_letterbox_product = $product->get_meta( Product\Single::LETTERBOX_PARCEL );
@@ -753,6 +753,7 @@ class Utils {
 				return false;
 			}
 
+			$has_letterbox_product 		= true;
 			$quantity                   = $item['quantity'] ?? $item->get_quantity();
 			$qty_per_letterbox          = intval( $product->get_meta( Product\Single::MAX_QTY_PER_LETTERBOX ) );
 			$ratio_letterbox_item       = 0 != $qty_per_letterbox ? 1 / $qty_per_letterbox : 0;
@@ -760,7 +761,7 @@ class Utils {
 		}
 
 		// If the total ratio is more than 1, that means order items cannot be packed using letterbox.
-		return ( $total_ratio_letterbox_item <= 1 ) ? true : false;
+		return ( $total_ratio_letterbox_item <= 1 && $has_letterbox_product) ? true : false;
 	}
 
 	/**

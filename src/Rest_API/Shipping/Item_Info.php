@@ -995,12 +995,17 @@ class Item_Info extends Base_Info {
 	 * @return array.
 	 */
 	public function get_return_options() {
+		$shipment_return_type = $this->settings->get_return_shipment_and_labels();
+
+		if ( 'none' === $shipment_return_type ) {
+			return array();
+		}
+
+		$return_all_labels    = 'yes' === $this->settings->get_return_shipment_and_labels_all();
 		$return_label_options = Mapping::shipping_return_labels_options();
 		$from_country         = $this->api_args['store_address']['country'];
 		$to_country           = $this->api_args['shipping_address']['country'];
 		$destination          = Utils::get_shipping_zone( $to_country );
-		$return_all_labels    = 'yes' === $this->settings->get_return_shipment_and_labels_all();
-		$shipment_return_type = $this->settings->get_return_shipment_and_labels();
 
 		if ( ! $return_all_labels && 'shipping_return' === $shipment_return_type ) {
 			$shipment_return_type = 'return_all_labels_not_active';

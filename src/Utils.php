@@ -742,7 +742,7 @@ class Utils {
 			
 			$is_digital = $product->is_virtual() || $product->is_downloadable();
 			if( !$is_digital ) {
-				return false;
+				continue;
 			}
 
 			$is_letterbox_product = $product->get_meta( Product\Single::LETTERBOX_PARCEL );

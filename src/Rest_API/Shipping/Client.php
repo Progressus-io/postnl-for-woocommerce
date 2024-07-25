@@ -7,6 +7,7 @@
 
 namespace PostNLWooCommerce\Rest_API\Shipping;
 
+use PostNLWooCommerce\Helper\Mapping;
 use PostNLWooCommerce\Rest_API\Base;
 use PostNLWooCommerce\Utils;
 
@@ -129,6 +130,45 @@ class Client extends Base {
 		
 			}
 		}
+
+		// Add return options
+		if ( ! empty( $this->item_info->shipment['return_options'] ) ) {
+			$shipment['ProductOptions'] = $shipment['ProductOptions'] ?? array();
+
+			foreach ( $this->item_info->shipment['return_options'] as $option ) {
+				$shipment['ProductOptions'][] = array(
+					'Characteristic' => $option['characteristic'],
+					'Option'         => $option['option'],
+				);
+			}
+		}
+
+		/*if ( isset( $return_label_options[][] ) ) {
+			$return_all_labels    = 'yes' === $this->settings->get_return_shipment_and_labels_all();
+			$shipment_return_type = $this->settings->get_return_shipment_and_labels();
+		}
+
+
+		if ( $return_all_labels && 'shipping_return' === $shipment_return_type ) {
+			$shipment['ProductOptions'][] = array(
+				'characteristic' => '152',
+				'option'         => '026',
+			);
+		}
+
+		if ( ! $return_all_labels && 'shipping_return' === $shipment_return_type ) {
+			$shipment['ProductOptions'][] = array(
+				'characteristic' => '191',
+				'option'         => '004',
+			);
+		}
+
+		if ( 'in_box' === $shipment_return_type ) {
+			$shipment['ProductOptions'][] = array(
+				'characteristic' => '152',
+				'option'         => '028',
+			);
+		}*/
 
 		if ( ! empty( $this->item_info->shipment['return_barcode'] ) ) {
 			$shipment['ReturnBarcode'] = $this->item_info->shipment['return_barcode'];

@@ -53,6 +53,10 @@
                 jQuery('#woocommerce_postnl_return_shipment_and_labels_all').closest('tr').hide();
                 jQuery('#woocommerce_postnl_return_address_default').closest('tr').show();               
             }
+
+            if( 'none' === value ){
+                jQuery('#woocommerce_postnl_return_address_default').closest('tr').hide();               
+            }
         },
 
 

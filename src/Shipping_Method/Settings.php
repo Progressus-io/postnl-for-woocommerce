@@ -155,6 +155,15 @@ class Settings extends \WC_Settings_API {
 				'type'        => 'title',
 				'description' => esc_html__( 'If you have a reply number, only fill in the Zip code, City and Return code. If you want to return your shipments to a home address, also provide the address line (Street, Housenumber and HouseNrExt) of your return address.', 'postnl-for-woocommerce' ),
 			),
+			'return_address_default'         => array(
+				'title'       => esc_html__( 'Always print returnlabel together with shipping label', 'postnl-for-woocommerce' ),
+				'type'        => 'checkbox',
+				'description' => esc_html__( 'With this setting enabled, the return-label of a shipment will automatically be downloaded and printed when the shipping label created.', 'postnl-for-woocommerce' ),
+				'desc_tip'    => true,
+				'default'     => '',
+				'label'       => esc_html__( 'Enable', 'postnl-for-woocommerce' ),
+				'placeholder' => '',
+			),
 			'return_shipment_and_labels' => array(
 				'title'       => esc_html__( 'Shipment & Return labels ', 'postnl-for-woocommerce' ),
 				'type'        => 'select',

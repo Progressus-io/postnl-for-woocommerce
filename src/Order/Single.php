@@ -62,6 +62,16 @@ class Single extends Base {
 			return;
 		}
 
+		if ( ! empty( $screen->id ) && 'woocommerce_page_wc-settings' === $screen->id && ! empty( $_GET['section'] ) && POSTNL_SETTINGS_ID === wp_unslash( $_GET['section'] ) ) {
+			wp_enqueue_script(
+				'postnl-admin-settings',
+				POSTNL_WC_PLUGIN_DIR_URL . '/assets/js/admin-settings.js',
+				array( 'jquery' ),
+				POSTNL_WC_VERSION,
+				true
+			);
+		}
+		
 		if ( ( 'shop_order' === $screen->id && 'post' === $screen->base ) || 'woocommerce_page_wc-orders' === $screen->id ) {
 			wp_enqueue_style( 'postnl-admin-order-single', POSTNL_WC_PLUGIN_DIR_URL . '/assets/css/admin-order-single.css', array(), POSTNL_WC_VERSION );
 

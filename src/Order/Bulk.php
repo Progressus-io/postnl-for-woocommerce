@@ -418,16 +418,16 @@ class Bulk extends Base {
 			
 		);
 
-		if('in_box' == $this->settings->get_return_shipment_and_labels()){
+		if ( 'in_box' == $this->settings->get_return_shipment_and_labels() ) {
 			$fields[] = array(
-					'id'            => $this->prefix . 'create_return_label',
-					'type'          => 'checkbox',
-					'label'         => __( 'Create Return Label: ', 'postnl-for-woocommerce' ),
-					'placeholder'   => '',
-					'description'   => '',
-					'container'     => true,
-					'value'         => $this->settings->get_return_address_default(),
-				);
+				'id'          => $this->prefix . 'create_return_label',
+				'type'        => 'checkbox',
+				'label'       => __( 'Create Return Label: ', 'postnl-for-woocommerce' ),
+				'placeholder' => '',
+				'description' => '',
+				'container'   => true,
+				'value'       => $this->settings->get_return_address_default(),
+			);
 		}
 				
 		if('A6' !== $this->settings->get_label_format()){

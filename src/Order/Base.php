@@ -38,37 +38,45 @@ abstract class Base {
 	/**
 	 * Nonce key for ajax call.
 	 *
-	 * @var nonce_key
+	 * @var string nonce_key.
 	 */
 	protected $nonce_key = 'create-postnl-label';
 
 	/**
 	 * Current service.
 	 *
-	 * @var service
+	 * @var string service.
 	 */
 	protected $service = POSTNL_SERVICE_NAME;
 
 	/**
 	 * Prefix for meta box fields.
 	 *
-	 * @var prefix
+	 * @var string prefix.
 	 */
 	protected $prefix = POSTNL_SETTINGS_ID . '_';
 
 	/**
 	 * Meta name for saved fields.
 	 *
-	 * @var meta_name
+	 * @var string.
 	 */
 	protected $meta_name;
+
+	/**
+	 * Is return activated flag meta name.
+	 *
+	 * @var string.
+	 */
+	protected $is_return_activated_meta;
 
 	/**
 	 * Init and hook in the integration.
 	 */
 	public function __construct() {
-		$this->settings  = Settings::get_instance();
-		$this->meta_name = '_' . $this->prefix . 'order_metadata';
+		$this->settings                 = Settings::get_instance();
+		$this->meta_name                = '_' . $this->prefix . 'order_metadata';
+		$this->is_return_activated_meta = '_' . $this->prefix . 'return_activated';
 		$this->init_hooks();
 	}
 
@@ -1411,11 +1419,28 @@ abstract class Base {
 	 *
 	 * @param  \WC_Order  $order  current order object.
 	 *
-	 * @return booleanCancel
+	 * @return boolean.
 	 */
 	public function have_label_file( $order ) {
 		$order_data = $order->get_meta( $this->meta_name );
 
 		return ! empty( $order_data['labels']['label']['filepath'] );
+	}
+
+	/**
+	 * Check if the return function is activated for the order.
+	 *
+	 * @param int|\WC_Order $order.
+	 *
+	 * @return bool
+	 */
+	public function is_return_function_activated( $order ) {
+		$order = ( $order instanceof \WC_Order ) ? $order : wc_get_order( $order );
+
+		if ( ! $order instanceof \WC_Order ) {
+			return false;
+		}
+
+		return 'yes' === $order->get_meta( $this->is_return_activated_meta );
 	}
 }

@@ -353,13 +353,12 @@ class Single extends Base {
 	 * Adds an 'Activate return function' button.
 	 */
 	public function activate_return_function_html( $order ) {
-		$check_for_barcode = empty( $this->get_backend_data( $order->get_ID() ) );
 		if ( 'shipping_return' === $this->settings->get_return_shipment_and_labels() && $this->settings->get_return_shipment_and_labels_all() == 'no' ) {
 			?>
 			<hr id="postnl_break_2">
 			<p class="form-field">
 				<?php wp_nonce_field( 'postnl_activate_return_function', 'activate_return_function_nonce' ); ?>
-				<button type="button" class="button button-activate-return" <?php //disabled( $check_for_barcode ); ?>><?php esc_html_e( 'Activate return function', 'postnl-for-woocommerce' ); ?></button>
+				<button type="button" class="button button-activate-return" <?php disabled( $this->is_return_function_activated( $order ) ); ?>><?php esc_html_e( 'Activate return function', 'postnl-for-woocommerce' ); ?></button>
 				<div class="postnl-info">
 					<?php esc_html_e( 'Click here to activate the return function of this label', 'postnl-for-woocommerce' ); ?>
 				</div>
@@ -610,11 +609,25 @@ class Single extends Base {
 			}
 
 			$order_id = ! empty( $_REQUEST['order_id'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['order_id'] ) ) : 0;
+
+			// Check if order id is really an ID from shop_order post type.
+			$order = wc_get_order( $order_id );
+			if ( ! is_a( $order, 'WC_Order' ) ) {
+				throw new \Exception( esc_html__( 'Order does not exist!', 'postnl-for-woocommerce' ) );
+			}
+
+            if ( $this->is_return_function_activated( $order ) ) {
+	            throw new \Exception( esc_html__( 'Already activated!', 'postnl-for-woocommerce' ) );
+            }
+
 			$item_info = new Item_Info( $order_id );
 			$api_call  = new Client( $item_info );
 			$response  = $api_call->send_request();
 
 			if ( empty( $response ) ) {
+				$order->update_meta_data( $this->is_return_activated_meta, 'yes' );
+				$order->save_meta_data();
+
 				wp_send_json_success();
 			} else {
 				wp_send_json_error();

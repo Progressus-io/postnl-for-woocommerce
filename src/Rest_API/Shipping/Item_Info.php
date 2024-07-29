@@ -290,6 +290,7 @@ class Item_Info extends Base_Info {
 	public function set_order_shipping_product() {
 		$this->api_args['order_details']['shipping_product'] = $this->get_shipping_product();
 		$this->api_args['order_details']['product_options']  = $this->get_product_options();
+		$this->api_args['order_details']['return_options']   = $this->get_return_options();
 	}
 
 	/**
@@ -432,33 +433,21 @@ class Item_Info extends Base_Info {
 					'option'         => '',
 				),
 				'sanitize' => function ( $value ) use ( $self ) {
-					if($this->settings->get_return_shipment_and_labels_all() == 'yes' && $this->settings->get_return_shipment_and_labels() == 'shipping_return'){
-						return array(
-							'characteristic' => '152',
-							'option'         => '026',
-						);
-					}
-					if($this->settings->get_return_shipment_and_labels_all() == 'no' && $this->settings->get_return_shipment_and_labels() == 'shipping_return'){
-						return array(
-							'characteristic' => '191',
-							'option'         => '004',
-						);	
-					}
-					if($this->settings->get_return_shipment_and_labels() == 'in_box'){
-						return array(
-							'characteristic' => '152',
-							'option'         => '028',
-						);	
-					}
 					return array(
 						'characteristic' => ! empty( $value['characteristic'] ) ? $self->string_length_sanitization( $value['characteristic'], 3 ) : '',
 						'option'         => ! empty( $value['option'] ) ? $self->string_length_sanitization( $value['option'], 3 ) : '',
 					);
 				},
 			),
+			'return_options' => array(
+				'default'  => array(),
+			),
 			'printer_type'    => array(
 				'default'  => $this->get_product_code() == '4909' ? 'GraphicFile|PDF':$this->settings->get_printer_type(),
 				'sanitize' => function( $value ) use ( $self ) {
+					if($this->get_product_code() == '4909'){
+						return 'GraphicFile|PDF';
+					}
 					return sanitize_text_field( $value );
 				},
 			),
@@ -930,7 +919,7 @@ class Item_Info extends Base_Info {
 	/**
 	 * Get product options from api args.
 	 *
-	 * @return String.
+	 * @return array.
 	 */
 	public function get_product_options() {
 		$option_map   = Mapping::additional_product_options();
@@ -1001,6 +990,40 @@ class Item_Info extends Base_Info {
 				__( 'Insurance amount for EU shipments cannot exceed €5000. Your total is: ' . $order_total, 'postnl-for-woocommerce' )
 			);
 		}
+	}
+
+	/**
+	 * Get Shipping and Return options.
+	 *
+	 * @return array.
+	 */
+	public function get_return_options() {
+		$shipment_return_type = $this->settings->get_return_shipment_and_labels();
+
+		if ( 'none' === $shipment_return_type ) {
+			return array();
+		}
+
+		$return_all_labels    = 'yes' === $this->settings->get_return_shipment_and_labels_all();
+		$return_label_options = Mapping::shipping_return_labels_options();
+		$from_country         = $this->api_args['store_address']['country'];
+		$to_country           = $this->api_args['shipping_address']['country'];
+		$destination          = Utils::get_shipping_zone( $to_country );
+
+		if ( ! $return_all_labels && 'shipping_return' === $shipment_return_type ) {
+			$shipment_return_type = 'return_all_labels_not_active';
+		}
+
+		if ( empty( $return_label_options[ $from_country ][ $destination ] ) || ! isset( $return_label_options[ $from_country ][ $destination ][ $shipment_return_type ] ) ) {
+			return array();
+		}
+
+		$allowed_products = $return_label_options[ $from_country ][ $destination ][ $shipment_return_type ]['products'];
+		if ( ! empty( $allowed_products ) && ! in_array( $this->api_args['order_details']['shipping_product']['code'], $allowed_products ) ) {
+			return array();
+		}
+
+		return $return_label_options[ $from_country ][ $destination ][ $shipment_return_type ]['options'] ?? array();
 	}
 
 }

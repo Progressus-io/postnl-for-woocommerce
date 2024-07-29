@@ -8,7 +8,6 @@
 namespace PostNLWooCommerce\Rest_API\Shipping;
 
 use PostNLWooCommerce\Rest_API\Base;
-use PostNLWooCommerce\Utils;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -127,6 +126,18 @@ class Client extends Base {
 					'Option'         => $option['option'],
 				);
 		
+			}
+		}
+
+		// Add return options
+		if ( ! empty( $this->item_info->shipment['return_options'] ) ) {
+			$shipment['ProductOptions'] = $shipment['ProductOptions'] ?? array();
+
+			foreach ( $this->item_info->shipment['return_options'] as $option ) {
+				$shipment['ProductOptions'][] = array(
+					'Characteristic' => $option['characteristic'],
+					'Option'         => $option['option'],
+				);
 			}
 		}
 

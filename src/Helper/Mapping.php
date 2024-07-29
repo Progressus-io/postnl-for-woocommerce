@@ -605,4 +605,60 @@ class Mapping {
 			)
 		);
 	}
+
+	/**
+	 * Shipment & Return labels options mapping.
+	 *
+	 * @return array[].
+	 */
+	public static function shipping_return_labels_options() {
+		return array(
+			'NL' => array(
+				'NL' => array(
+					'in_box'                       => array(
+						'products' => array(), // Empty mean it can be combined with all products.
+						'options'  => array(
+							array(
+								'characteristic' => '152',
+								'option'         => '028',
+							)
+						),
+					),
+					'shipping_return'              => array(
+						'products' => array( '3085', '3438', '3090', '3189', '3385', '3087', '3389', '3094', '3390', '3096', '3089', '3533', '3534', ),
+						'options'  => array(
+							array(
+								'characteristic' => '152',
+								'option'         => '026',
+							)
+						),
+					),
+					'return_all_labels_not_active' => array(
+						'products' => array( '3085', '3438', '3090', '3189', '3385', '3087', '3389', '3094', '3390', '3096', '3089', '3533', '3534', ),
+						'options'  => array(
+							array(
+								'characteristic' => '152',
+								'option'         => '026',
+							),
+							array(
+								'characteristic' => '191',
+								'option'         => '004',
+							)
+						),
+					),
+				),
+				'BE' => array(
+					'in_box' => array(
+						'products' => array( '4946', '4941', '4912', '4914', '4936', ),
+						'options'  => array(
+							array(
+								'characteristic' => '152',
+								'option'         => '028',
+							)
+						),
+					)
+				)
+			),
+		);
+	}
 }

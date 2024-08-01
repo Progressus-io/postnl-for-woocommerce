@@ -1009,21 +1009,26 @@ class Item_Info extends Base_Info {
 		$from_country         = $this->api_args['store_address']['country'];
 		$to_country           = $this->api_args['shipping_address']['country'];
 		$destination          = Utils::get_shipping_zone( $to_country );
+		$is_letterbox         = 'yes' === $this->api_args['backend_data']['letterbox'];
 
-		if ( ! $return_all_labels && 'shipping_return' === $shipment_return_type ) {
+		if ( ! $is_letterbox && ! $return_all_labels && 'shipping_return' === $shipment_return_type ) {
 			$shipment_return_type = 'return_all_labels_not_active';
 		}
 
-		if ( empty( $return_label_options[ $from_country ][ $destination ] ) || ! isset( $return_label_options[ $from_country ][ $destination ][ $shipment_return_type ] ) ) {
-			return array();
+		//Domestic Letterbox parcel (product code 2928) cannot be used in combination with Shipment and Return.
+		if ( $is_letterbox ) {
+			$shipment_return_type = 'in_box';
 		}
 
-		$allowed_products = $return_label_options[ $from_country ][ $destination ][ $shipment_return_type ]['products'];
-		if ( ! empty( $allowed_products ) && ! in_array( $this->api_args['order_details']['shipping_product']['code'], $allowed_products ) ) {
-			return array();
+		if ( isset( $return_label_options[ $from_country ][ $destination ][ $shipment_return_type ] ) ) {
+			$allowed_products = $return_label_options[ $from_country ][ $destination ][ $shipment_return_type ]['products'];
+			$is_allowed       = in_array( $this->api_args['order_details']['shipping_product']['code'], $allowed_products ) || empty( $allowed_products );
+			$options          = $return_label_options[ $from_country ][ $destination ][ $shipment_return_type ]['options'];
+
+			return $is_allowed ? $options : array();
 		}
 
-		return $return_label_options[ $from_country ][ $destination ][ $shipment_return_type ]['options'] ?? array();
+		return array();
 	}
 
 }

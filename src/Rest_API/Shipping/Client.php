@@ -129,7 +129,7 @@ class Client extends Base {
 			}
 		}
 
-		// Add return options
+		// Add return options.
 		if ( ! empty( $this->item_info->shipment['return_options'] ) ) {
 			$shipment['ProductOptions'] = $shipment['ProductOptions'] ?? array();
 

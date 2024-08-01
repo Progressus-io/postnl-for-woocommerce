@@ -5,10 +5,10 @@
 * Tags: PostNL, Shipping
 * Requires at least: 4.6
 * Requires PHP: 5.6
-* Tested up to: 6.5
+* Tested up to: 6.6
 * Stable tag: 5.4.2
 * WC requires at least: 4.0
-* WC tested up to: 9.0
+* WC tested up to: 9.1
 * License: GPLv2 or later
 * License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -38,8 +38,6 @@ PostNL’s official extension for WooCommerce on WordPress. Manage your national
 
 ### 5.5.0
 * Add: Compatibility with the new WooCommerce Product Editor.
-
-### 5.4.3
 * Fix: HPOS declaration path.
 
 ### 5.4.2

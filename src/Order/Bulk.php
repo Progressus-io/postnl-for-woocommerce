@@ -418,7 +418,7 @@ class Bulk extends Base {
 			
 		);
 
-		if ( 'in_box' == $this->settings->get_return_shipment_and_labels() ) {
+		if ( 'in_box' === $this->settings->get_return_shipment_and_labels() ) {
 			$fields[] = array(
 				'id'          => $this->prefix . 'create_return_label',
 				'type'        => 'checkbox',

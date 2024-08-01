@@ -314,7 +314,7 @@ abstract class Base {
 			),
 		);
 
-		if ( 'in_box' == $this->settings->get_return_shipment_and_labels() ) {
+		if ( 'in_box' === $this->settings->get_return_shipment_and_labels() || 'yes' === ( $default_options['letterbox'] ?? '' ) ) {
 			$fields[] = array(
 				'id'            => $this->prefix . 'create_return_label',
 				'type'          => 'checkbox',

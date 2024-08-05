@@ -499,8 +499,9 @@ abstract class Base {
 		$label_post_data['main_barcode'] = $barcodes[0]; // for MainBarcode.
 		$label_post_data['barcodes']     = $barcodes;
 
-		$label_post_data['return_barcode'] = $this->maybe_create_return_barcode( $label_post_data );
+		$label_post_data['return_barcode']          = $this->maybe_create_return_barcode( $label_post_data );
 		$label_post_data['shipment_return_barcode'] = $this->maybe_create_shipment_return_barcode( $label_post_data );
+		$label_post_data['is_return_activated']     = $this->is_return_function_activated( $order );
 
 		$labels = $this->create_label( $label_post_data );
 

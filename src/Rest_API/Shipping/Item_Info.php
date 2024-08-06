@@ -220,14 +220,15 @@ class Item_Info extends Base_Info {
 		);
 
 		$this->api_args['order_details'] = array(
-			'order_id'       => $order->get_id(),
-			'order_number'   => $order->get_order_number(),
-			'main_barcode'   => $post_data['main_barcode'],
-			'barcodes'       => $post_data['barcodes'],
-			'return_barcode' => $post_data['return_barcode'],
-			'currency'       => $order->get_currency(),
-			'total_weight'   => $order_weight,
-			'subtotal'       => $order->get_subtotal(),
+			'order_id'            => $order->get_id(),
+			'order_number'        => $order->get_order_number(),
+			'main_barcode'        => $post_data['main_barcode'],
+			'barcodes'            => $post_data['barcodes'],
+			'return_barcode'      => $post_data['return_barcode'],
+			'is_return_activated' => $post_data['is_return_activated'] ? 'yes' : 'no',
+			'currency'            => $order->get_currency(),
+			'total_weight'        => $order_weight,
+			'subtotal'            => $order->get_subtotal(),
 		);
 
 		// Check mailbox weight limit.
@@ -1012,8 +1013,9 @@ class Item_Info extends Base_Info {
 		$to_country           = $this->api_args['shipping_address']['country'];
 		$destination          = Utils::get_shipping_zone( $to_country );
 		$is_letterbox         = 'yes' === $this->api_args['backend_data']['letterbox'];
+		$is_return_activated  = 'yes' === $this->api_args['order_details']['is_return_activated'];
 
-		if ( ! $is_letterbox && ! $return_all_labels && 'shipping_return' === $shipment_return_type ) {
+		if ( ! $is_return_activated && ! $is_letterbox && ! $return_all_labels && 'shipping_return' === $shipment_return_type ) {
 			$shipment_return_type = 'return_all_labels_not_active';
 		}
 

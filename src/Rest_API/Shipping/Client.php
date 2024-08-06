@@ -88,6 +88,7 @@ class Client extends Base {
 		$shipment = array(
 			'Addresses'           => $this->get_shipment_addresses(),
 			'Barcode'             => $this->item_info->shipment['main_barcode'],
+			'ReturnBarcode'       => $this->item_info->shipment['main_barcode'],
 			'Contacts'            => array(
 				array(
 					'ContactType' => '01',

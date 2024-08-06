@@ -111,6 +111,8 @@ abstract class Base {
 		add_action( 'woocommerce_checkout_update_order_meta', array( $this, 'calculate_non_standard_fee' ), 20, 2 );
 		add_filter( 'postnl_frontend_checkout_tab', array( $this, 'add_checkout_tab' ), 10, 2 );
 		add_action( 'postnl_checkout_content', array( $this, 'display_content' ), 10, 2 );
+		add_filter('woocommerce_email_order_meta_fields', array( $this, 'add_custom_fields_to_email'), 10, 3);
+
 	}
 
 	/**
@@ -130,7 +132,85 @@ abstract class Base {
 	 * @param array $post_data Post data on checkout page.
 	 */
 	abstract public function get_content_data( $response, $post_data );
+	public function add_custom_fields_to_email($fields, $sent_to_admin, $order) {
+		$data = $this->get_data( $order->get_id() );
+		foreach ( $data['frontend'] as $key => $value ) {
+			if ( false !== strpos( $key, 'dropoff_points_' ) ) {
+				$info_value[ $key ] = $value;
+			}
+		}
+		$value = $this->generate_pickup_points_email_html($info_value);
+		$fields['Pickup address'] = array(
+			'label' => 'Pickup address',
+			'value' => $value
+		);
+	
+		return $fields;
+	}
 
+	/**
+	 * Generate the dropoff points html information.
+	 *
+	 * @param Array $infos Dropoff points informations.
+	 */
+	public function generate_pickup_points_email_html( $infos ) {
+		$filtered_infos = array_filter(
+			$infos,
+			function ( $info ) {
+				$displayed_info = array(
+					'dropoff_points_date',
+					'dropoff_points_time',
+				);
+
+				return in_array( $info, $displayed_info, true );
+			},
+			ARRAY_FILTER_USE_KEY
+		);
+
+		$address_info = array_filter(
+			$infos,
+			function ( $info ) {
+				return false !== strpos( $info, '_address_' );
+			},
+			ARRAY_FILTER_USE_KEY
+		);
+
+		if ( ! empty( $address_info ) ) {
+			$filtered_infos['address'] = implode( ', ', $address_info );
+			ksort( $filtered_infos );
+		}
+
+		if ( empty( $filtered_infos ) ) {
+			return;
+		}
+		?>
+		<div class="postnl-info-container pickup-points-info">
+			<label for="postnl_pickup_points"><strong><?php esc_html_e( 'Pickup Address:', 'postnl-for-woocommerce' ); ?></strong></label>
+			<?php
+			foreach ( $filtered_infos as $info_idx => $info_val ) {
+				switch ( $info_idx ) {
+					case 'dropoff_points_date':
+						$additional_text = esc_html__( 'Date:', 'postnl-for-woocommerce' );
+						break;
+
+					case 'dropoff_points_time':
+						$additional_text = esc_html__( 'Time:', 'postnl-for-woocommerce' );
+						break;
+
+					default:
+						$additional_text = '';
+						break;
+				}
+				?>
+				<div>
+					<?php echo esc_html( $additional_text . ' ' . $info_val ); ?>
+				</div>
+				<?php
+			}
+			?>
+		</div>
+		<?php
+	}
 	/**
 	 * Adding a content in the frontend checkout.
 	 *

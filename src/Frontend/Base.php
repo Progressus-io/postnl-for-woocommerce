@@ -132,16 +132,11 @@ abstract class Base {
 	 * @param array $post_data Post data on checkout page.
 	 */
 	abstract public function get_content_data( $response, $post_data );
-	public function add_custom_fields_to_email($fields, $sent_to_admin, $order) {
+	public function add_pickup_points_fields_to_email($fields, $sent_to_admin, $order) {
 		$data = $this->get_data( $order->get_id() );
-		foreach ( $data['frontend'] as $key => $value ) {
-			if ( false !== strpos( $key, 'dropoff_points_' ) ) {
-				$info_value[ $key ] = $value;
-			}
-		}
-		$value = $this->generate_pickup_points_email_html($info_value);
+		$value = $this->generate_pickup_points_email_html($data['frontend']);
 		$fields['Pickup address'] = array(
-			'label' => 'Pickup address',
+			'label' => __( 'Pickup Address', 'postnl-for-woocommerce' ),
 			'value' => $value
 		);
 	
@@ -183,10 +178,10 @@ abstract class Base {
 		if ( empty( $filtered_infos ) ) {
 			return;
 		}
-		?>
-		<div class="postnl-info-container pickup-points-info">
-			<label for="postnl_pickup_points"><strong><?php esc_html_e( 'Pickup Address:', 'postnl-for-woocommerce' ); ?></strong></label>
-			<?php
+		$value = "
+		
+		<div class='postnl-info-container pickup-points-info'>";
+			
 			foreach ( $filtered_infos as $info_idx => $info_val ) {
 				switch ( $info_idx ) {
 					case 'dropoff_points_date':
@@ -201,15 +196,14 @@ abstract class Base {
 						$additional_text = '';
 						break;
 				}
-				?>
+				$value .= "
 				<div>
-					<?php echo esc_html( $additional_text . ' ' . $info_val ); ?>
+					". esc_html( $additional_text . ' ' . $info_val )."
 				</div>
-				<?php
+				";
 			}
-			?>
-		</div>
-		<?php
+			$value .= " </div> <br>";
+		return $value;
 	}
 	/**
 	 * Adding a content in the frontend checkout.

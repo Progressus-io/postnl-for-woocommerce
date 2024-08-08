@@ -134,12 +134,13 @@ abstract class Base {
 	abstract public function get_content_data( $response, $post_data );
 	public function add_pickup_points_fields_to_email($fields, $sent_to_admin, $order) {
 		$data = $this->get_data( $order->get_id() );
-		$value = $this->generate_pickup_points_email_html($data['frontend']);
-		$fields['Pickup address'] = array(
-			'label' => __( 'Pickup Address', 'postnl-for-woocommerce' ),
-			'value' => $value
-		);
-	
+		if( ! empty( $data['frontend'] ) ){
+			$value = $this->generate_pickup_points_email_html($data['frontend']);
+			$fields['Pickup address'] = array(
+				'label' => __( 'Pick up at PostNL-point', 'postnl-for-woocommerce' ),
+				'value' => $value
+			);
+		}
 		return $fields;
 	}
 

@@ -37,6 +37,10 @@ msgstr ""
 msgid "https://postnl.post/"
 msgstr ""
 
+#: src/Frontend/Base.php:139
+msgid "Pick up at PostNL-point"
+msgstr "Ophalen bij PostNL-punt"
+
 #: src/Frontend/Base.php:446
 msgid "PostNL Evening Fee"
 msgstr "Toeslag avondbezorging"

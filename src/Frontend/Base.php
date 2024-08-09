@@ -111,7 +111,7 @@ abstract class Base {
 		add_action( 'woocommerce_checkout_update_order_meta', array( $this, 'calculate_non_standard_fee' ), 20, 2 );
 		add_filter( 'postnl_frontend_checkout_tab', array( $this, 'add_checkout_tab' ), 10, 2 );
 		add_action( 'postnl_checkout_content', array( $this, 'display_content' ), 10, 2 );
-		add_filter('woocommerce_email_order_meta_fields', array( $this, 'add_custom_fields_to_email'), 10, 3);
+		add_filter('woocommerce_email_order_meta_fields', array( $this, 'add_pickup_points_fields_to_email'), 10, 3);
 
 	}
 
@@ -132,6 +132,7 @@ abstract class Base {
 	 * @param array $post_data Post data on checkout page.
 	 */
 	abstract public function get_content_data( $response, $post_data );
+
 	public function add_pickup_points_fields_to_email($fields, $sent_to_admin, $order) {
 		$data = $this->get_data( $order->get_id() );
 		if( ! empty( $data['frontend'] ) ){

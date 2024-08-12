@@ -430,7 +430,7 @@ class Bulk extends Base {
 			);
 		}
 				
-		if('A6' !== $this->settings->get_label_format()){
+		if( 'A6' !== $this->settings->get_label_format() ){
 			$fields[] = array(
 				'id'            => $this->prefix . 'position_printing_labels',
 				'type'          => 'select',

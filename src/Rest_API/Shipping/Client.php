@@ -88,7 +88,6 @@ class Client extends Base {
 		$shipment = array(
 			'Addresses'           => $this->get_shipment_addresses(),
 			'Barcode'             => $this->item_info->shipment['main_barcode'],
-			'ReturnBarcode'       => $this->item_info->shipment['main_barcode'],
 			'Contacts'            => array(
 				array(
 					'ContactType' => '01',
@@ -141,9 +140,11 @@ class Client extends Base {
 				);
 			}
 		}
-
+		
 		if ( ! empty( $this->item_info->shipment['return_barcode'] ) ) {
 			$shipment['ReturnBarcode'] = $this->item_info->shipment['return_barcode'];
+		} else if ( 'yes' === $this->item_info->shipment['shipment_return_label'] ) {
+			$shipment['ReturnBarcode'] = $this->item_info->shipment['main_barcode'];
 		}
 
 		if ( $this->item_info->backend_data['insured_shipping'] ) {
@@ -249,7 +250,7 @@ class Client extends Base {
 			);
 		}
 
-		if ( $this->item_info->shipment['return_barcode'] || $this->item_info->shipment['shipment_return_label']) {
+		if ( $this->item_info->shipment['return_barcode'] || 'yes' === $this->item_info->shipment['shipment_return_label']) {
 			$addresses[] = array(
 				'AddressType' => '08',
 				'City'        => $this->item_info->customer['return_address_city'],

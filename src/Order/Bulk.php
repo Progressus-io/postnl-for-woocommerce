@@ -407,7 +407,7 @@ class Bulk extends Base {
 				'placeholder'       => '',
 				'description'       => '',
 				'class'             => 'short',
-				'value'             => '',
+				'value'             => '1',
 				'container'         => true,
 				'custom_attributes' =>
 					array(

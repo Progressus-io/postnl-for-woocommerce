@@ -153,12 +153,15 @@ class Settings extends \WC_Settings_API {
 			'return_settings_title'          => array(
 				'title'       => esc_html__( 'Return Settings', 'postnl-for-woocommerce' ),
 				'type'        => 'title',
-				'description' => esc_html__( 'If you have a reply number, only fill in the Zip code, City and Return code. If you want to return your shipments to a home address, also provide the address line (Street, Housenumber and HouseNrExt) of your return address.', 'postnl-for-woocommerce' ),
+				// 'description' => esc_html__( 'If you have a reply number, only fill in the Zip code, City and Return code. If you want to return your shipments to a home address, also provide the address line (Street, Housenumber and HouseNrExt) of your return address.', 'postnl-for-woocommerce' ),
 			),
 			'return_shipment_and_labels' => array(
 				'title'       => esc_html__( 'Shipment & Return labels ', 'postnl-for-woocommerce' ),
 				'type'        => 'select',
-				'description' => esc_html__( 'Choose between using Shipment & Return labels or Label in the Box. The return function of the Shipment & Return label can only be used for the first 7 days after creation. If a customer wants to return a parcel with a Shipment & Return label after 7 days you can send them a Smart Return barcode.', 'postnl-for-woocommerce' ),
+				'description' => esc_html__( '- None: return labels are not automatically created' ) . '<br>' .
+					esc_html__( '- Shipment & Return: the label of the outward shipment can also be used for the return shipment.' ) . '<br>' .
+					esc_html__( '- Label in the box: a separate return label is created at the same time as the label for the outward shipment and can be included in the box.', 'postnl-for-woocommerce' ),
+
 				'options'     => array(
 					'none'            => esc_html__( 'None', 'postnl-for-woocommerce' ),
 					'shipping_return' => esc_html__( 'Shipping & Return Label', 'postnl-for-woocommerce' ),
@@ -166,26 +169,39 @@ class Settings extends \WC_Settings_API {
 				),
 				'for_country' => array('NL'),
 			),
-			'return_address_default'         => array(
-				'title'       => esc_html__( 'Always print returnlabel together with shipping label', 'postnl-for-woocommerce' ),
-				'type'        => 'checkbox',
-				'description' => esc_html__( 'With this setting enabled, the return-label of a shipment will automatically be downloaded and printed when the shipping label created.', 'postnl-for-woocommerce' ),
-				'desc_tip'    => true,
-				'default'     => '',
-				'label'       => esc_html__( 'Enable', 'postnl-for-woocommerce' ),
-				'placeholder' => '',
-			),
+			// 'return_address_default'         => array(
+			// 	'title'       => esc_html__( 'Always print returnlabel together with shipping label', 'postnl-for-woocommerce' ),
+			// 	'type'        => 'checkbox',
+			// 	'description' => esc_html__( 'With this setting enabled, the return-label of a shipment will automatically be downloaded and printed when the shipping label created.', 'postnl-for-woocommerce' ),
+			// 	'desc_tip'    => true,
+			// 	'default'     => '',
+			// 	'label'       => esc_html__( 'Enable', 'postnl-for-woocommerce' ),
+			// 	'placeholder' => '',
+			// ),
 			'return_shipment_and_labels_all' => array(
-				'title'       => esc_html__( 'Shipping & Return for all labels', 'postnl-for-woocommerce' ),
-				'type'        => 'checkbox',
+				'title'       => esc_html__( 'Directly activate return function for all labels', 'postnl-for-woocommerce' ),
+				'type'        => 'select',
 				'label'       => esc_html__( 'Enable', 'postnl-for-woocommerce' ),
-				'description' => esc_html__( 'Tick this box if you want all labels to be activated for returning immediately. If you do not tick this box the return function can be activated on an order-by-order basis.', 'postnl-for-woocommerce' ),
+				// 'description' => esc_html__( 'Tick this box if you want all labels to be activated for returning immediately. If you do not tick this box the return function can be activated on an order-by-order basis.', 'postnl-for-woocommerce' ),
+				'options'     => array(
+					'yes'            => esc_html__( 'Yes, activate return function directly for all orders', 'postnl-for-woocommerce' ),
+					'no' 			 => esc_html__( 'No, activate return function per individual order', 'postnl-for-woocommerce' ),
+				),
 				'for_country' => array('NL'),
+			),
+			'activate_smart_return'         => array(
+				'title'       => esc_html__( 'Activate Smart Return', 'postnl-for-woocommerce' ),
+				'type'        => 'checkbox',
+				'default'     => '',
+				'label'       => esc_html__( 'Activate', 'postnl-for-woocommerce' ),
+				'placeholder' => '',
 			),
 			'return_address_or_reply_no' => array(
 				'title'       => esc_html__( 'Return to home address', 'postnl-for-woocommerce' ),
 				'type'        => 'checkbox',
 				'label'       => esc_html__( 'Activate', 'postnl-for-woocommerce' ),
+				'description' => esc_html__( '[instead of business replynumber]', 'postnl-for-woocommerce' ),
+				'desc_tip'    => true,
 			),
 			'return_replynumber'             => array(
 				'title'       => esc_html__( 'Replynumber', 'postnl-for-woocommerce' ),
@@ -786,6 +802,18 @@ class Settings extends \WC_Settings_API {
 	 */
 	public function get_return_address_or_reply_no() {
 		if ( 'yes' === $this->get_country_option( 'return_address_or_reply_no', '' ) ) {
+			return true;
+		}
+		return false;
+	}
+
+	/**
+	 * Get value of the return address or reply number.
+	 *
+	 * @return bool
+	 */
+	public function get_activate_smart_return() {
+		if ( 'yes' === $this->get_country_option( 'activate_smart_return', '' ) ) {
 			return true;
 		}
 		return false;

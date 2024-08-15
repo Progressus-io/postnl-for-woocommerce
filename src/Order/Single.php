@@ -367,9 +367,14 @@ class Single extends Base {
 			?>
 			<hr id="postnl_break_2">
 			<p class="form-field">
+				
 				<?php wp_nonce_field( 'postnl_activate_return_function', 'activate_return_function_nonce' ); ?>
 				<button type="button" class="button button-activate-return" <?php disabled( $this->is_return_function_activated( $order ) ); ?>><?php esc_html_e( 'Activate return function', 'postnl-for-woocommerce' ); ?></button>
-				<div class="postnl-info">
+
+				<div class="postnl-info activated-return-info" <?php echo ( $this->is_return_function_activated( $order) ) ? '':'style="display:none;"'; ?> >
+					<?php esc_html_e( 'Return function is activated for this label', 'postnl-for-woocommerce' ); ?>
+				</div>
+				<div class="postnl-info activate-return-info" <?php echo ( $this->is_return_function_activated( $order) ) ? 'style="display:none;"':''; ?> >
 					<?php esc_html_e( 'Click here to activate the return function of this label', 'postnl-for-woocommerce' ); ?>
 				</div>
 			</p>

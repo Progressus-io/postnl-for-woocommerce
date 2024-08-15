@@ -207,6 +207,8 @@
             $.post( woocommerce_admin_meta_boxes.ajax_url, data, function( response ) {
 				if ( true === response.success ) {
 					jQuery('button.button-activate-return').prop('disabled',true);
+					jQuery('.activate-return-info').css('display', 'none');
+					jQuery('.activated-return-info').css('display', 'block');
 				} else {
 					var label_form = jQuery( '#shipment-postnl-label-form' );
 					var error_cont = label_form.find( '#shipment-postnl-error-text' );

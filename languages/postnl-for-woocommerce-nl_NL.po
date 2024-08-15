@@ -807,6 +807,10 @@ msgstr "Smart Returns activeren"
 msgid "Activate"
 msgstr "Activeren"
 
+#: src/Shipping_Method/Settings.php:200
+msgid "Return to home address"
+msgstr "Retour naar huisadres"
+
 #: src/Shipping_Method/Settings.php:161
 msgid ""
 "With this setting enabled, the return-label of a shipment will automatically be downloaded and printed when the "

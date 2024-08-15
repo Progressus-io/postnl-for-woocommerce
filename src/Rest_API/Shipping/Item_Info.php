@@ -1020,8 +1020,10 @@ class Item_Info extends Base_Info {
 		}
 
 		//Domestic Letterbox parcel (product code 2928) cannot be used in combination with Shipment and Return.
-		if ( $is_letterbox ) {
+		if ( $is_letterbox && 'yes' === $this->api_args['backend_data']['create_return_label'] ) {
 			$shipment_return_type = 'in_box';
+		} else if ( $is_letterbox ) {
+			return array();
 		}
 
 		if ( isset( $return_label_options[ $from_country ][ $destination ][ $shipment_return_type ] ) ) {

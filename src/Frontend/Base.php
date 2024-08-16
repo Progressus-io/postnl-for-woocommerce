@@ -189,9 +189,7 @@ abstract class Base {
 		if ( empty( $filtered_infos ) ) {
 			return;
 		}
-		$value = "
-		
-		<div class='postnl-info-container pickup-points-info'>";
+		$value = "<div class='postnl-info-container pickup-points-info'>";
 			
 			foreach ( $filtered_infos as $info_idx => $info_val ) {
 				switch ( $info_idx ) {

@@ -132,15 +132,25 @@ abstract class Base {
 	 */
 	abstract public function get_content_data( $response, $post_data );
 
-	public function add_pickup_points_fields_to_email($fields, $sent_to_admin, $order) {
+	/**
+	 * Add pickup points info to email templates.
+	 *
+	 * @param array     $fields Current fields.
+	 * @param bool      $sent_to_admin If should sent to admin.
+	 * @param \WC_Order $order Order instance.
+	 *
+	 * @return array
+	 */
+	public function add_pickup_points_fields_to_email( $fields, $sent_to_admin, $order ) {
 		$data = $this->get_data( $order->get_id() );
-		if( ! empty( $data['frontend'] ) ){
-			$value = $this->generate_pickup_points_email_html($data['frontend']);
+		if ( ! empty( $data['frontend'] ) ) {
+			$value                    = $this->generate_pickup_points_email_html( $data['frontend'] );
 			$fields['Pickup address'] = array(
 				'label' => __( 'Pick up at PostNL-point', 'postnl-for-woocommerce' ),
-				'value' => $value
+				'value' => $value,
 			);
 		}
+
 		return $fields;
 	}
 

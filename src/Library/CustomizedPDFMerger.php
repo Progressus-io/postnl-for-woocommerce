@@ -65,7 +65,7 @@ class CustomizedPDFMerger {
             throw new Exception("No PDFs to merge.");
         }
 
-        $fpdi         = new Fpdi();
+        $fpdi         = new PDF_Rotate();
 		$files        = array();
 
         // merger operations
@@ -162,9 +162,27 @@ class CustomizedPDFMerger {
 					continue;
 				}
 
-				if ( intval( $file_template['size']['width'] ) !== intval( $a4_size['width'] ) && intval( $file_template['size']['height'] ) !== intval( $a4_size['height'] ) && intval( $file_template['size']['width'] ) !== intval( $a6_size['width'] ) && intval( $file_template['size']['height'] ) !== intval( $a6_size['height'] ) ) {
-					$fpdi->AddPage( $file_template['orientation'], array( $file_template['size']['width'], $file_template['size']['height'] ) );
-                    $fpdi->useTemplate( $file_template['template'] );
+				$rotation_needed = false;
+
+				if (
+					intval( $file_template['size']['width'] ) === intval( $a6_size['height'] )
+					&& intval( $file_template['size']['height'] ) === intval( $a6_size['width'] )
+				) {
+					$rotation_needed = true;
+				}
+
+				if (
+					! $rotation_needed
+					&& intval( $file_template['size']['width'] ) !== intval( $a4_size['width'] )
+					&& intval( $file_template['size']['height'] ) !== intval( $a4_size['height'] )
+					&& intval( $file_template['size']['width'] ) !== intval( $a6_size['width'] )
+					&& intval( $file_template['size']['height'] ) !== intval( $a6_size['height'] )
+				) {
+					$fpdi->AddPage( $file_template['orientation'], array(
+						$file_template['size']['width'],
+						$file_template['size']['height']
+					) );
+					$fpdi->useTemplate( $file_template['template'] );
 					$label_number = 1;
 					continue;
 				}
@@ -182,12 +200,19 @@ class CustomizedPDFMerger {
 						$start_position = 'top-left';
 					}
 				}
+
 				$coords = $coordinate_map[ $start_position ][ $label_number ];
-				$fpdi->useTemplate( $file_template['template'], $coords[0], $coords[1], $file_template['size']['width'], $file_template['size']['height'], false );
 
+				if ( $rotation_needed ) {
+					$fpdi->Rotate(90, $coords[0] + $a6_size['width'], $coords[1]);
+					$fpdi->useTemplate($file_template['template'], $a4_size['width'] / 2 , $coords[1] - $a6_size['width'], $file_template['size']['width'], $file_template['size']['height']);
+					$fpdi->Rotate(0); // Reset rotation
+				} else {
+					// Portrait - place as is
+					$fpdi->useTemplate( $file_template['template'], $coords[0], $coords[1], $file_template['size']['width'], $file_template['size']['height'], false );
+				}
 
-
-				$label_number++;
+				$label_number ++;
 			}
 		}
 

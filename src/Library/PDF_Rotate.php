@@ -1,0 +1,48 @@
+<?php
+/**
+ * Class PDF_Rotate file.
+ *
+ * @package PostNLWooCommerce\Library
+ */
+
+
+namespace PostNLWooCommerce\Library;
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
+use setasign\Fpdi\Fpdi;
+
+class PDF_Rotate extends FPDI {
+	var $angle = 0;
+
+	function Rotate( $angle, $x = - 1, $y = - 1 ) {
+		if ( $x == - 1 ) {
+			$x = $this->x;
+		}
+		if ( $y == - 1 ) {
+			$y = $this->y;
+		}
+		if ( $this->angle != 0 ) {
+			$this->_out( 'Q' );
+		}
+		$this->angle = $angle;
+		if ( $angle != 0 ) {
+			$angle *= M_PI / 180;
+			$c     = cos( $angle );
+			$s     = sin( $angle );
+			$cx    = $x * $this->k;
+			$cy    = ( $this->h - $y ) * $this->k;
+			$this->_out( sprintf( 'q %.5f %.5f %.5f %.5f %.5f %.5f cm 1 0 0 1 %.5f %.5f cm', $c, $s, - $s, $c, $cx, $cy, - $cx, - $cy ) );
+		}
+	}
+
+	function _endpage() {
+		if ( $this->angle != 0 ) {
+			$this->angle = 0;
+			$this->_out( 'Q' );
+		}
+		parent::_endpage();
+	}
+}

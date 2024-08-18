@@ -204,9 +204,9 @@ class CustomizedPDFMerger {
 				$coords = $coordinate_map[ $start_position ][ $label_number ];
 
 				if ( $rotation_needed ) {
-					$fpdi->Rotate(90, $coords[0] + $a6_size['width'], $coords[1]);
-					$fpdi->useTemplate($file_template['template'], $a4_size['width'] / 2 , $coords[1] - $a6_size['width'], $file_template['size']['width'], $file_template['size']['height']);
-					$fpdi->Rotate(0); // Reset rotation
+					$fpdi->Rotate( 90, $coords[0] + $a6_size['width'], $coords[1] );
+					$fpdi->useTemplate( $file_template['template'], $a4_size['width'] / 2, $coords[1] - $a6_size['width'], $file_template['size']['width'], $file_template['size']['height'] );
+					$fpdi->Rotate( 0 ); // Reset rotation
 				} else {
 					// Portrait - place as is
 					$fpdi->useTemplate( $file_template['template'], $coords[0], $coords[1], $file_template['size']['width'], $file_template['size']['height'], false );

@@ -732,7 +732,8 @@ class Utils {
 	 */
 	public static function check_products_for_letterbox( $products ) {
 		$total_ratio_letterbox_item = 0;
-		$has_letterbox_product = false;
+		$has_letterbox_product      = false;
+
 		foreach ( $products as $item_id => $item ) {
 			$product              = wc_get_product( $item['product_id'] ?? $item->get_product_id() );
 			if ( ! is_a( $product, 'WC_Product' ) ) {

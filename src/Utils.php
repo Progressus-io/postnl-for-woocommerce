@@ -762,7 +762,7 @@ class Utils {
 		}
 
 		// If the total ratio is more than 1, that means order items cannot be packed using letterbox.
-		return ( $total_ratio_letterbox_item <= 1 && $has_letterbox_product) ? true : false;
+		return $has_letterbox_product && $total_ratio_letterbox_item <= 1;
 	}
 
 	/**

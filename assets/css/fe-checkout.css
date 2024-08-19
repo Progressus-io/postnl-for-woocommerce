@@ -3,7 +3,7 @@ tr.postnl-co-tr-container > td {
 }
 
 .woocommerce-shipping-methods label:has(.postnl_shipping_method_icon) {
-	display: flex;
+	display: inline-flex;
 	align-items: center;
 }
 

@@ -111,8 +111,7 @@ abstract class Base {
 		add_action( 'woocommerce_checkout_update_order_meta', array( $this, 'calculate_non_standard_fee' ), 20, 2 );
 		add_filter( 'postnl_frontend_checkout_tab', array( $this, 'add_checkout_tab' ), 10, 2 );
 		add_action( 'postnl_checkout_content', array( $this, 'display_content' ), 10, 2 );
-		add_filter('woocommerce_email_order_meta_fields', array( $this, 'add_pickup_points_fields_to_email'), 10, 3);
-
+		add_filter( 'woocommerce_email_order_meta_fields', array( $this, 'add_pickup_points_fields_to_email' ), 10, 3 );
 	}
 
 	/**
@@ -133,15 +132,25 @@ abstract class Base {
 	 */
 	abstract public function get_content_data( $response, $post_data );
 
-	public function add_pickup_points_fields_to_email($fields, $sent_to_admin, $order) {
+	/**
+	 * Add pickup points info to email templates.
+	 *
+	 * @param array     $fields Current fields.
+	 * @param bool      $sent_to_admin If should sent to admin.
+	 * @param \WC_Order $order Order instance.
+	 *
+	 * @return array
+	 */
+	public function add_pickup_points_fields_to_email( $fields, $sent_to_admin, $order ) {
 		$data = $this->get_data( $order->get_id() );
-		if( ! empty( $data['frontend'] ) ){
-			$value = $this->generate_pickup_points_email_html($data['frontend']);
+		if ( ! empty( $data['frontend'] ) ) {
+			$value                    = $this->generate_pickup_points_email_html( $data['frontend'] );
 			$fields['Pickup address'] = array(
 				'label' => __( 'Pick up at PostNL-point', 'postnl-for-woocommerce' ),
-				'value' => $value
+				'value' => $value,
 			);
 		}
+
 		return $fields;
 	}
 
@@ -152,9 +161,7 @@ abstract class Base {
 	 */
 	public function generate_pickup_points_email_html( $infos ) {
 		$filtered_infos = Utils::get_pickup_points_infos($infos);
-		$value = "
-		
-		<div class='postnl-info-container pickup-points-info'>";
+		$value = "<div class='postnl-info-container pickup-points-info'>";
 			
 			foreach ( $filtered_infos as $info_idx => $info_val ) {
 				switch ( $info_idx ) {

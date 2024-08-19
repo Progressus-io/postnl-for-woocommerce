@@ -418,14 +418,14 @@ class Container {
 	 * Replace shipping method title with Icon.
 	 *
 	 * @param String             $label String of label html.
-	 * @param WC_Shipping_Method $method Shipping method object.
+	 * @param \WC_Shipping_Rate $method Shipping method object.
 	 *
-	 * @return mixed|string
+	 * @return string
 	 */
 	public function add_shipping_method_icon( $label, $method ) {
-		if ( POSTNL_SETTINGS_ID === $method->method_id ) {
+		if ( POSTNL_SETTINGS_ID === $method->get_method_id() ) {
 			$method_title = $method->get_label();
-			$label        = '<img src="' . esc_url( trailingslashit( POSTNL_WC_PLUGIN_DIR_URL ) . 'assets/images/postnl-logo-40x40.jpeg' ) . '" class="postnl_shipping_method_icon" alt="' . $method_title . '" />' . $label;
+			$label        = '<img src="' . esc_url( trailingslashit( POSTNL_WC_PLUGIN_DIR_URL ) . 'assets/images/postnl-new-brand-logo.png' ) . '" class="postnl_shipping_method_icon" alt="' . $method_title . '" />' . $label;
 		}
 
 		return $label;

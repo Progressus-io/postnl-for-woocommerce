@@ -741,8 +741,7 @@ class Utils {
 				return false;
 			}
 
-			$is_digital = $product->is_virtual() || $product->is_downloadable();
-			if( $is_digital ) {
+			if( ! $product->needs_shipping() ) {
 				continue;
 			}
 

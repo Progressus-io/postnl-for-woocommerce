@@ -83,6 +83,7 @@ Follow these instructions (https://www.postnl.nl/Images/aanvragen-api-key-stappe
 = 5.5.0 (2024-xx-xx) =
 * Add: Compatibility with the new WooCommerce Product Editor.
 * Fix: HPOS declaration path.
+* Fix: Multiple return labels are printed when try to print the label for an order with existed label using bulk actions.
 
 = 5.4.2 (2024-07-03) =
 * Fix: Error "Invalid nonce" when trying to delete labels.

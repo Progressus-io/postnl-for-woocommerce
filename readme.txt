@@ -85,6 +85,7 @@ Follow these instructions (https://www.postnl.nl/Images/aanvragen-api-key-stappe
 * Fix: HPOS declaration path.
 * Fix: Item Value is fed by price after discount.
 * Fix: Chosen delivery options jumps back to Evening Delivery.
+* Fix: Update PostNL corporate identity.
 * Fix: Automatic letterbox doesn't work in combination with digital product.
 
 = 5.4.2 (2024-07-03) =

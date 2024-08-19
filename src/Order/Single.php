@@ -281,32 +281,7 @@ class Single extends Base {
 	 * @param Array $infos Dropoff points informations.
 	 */
 	public function generate_pickup_points_html( $infos ) {
-		$filtered_infos = array_filter(
-			$infos,
-			function ( $info ) {
-				$displayed_info = array(
-					'dropoff_points_date',
-					'dropoff_points_time',
-				);
-
-				return in_array( $info, $displayed_info, true );
-			},
-			ARRAY_FILTER_USE_KEY
-		);
-
-		$address_info = array_filter(
-			$infos,
-			function ( $info ) {
-				return false !== strpos( $info, '_address_' );
-			},
-			ARRAY_FILTER_USE_KEY
-		);
-
-		if ( ! empty( $address_info ) ) {
-			$filtered_infos['address'] = implode( ', ', $address_info );
-			ksort( $filtered_infos );
-		}
-
+		$filtered_infos = Utils::get_pickup_points_infos($infos);
 		if ( empty( $filtered_infos ) ) {
 			return;
 		}

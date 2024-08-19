@@ -160,7 +160,10 @@ abstract class Base {
 	 * @param Array $infos Dropoff points informations.
 	 */
 	public function generate_pickup_points_email_html( $infos ) {
-		$filtered_infos = Utils::get_pickup_points_infos($infos);
+		$filtered_infos = Utils::get_pickup_points_infos( $infos );
+		if ( empty( $filtered_infos ) ) {
+			return;
+		}
 		$value = "<div class='postnl-info-container pickup-points-info'>";
 			
 			foreach ( $filtered_infos as $info_idx => $info_val ) {

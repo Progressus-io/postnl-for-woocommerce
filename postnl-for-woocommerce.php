@@ -36,6 +36,10 @@ if ( ! defined( 'POSTNL_WC_PLUGIN_FILE' ) ) {
 	define( 'POSTNL_WC_PLUGIN_FILE', __FILE__ );
 }
 
+if ( ! defined( 'POSTNL_WC_PLUGIN_BASENAME' ) ) {
+	define( 'POSTNL_WC_PLUGIN_BASENAME', plugin_basename( POSTNL_WC_PLUGIN_FILE ) );
+}
+
 require_once ( plugin_dir_path( __FILE__ ) . '/vendor/autoload.php' );
 
 /**

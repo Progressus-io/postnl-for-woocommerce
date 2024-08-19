@@ -39,6 +39,10 @@ PostNL’s official extension for WooCommerce on WordPress. Manage your national
 ### 5.5.0
 * Add: Compatibility with the new WooCommerce Product Editor.
 * Fix: HPOS declaration path.
+* Fix: Item Value is fed by price after discount.
+* Fix: Chosen delivery options jumps back to Evening Delivery.
+* Fix: Update PostNL corporate identity.
+* Fix: Automatic letterbox doesn't work in combination with digital product.
 
 ### 5.4.2
 * Fix: Error "Invalid nonce" when trying to delete labels.

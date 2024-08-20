@@ -459,6 +459,14 @@ abstract class Base {
 
 		$saved_data = $this->get_data( $order_id );
 
+		// Check if label is already created.
+		if ( isset( $saved_data['labels']['label'] ) ) {
+			return array(
+				'saved_data' => $saved_data,
+				'labels'     => $saved_data['labels'],
+			);
+		}
+
 		// Get array of nonce fields.
 		$nonce_fields = array_values( $this->get_nonce_fields() );
 

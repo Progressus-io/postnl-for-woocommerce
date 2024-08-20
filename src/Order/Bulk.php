@@ -426,7 +426,7 @@ class Bulk extends Base {
 				'placeholder' => '',
 				'description' => '',
 				'container'   => true,
-				'value'       => $this->settings->get_return_address_default(),
+				'value'       => 'yes',
 			);
 		}
 				

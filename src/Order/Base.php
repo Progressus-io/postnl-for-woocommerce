@@ -321,7 +321,7 @@ abstract class Base {
 				'label'         => __( 'Create Return Label: ', 'postnl-for-woocommerce' ),
 				'placeholder'   => '',
 				'description'   => '',
-				'value'         => $this->settings->get_return_address_default(),
+				'value'         => 'yes',
 				'show_in_bulk'  => true,
 				'standard_feat' => true,
 				'const_field'   => false,

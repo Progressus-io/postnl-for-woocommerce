@@ -893,8 +893,9 @@ abstract class Base {
 
 			$file_paths[] = $label['filepath'];
 		}
+		$extension = pathinfo( $file_paths[0], PATHINFO_EXTENSION );
 
-		$filename    = Utils::generate_label_name( $order->get_id(), $label_type, $barcode, $label_format, 'pdf' );
+		$filename    = Utils::generate_label_name( $order->get_id(), $label_type, $barcode, $label_format, $extension );
 		$merged_info = $this->merge_labels( $file_paths, $filename );
 
 		$merged_labels[ $label_type ] = array(
@@ -1074,19 +1075,30 @@ abstract class Base {
 	protected function merge_text_files( $label_paths, $merge_filename ) {
 		$merged_paths = array();
 		$filepath     = trailingslashit( POSTNL_UPLOADS_DIR ) . $merge_filename;
-
+	
 		$output = fopen( $filepath, "w" );
+	
 		foreach ( $label_paths as $path ) {
+			if ( ! file_exists( $path ) ) {
+				continue; // Skip if the file does not exist
+			}
+	
 			$input = fopen( $path, "r" );
-			while ( $line = fgets( $input ) ){
-				print $path;
+			if ( ! $input ) {
+				continue; // Skip if unable to open the file
+			}
+	
+			// Read each line and write it to the output file
+			while ( ( $line = fgets( $input ) ) !== false ) {
 				fwrite( $output, $line );
 			}
-			fclose( $input );
+	
+			fclose( $input ); // Close each input file after reading
 			$merged_paths[] = $path;
 		}
-		fclose( $output );
-
+	
+		fclose( $output ); // Close the output file after writing
+	
 		return array(
 			'merged_filepaths' => $merged_paths,
 			'filepath'         => $filepath,

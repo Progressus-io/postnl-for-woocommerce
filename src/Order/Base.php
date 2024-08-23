@@ -705,7 +705,7 @@ abstract class Base {
 						$file_ret = file_put_contents( $filepath, $content );
 					}
 
-					$labels[$label_type] = array(
+					$labels[] = array(
 						'type'       => $label_type,
 						'barcode'    => $barcode,
 						'created_at' => current_time( 'timestamp' ),

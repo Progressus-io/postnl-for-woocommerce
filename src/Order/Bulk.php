@@ -617,6 +617,7 @@ class Bulk extends Base {
 			$array_messages   = array(
 				'user_id' => get_current_user_id(),
 			);
+			$_REQUEST['postnl_create_return_label'] = 'yes';
 			$result           = $this->generate_label_and_notes( $order_id, $_REQUEST );
 			$array_messages[] = $result['message'];
 

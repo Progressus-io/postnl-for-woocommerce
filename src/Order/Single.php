@@ -716,20 +716,19 @@ class Single extends Base {
 			}
 
 			$to           = $order->get_billing_email();
-			$subject      = apply_filters( 'postnl_smart_return_email_subject', esc_html__( 'PostNL Smart Returns', 'postnl-for-woocommerce' ) );
-			$message      = apply_filters( 'postnl_smart_return_email_message', esc_html__( 'In this email you will find the barcode you need to return your order. Scan this barcode at a PostNL point to print your return label. Please note, wait at least 10 minutes before scanning the barcode after receipt of this mail.', 'postnl-for-woocommerce' ) );
-			//$message     .= $printcodeLabelContent;
-			$headers = array('Content-Type: text/html; charset=UTF-8');
-    		$attachments = array($file_path);
-
+			$is_successful = false;
 			$emails = WC()->mailer()->get_emails();
-    
-			if ( ! empty( $emails ) && isset( $emails['wc_smart_return_email'] ) ) {
-				$emails['wc_smart_return_email']->trigger( $order_id, $attachments );
+
+			if ( ! empty( $emails ) && isset( $emails['WC_Smart_Return_Email'] ) ) {
+				$emails['WC_Smart_Return_Email']->recipient = $to;
+
+				// Set the attachment path property
+				$emails['WC_Smart_Return_Email']->attachment = $file_path;
+
+				// Trigger the email
+				$is_successful = $emails['WC_Smart_Return_Email']->trigger( $order_id );
 			}
-
-			$is_successful = wp_mail( $to, $subject, $message, $headers, $attachments );
-
+			
 			if ( $is_successful ) {
 				wp_send_json_success( $to );
 			} else {

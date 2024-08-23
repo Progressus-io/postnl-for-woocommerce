@@ -714,12 +714,19 @@ class Single extends Base {
 				// Write the content to the file
 				file_put_contents($file_path, $pdf_content);
 			}
+
 			$to           = $order->get_billing_email();
 			$subject      = apply_filters( 'postnl_smart_return_email_subject', esc_html__( 'PostNL Smart Returns', 'postnl-for-woocommerce' ) );
 			$message      = apply_filters( 'postnl_smart_return_email_message', esc_html__( 'In this email you will find the barcode you need to return your order. Scan this barcode at a PostNL point to print your return label. Please note, wait at least 10 minutes before scanning the barcode after receipt of this mail.', 'postnl-for-woocommerce' ) );
 			//$message     .= $printcodeLabelContent;
 			$headers = array('Content-Type: text/html; charset=UTF-8');
     		$attachments = array($file_path);
+
+			$emails = WC()->mailer()->get_emails();
+    
+			if ( ! empty( $emails ) && isset( $emails['wc_smart_return_email'] ) ) {
+				$emails['wc_smart_return_email']->trigger( $order_id, $attachments );
+			}
 
 			$is_successful = wp_mail( $to, $subject, $message, $headers, $attachments );
 

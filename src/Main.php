@@ -195,6 +195,24 @@ class Main {
 
 		// Locate woocommerce template.
 		add_filter( 'woocommerce_locate_template', array( $this, 'woocommerce_locate_template' ), 20, 3 );
+
+		add_filter( 'woocommerce_email_classes', array( $this, 'add_wc_smart_return_email' ) );
+	}
+
+	/**
+	 * Add the smart return email class.
+	 *
+	 * @param array $email_classes Array of existing WC emails.
+	 *
+	 * @return array $email_classes
+	 */
+	public function add_wc_smart_return_email( $email_classes ) {
+		//require_once plugin_dir_path( __FILE__ ) . 'Emails/class-wc-smart-return-email.php';
+	
+		// Add the smart return email to the list of email classes.
+		$email_classes['WC_Smart_Return_Email'] = new Emails\WC_Email_Smart_Return();
+	
+		return $email_classes;
 	}
 
 	/**

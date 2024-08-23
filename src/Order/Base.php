@@ -314,7 +314,7 @@ abstract class Base {
 			),
 		);
 
-		if ( 'in_box' === $this->settings->get_return_shipment_and_labels() || 'yes' === ( $default_options['letterbox'] ?? '' ) ) {
+		if ( 'in_box' === $this->settings->get_return_shipment_and_labels() ) {
 			$fields[] = array(
 				'id'            => $this->prefix . 'create_return_label',
 				'type'          => 'checkbox',
@@ -830,7 +830,7 @@ abstract class Base {
 	 * @throws \Exception Error when response has an error.
 	 */
 	public function maybe_create_return_barcode( $post_data ) {
-		if ( isset( $post_data['saved_data']['backend']['create_return_label'] ) && 'yes' !== $post_data['saved_data']['backend']['create_return_label'] ) {
+		if ( ! isset( $post_data['saved_data']['backend']['create_return_label'] ) || 'yes' !== $post_data['saved_data']['backend']['create_return_label'] ) {
 			return '';
 		}
 

@@ -192,6 +192,9 @@ class CustomizedPDFMerger {
 				if ( 1 === $label_number % $new_page_condition || $start_position == 'bottom-right' ) {
 					$fpdi->AddPage( $file_template['orientation'], array( $a4_size['width'], $a4_size['height'] ) );
 					$label_number = 1;
+                    if( 'bottom-right' === $start_position ) {
+                        $rotation_needed = false;
+                    }
 					if ( $first_page ) {
 						// If it's the first page, use the given start_position
 						$first_page = false;
@@ -204,9 +207,14 @@ class CustomizedPDFMerger {
 				$coords = $coordinate_map[ $start_position ][ $label_number ];
 
 				if ( $rotation_needed ) {
-					$fpdi->Rotate( 90, $coords[0] + $a6_size['width'], $coords[1] );
-					$fpdi->useTemplate( $file_template['template'], $a4_size['width'] - $a6_size['height'], $coords[1] - $a6_size['width'], $file_template['size']['width'], $file_template['size']['height'] );
-					$fpdi->Rotate( 0 ); // Reset rotation
+                    $fpdi->Rotate( 90, $coords[0] + $a6_size['width'], $coords[1] );
+                    if( 'top-right' === $start_position ) {
+                        $fpdi->useTemplate( $file_template['template'], $a6_size['width'], $coords[1] - $a6_size['width'], $file_template['size']['width'], $file_template['size']['height'] );
+                    } else {
+                        $fpdi->useTemplate( $file_template['template'], $a4_size['width'] - $a6_size['height'], $coords[1] - $a6_size['width'], $file_template['size']['width'], $file_template['size']['height'] );
+                    }
+
+                    $fpdi->Rotate( 0 ); // Reset rotation
 				} else {
 					// Portrait - place as is
 					$fpdi->useTemplate( $file_template['template'], $coords[0], $coords[1], $file_template['size']['width'], $file_template['size']['height'], false );

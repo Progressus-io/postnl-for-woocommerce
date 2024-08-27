@@ -4,9 +4,9 @@ Tags: woocommerce, export, delivery, packages, PostNL, Shipping
 Requires at least: 4.6
 Requires PHP: 5.6
 Tested up to: 6.6
-Stable tag: 5.4.2
+Stable tag: 5.5.0
 WC requires at least: 4.0
-WC tested up to: 9.1
+WC tested up to: 9.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -83,6 +83,11 @@ Follow these instructions (https://www.postnl.nl/Images/aanvragen-api-key-stappe
 = 5.5.0 (2024-xx-xx) =
 * Add: Compatibility with the new WooCommerce Product Editor.
 * Fix: HPOS declaration path.
+* Fix: Item Value is fed by price after discount.
+* Fix: Chosen delivery options jumps back to Evening Delivery.
+* Fix: Update PostNL corporate identity.
+* Fix: Automatic letterbox doesn't work in combination with digital product.
+* Fix: Multiple return labels are printed when try to print the label for an order with existed label using bulk actions.
 
 = 5.4.2 (2024-07-03) =
 * Fix: Error "Invalid nonce" when trying to delete labels.

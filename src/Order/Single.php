@@ -645,7 +645,7 @@ class Single extends Base {
 
 				wp_send_json_success();
 			} else {
-				wp_send_json_error();
+				throw new \Exception( esc_html__( print_r( $response['errorsPerBarcode'][0]['errors'][0], true ) ) );
 			}
 		} catch ( \Exception $e ) {
 			wp_send_json_error(

@@ -1015,12 +1015,12 @@ class Item_Info extends Base_Info {
 		$is_letterbox         = 'yes' === $this->api_args['backend_data']['letterbox'];
 		$is_return_activated  = 'yes' === $this->api_args['order_details']['is_return_activated'];
 
-		if ( ! $is_return_activated && ! $is_letterbox && ! $return_all_labels && 'shipping_return' === $shipment_return_type ) {
+		if ( ! $is_return_activated && ! $is_letterbox && ! $return_all_labels && 'shipping_return' === $shipment_return_type && 'BE' != $destination) {
 			$shipment_return_type = 'return_all_labels_not_active';
 		}
 
 		//Domestic Letterbox parcel (product code 2928) cannot be used in combination with Shipment and Return.
-		if ( $is_letterbox && 'yes' === $this->api_args['backend_data']['create_return_label'] ) {
+		if ( ( $is_letterbox && 'yes' === $this->api_args['backend_data']['create_return_label'] ) || 'BE' == $destination ) {
 			$shipment_return_type = 'in_box';
 		} else if ( $is_letterbox ) {
 			return array();
@@ -1030,7 +1030,6 @@ class Item_Info extends Base_Info {
 			$allowed_products = $return_label_options[ $from_country ][ $destination ][ $shipment_return_type ]['products'];
 			$is_allowed       = in_array( $this->api_args['order_details']['shipping_product']['code'], $allowed_products ) || empty( $allowed_products );
 			$options          = $return_label_options[ $from_country ][ $destination ][ $shipment_return_type ]['options'];
-
 			return $is_allowed ? $options : array();
 		}
 

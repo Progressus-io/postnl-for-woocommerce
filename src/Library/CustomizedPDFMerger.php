@@ -165,6 +165,7 @@ class CustomizedPDFMerger {
 				$rotation_needed = false;
 
 				if (
+                    count( $files ) > 1 &&
 					intval( $file_template['size']['width'] ) === intval( $a6_size['height'] )
 					&& intval( $file_template['size']['height'] ) === intval( $a6_size['width'] )
 				) {

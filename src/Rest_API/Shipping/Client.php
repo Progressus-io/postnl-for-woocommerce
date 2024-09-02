@@ -141,12 +141,13 @@ class Client extends Base {
 			}
 		}
 		
-		if ( ! empty( $this->item_info->shipment['return_barcode'] ) ) {
+		$not_allowed = 	array( '6440', '6972', '6405', '6350', '6906' );	
+		if ( ! empty( $this->item_info->shipment['return_barcode'] ) && 
+			 ! in_array( $this->item_info->shipment['shipping_product']['code'], $not_allowed )) {
 			$shipment['ReturnBarcode'] = $this->item_info->shipment['return_barcode'];
-		} else if ( 'yes' === $this->item_info->shipment['shipment_return_label'] && 
-		            '2928' !== $this->item_info->shipment['shipping_product']['code'] && 
-					'NL' === $this->item_info->receiver['country']
-				  ) {
+		} else if ( 'shipping_return' === $this->settings->get_return_shipment_and_labels() && 
+					'2928' !== $this->item_info->shipment['shipping_product']['code']  &&
+					'NL' === $this->item_info->receiver['country'] ) {
 			$shipment['ReturnBarcode'] = $this->item_info->shipment['main_barcode'];
 		}
 
@@ -253,11 +254,12 @@ class Client extends Base {
 			);
 		}
 
-		if ( $this->item_info->shipment['return_barcode'] || 
-			 ( 'yes' === $this->item_info->shipment['shipment_return_label'] && 
+		$not_allowed = 	array( '6440', '6972', '6405', '6350', '6906' );	
+		if ( ( ! empty( $this->item_info->shipment['return_barcode'] ) && 
+			   ! in_array( $this->item_info->shipment['shipping_product']['code'], $not_allowed ) ) || 
+			 ( 'shipping_return' === $this->settings->get_return_shipment_and_labels() &&
 			   '2928' !== $this->item_info->shipment['shipping_product']['code'] &&
-			   'NL' === $this->item_info->receiver['country'] 
-			 ) ) {
+			   'NL' === $this->item_info->receiver['country'] ) ) {
 			$addresses[] = array(
 				'AddressType' => '08',
 				'City'        => $this->item_info->customer['return_address_city'],

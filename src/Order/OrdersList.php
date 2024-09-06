@@ -107,7 +107,7 @@ class OrdersList extends Base {
 	 * @return array.
 	 */
 	public function add_order_delivery_date_column_header( $columns ) {
-		$wc_actions = $columns['wc_actions'];
+		$wc_actions = isset( $columns['wc_actions'] ) ? $columns['wc_actions'] : '';
 		unset( $columns['wc_actions'] );
 
 		$columns['postnl_delivery_date'] = esc_html__( 'Delivery Date', 'postnl-for-woocommerce' );

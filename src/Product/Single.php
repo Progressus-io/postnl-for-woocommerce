@@ -190,7 +190,7 @@ class Single {
 		$fields = self::product_field_maps( $this->service );
 
 		foreach ( $fields as $field ) {
-			if ( empty( $i ) && ! is_array( $_POST[ $field['id'] ] ) && 0 === $product->get_parent_id() ) {
+			if ( empty( $i ) && isset( $_POST[ $field['id'] ] ) && ! is_array( $_POST[ $field['id'] ] ) && 0 === $product->get_parent_id() ) {
 				$product->update_meta_data( $field['id'], sanitize_text_field( wp_unslash( $_POST[ $field['id'] ] ) ) );
 			} elseif ( ! empty( $i ) && 0 !== $product->get_parent_id() ) {
 				$field_value = ! empty( $_POST[ $field['id'] ][ $i ] ) ? $_POST[ $field['id'] ][ $i ] : '';

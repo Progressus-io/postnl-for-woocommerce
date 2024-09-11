@@ -220,15 +220,16 @@ class Item_Info extends Base_Info {
 		);
 
 		$this->api_args['order_details'] = array(
-			'order_id'            => $order->get_id(),
-			'order_number'        => $order->get_order_number(),
-			'main_barcode'        => $post_data['main_barcode'],
-			'barcodes'            => $post_data['barcodes'],
-			'return_barcode'      => $post_data['return_barcode'],
-			'is_return_activated' => $post_data['is_return_activated'] ? 'yes' : 'no',
-			'currency'            => $order->get_currency(),
-			'total_weight'        => $order_weight,
-			'subtotal'            => $order->get_subtotal(),
+			'order_id'            		=> $order->get_id(),
+			'order_number'        		=> $order->get_order_number(),
+			'main_barcode'        		=> $post_data['main_barcode'],
+			'barcodes'            		=> $post_data['barcodes'],
+			'return_barcode'      		=> isset( $post_data['return_barcode'] ) ? $post_data['return_barcode'] : '',
+			'shipping_return_barcode'   => isset( $post_data['shipping_return_barcode'] ) ? $post_data['shipping_return_barcode'] : '',
+			'is_return_activated' 		=> $post_data['is_return_activated'] ? 'yes' : 'no',
+			'currency'            		=> $order->get_currency(),
+			'total_weight'        		=> $order_weight,
+			'subtotal'            		=> $order->get_subtotal(),
 		);
 
 		// Check mailbox weight limit.
@@ -416,6 +417,9 @@ class Item_Info extends Base_Info {
 				'default' => array(),
 			),
 			'return_barcode'   => array(
+				'default' => '',
+			),
+			'shipping_return_barcode'   => array(
 				'default' => '',
 			),
 			'shipping_product' => array(

@@ -508,7 +508,7 @@ abstract class Base {
 		$label_post_data['barcodes']     = $barcodes;
 
 		$label_post_data['return_barcode']          = $this->maybe_create_return_barcode( $label_post_data );
-		$label_post_data['shipment_return_barcode'] = $this->maybe_create_shipment_return_barcode( $label_post_data );
+		$label_post_data['shipping_return_barcode'] = $this->maybe_create_shipping_return_barcode( $label_post_data, $label_post_data['main_barcode'] );
 		$label_post_data['is_return_activated']     = $this->is_return_function_activated( $order );
 
 		$labels = $this->create_label( $label_post_data );
@@ -803,29 +803,15 @@ abstract class Base {
 	 *
 	 * @throws \Exception Error when response has an error.
 	 */
-	public function maybe_create_shipment_return_barcode( $post_data ) {
-		if ( ! isset( $post_data['saved_data']['backend']['create_shipment_return_label'] ) || 'yes' !== $post_data['saved_data']['backend']['create_shipment_return_label'] ) {
+	public function maybe_create_shipping_return_barcode( $post_data, $barcode ) {
+		$item_info = new Shipping\Item_Info( $post_data );
+		if ( 'shipping_return' !== $this->settings->get_return_shipment_and_labels() || 
+			 'NL' !== $item_info->receiver['country'] ||
+			 '2928' === $item_info->shipment['shipping_product']['code'] ) {
 			return '';
 		}
 
-		$return_code = $this->settings->get_customer_code();
-
-		$data = array(
-			'order'         => $post_data['order'],
-			'customer_code' => $return_code,
-		);
-
-		$item_info = new Barcode\Item_Info( $data );
-		$barcode   = new Barcode\Client( $item_info );
-		$response  = $barcode->send_request();
-
-		if ( empty( $response['Barcode'] ) ) {
-			throw new \Exception(
-				esc_html__( 'Cannot create shipment return barcode.', 'postnl-for-woocommerce' )
-			);
-		}
-
-		return $response['Barcode'];
+		return $barcode;
 	}
 
 	/**
@@ -838,10 +824,22 @@ abstract class Base {
 	 * @throws \Exception Error when response has an error.
 	 */
 	public function maybe_create_return_barcode( $post_data ) {
-		if ( ! isset( $post_data['saved_data']['backend']['create_return_label'] ) || 'yes' !== $post_data['saved_data']['backend']['create_return_label'] ) {
+		$item_info = new Shipping\Item_Info( $post_data );
+		if( 'shipping_return' === $this->settings->get_return_shipment_and_labels() &&
+			'BE'  !== $item_info->receiver['country'] ) {
 			return '';
 		}
-
+		if ( 'in_box' === $this->settings->get_return_shipment_and_labels() && 
+				( ! isset( $post_data['saved_data']['backend']['create_return_label'] ) || 
+				  'yes' !== $post_data['saved_data']['backend']['create_return_label'] )
+			  ) {
+			return '';
+		}
+		$not_allowed = 	array( '6440', '6972', '6405', '6350', '6906' );	
+		if( 'BE'  === $item_info->receiver['country'] && in_array( $item_info->shipment['shipping_product']['code'], $not_allowed ) ) {
+			return '';
+		}
+		
 		$return_code = $this->settings->get_return_customer_code();
 
 		$data = array(

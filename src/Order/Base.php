@@ -824,19 +824,26 @@ abstract class Base {
 	 * @throws \Exception Error when response has an error.
 	 */
 	public function maybe_create_return_barcode( $post_data ) {
-		$item_info = new Shipping\Item_Info( $post_data );
-		if( 'shipping_return' === $this->settings->get_return_shipment_and_labels() &&
-			'BE'  !== $item_info->receiver['country'] ) {
+		$shipping_item_info = new Shipping\Item_Info( $post_data );
+
+		if( ! in_array( $shipping_item_info->receiver['country'], array( 'BE', 'NL' ) ) ) {
 			return '';
 		}
+
+		if( 'shipping_return' === $this->settings->get_return_shipment_and_labels() &&
+			'BE'  !== $shipping_item_info->receiver['country'] ) {
+			return '';
+		}
+
 		if ( 'in_box' === $this->settings->get_return_shipment_and_labels() && 
 				( ! isset( $post_data['saved_data']['backend']['create_return_label'] ) || 
 				  'yes' !== $post_data['saved_data']['backend']['create_return_label'] )
 			  ) {
 			return '';
 		}
+
 		$not_allowed = 	array( '6440', '6972', '6405', '6350', '6906' );	
-		if( 'BE'  === $item_info->receiver['country'] && in_array( $item_info->shipment['shipping_product']['code'], $not_allowed ) ) {
+		if( 'BE'  === $shipping_item_info->receiver['country'] && in_array( $shipping_item_info->shipment['shipping_product']['code'], $not_allowed ) ) {
 			return '';
 		}
 		

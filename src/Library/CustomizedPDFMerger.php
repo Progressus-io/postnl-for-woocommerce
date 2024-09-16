@@ -12,18 +12,22 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 use Exception;
-use setasign\Fpdi\Fpdi;
 use PostNLWooCommerce\Shipping_Method\Settings;
 use PostNLWooCommerce\Utils;
 
 class CustomizedPDFMerger {
+
+	/**
+	 * Files to merge.
+	 *
+	 * @var array
+	 */
 	private $_files;    //['form.pdf']  ["1,2,4, 5-19"]
-	private $_fpdi;
 
 	/**
 	 * Settings class instance.
 	 *
-	 * @var PostNLWooCommerce\Shipping_Method\Settings
+	 * @var Settings
 	 */
 	protected $settings;
 
@@ -35,9 +39,11 @@ class CustomizedPDFMerger {
 	 * Add a PDF for inclusion in the merge with a valid file path. Pages should be formatted: 1,3,6, 12-16.
 	 *
 	 * @param $filepath
-	 * @param $pages
+	 * @param string $pages
+	 * @param string|null $orientation
 	 *
-	 * @return void
+	 * @return CustomizedPDFMerger
+	 * @throws Exception
 	 */
 	public function addPDF( $filepath, $pages = 'all', $orientation = null ) {
 		if ( file_exists( $filepath ) ) {
@@ -56,11 +62,13 @@ class CustomizedPDFMerger {
 	/**
 	 * Merges your provided PDFs and outputs to specified location.
 	 *
-	 * @param $outputmode
-	 * @param $outputname
-	 * @param $orientation
+	 * @param string $outputmode
+	 * @param string $outputpath
+	 * @param string $orientation
+	 * @param string $start_position
 	 *
-	 * @return PDF
+	 * @return string|bool
+	 * @throws Exception
 	 */
 	public function merge( $outputmode = 'browser', $outputpath = 'newfile.pdf', $orientation = 'A', $start_position = 'top-left' ) {
 		if ( ! isset( $this->_files ) || ! is_array( $this->_files ) ) {
@@ -246,15 +254,12 @@ class CustomizedPDFMerger {
 	 *
 	 * @param $mode
 	 *
-	 * @return Character
+	 * @return string Character
 	 */
 	private function _switchmode( $mode ) {
 		switch ( strtolower( $mode ) ) {
 			case 'download':
 				return 'D';
-				break;
-			case 'browser':
-				return 'I';
 				break;
 			case 'file':
 				return 'F';
@@ -273,7 +278,8 @@ class CustomizedPDFMerger {
 	 *
 	 * @param $pages
 	 *
-	 * @return unknown_type
+	 * @return array
+	 * @throws Exception
 	 */
 	private function _rewritepages( $pages ) {
 		$pages = str_replace( ' ', '', $pages );

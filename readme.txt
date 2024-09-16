@@ -80,7 +80,7 @@ Follow these instructions (https://www.postnl.nl/Images/aanvragen-api-key-stappe
 
 == Changelog ==
 
-= 5.5.0 (2024-xx-xx) =
+= 5.5.0 (2024-08-27) =
 * Add: Compatibility with the new WooCommerce Product Editor.
 * Fix: HPOS declaration path.
 * Fix: Item Value is fed by price after discount.

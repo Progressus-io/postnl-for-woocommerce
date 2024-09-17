@@ -304,7 +304,8 @@ class Single extends Base {
 	 * @param Array $infos Dropoff points informations.
 	 */
 	public function generate_pickup_points_html( $infos ) {
-		$filtered_infos = Utils::get_pickup_points_infos($infos);
+		$filtered_infos = Utils::get_filtered_pickup_points_infos($infos);
+
 		if ( empty( $filtered_infos ) ) {
 			return;
 		}

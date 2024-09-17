@@ -759,13 +759,13 @@ class Utils {
 	}
 
 	/**
-	 * Get pickup points specific infos.
+	 * Get filtered pickup points specific infos.
 	 *
-	 * @param Array $infos Dropoff points informations.
+	 * @param array $infos Dropoff points informations.
 	 *
 	 * @return array
 	 */
-	public static function get_pickup_points_infos( $infos ) {
+	public static function get_filtered_pickup_points_infos( $infos ) {
 		$filtered_infos = array_filter(
 			$infos,
 			function ( $info ) {
@@ -792,8 +792,6 @@ class Utils {
 			ksort( $filtered_infos );
 		}
 
-		if ( empty( $filtered_infos ) ) {
-			return '';
-		}
+		return $filtered_infos;
 	}
 }

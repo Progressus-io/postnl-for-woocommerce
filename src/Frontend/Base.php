@@ -415,6 +415,10 @@ abstract class Base {
 		$non_standard_fees = self::non_standard_fees_data();
 
 		foreach ( $non_standard_fees as $type => $fee ) {
+			if ( ! isset( $data['frontend'][ $fee['condition']['key'] ] ) ) {
+				continue;
+			}
+
 			if ( $type === $data['frontend'][ $fee['condition']['key'] ] ) {
 				$fee_name  = $fee['fee_name'];
 				$fee_price = $fee['fee_price'];

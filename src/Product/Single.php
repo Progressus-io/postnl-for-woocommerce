@@ -190,6 +190,11 @@ class Single {
 		$fields = self::product_field_maps( $this->service );
 
 		foreach ( $fields as $field ) {
+			if ( ! isset( $_POST[ $field['id'] ] ) ) {
+				$product->delete_meta_data( $field['id'] );
+				continue;
+			}
+
 			if ( empty( $i ) && ! is_array( $_POST[ $field['id'] ] ) && 0 === $product->get_parent_id() ) {
 				$product->update_meta_data( $field['id'], sanitize_text_field( wp_unslash( $_POST[ $field['id'] ] ) ) );
 			} elseif ( ! empty( $i ) && 0 !== $product->get_parent_id() ) {

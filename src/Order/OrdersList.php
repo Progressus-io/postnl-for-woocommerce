@@ -72,11 +72,14 @@ class OrdersList extends Base {
 	 * @return array.
 	 */
 	public function add_order_barcode_column_header( $columns ) {
-		$wc_actions = $columns['wc_actions'];
+		$wc_actions = $columns['wc_actions'] ?? null;
 		unset( $columns['wc_actions'] );
 
 		$columns['postnl_tracking_link'] = esc_html__( 'PostNL Tracking', 'postnl-for-woocommerce' );
-		$columns['wc_actions']           = $wc_actions;
+
+		if ( $wc_actions ) {
+			$columns['wc_actions'] = $wc_actions;
+		}
 
 		return $columns;
 	}
@@ -107,11 +110,15 @@ class OrdersList extends Base {
 	 * @return array.
 	 */
 	public function add_order_delivery_date_column_header( $columns ) {
-		$wc_actions = $columns['wc_actions'];
+		$wc_actions = $columns['wc_actions'] ?? null;
 		unset( $columns['wc_actions'] );
 
+		// Add the new Delivery Date column.
 		$columns['postnl_delivery_date'] = esc_html__( 'Delivery Date', 'postnl-for-woocommerce' );
-		$columns['wc_actions']           = $wc_actions;
+
+		if ( $wc_actions ) {
+			$columns['wc_actions'] = $wc_actions;
+		}
 
 		return $columns;
 	}
@@ -155,11 +162,14 @@ class OrdersList extends Base {
 	 * @return array.
 	 */
 	public function add_order_shipping_options_column_header( $columns ) {
-		$wc_actions = $columns['wc_actions'];
+		$wc_actions = $columns['wc_actions'] ?? null;
 		unset( $columns['wc_actions'] );
 
 		$columns['postnl_shipping_options'] = esc_html__( 'Shipping options', 'postnl-for-woocommerce' );
-		$columns['wc_actions']              = $wc_actions;
+
+		if ( $wc_actions ) {
+			$columns['wc_actions'] = $wc_actions;
+		}
 
 		return $columns;
 	}
@@ -239,11 +249,14 @@ class OrdersList extends Base {
 	 * @return array
 	 */
 	public function add_eligible_auto_letterbox_column_header( $columns ) {
-		$wc_actions = $columns['wc_actions'];
+		$wc_actions = $columns['wc_actions'] ?? null;
 		unset( $columns['wc_actions'] );
 
 		$columns['postnl_eligible_auto_letterbox'] = esc_html__( 'Fits through letterbox', 'postnl-for-woocommerce' );
-		$columns['wc_actions']           = $wc_actions;
+
+        if ( $wc_actions ) {
+			$columns['wc_actions'] = $wc_actions;
+		}
 
 		return $columns;
 	}

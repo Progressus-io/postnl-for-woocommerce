@@ -111,6 +111,7 @@ abstract class Base {
 		add_action( 'woocommerce_checkout_update_order_meta', array( $this, 'calculate_non_standard_fee' ), 20, 2 );
 		add_filter( 'postnl_frontend_checkout_tab', array( $this, 'add_checkout_tab' ), 10, 2 );
 		add_action( 'postnl_checkout_content', array( $this, 'display_content' ), 10, 2 );
+		add_filter( 'woocommerce_email_order_meta_fields', array( $this, 'add_pickup_points_fields_to_email' ), 10, 3 );
 	}
 
 	/**
@@ -131,6 +132,68 @@ abstract class Base {
 	 */
 	abstract public function get_content_data( $response, $post_data );
 
+	/**
+	 * Add pickup points info to email templates.
+	 *
+	 * @param array     $fields Current fields.
+	 * @param bool      $sent_to_admin If should sent to admin.
+	 * @param \WC_Order $order Order instance.
+	 *
+	 * @return array
+	 */
+	public function add_pickup_points_fields_to_email( $fields, $sent_to_admin, $order ) {
+		$data = $this->get_data( $order->get_id() );
+		if ( ! empty( $data['frontend'] ) ) {
+			$value                    = $this->generate_pickup_points_email_html( $data['frontend'] );
+			$fields['Pickup address'] = array(
+				'label' => __( 'Pick up at PostNL-point', 'postnl-for-woocommerce' ),
+				'value' => $value,
+			);
+		}
+
+		return $fields;
+	}
+
+	/**
+	 * Generate the dropoff points html information.
+	 *
+	 * @param Array $infos Dropoff points informations.
+	 */
+	public function generate_pickup_points_email_html( $infos ) {
+		$filtered_infos = Utils::get_filtered_pickup_points_infos( $infos );
+
+		if ( empty( $filtered_infos ) ) {
+			return '';
+		}
+
+		$value = "<div class='postnl-info-container pickup-points-info'>";
+
+		foreach ( $filtered_infos as $info_idx => $info_val ) {
+			switch ( $info_idx ) {
+				case 'dropoff_points_date':
+					$additional_text = esc_html__( 'Date:', 'postnl-for-woocommerce' );
+					break;
+
+				case 'dropoff_points_time':
+					$additional_text = esc_html__( 'Time:', 'postnl-for-woocommerce' );
+					break;
+
+				default:
+					$additional_text = '';
+					break;
+			}
+
+			$value .= "
+				<div>
+					" . esc_html( $additional_text . ' ' . $info_val ) . "
+				</div>
+				";
+		}
+
+		$value .= " </div> <br>";
+
+		return $value;
+	}
 	/**
 	 * Adding a content in the frontend checkout.
 	 *

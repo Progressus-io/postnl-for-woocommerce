@@ -757,4 +757,41 @@ class Utils {
 
 		return $shipping_options;
 	}
+
+	/**
+	 * Get filtered pickup points specific infos.
+	 *
+	 * @param array $infos Dropoff points informations.
+	 *
+	 * @return array
+	 */
+	public static function get_filtered_pickup_points_infos( $infos ) {
+		$filtered_infos = array_filter(
+			$infos,
+			function ( $info ) {
+				$displayed_info = array(
+					'dropoff_points_date',
+					'dropoff_points_time',
+				);
+
+				return in_array( $info, $displayed_info, true );
+			},
+			ARRAY_FILTER_USE_KEY
+		);
+
+		$address_info = array_filter(
+			$infos,
+			function ( $info ) {
+				return false !== strpos( $info, '_address_' );
+			},
+			ARRAY_FILTER_USE_KEY
+		);
+
+		if ( ! empty( $address_info ) ) {
+			$filtered_infos['address'] = implode( ', ', $address_info );
+			ksort( $filtered_infos );
+		}
+
+		return $filtered_infos;
+	}
 }

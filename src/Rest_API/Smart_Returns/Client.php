@@ -74,9 +74,6 @@ class Client extends Base {
 					'ContactType' => '01',
 					'Email'       => $this->item_info->store['email'],
 				),
-				'Dimension'           => array(
-					'Weight' => $this->item_info->order_weight,
-				),
 				'ProductCodeDelivery' => $this->settings->get_return_address_or_reply_no() ? '3285' : '2285',
 				'ProductOptions'      => array(
 					'Characteristic' => '152',

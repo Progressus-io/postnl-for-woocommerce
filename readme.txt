@@ -86,6 +86,7 @@ Follow these instructions (https://www.postnl.nl/Images/aanvragen-api-key-stappe
 * Add: Smart Return feature allowing merchants to generate and email return barcodes for printer-less returns at PostNL locations.
 * Fix: Ability to merge Portrait and Landscape A6 labels into A4 PDF file.
 * Add: Display the selected Pickup-Point in the confirmation email to clarify the chosen delivery option.
+* Fix: PHP warnings.
 
 = 5.5.0 (2024-08-27) =
 * Add: Compatibility with the new WooCommerce Product Editor.

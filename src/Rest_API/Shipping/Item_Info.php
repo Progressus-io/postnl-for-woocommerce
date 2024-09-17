@@ -226,7 +226,7 @@ class Item_Info extends Base_Info {
 			'barcodes'                => $post_data['barcodes'],
 			'return_barcode'          => isset( $post_data['return_barcode'] ) ? $post_data['return_barcode'] : '',
 			'shipping_return_barcode' => isset( $post_data['shipping_return_barcode'] ) ? $post_data['shipping_return_barcode'] : '',
-			'is_return_activated'     => $post_data['is_return_activated'] ? 'yes' : 'no',
+			'is_return_activated'     => isset( $post_data['is_return_activated'] ) && $post_data['is_return_activated'] ? 'yes' : 'no',
 			'currency'                => $order->get_currency(),
 			'total_weight'            => $order_weight,
 			'subtotal'                => $order->get_subtotal(),

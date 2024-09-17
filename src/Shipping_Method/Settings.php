@@ -1324,7 +1324,7 @@ class Settings extends \WC_Settings_API {
 	 */
 	public function get_printer_type() {
 		$printer_type = $this->get_country_option( 'printer_type', '' );
-		$resolution   = (int) $this->get_country_option( 'printer_type_resolution', '' );
+		$resolution   = (int) $this->get_country_option( 'printer_type_resolution', 600 );
 
 		switch ( $printer_type ) {
 			case 'JPG':

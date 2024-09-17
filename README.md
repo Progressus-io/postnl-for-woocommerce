@@ -41,6 +41,7 @@ PostNL’s official extension for WooCommerce on WordPress. Manage your national
 * Add: "Return to Home Address" option to the Return Settings.
 * Add: Smart Return feature allowing merchants to generate and email return barcodes for printer-less returns at PostNL locations.
 * Fix: Ability to merge Portrait and Landscape A6 labels into A4 PDF file.
+* Add: Display the selected Pickup-Point in the confirmation email to clarify the chosen delivery option.
 
 ### 5.5.0
 * Add: Compatibility with the new WooCommerce Product Editor.

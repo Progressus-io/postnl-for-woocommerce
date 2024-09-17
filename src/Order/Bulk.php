@@ -182,32 +182,36 @@ class Bulk extends Base {
 	/**
 	 * Merge bulk labels.
 	 *
-	 * @param Array $gen_labels Generated labels.
+	 * @param array $gen_labels Generated labels.
 	 */
 	public function merge_bulk_labels( $gen_labels ) {
-		$label_format  = $this->settings->get_label_format();
-		$label_paths   = array();
-		$array_messags = array();
+		$label_format = $this->settings->get_label_format();
+		$label_paths  = array();
 
-		if('A6' !== $label_format){
-			foreach ( $gen_labels as $idx => $label ) {
-				foreach ( $label as $label_type => $label_info ) {
-					if ( empty( $label_info['filepath'] ) ) {
-						continue 2;
-					}
+		if ( 'A6' === $label_format ) {
+			return array(
+				'message' => esc_html__( 'Could not create bulk PostNL label file while label format is set to A6, download individually.', 'postnl-for-woocommerce' ),
+				'type'    => 'error',
+			);
+		}
 
-					if ( 'A6' === $label_format && 'pdf' === pathinfo( $label_info['filepath'], PATHINFO_EXTENSION ) || 'pdf' !== pathinfo( $label_info['filepath'], PATHINFO_EXTENSION ) ) {
-						$label_paths[] = $label_info['filepath'];
-						continue 2;
-					}
+		foreach ( $gen_labels as $idx => $label ) {
+			foreach ( $label as $label_type => $label_info ) {
+				if ( empty( $label_info['filepath'] ) ) {
+					continue 2;
+				}
 
-					if ( empty( $label_info['merged_files'] ) ) {
-						continue 2;
-					}
+				if ( 'pdf' !== pathinfo( $label_info['filepath'], PATHINFO_EXTENSION ) ) {
+					$label_paths[] = $label_info['filepath'];
+					continue 2;
+				}
 
-					foreach ( $label_info['merged_files'] as $path ) {
-						$label_paths[] = $path;
-					}
+				if ( empty( $label_info['merged_files'] ) ) {
+					continue 2;
+				}
+
+				foreach ( $label_info['merged_files'] as $path ) {
+					$label_paths[] = $path;
 				}
 			}
 		}
@@ -241,12 +245,7 @@ class Bulk extends Base {
 				'type'    => 'success',
 			);
 		}
-		if ( 'A6' === $label_format ){
-			return array(
-				'message' => esc_html__( 'Could not create bulk PostNL label file while label format is set to A6, download individually.', 'postnl-for-woocommerce' ),
-				'type'    => 'error',
-			);
-		}
+
 		return array(
 			'message' => esc_html__( 'Could not create bulk PostNL label file, download individually.', 'postnl-for-woocommerce' ),
 			'type'    => 'error',

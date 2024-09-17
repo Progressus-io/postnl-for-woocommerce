@@ -952,10 +952,10 @@ abstract class Base {
 	/**
 	 * Merge PDF Labels.
 	 *
-	 * @param Array  $label_paths List of label path.
+	 * @param array  $label_paths List of label path.
 	 * @param String $merge_filename Name of the file after the merge process.
 	 *
-	 * @return Array List of filepath that has been merged.
+	 * @return array List of filepath that has been merged.
 	 */
 	protected function merge_pdf_labels( $label_paths, $merge_filename, $start_position = 'top-left' ) {
 		$pdf          = new CustomizedPDFMerger();

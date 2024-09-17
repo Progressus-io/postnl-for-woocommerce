@@ -80,6 +80,12 @@ Follow these instructions (https://www.postnl.nl/Images/aanvragen-api-key-stappe
 
 == Changelog ==
 
+= 5.6.0 (2024-09-17) =
+* Add: New "Printer Types" setting with support for PDF, GIF, JPG, and ZPL.
+* Add: "Return to Home Address" option to the Return Settings.
+* Add: Smart Return feature allowing merchants to generate and email return barcodes for printer-less returns at PostNL locations.
+* Fix: Ability to merge Portrait and Landscape A6 labels into A4 PDF file.
+
 = 5.5.0 (2024-08-27) =
 * Add: Compatibility with the new WooCommerce Product Editor.
 * Fix: HPOS declaration path.

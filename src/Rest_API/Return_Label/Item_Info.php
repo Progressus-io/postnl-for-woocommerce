@@ -31,7 +31,7 @@ class Item_Info extends Shipping\Item_Info {
 	/**
 	 * Get product options from api args.
 	 *
-	 * @return String.
+	 * @return array.
 	 */
 	public function get_product_options() {
 		return array(

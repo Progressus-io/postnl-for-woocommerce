@@ -34,7 +34,7 @@ class Item_Info extends Base_Info {
 	/**
 	 * Settings class instance.
 	 *
-	 * @var PostNLWooCommerce\Shipping_Method\Settings
+	 * @var Settings
 	 */
 	protected $settings;
 
@@ -100,7 +100,7 @@ class Item_Info extends Base_Info {
 	 * @var weight_uom
 	 */
 	public $weight_uom;
-	
+
 	/**
 	 * Parses the arguments and sets the instance's properties.
 	 *
@@ -110,7 +110,7 @@ class Item_Info extends Base_Info {
 		$this->weight_uom = Utils::get_uom();
 
 		$customer_info = $this->api_args['settings'] + $this->api_args['store_address'];
-		$shipment      = $this->api_args['billing_address'] + $this->api_args['order_details'];
+		$shipment      = $this->api_args['billing_address'] + $this->api_args['order_details'] + $this->api_args['settings'];
 
 		$this->shipment      = Utils::parse_args( $shipment, $this->get_shipment_info_schema() );
 		$this->receiver      = Utils::parse_args( $this->api_args['shipping_address'], $this->get_receiver_info_schema() );
@@ -176,19 +176,20 @@ class Item_Info extends Base_Info {
 		$this->api_args['shipping_address'] = Address_Utils::split_address( $shipping_address );
 
 		$this->api_args['backend_data'] = array(
-			'delivery_type'         => $saved_data['backend']['delivery_type'] ?? '',
-			'insured_shipping'      => $saved_data['backend']['insured_shipping'] ?? '',
-			'return_no_answer'      => $saved_data['backend']['return_no_answer'] ?? '',
-			'signature_on_delivery' => $saved_data['backend']['signature_on_delivery'] ?? '',
-			'only_home_address'     => $saved_data['backend']['only_home_address'] ?? '',
-			'num_labels'            => $saved_data['backend']['num_labels'] ?? '',
-			'create_return_label'   => $saved_data['backend']['create_return_label'] ?? '',
-			'letterbox'             => $saved_data['backend']['letterbox'] ?? '',
-			'id_check'              => $saved_data['backend']['id_check'] ?? '',
-			'packets'               => $saved_data['backend']['packets'] ?? '',
-			'mailboxpacket'         => $saved_data['backend']['mailboxpacket'] ?? '',
-			'track_and_trace'       => $saved_data['backend']['track_and_trace'] ?? '',
-			'insured_plus'          => $saved_data['backend']['insured_plus'] ?? '',
+			'delivery_type'                => $saved_data['backend']['delivery_type'] ?? '',
+			'insured_shipping'             => $saved_data['backend']['insured_shipping'] ?? '',
+			'return_no_answer'             => $saved_data['backend']['return_no_answer'] ?? '',
+			'signature_on_delivery'        => $saved_data['backend']['signature_on_delivery'] ?? '',
+			'only_home_address'            => $saved_data['backend']['only_home_address'] ?? '',
+			'num_labels'                   => $saved_data['backend']['num_labels'] ?? '',
+			'create_return_label'          => $saved_data['backend']['create_return_label'] ?? '',
+			'create_shipment_return_label' => $saved_data['backend']['create_shipment_return_label'] ?? '',
+			'letterbox'                    => $saved_data['backend']['letterbox'] ?? '',
+			'id_check'                     => $saved_data['backend']['id_check'] ?? '',
+			'packets'                      => $saved_data['backend']['packets'] ?? '',
+			'mailboxpacket'                => $saved_data['backend']['mailboxpacket'] ?? '',
+			'track_and_trace'              => $saved_data['backend']['track_and_trace'] ?? '',
+			'insured_plus'                 => $saved_data['backend']['insured_plus'] ?? '',
 		);
 
 		// Check mailbox weight limit
@@ -219,14 +220,16 @@ class Item_Info extends Base_Info {
 		);
 
 		$this->api_args['order_details'] = array(
-			'order_id'       => $order->get_id(),
-			'order_number'   => $order->get_order_number(),
-			'main_barcode'   => $post_data['main_barcode'],
-			'barcodes'       => $post_data['barcodes'],
-			'return_barcode' => $post_data['return_barcode'],
-			'currency'       => $order->get_currency(),
-			'total_weight'   => $order_weight,
-			'subtotal'       => $order->get_subtotal(),
+			'order_id'                => $order->get_id(),
+			'order_number'            => $order->get_order_number(),
+			'main_barcode'            => $post_data['main_barcode'],
+			'barcodes'                => $post_data['barcodes'],
+			'return_barcode'          => isset( $post_data['return_barcode'] ) ? $post_data['return_barcode'] : '',
+			'shipping_return_barcode' => isset( $post_data['shipping_return_barcode'] ) ? $post_data['shipping_return_barcode'] : '',
+			'is_return_activated'     => $post_data['is_return_activated'] ? 'yes' : 'no',
+			'currency'                => $order->get_currency(),
+			'total_weight'            => $order_weight,
+			'subtotal'                => $order->get_subtotal(),
 		);
 
 		// Check mailbox weight limit.
@@ -289,6 +292,7 @@ class Item_Info extends Base_Info {
 	public function set_order_shipping_product() {
 		$this->api_args['order_details']['shipping_product'] = $this->get_shipping_product();
 		$this->api_args['order_details']['product_options']  = $this->get_product_options();
+		$this->api_args['order_details']['return_options']   = $this->get_return_options();
 	}
 
 	/**
@@ -325,20 +329,20 @@ class Item_Info extends Base_Info {
 		$self = $this;
 
 		return array(
-			'location_code'        => array(
+			'location_code'              => array(
 				'error' => __( 'Location Code is empty!', 'postnl-for-woocommerce' ),
 			),
-			'customer_code'        => array(
+			'customer_code'              => array(
 				'error' => __( 'Customer Code is empty!', 'postnl-for-woocommerce' ),
 			),
-			'customer_num'         => array(
+			'customer_num'               => array(
 				'error' => __( 'Customer Number is empty!', 'postnl-for-woocommerce' ),
 			),
-			'company'              => array(
+			'company'                    => array(
 				'default' => '',
 			),
-			'email'                => array(
-				'validate' => function( $value ) {
+			'email'                      => array(
+				'validate' => function ( $value ) {
 					if ( empty( $value ) ) {
 						throw new \Exception(
 							__( 'Store email is empty!', 'postnl-for-woocommerce' )
@@ -352,36 +356,39 @@ class Item_Info extends Base_Info {
 					}
 				},
 			),
-			'return_company'       => array(
+			'return_company'             => array(
 				'default' => '',
 			),
-			'return_address_1'     => array(
+			'return_address_1'           => array(
 				'default'  => '',
-				'sanitize' => function( $value ) use ( $self ) {
+				'sanitize' => function ( $value ) use ( $self ) {
 					if ( 'NL' === $self->api_args['store_address']['country'] ) {
-						return 'Antwoordnummer';
+						return ( $self->api_args['settings']['return_address_or_reply_no'] || $this->get_product_code() == '2928' ) ? $self->api_args['settings']['return_address_street'] : 'Antwoordnummer';
 					}
 
 					return $self->string_length_sanitization( $value, 95 );
 				},
 			),
-			'return_address_2'     => array(
+			'return_address_2'           => array(
 				'default'  => '',
-				'sanitize' => function( $value ) use ( $self ) {
+				'sanitize' => function ( $value ) use ( $self ) {
 					if ( 'NL' === $self->api_args['store_address']['country'] ) {
-						$value = $self->api_args['settings']['return_replynumber'];
+						$value = ( $self->api_args['settings']['return_address_or_reply_no'] || $this->get_product_code() == '2928' ) ? $self->api_args['settings']['return_address_house_no'] : $self->api_args['settings']['return_replynumber'];
 					}
 
 					return $self->string_length_sanitization( $value, 35 );
 				},
 			),
-			'return_address_city'  => array(
+			'return_address_house_noext' => array(
 				'default' => '',
 			),
-			'return_address_zip'   => array(
+			'return_address_city'        => array(
 				'default' => '',
 			),
-			'return_customer_code' => array(
+			'return_address_zip'         => array(
+				'default' => '',
+			),
+			'return_customer_code'       => array(
 				'default' => '',
 			),
 		);
@@ -398,24 +405,27 @@ class Item_Info extends Base_Info {
 		$self = $this;
 
 		return array(
-			'order_id'         => array(
+			'order_id'                => array(
 				'error' => __( 'Order ID is empty!', 'postnl-for-woocommerce' ),
 			),
-			'order_number'     => array(
+			'order_number'            => array(
 				'error' => __( 'Order number is empty!', 'postnl-for-woocommerce' ),
 			),
-			'main_barcode'     => array(
+			'main_barcode'            => array(
 				'error' => __( 'Barcode is empty!', 'postnl-for-woocommerce' ),
 			),
-			'barcodes'         => array(
+			'barcodes'                => array(
 				'default' => array(),
 			),
-			'return_barcode'   => array(
+			'return_barcode'          => array(
 				'default' => '',
 			),
-			'shipping_product' => array(
+			'shipping_return_barcode' => array(
+				'default' => '',
+			),
+			'shipping_product'        => array(
 				'error'    => __( 'Product code is empty!', 'postnl-for-woocommerce' ),
-				'validate' => function( $value ) {
+				'validate' => function ( $value ) {
 					if ( empty( $value ) || ! is_numeric( $value['code'] ) && 4 !== strlen( $value['code'] ) ) {
 						throw new \Exception(
 							__( 'Wrong format for product code!', 'postnl-for-woocommerce' )
@@ -423,7 +433,7 @@ class Item_Info extends Base_Info {
 					}
 				}
 			),
-			'product_options' => array(
+			'product_options'         => array(
 				'default'  => array(
 					'characteristic' => '',
 					'option'         => '',
@@ -435,26 +445,39 @@ class Item_Info extends Base_Info {
 					);
 				},
 			),
-			'printer_type'    => array(
-				'default'  => 'GraphicFile|PDF',
-				'sanitize' => function( $value ) use ( $self ) {
-					return 'GraphicFile|PDF';
+			'return_options'          => array(
+				'default' => array(),
+			),
+			'printer_type'            => array(
+				'default'  => $this->get_product_code() == '4909' ? 'GraphicFile|PDF' : $this->settings->get_printer_type(),
+				'sanitize' => function ( $value ) use ( $self ) {
+					if ( in_array( $this->get_product_code(), array( '4909', '2928' ) ) ) {
+						return 'GraphicFile|PDF';
+					}
+
+					return $this->settings->get_printer_type();
 				},
 			),
-			'total_weight'    => array(
+			'shipment_return_label'   => array(
+				'default'  => $this->settings->get_return_shipment_and_labels_all(),
+				'sanitize' => function ( $value ) use ( $self ) {
+					return sanitize_text_field( $value );
+				},
+			),
+			'total_weight'            => array(
 				'error'    => __( 'Total weight is empty!', 'postnl-for-woocommerce' ),
-				'sanitize' => function( $value ) use ( $self ) {
+				'sanitize' => function ( $value ) use ( $self ) {
 					return $self->float_round_sanitization( $value, 2 );
 				},
 			),
-			'subtotal'        => array(
+			'subtotal'                => array(
 				'default'  => 0,
-				'sanitize' => function( $value ) use ( $self ) {
+				'sanitize' => function ( $value ) use ( $self ) {
 					return $self->float_round_sanitization( $value, 2 );
 				},
 			),
-			'email'           => array(
-				'validate' => function( $value ) {
+			'email'                   => array(
+				'validate' => function ( $value ) {
 					if ( ! is_email( $value ) ) {
 						throw new \Exception(
 							__( 'Customer email is not valid!', 'postnl-for-woocommerce' )
@@ -462,8 +485,8 @@ class Item_Info extends Base_Info {
 					}
 				},
 			),
-			'currency'     => array(
-				'validate' => function( $value ) {
+			'currency'                => array(
+				'validate' => function ( $value ) {
 					if ( ! Utils::check_available_currency( $value ) ) {
 						throw new \Exception(
 							__( 'Currency is not available!', 'postnl-for-woocommerce' )
@@ -471,7 +494,7 @@ class Item_Info extends Base_Info {
 					}
 				},
 			),
-			'phone'        => array(
+			'phone'                   => array(
 				'default' => '',
 			),
 		);
@@ -490,14 +513,14 @@ class Item_Info extends Base_Info {
 		return array(
 			'date'  => array(
 				'default'  => '',
-				'validate' => function( $date ) use ( $self ) {
+				'validate' => function ( $date ) use ( $self ) {
 					if ( empty( $date ) && $self->is_delivery_day() ) {
 						throw new \Exception(
 							__( 'Delivery day "Date" is empty!', 'postnl-for-woocommerce' )
 						);
 					}
 				},
-				'sanitize' => function( $value ) {
+				'sanitize' => function ( $value ) {
 					$timestamp = strtotime( $value );
 					$date      = gmdate( 'd-m-Y', $timestamp );
 
@@ -506,36 +529,36 @@ class Item_Info extends Base_Info {
 			),
 			'from'  => array(
 				'default'  => '',
-				'validate' => function( $hour ) use ( $self ) {
+				'validate' => function ( $hour ) use ( $self ) {
 					if ( empty( $hour ) && $self->is_delivery_day() ) {
 						throw new \Exception(
 							__( 'Delivery day "From" is empty!', 'postnl-for-woocommerce' )
 						);
 					}
 				},
-				'sanitize' => function( $value ) {
+				'sanitize' => function ( $value ) {
 					return $value . ':00';
 				},
 			),
 			'to'    => array(
 				'default'  => '',
-				'validate' => function( $hour ) use ( $self ) {
+				'validate' => function ( $hour ) use ( $self ) {
 					if ( empty( $hour ) && $self->is_delivery_day() ) {
 						throw new \Exception(
 							__( 'Delivery day "To" is empty!', 'postnl-for-woocommerce' )
 						);
 					}
 				},
-				'sanitize' => function( $value ) {
+				'sanitize' => function ( $value ) {
 					return $value . ':00';
 				},
 			),
 			'price' => array(
 				'default' => '',
 			),
-			'type'            => array(
+			'type'  => array(
 				'default'  => '',
-				'validate' => function( $type ) use ( $self ) {
+				'validate' => function ( $type ) use ( $self ) {
 					if ( empty( $type ) && $self->is_delivery_day() ) {
 						throw new \Exception(
 							__( 'Delivery day "Type" is empty!', 'postnl-for-woocommerce' )
@@ -557,8 +580,8 @@ class Item_Info extends Base_Info {
 		$self = $this;
 
 		return array(
-			'company'          => array(
-				'validate' => function( $company ) use ( $self ) {
+			'company'   => array(
+				'validate' => function ( $company ) use ( $self ) {
 					if ( empty( $company ) && $self->is_pickup_points() ) {
 						throw new \Exception(
 							__( 'Pickup "Company name" is empty!', 'postnl-for-woocommerce' )
@@ -566,23 +589,23 @@ class Item_Info extends Base_Info {
 					}
 				},
 			),
-			'address_1'        => array(
-				'validate' => function( $address ) use ( $self ) {
+			'address_1' => array(
+				'validate' => function ( $address ) use ( $self ) {
 					if ( empty( $address ) && $self->is_pickup_points() ) {
 						throw new \Exception(
 							__( 'Pickup "Address 1" is empty!', 'postnl-for-woocommerce' )
 						);
 					}
 				},
-				'sanitize' => function( $address ) use ( $self ) {
+				'sanitize' => function ( $address ) use ( $self ) {
 					return $self->string_length_sanitization( $address, 50 );
 				},
 			),
-			'address_2'        => array(
+			'address_2' => array(
 				'default' => '',
 			),
-			'city'             => array(
-				'validate' => function( $city ) use ( $self ) {
+			'city'      => array(
+				'validate' => function ( $city ) use ( $self ) {
 					if ( empty( $city ) && $self->is_pickup_points() ) {
 						throw new \Exception(
 							__( 'Pickup Point "City" is empty!', 'postnl-for-woocommerce' )
@@ -590,8 +613,8 @@ class Item_Info extends Base_Info {
 					}
 				},
 			),
-			'postcode'         => array(
-				'validate' => function( $postcode ) use ( $self ) {
+			'postcode'  => array(
+				'validate' => function ( $postcode ) use ( $self ) {
 					if ( empty( $postcode ) && $self->is_pickup_points() ) {
 						throw new \Exception(
 							__( 'Pickup Point "Postcode" is empty!', 'postnl-for-woocommerce' )
@@ -599,11 +622,11 @@ class Item_Info extends Base_Info {
 					}
 				},
 			),
-			'state'            => array(
+			'state'     => array(
 				'default' => '',
 			),
-			'country'          => array(
-				'validate' => function( $country ) use ( $self ) {
+			'country'   => array(
+				'validate' => function ( $country ) use ( $self ) {
 					if ( empty( $country ) && $self->is_pickup_points() ) {
 						throw new \Exception(
 							__( 'Pickup Point "Country" is empty!', 'postnl-for-woocommerce' )
@@ -627,37 +650,37 @@ class Item_Info extends Base_Info {
 		return array(
 			'delivery_type'         => array(
 				'default'  => 'Standard',
-				'sanitize' => function( $type ) {
+				'sanitize' => function ( $type ) {
 					return ( 'Evening' === $type ) ? 'Evening' : 'Standard';
 				},
 			),
 			'insured_shipping'      => array(
 				'default'  => false,
-				'sanitize' => function( $picked ) {
+				'sanitize' => function ( $picked ) {
 					return ( 'yes' === $picked );
 				},
 			),
 			'return_no_answer'      => array(
 				'default'  => false,
-				'sanitize' => function( $picked ) {
+				'sanitize' => function ( $picked ) {
 					return ( 'yes' === $picked );
 				},
 			),
 			'signature_on_delivery' => array(
 				'default'  => false,
-				'sanitize' => function( $picked ) {
+				'sanitize' => function ( $picked ) {
 					return ( 'yes' === $picked );
 				},
 			),
 			'only_home_address'     => array(
 				'default'  => false,
-				'sanitize' => function( $picked ) {
+				'sanitize' => function ( $picked ) {
 					return ( 'yes' === $picked );
 				},
 			),
 			'num_labels'            => array(
 				'default'  => '1',
-				'sanitize' => function( $num ) use ( $self ) {
+				'sanitize' => function ( $num ) use ( $self ) {
 					$abs_number = abs( intval( $num ) );
 					if ( empty( $abs_number ) ) {
 						return 1;
@@ -668,43 +691,43 @@ class Item_Info extends Base_Info {
 			),
 			'create_return_label'   => array(
 				'default'  => false,
-				'sanitize' => function( $picked ) {
+				'sanitize' => function ( $picked ) {
 					return ( 'yes' === $picked );
 				},
 			),
 			'letterbox'             => array(
 				'default'  => false,
-				'sanitize' => function( $picked ) {
+				'sanitize' => function ( $picked ) {
 					return ( 'yes' === $picked );
 				},
 			),
 			'id_check'              => array(
 				'default'  => false,
-				'sanitize' => function( $picked ) {
+				'sanitize' => function ( $picked ) {
 					return ( 'yes' === $picked );
 				},
 			),
-			'packets'              => array(
+			'packets'               => array(
 				'default'  => false,
-				'sanitize' => function( $picked ) {
+				'sanitize' => function ( $picked ) {
 					return ( 'yes' === $picked );
 				},
 			),
-			'mailboxpacket'              => array(
+			'mailboxpacket'         => array(
 				'default'  => false,
-				'sanitize' => function( $picked ) {
+				'sanitize' => function ( $picked ) {
 					return ( 'yes' === $picked );
 				},
 			),
-			'track_and_trace'              => array(
+			'track_and_trace'       => array(
 				'default'  => false,
-				'sanitize' => function( $picked ) {
+				'sanitize' => function ( $picked ) {
 					return ( 'yes' === $picked );
 				},
 			),
 			'insured_plus'          => array(
 				'default'  => false,
-				'sanitize' => function( $picked ) {
+				'sanitize' => function ( $picked ) {
 					return ( 'yes' === $picked );
 				},
 			),
@@ -714,9 +737,9 @@ class Item_Info extends Base_Info {
 	/**
 	 * Retrieves the args scheme to use with parser for parsing order content item info.
 	 *
+	 * @return array
 	 * @since [*next-version*]
 	 *
-	 * @return array
 	 */
 	protected function get_content_item_info_schema() {
 		// Closures in PHP 5.3 do not inherit class context.
@@ -726,7 +749,7 @@ class Item_Info extends Base_Info {
 		return array(
 			'hs_code'          => array(
 				'default'  => '',
-				'validate' => function( $hs_code ) {
+				'validate' => function ( $hs_code ) {
 					$length = is_string( $hs_code ) ? strlen( $hs_code ) : 0;
 
 					if ( empty( $length ) ) {
@@ -743,7 +766,7 @@ class Item_Info extends Base_Info {
 			'item_description' => array(
 				'rename'   => 'description',
 				'default'  => '',
-				'sanitize' => function( $description ) use ( $self ) {
+				'sanitize' => function ( $description ) use ( $self ) {
 					return $self->string_length_sanitization( $description, 35 );
 				},
 			),
@@ -756,7 +779,7 @@ class Item_Info extends Base_Info {
 			'item_value'       => array(
 				'rename'   => 'value',
 				'default'  => 0,
-				'sanitize' => function( $value ) use ( $self ) {
+				'sanitize' => function ( $value ) use ( $self ) {
 					return $self->float_round_sanitization( $value, 2 );
 				},
 			),
@@ -764,7 +787,7 @@ class Item_Info extends Base_Info {
 				'default' => Utils::get_base_country(),
 			),
 			'qty'              => array(
-				'validate' => function( $qty ) {
+				'validate' => function ( $qty ) {
 
 					if ( ! is_numeric( $qty ) || $qty < 1 ) {
 						throw new \Exception(
@@ -779,6 +802,7 @@ class Item_Info extends Base_Info {
 
 					$weight = $self->maybe_convert_to_grams( $weight, $self->weight_uom );
 					$weight = ( $weight > 1 ) ? $weight : 1;
+
 					return $weight;
 				},
 			),
@@ -788,7 +812,7 @@ class Item_Info extends Base_Info {
 	/**
 	 * Calculate total weight in one order.
 	 *
-	 * @param WC_Order $order Order object.
+	 * @param \WC_Order $order Order object.
 	 *
 	 * @return Float Total weight.
 	 */
@@ -858,7 +882,7 @@ class Item_Info extends Base_Info {
 		$code_map = Mapping::products_data();
 
 		$selected_product = array();
-		$destination  = Utils::get_shipping_zone( $to_country );
+		$destination      = Utils::get_shipping_zone( $to_country );
 
 		if ( empty( $code_map[ $from_country ][ $destination ][ $shipping_feature ] ) ) {
 			return $selected_product;
@@ -870,12 +894,12 @@ class Item_Info extends Base_Info {
 			}
 			$is_this_it = true;
 			foreach ( $features as $feature ) {
-				if ( ! in_array( $feature,  $product['combination']) ) {
+				if ( ! in_array( $feature, $product['combination'] ) ) {
 					$is_this_it = false;
-				}				
+				}
 			}
-			foreach($product['combination'] as $combination){
-				if ( ! in_array( $combination,  $features) ) {
+			foreach ( $product['combination'] as $combination ) {
+				if ( ! in_array( $combination, $features ) ) {
 					$is_this_it = false;
 				}
 			}
@@ -903,7 +927,7 @@ class Item_Info extends Base_Info {
 	/**
 	 * Get product options from api args.
 	 *
-	 * @return String.
+	 * @return array.
 	 */
 	public function get_product_options() {
 		$option_map   = Mapping::additional_product_options();
@@ -935,8 +959,8 @@ class Item_Info extends Base_Info {
 	/**
 	 * Check mailbox weight limit.
 	 *
-	 * @param $backend_data  .
-	 * @param $order_weight  .
+	 * @param $backend_data .
+	 * @param $order_weight .
 	 *
 	 * @return void.
 	 * @throws \Exception if the order weight exceeds 2000 grams.
@@ -954,26 +978,66 @@ class Item_Info extends Base_Info {
 	/**
 	 * Check Insurance amount limit.
 	 *
-	 * @param $backend_data  .
-	 * @param $order_total  .
+	 * @param $backend_data .
+	 * @param $order_total .
 	 *
 	 * @return void.
 	 * @throws \Exception if the order weight exceeds € 5000.
 	 */
 	protected function check_insurance_amount_limit( $backend_data, $order_total ) {
 		$is_non_eu_shipment = $this->is_rest_of_world();
-	
+
 		// For non-EU shipments, set the insured amount to €500 if insurance is selected
 		if ( $is_non_eu_shipment && 'yes' === $backend_data['insured_shipping'] ) {
 			$insured_amount = 500;
-		}
-	
-		// For EU shipments, validate that insurance does not exceed €5000
-		elseif ( !$is_non_eu_shipment && 'yes' === $backend_data['insured_shipping'] && $order_total > 5000 ) {
+		} // For EU shipments, validate that insurance does not exceed €5000
+		elseif ( ! $is_non_eu_shipment && 'yes' === $backend_data['insured_shipping'] && $order_total > 5000 ) {
 			throw new \Exception(
 				__( 'Insurance amount for EU shipments cannot exceed €5000. Your total is: ' . $order_total, 'postnl-for-woocommerce' )
 			);
 		}
+	}
+
+	/**
+	 * Get Shipping and Return options.
+	 *
+	 * @return array.
+	 */
+	public function get_return_options() {
+		$shipment_return_type = $this->settings->get_return_shipment_and_labels();
+
+		if ( 'none' === $shipment_return_type ) {
+			return array();
+		}
+
+		$return_all_labels    = 'yes' === $this->settings->get_return_shipment_and_labels_all();
+		$return_label_options = Mapping::shipping_return_labels_options();
+		$from_country         = $this->api_args['store_address']['country'];
+		$to_country           = $this->api_args['shipping_address']['country'];
+		$destination          = Utils::get_shipping_zone( $to_country );
+		$is_letterbox         = 'yes' === $this->api_args['backend_data']['letterbox'];
+		$is_return_activated  = 'yes' === $this->api_args['order_details']['is_return_activated'];
+
+		if ( ! $is_return_activated && ! $is_letterbox && ! $return_all_labels && 'shipping_return' === $shipment_return_type && 'BE' != $destination ) {
+			$shipment_return_type = 'return_all_labels_not_active';
+		}
+
+		//Domestic Letterbox parcel (product code 2928) cannot be used in combination with Shipment and Return.
+		if ( ( $is_letterbox && 'yes' === $this->api_args['backend_data']['create_return_label'] ) || 'BE' == $destination ) {
+			$shipment_return_type = 'in_box';
+		} else if ( $is_letterbox ) {
+			return array();
+		}
+
+		if ( isset( $return_label_options[ $from_country ][ $destination ][ $shipment_return_type ] ) ) {
+			$allowed_products = $return_label_options[ $from_country ][ $destination ][ $shipment_return_type ]['products'];
+			$is_allowed       = in_array( $this->api_args['order_details']['shipping_product']['code'], $allowed_products ) || empty( $allowed_products );
+			$options          = $return_label_options[ $from_country ][ $destination ][ $shipment_return_type ]['options'];
+
+			return $is_allowed ? $options : array();
+		}
+
+		return array();
 	}
 
 }

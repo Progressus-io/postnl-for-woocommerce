@@ -88,7 +88,7 @@ class PostNL extends \WC_Shipping_Flat_Rate {
 		$form_fields['title']['default'] = $this->method_title;
 
 		// Minimum for free shipping.
-		$currency_symbol =  get_woocommerce_currency_symbol();
+		$currency_symbol = get_woocommerce_currency_symbol();
 
 		$form_fields['minimum_for_free_shipping'] = array(
 			'title'    => sprintf( esc_html__( 'Free shipping from %s', 'postnl-for-woocommerce' ), $currency_symbol ),

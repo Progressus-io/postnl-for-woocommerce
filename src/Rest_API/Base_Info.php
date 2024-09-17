@@ -135,61 +135,62 @@ abstract class Base_Info {
 		$self = $this;
 
 		return array(
-			'first_name' => array(
+			'first_name'   => array(
 				'error'    => __( 'Shipping "First Name" is empty!', 'postnl-for-woocommerce' ),
-				'validate' => function( $name ) use ( $self ) {
+				'validate' => function ( $name ) use ( $self ) {
 					if ( empty( $name ) ) {
 						throw new \Exception(
 							__( 'Shipping "First Name" is empty!', 'postnl-for-woocommerce' )
 						);
 					}
 				},
-				'sanitize' => function( $name ) use ( $self ) {
+				'sanitize' => function ( $name ) use ( $self ) {
 					return $self->string_length_sanitization( $name, 50 );
 				},
 			),
-			'last_name'  => array(
-				'default' => '',
-				'sanitize' => function( $name ) use ( $self ) {
+			'last_name'    => array(
+				'default'  => '',
+				'sanitize' => function ( $name ) use ( $self ) {
 					return $self->string_length_sanitization( $name, 50 );
 				},
 			),
-			'company'    => array(
+			'company'      => array(
 				'default' => '',
 			),
-			'address_1'  => array(
+			'address_1'    => array(
 				'error'    => __( 'Shipping "Address 1" is empty!', 'postnl-for-woocommerce' ),
-				'validate' => function( $name ) use ( $self ) {
+				'validate' => function ( $name ) use ( $self ) {
 					if ( empty( $name ) ) {
 						throw new \Exception(
 							__( 'Shipping "Address 1" is empty!', 'postnl-for-woocommerce' )
 						);
 					}
 				},
-				'sanitize' => function( $name ) use ( $self ) {
+				'sanitize' => function ( $name ) use ( $self ) {
 					return $self->string_length_sanitization( $name, 50 );
 				},
 			),
-			'address_2'  => array(
+			'address_2'    => array(
 				'default' => '',
 			),
-			'city'       => array(
+			'city'         => array(
 				'error' => __( 'Shipping "City" is empty!', 'postnl-for-woocommerce' ),
 			),
-			'postcode'   => array(
+			'postcode'     => array(
 				'error'    => __( 'Shipping "Postcode" is empty!', 'postnl-for-woocommerce' ),
-				'sanitize' => function( $value ) use ( $self ) {
+				'sanitize' => function ( $value ) use ( $self ) {
 					$value = str_replace( ' ', '', $value );
+
 					return $self->string_length_sanitization( $value, 7 );
 				},
 			),
-			'state'      => array(
+			'state'        => array(
 				'default' => '',
 			),
-			'country'    => array(
+			'country'      => array(
 				'error' => __( 'Shipping "Country" is empty!', 'postnl-for-woocommerce' ),
 			),
-			'house_number'      => array(
+			'house_number' => array(
 				'default' => '',
 			),
 		);
@@ -217,14 +218,14 @@ abstract class Base_Info {
 			),
 			'address_1' => array(
 				'error'    => __( 'Store address 1 is not configured!', 'postnl-for-woocommerce' ),
-				'validate' => function( $address_1 ) use ( $self ) {
+				'validate' => function ( $address_1 ) use ( $self ) {
 					if ( empty( $address_1 ) ) {
 						throw new \Exception(
 							__( 'Store address 1 is not configured!', 'postnl-for-woocommerce' )
 						);
 					}
 				},
-				'sanitize' => function( $address_1 ) use ( $self ) {
+				'sanitize' => function ( $address_1 ) use ( $self ) {
 					return $self->string_length_sanitization( $address_1, 50 );
 				},
 			),
@@ -236,8 +237,9 @@ abstract class Base_Info {
 			),
 			'postcode'  => array(
 				'error'    => __( 'Store postcode is not configured!', 'postnl-for-woocommerce' ),
-				'sanitize' => function( $value ) use ( $self ) {
+				'sanitize' => function ( $value ) use ( $self ) {
 					$value = str_replace( ' ', '', $value );
+
 					return $self->string_length_sanitization( $value, 7 );
 				},
 			),
@@ -254,19 +256,20 @@ abstract class Base_Info {
 	 * Sanitization for float value.
 	 *
 	 * @param Float $float Float value.
-	 * @param Int   $numcomma Number of character after the comma.
+	 * @param Int $numcomma Number of character after the comma.
 	 *
 	 * @return Float
 	 */
 	protected function float_round_sanitization( $float, $numcomma ) {
 		$float = floatval( $float );
+
 		return round( $float, $numcomma );
 	}
 
 	/**
 	 * Converts a given weight into grams, if necessary.
 	 *
-	 * @param float  $weight The weight amount.
+	 * @param float $weight The weight amount.
 	 * @param string $uom The unit of measurement of the $weight parameter.
 	 *
 	 * @return float The potentially converted weight.
@@ -288,7 +291,7 @@ abstract class Base_Info {
 	 * Sanitization for string length.
 	 *
 	 * @param String $string String value.
-	 * @param Int    $max Maximum of character.
+	 * @param Int $max Maximum of character.
 	 *
 	 * @return String
 	 */

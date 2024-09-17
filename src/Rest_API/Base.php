@@ -126,7 +126,7 @@ class Base {
 	 * Set API Environment value.
 	 */
 	public function set_api_url() {
-		$this->api_url  = ( true === $this->is_sandbox ) ? POSTNL_WC_SANDBOX_API_URL : POSTNL_WC_PROD_API_URL;
+		$this->api_url = ( true === $this->is_sandbox ) ? POSTNL_WC_SANDBOX_API_URL : POSTNL_WC_PROD_API_URL;
 		$this->api_url .= $this->endpoint;
 
 		if ( ! empty( $this->compose_url_params() ) && is_array( $this->compose_url_params() ) ) {
@@ -173,7 +173,7 @@ class Base {
 	/**
 	 * Get basic headers args for REST request.
 	 *
-	 * @return Array
+	 * @return array
 	 */
 	public function get_basic_headers_args() {
 		return array(
@@ -228,7 +228,7 @@ class Base {
 		$this->logger->write( 'API Request:' );
 		$this->logger->write( $request_args );
 
-		for ( $i = 1; $i <= 5; $i++ ) {
+		for ( $i = 1; $i <= 5; $i ++ ) {
 			$response = wp_remote_request( $api_url, $request_args );
 
 			if ( ! is_wp_error( $response ) ) {

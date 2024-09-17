@@ -207,11 +207,9 @@ class Main {
 	 * @return array $email_classes
 	 */
 	public function add_wc_smart_return_email( $email_classes ) {
-		//require_once plugin_dir_path( __FILE__ ) . 'Emails/class-wc-smart-return-email.php';
-	
 		// Add the smart return email to the list of email classes.
 		$email_classes['WC_Smart_Return_Email'] = new Emails\WC_Email_Smart_Return();
-	
+
 		return $email_classes;
 	}
 

@@ -125,7 +125,7 @@ class Client extends Base {
 					'Characteristic' => $option['characteristic'],
 					'Option'         => $option['option'],
 				);
-		
+
 			}
 		}
 
@@ -140,7 +140,7 @@ class Client extends Base {
 				);
 			}
 		}
-		
+
 		if ( ! empty( $this->item_info->shipment['return_barcode'] ) ) {
 			$shipment['ReturnBarcode'] = $this->item_info->shipment['return_barcode'];
 		} else if ( ! empty( $this->item_info->shipment['shipping_return_barcode'] ) ) {
@@ -155,7 +155,7 @@ class Client extends Base {
 			);
 		}
 
-		for ( $i = 1; $i <= $this->item_info->backend_data['num_labels']; $i++ ) {
+		for ( $i = 1; $i <= $this->item_info->backend_data['num_labels']; $i ++ ) {
 			if ( $this->item_info->backend_data['num_labels'] > 1 ) {
 				$shipment['Barcode'] = $this->item_info->shipment['barcodes'][ ( $i - 1 ) ];
 				$shipment['Groups']  = array(
@@ -204,7 +204,7 @@ class Client extends Base {
 		}
 
 		$contents = array();
-		foreach ( $this->item_info->contents  as $item ) {
+		foreach ( $this->item_info->contents as $item ) {
 			$contents[] = array(
 				'Description'     => $item['description'],
 				'Quantity'        => $item['qty'],
@@ -250,8 +250,8 @@ class Client extends Base {
 			);
 		}
 
-		if ( ! empty( $this->item_info->shipment['return_barcode'] ) || 
-			 ! empty( $this->item_info->shipment['shipping_return_barcode'] ) ) {
+		if ( ! empty( $this->item_info->shipment['return_barcode'] ) ||
+		     ! empty( $this->item_info->shipment['shipping_return_barcode'] ) ) {
 			$addresses[] = array(
 				'AddressType' => '08',
 				'City'        => $this->item_info->customer['return_address_city'],

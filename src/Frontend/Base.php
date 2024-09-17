@@ -167,28 +167,31 @@ abstract class Base {
 		}
 
 		$value = "<div class='postnl-info-container pickup-points-info'>";
-			
-			foreach ( $filtered_infos as $info_idx => $info_val ) {
-				switch ( $info_idx ) {
-					case 'dropoff_points_date':
-						$additional_text = esc_html__( 'Date:', 'postnl-for-woocommerce' );
-						break;
 
-					case 'dropoff_points_time':
-						$additional_text = esc_html__( 'Time:', 'postnl-for-woocommerce' );
-						break;
+		foreach ( $filtered_infos as $info_idx => $info_val ) {
+			switch ( $info_idx ) {
+				case 'dropoff_points_date':
+					$additional_text = esc_html__( 'Date:', 'postnl-for-woocommerce' );
+					break;
 
-					default:
-						$additional_text = '';
-						break;
-				}
-				$value .= "
+				case 'dropoff_points_time':
+					$additional_text = esc_html__( 'Time:', 'postnl-for-woocommerce' );
+					break;
+
+				default:
+					$additional_text = '';
+					break;
+			}
+
+			$value .= "
 				<div>
-					". esc_html( $additional_text . ' ' . $info_val )."
+					" . esc_html( $additional_text . ' ' . $info_val ) . "
 				</div>
 				";
-			}
-			$value .= " </div> <br>";
+		}
+
+		$value .= " </div> <br>";
+
 		return $value;
 	}
 	/**

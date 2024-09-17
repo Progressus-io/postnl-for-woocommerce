@@ -1337,24 +1337,6 @@ class Settings extends \WC_Settings_API {
 				return 'GraphicFile|PDF';
 		}
 	}
-	
-	/**
-	 * Get ask position A4 from the settings.
-	 *
-	 * @return String
-	 */
-	public function get_ask_position_a4() {
-		return $this->get_country_option( 'ask_position_a4', '' );
-	}
-
-	/**
-	 * Return true if track trace email field is ticked.
-	 *
-	 * @return Bool
-	 */
-	public function is_ask_position_a4_enabled() {
-		return ( 'yes' === $this->get_ask_position_a4() );
-	}
 
 	/**
 	 * Get woocommerce email checkbox value from the settings.

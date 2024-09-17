@@ -107,7 +107,7 @@ class Item_Info extends Base_Info {
 			'return_address_house_noext' => $this->settings->get_return_address_house_noext(),
 			'return_address_city'        => $this->settings->get_return_city(),
 			'return_address_zip'         => $this->settings->get_return_zipcode(),
-			'return_customer_code'       => $this->settings->get_return_customer_code()
+			'return_customer_code'       => $this->settings->get_return_customer_code(),
 		);
 
 		return Address_Utils::split_address( $customer_address );
@@ -122,7 +122,7 @@ class Item_Info extends Base_Info {
 		return array(
 			'id'           => '36209c3d-14d2-478f-85de-abccd84fa790',
 			'time_stamp'   => gmdate( 'd-m-Y H:i:s' ),
-			'printer_type' => 'GraphicFile|PDF'
+			'printer_type' => 'GraphicFile|PDF',
 		);
 	}
 

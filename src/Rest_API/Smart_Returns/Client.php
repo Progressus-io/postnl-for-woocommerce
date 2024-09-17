@@ -39,7 +39,7 @@ class Client extends Base {
 	 */
 	public function compose_body_request() {
 		return array(
-			'Customer'               => array(
+			'Customer'  => array(
 				'Address'            => array(
 					'AddressType' => '02',
 					'City'        => $this->item_info->customer['city'],
@@ -53,12 +53,12 @@ class Client extends Base {
 				'CollectionLocation' => $this->item_info->store['location_code'],
 				'CustomerCode'       => $this->item_info->store['customer_code'],
 				'CustomerNumber'     => $this->item_info->store['customer_number'],
-				'Email'              => $this->item_info->store['email']
+				'Email'              => $this->item_info->store['email'],
 			),
-			'Message'                 => array(
+			'Message'   => array(
 				'MessageID'        => $this->item_info->message['id'],
 				'MessageTimeStamp' => $this->item_info->message['time_stamp'],
-				'Printertype'      => $this->item_info->message['printer_type']
+				'Printertype'      => $this->item_info->message['printer_type'],
 			),
 			'Shipments' => array(
 				'Addresses'           => array(
@@ -68,23 +68,22 @@ class Client extends Base {
 					'Countrycode' => $this->item_info->store['country'],
 					'HouseNr'     => $this->item_info->store['address_2'],
 					'Street'      => $this->item_info->store['address_1'],
-					'Zipcode'     => $this->item_info->store['postcode']
+					'Zipcode'     => $this->item_info->store['postcode'],
 				),
 				'Contacts'            => array(
 					'ContactType' => '01',
-					'Email'       => $this->item_info->store['email']
+					'Email'       => $this->item_info->store['email'],
 				),
 				'Dimension'           => array(
 					'Weight' => $this->item_info->order_weight,
 				),
-				'ProductCodeDelivery' => $this->settings->get_return_address_or_reply_no()?'3285':'2285',
+				'ProductCodeDelivery' => $this->settings->get_return_address_or_reply_no() ? '3285' : '2285',
 				'ProductOptions'      => array(
-					'Characteristic'  => '152',
-					'Option'          => '025',
+					'Characteristic' => '152',
+					'Option'         => '025',
 				),
-				'Reference' => 'cust order ref ' . $this->item_info->order_id,
+				'Reference'           => 'cust order ref ' . $this->item_info->order_id,
 			)
 		);
 	}
-
 }

@@ -11,6 +11,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+use PostNLWooCommerce\Product\Product_Editor;
+
 /**
  * Class Main
  *
@@ -22,7 +24,7 @@ class Main {
 	 *
 	 * @var _version
 	 */
-	private $version = '5.4.2';
+	private $version = '5.5.0';
 
 	/**
 	 * The ID of this plugin settings.
@@ -72,6 +74,7 @@ class Main {
 	 * @var PostNLWooCommerce\Shipping_Method\Settings
 	 */
 	public $shipping_settings = null;
+	
 
 	/**
 	 * Instance to call certain functions globally within the plugin
@@ -81,11 +84,19 @@ class Main {
 	protected static $instance = null;
 
 	/**
+	 * Product Editor.
+	 *
+	 * @var PostNLWooCommerce\Product\Product_Editor
+	 */
+	public $product_editor = null;
+
+	/**
 	 * Construct the plugin.
 	 */
 	public function __construct() {
 		add_action( 'init', array( $this, 'load_plugin' ), 1 );
 		add_action( 'before_woocommerce_init', array( $this, 'declare_wc_hpos_compatibility' ), 10 );
+		add_action( 'before_woocommerce_init', array( $this, 'declare_product_editor_compatibility' ), 10 );
 	}
 
 	/**
@@ -94,6 +105,15 @@ class Main {
 	public function declare_wc_hpos_compatibility() {
 		if ( class_exists( '\Automattic\WooCommerce\Utilities\FeaturesUtil' ) ) {
 			\Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility( 'custom_order_tables', POSTNL_WC_PLUGIN_BASENAME, true );
+		}
+	}
+
+	/**
+	 * Declare Product Editor compatibility.
+	 */
+	public function declare_product_editor_compatibility() {
+		if ( class_exists( '\Automattic\WooCommerce\Utilities\FeaturesUtil' ) ) {
+			\Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility( 'product_block_editor', POSTNL_WC_PLUGIN_BASENAME, true );
 		}
 	}
 
@@ -120,7 +140,6 @@ class Main {
 
 		// Path related defines.
 		$this->define( 'POSTNL_WC_PLUGIN_FILE', POSTNL_WC_PLUGIN_FILE );
-		$this->define( 'POSTNL_WC_PLUGIN_BASENAME', plugin_basename( POSTNL_WC_PLUGIN_FILE ) );
 		$this->define( 'POSTNL_WC_PLUGIN_DIR_PATH', untrailingslashit( plugin_dir_path( POSTNL_WC_PLUGIN_FILE ) ) );
 		$this->define( 'POSTNL_WC_PLUGIN_DIR_URL', untrailingslashit( plugins_url( '/', POSTNL_WC_PLUGIN_FILE ) ) );
 
@@ -162,6 +181,7 @@ class Main {
 		$this->get_orders_list();
 		$this->get_shipping_product();
 		$this->get_frontend();
+		$this->get_product_editor();
 	}
 
 	/**
@@ -176,8 +196,21 @@ class Main {
 		// Locate woocommerce template.
 		add_filter( 'woocommerce_locate_template', array( $this, 'woocommerce_locate_template' ), 20, 3 );
 
-		// Enqueue shipping method settings js.
-		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_shipping_method_assets' ) );
+		add_filter( 'woocommerce_email_classes', array( $this, 'add_wc_smart_return_email' ) );
+	}
+
+	/**
+	 * Add the smart return email class.
+	 *
+	 * @param array $email_classes Array of existing WC emails.
+	 *
+	 * @return array $email_classes
+	 */
+	public function add_wc_smart_return_email( $email_classes ) {
+		// Add the smart return email to the list of email classes.
+		$email_classes['WC_Smart_Return_Email'] = new Emails\WC_Email_Smart_Return();
+
+		return $email_classes;
 	}
 
 	/**
@@ -210,6 +243,19 @@ class Main {
 		}
 
 		return $this->shipping_order;
+	}
+
+	/**
+	 * Get product editor class.
+	 *
+	 * @return Product\Product_Editor
+	 */
+	public function get_product_editor() {
+		if ( empty( $this->product_editor ) ) {
+			$this->product_editor = new Product\Product_Editor();
+		}
+
+		return $this->product_editor;
 	}
 
 	/**
@@ -375,22 +421,5 @@ class Main {
 	public static function get_logger() {
 		$settings = Shipping_Method\Settings::get_instance();
 		return new Logger( $settings->is_logging_enabled() );
-	}
-
-	/**
-	 * Enqueue js file in shipping method settings page.
-	 */
-	public function enqueue_shipping_method_assets() {
-		$screen = get_current_screen();
-
-		if ( ! empty( $screen->id ) && 'woocommerce_page_wc-settings' === $screen->id && ! empty( $_GET['section'] ) && POSTNL_SETTINGS_ID === wp_unslash( $_GET['section'] ) ) {
-			wp_enqueue_script(
-				'postnl-admin-settings',
-				POSTNL_WC_PLUGIN_DIR_URL . '/assets/js/admin-settings.js',
-				array( 'jquery' ),
-				POSTNL_WC_VERSION,
-				true
-			);
-		}
 	}
 }

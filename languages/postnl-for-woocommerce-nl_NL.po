@@ -342,6 +342,22 @@ msgid "Create Shipment"
 msgstr "Zending aanmaken"
 
 #: src/Order/Single.php:372
+msgid "Activate return function"
+msgstr "Activeer retour functie"
+
+#: src/Order/Single.php:375
+msgid "Return function is activated for this label"
+msgstr "Retour functie is geactiveerd voor dit label"
+
+#: src/Order/Single.php:378
+msgid "Click here to activate the return function of this label"
+msgstr "Klik hier om de retour functie voor dit label te activeren"
+
+#: src/Order/Single.php:395
+msgid "Send email with Smart Return"
+msgstr "Zend Smart Return email"
+
+#: src/Order/Single.php:372
 msgid "Print Label"
 msgstr "Print Label"
 
@@ -738,6 +754,22 @@ msgstr "Vul bedrijfsnaam in - deze naam wordt genoteerd als afzender op het labe
 msgid "Return Settings"
 msgstr "Retour Instellingen"
 
+#: src/Shipping_Method/Settings.php:159
+msgid "Standard return option"
+msgstr "Standaard retour optie"
+
+#: src/Shipping_Method/Settings.php:161
+msgid "- None: return labels are not automatically created"
+msgstr "- Geen: retour-labels worden niet automatisch aangemaakt"
+
+#: src/Shipping_Method/Settings.php:162
+msgid "- Shipment & Return: the label of the outward shipment can also be used for the return shipment."
+msgstr "- Heen & Terug: het label van de heenzending kan ook gebruikt worden voor de retourzending."
+
+#: src/Shipping_Method/Settings.php:163
+msgid "- Label in the box: a separate return label is created at the same time as the label for the outward shipment and can be included in the box."
+msgstr "- Label in de doos: een los retourlabel wordt tegelijk met het label voor de heenzending aangemaakt en kan in de doos worden meegestuurd."
+
 #: src/Shipping_Method/Settings.php:156
 msgid "Please insert your return credentials."
 msgstr "Vul hier jouw retourgegevens in."
@@ -745,6 +777,43 @@ msgstr "Vul hier jouw retourgegevens in."
 #: src/Shipping_Method/Settings.php:159
 msgid "Always print returnlabel together with shipping label"
 msgstr "Altijd retour-label printen met label heenzending"
+
+#: src/Shipping_Method/Settings.php:166
+msgid "None"
+msgstr "Geen"
+
+#: src/Shipping_Method/Settings.php:167
+msgid "Shipping & Return Label"
+msgstr "Heen & Terug"
+
+#: src/Shipping_Method/Settings.php:168
+msgid "Label in the box"
+msgstr "Label in de doos"
+
+#: src/Shipping_Method/Settings.php:182
+msgid "Directly activate return function for all labels"
+msgstr "Retourfunctie direct activeren voor alle labels"
+
+#: src/Shipping_Method/Settings.php:187
+msgid "Yes, activate return function directly for all orders"
+msgstr "Ja, retourfunctie direct activeren voor alle orders."
+
+#: src/Shipping_Method/Settings.php:188
+msgid "No, activate return function per individual order"
+msgstr "Nee, retourfunctie per individuele order activeren."
+
+#: src/Shipping_Method/Settings.php:193
+msgid "Activate Smart Return"
+msgstr "Smart Returns activeren"
+
+#: src/Shipping_Method/Settings.php:196
+#: src/Shipping_Method/Settings.php:202
+msgid "Activate"
+msgstr "Activeren"
+
+#: src/Shipping_Method/Settings.php:200
+msgid "Return to home address"
+msgstr "Retour naar huisadres"
 
 #: src/Shipping_Method/Settings.php:161
 msgid ""

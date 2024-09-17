@@ -807,7 +807,7 @@ class Utils {
 		}
 
 		if ( empty( $filtered_infos ) ) {
-			return;
+			return '';
 		}
 	}
 }

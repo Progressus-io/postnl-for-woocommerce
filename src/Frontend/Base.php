@@ -162,7 +162,7 @@ abstract class Base {
 	public function generate_pickup_points_email_html( $infos ) {
 		$filtered_infos = Utils::get_pickup_points_infos( $infos );
 		if ( empty( $filtered_infos ) ) {
-			return;
+			return '';
 		}
 		$value = "<div class='postnl-info-container pickup-points-info'>";
 			

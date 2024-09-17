@@ -134,7 +134,7 @@ class Mapping {
 									'option'         => '014',
 								),
 							),
-						)
+						),
 					),
 					'pickup_points' => array(
 						array(
@@ -202,7 +202,7 @@ class Mapping {
 							'combination' => array(),
 							'code'        => '4936',
 							'options'     => array(),
-						)
+						),
 					),
 				),
 				'EU'  => array(
@@ -219,9 +219,9 @@ class Mapping {
 								array(
 									'characteristic' => '101',
 									'option'         => '012',
-								)
-							)
-						)
+								),
+							),
+						),
 					),
 				),
 				'ROW' => array(
@@ -234,9 +234,9 @@ class Mapping {
 								array(
 									'characteristic' => '005',
 									'option'         => '025',
-								)
-							)
-						)
+								),
+							),
+						),
 					),
 				)
 			),
@@ -267,7 +267,7 @@ class Mapping {
 							'combination' => array( 'insured_shipping', 'only_home_address' ),
 							'code'        => '4965',
 							'options'     => array(),
-						)
+						),
 					),
 					'pickup_points' => array(
 						array(
@@ -279,7 +279,7 @@ class Mapping {
 							'combination' => array( 'insured_shipping' ),
 							'code'        => '4878',
 							'options'     => array(),
-						)
+						),
 					),
 				),
 				'NL'  => array(
@@ -323,7 +323,7 @@ class Mapping {
 							'combination' => array( 'signature_on_delivery', 'only_home_address', 'insured_shipping' ),
 							'code'        => '4897',
 							'options'     => array(),
-						)
+						),
 					),
 					'pickup_points' => array(
 						array(
@@ -335,7 +335,7 @@ class Mapping {
 							'combination' => array(),
 							'code'        => '4898',
 							'options'     => array(),
-						)
+						),
 					),
 
 				),
@@ -344,8 +344,8 @@ class Mapping {
 				),
 				'ROW' => array(
 					'delivery_day' => self::globalpack_products(),
-				)
-			)
+				),
+			),
 		);
 	}
 
@@ -359,28 +359,28 @@ class Mapping {
 			array(
 				'combination' => array( 'mailboxpacket' ),
 				'code'        => '6440',
-				'options'     => array()
+				'options'     => array(),
 			),
 			array(
 				'combination' => array( 'track_and_trace', 'mailboxpacket' ),
 				'code'        => '6972',
-				'options'     => array()
+				'options'     => array(),
 			),
 			array(
 				'combination' => array( 'packets' ),
 				'code'        => '6405',
-				'options'     => array()
+				'options'     => array(),
 			),
 			array(
 				'combination' => array( 'track_and_trace', 'packets' ),
 				'code'        => '6350',
-				'options'     => array()
+				'options'     => array(),
 			),
 			array(
 				'combination' => array( 'track_and_trace', 'packets', 'insured_shipping' ),
 				'code'        => '6906',
-				'options'     => array()
-			)
+				'options'     => array(),
+			),
 		);
 	}
 
@@ -403,8 +403,8 @@ class Mapping {
 						array(
 							'characteristic' => '101',
 							'option'         => '012',
-						)
-					)
+						),
+					),
 				),
 				array(
 					'combination' => array( 'track_and_trace' ),
@@ -417,8 +417,8 @@ class Mapping {
 						array(
 							'characteristic' => '101',
 							'option'         => '012',
-						)
-					)
+						),
+					),
 				),
 				array(
 					'combination' => array( 'track_and_trace', 'insured_shipping' ),
@@ -431,8 +431,8 @@ class Mapping {
 						array(
 							'characteristic' => '101',
 							'option'         => '012',
-						)
-					)
+						),
+					),
 				),
 				array(
 					'combination' => array( 'track_and_trace', 'insured_plus' ),
@@ -445,9 +445,9 @@ class Mapping {
 						array(
 							'characteristic' => '101',
 							'option'         => '012',
-						)
-					)
-				)
+						),
+					),
+				),
 			),
 			self::EU_ROW_products()
 		);
@@ -467,8 +467,8 @@ class Mapping {
 					array(
 						'characteristic' => '004',
 						'option'         => '015',
-					)
-				)
+					),
+				),
 			),
 			array(
 				'combination' => array( 'track_and_trace' ),
@@ -487,9 +487,9 @@ class Mapping {
 					array(
 						'characteristic' => '004',
 						'option'         => '016',
-					)
-				)
-			)
+					),
+				),
+			),
 		);
 	}
 
@@ -594,15 +594,15 @@ class Mapping {
 		return array(
 			'UE' => array(
 				array( 'mailboxpacket' ),
-				array( 'packets' )
+				array( 'packets' ),
 			),
 			'LA' => array(
 				array( 'track_and_trace', 'mailboxpacket' ),
-				array( 'track_and_trace', 'packets' )
+				array( 'track_and_trace', 'packets' ),
 			),
 			'RI' => array(
-				array( 'track_and_trace', 'packets', 'insured_shipping' )
-			)
+				array( 'track_and_trace', 'packets', 'insured_shipping' ),
+			),
 		);
 	}
 
@@ -621,20 +621,48 @@ class Mapping {
 							array(
 								'characteristic' => '152',
 								'option'         => '028',
-							)
+							),
 						),
 					),
 					'shipping_return'              => array(
-						'products' => array( '3085', '3438', '3090', '3189', '3385', '3087', '3389', '3094', '3390', '3096', '3089', '3533', '3534', ),
+						'products' => array(
+							'3085',
+							'3438',
+							'3090',
+							'3189',
+							'3385',
+							'3087',
+							'3389',
+							'3094',
+							'3390',
+							'3096',
+							'3089',
+							'3533',
+							'3534',
+						),
 						'options'  => array(
 							array(
 								'characteristic' => '152',
 								'option'         => '026',
-							)
+							),
 						),
 					),
 					'return_all_labels_not_active' => array(
-						'products' => array( '3085', '3438', '3090', '3189', '3385', '3087', '3389', '3094', '3390', '3096', '3089', '3533', '3534', ),
+						'products' => array(
+							'3085',
+							'3438',
+							'3090',
+							'3189',
+							'3385',
+							'3087',
+							'3389',
+							'3094',
+							'3390',
+							'3096',
+							'3089',
+							'3533',
+							'3534',
+						),
 						'options'  => array(
 							array(
 								'characteristic' => '152',
@@ -643,7 +671,7 @@ class Mapping {
 							array(
 								'characteristic' => '191',
 								'option'         => '004',
-							)
+							),
 						),
 					),
 				),
@@ -654,10 +682,10 @@ class Mapping {
 							array(
 								'characteristic' => '152',
 								'option'         => '028',
-							)
+							),
 						),
-					)
-				)
+					),
+				),
 			),
 		);
 	}

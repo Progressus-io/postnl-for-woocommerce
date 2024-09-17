@@ -662,13 +662,15 @@ class Utils {
 	 */
 	public static function is_eligible_auto_letterbox( $order ) {
 
+		if ( wc_get_base_location()['country'] == 'BE' ) {
+			return false;
+		}
+
 		// Check order
 		if ( is_int( $order ) ) {
 			$order = wc_get_order( $order );
 		}
-		if ( wc_get_base_location()['country'] == 'BE' ) {
-			return false;
-		}
+
 		if ( is_a( $order, 'WC_Order' ) ) {
 			if ( $order->meta_exists( '_postnl_letterbox' ) ) {
 				return (bool) $order->get_meta( '_postnl_letterbox', true );
@@ -682,7 +684,7 @@ class Utils {
 			$products = $order->get_items();
 		}
 
-		// Check cart items
+		// Check cart items.
 		if ( is_a( $order, 'WC_Cart' ) ) {
 			if ( ! in_array( WC()->customer->get_shipping_country(), Utils::get_available_country_for_letterbox(), true ) ) {
 				return false;
@@ -719,7 +721,7 @@ class Utils {
 				return false;
 			}
 
-			if( ! $product->needs_shipping() ) {
+			if ( ! $product->needs_shipping() ) {
 				continue;
 			}
 
@@ -731,7 +733,7 @@ class Utils {
 				return false;
 			}
 
-			$has_letterbox_product 		= true;
+			$has_letterbox_product      = true;
 			$quantity                   = $item['quantity'] ?? $item->get_quantity();
 			$qty_per_letterbox          = intval( $product->get_meta( Product\Single::MAX_QTY_PER_LETTERBOX ) );
 			$ratio_letterbox_item       = 0 != $qty_per_letterbox ? 1 / $qty_per_letterbox : 0;

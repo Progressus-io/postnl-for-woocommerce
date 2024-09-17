@@ -449,13 +449,12 @@ class Item_Info extends Base_Info {
 			),
 			'printer_type'    => array(
 				'default'  => $this->get_product_code() == '4909' ? 'GraphicFile|PDF':$this->settings->get_printer_type(),
-				'sanitize' => function( $value ) use ( $self ) {
-					if ( in_array($this->get_product_code(), [ '4909', '2928' ]) ){
+				'sanitize' => function ( $value ) use ( $self ) {
+					if ( in_array( $this->get_product_code(), array( '4909', '2928' ) ) ) {
 						return 'GraphicFile|PDF';
-					} else {
-						return $this->settings->get_printer_type();
 					}
-					return sanitize_text_field( $value );
+
+					return $this->settings->get_printer_type();
 				},
 			),
 			'shipment_return_label'    => array(

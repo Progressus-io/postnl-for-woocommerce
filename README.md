@@ -36,6 +36,9 @@ PostNL’s official extension for WooCommerce on WordPress. Manage your national
 
 ## Changelog
 
+### 5.6.0
+* Add: New "Printer Types" setting with support for PDF, GIF, JPG, and ZPL.
+
 ### 5.5.0
 * Add: Compatibility with the new WooCommerce Product Editor.
 * Fix: HPOS declaration path.

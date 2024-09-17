@@ -1318,21 +1318,23 @@ class Settings extends \WC_Settings_API {
 
 	/**
 	 * Get printer type from the settings.
+	 * PDF by default.
 	 *
 	 * @return String
 	 */
 	public function get_printer_type() {
 		$printer_type = $this->get_country_option( 'printer_type', '' );
 		$resolution   = (int) $this->get_country_option( 'printer_type_resolution', '' );
+
 		switch ( $printer_type ) {
-			case 'PDF':
-				return 'GraphicFile|PDF';
 			case 'JPG':
 				return sprintf( "GraphicFile|JPG %d dpi", $resolution );
 			case 'GIF':
 				return sprintf( "GraphicFile|GIF %d dpi", $resolution );
 			case 'ZPL':
 				return sprintf( "Zebra|Generic ZPL II %d dpi", $resolution );
+			default :
+				return 'GraphicFile|PDF';
 		}
 	}
 	

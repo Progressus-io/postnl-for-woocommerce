@@ -250,11 +250,12 @@ class Utils {
 	 * @param String $label_type Type of label.
 	 * @param String $barcode Barcode string.
 	 * @param String $label_format Label Format whether A4 or A6.
+	 * @param String $extension Label extension format given from API response. The extension could be change by the settings page.
 	 *
 	 * @return String.
 	 */
-	public static function generate_label_name( $order_id, $label_type, $barcode, $label_format ) {
-		return 'postnl-' . $order_id . '-' . $label_type . '-' . $barcode . '-' . $label_format . '.pdf';
+	public static function generate_label_name( $order_id, $label_type, $barcode, $label_format, $extension ) {
+		return 'postnl-' . $order_id . '-' . $label_type . '-' . $barcode . '-' . $label_format . '.' . $extension;
 	}
 
 	/**
@@ -608,72 +609,49 @@ class Utils {
 		$order                = wc_get_order( $order_id );
 		$shipping_destination = Utils::get_shipping_zone( $order->get_shipping_country() );
 
-		if ( 'NL' === $shipping_destination ) {
-			return array(
-				'standard_shipment'     => esc_html__( 'Standard shipment', 'postnl-for-woocommerce' ),
-				'id_check'              => esc_html__( 'ID Check', 'postnl-for-woocommerce' ),
-				'insured_shipping'      => esc_html__( 'Insured Shipping', 'postnl-for-woocommerce' ),
-				'return_no_answer'      => esc_html__( 'Return if no answer', 'postnl-for-woocommerce' ),
-				'signature_on_delivery' => esc_html__( 'Signature on Delivery', 'postnl-for-woocommerce' ),
-				'only_home_address'     => esc_html__( 'Only Home Address', 'postnl-for-woocommerce' ),
-				'letterbox'             => esc_html__( 'Letterbox', 'postnl-for-woocommerce' ),
-				'packets'               => esc_html__( 'Packets', 'postnl-for-woocommerce' ),
-				'standard_belgium'      => esc_html__( 'Standard Shipment Belgium', 'postnl-for-woocommerce' ),
-				'mailboxpacket'         => esc_html__( 'Boxable Packet', 'postnl-for-woocommerce' ),
-				'track_and_trace'       => esc_html__( 'Track & Trace', 'postnl-for-woocommerce' ),
-				'eu_parcel'             => esc_html__( 'Parcels Non-EU Insured', 'postnl-for-woocommerce' ),
-				'parcel_non_eu'         => esc_html__( 'Parcels non-EU Insured Plus', 'postnl-for-woocommerce' ),
-			);
-		} elseif ( 'BE' === $shipping_destination ) {
-			return array(
-				'standard_shipment'     => esc_html__( 'Standard shipment', 'postnl-for-woocommerce' ),
-				'id_check'              => esc_html__( 'ID Check', 'postnl-for-woocommerce' ),
-				'return_no_answer'      => esc_html__( 'Return if no answer', 'postnl-for-woocommerce' ),
-				'signature_on_delivery' => esc_html__( 'Signature on Delivery', 'postnl-for-woocommerce' ),
-				'only_home_address'     => esc_html__( 'Only Home Address', 'postnl-for-woocommerce' ),
-				'letterbox'             => esc_html__( 'Letterbox', 'postnl-for-woocommerce' ),
-				'packets'               => esc_html__( 'Packet', 'postnl-for-woocommerce' ),
-				'standard_belgium'      => esc_html__( 'Standard Shipment Belgium', 'postnl-for-woocommerce' ),
-				'mailboxpacket'         => esc_html__( 'Boxable Packet', 'postnl-for-woocommerce' ),
-				'track_and_trace'       => esc_html__( 'Track & Trace', 'postnl-for-woocommerce' ),
-				'eu_parcel'             => esc_html__( 'Parcels Non-EU Insured', 'postnl-for-woocommerce' ),
-				'insured_shipping'      => esc_html__( 'Insured Shipping', 'postnl-for-woocommerce' ),
-				'parcel_non_eu'         => esc_html__( 'Parcels non-EU Insured Plus', 'postnl-for-woocommerce' ),
-			);
-		} elseif ( 'EU' === $shipping_destination ) {
-			return array(
-				'standard_shipment'     => esc_html__( 'Standard shipment', 'postnl-for-woocommerce' ),
-				'id_check'              => esc_html__( 'ID Check', 'postnl-for-woocommerce' ),
-				'return_no_answer'      => esc_html__( 'Return if no answer', 'postnl-for-woocommerce' ),
-				'signature_on_delivery' => esc_html__( 'Signature on Delivery', 'postnl-for-woocommerce' ),
-				'only_home_address'     => esc_html__( 'Only Home Address', 'postnl-for-woocommerce' ),
-				'letterbox'             => esc_html__( 'Letterbox', 'postnl-for-woocommerce' ),
-				'packets'               => esc_html__( 'Packet', 'postnl-for-woocommerce' ),
-				'standard_belgium'      => esc_html__( 'Standard Shipment Belgium', 'postnl-for-woocommerce' ),
-				'mailboxpacket'         => esc_html__( 'Boxable Packet', 'postnl-for-woocommerce' ),
-				'eu_parcel'             => esc_html__( 'Parcels EU', 'postnl-for-woocommerce' ),
-				'track_and_trace'       => esc_html__( 'Track & Trace', 'postnl-for-woocommerce' ),
-				'insured_shipping'      => esc_html__( 'Insured Shipping', 'postnl-for-woocommerce' ),
-				'insured_plus'          => esc_html__( 'Insured Plus', 'postnl-for-woocommerce' ),
-			);
-		} else {
-			return array(
-				'standard_shipment'     => esc_html__( 'Standard shipment', 'postnl-for-woocommerce' ),
-				'id_check'              => esc_html__( 'ID Check', 'postnl-for-woocommerce' ),
-				'return_no_answer'      => esc_html__( 'Return if no answer', 'postnl-for-woocommerce' ),
-				'signature_on_delivery' => esc_html__( 'Signature on Delivery', 'postnl-for-woocommerce' ),
-				'only_home_address'     => esc_html__( 'Only Home Address', 'postnl-for-woocommerce' ),
-				'letterbox'             => esc_html__( 'Letterbox', 'postnl-for-woocommerce' ),
-				'packets'               => esc_html__( 'Packet', 'postnl-for-woocommerce' ),
-				'standard_belgium'      => esc_html__( 'Standard Shipment Belgium', 'postnl-for-woocommerce' ),
-				'mailboxpacket'         => esc_html__( 'Boxable Packet', 'postnl-for-woocommerce' ),
-				'parcel_non_eu'         => esc_html__( 'Parcels Non-EU', 'postnl-for-woocommerce' ),
-				'track_and_trace'       => esc_html__( 'Track & Trace', 'postnl-for-woocommerce' ),
-				'insured_shipping'      => esc_html__( 'Insured Shipping', 'postnl-for-woocommerce' ),
-				'insured_plus'          => esc_html__( 'Insured Plus', 'postnl-for-woocommerce' ),
-			);
+		// Base shipping options (common to all destinations).
+		$base_options = array(
+			'standard_shipment'     => esc_html__( 'Standard shipment', 'postnl-for-woocommerce' ),
+			'id_check'              => esc_html__( 'ID Check', 'postnl-for-woocommerce' ),
+			'return_no_answer'      => esc_html__( 'Return if no answer', 'postnl-for-woocommerce' ),
+			'signature_on_delivery' => esc_html__( 'Signature on Delivery', 'postnl-for-woocommerce' ),
+			'only_home_address'     => esc_html__( 'Only Home Address', 'postnl-for-woocommerce' ),
+			'letterbox'             => esc_html__( 'Letterbox', 'postnl-for-woocommerce' ),
+			'packets'               => esc_html__( 'Packet', 'postnl-for-woocommerce' ),
+			'standard_belgium'      => esc_html__( 'Standard Shipment Belgium', 'postnl-for-woocommerce' ),
+			'mailboxpacket'         => esc_html__( 'Boxable Packet', 'postnl-for-woocommerce' ),
+			'track_and_trace'       => esc_html__( 'Track & Trace', 'postnl-for-woocommerce' ),
+			'insured_shipping'      => esc_html__( 'Insured Shipping', 'postnl-for-woocommerce' ),
+		);
+
+		// Modify options based on shipping destination.
+		switch ( $shipping_destination ) {
+			case 'BE':
+			case 'NL':
+				$destination_options = array(
+					'eu_parcel'     => esc_html__( 'Parcels Non-EU Insured', 'postnl-for-woocommerce' ),
+					'parcel_non_eu' => esc_html__( 'Parcels non-EU Insured Plus', 'postnl-for-woocommerce' ),
+				);
+				break;
+
+			case 'EU':
+				$destination_options = array(
+					'eu_parcel'    => esc_html__( 'Parcels EU', 'postnl-for-woocommerce' ),
+					'insured_plus' => esc_html__( 'Insured Plus', 'postnl-for-woocommerce' ),
+				);
+				break;
+
+			default:
+				$destination_options = array(
+					'parcel_non_eu' => esc_html__( 'Parcels Non-EU', 'postnl-for-woocommerce' ),
+					'insured_plus'  => esc_html__( 'Insured Plus', 'postnl-for-woocommerce' ),
+				);
+				break;
 		}
+
+		return array_merge( $base_options, $destination_options );
 	}
+
 
 	/**
 	 * Check if current order/cart is eligible for automatically use letterbox.
@@ -684,13 +662,15 @@ class Utils {
 	 */
 	public static function is_eligible_auto_letterbox( $order ) {
 
+		if ( wc_get_base_location()['country'] == 'BE' ) {
+			return false;
+		}
+
 		// Check order
 		if ( is_int( $order ) ) {
 			$order = wc_get_order( $order );
 		}
-		if ( wc_get_base_location()['country'] == 'BE' ) {
-			return false;
-		}
+
 		if ( is_a( $order, 'WC_Order' ) ) {
 			if ( $order->meta_exists( '_postnl_letterbox' ) ) {
 				return (bool) $order->get_meta( '_postnl_letterbox', true );
@@ -704,7 +684,7 @@ class Utils {
 			$products = $order->get_items();
 		}
 
-		// Check cart items
+		// Check cart items.
 		if ( is_a( $order, 'WC_Cart' ) ) {
 			if ( ! in_array( WC()->customer->get_shipping_country(), Utils::get_available_country_for_letterbox(), true ) ) {
 				return false;
@@ -732,12 +712,17 @@ class Utils {
 	 */
 	public static function check_products_for_letterbox( $products ) {
 		$total_ratio_letterbox_item = 0;
+		$has_letterbox_product      = false;
 
 		foreach ( $products as $item_id => $item ) {
-			$product              = wc_get_product( $item['product_id'] ?? $item->get_product_id() );
+			$product = wc_get_product( $item['product_id'] ?? $item->get_product_id() );
 			if ( ! is_a( $product, 'WC_Product' ) ) {
 				// If the product is not found, consider the order not eligible.
 				return false;
+			}
+
+			if ( ! $product->needs_shipping() ) {
+				continue;
 			}
 
 			$is_letterbox_product = $product->get_meta( Product\Single::LETTERBOX_PARCEL );
@@ -748,6 +733,7 @@ class Utils {
 				return false;
 			}
 
+			$has_letterbox_product      = true;
 			$quantity                   = $item['quantity'] ?? $item->get_quantity();
 			$qty_per_letterbox          = intval( $product->get_meta( Product\Single::MAX_QTY_PER_LETTERBOX ) );
 			$ratio_letterbox_item       = 0 != $qty_per_letterbox ? 1 / $qty_per_letterbox : 0;
@@ -755,7 +741,7 @@ class Utils {
 		}
 
 		// If the total ratio is more than 1, that means order items cannot be packed using letterbox.
-		return ( $total_ratio_letterbox_item <= 1 ) ? true : false;
+		return $has_letterbox_product && $total_ratio_letterbox_item <= 1;
 	}
 
 	/**
@@ -770,5 +756,42 @@ class Utils {
 		$shipping_options = array_fill_keys( $shipping_options, 'yes' );
 
 		return $shipping_options;
+	}
+
+	/**
+	 * Get filtered pickup points specific infos.
+	 *
+	 * @param array $infos Dropoff points informations.
+	 *
+	 * @return array
+	 */
+	public static function get_filtered_pickup_points_infos( $infos ) {
+		$filtered_infos = array_filter(
+			$infos,
+			function ( $info ) {
+				$displayed_info = array(
+					'dropoff_points_date',
+					'dropoff_points_time',
+				);
+
+				return in_array( $info, $displayed_info, true );
+			},
+			ARRAY_FILTER_USE_KEY
+		);
+
+		$address_info = array_filter(
+			$infos,
+			function ( $info ) {
+				return false !== strpos( $info, '_address_' );
+			},
+			ARRAY_FILTER_USE_KEY
+		);
+
+		if ( ! empty( $address_info ) ) {
+			$filtered_infos['address'] = implode( ', ', $address_info );
+			ksort( $filtered_infos );
+		}
+
+		return $filtered_infos;
 	}
 }

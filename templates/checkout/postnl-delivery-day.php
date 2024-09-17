@@ -25,11 +25,11 @@ if ( empty( $data['delivery_options'] ) ) {
 			<li>
 				<div class="list_title"><span><?php echo esc_html( $delivery['date'] . ' ' . $delivery['day'] ); ?></span></div>
 				<ul class="postnl_sub_list">
-					<?php foreach ( $delivery['options'] as $option ) { ?>
+					<?php foreach ( $delivery['options'] as $option_index => $option ) { ?>
 						<?php
 							$value      = sanitize_title( $delivery['date'] . '_' . $option['from'] . '-' . $option['to'] . '_' . $option['price'] );
 							$is_charged = ( empty( $option['price'] ) ) ? '' : '+' . wc_price( $option['price'] );
-							$is_checked = ( $value === $data['value'] || 0 === $index ) ? 'checked="checked"' : '';
+							$is_checked = ( $value === $data['value'] || 0 === $index && 0 === $option_index ) ? 'checked="checked"' : '';
 							$is_active  = ( $value === $data['value'] ) ? 'active' : '';
 							$delivery_time = '';
 							if ( 'Evening' === $option['type'] ) {
@@ -53,7 +53,7 @@ if ( empty( $data['delivery_options'] ) ) {
 									name="<?php echo esc_attr( $data['field_name'] ); ?>" 
 									class="postnl_sub_radio" 
 									value="<?php echo esc_attr( $value ); ?>"
-									<?php echo esc_html( $is_checked ); ?>
+									<?php echo $is_checked; ?>
 								/>
 								<i><?php echo wp_kses_post( $is_charged ); ?></i>
 								<i><?php echo esc_html( $delivery_time ); ?></i>

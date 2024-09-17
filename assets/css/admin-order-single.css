@@ -1,20 +1,15 @@
 #woocommerce-shipment-postnl-label h2.hndle.ui-sortable-handle {
-    background: url(../images/postnl-logo.png) no-repeat left 14px top / contain;
+    background: url(../images/postnl-new-brand-logo.png) no-repeat left 14px top / contain;
     height: 20px;
     padding: 5px 0 5px 55px;
 }
 
-#shipment-postnl-label-form .form-field {
-    display: flex;
-}
-
-#shipment-postnl-label-form .form-field label {
-    flex-grow: 1;
-}
-
-
 #shipment-postnl-label-form label {
     font-weight:700;
+}
+
+#shipment-postnl-label-form select, #shipment-postnl-label-form input[type="number"] {
+    width: 120px!important;
 }
 
 #shipment-postnl-label-form select, #shipment-postnl-label-form input[type="number"] {

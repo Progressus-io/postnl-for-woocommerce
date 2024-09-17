@@ -84,34 +84,37 @@ abstract class Base_Info {
 	 */
 	public function set_settings_data() {
 		$this->api_args['settings'] = array(
-			'location_code'            => $this->settings->get_location_code(),
-			'customer_code'            => $this->settings->get_customer_code(),
-			'customer_num'             => $this->settings->get_customer_num(),
-			'cut_off_time'             => $this->settings->get_cut_off_time(),
-			'dropoff_days'             => $this->settings->get_dropoff_days(),
-			'excluded_dropoff_days'    => $this->settings->get_excluded_dropoff_days(),
-			'pickup_points_enabled'    => $this->settings->is_pickup_points_enabled(),
-			'delivery_days_enabled'    => $this->settings->is_delivery_days_enabled(),
-			'morning_delivery_enabled' => $this->settings->is_morning_delivery_enabled(),
-			'evening_delivery_enabled' => $this->settings->is_evening_delivery_enabled(),
-			'transit_time'             => $this->settings->get_transit_time(),
+			'location_code'              => $this->settings->get_location_code(),
+			'customer_code'              => $this->settings->get_customer_code(),
+			'customer_num'               => $this->settings->get_customer_num(),
+			'cut_off_time'               => $this->settings->get_cut_off_time(),
+			'dropoff_days'               => $this->settings->get_dropoff_days(),
+			'excluded_dropoff_days'      => $this->settings->get_excluded_dropoff_days(),
+			'pickup_points_enabled'      => $this->settings->is_pickup_points_enabled(),
+			'delivery_days_enabled'      => $this->settings->is_delivery_days_enabled(),
+			'morning_delivery_enabled'   => $this->settings->is_morning_delivery_enabled(),
+			'evening_delivery_enabled'   => $this->settings->is_evening_delivery_enabled(),
+			'transit_time'               => $this->settings->get_transit_time(),
 			/* Temporarily hardcoded in Settings::get_number_pickup_points(). */
-			'number_pickup_points'     => $this->settings->get_number_pickup_points(),
-			'number_delivery_days'     => $this->settings->get_number_delivery_days(),
-			'return_company'           => $this->settings->get_return_company_name(),
-			'return_replynumber'       => $this->settings->get_return_reply_number(),
-			'return_address_1'         => $this->settings->get_return_address(),
-			'return_address_2'         => $this->settings->get_return_streetnumber(),
-			'return_address_city'      => $this->settings->get_return_city(),
-			'return_address_zip'       => $this->settings->get_return_zipcode(),
-			'return_customer_code'     => $this->settings->get_return_customer_code(),
-			'globalpack_barcode_type'  => $this->settings->get_globalpack_barcode_type(),
-			'globalpack_customer_code' => $this->settings->get_globalpack_customer_code(),
-			'hs_tariff_code'           => $this->settings->get_hs_tariff_code(),
-			'country_origin'           => $this->settings->get_country_origin(),
-			'label_format'             => $this->settings->get_label_format(),
-			'woocommerce_email'        => $this->settings->is_woocommerce_email_enabled(),
-			'woocommerce_email_text'   => $this->settings->get_woocommerce_email_text(),
+			'number_pickup_points'       => $this->settings->get_number_pickup_points(),
+			'number_delivery_days'       => $this->settings->get_number_delivery_days(),
+			'return_company'             => $this->settings->get_return_company_name(),
+			'return_address_or_reply_no' => $this->settings->get_return_address_or_reply_no(),
+			'return_replynumber'         => $this->settings->get_return_reply_number(),
+			'return_address_street'      => $this->settings->get_return_address_street(),
+			'return_address_house_no'    => $this->settings->get_return_address_house_no(),
+			'return_address_house_noext' => $this->settings->get_return_address_house_noext(),
+			'return_address_city'        => $this->settings->get_return_city(),
+			'return_address_zip'         => $this->settings->get_return_zipcode(),
+			'return_customer_code'       => $this->settings->get_return_customer_code(),
+			'globalpack_barcode_type'    => $this->settings->get_globalpack_barcode_type(),
+			'globalpack_customer_code'   => $this->settings->get_globalpack_customer_code(),
+			'hs_tariff_code'             => $this->settings->get_hs_tariff_code(),
+			'country_origin'             => $this->settings->get_country_origin(),
+			'printer_type'               => $this->settings->get_printer_type(),
+			'label_format'               => $this->settings->get_label_format(),
+			'woocommerce_email'          => $this->settings->is_woocommerce_email_enabled(),
+			'woocommerce_email_text'     => $this->settings->get_woocommerce_email_text(),
 		);
 	}
 
@@ -132,61 +135,62 @@ abstract class Base_Info {
 		$self = $this;
 
 		return array(
-			'first_name' => array(
+			'first_name'   => array(
 				'error'    => __( 'Shipping "First Name" is empty!', 'postnl-for-woocommerce' ),
-				'validate' => function( $name ) use ( $self ) {
+				'validate' => function ( $name ) use ( $self ) {
 					if ( empty( $name ) ) {
 						throw new \Exception(
 							__( 'Shipping "First Name" is empty!', 'postnl-for-woocommerce' )
 						);
 					}
 				},
-				'sanitize' => function( $name ) use ( $self ) {
+				'sanitize' => function ( $name ) use ( $self ) {
 					return $self->string_length_sanitization( $name, 50 );
 				},
 			),
-			'last_name'  => array(
-				'default' => '',
-				'sanitize' => function( $name ) use ( $self ) {
+			'last_name'    => array(
+				'default'  => '',
+				'sanitize' => function ( $name ) use ( $self ) {
 					return $self->string_length_sanitization( $name, 50 );
 				},
 			),
-			'company'    => array(
+			'company'      => array(
 				'default' => '',
 			),
-			'address_1'  => array(
+			'address_1'    => array(
 				'error'    => __( 'Shipping "Address 1" is empty!', 'postnl-for-woocommerce' ),
-				'validate' => function( $name ) use ( $self ) {
+				'validate' => function ( $name ) use ( $self ) {
 					if ( empty( $name ) ) {
 						throw new \Exception(
 							__( 'Shipping "Address 1" is empty!', 'postnl-for-woocommerce' )
 						);
 					}
 				},
-				'sanitize' => function( $name ) use ( $self ) {
+				'sanitize' => function ( $name ) use ( $self ) {
 					return $self->string_length_sanitization( $name, 50 );
 				},
 			),
-			'address_2'  => array(
+			'address_2'    => array(
 				'default' => '',
 			),
-			'city'       => array(
+			'city'         => array(
 				'error' => __( 'Shipping "City" is empty!', 'postnl-for-woocommerce' ),
 			),
-			'postcode'   => array(
+			'postcode'     => array(
 				'error'    => __( 'Shipping "Postcode" is empty!', 'postnl-for-woocommerce' ),
-				'sanitize' => function( $value ) use ( $self ) {
+				'sanitize' => function ( $value ) use ( $self ) {
 					$value = str_replace( ' ', '', $value );
+
 					return $self->string_length_sanitization( $value, 7 );
 				},
 			),
-			'state'      => array(
+			'state'        => array(
 				'default' => '',
 			),
-			'country'    => array(
+			'country'      => array(
 				'error' => __( 'Shipping "Country" is empty!', 'postnl-for-woocommerce' ),
 			),
-			'house_number'      => array(
+			'house_number' => array(
 				'default' => '',
 			),
 		);
@@ -214,14 +218,14 @@ abstract class Base_Info {
 			),
 			'address_1' => array(
 				'error'    => __( 'Store address 1 is not configured!', 'postnl-for-woocommerce' ),
-				'validate' => function( $address_1 ) use ( $self ) {
+				'validate' => function ( $address_1 ) use ( $self ) {
 					if ( empty( $address_1 ) ) {
 						throw new \Exception(
 							__( 'Store address 1 is not configured!', 'postnl-for-woocommerce' )
 						);
 					}
 				},
-				'sanitize' => function( $address_1 ) use ( $self ) {
+				'sanitize' => function ( $address_1 ) use ( $self ) {
 					return $self->string_length_sanitization( $address_1, 50 );
 				},
 			),
@@ -233,8 +237,9 @@ abstract class Base_Info {
 			),
 			'postcode'  => array(
 				'error'    => __( 'Store postcode is not configured!', 'postnl-for-woocommerce' ),
-				'sanitize' => function( $value ) use ( $self ) {
+				'sanitize' => function ( $value ) use ( $self ) {
 					$value = str_replace( ' ', '', $value );
+
 					return $self->string_length_sanitization( $value, 7 );
 				},
 			),
@@ -251,19 +256,20 @@ abstract class Base_Info {
 	 * Sanitization for float value.
 	 *
 	 * @param Float $float Float value.
-	 * @param Int   $numcomma Number of character after the comma.
+	 * @param Int $numcomma Number of character after the comma.
 	 *
 	 * @return Float
 	 */
 	protected function float_round_sanitization( $float, $numcomma ) {
 		$float = floatval( $float );
+
 		return round( $float, $numcomma );
 	}
 
 	/**
 	 * Converts a given weight into grams, if necessary.
 	 *
-	 * @param float  $weight The weight amount.
+	 * @param float $weight The weight amount.
 	 * @param string $uom The unit of measurement of the $weight parameter.
 	 *
 	 * @return float The potentially converted weight.
@@ -285,7 +291,7 @@ abstract class Base_Info {
 	 * Sanitization for string length.
 	 *
 	 * @param String $string String value.
-	 * @param Int    $max Maximum of character.
+	 * @param Int $max Maximum of character.
 	 *
 	 * @return String
 	 */

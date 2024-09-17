@@ -16,6 +16,7 @@ use PostNLWooCommerce\Shipping_Method\Settings;
 use PostNLWooCommerce\Helper\Mapping;
 use PostNLWooCommerce\Library\CustomizedPDFMerger;
 use PostNLWooCommerce\Product;
+use \Imagick;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -37,37 +38,45 @@ abstract class Base {
 	/**
 	 * Nonce key for ajax call.
 	 *
-	 * @var nonce_key
+	 * @var string nonce_key.
 	 */
 	protected $nonce_key = 'create-postnl-label';
 
 	/**
 	 * Current service.
 	 *
-	 * @var service
+	 * @var string service.
 	 */
 	protected $service = POSTNL_SERVICE_NAME;
 
 	/**
 	 * Prefix for meta box fields.
 	 *
-	 * @var prefix
+	 * @var string prefix.
 	 */
 	protected $prefix = POSTNL_SETTINGS_ID . '_';
 
 	/**
 	 * Meta name for saved fields.
 	 *
-	 * @var meta_name
+	 * @var string.
 	 */
 	protected $meta_name;
+
+	/**
+	 * Is return activated flag meta name.
+	 *
+	 * @var string.
+	 */
+	protected $is_return_activated_meta;
 
 	/**
 	 * Init and hook in the integration.
 	 */
 	public function __construct() {
-		$this->settings  = Settings::get_instance();
-		$this->meta_name = '_' . $this->prefix . 'order_metadata';
+		$this->settings                 = Settings::get_instance();
+		$this->meta_name                = '_' . $this->prefix . 'order_metadata';
+		$this->is_return_activated_meta = '_' . $this->prefix . 'return_activated';
 		$this->init_hooks();
 	}
 
@@ -84,7 +93,7 @@ abstract class Base {
 	public function get_nonce_fields() {
 		return array_filter(
 			$this->meta_box_fields(),
-			function( $field ) {
+			function ( $field ) {
 				return ( ! empty( $field['nonce'] ) && true === $field['nonce'] );
 			}
 		);
@@ -116,6 +125,7 @@ abstract class Base {
 		if ( 'NL' === $delivery_zone && Utils::is_eligible_auto_letterbox( $order ) ) {
 			return array( 'letterbox' => 'yes' );
 		}
+
 		return $this->settings->get_default_shipping_options( $delivery_zone );
 	}
 
@@ -148,195 +158,202 @@ abstract class Base {
 	public function meta_box_fields( $order = false ) {
 
 		$default_options = $this->get_shipping_options( $order );
+		$fields          = array(
+			array(
+				'id'            => $this->prefix . 'id_check',
+				'type'          => 'checkbox',
+				'label'         => __( 'ID Check: ', 'postnl-for-woocommerce' ),
+				'placeholder'   => '',
+				'description'   => '',
+				'value'         => $default_options['id_check'] ?? '',
+				'show_in_bulk'  => false,
+				'standard_feat' => false,
+				'const_field'   => false,
+				'container'     => true,
+			),
+			array(
+				'id'            => $this->prefix . 'insured_shipping',
+				'type'          => 'checkbox',
+				'label'         => __( 'Insured Shipping: ', 'postnl-for-woocommerce' ),
+				'placeholder'   => '',
+				'description'   => '',
+				'value'         => $default_options['insured_shipping'] ?? '',
+				'show_in_bulk'  => true,
+				'standard_feat' => false,
+				'const_field'   => false,
+				'container'     => true,
+			),
+			array(
+				'id'            => $this->prefix . 'insured_plus',
+				'type'          => 'checkbox',
+				'label'         => __( 'Insured Plus: ', 'postnl-for-woocommerce' ),
+				'placeholder'   => '',
+				'description'   => '',
+				'value'         => '',
+				'show_in_bulk'  => true,
+				'standard_feat' => false,
+				'const_field'   => false,
+				'container'     => true,
+			),
+			array(
+				'id'            => $this->prefix . 'return_no_answer',
+				'type'          => 'checkbox',
+				'label'         => __( 'Return if no answer: ', 'postnl-for-woocommerce' ),
+				'placeholder'   => '',
+				'description'   => '',
+				'value'         => $default_options['return_no_answer'] ?? '',
+				'show_in_bulk'  => true,
+				'standard_feat' => false,
+				'const_field'   => false,
+				'container'     => true,
+			),
+			array(
+				'id'            => $this->prefix . 'signature_on_delivery',
+				'type'          => 'checkbox',
+				'label'         => __( 'Signature on Delivery: ', 'postnl-for-woocommerce' ),
+				'placeholder'   => '',
+				'description'   => '',
+				'value'         => $default_options['signature_on_delivery'] ?? '',
+				'show_in_bulk'  => true,
+				'standard_feat' => false,
+				'const_field'   => false,
+				'container'     => true,
+			),
+			array(
+				'id'            => $this->prefix . 'only_home_address',
+				'type'          => 'checkbox',
+				'label'         => __( 'Only Home Address: ', 'postnl-for-woocommerce' ),
+				'placeholder'   => '',
+				'description'   => '',
+				'value'         => $default_options['only_home_address'] ?? '',
+				'show_in_bulk'  => true,
+				'standard_feat' => false,
+				'const_field'   => false,
+				'container'     => true,
+			),
+			array(
+				'id'            => $this->prefix . 'letterbox',
+				'type'          => 'checkbox',
+				'label'         => __( 'Letterbox: ', 'postnl-for-woocommerce' ),
+				'placeholder'   => '',
+				'description'   => '',
+				'value'         => $default_options['letterbox'] ?? '',
+				'show_in_bulk'  => true,
+				'standard_feat' => false,
+				'const_field'   => false,
+				'container'     => true,
+			),
+			array(
+				'id'            => $this->prefix . 'packets',
+				'type'          => 'checkbox',
+				'label'         => __( 'Packets: ', 'postnl-for-woocommerce' ),
+				'placeholder'   => '',
+				'description'   => '',
+				'value'         => '',
+				'show_in_bulk'  => true,
+				'standard_feat' => false,
+				'const_field'   => false,
+				'container'     => true,
+			),
+			array(
+				'id'            => $this->prefix . 'mailboxpacket',
+				'type'          => 'checkbox',
+				'label'         => __( 'Mailbox Packet (International): ', 'postnl-for-woocommerce' ),
+				'placeholder'   => '',
+				'description'   => '',
+				'value'         => '',
+				'show_in_bulk'  => true,
+				'standard_feat' => false,
+				'const_field'   => false,
+				'container'     => true,
+			),
+			array(
+				'id'            => $this->prefix . 'track_and_trace',
+				'type'          => 'checkbox',
+				'label'         => __( 'Track & Trace: ', 'postnl-for-woocommerce' ),
+				'placeholder'   => '',
+				'description'   => '',
+				'value'         => '',
+				'show_in_bulk'  => true,
+				'standard_feat' => false,
+				'const_field'   => false,
+				'container'     => true,
+			),
+			array(
+				'id'            => $this->prefix . 'break_2',
+				'standard_feat' => false,
+				'const_field'   => true,
+				'type'          => 'break',
+			),
+			array(
+				'id'                => $this->prefix . 'num_labels',
+				'type'              => 'number',
+				'label'             => __( 'Number of Labels: ', 'postnl-for-woocommerce' ),
+				'placeholder'       => '',
+				'description'       => '',
+				'class'             => 'short',
+				'value'             => '',
+				'custom_attributes' =>
+					array(
+						'step' => 'any',
+						'min'  => '0',
+					),
+				'show_in_bulk'      => true,
+				'standard_feat'     => true,
+				'const_field'       => false,
+				'container'         => true,
+			),
+			array(
+				'id'            => $this->prefix . 'label_nonce',
+				'type'          => 'hidden',
+				'nonce'         => true,
+				'value'         => wp_create_nonce( $this->nonce_key ),
+				'show_in_bulk'  => true,
+				'standard_feat' => false,
+				'const_field'   => true,
+				'container'     => true,
+			),
+		);
+
+		if ( 'in_box' === $this->settings->get_return_shipment_and_labels() ) {
+			$fields[] = array(
+				'id'            => $this->prefix . 'create_return_label',
+				'type'          => 'checkbox',
+				'label'         => __( 'Create Return Label: ', 'postnl-for-woocommerce' ),
+				'placeholder'   => '',
+				'description'   => '',
+				'value'         => 'yes',
+				'show_in_bulk'  => true,
+				'standard_feat' => true,
+				'const_field'   => false,
+				'container'     => true,
+			);
+		}
+
+		if ( 'A6' !== $this->settings->get_label_format() ) {
+			$fields[] = array(
+				'id'            => $this->prefix . 'position_printing_labels',
+				'type'          => 'select',
+				'label'         => __( 'Start position printing label: ', 'postnl-for-woocommerce' ),
+				'placeholder'   => '',
+				'description'   => '',
+				'options'       => array(
+					'top-left'     => __( 'Top Left', 'postnl-for-woocommerce' ),
+					'top-right'    => __( 'Top Right', 'postnl-for-woocommerce' ),
+					'bottom-left'  => __( 'Bottom Left', 'postnl-for-woocommerce' ),
+					'bottom-right' => __( 'Bottom Right', 'postnl-for-woocommerce' ),
+				),
+				'value'         => '',
+				'show_in_bulk'  => true,
+				'standard_feat' => false,
+				'const_field'   => true,
+				'container'     => true,
+			);
+		}
 
 		return apply_filters(
 			'postnl_order_meta_box_fields',
-			array(
-				array(
-					'id'            => $this->prefix . 'id_check',
-					'type'          => 'checkbox',
-					'label'         => __( 'ID Check: ', 'postnl-for-woocommerce' ),
-					'placeholder'   => '',
-					'description'   => '',
-					'value'         => $default_options['id_check'] ?? '',
-					'show_in_bulk'  => false,
-					'standard_feat' => false,
-					'const_field'   => false,
-					'container'     => true,
-				),
-				array(
-					'id'            => $this->prefix . 'insured_shipping',
-					'type'          => 'checkbox',
-					'label'         => __( 'Insured Shipping: ', 'postnl-for-woocommerce' ),
-					'placeholder'   => '',
-					'description'   => '',
-					'value'         => $default_options['insured_shipping'] ?? '',
-					'show_in_bulk'  => true,
-					'standard_feat' => false,
-					'const_field'   => false,
-					'container'     => true,
-				),
-				array(
-					'id'            => $this->prefix . 'insured_plus',
-					'type'          => 'checkbox',
-					'label'         => __( 'Insured Plus: ', 'postnl-for-woocommerce' ),
-					'placeholder'   => '',
-					'description'   => '',
-					'value'         => '',
-					'show_in_bulk'  => true,
-					'standard_feat' => false,
-					'const_field'   => false,
-					'container'     => true,
-				),
-				array(
-					'id'            => $this->prefix . 'return_no_answer',
-					'type'          => 'checkbox',
-					'label'         => __( 'Return if no answer: ', 'postnl-for-woocommerce' ),
-					'placeholder'   => '',
-					'description'   => '',
-					'value'         => $default_options['return_no_answer'] ?? '',
-					'show_in_bulk'  => true,
-					'standard_feat' => false,
-					'const_field'   => false,
-					'container'     => true,
-				),
-				array(
-					'id'            => $this->prefix . 'signature_on_delivery',
-					'type'          => 'checkbox',
-					'label'         => __( 'Signature on Delivery: ', 'postnl-for-woocommerce' ),
-					'placeholder'   => '',
-					'description'   => '',
-					'value'         => $default_options['signature_on_delivery'] ?? '',
-					'show_in_bulk'  => true,
-					'standard_feat' => false,
-					'const_field'   => false,
-					'container'     => true,
-				),
-				array(
-					'id'            => $this->prefix . 'only_home_address',
-					'type'          => 'checkbox',
-					'label'         => __( 'Only Home Address: ', 'postnl-for-woocommerce' ),
-					'placeholder'   => '',
-					'description'   => '',
-					'value'         => $default_options['only_home_address'] ?? '',
-					'show_in_bulk'  => true,
-					'standard_feat' => false,
-					'const_field'   => false,
-					'container'     => true,
-				),
-				array(
-					'id'            => $this->prefix . 'letterbox',
-					'type'          => 'checkbox',
-					'label'         => __( 'Letterbox: ', 'postnl-for-woocommerce' ),
-					'placeholder'   => '',
-					'description'   => '',
-					'value'         => $default_options['letterbox'] ?? '',
-					'show_in_bulk'  => true,
-					'standard_feat' => false,
-					'const_field'   => false,
-					'container'     => true,
-				),
-				array(
-					'id'            => $this->prefix . 'packets',
-					'type'          => 'checkbox',
-					'label'         => __( 'Packets: ', 'postnl-for-woocommerce' ),
-					'placeholder'   => '',
-					'description'   => '',
-					'value'         => $default_options['packets'] ?? '',
-					'show_in_bulk'  => true,
-					'standard_feat' => false,
-					'const_field'   => false,
-					'container'     => true,
-				),
-				array(
-					'id'            => $this->prefix . 'mailboxpacket',
-					'type'          => 'checkbox',
-					'label'         => __( 'Mailbox Packet (International): ', 'postnl-for-woocommerce' ),
-					'placeholder'   => '',
-					'description'   => '',
-					'value'         => $default_options['mailboxpacket'] ?? '',
-					'show_in_bulk'  => true,
-					'standard_feat' => false,
-					'const_field'   => false,
-					'container'     => true,
-				),
-				array(
-					'id'            => $this->prefix . 'track_and_trace',
-					'type'          => 'checkbox',
-					'label'         => __( 'Track & Trace: ', 'postnl-for-woocommerce' ),
-					'placeholder'   => '',
-					'description'   => '',
-					'value'         => $default_options['track_and_trace'] ?? '',
-					'show_in_bulk'  => true,
-					'standard_feat' => false,
-					'const_field'   => false,
-					'container'     => true,
-				),
-				array(
-					'id'            => $this->prefix . 'break_2',
-					'standard_feat' => false,
-					'const_field'   => true,
-					'type'          => 'break',
-				),
-				array(
-					'id'                => $this->prefix . 'num_labels',
-					'type'              => 'number',
-					'label'             => __( 'Number of Labels: ', 'postnl-for-woocommerce' ),
-					'placeholder'       => '',
-					'description'       => '',
-					'class'             => 'short',
-					'value'             => '',
-					'custom_attributes' =>
-						array(
-							'step' => 'any',
-							'min'  => '0',
-						),
-					'show_in_bulk'      => true,
-					'standard_feat'     => true,
-					'const_field'       => false,
-					'container'         => true,
-				),
-				array(
-					'id'            => $this->prefix . 'create_return_label',
-					'type'          => 'checkbox',
-					'label'         => __( 'Create Return Label: ', 'postnl-for-woocommerce' ),
-					'placeholder'   => '',
-					'description'   => '',
-					'value'         => $this->settings->get_return_address_default(),
-					'show_in_bulk'  => true,
-					'standard_feat' => true,
-					'const_field'   => false,
-					'container'     => true,
-				),
-				array(
-					'id'            => $this->prefix . 'position_printing_labels',
-					'type'          => 'select',
-					'label'         => __( 'Start position printing label: ', 'postnl-for-woocommerce' ),
-					'placeholder'   => '',
-					'description'   => '',
-					'options'       => array(
-						'top-left'     => __( 'Top Left', 'postnl-for-woocommerce' ),
-						'top-right'    => __( 'Top Right', 'postnl-for-woocommerce' ),
-						'bottom-left'  => __( 'Bottom Left', 'postnl-for-woocommerce' ),
-						'bottom-right' => __( 'Bottom Right', 'postnl-for-woocommerce' ),
-					),
-					'value'         => '',
-					'show_in_bulk'  => true,
-					'standard_feat' => false,
-					'const_field'   => true,
-					'container'     => true,
-				),
-				array(
-					'id'            => $this->prefix . 'label_nonce',
-					'type'          => 'hidden',
-					'nonce'         => true,
-					'value'         => wp_create_nonce( $this->nonce_key ),
-					'show_in_bulk'  => true,
-					'standard_feat' => false,
-					'const_field'   => true,
-					'container'     => true,
-				),
-			)
+			$fields
 		);
 	}
 
@@ -395,6 +412,7 @@ abstract class Base {
 		}
 
 		$data = $order->get_meta( $this->meta_name );
+
 		return ! empty( $data ) && is_array( $data ) ? $data : array();
 	}
 
@@ -444,8 +462,8 @@ abstract class Base {
 	/**
 	 * Saving meta box in order admin page.
 	 *
-	 * @param  int   $order_id Order post ID.
-	 * @param  array $meta_values PostNL meta values.
+	 * @param int $order_id Order post ID.
+	 * @param array $meta_values PostNL meta values.
 	 *
 	 * @throws \Exception Throw error for invalid order id.
 	 */
@@ -458,6 +476,14 @@ abstract class Base {
 		}
 
 		$saved_data = $this->get_data( $order_id );
+
+		// Check if label is already created.
+		if ( isset( $saved_data['labels']['label'] ) ) {
+			return array(
+				'saved_data' => $saved_data,
+				'labels'     => $saved_data['labels'],
+			);
+		}
 
 		// Get array of nonce fields.
 		$nonce_fields = array_values( $this->get_nonce_fields() );
@@ -484,7 +510,9 @@ abstract class Base {
 		$label_post_data['main_barcode'] = $barcodes[0]; // for MainBarcode.
 		$label_post_data['barcodes']     = $barcodes;
 
-		$label_post_data['return_barcode'] = $this->maybe_create_return_barcode( $label_post_data );
+		$label_post_data['return_barcode']          = $this->maybe_create_return_barcode( $label_post_data );
+		$label_post_data['shipping_return_barcode'] = $this->maybe_create_shipping_return_barcode( $label_post_data, $label_post_data['main_barcode'] );
+		$label_post_data['is_return_activated']     = $this->is_return_function_activated( $order );
 
 		$labels = $this->create_label( $label_post_data );
 
@@ -498,7 +526,7 @@ abstract class Base {
 		*/
 
 		$saved_data['barcodes'] = array_map(
-			function( $barc ) {
+			function ( $barc ) {
 				return array(
 					'value'      => $barc,
 					'created_at' => current_time( 'timestamp' ),
@@ -508,8 +536,9 @@ abstract class Base {
 		);
 
 		$saved_data['labels'] = array_map(
-			function( $label ) {
+			function ( $label ) {
 				unset( $label['merged_files'] );
+
 				return $label;
 			},
 			$labels
@@ -559,8 +588,8 @@ abstract class Base {
 	/**
 	 * Get order information from frontend data.
 	 *
-	 * @param  WC_Order  $order  Order object.
-	 * @param  String  $needle  String that will be used to search the frontend value.
+	 * @param WC_Order $order Order object.
+	 * @param String $needle String that will be used to search the frontend value.
 	 *
 	 * @return array.
 	 */
@@ -621,7 +650,7 @@ abstract class Base {
 	/**
 	 * Delete meta data in order admin page.
 	 *
-	 * @param  int $order_id Order post ID.
+	 * @param int $order_id Order post ID.
 	 *
 	 * @throws \Exception Throw error for invalid order.
 	 */
@@ -649,10 +678,10 @@ abstract class Base {
 	/**
 	 * Put the label content into PDF files.
 	 *
-	 * @param array    $response Response from PostNL API.
+	 * @param array $response Response from PostNL API.
 	 * @param WC_Order $order Order object.
-	 * @param String   $parent_barcode Generated barcode string.
-	 * @param String   $parent_label_type Type of label.
+	 * @param String $parent_barcode Generated barcode string.
+	 * @param String $parent_label_type Type of label.
 	 *
 	 * @return array
 	 */
@@ -676,11 +705,12 @@ abstract class Base {
 						continue 3;
 					}
 
-					$label_type = ! empty( $label_contents['Labeltype'] ) ? sanitize_title( $label_contents['Labeltype'] ) : 'unknown-type';
-					$barcode    = $response[ $type ][ $shipment_idx ][ $content_type['barcode_key'] ];
-					$barcode    = is_array( $barcode ) ? array_shift( $barcode ) : $barcode;
-					$filename   = Utils::generate_label_name( $order->get_id(), $label_type, $barcode, 'A6' );
-					$filepath   = trailingslashit( POSTNL_UPLOADS_DIR ) . $filename;
+					$label_type      = ! empty( $label_contents['Labeltype'] ) ? sanitize_title( $label_contents['Labeltype'] ) : 'unknown-type';
+					$label_extension = ! empty( $label_contents['OutputType'] ) ? sanitize_title( $label_contents['OutputType'] ) : 'pdf';
+					$barcode         = $response[ $type ][ $shipment_idx ][ $content_type['barcode_key'] ];
+					$barcode         = is_array( $barcode ) ? array_shift( $barcode ) : $barcode;
+					$filename        = Utils::generate_label_name( $order->get_id(), $label_type, $barcode, 'A6', $label_extension );
+					$filepath        = trailingslashit( POSTNL_UPLOADS_DIR ) . $filename;
 
 					if ( wp_mkdir_p( POSTNL_UPLOADS_DIR ) && ! file_exists( $filepath ) ) {
 						$content  = base64_decode( $label_contents['Content'] );
@@ -697,8 +727,10 @@ abstract class Base {
 			}
 		}
 
+		// if ( 'PDF' === $label_contents['OutputType'] ) {
 		$labels = $this->maybe_merge_labels( $labels, $order, $parent_barcode, $parent_label_type );
 
+		// }
 		return $labels;
 	}
 
@@ -749,7 +781,7 @@ abstract class Base {
 			$num_labels = intval( $saved_data['backend']['num_labels'] );
 		}
 
-		for ( $i = 0; $i < $num_labels; $i++ ) {
+		for ( $i = 0; $i < $num_labels; $i ++ ) {
 			// Check if barcode has been created on the last 7 days before creating a new one.
 			if ( ! empty( $saved_data['barcodes'][ $i ]['created_at'] ) && ! empty( $saved_data['barcodes'][ $i ]['value'] ) ) {
 				$time_deviation = current_time( 'timestamp' ) - intval( $saved_data['barcodes'][ $i ]['created_at'] );
@@ -766,6 +798,27 @@ abstract class Base {
 		return $barcodes;
 	}
 
+
+	/**
+	 * Create PostNL return barcode for current order
+	 *
+	 * @param array $post_data Order post data.
+	 *
+	 * @return array|Boolean
+	 *
+	 * @throws \Exception Error when response has an error.
+	 */
+	public function maybe_create_shipping_return_barcode( $post_data, $barcode ) {
+		$item_info = new Shipping\Item_Info( $post_data );
+		if ( 'shipping_return' !== $this->settings->get_return_shipment_and_labels() ||
+		     'NL' !== $item_info->receiver['country'] ||
+		     '2928' === $item_info->shipment['shipping_product']['code'] ) {
+			return '';
+		}
+
+		return $barcode;
+	}
+
 	/**
 	 * Create PostNL return barcode for current order
 	 *
@@ -776,7 +829,26 @@ abstract class Base {
 	 * @throws \Exception Error when response has an error.
 	 */
 	public function maybe_create_return_barcode( $post_data ) {
-		if ( ! isset( $post_data['saved_data']['backend']['create_return_label'] ) || 'yes' !== $post_data['saved_data']['backend']['create_return_label'] ) {
+		$shipping_item_info = new Shipping\Item_Info( $post_data );
+
+		if ( ! in_array( $shipping_item_info->receiver['country'], array( 'BE', 'NL' ) ) ) {
+			return '';
+		}
+
+		if ( 'shipping_return' === $this->settings->get_return_shipment_and_labels() &&
+		     'BE' !== $shipping_item_info->receiver['country'] ) {
+			return '';
+		}
+
+		if ( 'in_box' === $this->settings->get_return_shipment_and_labels() &&
+		     ( ! isset( $post_data['saved_data']['backend']['create_return_label'] ) ||
+		       'yes' !== $post_data['saved_data']['backend']['create_return_label'] )
+		) {
+			return '';
+		}
+
+		$not_allowed = array( '6440', '6972', '6405', '6350', '6906' );
+		if ( 'BE' === $shipping_item_info->receiver['country'] && in_array( $shipping_item_info->shipment['shipping_product']['code'], $not_allowed ) ) {
 			return '';
 		}
 
@@ -803,10 +875,10 @@ abstract class Base {
 	/**
 	 * Merging the label.
 	 *
-	 * @param Array    $labels List of labels.
+	 * @param Array $labels List of labels.
 	 * @param WC_Order $order Order object.
-	 * @param String   $barcode Generated barcode string.
-	 * @param String   $label_type Type of label.
+	 * @param String $barcode Generated barcode string.
+	 * @param String $label_type Type of label.
 	 *
 	 * @return Array.
 	 */
@@ -829,7 +901,7 @@ abstract class Base {
 		$destination     = Utils::get_shipping_zone( $to_country );
 		$label_type_list = Mapping::label_type_list();
 
-		$available_type  = ( ! empty( $label_type_list[ $from_country ][ $destination ] ) ) ? $label_type_list[ $from_country ][ $destination ] : array( 'label' );
+		$available_type = ( ! empty( $label_type_list[ $from_country ][ $destination ] ) ) ? $label_type_list[ $from_country ][ $destination ] : array( 'label' );
 
 		$file_paths = array();
 		foreach ( $labels as $label ) {
@@ -839,8 +911,9 @@ abstract class Base {
 
 			$file_paths[] = $label['filepath'];
 		}
+		$extension = pathinfo( $file_paths[0], PATHINFO_EXTENSION );
 
-		$filename    = Utils::generate_label_name( $order->get_id(), $label_type, $barcode, $label_format );
+		$filename    = Utils::generate_label_name( $order->get_id(), $label_type, $barcode, $label_format, $extension );
 		$merged_info = $this->merge_labels( $file_paths, $filename );
 
 		$merged_labels[ $label_type ] = array(
@@ -855,14 +928,41 @@ abstract class Base {
 	}
 
 	/**
-	 * Merge PDF Labels.
+	 * Merge given files into the single one.
 	 *
-	 * @param Array  $label_paths List of label path.
-	 * @param String $merge_filename Name of the file after the merge process.
+	 * @param array $label_paths Array of files to be merged.
+	 * @param string $merge_filename The final/merged filename with extension.
+	 * @param string $start_position Start position for the pdf file only.
 	 *
-	 * @return Array List of filepath that has been merged.
+	 * @return array|\PostNLWooCommerce\Order\Array|void
 	 */
 	protected function merge_labels( $label_paths, $merge_filename, $start_position = 'top-left' ) {
+		$extension = pathinfo( $label_paths[0], PATHINFO_EXTENSION );
+		switch ( $extension ) {
+			case 'pdf':
+				return $this->merge_pdf_labels( $label_paths, $merge_filename, $start_position );
+			case 'jpg':
+				return $this->merge_jpg_files( $label_paths, $merge_filename, 'horizontal' );
+			case 'gif':
+				try {
+					return $this->merge_graphic_labels( $label_paths, $merge_filename );
+				} catch ( \Exception $e ) {
+					wc_add_notice( $e->getMessage(), 'error' );
+				}
+			case 'zpl_rle':
+				return $this->merge_text_files( $label_paths, $merge_filename );
+		}
+	}
+
+	/**
+	 * Merge PDF Labels.
+	 *
+	 * @param array $label_paths List of label path.
+	 * @param String $merge_filename Name of the file after the merge process.
+	 *
+	 * @return array List of filepath that has been merged.
+	 */
+	protected function merge_pdf_labels( $label_paths, $merge_filename, $start_position = 'top-left' ) {
 		$pdf          = new CustomizedPDFMerger();
 		$merged_paths = array();
 
@@ -878,6 +978,144 @@ abstract class Base {
 		}
 
 		$pdf->merge( 'file', $filepath, 'A', $start_position );
+
+		return array(
+			'merged_filepaths' => $merged_paths,
+			'filepath'         => $filepath,
+		);
+	}
+
+	/**
+	 * Merge JPG Labels.
+	 *
+	 * @param array $image_paths List of label path.
+	 * @param String $merge_filename Name of the file after the merge process.
+	 *
+	 * @return array List of filepath that has been merged.
+	 */
+	protected function merge_jpg_files( $image_paths, $merge_filename, $direction = 'vertical' ) {
+		$images = [];
+		$width  = 0;
+		$height = 0;
+
+		// Load images and calculate dimensions
+		foreach ( $image_paths as $path ) {
+			$img      = imagecreatefromjpeg( $path );
+			$images[] = $img;
+			$width    = max( $width, imagesx( $img ) );
+			$height   += imagesy( $img );
+		}
+
+		// Create a blank canvas for the merged image
+		if ( $direction == 'horizontal' ) {
+			$canvas = imagecreatetruecolor( $width * count( $images ), $height );
+		} else {
+			$canvas = imagecreatetruecolor( $width, $height );
+		}
+
+		// Set white background
+		$white = imagecolorallocate( $canvas, 255, 255, 255 );
+		imagefill( $canvas, 0, 0, $white );
+
+		// Copy each image onto the canvas
+		$offset = 0;
+		foreach ( $images as $img ) {
+			if ( $direction == 'horizontal' ) {
+				imagecopy( $canvas, $img, $offset, 0, 0, 0, imagesx( $img ), imagesy( $img ) );
+				$offset += imagesx( $img );
+			} else {
+				imagecopy( $canvas, $img, 0, $offset, 0, 0, imagesx( $img ), imagesy( $img ) );
+				$offset += imagesy( $img );
+			}
+			imagedestroy( $img );
+		}
+
+		// Set the output file path
+		$filepath = trailingslashit( POSTNL_UPLOADS_DIR ) . $merge_filename;
+
+		// Save the merged image
+		imagejpeg( $canvas, $filepath );
+		imagedestroy( $canvas );
+
+		return array(
+			'merged_filepaths' => $image_paths,
+			'filepath'         => $filepath,
+		);
+	}
+
+	/**
+	 * Merge graphic labels.
+	 *
+	 * @param Array $label_paths List of label path.
+	 * @param String $merge_filename Name of the file after the merge process.
+	 *
+	 * @return array
+	 * @throws \ImagickException
+	 */
+	protected function merge_graphic_labels( $label_paths, $merge_filename ) {
+
+		if ( empty( $label_paths ) ) {
+			throw new Exception( __( 'There are no files to merge.', 'postnl-for-woocommerce' ) );
+		}
+
+		if ( ! class_exists( 'Imagick' ) ) {
+			throw new Exception( __( '"Imagick" must be installed on the server to merge png files.', 'postnl-for-woocommerce' ) );
+		}
+		$merged_paths     = array();
+		$final_label_path = trailingslashit( POSTNL_UPLOADS_DIR ) . $merge_filename;
+		$final_label      = new \Imagick();
+		foreach ( $label_paths as $path ) {
+			$final_label->addImage( new \Imagick( $path ) );
+			$merged_paths[] = $path;
+		}
+
+		/* Append the images into one */
+		$final_label->resetIterator();
+		$combined = $final_label->appendImages( true );
+		$combined->setImageFormat( pathinfo( $final_label_path, PATHINFO_EXTENSION ) );
+		$combined->writeimage( $final_label_path );
+
+		return array(
+			'merged_filepaths' => $merged_paths,
+			'filepath'         => $final_label_path,
+		);
+
+	}
+
+	/**
+	 * Merge text files, for the ZEBRA printer.
+	 *
+	 * @param array $label_paths List of label path.
+	 * @param String $merge_filename Name of the file after the merge process.
+	 *
+	 * @return array
+	 */
+	protected function merge_text_files( $label_paths, $merge_filename ) {
+		$merged_paths = array();
+		$filepath     = trailingslashit( POSTNL_UPLOADS_DIR ) . $merge_filename;
+
+		$output = fopen( $filepath, "w" );
+
+		foreach ( $label_paths as $path ) {
+			if ( ! file_exists( $path ) ) {
+				continue; // Skip if the file does not exist
+			}
+
+			$input = fopen( $path, "r" );
+			if ( ! $input ) {
+				continue; // Skip if unable to open the file
+			}
+
+			// Read each line and write it to the output file
+			while ( ( $line = fgets( $input ) ) !== false ) {
+				fwrite( $output, $line );
+			}
+
+			fclose( $input ); // Close each input file after reading
+			$merged_paths[] = $path;
+		}
+
+		fclose( $output ); // Close the output file after writing
 
 		return array(
 			'merged_filepaths' => $merged_paths,
@@ -1030,7 +1268,7 @@ abstract class Base {
 	/**
 	 * Generate download label url
 	 *
-	 * @param int    $order_id ID of the order post.
+	 * @param int $order_id ID of the order post.
 	 * @param String $label_type Type of the label. Possible options : 'label', 'return-label'.
 	 *
 	 * @return String.
@@ -1051,8 +1289,8 @@ abstract class Base {
 	/**
 	 * Get label file.
 	 *
-	 * @since   1.0.0
 	 * @return  void
+	 * @since   1.0.0
 	 */
 	public function get_label_file() {
 		if ( empty( $_GET['postnl_label_nonce'] ) ) {
@@ -1193,7 +1431,7 @@ abstract class Base {
 	 * Check if the order have the label data.
 	 *
 	 * @param WC_Order $order current order object.
-	 * @param String   $field Backend field name.
+	 * @param String $field Backend field name.
 	 *
 	 * @return boolean
 	 */
@@ -1210,13 +1448,30 @@ abstract class Base {
 	/**
 	 * Check if the order have the label file.
 	 *
-	 * @param  \WC_Order  $order  current order object.
+	 * @param \WC_Order $order current order object.
 	 *
-	 * @return boolean
+	 * @return boolean.
 	 */
 	public function have_label_file( $order ) {
 		$order_data = $order->get_meta( $this->meta_name );
 
 		return ! empty( $order_data['labels']['label']['filepath'] );
+	}
+
+	/**
+	 * Check if the return function is activated for the order.
+	 *
+	 * @param int|\WC_Order $order .
+	 *
+	 * @return bool
+	 */
+	public function is_return_function_activated( $order ) {
+		$order = ( $order instanceof \WC_Order ) ? $order : wc_get_order( $order );
+
+		if ( ! $order instanceof \WC_Order ) {
+			return false;
+		}
+
+		return 'yes' === $order->get_meta( $this->is_return_activated_meta );
 	}
 }

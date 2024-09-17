@@ -22,7 +22,7 @@ class Client extends Shipping\Client {
 	/**
 	 * Get customer address information for Rest API.
 	 *
-	 * @return Array
+	 * @return array
 	 */
 	public function get_customer_address() {
 		return array(

@@ -8,7 +8,6 @@
 namespace PostNLWooCommerce\Rest_API\Shipping;
 
 use PostNLWooCommerce\Rest_API\Base;
-use PostNLWooCommerce\Utils;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -126,11 +125,26 @@ class Client extends Base {
 					'Characteristic' => $option['characteristic'],
 					'Option'         => $option['option'],
 				);
+
+			}
+		}
+
+		// Add return options.
+		if ( ! empty( $this->item_info->shipment['return_options'] ) ) {
+			$shipment['ProductOptions'] = $shipment['ProductOptions'] ?? array();
+
+			foreach ( $this->item_info->shipment['return_options'] as $option ) {
+				$shipment['ProductOptions'][] = array(
+					'Characteristic' => $option['characteristic'],
+					'Option'         => $option['option'],
+				);
 			}
 		}
 
 		if ( ! empty( $this->item_info->shipment['return_barcode'] ) ) {
 			$shipment['ReturnBarcode'] = $this->item_info->shipment['return_barcode'];
+		} else if ( ! empty( $this->item_info->shipment['shipping_return_barcode'] ) ) {
+			$shipment['ReturnBarcode'] = $this->item_info->shipment['main_barcode'];
 		}
 
 		if ( $this->item_info->backend_data['insured_shipping'] ) {
@@ -141,7 +155,7 @@ class Client extends Base {
 			);
 		}
 
-		for ( $i = 1; $i <= $this->item_info->backend_data['num_labels']; $i++ ) {
+		for ( $i = 1; $i <= $this->item_info->backend_data['num_labels']; $i ++ ) {
 			if ( $this->item_info->backend_data['num_labels'] > 1 ) {
 				$shipment['Barcode'] = $this->item_info->shipment['barcodes'][ ( $i - 1 ) ];
 				$shipment['Groups']  = array(
@@ -190,7 +204,7 @@ class Client extends Base {
 		}
 
 		$contents = array();
-		foreach ( $this->item_info->contents  as $item ) {
+		foreach ( $this->item_info->contents as $item ) {
 			$contents[] = array(
 				'Description'     => $item['description'],
 				'Quantity'        => $item['qty'],
@@ -236,13 +250,15 @@ class Client extends Base {
 			);
 		}
 
-		if ( $this->item_info->shipment['return_barcode'] ) {
+		if ( ! empty( $this->item_info->shipment['return_barcode'] ) ||
+		     ! empty( $this->item_info->shipment['shipping_return_barcode'] ) ) {
 			$addresses[] = array(
 				'AddressType' => '08',
 				'City'        => $this->item_info->customer['return_address_city'],
 				'CompanyName' => $this->item_info->customer['return_company'],
 				'Countrycode' => $this->item_info->shipper['country'],
 				'HouseNr'     => $this->item_info->customer['return_address_2'],
+				'HouseNrExt'  => '',
 				'Street'      => $this->item_info->customer['return_address_1'],
 				'Zipcode'     => $this->item_info->customer['return_address_zip'],
 			);

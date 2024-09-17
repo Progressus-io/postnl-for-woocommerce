@@ -6,9 +6,9 @@
 * Requires at least: 4.6
 * Requires PHP: 5.6
 * Tested up to: 6.6
-* Stable tag: 5.4.2
+* Stable tag: 5.5.0
 * WC requires at least: 4.0
-* WC tested up to: 9.1
+* WC tested up to: 9.2
 * License: GPLv2 or later
 * License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -36,9 +36,21 @@ PostNL’s official extension for WooCommerce on WordPress. Manage your national
 
 ## Changelog
 
+### 5.6.0
+* Add: New "Printer Types" setting with support for PDF, GIF, JPG, and ZPL.
+* Add: "Return to Home Address" option to the Return Settings.
+* Add: Smart Return feature allowing merchants to generate and email return barcodes for printer-less returns at PostNL locations.
+* Fix: Ability to merge Portrait and Landscape A6 labels into A4 PDF file.
+* Add: Display the selected Pickup-Point in the confirmation email to clarify the chosen delivery option.
+
 ### 5.5.0
 * Add: Compatibility with the new WooCommerce Product Editor.
 * Fix: HPOS declaration path.
+* Fix: Item Value is fed by price after discount.
+* Fix: Chosen delivery options jumps back to Evening Delivery.
+* Fix: Update PostNL corporate identity.
+* Fix: Automatic letterbox doesn't work in combination with digital product.
+* Fix: Multiple return labels are printed when try to print the label for an order with existed label using bulk actions.
 
 ### 5.4.2
 * Fix: Error "Invalid nonce" when trying to delete labels.

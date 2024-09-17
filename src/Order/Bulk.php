@@ -448,6 +448,7 @@ class Bulk extends Base {
 				'placeholder' => '',
 				'description' => '',
 				'container'   => true,
+				'value'       => 'top-left',
 				'options'     => array(
 					'top-left'     => __( 'Top Left', 'postnl-for-woocommerce' ),
 					'top-right'    => __( 'Top Right', 'postnl-for-woocommerce' ),

@@ -40,6 +40,7 @@ PostNL’s official extension for WooCommerce on WordPress. Manage your national
 * Add: New "Printer Types" setting with support for PDF, GIF, JPG, and ZPL.
 * Add: "Return to Home Address" option to the Return Settings.
 * Add: Smart Return feature allowing merchants to generate and email return barcodes for printer-less returns at PostNL locations.
+* Fix: Ability to merge Portrait and Landscape A6 labels into A4 PDF file.
 
 ### 5.5.0
 * Add: Compatibility with the new WooCommerce Product Editor.

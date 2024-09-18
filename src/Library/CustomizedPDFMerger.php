@@ -165,7 +165,7 @@ class CustomizedPDFMerger {
 		foreach ( $files as $filename => $file_templates ) {
 			foreach ( $file_templates as $file_template ) {
 				if ( 'A6' === $label_format ) {
-					$fpdi->AddPage( $file_template['orientation'], array(
+					$fpdi->AddPage( $file_template['size']['orientation'], array(
 						$file_template['size']['width'],
 						$file_template['size']['height']
 					) );

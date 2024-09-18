@@ -4,7 +4,7 @@ Tags: woocommerce, export, delivery, packages, PostNL, Shipping
 Requires at least: 4.6
 Requires PHP: 5.6
 Tested up to: 6.6
-Stable tag: 5.6.0
+Stable tag: 5.6.1
 WC requires at least: 4.0
 WC tested up to: 9.3
 License: GPLv2 or later

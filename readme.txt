@@ -80,6 +80,9 @@ Follow these instructions (https://www.postnl.nl/Images/aanvragen-api-key-stappe
 
 == Changelog ==
 
+= 5.6.1 (2024-09-18) =
+* Fix: Preventing bulk label downloads when label format is set to A6.
+
 = 5.6.0 (2024-09-17) =
 * Add: Shipment & Return labels feature, allowing customers to use a single label for both shipping and returning parcels.
 * Add: New "Printer Types" setting with support for PDF, GIF, JPG, and ZPL.

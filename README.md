@@ -36,6 +36,9 @@ PostNL’s official extension for WooCommerce on WordPress. Manage your national
 
 ## Changelog
 
+### 5.6.1
+* Fix: Preventing bulk label downloads when label format is set to A6.
+
 ### 5.6.0
 * Add: Shipment & Return labels feature, allowing customers to use a single label for both shipping and returning parcels.
 * Add: New "Printer Types" setting with support for PDF, GIF, JPG, and ZPL.

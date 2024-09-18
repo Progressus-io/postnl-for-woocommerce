@@ -198,20 +198,13 @@ class Bulk extends Base {
 		$label_format = $this->settings->get_label_format();
 		$label_paths  = array();
 
-		if ( 'A6' === $label_format ) {
-			return array(
-				'message' => esc_html__( 'Could not create bulk PostNL label file while label format is set to A6, download individually.', 'postnl-for-woocommerce' ),
-				'type'    => 'error',
-			);
-		}
-
 		foreach ( $gen_labels as $idx => $label ) {
 			foreach ( $label as $label_type => $label_info ) {
 				if ( empty( $label_info['filepath'] ) ) {
 					continue 2;
 				}
 
-				if ( 'pdf' !== pathinfo( $label_info['filepath'], PATHINFO_EXTENSION ) ) {
+				if ( 'A6' === $label_format || 'pdf' !== pathinfo( $label_info['filepath'], PATHINFO_EXTENSION ) ) {
 					$label_paths[] = $label_info['filepath'];
 					continue 2;
 				}

@@ -810,7 +810,13 @@ abstract class Base {
 	 */
 	public function maybe_create_shipping_return_barcode( $post_data, $barcode ) {
 		$item_info = new Shipping\Item_Info( $post_data );
-		if ( 'shipping_return' !== $this->settings->get_return_shipment_and_labels() ||
+		$shipment_return_type = $this->settings->get_return_shipment_and_labels();
+
+		if ( 'none' === $shipment_return_type ) {
+			return '';
+		}
+
+		if ( 'shipping_return' !== $shipment_return_type() ||
 		     'NL' !== $item_info->receiver['country'] ||
 		     '2928' === $item_info->shipment['shipping_product']['code'] ) {
 			return '';
@@ -830,17 +836,22 @@ abstract class Base {
 	 */
 	public function maybe_create_return_barcode( $post_data ) {
 		$shipping_item_info = new Shipping\Item_Info( $post_data );
+		$shipment_return_type = $this->settings->get_return_shipment_and_labels();
+
+		if ( 'none' === $shipment_return_type ) {
+			return '';
+		}
 
 		if ( ! in_array( $shipping_item_info->receiver['country'], array( 'BE', 'NL' ) ) ) {
 			return '';
 		}
 
-		if ( 'shipping_return' === $this->settings->get_return_shipment_and_labels() &&
+		if ( 'shipping_return' === $shipment_return_type &&
 		     'BE' !== $shipping_item_info->receiver['country'] ) {
 			return '';
 		}
 
-		if ( 'in_box' === $this->settings->get_return_shipment_and_labels() &&
+		if ( 'in_box' === $shipment_return_type &&
 		     ( ! isset( $post_data['saved_data']['backend']['create_return_label'] ) ||
 		       'yes' !== $post_data['saved_data']['backend']['create_return_label'] )
 		) {

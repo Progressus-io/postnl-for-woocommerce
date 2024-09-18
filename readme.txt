@@ -81,6 +81,7 @@ Follow these instructions (https://www.postnl.nl/Images/aanvragen-api-key-stappe
 == Changelog ==
 
 = 5.6.0 (2024-09-17) =
+* Add: Shipment & Return labels feature, allowing customers to use a single label for both shipping and returning parcels.
 * Add: New "Printer Types" setting with support for PDF, GIF, JPG, and ZPL.
 * Add: "Return to Home Address" option to the Return Settings.
 * Add: Smart Return feature allowing merchants to generate and email return barcodes for printer-less returns at PostNL locations.

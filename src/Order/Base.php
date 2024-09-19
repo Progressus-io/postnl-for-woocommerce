@@ -816,7 +816,7 @@ abstract class Base {
 			return '';
 		}
 
-		if ( 'shipping_return' !== $shipment_return_type() ||
+		if ( 'shipping_return' !== $shipment_return_type ||
 		     'NL' !== $item_info->receiver['country'] ||
 		     '2928' === $item_info->shipment['shipping_product']['code'] ) {
 			return '';

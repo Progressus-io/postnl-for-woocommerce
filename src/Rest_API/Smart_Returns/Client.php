@@ -66,8 +66,8 @@ class Client extends Base {
 					'City'        => $this->item_info->store['city'],
 					'CompanyName' => $this->item_info->store['company'],
 					'Countrycode' => $this->item_info->store['country'],
-					'HouseNr'     => $this->item_info->store['address_2'],
-					'Street'      => $this->item_info->store['address_1'],
+					'HouseNr'     => $this->item_info->customer['return_address_2'],
+					'Street'      => $this->item_info->customer['return_address_1'],
 					'Zipcode'     => $this->item_info->store['postcode'],
 				),
 				'Contacts'            => array(

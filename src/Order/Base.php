@@ -510,8 +510,10 @@ abstract class Base {
 		$label_post_data['main_barcode'] = $barcodes[0]; // for MainBarcode.
 		$label_post_data['barcodes']     = $barcodes;
 
-		$label_post_data['return_barcode']          = $this->maybe_create_return_barcode( $label_post_data );
-		$label_post_data['shipping_return_barcode'] = $this->maybe_create_shipping_return_barcode( $label_post_data, $label_post_data['main_barcode'] );
+		// Need to be refactored.
+		$shipping_item_info                         = new Shipping\Item_Info( $label_post_data );
+		$label_post_data['return_barcode']          = $this->maybe_create_return_barcode( $label_post_data, $shipping_item_info );
+		$label_post_data['shipping_return_barcode'] = $this->maybe_create_shipping_return_barcode( $label_post_data, $shipping_item_info );
 		$label_post_data['is_return_activated']     = $this->is_return_function_activated( $order );
 
 		$labels = $this->create_label( $label_post_data );
@@ -808,15 +810,26 @@ abstract class Base {
 	 *
 	 * @throws \Exception Error when response has an error.
 	 */
-	public function maybe_create_shipping_return_barcode( $post_data, $barcode ) {
-		$item_info = new Shipping\Item_Info( $post_data );
-		if ( 'shipping_return' !== $this->settings->get_return_shipment_and_labels() ||
-		     'NL' !== $item_info->receiver['country'] ||
-		     '2928' === $item_info->shipment['shipping_product']['code'] ) {
+	public function maybe_create_shipping_return_barcode( $label_post_data, $shipping_item_info ) {
+		$shipment_return_type = $this->settings->get_return_shipment_and_labels();
+
+		if ( 'none' === $shipment_return_type ) {
 			return '';
 		}
 
-		return $barcode;
+		if ( 'shipping_return' !== $shipment_return_type ) {
+			return '';
+		}
+
+		if ( 'NL' !== $shipping_item_info->receiver['country'] ) {
+			return '';
+		}
+
+		if ( '2928' === $shipping_item_info->shipment['shipping_product']['code'] ) {
+			return '';
+		}
+
+		return $label_post_data['main_barcode'];
 	}
 
 	/**
@@ -828,19 +841,22 @@ abstract class Base {
 	 *
 	 * @throws \Exception Error when response has an error.
 	 */
-	public function maybe_create_return_barcode( $post_data ) {
-		$shipping_item_info = new Shipping\Item_Info( $post_data );
+	public function maybe_create_return_barcode( $post_data, $shipping_item_info ) {
+		$shipment_return_type = $this->settings->get_return_shipment_and_labels();
+		if ( 'none' === $shipment_return_type ) {
+			return '';
+		}
 
 		if ( ! in_array( $shipping_item_info->receiver['country'], array( 'BE', 'NL' ) ) ) {
 			return '';
 		}
 
-		if ( 'shipping_return' === $this->settings->get_return_shipment_and_labels() &&
+		if ( 'shipping_return' === $shipment_return_type &&
 		     'BE' !== $shipping_item_info->receiver['country'] ) {
 			return '';
 		}
 
-		if ( 'in_box' === $this->settings->get_return_shipment_and_labels() &&
+		if ( 'in_box' === $shipment_return_type &&
 		     ( ! isset( $post_data['saved_data']['backend']['create_return_label'] ) ||
 		       'yes' !== $post_data['saved_data']['backend']['create_return_label'] )
 		) {
@@ -868,7 +884,7 @@ abstract class Base {
 				esc_html__( 'Cannot create return barcode.', 'postnl-for-woocommerce' )
 			);
 		}
-
+		
 		return $response['Barcode'];
 	}
 
@@ -1133,11 +1149,10 @@ abstract class Base {
 	 * @throws \Exception Error when response has an error.
 	 */
 	public function create_label( $post_data ) {
-		$order = $post_data['order'];
-
-		$item_info = new Shipping\Item_Info( $post_data );
-		$shipping  = new Shipping\Client( $item_info );
-		$response  = $shipping->send_request();
+		$order 	   			= $post_data['order'];
+		$shipping_item_info = new Shipping\Item_Info( $post_data );
+		$shipping  			= new Shipping\Client( $shipping_item_info );
+		$response  			= $shipping->send_request();
 
 		// Check any errors.
 		$this->check_label_and_barcode( $response );

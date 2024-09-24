@@ -6,7 +6,7 @@
 * Requires at least: 4.6
 * Requires PHP: 5.6
 * Tested up to: 6.6
-* Stable tag: 5.6.1
+* Stable tag: 5.6.2
 * WC requires at least: 4.0
 * WC tested up to: 9.3
 * License: GPLv2 or later
@@ -35,6 +35,9 @@ PostNL’s official extension for WooCommerce on WordPress. Manage your national
 
 
 ## Changelog
+
+### 5.6.2
+* Fix: Ensured that when the return option is set to "None," no return labels are generated for orders.
 
 ### 5.6.1
 * Fix: Preventing bulk label downloads when label format is set to A6.

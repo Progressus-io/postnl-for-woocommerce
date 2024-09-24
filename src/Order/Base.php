@@ -509,10 +509,11 @@ abstract class Base {
 		$barcodes                        = $this->maybe_create_multi_barcodes( $label_post_data );
 		$label_post_data['main_barcode'] = $barcodes[0]; // for MainBarcode.
 		$label_post_data['barcodes']     = $barcodes;
-		$shipping_item_info 			 = new Shipping\Item_Info( $label_post_data );
 
+		// Need to be refactored.
+		$shipping_item_info                         = new Shipping\Item_Info( $label_post_data );
 		$label_post_data['return_barcode']          = $this->maybe_create_return_barcode( $label_post_data, $shipping_item_info );
-		$label_post_data['shipping_return_barcode'] = $this->maybe_create_shipping_return_barcode( $label_post_data, $label_post_data['main_barcode'], $shipping_item_info );
+		$label_post_data['shipping_return_barcode'] = $this->maybe_create_shipping_return_barcode( $label_post_data, $shipping_item_info );
 		$label_post_data['is_return_activated']     = $this->is_return_function_activated( $order );
 
 		$labels = $this->create_label( $label_post_data );
@@ -809,7 +810,7 @@ abstract class Base {
 	 *
 	 * @throws \Exception Error when response has an error.
 	 */
-	public function maybe_create_shipping_return_barcode( $shipping_item_info, $barcode ) {
+	public function maybe_create_shipping_return_barcode( $label_post_data, $shipping_item_info ) {
 		$shipment_return_type = $this->settings->get_return_shipment_and_labels();
 
 		if ( 'none' === $shipment_return_type ) {
@@ -828,7 +829,7 @@ abstract class Base {
 			return '';
 		}
 
-		return $barcode;
+		return $label_post_data['main_barcode'];
 	}
 
 	/**

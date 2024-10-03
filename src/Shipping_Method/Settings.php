@@ -541,6 +541,7 @@ class Settings extends \WC_Settings_API {
 				'options'     => array(
 					'standard_shipment'                                        => __( 'Standard shipment', 'postnl-for-woocommerce' ),
 					'id_check'                                                 => __( 'ID Check', 'postnl-for-woocommerce' ),
+					'id_check|insured_shipping'                                => __( 'ID Check + Insured Shipping', 'postnl-for-woocommerce' ),
 					// 'insured_shipping'                                         => __( 'Insured Shipping', 'postnl-for-woocommerce' ),
 					'return_no_answer'                                         => __( 'Return if no answer', 'postnl-for-woocommerce' ),
 					'signature_on_delivery'                                    => __( 'Signature on Delivery', 'postnl-for-woocommerce' ),

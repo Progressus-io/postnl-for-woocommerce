@@ -147,6 +147,16 @@ class Mapping {
 							'code'        => '3534',
 							'options'     => array(),
 						),
+						array(
+							'combination' => array( 'id_check' ),
+							'code'        => '3571',
+							'options'     => array(
+								array(
+									'characteristic' => '002',
+									'option'         => '014',
+								),
+							),
+						),
 					)
 				),
 				'BE'  => array(

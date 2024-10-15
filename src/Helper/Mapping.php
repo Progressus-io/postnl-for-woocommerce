@@ -659,6 +659,8 @@ class Mapping {
 							'3089',
 							'3533',
 							'3534',
+							'3443',
+							'3571',
 						),
 						'options'  => array(
 							array(
@@ -682,6 +684,8 @@ class Mapping {
 							'3089',
 							'3533',
 							'3534',
+							'3443',
+							'3571',
 						),
 						'options'  => array(
 							array(

@@ -182,6 +182,7 @@ class Main {
 		$this->get_shipping_product();
 		$this->get_frontend();
 		$this->get_product_editor();
+		$this->get_checkout_blocks();
 	}
 
 	/**
@@ -318,6 +319,14 @@ class Main {
 		}
 
 		return $this->shipping_settings;
+	}
+
+	/**
+	 * Get checkout blocks class.
+	 */
+	public function get_checkout_blocks() {
+		new Checkout_Blocks\Checkout_Blocks();
+
 	}
 
 	/**

@@ -1,0 +1,72 @@
+{
+  "apiVersion": 2,
+  "name": "postnl/postnl-dropoff-points",
+  "version": "2.0.0",
+  "title": "PostNL Dropoff Points",
+  "category": "woocommerce",
+  "description": "Allows customers to select a dropoff point for their shipment.",
+  "supports": {
+	"html": false,
+	"align": false,
+	"multiple": false,
+	"reusable": false
+  },
+  "parent": [
+	"woocommerce/checkout-order-summary-block"
+  ],
+  "attributes": {
+	"lock": {
+	  "type": "object",
+	  "default": {
+		"remove": true,
+		"move": true
+	  }
+	},
+	"selectedOption": {
+	  "type": "string",
+	  "default": ""
+	},
+	"dpAddressCompany": {
+	  "type": "string",
+	  "default": ""
+	},
+	"dpAddress1": {
+	  "type": "string",
+	  "default": ""
+	},
+	"dpAddress2": {
+	  "type": "string",
+	  "default": ""
+	},
+	"dpCity": {
+	  "type": "string",
+	  "default": ""
+	},
+	"dpPostcode": {
+	  "type": "string",
+	  "default": ""
+	},
+	"dpCountry": {
+	  "type": "string",
+	  "default": ""
+	},
+	"dpPartnerID": {
+	  "type": "string",
+	  "default": ""
+	},
+	"dpDate": {
+	  "type": "string",
+	  "default": ""
+	},
+	"dpTime": {
+	  "type": "string",
+	  "default": ""
+	},
+	"dpDistance": {
+	  "type": "string",
+	  "default": ""
+	}
+  },
+  "textdomain": "postnl-for-woocommerce",
+  "editorStyle": "file:../../../build/style-postnl-for-woocommerce-block.css"
+}

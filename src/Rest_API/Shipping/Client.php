@@ -264,6 +264,6 @@ class Client extends Base {
 			);
 		}
 
-		return $addresses;
+		return apply_filters( 'postnl_shipment_addresses', $addresses, $this );
 	}
 }

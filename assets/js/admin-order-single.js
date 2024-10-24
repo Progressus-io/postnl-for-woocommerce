@@ -248,7 +248,7 @@
 			var currentId = $(this).attr( 'id' );
 			
 			// Uncheck the other checkbox
-			if ($(this).is( ':checked' )) {
+			if ( $(this).is( ':checked' ) ) {
 				if ( currentId === 'postnl_id_check' ) {
 					$( '#postnl_insured_shipping' ).prop( 'checked', false );
 				} else {

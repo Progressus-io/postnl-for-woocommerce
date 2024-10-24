@@ -1,8 +1,8 @@
 /**
  * External dependencies
  */
-import { useEffect, useState, useCallback } from '@wordpress/element';
-import { RadioControl, Spinner, Notice } from '@wordpress/components';
+import { useEffect, useState, useCallback, useRef } from '@wordpress/element';
+import { Spinner, Notice } from '@wordpress/components';
 import { __ } from '@wordpress/i18n';
 import axios from 'axios';
 
@@ -11,11 +11,20 @@ import axios from 'axios';
  */
 export const Block = ({ checkoutExtensionData }) => {
 	const { setExtensionData } = checkoutExtensionData;
-	const [deliveryOptions, setDeliveryOptions] = useState([]);
 	const [selectedOption, setSelectedOption] = useState('');
 	const [loading, setLoading] = useState(true);
 	const [updating, setUpdating] = useState(false);
 	const [error, setError] = useState('');
+
+	// Use ref to store delivery options across renders
+	const deliveryOptionsRef = useRef([]);
+
+	// State variables for hidden fields based on block.json attributes
+	const [deliveryDayDate, setDeliveryDayDate] = useState('');
+	const [deliveryDayFrom, setDeliveryDayFrom] = useState('');
+	const [deliveryDayTo, setDeliveryDayTo] = useState('');
+	const [deliveryDayPrice, setDeliveryDayPrice] = useState('');
+	const [deliveryDayType, setDeliveryDayType] = useState('');
 
 	/**
 	 * Helper function to clear selections
@@ -23,10 +32,17 @@ export const Block = ({ checkoutExtensionData }) => {
 	const clearSelections = () => {
 		setSelectedOption('');
 		setExtensionData('postnl_selected_option', '');
-		setExtensionData('postnl_delivery_day_date', '');
-		setExtensionData('postnl_delivery_day_from', '');
-		setExtensionData('postnl_delivery_day_to', '');
-		setExtensionData('postnl_delivery_day_type', '');
+		setDeliveryDayDate('');
+		setDeliveryDayFrom('');
+		setDeliveryDayTo('');
+		setDeliveryDayPrice('');
+		setDeliveryDayType('');
+
+		setExtensionData('deliveryDayDate', '');
+		setExtensionData('deliveryDayFrom', '');
+		setExtensionData('deliveryDayTo', '');
+		setExtensionData('deliveryDayPrice', '');
+		setExtensionData('deliveryDayType', '');
 	};
 
 	/**
@@ -40,15 +56,15 @@ export const Block = ({ checkoutExtensionData }) => {
 		formData.append('action', 'postnl_get_delivery_options');
 		formData.append('nonce', window.postnl_ajax_object.nonce);
 
-
-		axios.post(window.postnl_ajax_object.ajax_url, formData, {
-			headers: {
-				'Content-Type': 'application/x-www-form-urlencoded',
-			},
-		})
-			.then(response => {
+		axios
+			.post(window.postnl_ajax_object.ajax_url, formData, {
+				headers: {
+					'Content-Type': 'application/x-www-form-urlencoded',
+				},
+			})
+			.then((response) => {
 				if (response.data.success) {
-					const newDeliveryOptions = response.data.data.delivery_options; // Corrected path
+					const newDeliveryOptions = response.data.data.delivery_options;
 
 					if (!newDeliveryOptions) {
 						throw new Error('Delivery options are undefined.');
@@ -58,78 +74,91 @@ export const Block = ({ checkoutExtensionData }) => {
 						throw new Error('Delivery options is not an array.');
 					}
 
-					setDeliveryOptions(newDeliveryOptions);
+					// Store delivery options in ref
+					deliveryOptionsRef.current = newDeliveryOptions;
 
-					// Set a default selected option if available
 					if (newDeliveryOptions.length > 0) {
 						const firstDelivery = newDeliveryOptions[0];
-						if (Array.isArray(firstDelivery.options) && firstDelivery.options.length > 0) { // Updated here
-							const firstOption = firstDelivery.options[0]; // Updated here
-							const optionType = firstOption.type || 'Unknown'; // Updated here
-							const price = firstOption.price || 0; // Added price
-							const defaultValue = `${firstDelivery.date}_${firstOption.from}-${firstOption.to}_${optionType}`; // Updated here
+						if (Array.isArray(firstDelivery.options) && firstDelivery.options.length > 0) {
+							const firstOption = firstDelivery.options[0];
+							const optionType = firstOption.type || 'Unknown';
+							const price = firstOption.price || 0;
+							const defaultValue = `${firstDelivery.date}_${firstOption.from}-${firstOption.to}_${price}`;
 							setSelectedOption(defaultValue);
 							setExtensionData('postnl_selected_option', defaultValue);
 
-							// Set hidden fields via extension data
-							setExtensionData('postnl_delivery_day_date', firstDelivery.date); // Updated here
-							setExtensionData('postnl_delivery_day_from', firstOption.from); // Updated here
-							setExtensionData('postnl_delivery_day_to', firstOption.to); // Updated here
-							setExtensionData('postnl_delivery_day_type', optionType); // Updated here
-							// Assuming price is handled separately or is part of 'optionType'
+							setDeliveryDayDate(firstDelivery.date);
+							setDeliveryDayFrom(firstOption.from);
+							setDeliveryDayTo(firstOption.to);
+							setDeliveryDayPrice(price);
+							setDeliveryDayType(optionType);
+
+							setExtensionData('deliveryDayDate', firstDelivery.date);
+							setExtensionData('deliveryDayFrom', firstOption.from);
+							setExtensionData('deliveryDayTo', firstOption.to);
+							setExtensionData('deliveryDayPrice', price.toString());
+							setExtensionData('deliveryDayType', optionType);
 						} else {
-							// If no options are available, clear selections
 							clearSelections();
 						}
 					} else {
-						// If no delivery options are available, clear selections
 						clearSelections();
 					}
 				} else {
 					throw new Error(response.data.message || 'Error fetching delivery options.');
 				}
 			})
-			.catch(error => {
+			.catch((error) => {
 				console.error('AJAX error:', error);
 				setError(error.message || 'An unexpected error occurred.');
 			})
 			.finally(() => {
 				setUpdating(false);
+				setLoading(false);
 			});
 	}, [setExtensionData]);
 
 	/**
-	 * Initial Load: Set delivery options from localized data
+	 * Initial Load: Fetch delivery options or use existing ones
 	 */
 	useEffect(() => {
-		if (window.postnl_ajax_object && window.postnl_ajax_object.deliveryOptions) {
+		if (deliveryOptionsRef.current.length > 0) {
+			// Use existing delivery options
+			setLoading(false);
+		} else if (window.postnl_ajax_object && window.postnl_ajax_object.deliveryOptions) {
 			const initialDeliveryOptions = window.postnl_ajax_object.deliveryOptions;
 
 			if (Array.isArray(initialDeliveryOptions) && initialDeliveryOptions.length > 0) {
-				setDeliveryOptions(initialDeliveryOptions);
+				// Store delivery options in ref
+				deliveryOptionsRef.current = initialDeliveryOptions;
 
 				const firstDelivery = initialDeliveryOptions[0];
-				if (Array.isArray(firstDelivery.options) && firstDelivery.options.length > 0) { // Updated here
-					const firstOption = firstDelivery.options[0]; // Updated here
+				if (Array.isArray(firstDelivery.options) && firstDelivery.options.length > 0) {
+					const firstOption = firstDelivery.options[0];
 					const optionType = firstOption.type || 'Unknown';
 					const price = firstOption.price || 0;
-					const defaultValue = `${firstDelivery.date}_${firstOption.from}-${firstOption.to}_${optionType}`; // Updated here
+					const defaultValue = `${firstDelivery.date}_${firstOption.from}-${firstOption.to}_${price}`;
 					setSelectedOption(defaultValue);
 					setExtensionData('postnl_selected_option', defaultValue);
 
-					// Set hidden fields via extension data
-					setExtensionData('postnl_delivery_day_date', firstDelivery.date); // Updated here
-					setExtensionData('postnl_delivery_day_from', firstOption.from); // Updated here
-					setExtensionData('postnl_delivery_day_to', firstOption.to); // Updated here
-					setExtensionData('postnl_delivery_day_type', optionType); // Updated here
-					// Assuming price is handled separately or is part of 'optionType'
+					setDeliveryDayDate(firstDelivery.date);
+					setDeliveryDayFrom(firstOption.from);
+					setDeliveryDayTo(firstOption.to);
+					setDeliveryDayPrice(price);
+					setDeliveryDayType(optionType);
+
+					setExtensionData('deliveryDayDate', firstDelivery.date);
+					setExtensionData('deliveryDayFrom', firstOption.from);
+					setExtensionData('deliveryDayTo', firstOption.to);
+					setExtensionData('deliveryDayPrice', price.toString());
+					setExtensionData('deliveryDayType', optionType);
 				}
 			}
 			setLoading(false);
 		} else {
-			setLoading(false);
+			fetchDeliveryOptions();
 		}
-	}, [setExtensionData]);
+	}, [fetchDeliveryOptions, setExtensionData]);
 
 	/**
 	 * Listen for the custom event to fetch updated delivery options
@@ -154,14 +183,41 @@ export const Block = ({ checkoutExtensionData }) => {
 	 * @param {string} from - Start time
 	 * @param {string} to - End time
 	 * @param {string} type - Type (Morning/Evening)
+	 * @param {number} price - Price of the option
 	 */
-	const handleOptionChange = (value, deliveryDate, from, to, type) => {
+	const handleOptionChange = async (value, deliveryDate, from, to, type, price) => {
 		setSelectedOption(value);
 		setExtensionData('postnl_selected_option', value);
-		setExtensionData('postnl_delivery_day_date', deliveryDate);
-		setExtensionData('postnl_delivery_day_from', from);
-		setExtensionData('postnl_delivery_day_to', to);
-		setExtensionData('postnl_delivery_day_type', type);
+
+		setDeliveryDayDate(deliveryDate);
+		setDeliveryDayFrom(from);
+		setDeliveryDayTo(to);
+		setDeliveryDayPrice(price);
+		setDeliveryDayType(type);
+
+		setExtensionData('deliveryDayDate', deliveryDate);
+		setExtensionData('deliveryDayFrom', from);
+		setExtensionData('deliveryDayTo', to);
+		setExtensionData('deliveryDayPrice', price.toString());
+		setExtensionData('deliveryDayType', type);
+
+		// Call extensionCartUpdate to update the cart total
+		try {
+			const { extensionCartUpdate } = window.wc.blocksCheckout || {};
+
+			if (typeof extensionCartUpdate === 'function') {
+				await extensionCartUpdate({
+					namespace: 'postnl',
+					data: {
+						action: 'update_delivery_fee',
+						price: price,
+						type: type,
+					},
+				});
+			}
+		} catch (error) {
+			console.error('Error updating cart:', error);
+		}
 	};
 
 	/**
@@ -176,35 +232,34 @@ export const Block = ({ checkoutExtensionData }) => {
 	 */
 	if (error) {
 		return (
-			<Notice status="error" isDismissible={ false }>
-				{ __( error, 'postnl-for-woocommerce' ) }
+			<Notice status="error" isDismissible={false}>
+				{__(error, 'postnl-for-woocommerce')}
 			</Notice>
 		);
 	}
 
 	/**
-	 * Render the Delivery Options
+	 * Render the Delivery Options with Hidden Inputs
 	 */
 	return (
 		<div className="postnl_content" id="postnl_delivery_day_content">
 			<ul className="postnl_delivery_day_list postnl_list">
-				{deliveryOptions.map((delivery, index) => (
-					Array.isArray(delivery.options) && delivery.options.length > 0 && (
+				{deliveryOptionsRef.current.map((delivery, index) =>
+					Array.isArray(delivery.options) && delivery.options.length > 0 ? (
 						<li key={index}>
 							<div className="list_title">
 								<span>{`${delivery.date} ${delivery.day}`}</span>
 							</div>
 							<ul className="postnl_sub_list">
 								{delivery.options.map((option, optionIndex) => {
-									// Ensure option properties exist
 									const from = option.from || '';
 									const to = option.to || '';
 									const optionType = option.type || 'Unknown';
 									const price = option.price || 0;
-									const value = `${delivery.date}_${from}-${to}_${optionType}`;
+									const value = `${delivery.date}_${from}-${to}_${price}`;
 
-									const isChecked = selectedOption === value || (index === 0 && optionIndex === 0);
-									const isActive = selectedOption === value ? 'active' : '';
+									const isChecked = selectedOption === value;
+									const isActive = isChecked ? 'active' : '';
 
 									let delivery_time = '';
 									if (optionType === 'Evening') {
@@ -232,9 +287,10 @@ export const Block = ({ checkoutExtensionData }) => {
 													className="postnl_sub_radio"
 													value={value}
 													checked={isChecked}
-													onChange={() => handleOptionChange(value, delivery.date, from, to, optionType)}
+													onChange={() =>
+														handleOptionChange(value, delivery.date, from, to, optionType, price)
+													}
 												/>
-												{/* Display additional information if needed */}
 												{price > 0 && <i>+€{price.toFixed(2)}</i>}
 												<i>{delivery_time}</i>
 												<span>{`${from} - ${to}`}</span>
@@ -244,9 +300,14 @@ export const Block = ({ checkoutExtensionData }) => {
 								})}
 							</ul>
 						</li>
-					)
-				))}
+					) : null
+				)}
 			</ul>
+			<input type="hidden" name="deliveryDayDate" id="deliveryDayDate" value={deliveryDayDate} />
+			<input type="hidden" name="deliveryDayFrom" id="deliveryDayFrom" value={deliveryDayFrom} />
+			<input type="hidden" name="deliveryDayTo" id="deliveryDayTo" value={deliveryDayTo} />
+			<input type="hidden" name="deliveryDayPrice" id="deliveryDayPrice" value={deliveryDayPrice} />
+			<input type="hidden" name="deliveryDayType" id="deliveryDayType" value={deliveryDayType} />
 		</div>
 	);
 };

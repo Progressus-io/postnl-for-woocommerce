@@ -26,43 +26,43 @@
 	  "type": "string",
 	  "default": ""
 	},
-	"dpAddressCompany": {
+	"dropoffPointsAddressCompany": {
 	  "type": "string",
 	  "default": ""
 	},
-	"dpAddress1": {
+	"dropoffPointsAddress1": {
 	  "type": "string",
 	  "default": ""
 	},
-	"dpAddress2": {
+	"dropoffPointsAddress2": {
 	  "type": "string",
 	  "default": ""
 	},
-	"dpCity": {
+	"dropoffPointsCity": {
 	  "type": "string",
 	  "default": ""
 	},
-	"dpPostcode": {
+	"dropoffPointsPostcode": {
 	  "type": "string",
 	  "default": ""
 	},
-	"dpCountry": {
+	"dropoffPointsCountry": {
 	  "type": "string",
 	  "default": ""
 	},
-	"dpPartnerID": {
+	"dropoffPointsPartnerID": {
 	  "type": "string",
 	  "default": ""
 	},
-	"dpDate": {
+	"dropoffPointsDate": {
 	  "type": "string",
 	  "default": ""
 	},
-	"dpTime": {
+	"dropoffPointsTime": {
 	  "type": "string",
 	  "default": ""
 	},
-	"dpDistance": {
+	"dropoffPointsDistance": {
 	  "type": "string",
 	  "default": ""
 	}

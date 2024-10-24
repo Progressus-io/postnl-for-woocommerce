@@ -23,10 +23,9 @@ class Checkout_Blocks {
 
 		// Initialize endpoints and core functionality.
 		$extend_store = new Extend_Store_Endpoint();
-		$extend_core  = new Extend_Block_Core(); // Assuming this is the renamed class.
 
 		$extend_store->init();
-		$extend_core->init(); // Uncomment if needed.
+		new Extend_Block_Core();
 
 		// Register the blocks integration with WooCommerce blocks.
 		/*add_action( 'woocommerce_blocks_checkout_block_registration', function( $integration_registry ) {

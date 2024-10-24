@@ -22,23 +22,23 @@
 		"move": true
 	  }
 	},
-	"ddDate": {
+	"deliveryDayDate": {
 	  "type": "string",
 	  "default": ""
 	},
-	"ddFrom": {
+	"deliveryDayFrom": {
 	  "type": "string",
 	  "default": ""
 	},
-	"ddTo": {
+	"deliveryDayTo": {
 	  "type": "string",
 	  "default": ""
 	},
-	"ddPrice": {
+	"deliveryDayPrice": {
 	  "type": "string",
 	  "default": ""
 	},
-	"ddType": {
+	"deliveryDayType": {
 	  "type": "string",
 	  "default": ""
 	}

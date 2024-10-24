@@ -146,7 +146,7 @@ class Bulk extends Base {
 			foreach ( $object_ids as $order_id ) {
 				$order                = wc_get_order( $order_id );
 				$have_label_file      = $this->have_label_file( $order );
-				$match_shipping_zones = $zone === $this->get_shipping_zone( $order );
+				$match_shipping_zones = $zone === $this->get_shipping_zone( $order ) || 'PICKUP' === $zone;
 
 				if ( $have_label_file ) {
 					$array_messages[] = array(
@@ -487,10 +487,11 @@ class Bulk extends Base {
 				'value'     => 'nl',
 				'container' => true,
 				'options'   => array(
-					'nl'  => __( 'Domestic', 'postnl-for-woocommerce' ),
-					'be'  => __( 'Belgium', 'postnl-for-woocommerce' ),
-					'eu'  => __( 'EU Parcel', 'postnl-for-woocommerce' ),
-					'row' => __( 'Non-EU Shipment', 'postnl-for-woocommerce' ),
+					'nl'  	 => __( 'Domestic', 'postnl-for-woocommerce' ),
+					'be'  	 => __( 'Belgium', 'postnl-for-woocommerce' ),
+					'eu'  	 => __( 'EU Parcel', 'postnl-for-woocommerce' ),
+					'row' 	 => __( 'Non-EU Shipment', 'postnl-for-woocommerce' ),
+					'pickup' => __( 'Pick-up at PostNL', 'postnl-for-woocommerce' ),
 				),
 			),
 			array(
@@ -528,6 +529,15 @@ class Bulk extends Base {
 				'container'     => true,
 				'value'         => $this->settings->get_country_option( 'default_shipping_options_' . 'row' ),
 				'options'       => $this->get_available_shipping_options_per_zone( 'row' ),
+			),
+			array(
+				'id'            => $this->prefix . 'default_shipping_options_pickup',
+				'type'          => 'select',
+				'label'         => __( 'Shipping options for Pick-up at PostNL', 'postnl-for-woocommerce' ),
+				'wrapper_class' => 'conditional pickup',
+				'container'     => true,
+				'value'         => $this->settings->get_country_option( 'default_shipping_options_' . 'pickup' ),
+				'options'       => $this->get_available_shipping_options_per_zone( 'pickup' ),
 			),
 		);
 	}

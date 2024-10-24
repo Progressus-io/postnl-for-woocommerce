@@ -607,6 +607,17 @@ class Settings extends \WC_Settings_API {
 					'packets|track_and_trace|insured_shipping'       => __( 'Packets + Track & Trace + Insured', 'postnl-for-woocommerce' ),
 				),
 			),
+			'default_shipping_options_pickup'   => array(
+				'title'       => __( 'Default Shipping Pickup', 'postnl-for-woocommerce' ),
+				'type'        => 'select',
+				'description' => __( 'Shipping options Pickup.', 'postnl-for-woocommerce' ),
+				'default'     => 'id_check',
+				'for_country' => array( 'NL' ),
+				'options'     => array(
+					'id_check'         => __( 'ID Check', 'postnl-for-woocommerce' ),
+					'insured_shipping' => __( 'Insured Shipping', 'postnl-for-woocommerce' ),
+				),
+			),
 			'auto_complete_order'            => array(
 				'title'       => esc_html__( 'Automatically change order status to Completed', 'postnl-for-woocommerce' ),
 				'type'        => 'checkbox',

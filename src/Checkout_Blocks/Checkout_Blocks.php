@@ -28,9 +28,9 @@ class Checkout_Blocks {
 		new Extend_Block_Core();
 
 		// Register the blocks integration with WooCommerce blocks.
-		/*add_action( 'woocommerce_blocks_checkout_block_registration', function( $integration_registry ) {
+		add_action( 'woocommerce_blocks_checkout_block_registration', function( $integration_registry ) {
 			$integration_registry->register( new Blocks_Integration() );
-		});*/
+		});
 
 		// Register the block category.
 		add_action( 'block_categories_all', array( $this, 'register_postnl_block_category' ), 10, 2 );

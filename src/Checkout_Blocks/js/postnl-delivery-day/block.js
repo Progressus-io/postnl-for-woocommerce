@@ -242,7 +242,7 @@ export const Block = ({ checkoutExtensionData }) => {
 	 * Render the Delivery Options with Hidden Inputs
 	 */
 	return (
-		<div className="postnl_content" id="postnl_delivery_day_content">
+		<div>
 			<ul className="postnl_delivery_day_list postnl_list">
 				{deliveryOptionsRef.current.map((delivery, index) =>
 					Array.isArray(delivery.options) && delivery.options.length > 0 ? (

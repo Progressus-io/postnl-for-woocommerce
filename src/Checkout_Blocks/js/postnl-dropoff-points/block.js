@@ -223,8 +223,7 @@ export const Block = ({ checkoutExtensionData }) => {
 	 * Render the Dropoff Points with Hidden Inputs
 	 */
 	return (
-		<div className="postnl_content" id="postnl_dropoff_points_content">
-			{/* Optional: Display description if needed */}
+		<div>
 			{dropoffOptions.some((point) => point.show_desc) && (
 				<div className="postnl_content_desc">
 					{__('Receive shipment at home? Continue ', 'postnl-for-woocommerce')}

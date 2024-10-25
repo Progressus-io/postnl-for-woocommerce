@@ -86,7 +86,11 @@ class Blocks_Integration implements IntegrationInterface {
 			'/build/postnl-delivery-day.js',
 			'/build/postnl-delivery-day.asset.php'
 		);
-
+		$this->register_block_script(
+			'postnl-container-editor',
+			'/build/postnl-container.js',
+			'/build/postnl-container.asset.php'
+		);
 		// Register postnl-dropoff-points block
 		$this->register_block_script(
 			'postnl-dropoff-points-editor',
@@ -113,6 +117,13 @@ class Blocks_Integration implements IntegrationInterface {
 			'postnl-delivery-day-frontend',
 			'/build/postnl-delivery-day-frontend.js',
 			'/build/postnl-delivery-day-frontend.asset.php'
+		);
+
+
+		$this->register_frontend_script(
+			'postnl-container-frontend',
+			'/build/postnl-container-frontend.js',
+			'/build/postnl-container-frontend.asset.php'
 		);
 
 		$this->register_frontend_script(

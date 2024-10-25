@@ -4,8 +4,9 @@
 import { registerPlugin } from '@wordpress/plugins';
 
 // Import block definitions
-import './postnl-delivery-day';
-import './postnl-dropoff-points';
+import './postnl-billing-address';
+import './postnl-shipping-address';
+import './postnl-container';
 
 const render = () => {};
 

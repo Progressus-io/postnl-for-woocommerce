@@ -52,3 +52,6 @@ composer.lock
 
 # Customize PHPCS
 phpcs.xml
+
+#zip files
+postnl-for-woocommerce.zip

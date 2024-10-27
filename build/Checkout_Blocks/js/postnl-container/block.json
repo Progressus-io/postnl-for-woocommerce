@@ -1,0 +1,28 @@
+{
+  "apiVersion": 2,
+  "name": "postnl/postnl-container",
+  "version": "1.0.0",
+  "title": "Postnl Tabs",
+  "category": "woocommerce",
+  "description": "",
+  "supports": {
+    "html": false,
+    "align": false,
+    "multiple": false,
+    "reusable": false
+  },
+  "parent": [
+    "woocommerce/checkout-order-summary-block"
+  ],
+  "attributes": {
+    "lock": {
+      "type": "object",
+      "default": {
+        "remove": true,
+        "move": true
+      }
+    }
+  },
+  "textdomain": "postnl-for-woocommerce",
+  "editorStyle": "file:../../../build/style-postnl-for-woocommerce-block.css"
+}

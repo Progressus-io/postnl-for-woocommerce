@@ -162,7 +162,12 @@ class Bulk extends Base {
 					);
 				}
 
-				if ( ! $have_label_file && $match_shipping_zones ) {
+				if ( ! $have_label_file && 'PICKUP' === $zone ) {
+					$meta = $order->get_meta( $this->meta_name );
+					$meta['backend'] = $selected_shipping_options ;
+					$order->update_meta_data( $this->meta_name, $meta );
+					$order->save();
+				}elseif ( ! $have_label_file && $match_shipping_zones ) {
 					$order->delete_meta_data( $this->meta_name );
 					$order->update_meta_data( $this->meta_name, array( 'backend' => $selected_shipping_options ) );
 					$order->save();

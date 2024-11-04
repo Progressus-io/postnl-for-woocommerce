@@ -91,7 +91,7 @@ class Checkout_Fields {
 			),
 			'house_number' => array(
 				'priority' => 6,
-				'required' => true,
+				'required' => false,
 				'hidden'   => false,
 			),
 			'address_2'    => array(

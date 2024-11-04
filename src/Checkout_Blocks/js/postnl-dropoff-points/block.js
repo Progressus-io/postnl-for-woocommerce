@@ -5,6 +5,8 @@ import { useEffect, useState, useCallback } from '@wordpress/element';
 import { Spinner, Notice } from '@wordpress/components';
 import { __ } from '@wordpress/i18n';
 import axios from 'axios';
+import { debounce } from 'lodash';
+import { getSetting } from '@woocommerce/settings';
 
 /**
  * Utility Functions
@@ -21,15 +23,24 @@ const Utils = {
 /**
  * Dropoff Points Block Component
  */
-export const Block = ({ checkoutExtensionData }) => {
+export const Block = ({ checkoutExtensionData, isActive }) => {
 	const { setExtensionData } = checkoutExtensionData;
+	const postnlData = getSetting( 'postnl-for-woocommerce-blocks_data', {} );
+
+	// Debounce setting extension data to optimize performance
+	const debouncedSetExtensionData = useCallback(
+		debounce((namespace, key, value) => {
+			setExtensionData(namespace, key, value);
+		}, 1000),
+		[setExtensionData]
+	);
+
 	const [dropoffOptions, setDropoffOptions] = useState([]);
-	const [selectedOption, setSelectedOption] = useState('');
+	const [dropoffPoints, setDropoffPoints] = useState(''); // Empty by default
 	const [loading, setLoading] = useState(true);
 	const [updating, setUpdating] = useState(false);
 	const [error, setError] = useState('');
 
-	// State variables for hidden fields based on block.json attributes
 	const [dropoffPointsAddressCompany, setDropoffPointsAddressCompany] = useState('');
 	const [dropoffPointsAddress1, setDropoffPointsAddress1] = useState('');
 	const [dropoffPointsAddress2, setDropoffPointsAddress2] = useState('');
@@ -39,15 +50,82 @@ export const Block = ({ checkoutExtensionData }) => {
 	const [dropoffPointsPartnerID, setDropoffPointsPartnerID] = useState('');
 	const [dropoffPointsDate, setDropoffPointsDate] = useState('');
 	const [dropoffPointsTime, setDropoffPointsTime] = useState('');
-	const [dropoffPointsDistance, setDropoffPointsDistance] = useState('');
+	const [dropoffPointsDistance, setDropoffPointsDistance] = useState(null);
+
+
+	useEffect(() => {
+		setExtensionData('postnl', 'dropoffPoints', dropoffPoints);
+		debouncedSetExtensionData('postnl', 'dropoffPoints', dropoffPoints);
+	}, [dropoffPoints, setExtensionData, debouncedSetExtensionData]);
+
+	useEffect(() => {
+		setExtensionData('postnl', 'dropoffPointsAddressCompany', dropoffPointsAddressCompany);
+		debouncedSetExtensionData('postnl', 'dropoffPointsAddressCompany', dropoffPointsAddressCompany);
+	}, [dropoffPointsAddressCompany, setExtensionData, debouncedSetExtensionData]);
+
+	useEffect(() => {
+		setExtensionData('postnl', 'dropoffPointsAddress1', dropoffPointsAddress1);
+		debouncedSetExtensionData('postnl', 'dropoffPointsAddress1', dropoffPointsAddress1);
+	}, [dropoffPointsAddress1, setExtensionData, debouncedSetExtensionData]);
+
+	useEffect(() => {
+		setExtensionData('postnl', 'dropoffPointsAddress2', dropoffPointsAddress2);
+		debouncedSetExtensionData('postnl', 'dropoffPointsAddress2', dropoffPointsAddress2);
+	}, [dropoffPointsAddress2, setExtensionData, debouncedSetExtensionData]);
+
+	useEffect(() => {
+		setExtensionData('postnl', 'dropoffPointsCity', dropoffPointsCity);
+		debouncedSetExtensionData('postnl', 'dropoffPointsCity', dropoffPointsCity);
+	}, [dropoffPointsCity, setExtensionData, debouncedSetExtensionData]);
+
+	useEffect(() => {
+		setExtensionData('postnl', 'dropoffPointsPostcode', dropoffPointsPostcode);
+		debouncedSetExtensionData('postnl', 'dropoffPointsPostcode', dropoffPointsPostcode);
+	}, [dropoffPointsPostcode, setExtensionData, debouncedSetExtensionData]);
+
+	useEffect(() => {
+		setExtensionData('postnl', 'dropoffPointsCountry', dropoffPointsCountry);
+		debouncedSetExtensionData('postnl', 'dropoffPointsCountry', dropoffPointsCountry);
+	}, [dropoffPointsCountry, setExtensionData, debouncedSetExtensionData]);
+
+	useEffect(() => {
+		setExtensionData('postnl', 'dropoffPointsPartnerID', dropoffPointsPartnerID);
+		debouncedSetExtensionData('postnl', 'dropoffPointsPartnerID', dropoffPointsPartnerID);
+	}, [dropoffPointsPartnerID, setExtensionData, debouncedSetExtensionData]);
+
+	useEffect(() => {
+		setExtensionData('postnl', 'dropoffPointsDate', dropoffPointsDate);
+		debouncedSetExtensionData('postnl', 'dropoffPointsDate', dropoffPointsDate);
+	}, [dropoffPointsDate, setExtensionData, debouncedSetExtensionData]);
+
+	useEffect(() => {
+		setExtensionData('postnl', 'dropoffPointsTime', dropoffPointsTime);
+		debouncedSetExtensionData('postnl', 'dropoffPointsTime', dropoffPointsTime);
+	}, [dropoffPointsTime, setExtensionData, debouncedSetExtensionData]);
+
+	useEffect(() => {
+		setExtensionData('postnl', 'dropoffPointsDistance', dropoffPointsDistance);
+		debouncedSetExtensionData('postnl', 'dropoffPointsDistance', dropoffPointsDistance);
+	}, [dropoffPointsDistance, setExtensionData, debouncedSetExtensionData]);
+
+	/**
+	 * useEffect to handle tab activation
+	 */
+	useEffect(() => {
+		if (!isActive) {
+			// Tab is inactive
+			// Clear hidden fields
+			clearSelections();
+		}
+		// When tab becomes active, do not select any option by default
+		// Hidden fields remain empty until user selects an option
+	}, [isActive]);
 
 	/**
 	 * Helper function to clear selections
 	 */
 	const clearSelections = () => {
-		setSelectedOption('');
-		setExtensionData('selectedOption', '');
-
+		setDropoffPoints('');
 		setDropoffPointsAddressCompany('');
 		setDropoffPointsAddress1('');
 		setDropoffPointsAddress2('');
@@ -57,8 +135,9 @@ export const Block = ({ checkoutExtensionData }) => {
 		setDropoffPointsPartnerID('');
 		setDropoffPointsDate('');
 		setDropoffPointsTime('');
-		setDropoffPointsDistance('');
+		setDropoffPointsDistance(null); // Use null for numeric field
 
+		setExtensionData('dropoffPoints', '');
 		setExtensionData('dropoffPointsAddressCompany', '');
 		setExtensionData('dropoffPointsAddress1', '');
 		setExtensionData('dropoffPointsAddress2', '');
@@ -68,7 +147,7 @@ export const Block = ({ checkoutExtensionData }) => {
 		setExtensionData('dropoffPointsPartnerID', '');
 		setExtensionData('dropoffPointsDate', '');
 		setExtensionData('dropoffPointsTime', '');
-		setExtensionData('dropoffPointsDistance', '');
+		setExtensionData('dropoffPointsDistance', null); // Use null for numeric field
 	};
 
 	/**
@@ -80,10 +159,10 @@ export const Block = ({ checkoutExtensionData }) => {
 
 		const formData = new URLSearchParams();
 		formData.append('action', 'postnl_get_delivery_options'); // Adjust if you have a different AJAX action
-		formData.append('nonce', window.postnl_ajax_object.nonce);
+		formData.append('nonce', postnlData.nonce);
 
 		axios
-			.post(window.postnl_ajax_object.ajax_url, formData, {
+			.post(postnlData.ajax_url, formData, {
 				headers: {
 					'Content-Type': 'application/x-www-form-urlencoded',
 				},
@@ -102,26 +181,14 @@ export const Block = ({ checkoutExtensionData }) => {
 
 					setDropoffOptions(dropoffOptions);
 
-					// Set a default selected option if available
-					if (dropoffOptions.length > 0) {
-						const firstDropoff = dropoffOptions[0];
-						const value = `${firstDropoff.partner_id}-${firstDropoff.loc_code}`;
-						setSelectedOption(value);
-						setExtensionData('selectedOption', value);
-
-						// Update hidden fields and extension data
-						updateHiddenFields(firstDropoff);
-					} else {
-						// If no dropoff options are available, clear selections
-						clearSelections();
-					}
+					// Do not select any option by default
+					// Clear selections to ensure hidden fields are empty
+					clearSelections();
 				} else {
 					throw new Error(response.data.message || 'Error fetching dropoff options.');
 				}
 			})
 			.catch((error) => {
-				console.error('AJAX error:', error);
-				setError(error.message || 'An unexpected error occurred.');
 			})
 			.finally(() => {
 				setUpdating(false);
@@ -144,7 +211,7 @@ export const Block = ({ checkoutExtensionData }) => {
 		setDropoffPointsPartnerID(dropoffPoint.partner_id || '');
 		setDropoffPointsDate(dropoffPoint.date || '');
 		setDropoffPointsTime(dropoffPoint.time || '');
-		setDropoffPointsDistance(dropoffPoint.distance || '');
+		setDropoffPointsDistance(Number(dropoffPoint.distance) || null); // Ensure numeric value or null
 
 		setExtensionData('dropoffPointsAddressCompany', address.company || '');
 		setExtensionData('dropoffPointsAddress1', address.address_1 || '');
@@ -155,7 +222,7 @@ export const Block = ({ checkoutExtensionData }) => {
 		setExtensionData('dropoffPointsPartnerID', dropoffPoint.partner_id || '');
 		setExtensionData('dropoffPointsDate', dropoffPoint.date || '');
 		setExtensionData('dropoffPointsTime', dropoffPoint.time || '');
-		setExtensionData('dropoffPointsDistance', dropoffPoint.distance || '');
+		setExtensionData('dropoffPointsDistance', Number(dropoffPoint.distance) || null); // Ensure numeric value or null
 	};
 
 	/**
@@ -186,8 +253,8 @@ export const Block = ({ checkoutExtensionData }) => {
 	 * @param {string} value - The value of the selected option
 	 */
 	const handleOptionChange = (value) => {
-		setSelectedOption(value);
-		setExtensionData('selectedOption', value);
+		setDropoffPoints(value);
+		setExtensionData('dropoffPoints', value);
 
 		// Find the selected dropoff point.
 		const selectedDropoffPoint = dropoffOptions.find((point) => {
@@ -235,7 +302,7 @@ export const Block = ({ checkoutExtensionData }) => {
 				{dropoffOptions.map((point, index) => {
 					const value = `${point.partner_id}-${point.loc_code}`;
 					const address = `${point.address.address_1} ${point.address.address_2}, ${point.address.city}, ${point.address.postcode}`;
-					const isChecked = selectedOption === value;
+					const isChecked = dropoffPoints === value;
 					const isActive = isChecked ? 'active' : '';
 
 					return (
@@ -270,7 +337,6 @@ export const Block = ({ checkoutExtensionData }) => {
 											checked={isChecked}
 											onChange={() => handleOptionChange(value)}
 										/>
-										{/* Removed price display since 'price' isn't part of dropoff_options */}
 										<i>{__(point.type, 'postnl-for-woocommerce')}</i>
 										<span>{address}</span>
 									</label>
@@ -281,6 +347,8 @@ export const Block = ({ checkoutExtensionData }) => {
 				})}
 			</ul>
 
+			{/* Hidden Inputs */}
+			<input type="hidden" name="dropoffPoints" id="dropoffPoints" value={dropoffPoints} />
 			<input type="hidden" name="dropoffPointsAddressCompany" id="dropoffPointsAddressCompany" value={dropoffPointsAddressCompany} />
 			<input type="hidden" name="dropoffPointsAddress1" id="dropoffPointsAddress1" value={dropoffPointsAddress1} />
 			<input type="hidden" name="dropoffPointsAddress2" id="dropoffPointsAddress2" value={dropoffPointsAddress2} />

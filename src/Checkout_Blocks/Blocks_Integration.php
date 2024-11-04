@@ -2,10 +2,16 @@
 
 namespace PostNLWooCommerce\Checkout_Blocks;
 
-use \Automattic\WooCommerce\Blocks\Integrations\IntegrationInterface;
+use Automattic\WooCommerce\Blocks\Integrations\IntegrationInterface;
 use PostNLWooCommerce\Frontend\Delivery_Day;
 use PostNLWooCommerce\Frontend\Dropoff_Points;
 use PostNLWooCommerce\Frontend\Container;
+use PostNLWooCommerce\Shipping_Method\Settings;
+use PostNLWooCommerce\Utils;
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 
 /**
  * Class for integrating with WooCommerce Blocks
@@ -25,16 +31,33 @@ class Blocks_Integration implements IntegrationInterface {
 	 * When called invokes any initialization/setup for the integration.
 	 */
 	public function initialize() {
-		$this->register_postnl_for_wocommerce_editor_scripts();
-		$this->register_postnl_for_wocommerce_editor_styles();
+		$this->register_scripts_and_styles();
+		$this->register_ajax_actions();
+	}
+
+	/**
+	 * Registers scripts and styles for both editor and frontend.
+	 */
+	private function register_scripts_and_styles() {
+		// Register main integration script and style
 		$this->register_main_integration();
 
-		// Register AJAX actions
-		add_action( 'wp_ajax_postnl_set_checkout_post_data', array( $this, 'handle_set_checkout_post_data' ) );
-		add_action( 'wp_ajax_nopriv_postnl_set_checkout_post_data', array( $this, 'handle_set_checkout_post_data' ) );
-		add_action( 'wp_ajax_postnl_get_delivery_options', array( $this, 'handle_get_delivery_options' ) );
-		add_action( 'wp_ajax_nopriv_postnl_get_delivery_options', array( $this, 'handle_get_delivery_options' ) );
+		// Register block editor scripts
+		$this->register_block_script(
+			'postnl-container-editor',
+			'/build/postnl-container.js',
+			'/build/postnl-container.asset.php'
+		);
 
+		// Register frontend scripts for blocks
+		$this->register_frontend_script(
+			'postnl-container-frontend',
+			'/build/postnl-container-frontend.js',
+			'/build/postnl-container-frontend.asset.php'
+		);
+
+		// Register block styles
+		$this->register_styles();
 	}
 
 	/**
@@ -47,11 +70,11 @@ class Blocks_Integration implements IntegrationInterface {
 		$script_url = POSTNL_WC_PLUGIN_DIR_URL . $script_path;
 		$style_url  = POSTNL_WC_PLUGIN_DIR_URL . $style_path;
 
-		$script_asset_path = dirname( __FILE__ ) . '/build/index.asset.php';
+		$script_asset_path = POSTNL_WC_PLUGIN_DIR_PATH . '/build/index.asset.php';
 		$script_asset      = file_exists( $script_asset_path )
 			? require $script_asset_path
 			: [
-				'dependencies' => array(),
+				'dependencies' => [],
 				'version'      => $this->get_file_version( $script_path ),
 			];
 
@@ -69,86 +92,18 @@ class Blocks_Integration implements IntegrationInterface {
 			$script_asset['version'],
 			true
 		);
+
 		wp_set_script_translations(
+			'postnl-delivery-day-integration',
 			'postnl-for-woocommerce-blocks',
-			'postnl-for-woocommerce-blocks',
-			dirname( __FILE__ ) . '/languages'
-		);
-	}
-
-	/**
-	 * Registers block editor and frontend scripts.
-	 */
-	public function register_postnl_for_wocommerce_editor_scripts() {
-		// Register postnl-delivery-day block
-		$this->register_block_script(
-			'postnl-delivery-day-editor',
-			'/build/postnl-delivery-day.js',
-			'/build/postnl-delivery-day.asset.php'
-		);
-		$this->register_block_script(
-			'postnl-container-editor',
-			'/build/postnl-container.js',
-			'/build/postnl-container.asset.php'
-		);
-		// Register postnl-dropoff-points block
-		$this->register_block_script(
-			'postnl-dropoff-points-editor',
-			'/build/postnl-dropoff-points.js',
-			'/build/postnl-dropoff-points.asset.php'
-		);
-
-		// Register postnl-billing-address block
-		$this->register_block_script(
-			'postnl-billing-address-editor',
-			'/build/postnl-billing-address.js',
-			'/build/postnl-billing-address.asset.php'
-		);
-
-		// Register postnl-shipping-address block
-		$this->register_block_script(
-			'postnl-shipping-address-editor',
-			'/build/postnl-shipping-address.js',
-			'/build/postnl-shipping-address.asset.php'
-		);
-
-		// Register frontend scripts for all blocks
-		$this->register_frontend_script(
-			'postnl-delivery-day-frontend',
-			'/build/postnl-delivery-day-frontend.js',
-			'/build/postnl-delivery-day-frontend.asset.php'
-		);
-
-
-		$this->register_frontend_script(
-			'postnl-container-frontend',
-			'/build/postnl-container-frontend.js',
-			'/build/postnl-container-frontend.asset.php'
-		);
-
-		$this->register_frontend_script(
-			'postnl-dropoff-points-frontend',
-			'/build/postnl-dropoff-points-frontend.js',
-			'/build/postnl-dropoff-points-frontend.asset.php'
-		);
-
-		$this->register_frontend_script(
-			'postnl-billing-address-frontend',
-			'/build/postnl-billing-address-frontend.js',
-			'/build/postnl-billing-address-frontend.asset.php'
-		);
-
-		$this->register_frontend_script(
-			'postnl-shipping-address-frontend',
-			'/build/postnl-shipping-address-frontend.js',
-			'/build/postnl-shipping-address-frontend.asset.php'
+			POSTNL_WC_PLUGIN_DIR_PATH . '/languages'
 		);
 	}
 
 	/**
 	 * Registers block styles for the block editor.
 	 */
-	public function register_postnl_for_wocommerce_editor_styles() {
+	private function register_styles() {
 		$block_style_path = '/build/style-postnl-delivery-day.css';
 		$block_style_url  = POSTNL_WC_PLUGIN_DIR_URL . $block_style_path;
 
@@ -158,31 +113,20 @@ class Blocks_Integration implements IntegrationInterface {
 			[],
 			$this->get_file_version( $block_style_path )
 		);
-
-		$extra_style_path = '/build/style-postnl-dropoff-points.css';
-		$extra_style_url  = POSTNL_WC_PLUGIN_DIR_URL . $extra_style_path;
-
-		wp_enqueue_style(
-			'postnl-dropoff-points',
-			$extra_style_url,
-			[],
-			$this->get_file_version( $extra_style_path )
-		);
-		$this->localize_scripts();
 	}
 
 	/**
 	 * Helper method to register block editor scripts.
 	 *
-	 * @param string $handle Script handle name.
+	 * @param string $handle      Script handle name.
 	 * @param string $script_path Path to the JS file.
-	 * @param string $asset_path Path to the asset file.
+	 * @param string $asset_path  Path to the asset file.
 	 */
 	private function register_block_script( $handle, $script_path, $asset_path ) {
 		$script_url = POSTNL_WC_PLUGIN_DIR_URL . $script_path;
-		$asset_file = dirname( __FILE__ ) . $asset_path;
+		$asset_file = POSTNL_WC_PLUGIN_DIR_PATH . $asset_path;
 		$asset      = file_exists( $asset_file ) ? require $asset_file : [
-			'dependencies' => array(),
+			'dependencies' => [],
 			'version'      => $this->get_file_version( $script_path ),
 		];
 
@@ -194,21 +138,25 @@ class Blocks_Integration implements IntegrationInterface {
 			true
 		);
 
-		wp_set_script_translations( $handle, 'postnl-for-woocommerce-blocks', dirname( __FILE__ ) . '/languages' );
+		wp_set_script_translations(
+			$handle,
+			'postnl-for-woocommerce-blocks',
+			POSTNL_WC_PLUGIN_DIR_PATH . '/languages'
+		);
 	}
 
 	/**
 	 * Helper method to register frontend scripts.
 	 *
-	 * @param string $handle Script handle name.
+	 * @param string $handle      Script handle name.
 	 * @param string $script_path Path to the JS file.
-	 * @param string $asset_path Path to the asset file.
+	 * @param string $asset_path  Path to the asset file.
 	 */
 	private function register_frontend_script( $handle, $script_path, $asset_path ) {
 		$script_url = POSTNL_WC_PLUGIN_DIR_URL . $script_path;
-		$asset_file = dirname( __FILE__ ) . $asset_path;
+		$asset_file = POSTNL_WC_PLUGIN_DIR_PATH . $asset_path;
 		$asset      = file_exists( $asset_file ) ? require $asset_file : [
-			'dependencies' => array(),
+			'dependencies' => [],
 			'version'      => $this->get_file_version( $script_path ),
 		];
 
@@ -220,7 +168,21 @@ class Blocks_Integration implements IntegrationInterface {
 			true
 		);
 
-		wp_set_script_translations( $handle, 'postnl-for-woocommerce-blocks', dirname( __FILE__ ) . '/languages' );
+		wp_set_script_translations(
+			$handle,
+			'postnl-for-woocommerce-blocks',
+			POSTNL_WC_PLUGIN_DIR_PATH . '/languages'
+		);
+	}
+
+	/**
+	 * Registers AJAX actions.
+	 */
+	private function register_ajax_actions() {
+		add_action( 'wp_ajax_postnl_set_checkout_post_data', [ $this, 'handle_set_checkout_post_data' ] );
+		add_action( 'wp_ajax_nopriv_postnl_set_checkout_post_data', [ $this, 'handle_set_checkout_post_data' ] );
+		add_action( 'wp_ajax_postnl_get_delivery_options', [ $this, 'handle_get_delivery_options' ] );
+		add_action( 'wp_ajax_nopriv_postnl_get_delivery_options', [ $this, 'handle_get_delivery_options' ] );
 	}
 
 	/**
@@ -231,8 +193,9 @@ class Blocks_Integration implements IntegrationInterface {
 	 * @return string The cache buster value to use for the given file.
 	 */
 	protected function get_file_version( $file ) {
-		if ( defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG && file_exists( $file ) ) {
-			return filemtime( $file );
+		$file_path = POSTNL_WC_PLUGIN_DIR_PATH . $file;
+		if ( defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG && file_exists( $file_path ) ) {
+			return filemtime( $file_path );
 		}
 
 		return POSTNL_WC_VERSION;
@@ -244,7 +207,10 @@ class Blocks_Integration implements IntegrationInterface {
 	 * @return string[]
 	 */
 	public function get_script_handles() {
-		return [ 'postnl-delivery-day-integration', 'postnl-delivery-day-frontend' ];
+		return [
+			'postnl-delivery-day-integration',
+			'postnl-container-frontend',
+		];
 	}
 
 	/**
@@ -253,8 +219,12 @@ class Blocks_Integration implements IntegrationInterface {
 	 * @return string[]
 	 */
 	public function get_editor_script_handles() {
-		return [ 'postnl-delivery-day-integration', 'postnl-delivery-day-editor' ];
+		return [
+			'postnl-delivery-day-integration',
+			'postnl-container-editor',
+		];
 	}
+
 
 	/**
 	 * An array of key, value pairs of data made available to the block on the client side.
@@ -262,54 +232,14 @@ class Blocks_Integration implements IntegrationInterface {
 	 * @return array
 	 */
 	public function get_script_data() {
-		$data = [
-			'postnl-delivery-day-active' => true,
+		$letterbox = Utils::is_eligible_auto_letterbox( WC()->cart );
+		return [
+			'pluginUrl' => POSTNL_WC_PLUGIN_DIR_URL,
+			'ajax_url'  => admin_url( 'admin-ajax.php' ),
+			'nonce'     => wp_create_nonce( 'postnl_delivery_day_nonce' ),
+			'letterbox' => $letterbox, // Add the letterbox status here
 		];
-
-		return $data;
 	}
-
-
-	public function localize_scripts() {
-		try {
-			// Prepare variables for use.
-			$plugin_url = POSTNL_WC_PLUGIN_DIR_URL;
-			// Instantiate Delivery_Day to get delivery options based on post_data
-
-
-			if (!empty($session_data) && is_array($session_data)) {
-				$order_data = $session_data;
-			}
-
-
-
-		} catch (Exception $e) {
-			$plugin_url = POSTNL_WC_PLUGIN_DIR_URL;
-		}
-
-		// Prepare the data to be localized into JavaScript.
-		$localize_data = array(
-			'pluginUrl'       => $plugin_url,
-			'ajax_url'        => admin_url('admin-ajax.php'),
-			'nonce'           => wp_create_nonce('postnl_delivery_day_nonce'),
-		);
-
-
-		// Localize scripts for frontend
-		wp_localize_script(
-			'postnl-delivery-day-frontend',
-			'postnl_ajax_object',
-			$localize_data
-		);
-
-		// Optionally, localize for editor scripts if needed
-		wp_localize_script(
-			'postnl-delivery-day-editor',
-			'postnl_ajax_object',
-			$localize_data
-		);
-	}
-
 
 	/**
 	 * Handle AJAX request to set checkout post data and return updated delivery options.
@@ -317,36 +247,72 @@ class Blocks_Integration implements IntegrationInterface {
 	public function handle_set_checkout_post_data() {
 		// Verify nonce
 		if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( $_POST['nonce'], 'postnl_delivery_day_nonce' ) ) {
-			wp_send_json_error( array( 'message' => 'Invalid nonce' ), 400 );
+			wp_send_json_error( [ 'message' => 'Invalid nonce' ], 400 );
 			wp_die();
 		}
 
 		// Check if data is provided
 		if ( ! isset( $_POST['data'] ) || ! is_array( $_POST['data'] ) ) {
-			wp_send_json_error( array( 'message' => 'No data provided.' ), 400 );
+			wp_send_json_error( [ 'message' => 'No data provided.' ], 400 );
 			wp_die();
 		}
 
 		// Sanitize data
 		$sanitized_data = array_map( 'sanitize_text_field', wp_unslash( $_POST['data'] ) );
 
+		// Validation
+		$settings         = new Settings();
+		$shipping_country = isset( $sanitized_data['shipping_country'] ) ? $sanitized_data['shipping_country'] : '';
+
+		if ( 'NL' !== $shipping_country ) {
+			// Clear the session data
+			WC()->session->__unset( 'postnl_checkout_post_data' );
+
+			// Return empty response to notify frontend to clear options
+			wp_send_json_success( [
+				'message'          => 'No delivery options available.',
+				'delivery_options' => [],
+			], 200 );
+			wp_die();
+		}
+
+		if ( $settings->is_validate_nl_address_enabled() ) {
+
+			// Check if shipping_postcode is provided
+			if ( empty( $sanitized_data['shipping_postcode'] ) || empty( $sanitized_data['shipping_house_number']) ){
+
+				// Clear the session data
+				WC()->session->__unset( 'postnl_checkout_post_data' );
+
+				// Return empty response to notify frontend to clear options
+				wp_send_json_success( [
+					'message'          => 'No delivery options available due to missing postcode or house number.',
+					'delivery_options' => [],
+				], 200 );
+				wp_die();
+			}
+		}
+
 		// Store data in WooCommerce session
 		WC()->session->set( 'postnl_checkout_post_data', $sanitized_data );
 
+		// Create Container instance
+		$con = new Container();
+
+		// Set loading to true is handled on the frontend
+
 		// Fetch updated delivery options
 		try {
-			$con = new Container();
-			$dd  = new Delivery_Day();
-			$checkout_data = $con->get_checkout_data( $sanitized_data );
-			$delivery_options = $dd->get_content_data( $checkout_data['response'], $checkout_data['post_data'] );
+			$delivery_day               = new Delivery_Day();
+			$checkout_data    = $con->get_checkout_data( $sanitized_data );
+			$delivery_options = $delivery_day->get_content_data( $checkout_data['response'], $checkout_data['post_data'] );
 
-			wp_send_json_success( array(
+			wp_send_json_success( [
 				'message'          => 'Data saved successfully.',
-				'delivery_options' => $delivery_options['DeliveryOptions'],
-			), 200 );
-		} catch ( Exception $e ) {
-			error_log( 'Error fetching delivery options: ' . $e->getMessage() );
-			wp_send_json_error( array( 'message' => 'Failed to fetch delivery options.' ), 500 );
+				'delivery_options' => isset( $delivery_options['delivery_options'] ) ? $delivery_options['delivery_options'] : [],
+			], 200 );
+		} catch ( \Exception $e ) {
+			wp_send_json_error( [ 'message' => 'Failed to fetch delivery options.' ], 500 );
 		}
 
 		wp_die();
@@ -356,41 +322,73 @@ class Blocks_Integration implements IntegrationInterface {
 	 * Handle AJAX request to fetch updated delivery options.
 	 */
 	public function handle_get_delivery_options() {
-
 		// Verify nonce
 		if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( $_POST['nonce'], 'postnl_delivery_day_nonce' ) ) {
-			wp_send_json_error( array( 'message' => 'Invalid nonce' ), 400 );
+			wp_send_json_error( [ 'message' => 'Invalid nonce' ], 400 );
 			wp_die();
 		}
 
 		// Retrieve post_data from WooCommerce session
 		$order_data = WC()->session->get( 'postnl_checkout_post_data' );
 
-		if ( empty( $order_data ) || ! is_array( $order_data ) ) {
-			wp_send_json_error( array( 'message' => 'No checkout data found.' ), 400 );
+
+		$settings         = new Settings();
+		$shipping_country = isset( $order_data['shipping_country'] ) ? $order_data['shipping_country'] : '';
+
+		if (empty( $order_data ) || ! is_array( $order_data ) || 'NL' !== $shipping_country ) {
+
+			// Clear the session data
+			WC()->session->__unset( 'postnl_checkout_post_data' );
+
+			// Return empty response to notify frontend to clear options
+			wp_send_json_success(
+				[
+					'delivery_options' => [],
+					'dropoff_options'  => [],
+				], 200 );
 			wp_die();
 		}
+		if ( $settings->is_validate_nl_address_enabled() ) {
+
+			// Check if shipping_postcode is provided
+			if ( empty( $order_data['shipping_postcode'] ) || empty( $order_data['shipping_house_number']) ){
+
+				// Clear the session data
+				WC()->session->__unset( 'postnl_checkout_post_data' );
+
+				// Return empty response to notify frontend to clear options
+				wp_send_json_success(
+					[
+						'delivery_options' => [],
+						'dropoff_options'  => [],
+					], 200 );
+				wp_die();
+
+			}
+
+		}
+
 
 		try {
-			$con              = new Container();
-			$dd               = new Delivery_Day();
+			$container              = new Container();
+			$delivery_day               = new Delivery_Day();
 			$dropoff          = new Dropoff_Points();
-			$checkout_data    = $con->get_checkout_data( $order_data );
-			$delivery_options = $dd->get_content_data( $checkout_data['response'], $checkout_data['post_data'] );
+			$checkout_data    = $container->get_checkout_data( $order_data );
+			$delivery_options = $delivery_day->get_content_data( $checkout_data['response'], $checkout_data['post_data'] );
 			$dropoff_options  = $dropoff->get_content_data( $checkout_data['response'], $checkout_data['post_data'] );
+
 			wp_send_json_success(
-				array(
+				[
 					'delivery_options' => isset( $delivery_options['delivery_options'] ) ? $delivery_options['delivery_options'] : [],
 					'dropoff_options'  => isset( $dropoff_options['dropoff_options'] ) ? $dropoff_options['dropoff_options'] : [],
-				), 200 );
-		} catch ( Exception $e ) {
-			error_log( 'Error fetching delivery options: ' . $e->getMessage() );
-			wp_send_json_error( array( 'message' => 'Failed to fetch delivery options.' ), 500 );
+				], 200 );
+		} catch ( \Exception $e ) {
+			$this->log_response( 'Failed to fetch delivery options: ' . $e->getMessage() );
+
+			wp_send_json_error( [ 'message' => 'Failed to fetch delivery options.' ], 500 );
 		}
 
 		wp_die();
 	}
-
-
 
 }

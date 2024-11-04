@@ -22,6 +22,10 @@
         "move": true
       }
     },
+    "deliveryDay": {
+      "type": "string",
+      "default": ""
+    },
     "deliveryDayDate": {
       "type": "string",
       "default": ""

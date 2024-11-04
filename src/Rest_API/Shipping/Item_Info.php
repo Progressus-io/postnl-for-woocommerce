@@ -993,7 +993,8 @@ class Item_Info extends Base_Info {
 		} // For EU shipments, validate that insurance does not exceed €5000
 		elseif ( ! $is_non_eu_shipment && 'yes' === $backend_data['insured_shipping'] && $order_total > 5000 ) {
 			throw new \Exception(
-				__( 'Insurance amount for EU shipments cannot exceed €5000. Your total is: ' . $order_total, 'postnl-for-woocommerce' )
+				// Translators: %s is the order total.
+				sprintf( __( 'Insurance amount for EU shipments cannot exceed €5000. Your total is: %s', 'postnl-for-woocommerce' ), wp_kses_post( $order_total ) )
 			);
 		}
 	}

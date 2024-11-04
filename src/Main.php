@@ -11,6 +11,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+use PostNLWooCommerce\Checkout_Blocks\Blocks_Integration;
+use PostNLWooCommerce\Checkout_Blocks\Extend_Block_Core;
+use PostNLWooCommerce\Checkout_Blocks\Extend_Store_Endpoint;
 use PostNLWooCommerce\Product\Product_Editor;
 
 /**
@@ -97,6 +100,10 @@ class Main {
 		add_action( 'init', array( $this, 'load_plugin' ), 1 );
 		add_action( 'before_woocommerce_init', array( $this, 'declare_wc_hpos_compatibility' ), 10 );
 		add_action( 'before_woocommerce_init', array( $this, 'declare_product_editor_compatibility' ), 10 );
+		$this->checkout_blocks();
+		// Register the block category.
+		add_action( 'block_categories_all', array( $this, 'register_postnl_block_category' ), 10, 2 );
+
 	}
 
 	/**
@@ -182,7 +189,6 @@ class Main {
 		$this->get_shipping_product();
 		$this->get_frontend();
 		$this->get_product_editor();
-		$this->get_checkout_blocks();
 	}
 
 	/**
@@ -321,13 +327,6 @@ class Main {
 		return $this->shipping_settings;
 	}
 
-	/**
-	 * Get checkout blocks class.
-	 */
-	public function get_checkout_blocks() {
-		new Checkout_Blocks\Checkout_Blocks();
-
-	}
 
 	/**
 	 * Define constant if not already set.
@@ -422,6 +421,33 @@ class Main {
 
 		// Return what we found.
 		return $template;
+	}
+	public function checkout_blocks() {
+
+		// Initialize classes that depend on WooCommerce
+		new Extend_Block_Core();
+		Extend_Store_Endpoint::init();
+		// Register the blocks integration
+		add_action( 'woocommerce_blocks_checkout_block_registration', function( $integration_registry ) {
+			$integration_registry->register( new  Blocks_Integration() );
+		} );
+	}
+	/**
+	 * Registers the slug as a block category with WordPress.
+	 *
+	 * @param array $categories Existing categories.
+	 * @return array Modified categories.
+	 */
+	public function register_postnl_block_category( $categories ) {
+		return array_merge(
+			$categories,
+			[
+				[
+					'slug'  => 'postnl',
+					'title' => __( 'Postnl Checkout Blocks', 'postnl-for-woocommerce' ),
+				],
+			]
+		);
 	}
 
 	/**

@@ -22,7 +22,7 @@
         "move": true
       }
     },
-    "selectedOption": {
+    "dropoffPoints": {
       "type": "string",
       "default": ""
     },
@@ -63,8 +63,8 @@
       "default": ""
     },
     "dropoffPointsDistance": {
-      "type": "string",
-      "default": ""
+      "type": "number",
+      "default": 0
     }
   },
   "textdomain": "postnl-for-woocommerce",

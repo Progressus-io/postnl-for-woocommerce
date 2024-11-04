@@ -27,10 +27,34 @@ class Extend_Block_Core {
 		], 10, 2 );
 
 		// Register the update callback when WooCommerce Blocks is loaded
-		add_action( 'woocommerce_blocks_loaded', [ $this, 'register_store_api_callback' ] );
+		add_action( 'init', [ $this, 'register_store_api_callback' ] );
 
 		// Register fee calculation
 		add_action( 'woocommerce_cart_calculate_fees', [ $this, 'postnl_add_custom_fee' ] );
+		$this->register_additional_checkout_fields();
+
+	}
+
+	/**
+	 * Register additional checkout fields .
+	 */
+	public function register_additional_checkout_fields() {
+		add_action(
+			'woocommerce_init',
+			function() {
+				woocommerce_register_additional_checkout_field(
+					array(
+						'id'            => 'postnl/house_number',
+						'label'         => 'House Number',
+						'location'      => 'address',
+						'required'      => true,
+						'attributes'    => array(
+							'autocomplete' => 'house-number',
+						),
+					),
+				);
+			}
+		);
 	}
 
 	/**
@@ -108,16 +132,11 @@ class Extend_Block_Core {
 	 */
 	public function save_postnl_checkout_fields( \WC_Order $order, \WP_REST_Request $request ) {
 
-		// Check if 'extensions' and 'postnl' data exist in the request
-		if ( ! isset( $request['extensions'][ $this->name ] ) ) {
-			return;
-		}
-
 		$postnl_request_data = $request['extensions'][ $this->name ];
 
 		// Extract billing and shipping house numbers with sanitization
-		$billing_house_number  = isset( $postnl_request_data['billingHouseNumber'] ) ? sanitize_text_field( $postnl_request_data['billingHouseNumber'] ) : '';
-		$shipping_house_number = isset( $postnl_request_data['shippingHouseNumber'] ) ? sanitize_text_field( $postnl_request_data['shippingHouseNumber'] ) : '';
+		$billing_house_number  = isset( $postnl_request_data['postnl_billing_house_number'] ) ? sanitize_text_field( $postnl_request_data['postnl_billing_house_number'] ) : '';
+		$shipping_house_number = isset( $postnl_request_data['postnl_shipping_house_number'] ) ? sanitize_text_field( $postnl_request_data['postnl_shipping_house_number'] ) : '';
 
 		// Update billing and shipping house numbers
 		$order->update_meta_data( '_billing_house_number', $billing_house_number );
@@ -158,7 +177,6 @@ class Extend_Block_Core {
 		];
 
 		if ( ! empty( $drop_data['frontend']['dropoff_points'] ) ) {
-			// Save Dropoff Points Data
 			$order->update_meta_data( '_postnl_order_metadata', $drop_data );
 		} elseif ( ! empty( $delivery_day_data['frontend']['delivery_day'] ) ) {
 			// Save Delivery Day Data

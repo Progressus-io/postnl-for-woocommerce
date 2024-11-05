@@ -692,8 +692,9 @@ class Utils {
 			$products = $order->get_cart();
 		}
 
-		$is_eligible = self::check_products_for_letterbox( $products );
-
+		if( isset( $products ) ) {
+			$is_eligible = self::check_products_for_letterbox( $products );
+		}
 		// Save the state for the order.
 		if ( is_a( $order, 'WC_Order' ) ) {
 			$order->update_meta_data( '_postnl_letterbox', $is_eligible );

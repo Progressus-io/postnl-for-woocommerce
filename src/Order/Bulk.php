@@ -141,45 +141,43 @@ class Bulk extends Base {
 		$selected_shipping_options = $this->prepare_default_options( $_REQUEST );
 		$zone                      = strtoupper( sanitize_text_field( $_REQUEST['postnl_shipping_zone'] ) );
 
-		foreach ( $object_ids as $order_id ) {
-			$order                = wc_get_order( $order_id );
-			$have_label_file      = $this->have_label_file( $order );
-			$match_shipping_zones = $zone === $this->get_shipping_zone( $order );
+	  foreach ( $object_ids as $order_id ) {
+		  $order                = wc_get_order( $order_id );
+		  $have_label_file      = $this->have_label_file( $order );
+		  $match_shipping_zones = $zone === $this->get_shipping_zone( $order );
 
-			if ( $have_label_file ) {
-				$array_messages[] = array(
-					'message' => sprintf( esc_html__( 'Order #%1$d already has a label.', 'postnl-for-woocommerce' ), $order_id ),
-					'type'    => 'error',
-				);
+		  if ( $have_label_file ) {
+			  $array_messages[] = array(
+				  'message' => sprintf( esc_html__( 'Order #%1$d already has a label.', 'postnl-for-woocommerce' ), $order_id ),
+				  'type'    => 'error',
+			  );
 
-				continue;
-			}
+			  continue;
+		  }
 
-			if ( ! $match_shipping_zones && 'PICKUP' !== $zone ) {
-				$array_messages[] = array(
-					'message' => sprintf( esc_html__( 'Order #%1$d is from another shipping zone.', 'postnl-for-woocommerce' ), $order_id ),
-					'type'    => 'error',
-				);
-			}
+		  if ( ! $match_shipping_zones && 'PICKUP' !== $zone ) {
+			  $array_messages[] = array(
+				  'message' => sprintf( esc_html__( 'Order #%1$d is from another shipping zone.', 'postnl-for-woocommerce' ), $order_id ),
+				  'type'    => 'error',
+			  );
 
-			if ( 'PICKUP' === $zone ) {
-				$meta            = $order->get_meta( $this->meta_name );
-				$meta['backend'] = $selected_shipping_options;
-				$order->update_meta_data( $this->meta_name, $meta );
-				$order->save();
-				continue;
-			}
+			  continue;
+		  }
 
-			if ( $match_shipping_zones ) {
-				$order->delete_meta_data( $this->meta_name );
-				$order->update_meta_data( $this->meta_name, array( 'backend' => $selected_shipping_options ) );
-				$order->save();
-			}
-		}
+		  $meta = $order->get_meta( $this->meta_name );
 
-		update_option( $this->bulk_option_text_name, $array_messages );
+		  if ( ! is_array( $meta ) ) {
+			  $meta = array();
+		  }
 
-		return $redirect;
+		  $meta['backend'] = $selected_shipping_options;
+		  $order->update_meta_data( $this->meta_name, $meta );
+		  $order->save();
+	  }
+
+	  update_option( $this->bulk_option_text_name, $array_messages );
+
+	  return $redirect;
 	}
 
 	/**

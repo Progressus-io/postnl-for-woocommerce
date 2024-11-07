@@ -145,7 +145,7 @@ class Bulk extends Base {
 			$order                = wc_get_order( $order_id );
 			$have_label_file      = $this->have_label_file( $order );
 			$match_shipping_zones = $zone === $this->get_shipping_zone( $order );
-			$match_pickup_zone = 'PICKUP' === $zone && 'NL' === $this->get_shipping_zone( $order );
+			$match_pickup_zone 	  = 'PICKUP' === $zone && 'NL' === $this->get_shipping_zone( $order );
 			if ( $have_label_file ) {
 				$array_messages[] = array(
 					'message' => sprintf( esc_html__( 'Order #%1$d already has a label.', 'postnl-for-woocommerce' ), $order_id ),

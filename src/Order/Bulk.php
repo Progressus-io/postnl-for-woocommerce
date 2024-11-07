@@ -146,7 +146,7 @@ class Bulk extends Base {
 			foreach ( $object_ids as $order_id ) {
 				$order                = wc_get_order( $order_id );
 				$have_label_file      = $this->have_label_file( $order );
-				$match_shipping_zones = $zone === $this->get_shipping_zone( $order ) || 'PICKUP' === $zone;
+				$match_shipping_zones = $zone === $this->get_shipping_zone( $order ) || ( 'PICKUP' === $zone && 'NL' === $this->get_shipping_zone( $order ) );
 
 				if ( $have_label_file ) {
 					$array_messages[] = array(
@@ -162,15 +162,17 @@ class Bulk extends Base {
 					);
 				}
 
-				if ( ! $have_label_file && 'PICKUP' === $zone ) {
-					$meta = $order->get_meta( $this->meta_name );
-					$meta['backend'] = $selected_shipping_options ;
-					$order->update_meta_data( $this->meta_name, $meta );
-					$order->save();
-				}elseif ( ! $have_label_file && $match_shipping_zones ) {
-					$order->delete_meta_data( $this->meta_name );
-					$order->update_meta_data( $this->meta_name, array( 'backend' => $selected_shipping_options ) );
-					$order->save();
+				if ( ! $have_label_file && $match_shipping_zones ) {
+					if( 'PICKUP' === $zone ){
+						$meta 			 = $order->get_meta( $this->meta_name );
+						$meta['backend'] = $selected_shipping_options ;
+						$order->update_meta_data( $this->meta_name, $meta );
+						$order->save();
+					}else{
+						$order->delete_meta_data( $this->meta_name );
+						$order->update_meta_data( $this->meta_name, array( 'backend' => $selected_shipping_options ) );
+						$order->save();
+					}
 				}
 			}
 		}

@@ -130,8 +130,7 @@ class Bulk extends Base {
 	 * @return string
 	 */
 	public function bulk_action_change_shipping_options( $redirect, $doaction, $object_ids ) {
-
-		if ( 'postnl-change-shipping-options' !== $doaction ) {
+		if ( 'postnl-change-shipping-options' !== $doaction || empty( $object_ids ) ) {
 			return $redirect;
 		}
 
@@ -142,39 +141,38 @@ class Bulk extends Base {
 		$selected_shipping_options = $this->prepare_default_options( $_REQUEST );
 		$zone                      = strtoupper( sanitize_text_field( $_REQUEST['postnl_shipping_zone'] ) );
 
-		if ( ! empty( $object_ids ) ) {
-			foreach ( $object_ids as $order_id ) {
-				$order                = wc_get_order( $order_id );
-				$have_label_file      = $this->have_label_file( $order );
-				$match_shipping_zones = $zone === $this->get_shipping_zone( $order ) || ( 'PICKUP' === $zone && 'NL' === $this->get_shipping_zone( $order ) );
+		foreach ( $object_ids as $order_id ) {
+			$order                = wc_get_order( $order_id );
+			$have_label_file      = $this->have_label_file( $order );
+			$match_shipping_zones = $zone === $this->get_shipping_zone( $order );
+			$match_pickup_zone = 'PICKUP' === $zone && 'NL' === $this->get_shipping_zone( $order );
+			if ( $have_label_file ) {
+				$array_messages[] = array(
+					'message' => sprintf( esc_html__( 'Order #%1$d already has a label.', 'postnl-for-woocommerce' ), $order_id ),
+					'type'    => 'error',
+				);
 
-				if ( $have_label_file ) {
-					$array_messages[] = array(
-						'message' => sprintf( esc_html__( 'Order #%1$d already has a label.', 'postnl-for-woocommerce' ), $order_id ),
-						'type'    => 'error',
-					);
-				}
-
-				if ( ! $match_shipping_zones ) {
-					$array_messages[] = array(
-						'message' => sprintf( esc_html__( 'Order #%1$d is from another shipping zone.', 'postnl-for-woocommerce' ), $order_id ),
-						'type'    => 'error',
-					);
-				}
-
-				if ( ! $have_label_file && $match_shipping_zones ) {
-					if( 'PICKUP' === $zone ){
-						$meta 			 = $order->get_meta( $this->meta_name );
-						$meta['backend'] = $selected_shipping_options ;
-						$order->update_meta_data( $this->meta_name, $meta );
-						$order->save();
-					}else{
-						$order->delete_meta_data( $this->meta_name );
-						$order->update_meta_data( $this->meta_name, array( 'backend' => $selected_shipping_options ) );
-						$order->save();
-					}
-				}
+				continue;
 			}
+
+			if ( ! $match_shipping_zones && ! $match_pickup_zone ) {
+				$array_messages[] = array(
+					'message' => sprintf( esc_html__( 'Order #%1$d is from another shipping zone.', 'postnl-for-woocommerce' ), $order_id ),
+					'type'    => 'error',
+				);
+
+				continue;
+			}
+
+			$meta = $order->get_meta( $this->meta_name );
+
+			if ( ! is_array( $meta ) ) {
+				$meta = array();
+			}
+
+			$meta['backend'] = $selected_shipping_options;
+			$order->update_meta_data( $this->meta_name, $meta );
+			$order->save();
 		}
 
 		update_option( $this->bulk_option_text_name, $array_messages );

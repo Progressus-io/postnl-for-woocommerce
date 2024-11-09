@@ -39,12 +39,13 @@ class Extend_Store_Endpoint {
 	 * Bootstraps the class and hooks required data.
 	 */
 	public static function init() {
-		add_action('woocommerce_blocks_loaded', function() {
+		add_action( 'woocommerce_blocks_loaded', function () {
 			self::$extend = StoreApi::container()->get( ExtendSchema::class );
 			self::extend_store();
-		});
+		} );
 
 	}
+
 	/**
 	 * Registers the actual data into the Checkout endpoint.
 	 */
@@ -60,6 +61,7 @@ class Extend_Store_Endpoint {
 			);
 		}
 	}
+
 	/**
 	 * Defines the schema for PostNL delivery data in Checkout.
 	 *
@@ -67,56 +69,56 @@ class Extend_Store_Endpoint {
 	 */
 	public static function extend_checkout_schema() {
 		return [
-			'billingHouseNumber' => [
+			'billingHouseNumber'          => [
 				'description' => 'Billing house number PostNL',
 				'context'     => [ 'view', 'edit' ],
 				'readonly'    => false,
 				'default'     => ''
 			],
-			'shippingHouseNumber' => [
+			'shippingHouseNumber'         => [
 				'description' => 'Shipping house number PostNL',
 				'context'     => [ 'view', 'edit' ],
 				'readonly'    => false,
 				'default'     => ''
 			],
-			'deliveryDay' => [
+			'deliveryDay'                 => [
 				'description' => 'Selected delivery day for PostNL',
 
-				'context'     => [ 'view', 'edit' ],
-				'readonly'    => false,
-				'default'     => ''
+				'context'  => [ 'view', 'edit' ],
+				'readonly' => false,
+				'default'  => ''
 			],
-			'deliveryDayDate' => [
+			'deliveryDayDate'             => [
 				'description' => 'Selected delivery day date for PostNL',
 				'context'     => [ 'view', 'edit' ],
 				'readonly'    => false,
 				'default'     => ''
 			],
-			'deliveryDayFrom' => [
+			'deliveryDayFrom'             => [
 				'description' => 'Delivery start time for PostNL delivery day',
 				'context'     => [ 'view', 'edit' ],
 				'readonly'    => false,
 				'default'     => ''
 			],
-			'deliveryDayTo' => [
+			'deliveryDayTo'               => [
 				'description' => 'Delivery end time for PostNL delivery day',
 				'context'     => [ 'view', 'edit' ],
 				'readonly'    => false,
 				'default'     => ''
 			],
-			'deliveryDayPrice' => [
+			'deliveryDayPrice'            => [
 				'description' => 'Price for the selected PostNL delivery time',
 				'context'     => [ 'view', 'edit' ],
 				'readonly'    => false,
 			],
-			'deliveryDayType' => [
+			'deliveryDayType'             => [
 				'description' => 'Type of delivery (Morning, Evening, etc.) for PostNL delivery day',
 				'context'     => [ 'view', 'edit' ],
 				'readonly'    => false,
 				'default'     => ''
 			],
 			// Updated hidden fields for the drop-off point
-			'dropoffPoints' => [
+			'dropoffPoints'               => [
 				'description' => 'Selected drop-off point identifier',
 				'context'     => [ 'view', 'edit' ],
 				'readonly'    => false,
@@ -128,59 +130,59 @@ class Extend_Store_Endpoint {
 				'readonly'    => false,
 				'default'     => ''
 			],
-			'dropoffPointsAddress1' => [
+			'dropoffPointsAddress1'       => [
 				'description' => 'Address line 1 of the drop-off point',
 				'context'     => [ 'view', 'edit' ],
 				'readonly'    => false,
 				'default'     => ''
 			],
-			'dropoffPointsAddress2' => [
+			'dropoffPointsAddress2'       => [
 				'description' => 'Address line 2 of the drop-off point',
 				'context'     => [ 'view', 'edit' ],
 				'readonly'    => false,
 				'default'     => ''
 			],
-			'dropoffPointsCity' => [
+			'dropoffPointsCity'           => [
 				'description' => 'City of the drop-off point',
 				'context'     => [ 'view', 'edit' ],
 				'readonly'    => false,
 				'default'     => ''
 			],
-			'dropoffPointsPostcode' => [
+			'dropoffPointsPostcode'       => [
 				'description' => 'Postcode of the drop-off point',
 				'context'     => [ 'view', 'edit' ],
 				'readonly'    => false,
 				'default'     => ''
 			],
-			'dropoffPointsCountry' => [
+			'dropoffPointsCountry'        => [
 				'description' => 'Country of the drop-off point',
-				 // Use 'country' format if applicable
+				// Use 'country' format if applicable
 				'context'     => [ 'view', 'edit' ],
 				'readonly'    => false,
 				'default'     => ''
 			],
-			'dropoffPointsPartnerID' => [
+			'dropoffPointsPartnerID'      => [
 				'description' => 'Partner ID of the drop-off point',
-				  // Change to 'number' if it's numeric
+				// Change to 'number' if it's numeric
 				'context'     => [ 'view', 'edit' ],
 				'readonly'    => false,
 				'default'     => ''
 			],
-			'dropoffPointsDate' => [
+			'dropoffPointsDate'           => [
 				'description' => 'Date of the drop-off point selection',
-				 // Use 'date' format if applicable
+				// Use 'date' format if applicable
 				'context'     => [ 'view', 'edit' ],
 				'readonly'    => false,
 				'default'     => ''
 			],
-			'dropoffPointsTime' => [
+			'dropoffPointsTime'           => [
 				'description' => 'Time of the drop-off point selection',
-				 // Use 'time' format if applicable
+				// Use 'time' format if applicable
 				'context'     => [ 'view', 'edit' ],
 				'readonly'    => false,
 				'default'     => ''
 			],
-			'dropoffPointsDistance' => [
+			'dropoffPointsDistance'       => [
 				'description' => 'Distance to the drop-off point',
 				'context'     => [ 'view', 'edit' ],
 				'readonly'    => false,

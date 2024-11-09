@@ -250,6 +250,7 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
+
 /**
  * Delivery Day Block Component
  */
@@ -262,25 +263,41 @@ const Block = ({
     setExtensionData
   } = checkoutExtensionData;
   const postnlData = (0,_woocommerce_settings__WEBPACK_IMPORTED_MODULE_4__.getSetting)('postnl-for-woocommerce-blocks_data', {});
+
   // Debounce setting extension data to optimize performance
   const debouncedSetExtensionData = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useCallback)((0,lodash__WEBPACK_IMPORTED_MODULE_3__.debounce)((namespace, key, value) => {
     setExtensionData(namespace, key, value);
   }, 1000), [setExtensionData]);
-  const [selectedOption, setSelectedOption] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useState)('');
+
+  // Initialize state from sessionStorage if available
+  const [selectedOption, setSelectedOption] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useState)(() => {
+    return sessionStorage.getItem('postnl_selected_option') || '';
+  });
   const [loading, setLoading] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useState)(true);
   const [updating, setUpdating] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
-  const [error, setError] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useState)('');
 
   // Use ref to store delivery options across renders
   const deliveryOptionsRef = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useRef)([]);
 
   // State variables for hidden fields based on block.json attributes
-  const [deliveryDay, setDeliveryDay] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useState)('');
-  const [deliveryDayDate, setDeliveryDayDate] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useState)('');
-  const [deliveryDayFrom, setDeliveryDayFrom] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useState)('');
-  const [deliveryDayTo, setDeliveryDayTo] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useState)('');
-  const [deliveryDayPrice, setDeliveryDayPrice] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useState)('');
-  const [deliveryDayType, setDeliveryDayType] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useState)('');
+  const [deliveryDay, setDeliveryDay] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useState)(() => {
+    return sessionStorage.getItem('postnl_deliveryDay') || '';
+  });
+  const [deliveryDayDate, setDeliveryDayDate] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useState)(() => {
+    return sessionStorage.getItem('postnl_deliveryDayDate') || '';
+  });
+  const [deliveryDayFrom, setDeliveryDayFrom] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useState)(() => {
+    return sessionStorage.getItem('postnl_deliveryDayFrom') || '';
+  });
+  const [deliveryDayTo, setDeliveryDayTo] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useState)(() => {
+    return sessionStorage.getItem('postnl_deliveryDayTo') || '';
+  });
+  const [deliveryDayPrice, setDeliveryDayPrice] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useState)(() => {
+    return sessionStorage.getItem('postnl_deliveryDayPrice') || '';
+  });
+  const [deliveryDayType, setDeliveryDayType] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useState)(() => {
+    return sessionStorage.getItem('postnl_deliveryDayType') || '';
+  });
   (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
     setExtensionData('postnl', 'deliveryDay', deliveryDay);
     debouncedSetExtensionData('postnl', 'deliveryDay', deliveryDay);
@@ -322,7 +339,7 @@ const Block = ({
       }
     } else {
       // Tab is inactive
-      // Clear hidden fields
+      // Clear hidden fields and extension data, but keep sessionStorage
       clearSelections();
     }
   }, [isActive]);
@@ -330,21 +347,31 @@ const Block = ({
   /**
    * Helper function to clear selections
    */
-  const clearSelections = () => {
+  const clearSelections = (clearSession = false) => {
     setSelectedOption('');
-    setExtensionData('postnl_selected_option', '');
+    if (clearSession) {
+      sessionStorage.removeItem('postnl_selected_option');
+    }
     setDeliveryDay('');
     setDeliveryDayDate('');
     setDeliveryDayFrom('');
     setDeliveryDayTo('');
     setDeliveryDayPrice('');
     setDeliveryDayType('');
-    setExtensionData('deliveryDay', '');
-    setExtensionData('deliveryDayDate', '');
-    setExtensionData('deliveryDayFrom', '');
-    setExtensionData('deliveryDayTo', '');
-    setExtensionData('deliveryDayPrice', '');
-    setExtensionData('deliveryDayType', '');
+    if (clearSession) {
+      sessionStorage.removeItem('postnl_deliveryDay');
+      sessionStorage.removeItem('postnl_deliveryDayDate');
+      sessionStorage.removeItem('postnl_deliveryDayFrom');
+      sessionStorage.removeItem('postnl_deliveryDayTo');
+      sessionStorage.removeItem('postnl_deliveryDayPrice');
+      sessionStorage.removeItem('postnl_deliveryDayType');
+    }
+    setExtensionData('postnl', 'deliveryDay', '');
+    setExtensionData('postnl', 'deliveryDayDate', '');
+    setExtensionData('postnl', 'deliveryDayFrom', '');
+    setExtensionData('postnl', 'deliveryDayTo', '');
+    setExtensionData('postnl', 'deliveryDayPrice', '');
+    setExtensionData('postnl', 'deliveryDayType', '');
   };
 
   /**
@@ -352,7 +379,6 @@ const Block = ({
    */
   const fetchDeliveryOptions = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useCallback)(() => {
     setUpdating(true);
-    setError('');
     const formData = new URLSearchParams();
     formData.append('action', 'postnl_get_delivery_options');
     formData.append('nonce', postnlData.nonce);
@@ -366,24 +392,54 @@ const Block = ({
         if (!newDeliveryOptions || !Array.isArray(newDeliveryOptions) || newDeliveryOptions.length === 0) {
           // Clear delivery options
           deliveryOptionsRef.current = [];
-          clearSelections();
+          clearSelections(true); // Clear sessionStorage
         } else {
           // Store delivery options in ref
           deliveryOptionsRef.current = newDeliveryOptions;
+
+          // Check if the selected option still exists
+          const matchingOption = findMatchingOption(selectedOption, newDeliveryOptions);
+          if (!matchingOption) {
+            // Selected option no longer valid, clear selection
+            clearSelections(true); // Clear sessionStorage
+          }
         }
       } else {
         // Handle error
         deliveryOptionsRef.current = [];
-        clearSelections();
+        clearSelections(true); // Clear sessionStorage
       }
     }).catch(error => {
       deliveryOptionsRef.current = [];
-      clearSelections();
+      clearSelections(true); // Clear sessionStorage
     }).finally(() => {
       setUpdating(false);
       setLoading(false);
     });
-  }, [setExtensionData]);
+  }, [selectedOption]);
+
+  /**
+   * Helper function to find matching option
+   */
+  const findMatchingOption = (selectedValue, deliveryOptions) => {
+    for (const delivery of deliveryOptions) {
+      if (Array.isArray(delivery.options)) {
+        for (const option of delivery.options) {
+          const from = option.from || '';
+          const to = option.to || '';
+          const price = option.price || 0;
+          const value = `${delivery.date}_${from}-${to}_${price}`;
+          if (value === selectedValue) {
+            return {
+              delivery,
+              option
+            };
+          }
+        }
+      }
+    }
+    return null;
+  };
 
   /**
    * Initial Load: Fetch delivery options or use existing ones
@@ -392,39 +448,10 @@ const Block = ({
     if (deliveryOptionsRef.current.length > 0) {
       // Use existing delivery options
       setLoading(false);
-    } else if (window.postnl_ajax_object && window.postnl_ajax_object.deliveryOptions) {
-      const initialDeliveryOptions = window.postnl_ajax_object.deliveryOptions;
-      if (Array.isArray(initialDeliveryOptions) && initialDeliveryOptions.length > 0) {
-        // Store delivery options in ref
-        deliveryOptionsRef.current = initialDeliveryOptions;
-        const firstDelivery = initialDeliveryOptions[0];
-        if (Array.isArray(firstDelivery.options) && firstDelivery.options.length > 0) {
-          const firstOption = firstDelivery.options[0];
-          const optionType = firstOption.type || 'Unknown';
-          const price = firstOption.price || 0;
-          const defaultValue = `${firstDelivery.date}_${firstOption.from}-${firstOption.to}_${price}`;
-          setSelectedOption(defaultValue);
-          setExtensionData('postnl_selected_option', defaultValue);
-          setDeliveryDayDate(firstDelivery.date);
-          setDeliveryDayFrom(firstOption.from);
-          setDeliveryDayTo(firstOption.to);
-          setDeliveryDayPrice(price);
-          setDeliveryDayType(optionType);
-          const deliveryDayValue = `${firstDelivery.date}_${firstOption.from}-${firstOption.to}_${price}`;
-          setDeliveryDay(deliveryDayValue);
-          setExtensionData('deliveryDay', deliveryDayValue);
-          setExtensionData('deliveryDayDate', firstDelivery.date);
-          setExtensionData('deliveryDayFrom', firstOption.from);
-          setExtensionData('deliveryDayTo', firstOption.to);
-          setExtensionData('deliveryDayPrice', price.toString());
-          setExtensionData('deliveryDayType', optionType);
-        }
-      }
-      setLoading(false);
     } else {
       fetchDeliveryOptions();
     }
-  }, [fetchDeliveryOptions, setExtensionData]);
+  }, [fetchDeliveryOptions]);
 
   /**
    * Listen for the custom event to fetch updated delivery options
@@ -451,20 +478,50 @@ const Block = ({
    */
   const handleOptionChange = async (value, deliveryDate, from, to, type, price) => {
     setSelectedOption(value);
-    setExtensionData('postnl_selected_option', value);
+    sessionStorage.setItem('postnl_selected_option', value);
     setDeliveryDayDate(deliveryDate);
+    sessionStorage.setItem('postnl_deliveryDayDate', deliveryDate);
     setDeliveryDayFrom(from);
+    sessionStorage.setItem('postnl_deliveryDayFrom', from);
     setDeliveryDayTo(to);
+    sessionStorage.setItem('postnl_deliveryDayTo', to);
     setDeliveryDayPrice(price);
+    sessionStorage.setItem('postnl_deliveryDayPrice', price.toString());
     setDeliveryDayType(type);
+    sessionStorage.setItem('postnl_deliveryDayType', type);
     const deliveryDayValue = `${deliveryDate}_${from}-${to}_${price}`;
     setDeliveryDay(deliveryDayValue);
-    setExtensionData('deliveryDay', deliveryDayValue);
-    setExtensionData('deliveryDayDate', deliveryDate);
-    setExtensionData('deliveryDayFrom', from);
-    setExtensionData('deliveryDayTo', to);
-    setExtensionData('deliveryDayPrice', price.toString());
-    setExtensionData('deliveryDayType', type);
+    sessionStorage.setItem('postnl_deliveryDay', deliveryDayValue);
+    setExtensionData('postnl', 'deliveryDay', deliveryDayValue);
+    setExtensionData('postnl', 'deliveryDayDate', deliveryDate);
+    setExtensionData('postnl', 'deliveryDayFrom', from);
+    setExtensionData('postnl', 'deliveryDayTo', to);
+    setExtensionData('postnl', 'deliveryDayPrice', price.toString());
+    setExtensionData('postnl', 'deliveryDayType', type);
+
+    // Also, clear dropoff point data
+    sessionStorage.removeItem('postnl_dropoffPoints');
+    sessionStorage.removeItem('postnl_dropoffPointsAddressCompany');
+    sessionStorage.removeItem('postnl_dropoffPointsAddress1');
+    sessionStorage.removeItem('postnl_dropoffPointsAddress2');
+    sessionStorage.removeItem('postnl_dropoffPointsCity');
+    sessionStorage.removeItem('postnl_dropoffPointsPostcode');
+    sessionStorage.removeItem('postnl_dropoffPointsCountry');
+    sessionStorage.removeItem('postnl_dropoffPointsPartnerID');
+    sessionStorage.removeItem('postnl_dropoffPointsDate');
+    sessionStorage.removeItem('postnl_dropoffPointsTime');
+    sessionStorage.removeItem('postnl_dropoffPointsDistance');
+    setExtensionData('postnl', 'dropoffPoints', '');
+    setExtensionData('postnl', 'dropoffPointsAddressCompany', '');
+    setExtensionData('postnl', 'dropoffPointsAddress1', '');
+    setExtensionData('postnl', 'dropoffPointsAddress2', '');
+    setExtensionData('postnl', 'dropoffPointsCity', '');
+    setExtensionData('postnl', 'dropoffPointsPostcode', '');
+    setExtensionData('postnl', 'dropoffPointsCountry', '');
+    setExtensionData('postnl', 'dropoffPointsPartnerID', '');
+    setExtensionData('postnl', 'dropoffPointsDate', '');
+    setExtensionData('postnl', 'dropoffPointsTime', '');
+    setExtensionData('postnl', 'dropoffPointsDistance', null);
 
     // Call extensionCartUpdate to update the cart total
     try {
@@ -481,7 +538,9 @@ const Block = ({
           }
         });
       }
-    } catch (error) {}
+    } catch (error) {
+      // Handle error
+    }
   };
 
   /**
@@ -655,24 +714,90 @@ const Block = ({
   const debouncedSetExtensionData = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useCallback)((0,lodash__WEBPACK_IMPORTED_MODULE_3__.debounce)((namespace, key, value) => {
     setExtensionData(namespace, key, value);
   }, 1000), [setExtensionData]);
+
+  // Initialize state from sessionStorage if available
+  const [dropoffPoints, setDropoffPoints] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useState)(() => {
+    return sessionStorage.getItem('postnl_dropoffPoints') || '';
+  });
+  const [dropoffPointsAddressCompany, setDropoffPointsAddressCompany] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useState)(() => {
+    return sessionStorage.getItem('postnl_dropoffPointsAddressCompany') || '';
+  });
+  const [dropoffPointsAddress1, setDropoffPointsAddress1] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useState)(() => {
+    return sessionStorage.getItem('postnl_dropoffPointsAddress1') || '';
+  });
+  const [dropoffPointsAddress2, setDropoffPointsAddress2] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useState)(() => {
+    return sessionStorage.getItem('postnl_dropoffPointsAddress2') || '';
+  });
+  const [dropoffPointsCity, setDropoffPointsCity] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useState)(() => {
+    return sessionStorage.getItem('postnl_dropoffPointsCity') || '';
+  });
+  const [dropoffPointsPostcode, setDropoffPointsPostcode] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useState)(() => {
+    return sessionStorage.getItem('postnl_dropoffPointsPostcode') || '';
+  });
+  const [dropoffPointsCountry, setDropoffPointsCountry] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useState)(() => {
+    return sessionStorage.getItem('postnl_dropoffPointsCountry') || '';
+  });
+  const [dropoffPointsPartnerID, setDropoffPointsPartnerID] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useState)(() => {
+    return sessionStorage.getItem('postnl_dropoffPointsPartnerID') || '';
+  });
+  const [dropoffPointsDate, setDropoffPointsDate] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useState)(() => {
+    return sessionStorage.getItem('postnl_dropoffPointsDate') || '';
+  });
+  const [dropoffPointsTime, setDropoffPointsTime] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useState)(() => {
+    return sessionStorage.getItem('postnl_dropoffPointsTime') || '';
+  });
+  const [dropoffPointsDistance, setDropoffPointsDistance] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useState)(() => {
+    const value = sessionStorage.getItem('postnl_dropoffPointsDistance');
+    return value !== null ? Number(value) : null;
+  });
   const [dropoffOptions, setDropoffOptions] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useState)([]);
-  const [dropoffPoints, setDropoffPoints] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useState)(''); // Empty by default
   const [loading, setLoading] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useState)(true);
   const [updating, setUpdating] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
   const [error, setError] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useState)('');
-  const [dropoffPointsAddressCompany, setDropoffPointsAddressCompany] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useState)('');
-  const [dropoffPointsAddress1, setDropoffPointsAddress1] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useState)('');
-  const [dropoffPointsAddress2, setDropoffPointsAddress2] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useState)('');
-  const [dropoffPointsCity, setDropoffPointsCity] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useState)('');
-  const [dropoffPointsPostcode, setDropoffPointsPostcode] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useState)('');
-  const [dropoffPointsCountry, setDropoffPointsCountry] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useState)('');
-  const [dropoffPointsPartnerID, setDropoffPointsPartnerID] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useState)('');
-  const [dropoffPointsDate, setDropoffPointsDate] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useState)('');
-  const [dropoffPointsTime, setDropoffPointsTime] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useState)('');
-  const [dropoffPointsDistance, setDropoffPointsDistance] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useState)(null);
-
-  // useEffect hooks for updating extension data
-  // ...
+  (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
+    setExtensionData('postnl', 'dropoffPoints', dropoffPoints);
+    debouncedSetExtensionData('postnl', 'dropoffPoints', dropoffPoints);
+  }, [dropoffPoints, setExtensionData, debouncedSetExtensionData]);
+  (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
+    setExtensionData('postnl', 'dropoffPointsAddressCompany', dropoffPointsAddressCompany);
+    debouncedSetExtensionData('postnl', 'dropoffPointsAddressCompany', dropoffPointsAddressCompany);
+  }, [dropoffPointsAddressCompany, setExtensionData, debouncedSetExtensionData]);
+  (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
+    setExtensionData('postnl', 'dropoffPointsAddress1', dropoffPointsAddress1);
+    debouncedSetExtensionData('postnl', 'dropoffPointsAddress1', dropoffPointsAddress1);
+  }, [dropoffPointsAddress1, setExtensionData, debouncedSetExtensionData]);
+  (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
+    setExtensionData('postnl', 'dropoffPointsAddress2', dropoffPointsAddress2);
+    debouncedSetExtensionData('postnl', 'dropoffPointsAddress2', dropoffPointsAddress2);
+  }, [dropoffPointsAddress2, setExtensionData, debouncedSetExtensionData]);
+  (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
+    setExtensionData('postnl', 'dropoffPointsCity', dropoffPointsCity);
+    debouncedSetExtensionData('postnl', 'dropoffPointsCity', dropoffPointsCity);
+  }, [dropoffPointsCity, setExtensionData, debouncedSetExtensionData]);
+  (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
+    setExtensionData('postnl', 'dropoffPointsPostcode', dropoffPointsPostcode);
+    debouncedSetExtensionData('postnl', 'dropoffPointsPostcode', dropoffPointsPostcode);
+  }, [dropoffPointsPostcode, setExtensionData, debouncedSetExtensionData]);
+  (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
+    setExtensionData('postnl', 'dropoffPointsCountry', dropoffPointsCountry);
+    debouncedSetExtensionData('postnl', 'dropoffPointsCountry', dropoffPointsCountry);
+  }, [dropoffPointsCountry, setExtensionData, debouncedSetExtensionData]);
+  (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
+    setExtensionData('postnl', 'dropoffPointsPartnerID', dropoffPointsPartnerID);
+    debouncedSetExtensionData('postnl', 'dropoffPointsPartnerID', dropoffPointsPartnerID);
+  }, [dropoffPointsPartnerID, setExtensionData, debouncedSetExtensionData]);
+  (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
+    setExtensionData('postnl', 'dropoffPointsDate', dropoffPointsDate);
+    debouncedSetExtensionData('postnl', 'dropoffPointsDate', dropoffPointsDate);
+  }, [dropoffPointsDate, setExtensionData, debouncedSetExtensionData]);
+  (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
+    setExtensionData('postnl', 'dropoffPointsTime', dropoffPointsTime);
+    debouncedSetExtensionData('postnl', 'dropoffPointsTime', dropoffPointsTime);
+  }, [dropoffPointsTime, setExtensionData, debouncedSetExtensionData]);
+  (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
+    setExtensionData('postnl', 'dropoffPointsDistance', dropoffPointsDistance);
+    debouncedSetExtensionData('postnl', 'dropoffPointsDistance', dropoffPointsDistance);
+  }, [dropoffPointsDistance, setExtensionData, debouncedSetExtensionData]);
 
   /**
    * useEffect to handle tab activation
@@ -680,7 +805,7 @@ const Block = ({
   (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
     if (!isActive) {
       // Tab is inactive
-      // Clear hidden fields
+      // Clear hidden fields and extension data, but keep sessionStorage
       clearSelections();
     }
     // When tab becomes active, do not select any option by default
@@ -690,8 +815,11 @@ const Block = ({
   /**
    * Helper function to clear selections
    */
-  const clearSelections = () => {
+  const clearSelections = (clearSession = false) => {
     setDropoffPoints('');
+    if (clearSession) {
+      sessionStorage.removeItem('postnl_dropoffPoints');
+    }
     setDropoffPointsAddressCompany('');
     setDropoffPointsAddress1('');
     setDropoffPointsAddress2('');
@@ -701,19 +829,30 @@ const Block = ({
     setDropoffPointsPartnerID('');
     setDropoffPointsDate('');
     setDropoffPointsTime('');
-    setDropoffPointsDistance(null); // Use null for numeric field
-
-    setExtensionData('dropoffPoints', '');
-    setExtensionData('dropoffPointsAddressCompany', '');
-    setExtensionData('dropoffPointsAddress1', '');
-    setExtensionData('dropoffPointsAddress2', '');
-    setExtensionData('dropoffPointsCity', '');
-    setExtensionData('dropoffPointsPostcode', '');
-    setExtensionData('dropoffPointsCountry', '');
-    setExtensionData('dropoffPointsPartnerID', '');
-    setExtensionData('dropoffPointsDate', '');
-    setExtensionData('dropoffPointsTime', '');
-    setExtensionData('dropoffPointsDistance', null); // Use null for numeric field
+    setDropoffPointsDistance(null);
+    if (clearSession) {
+      sessionStorage.removeItem('postnl_dropoffPointsAddressCompany');
+      sessionStorage.removeItem('postnl_dropoffPointsAddress1');
+      sessionStorage.removeItem('postnl_dropoffPointsAddress2');
+      sessionStorage.removeItem('postnl_dropoffPointsCity');
+      sessionStorage.removeItem('postnl_dropoffPointsPostcode');
+      sessionStorage.removeItem('postnl_dropoffPointsCountry');
+      sessionStorage.removeItem('postnl_dropoffPointsPartnerID');
+      sessionStorage.removeItem('postnl_dropoffPointsDate');
+      sessionStorage.removeItem('postnl_dropoffPointsTime');
+      sessionStorage.removeItem('postnl_dropoffPointsDistance');
+    }
+    setExtensionData('postnl', 'dropoffPoints', '');
+    setExtensionData('postnl', 'dropoffPointsAddressCompany', '');
+    setExtensionData('postnl', 'dropoffPointsAddress1', '');
+    setExtensionData('postnl', 'dropoffPointsAddress2', '');
+    setExtensionData('postnl', 'dropoffPointsCity', '');
+    setExtensionData('postnl', 'dropoffPointsPostcode', '');
+    setExtensionData('postnl', 'dropoffPointsCountry', '');
+    setExtensionData('postnl', 'dropoffPointsPartnerID', '');
+    setExtensionData('postnl', 'dropoffPointsDate', '');
+    setExtensionData('postnl', 'dropoffPointsTime', '');
+    setExtensionData('postnl', 'dropoffPointsDistance', null);
   };
 
   /**
@@ -731,26 +870,44 @@ const Block = ({
       }
     }).then(response => {
       if (response.data.success) {
-        const dropoffOptions = response.data.data.dropoff_options;
-        if (!dropoffOptions) {
+        const newDropoffOptions = response.data.data.dropoff_options;
+        if (!newDropoffOptions) {
           throw new Error('Dropoff options are undefined.');
         }
-        if (!Array.isArray(dropoffOptions)) {
+        if (!Array.isArray(newDropoffOptions)) {
           throw new Error('Dropoff options is not an array.');
         }
-        setDropoffOptions(dropoffOptions);
+        setDropoffOptions(newDropoffOptions);
 
-        // Do not select any option by default
-        // Clear selections to ensure hidden fields are empty
-        clearSelections();
+        // Check if the selected option still exists
+        const matchingOption = findMatchingOption(dropoffPoints, newDropoffOptions);
+        if (!matchingOption) {
+          // Selected option no longer valid, clear selection
+          clearSelections(true); // Clear sessionStorage
+        }
       } else {
         throw new Error(response.data.message || 'Error fetching dropoff options.');
       }
-    }).catch(error => {}).finally(() => {
+    }).catch(error => {
+      // Handle error
+      setError(error.message || 'Error fetching dropoff options.');
+      setDropoffOptions([]);
+      clearSelections(true); // Clear sessionStorage
+    }).finally(() => {
       setUpdating(false);
       setLoading(false); // Ensure loading is set to false after fetch
     });
-  }, [setExtensionData]);
+  }, [dropoffPoints]);
+
+  /**
+   * Helper function to find matching option
+   */
+  const findMatchingOption = (selectedValue, dropoffOptions) => {
+    return dropoffOptions.find(point => {
+      const pointValue = `${point.partner_id}-${point.loc_code}`;
+      return pointValue === selectedValue;
+    });
+  };
 
   /**
    * Update hidden fields and extension data based on selected dropoff point
@@ -758,26 +915,37 @@ const Block = ({
   const updateHiddenFields = dropoffPoint => {
     const address = dropoffPoint.address || {};
     setDropoffPointsAddressCompany(address.company || '');
+    sessionStorage.setItem('postnl_dropoffPointsAddressCompany', address.company || '');
     setDropoffPointsAddress1(address.address_1 || '');
+    sessionStorage.setItem('postnl_dropoffPointsAddress1', address.address_1 || '');
     setDropoffPointsAddress2(address.address_2 || '');
+    sessionStorage.setItem('postnl_dropoffPointsAddress2', address.address_2 || '');
     setDropoffPointsCity(address.city || '');
+    sessionStorage.setItem('postnl_dropoffPointsCity', address.city || '');
     setDropoffPointsPostcode(address.postcode || '');
+    sessionStorage.setItem('postnl_dropoffPointsPostcode', address.postcode || '');
     setDropoffPointsCountry(address.country || '');
+    sessionStorage.setItem('postnl_dropoffPointsCountry', address.country || '');
     setDropoffPointsPartnerID(dropoffPoint.partner_id || '');
+    sessionStorage.setItem('postnl_dropoffPointsPartnerID', dropoffPoint.partner_id || '');
     setDropoffPointsDate(dropoffPoint.date || '');
+    sessionStorage.setItem('postnl_dropoffPointsDate', dropoffPoint.date || '');
     setDropoffPointsTime(dropoffPoint.time || '');
-    setDropoffPointsDistance(Number(dropoffPoint.distance) || null); // Ensure numeric value or null
+    sessionStorage.setItem('postnl_dropoffPointsTime', dropoffPoint.time || '');
+    setDropoffPointsDistance(Number(dropoffPoint.distance) || null);
+    sessionStorage.setItem('postnl_dropoffPointsDistance', Number(dropoffPoint.distance) || '');
 
-    setExtensionData('dropoffPointsAddressCompany', address.company || '');
-    setExtensionData('dropoffPointsAddress1', address.address_1 || '');
-    setExtensionData('dropoffPointsAddress2', address.address_2 || '');
-    setExtensionData('dropoffPointsCity', address.city || '');
-    setExtensionData('dropoffPointsPostcode', address.postcode || '');
-    setExtensionData('dropoffPointsCountry', address.country || '');
-    setExtensionData('dropoffPointsPartnerID', dropoffPoint.partner_id || '');
-    setExtensionData('dropoffPointsDate', dropoffPoint.date || '');
-    setExtensionData('dropoffPointsTime', dropoffPoint.time || '');
-    setExtensionData('dropoffPointsDistance', Number(dropoffPoint.distance) || null); // Ensure numeric value or null
+    // Also update extension data
+    setExtensionData('postnl', 'dropoffPointsAddressCompany', address.company || '');
+    setExtensionData('postnl', 'dropoffPointsAddress1', address.address_1 || '');
+    setExtensionData('postnl', 'dropoffPointsAddress2', address.address_2 || '');
+    setExtensionData('postnl', 'dropoffPointsCity', address.city || '');
+    setExtensionData('postnl', 'dropoffPointsPostcode', address.postcode || '');
+    setExtensionData('postnl', 'dropoffPointsCountry', address.country || '');
+    setExtensionData('postnl', 'dropoffPointsPartnerID', dropoffPoint.partner_id || '');
+    setExtensionData('postnl', 'dropoffPointsDate', dropoffPoint.date || '');
+    setExtensionData('postnl', 'dropoffPointsTime', dropoffPoint.time || '');
+    setExtensionData('postnl', 'dropoffPointsDistance', Number(dropoffPoint.distance) || null);
   };
 
   /**
@@ -807,7 +975,8 @@ const Block = ({
    */
   const handleOptionChange = value => {
     setDropoffPoints(value);
-    setExtensionData('dropoffPoints', value);
+    sessionStorage.setItem('postnl_dropoffPoints', value);
+    setExtensionData('postnl', 'dropoffPoints', value);
 
     // Find the selected dropoff point.
     const selectedDropoffPoint = dropoffOptions.find(point => {
@@ -819,6 +988,21 @@ const Block = ({
     if (selectedDropoffPoint) {
       updateHiddenFields(selectedDropoffPoint);
     }
+
+    // Also, clear delivery day data
+    sessionStorage.removeItem('postnl_selected_option');
+    sessionStorage.removeItem('postnl_deliveryDay');
+    sessionStorage.removeItem('postnl_deliveryDayDate');
+    sessionStorage.removeItem('postnl_deliveryDayFrom');
+    sessionStorage.removeItem('postnl_deliveryDayTo');
+    sessionStorage.removeItem('postnl_deliveryDayPrice');
+    sessionStorage.removeItem('postnl_deliveryDayType');
+    setExtensionData('postnl', 'deliveryDay', '');
+    setExtensionData('postnl', 'deliveryDayDate', '');
+    setExtensionData('postnl', 'deliveryDayFrom', '');
+    setExtensionData('postnl', 'deliveryDayTo', '');
+    setExtensionData('postnl', 'deliveryDayPrice', '');
+    setExtensionData('postnl', 'deliveryDayType', '');
   };
 
   /**

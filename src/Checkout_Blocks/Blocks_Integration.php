@@ -118,9 +118,9 @@ class Blocks_Integration implements IntegrationInterface {
 	/**
 	 * Helper method to register block editor scripts.
 	 *
-	 * @param string $handle      Script handle name.
+	 * @param string $handle Script handle name.
 	 * @param string $script_path Path to the JS file.
-	 * @param string $asset_path  Path to the asset file.
+	 * @param string $asset_path Path to the asset file.
 	 */
 	private function register_block_script( $handle, $script_path, $asset_path ) {
 		$script_url = POSTNL_WC_PLUGIN_DIR_URL . $script_path;
@@ -148,9 +148,9 @@ class Blocks_Integration implements IntegrationInterface {
 	/**
 	 * Helper method to register frontend scripts.
 	 *
-	 * @param string $handle      Script handle name.
+	 * @param string $handle Script handle name.
 	 * @param string $script_path Path to the JS file.
-	 * @param string $asset_path  Path to the asset file.
+	 * @param string $asset_path Path to the asset file.
 	 */
 	private function register_frontend_script( $handle, $script_path, $asset_path ) {
 		$script_url = POSTNL_WC_PLUGIN_DIR_URL . $script_path;
@@ -233,6 +233,7 @@ class Blocks_Integration implements IntegrationInterface {
 	 */
 	public function get_script_data() {
 		$letterbox = Utils::is_eligible_auto_letterbox( WC()->cart );
+
 		return [
 			'pluginUrl' => POSTNL_WC_PLUGIN_DIR_URL,
 			'ajax_url'  => admin_url( 'admin-ajax.php' ),
@@ -279,7 +280,7 @@ class Blocks_Integration implements IntegrationInterface {
 		if ( $settings->is_validate_nl_address_enabled() ) {
 
 			// Check if shipping_postcode is provided
-			if ( empty( $sanitized_data['shipping_postcode'] ) || empty( $sanitized_data['shipping_house_number']) ){
+			if ( empty( $sanitized_data['shipping_postcode'] ) || empty( $sanitized_data['shipping_house_number'] ) ) {
 
 				// Clear the session data
 				WC()->session->__unset( 'postnl_checkout_post_data' );
@@ -303,7 +304,7 @@ class Blocks_Integration implements IntegrationInterface {
 
 		// Fetch updated delivery options
 		try {
-			$delivery_day               = new Delivery_Day();
+			$delivery_day     = new Delivery_Day();
 			$checkout_data    = $con->get_checkout_data( $sanitized_data );
 			$delivery_options = $delivery_day->get_content_data( $checkout_data['response'], $checkout_data['post_data'] );
 
@@ -335,7 +336,7 @@ class Blocks_Integration implements IntegrationInterface {
 		$settings         = new Settings();
 		$shipping_country = isset( $order_data['shipping_country'] ) ? $order_data['shipping_country'] : '';
 
-		if (empty( $order_data ) || ! is_array( $order_data ) || 'NL' !== $shipping_country ) {
+		if ( empty( $order_data ) || ! is_array( $order_data ) || 'NL' !== $shipping_country ) {
 
 			// Clear the session data
 			WC()->session->__unset( 'postnl_checkout_post_data' );
@@ -351,7 +352,7 @@ class Blocks_Integration implements IntegrationInterface {
 		if ( $settings->is_validate_nl_address_enabled() ) {
 
 			// Check if shipping_postcode is provided
-			if ( empty( $order_data['shipping_postcode'] ) || empty( $order_data['shipping_house_number']) ){
+			if ( empty( $order_data['shipping_postcode'] ) || empty( $order_data['shipping_house_number'] ) ) {
 
 				// Clear the session data
 				WC()->session->__unset( 'postnl_checkout_post_data' );
@@ -370,8 +371,8 @@ class Blocks_Integration implements IntegrationInterface {
 
 
 		try {
-			$container              = new Container();
-			$delivery_day               = new Delivery_Day();
+			$container        = new Container();
+			$delivery_day     = new Delivery_Day();
 			$dropoff          = new Dropoff_Points();
 			$checkout_data    = $container->get_checkout_data( $order_data );
 			$delivery_options = $delivery_day->get_content_data( $checkout_data['response'], $checkout_data['post_data'] );
@@ -383,7 +384,6 @@ class Blocks_Integration implements IntegrationInterface {
 					'dropoff_options'  => isset( $dropoff_options['dropoff_options'] ) ? $dropoff_options['dropoff_options'] : [],
 				], 200 );
 		} catch ( \Exception $e ) {
-			$this->log_response( 'Failed to fetch delivery options: ' . $e->getMessage() );
 
 			wp_send_json_error( [ 'message' => 'Failed to fetch delivery options.' ], 500 );
 		}

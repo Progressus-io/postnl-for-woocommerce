@@ -884,7 +884,7 @@ abstract class Base {
 				esc_html__( 'Cannot create return barcode.', 'postnl-for-woocommerce' )
 			);
 		}
-		
+
 		return $response['Barcode'];
 	}
 

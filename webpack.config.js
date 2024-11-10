@@ -12,71 +12,23 @@ module.exports = {
 	...defaultConfig,
 	entry: {
 		index: path.resolve(process.cwd(), 'src', 'Checkout_Blocks', 'js', 'index.js'),
-		// Existing blocks
-		'postnl-delivery-day': path.resolve(
+		'postnl-container': path.resolve(
 			process.cwd(),
 			'src',
 			'Checkout_Blocks',
 			'js',
-			'postnl-delivery-day',
+			'postnl-container',
 			'index.js'
 		),
-		'postnl-delivery-day-frontend': path.resolve(
+		'postnl-container-frontend': path.resolve(
 			process.cwd(),
 			'src',
 			'Checkout_Blocks',
 			'js',
-			'postnl-delivery-day',
+			'postnl-container',
 			'frontend.js'
-		),
-		'postnl-dropoff-points': path.resolve(
-			process.cwd(),
-			'src',
-			'Checkout_Blocks',
-			'js',
-			'postnl-dropoff-points',
-			'index.js'
-		),
-		'postnl-dropoff-points-frontend': path.resolve(
-			process.cwd(),
-			'src',
-			'Checkout_Blocks',
-			'js',
-			'postnl-dropoff-points',
-			'frontend.js'
-		),
-		'postnl-billing-address': path.resolve(
-			process.cwd(),
-			'src',
-			'Checkout_Blocks',
-			'js',
-			'postnl-billing-address',
-			'index.js'
-		),
-		'postnl-billing-address-frontend': path.resolve(
-			process.cwd(),
-			'src',
-			'Checkout_Blocks',
-			'js',
-			'postnl-billing-address',
-			'frontend.js'
-		),
-		'postnl-shipping-address': path.resolve(
-			process.cwd(),
-			'src',
-			'Checkout_Blocks',
-			'js',
-			'postnl-shipping-address',
-			'index.js'
-		),
-		'postnl-shipping-address-frontend': path.resolve(
-			process.cwd(),
-			'src',
-			'Checkout_Blocks',
-			'js',
-			'postnl-shipping-address',
-			'frontend.js'
-		),
+		)
+
 	},
 	module: {
 		...defaultConfig.module,
@@ -99,6 +51,21 @@ module.exports = {
 				],
 			},
 		],
+	},
+	externals: {
+		// Use WordPress and WooCommerce global variables instead of bundling them
+		'@wordpress/element': 'wp.element',
+		'@wordpress/components': 'wp.components',
+		'@wordpress/data': 'wp.data',
+		'@wordpress/i18n': 'wp.i18n',
+		'@wordpress/hooks': 'wp.hooks',
+		'@wordpress/plugins': 'wp.plugins',
+		'@woocommerce/blocks-registry': 'wc.blocksRegistry',
+		'@woocommerce/settings': 'wc.settings',
+		'@woocommerce/block-data': 'wc.blockData',
+		'@woocommerce/blocks-checkout': 'wc.blocksCheckout',
+		// You can add other externals as needed
+		lodash: 'lodash',
 	},
 	plugins: [
 		// Remove the DependencyExtractionWebpackPlugin from WordPress scripts

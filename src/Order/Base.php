@@ -537,14 +537,7 @@ abstract class Base {
 			$barcodes
 		);
 
-		$saved_data['labels'] = array_map(
-			function ( $label ) {
-				unset( $label['merged_files'] );
-
-				return $label;
-			},
-			$labels
-		);
+		$saved_data['labels'] = $labels;
 
 		if ( $this->settings->is_auto_complete_order_enabled() ) {
 			// Updating the order status to completed.
@@ -711,7 +704,8 @@ abstract class Base {
 					$label_extension = ! empty( $label_contents['OutputType'] ) ? sanitize_title( $label_contents['OutputType'] ) : 'pdf';
 					$barcode         = $response[ $type ][ $shipment_idx ][ $content_type['barcode_key'] ];
 					$barcode         = is_array( $barcode ) ? array_shift( $barcode ) : $barcode;
-					$filename        = Utils::generate_label_name( $order->get_id(), $label_type, $barcode, 'A6', $label_extension );
+					$label_format  	 = $this->settings->get_label_format();
+					$filename        = Utils::generate_label_name( $order->get_id(), $label_type, $barcode, $label_format, $label_extension );
 					$filepath        = trailingslashit( POSTNL_UPLOADS_DIR ) . $filename;
 
 					if ( wp_mkdir_p( POSTNL_UPLOADS_DIR ) && ! file_exists( $filepath ) ) {

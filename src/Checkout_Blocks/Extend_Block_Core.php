@@ -40,7 +40,7 @@ class Extend_Block_Core {
 	 */
 	public function register_additional_checkout_fields() {
 		add_action(
-			'woocommerce_init',
+			'init',
 			function () {
 				woocommerce_register_additional_checkout_field(
 					array(

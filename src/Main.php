@@ -100,7 +100,6 @@ class Main {
 		add_action( 'init', array( $this, 'load_plugin' ), 1 );
 		add_action( 'before_woocommerce_init', array( $this, 'declare_wc_hpos_compatibility' ), 10 );
 		add_action( 'before_woocommerce_init', array( $this, 'declare_product_editor_compatibility' ), 10 );
-		$this->checkout_blocks();
 		// Register the block category.
 		add_action( 'block_categories_all', array( $this, 'register_postnl_block_category' ), 10, 2 );
 
@@ -176,6 +175,8 @@ class Main {
 		if ( class_exists( 'WooCommerce' ) && Utils::use_available_currency() && Utils::use_available_country() ) {
 			$this->define_constants();
 			$this->init_hooks();
+			$this->checkout_blocks();
+
 		}
 	}
 

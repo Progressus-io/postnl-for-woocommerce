@@ -85,7 +85,7 @@ class Checkout_Fields {
 				'postcode'            => array( 'priority' => 5 ),
 				'postnl/house_number' => array(
 					'priority' => 6,
-					'required' => false,
+					'required' => true,
 					'hidden'   => false,
 				),
 				'address_2'           => array(

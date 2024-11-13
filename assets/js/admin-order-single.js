@@ -242,5 +242,21 @@
 	
 	postnl_order_single.init();
 
+	if ( $( 'div.pickup-points-info' ).length ) {
+		$( '#postnl_id_check, #postnl_insured_shipping' ).on( 'change', function() {
+			// Get the ID of the current checkbox
+			var currentId = $(this).attr( 'id' );
+			
+			// Uncheck the other checkbox
+			if ( $(this).is( ':checked' ) ) {
+				if ( currentId === 'postnl_id_check' ) {
+					$( '#postnl_insured_shipping' ).prop( 'checked', false );
+				} else {
+					$( '#postnl_id_check' ).prop( 'checked', false );
+				}
+			}
+		});
+	}
+
 	window.postnl_order_single_refresh = postnl_order_single.refresh_items;
 } )( jQuery );

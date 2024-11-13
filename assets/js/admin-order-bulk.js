@@ -66,6 +66,7 @@
                     post_form.find('#postnl-field-container').append('<input type="hidden" name="postnl_default_shipping_options_be" value="' + tb_window.find('#postnl_default_shipping_options_be').val() + '">');
                     post_form.find('#postnl-field-container').append('<input type="hidden" name="postnl_default_shipping_options_eu" value="' + tb_window.find('#postnl_default_shipping_options_eu').val() + '">');
                     post_form.find('#postnl-field-container').append('<input type="hidden" name="postnl_default_shipping_options_row" value="' + tb_window.find('#postnl_default_shipping_options_row').val() + '">');
+					post_form.find('#postnl-field-container').append('<input type="hidden" name="postnl_default_shipping_options_pickup" value="' + tb_window.find('#postnl_default_shipping_options_pickup').val() + '">');
 					jQuery( this ).prop( 'disabled', true );
 					post_form.submit();
 				} );

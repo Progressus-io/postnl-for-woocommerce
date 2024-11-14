@@ -277,6 +277,10 @@ class Blocks_Integration implements IntegrationInterface {
 			wp_die();
 		}
 
+		// Create Container instance
+		$container = new Container();
+
+		// Validate the address if validation is enabled
 		if ( $settings->is_validate_nl_address_enabled() ) {
 
 			// Check if shipping_postcode is provided
@@ -292,26 +296,31 @@ class Blocks_Integration implements IntegrationInterface {
 				], 200 );
 				wp_die();
 			}
+
+			// Call the validated_address method
+			$container->validated_address( $sanitized_data );
+
+			// Get the validated address from the session
+			$validated_address = WC()->session->get( POSTNL_SETTINGS_ID . '_validated_address' );
+
+
+			// Include the validated address in the response data
+			$response_data['validated_address'] = $validated_address;
 		}
 
 		// Store data in WooCommerce session
 		WC()->session->set( 'postnl_checkout_post_data', $sanitized_data );
 
-		// Create Container instance
-		$con = new Container();
-
-		// Set loading to true is handled on the frontend
-
 		// Fetch updated delivery options
 		try {
 			$delivery_day     = new Delivery_Day();
-			$checkout_data    = $con->get_checkout_data( $sanitized_data );
+			$checkout_data    = $container->get_checkout_data( $sanitized_data );
 			$delivery_options = $delivery_day->get_content_data( $checkout_data['response'], $checkout_data['post_data'] );
 
-			wp_send_json_success( [
-				'message'          => 'Data saved successfully.',
-				'delivery_options' => isset( $delivery_options['delivery_options'] ) ? $delivery_options['delivery_options'] : [],
-			], 200 );
+			$response_data['message']          = 'Data saved successfully.';
+			$response_data['delivery_options'] = isset( $delivery_options['delivery_options'] ) ? $delivery_options['delivery_options'] : [];
+
+			wp_send_json_success( $response_data, 200 );
 		} catch ( \Exception $e ) {
 			wp_send_json_error( [ 'message' => 'Failed to fetch delivery options.' ], 500 );
 		}

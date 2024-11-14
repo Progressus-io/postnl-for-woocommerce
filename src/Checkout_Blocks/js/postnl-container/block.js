@@ -1,11 +1,10 @@
 /**
  * External dependencies
  */
-import {registerCheckoutBlock} from '@woocommerce/blocks-checkout';
-import {useEffect, useState} from '@wordpress/element';
+import {useCallback, useEffect, useState} from '@wordpress/element';
 import {__} from '@wordpress/i18n';
 import {getSetting} from '@woocommerce/settings';
-import {useSelect} from '@wordpress/data';
+import {useDispatch, useSelect} from '@wordpress/data';
 import axios from 'axios';
 import {Spinner} from '@wordpress/components'; // Added import for Spinner
 
@@ -15,6 +14,7 @@ import {Spinner} from '@wordpress/components'; // Added import for Spinner
 // Import child components
 import {Block as DeliveryDayBlock} from '../postnl-delivery-day/block';
 import {Block as DropoffPointsBlock} from '../postnl-dropoff-points/block';
+import debounce from 'lodash/debounce'; // Correct import
 
 export const Block = ({checkoutExtensionData}) => {
 	const {setExtensionData} = checkoutExtensionData;
@@ -30,11 +30,13 @@ export const Block = ({checkoutExtensionData}) => {
 	// Get the letterbox status from settings
 	const postnlData = getSetting('postnl-for-woocommerce-blocks_data', {});
 	const letterbox = postnlData.letterbox || false;
+	const { CART_STORE_KEY } = window.wc.wcBlocksData;
 
 	// Retrieve customer data from WooCommerce cart store
 	const customerData = useSelect((select) => {
-		return select('wc/store/cart').getCustomerData();
-	}, []);
+		const store = select(CART_STORE_KEY); // Correctly using CART_STORE_KEY
+		return store ? store.getCustomerData() : {};
+	}, [CART_STORE_KEY]);
 
 	// Extract shipping and billing addresses
 	const shippingAddress = customerData ? customerData.shippingAddress : null;
@@ -45,23 +47,57 @@ export const Block = ({checkoutExtensionData}) => {
 	// State to track loading
 	const [loading, setLoading] = useState(false);
 
+	// Correctly destructure setShippingAddress from useDispatch
+	const { setShippingAddress } = useDispatch(CART_STORE_KEY);
 
-	// Handle AJAX submission when all required fields are present
+	// Create a debounced shipping address state
+	const [debouncedShippingAddress, setDebouncedShippingAddress] = useState(shippingAddress);
+
+	// Update debouncedShippingAddress after user stops typing for 1 second
 	useEffect(() => {
-		if (shippingAddress) {
+		const handler = setTimeout(() => {
+			setDebouncedShippingAddress(shippingAddress);
+		}, 1000); // 1000ms debounce delay
+
+		// Cleanup the timeout if shippingAddress changes before delay completes
+		return () => {
+			clearTimeout(handler);
+		};
+	}, [shippingAddress]);
+
+	// Define the debounced function
+	const debouncedSetShippingAddress = useCallback(
+		debounce((newShippingAddress) => {
+			setShippingAddress(newShippingAddress);
+		}, 1000), // 1 second delay; adjust as needed
+		[setShippingAddress]
+	);
+
+	// Cleanup the debounced function on unmount
+	useEffect(() => {
+		return () => {
+			debouncedSetShippingAddress.cancel();
+		};
+	}, [debouncedSetShippingAddress]);
+
+	// Main useEffect dependent on debouncedShippingAddress
+	useEffect(() => {
+		// Proceed only if debouncedShippingAddress exists
+		if (debouncedShippingAddress) {
 			const data = {
-				shipping_country: shippingAddress.country || '',
-				shipping_postcode: shippingAddress.postcode || '',
-				shipping_house_number: shippingAddress['postnl/house_number'] || '',
-				shipping_address_2: shippingAddress.address_2 || '',
-				shipping_address_1: shippingAddress.address_1 || '',
-				shipping_city: shippingAddress.city || '',
-				shipping_state: shippingAddress.state || '',
-				shipping_phone: shippingAddress.phone || '',
-				shipping_email: shippingAddress.email || '',
+				shipping_country: debouncedShippingAddress.country || '',
+				shipping_postcode: debouncedShippingAddress.postcode || '',
+				shipping_house_number: debouncedShippingAddress['postnl/house_number'] || '',
+				shipping_address_2: debouncedShippingAddress.address_2 || '',
+				shipping_address_1: debouncedShippingAddress.address_1 || '',
+				shipping_city: debouncedShippingAddress.city || '',
+				shipping_state: debouncedShippingAddress.state || '',
+				shipping_phone: debouncedShippingAddress.phone || '',
+				shipping_email: debouncedShippingAddress.email || '',
 				shipping_method: 'postnl',
 				ship_to_different_address: '1',
 			};
+
 			// Check if the shipping country is NL
 			if (data.shipping_country !== 'NL') {
 				setShowContainer(false);
@@ -94,17 +130,36 @@ export const Block = ({checkoutExtensionData}) => {
 					},
 				})
 				.then((response) => {
+					if (response.data.success) {
+						// Check if validated_address is returned
+						if (response.data.data.validated_address) {
+							const { street, city, house_number } = response.data.data.validated_address;
+							const newShippingAddress = {
+								...debouncedShippingAddress, // Preserve existing address fields
+								address_1: street,           // Update address_1 with validated street
+								city: city,                  // Update city with validated city
+							};
 
-					if (
-						response.data.success &&
-						response.data.data &&
-						response.data.data.delivery_options &&
-						response.data.data.delivery_options.length > 0
-					) {
-						setShowContainer(true);
+							if (
+								debouncedShippingAddress.address_1 !== street ||
+								debouncedShippingAddress.city !== city
+							) {
+								debouncedSetShippingAddress(newShippingAddress);
+							}
+						}
+
+						if (
+							response.data.data.delivery_options &&
+							response.data.data.delivery_options.length > 0
+						) {
+							setShowContainer(true);
+						} else {
+							setShowContainer(false);
+						}
 					} else {
 						setShowContainer(false);
 					}
+
 					// Dispatch custom event to notify other components
 					const event = new Event('postnl_address_updated');
 					window.dispatchEvent(event);
@@ -120,21 +175,16 @@ export const Block = ({checkoutExtensionData}) => {
 					setLoading(false);
 				});
 
-			setExtensionData('postnl_shipping_country', data.shipping_country);
-			setExtensionData('postnl_shipping_postcode', data.shipping_postcode);
-			setExtensionData('postnl_shipping_house_number', data.shipping_house_number);
-			setExtensionData('postnl_shipping_address_2', data.shipping_address_2);
-			setExtensionData('postnl_shipping_address_1', data.shipping_address_1);
-			setExtensionData('postnl_shipping_city', data.shipping_city);
-			setExtensionData('postnl_shipping_state', data.shipping_state);
-			setExtensionData('postnl_shipping_phone', data.shipping_phone);
-			setExtensionData('postnl_shipping_email', data.shipping_email);
-			setExtensionData('postnl_shipping_method', data.shipping_method);
-			setExtensionData('postnl_ship_to_different_address', data.ship_to_different_address);
 		} else {
 			setShowContainer(false);
 		}
-	}, [shippingAddress, postnlData.ajax_url, postnlData.nonce, setExtensionData]);
+	}, [
+		debouncedShippingAddress,
+		postnlData.ajax_url,
+		postnlData.nonce,
+		setExtensionData,
+		debouncedSetShippingAddress,
+	]);
 
 	if (letterbox) {
 		return (

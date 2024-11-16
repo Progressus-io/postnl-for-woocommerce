@@ -48,7 +48,7 @@ export const Block = ({checkoutExtensionData}) => {
 	const [loading, setLoading] = useState(false);
 
 	// Correctly destructure setShippingAddress from useDispatch
-	const { setShippingAddress } = useDispatch(CART_STORE_KEY);
+	const { setShippingAddress, updateCustomerData  } = useDispatch(CART_STORE_KEY);
 
 	// Create a debounced shipping address state
 	const [debouncedShippingAddress, setDebouncedShippingAddress] = useState(shippingAddress);
@@ -69,8 +69,9 @@ export const Block = ({checkoutExtensionData}) => {
 	const debouncedSetShippingAddress = useCallback(
 		debounce((newShippingAddress) => {
 			setShippingAddress(newShippingAddress);
+			updateCustomerData(newShippingAddress);
 		}, 1000), // 1 second delay; adjust as needed
-		[setShippingAddress]
+		[setShippingAddress,updateCustomerData]
 	);
 
 	// Cleanup the debounced function on unmount

@@ -326,7 +326,7 @@ export const Block = ( { checkoutExtensionData, isActive } ) => {
 	 *
 	 * @param {string} value - The value of the selected option
 	 */
-	const handleOptionChange = ( value ) => {
+	const handleOptionChange = async ( value ) => {
 		setDropoffPoints( value );
 		sessionStorage.setItem( 'postnl_dropoffPoints', value );
 		setExtensionData( 'postnl', 'dropoffPoints', value );
@@ -357,6 +357,22 @@ export const Block = ( { checkoutExtensionData, isActive } ) => {
 		setExtensionData( 'postnl', 'deliveryDayTo', '' );
 		setExtensionData( 'postnl', 'deliveryDayPrice', '' );
 		setExtensionData( 'postnl', 'deliveryDayType', '' );
+
+		try {
+			const { extensionCartUpdate } = window.wc.blocksCheckout || {};
+
+			if ( typeof extensionCartUpdate === 'function' ) {
+				await extensionCartUpdate( {
+					namespace: 'postnl',
+					data: {
+						action: 'update_delivery_fee',
+						price: 0,
+						type: '',
+					},
+				} );
+			}
+		} catch ( error ) {
+		}
 	};
 
 	/**

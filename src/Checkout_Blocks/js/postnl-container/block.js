@@ -132,7 +132,13 @@ export const Block = ({checkoutExtensionData}) => {
 				.then((response) => {
 					if (response.data.success) {
 						// Check if validated_address is returned
-						if (response.data.data.validated_address) {
+						if (
+							response.data.data.validated_address &&
+							response.data.data.validated_address.street &&
+							response.data.data.validated_address.city &&
+							response.data.data.validated_address.house_number
+						) {
+
 							const { street, city, house_number } = response.data.data.validated_address;
 							const newShippingAddress = {
 								...debouncedShippingAddress, // Preserve existing address fields

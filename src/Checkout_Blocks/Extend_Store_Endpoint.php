@@ -39,7 +39,7 @@ class Extend_Store_Endpoint {
 	 * Bootstraps the class and hooks required data.
 	 */
 	public static function init() {
-		add_action( 'woocommerce_blocks_loaded', function () {
+		add_action( 'init', function () {
 			self::$extend = StoreApi::container()->get( ExtendSchema::class );
 			self::extend_store();
 		} );

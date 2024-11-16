@@ -1,6 +1,7 @@
 <?php
 
 namespace PostNLWooCommerce\Checkout_Blocks;
+use PostNLWooCommerce\Shipping_Method\Settings;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -27,12 +28,39 @@ class Extend_Block_Core {
 		], 10, 2 );
 
 		// Register the update callback when WooCommerce Blocks is loaded
-		add_action( 'init', [ $this, 'register_store_api_callback' ] );
+		add_action( 'init', array( $this, 'register_store_api_callback' ) );
 
 		// Register fee calculation
-		add_action( 'woocommerce_cart_calculate_fees', [ $this, 'postnl_add_custom_fee' ] );
+		add_action( 'woocommerce_cart_calculate_fees', array( $this, 'postnl_add_custom_fee' ) );
 		$this->register_additional_checkout_fields();
 
+		//Validate adress in cart
+		add_action( 'woocommerce_store_api_cart_errors',array($this, 'postnl_validate_address_in_cart'), 10, 2 );
+	}
+
+
+	/**
+	 * Validate address in cart.
+	 */
+	public function postnl_validate_address_in_cart( $errors, $cart ) {
+		$customer              = WC()->customer;
+		$validated_address     = WC()->session->get( POSTNL_SETTINGS_ID . '_validated_address' );
+		$shipping_house_number = isset( $validated_address['house_number'] ) ? $validated_address['house_number'] : '';
+		$shipping_country  = $customer->get_shipping_country();
+		$shipping_postcode = $customer->get_shipping_postcode();
+
+		$settings = Settings::get_instance();
+
+		if ( $settings->is_validate_nl_address_enabled() && 'NL' === $shipping_country ) {
+
+			// Check if postcode and house number are provided
+			if ( empty( $shipping_postcode ) || empty( $shipping_house_number ) ) {
+				$errors->add( 'invalid_address', __( 'Please provide a valid postcode and house number.', 'postnl-for-woocommerce' ) );
+			}
+			if ( empty( $validated_address ) ) {
+				$errors->add( 'invalid_address', __( 'This is not a valid address!', 'postnl-for-woocommerce' ) );
+			}
+		}
 	}
 
 	/**

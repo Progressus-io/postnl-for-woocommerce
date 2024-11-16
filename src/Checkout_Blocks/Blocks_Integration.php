@@ -322,7 +322,6 @@ class Blocks_Integration implements IntegrationInterface {
 
 			wp_send_json_success( $response_data, 200 );
 		} catch ( \Exception $e ) {
-			wp_send_json_error( [ 'message' => 'Failed to fetch delivery options.' ], 500 );
 		}
 
 		wp_die();

@@ -1271,6 +1271,12 @@ abstract class Base {
 			return false;
 		}
 
+		if( isset( $saved_data['labels']['label']['merged_files'] ) ){
+			foreach ( $saved_data['labels']['label']['merged_files'] as  $label_path ) {
+				unlink( $label_path );
+			}
+		}
+		
 		return unlink( $saved_data['labels']['label']['filepath'] );
 	}
 
@@ -1411,29 +1417,6 @@ abstract class Base {
 		$tracking_url = Utils::generate_tracking_url( $saved_data['labels']['label']['barcode'], $order->get_shipping_country(), $order->get_shipping_postcode() );
 
 		return sprintf( '<a href="%1$s" target="_blank" class="postnl-tracking-link">%2$s</a>', esc_url( $tracking_url ), $saved_data['labels']['label']['barcode'] );
-	}
-
-	/**
-	 * Delete label files from label info.
-	 *
-	 * @param Array $labels List of label info.
-	 */
-	public function delete_label_files( $labels ) {
-		if ( empty( $labels ) ) {
-			return;
-		}
-
-		foreach ( $labels as $label_type => $label_info ) {
-			if ( empty( $label_info['merged_files'] ) || empty( $label_info['filepath'] ) ) {
-				continue;
-			}
-
-			foreach ( $label_info['merged_files'] as $path ) {
-				if ( file_exists( $path ) && $path !== $label_info['filepath'] ) {
-					unlink( $path );
-				}
-			}
-		}
 	}
 
 	/**

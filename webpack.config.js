@@ -68,7 +68,6 @@ module.exports = {
 		lodash: 'lodash',
 	},
 	plugins: [
-		// Remove the DependencyExtractionWebpackPlugin from WordPress scripts
 		...defaultConfig.plugins.filter(
 			(plugin) =>
 				plugin.constructor.name !== 'DependencyExtractionWebpackPlugin'

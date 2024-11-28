@@ -1,7 +1,7 @@
 /**
  * External dependencies
  */
-import { useEffect, useState, useCallback } from '@wordpress/element';
+import { useEffect, useState, useCallback, useRef } from '@wordpress/element';
 import { Spinner, Notice } from '@wordpress/components';
 import { __ } from '@wordpress/i18n';
 import axios from 'axios';
@@ -75,6 +75,8 @@ export const Block = ( { checkoutExtensionData, isActive } ) => {
 	const [ loading, setLoading ] = useState( true );
 	const [ updating, setUpdating ] = useState( false );
 	const [ error, setError ] = useState( '' );
+
+	const isSelecting = useRef( false );
 
 	useEffect( () => {
 		setExtensionData( 'postnl', 'dropoffPoints', dropoffPoints );
@@ -191,6 +193,11 @@ export const Block = ( { checkoutExtensionData, isActive } ) => {
 	 * Fetch dropoff options via AJAX
 	 */
 	const fetchDropoffOptions = useCallback( () => {
+		if ( isSelecting.current ) {
+			// If a selection is in progress, do not fetch again
+			return;
+		}
+
 		setUpdating( true );
 		setError( '' );
 
@@ -230,7 +237,6 @@ export const Block = ( { checkoutExtensionData, isActive } ) => {
 			} )
 			.catch( ( error ) => {
 				// Handle error
-				setError( error.message || 'Error fetching dropoff options.' );
 				setDropoffOptions( [] );
 				clearSelections( true ); // Clear sessionStorage
 			} )
@@ -238,7 +244,7 @@ export const Block = ( { checkoutExtensionData, isActive } ) => {
 				setUpdating( false );
 				setLoading( false ); // Ensure loading is set to false after fetch
 			} );
-	}, [ dropoffPoints ] );
+	}, [ dropoffPoints, postnlData.nonce, postnlData.ajax_url ] );
 
 	/**
 	 * Helper function to find matching option
@@ -311,7 +317,10 @@ export const Block = ( { checkoutExtensionData, isActive } ) => {
 	 */
 	useEffect( () => {
 		const handleAddressUpdated = () => {
-			fetchDropoffOptions();
+			// Only fetch dropoff options if not currently handling a selection
+			if ( ! isSelecting.current ) {
+				fetchDropoffOptions();
+			}
 		};
 
 		window.addEventListener( 'postnl_address_updated', handleAddressUpdated );
@@ -319,7 +328,7 @@ export const Block = ( { checkoutExtensionData, isActive } ) => {
 		return () => {
 			window.removeEventListener( 'postnl_address_updated', handleAddressUpdated );
 		};
-	}, [ fetchDropoffOptions ] );
+	}, [ fetchDropoffOptions ]);
 
 	/**
 	 * Handle the change of a dropoff option
@@ -327,6 +336,8 @@ export const Block = ( { checkoutExtensionData, isActive } ) => {
 	 * @param {string} value - The value of the selected option
 	 */
 	const handleOptionChange = async ( value ) => {
+		isSelecting.current = true; // Indicate that a selection is in progress
+
 		setDropoffPoints( value );
 		sessionStorage.setItem( 'postnl_dropoffPoints', value );
 		setExtensionData( 'postnl', 'dropoffPoints', value );
@@ -358,6 +369,7 @@ export const Block = ( { checkoutExtensionData, isActive } ) => {
 		setExtensionData( 'postnl', 'deliveryDayPrice', '' );
 		setExtensionData( 'postnl', 'deliveryDayType', '' );
 
+		// Call extensionCartUpdate to update the cart total
 		try {
 			const { extensionCartUpdate } = window.wc.blocksCheckout || {};
 
@@ -372,19 +384,19 @@ export const Block = ( { checkoutExtensionData, isActive } ) => {
 				} );
 			}
 		} catch ( error ) {
+			// Handle error
+		} finally {
+			isSelecting.current = false; // Reset the selection flag
 		}
 	};
 
 	/**
-	 * Render Loading or Updating Spinner
+	 * Render Loading, Updating Spinner, or Error Message
 	 */
 	if ( loading || updating ) {
 		return <Spinner />;
 	}
 
-	/**
-	 * Render Error Message
-	 */
 	if ( error ) {
 		return (
 			<Notice status="error" isDismissible={ false }>

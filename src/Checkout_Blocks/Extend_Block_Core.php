@@ -52,12 +52,7 @@ class Extend_Block_Core {
 		$settings = Settings::get_instance();
 
 		if ( $settings->is_validate_nl_address_enabled() && 'NL' === $shipping_country ) {
-
-			// Check if postcode and house number are provided
-			if ( empty( $shipping_postcode ) || empty( $shipping_house_number ) ) {
-				$errors->add( 'invalid_address', __( 'Please provide a valid postcode and house number.', 'postnl-for-woocommerce' ) );
-			}
-			if ( empty( $validated_address ) ) {
+			if ( empty( $validated_address ) && ! empty( $shipping_postcode ) && ! empty( $shipping_house_number ) ) {
 				$errors->add( 'invalid_address', __( 'This is not a valid address!', 'postnl-for-woocommerce' ) );
 			}
 		}

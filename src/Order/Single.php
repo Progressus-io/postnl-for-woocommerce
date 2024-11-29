@@ -460,8 +460,6 @@ class Single extends Base {
 			$labels        = $result['labels'];
 			$tracking_note = $this->get_tracking_note( $order_id );
 
-			$this->delete_label_files( $labels );
-
 			if ( ! empty( $tracking_note ) ) {
 				$return_data = array_merge(
 					$result['saved_data'],

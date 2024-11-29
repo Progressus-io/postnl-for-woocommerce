@@ -537,14 +537,7 @@ abstract class Base {
 			$barcodes
 		);
 
-		$saved_data['labels'] = array_map(
-			function ( $label ) {
-				unset( $label['merged_files'] );
-
-				return $label;
-			},
-			$labels
-		);
+		$saved_data['labels'] = $labels;
 
 		if ( $this->settings->is_auto_complete_order_enabled() ) {
 			// Updating the order status to completed.
@@ -711,7 +704,8 @@ abstract class Base {
 					$label_extension = ! empty( $label_contents['OutputType'] ) ? sanitize_title( $label_contents['OutputType'] ) : 'pdf';
 					$barcode         = $response[ $type ][ $shipment_idx ][ $content_type['barcode_key'] ];
 					$barcode         = is_array( $barcode ) ? array_shift( $barcode ) : $barcode;
-					$filename        = Utils::generate_label_name( $order->get_id(), $label_type, $barcode, 'A6', $label_extension );
+					$label_format  	 = $this->settings->get_label_format();
+					$filename        = Utils::generate_label_name( $order->get_id(), $label_type, $barcode, $label_format, $label_extension );
 					$filepath        = trailingslashit( POSTNL_UPLOADS_DIR ) . $filename;
 
 					if ( wp_mkdir_p( POSTNL_UPLOADS_DIR ) && ! file_exists( $filepath ) ) {
@@ -1277,6 +1271,12 @@ abstract class Base {
 			return false;
 		}
 
+		if ( isset( $saved_data['labels']['label']['merged_files'] ) ) {
+			foreach ( $saved_data['labels']['label']['merged_files'] as $label_path ) {
+				unlink( $label_path );
+			}
+		}
+		
 		return unlink( $saved_data['labels']['label']['filepath'] );
 	}
 
@@ -1417,29 +1417,6 @@ abstract class Base {
 		$tracking_url = Utils::generate_tracking_url( $saved_data['labels']['label']['barcode'], $order->get_shipping_country(), $order->get_shipping_postcode() );
 
 		return sprintf( '<a href="%1$s" target="_blank" class="postnl-tracking-link">%2$s</a>', esc_url( $tracking_url ), $saved_data['labels']['label']['barcode'] );
-	}
-
-	/**
-	 * Delete label files from label info.
-	 *
-	 * @param Array $labels List of label info.
-	 */
-	public function delete_label_files( $labels ) {
-		if ( empty( $labels ) ) {
-			return;
-		}
-
-		foreach ( $labels as $label_type => $label_info ) {
-			if ( empty( $label_info['merged_files'] ) || empty( $label_info['filepath'] ) ) {
-				continue;
-			}
-
-			foreach ( $label_info['merged_files'] as $path ) {
-				if ( file_exists( $path ) && $path !== $label_info['filepath'] ) {
-					unlink( $path );
-				}
-			}
-		}
 	}
 
 	/**

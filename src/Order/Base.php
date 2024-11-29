@@ -1271,8 +1271,8 @@ abstract class Base {
 			return false;
 		}
 
-		if( isset( $saved_data['labels']['label']['merged_files'] ) ){
-			foreach ( $saved_data['labels']['label']['merged_files'] as  $label_path ) {
+		if ( isset( $saved_data['labels']['label']['merged_files'] ) ) {
+			foreach ( $saved_data['labels']['label']['merged_files'] as $label_path ) {
 				unlink( $label_path );
 			}
 		}

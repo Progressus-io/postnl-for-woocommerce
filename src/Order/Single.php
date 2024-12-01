@@ -627,7 +627,10 @@ class Single extends Base {
 
 				wp_send_json_success();
 			} else {
-				throw new \Exception( esc_html__( print_r( $response['errorsPerBarcode'][0]['errors'][0], true ) ) );
+				$error_message = isset($response['errorsPerBarcode'][0]['errors'][0]) ? $response['errorsPerBarcode'][0]['errors'][0] : 'Unknown error';
+
+				// Translators: %s is the error message.
+				throw new \Exception( sprintf( esc_html__( 'Error: %s', 'postnl-for-woocommerce' ), esc_html( $error_message ) ) );
 			}
 		} catch ( \Exception $e ) {
 			wp_send_json_error(

@@ -53,7 +53,7 @@ if ( ! class_exists( 'WC_Email_Smart_Return' ) ) :
 		 * @since  3.1.0
 		 */
 		public function get_default_subject() {
-			return __( '[{site_title}]: PostNL Smart Returns', 'woocommerce' );
+			return __( '[{site_title}]: PostNL Smart Returns', 'postnl-for-woocommerce' );
 		}
 
 		/**
@@ -63,7 +63,7 @@ if ( ! class_exists( 'WC_Email_Smart_Return' ) ) :
 		 * @since  3.1.0
 		 */
 		public function get_default_heading() {
-			return __( 'PostNL Smart Returns', 'woocommerce' );
+			return __( 'PostNL Smart Returns', 'postnl-for-woocommerce' );
 		}
 
 		/**

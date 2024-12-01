@@ -234,10 +234,6 @@ class Bulk extends Base {
 
 		$merged_info = $this->merge_labels( $label_paths, $filename, $start_position );
 
-		foreach ( $gen_labels as $labels ) {
-			$this->delete_label_files( $labels );
-		}
-
 		if ( file_exists( $merged_info ['filepath'] ) ) {
 			// We're saving the bulk file path temporarily and access it later during the download process.
 			// This information expires in 3 minutes (180 seconds), just enough for the user to see the

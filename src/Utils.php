@@ -652,54 +652,59 @@ class Utils {
 		return array_merge( $base_options, $destination_options );
 	}
 
+	/**
+	 * Check if current cart is eligible for automatically use letterbox.
+	 *
+	 * @param \WC_Cart|int \WC_Cart.
+	 *
+	 * @return boolean
+	 */
+	public static function is_cart_eligible_auto_letterbox( $cart ) {
+		if ( ! in_array( WC()->customer->get_shipping_country(), Utils::get_available_country_for_letterbox(), true ) ) {
+			return false;
+		}
+
+		return self::check_products_for_letterbox( $cart->get_cart() );
+	}
 
 	/**
 	 * Check if current order/cart is eligible for automatically use letterbox.
 	 *
-	 * @param \WC_Order|\WC_Cart|int $order \WC_order, \WC_Cart or Order ID.
+	 * @param \WC_Order|int $order \WC_order or Order ID.
 	 *
 	 * @return boolean
 	 */
-	public static function is_eligible_auto_letterbox( $order ) {
+	public static function is_order_eligible_auto_letterbox( $order ) {
 
 		if ( wc_get_base_location()['country'] == 'BE' ) {
 			return false;
 		}
 
-		// Check order
+		// Check if order id provided.
 		if ( is_int( $order ) ) {
 			$order = wc_get_order( $order );
 		}
 
-		if ( is_a( $order, 'WC_Order' ) ) {
-			if ( $order->meta_exists( '_postnl_letterbox' ) ) {
-				return (bool) $order->get_meta( '_postnl_letterbox', true );
-			}
-			if ( ! in_array( $order->get_shipping_country(), Utils::get_available_country_for_letterbox(), true ) ) {
-				$order->update_meta_data( '_postnl_letterbox', false );
-				$order->save();
-
-				return false;
-			}
-			$products = $order->get_items();
+		if ( ! is_a( $order, 'WC_Order' ) ) {
+			return false;
 		}
 
-		// Check cart items.
-		if ( is_a( $order, 'WC_Cart' ) ) {
-			if ( ! in_array( WC()->customer->get_shipping_country(), Utils::get_available_country_for_letterbox(), true ) ) {
-				return false;
-			}
-			$products = $order->get_cart();
+		if ( $order->meta_exists( '_postnl_letterbox' ) ) {
+			return (bool) $order->get_meta( '_postnl_letterbox', true );
 		}
 
-		if( isset( $products ) ) {
-			$is_eligible = self::check_products_for_letterbox( $products );
+		if ( ! in_array( $order->get_shipping_country(), Utils::get_available_country_for_letterbox(), true ) ) {
+			$order->update_meta_data( '_postnl_letterbox', false );
+			$order->save_meta_data();
+
+			return false;
 		}
-		// Save the state for the order.
-		if ( is_a( $order, 'WC_Order' ) ) {
-			$order->update_meta_data( '_postnl_letterbox', $is_eligible );
-			$order->save();
-		}
+
+		$products    = $order->get_items();
+		$is_eligible = self::check_products_for_letterbox( $products );
+
+		$order->update_meta_data( '_postnl_letterbox', $is_eligible );
+		$order->save_meta_data();
 
 		return $is_eligible;
 	}

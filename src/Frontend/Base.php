@@ -492,7 +492,7 @@ abstract class Base {
 			return;
 		}
 
-		$eligible_for_letterbox = Utils::is_eligible_auto_letterbox( $order );
+		$eligible_for_letterbox = Utils::is_order_eligible_auto_letterbox( $order );
 
 		if ( $eligible_for_letterbox ) {
 			$order->update_meta_data( $this->letterbox_meta_name, 1 );

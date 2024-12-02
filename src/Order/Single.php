@@ -342,7 +342,7 @@ class Single extends Base {
 	 * Adds an 'Activate return function' button.
 	 */
 	public function activate_return_function_html( $order ) {
-		if ( 'shipping_return' === $this->settings->get_return_shipment_and_labels() && 'no' === $this->settings->get_return_shipment_and_labels_all() && 'NL' === $order->get_shipping_country() && 'NL' === Utils::get_base_country() && ! Utils::is_eligible_auto_letterbox( $order ) ) {
+		if ( 'shipping_return' === $this->settings->get_return_shipment_and_labels() && 'no' === $this->settings->get_return_shipment_and_labels_all() && 'NL' === $order->get_shipping_country() && 'NL' === Utils::get_base_country() && ! Utils::is_order_eligible_auto_letterbox( $order ) ) {
 			?>
             <hr id="postnl_break_2">
             <p class="form-field">

@@ -45,10 +45,19 @@ class Extend_Block_Core {
 	public function postnl_validate_address_in_cart( $errors, $cart ) {
 		$customer              = WC()->customer;
 		$validated_address     = WC()->session->get( POSTNL_SETTINGS_ID . '_validated_address' );
-		$shipping_house_number = isset( $validated_address['house_number'] ) ? $validated_address['house_number'] : '';
 		$shipping_country  = $customer->get_shipping_country();
 		$shipping_postcode = $customer->get_shipping_postcode();
 
+		$customer_data = wc()->session->get( 'customer' );
+		if ( isset( $customer_data['meta_data'] ) && is_array( $customer_data['meta_data'] ) ) {
+			// Create an associative array with keys and values
+			$meta_keys = array_column( $customer_data['meta_data'], 'value', 'key' );
+
+			// Check if the specific shipping house number exists
+			if ( isset( $meta_keys['_wc_shipping/postnl/house_number'] ) ) {
+				$shipping_house_number = sanitize_text_field( $meta_keys['_wc_shipping/postnl/house_number'] );
+			}
+		}
 		$settings = Settings::get_instance();
 
 		if ( $settings->is_validate_nl_address_enabled() && 'NL' === $shipping_country ) {

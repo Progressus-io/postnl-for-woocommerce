@@ -53,7 +53,7 @@ if ( empty( $data['delivery_options'] ) ) {
 									name="<?php echo esc_attr( $data['field_name'] ); ?>" 
 									class="postnl_sub_radio" 
 									value="<?php echo esc_attr( $value ); ?>"
-									<?php echo wp_kses_post( $is_checked ); ?>
+									<?php echo $is_checked; ?>
 								/>
 								<i><?php echo wp_kses_post( $is_charged ); ?></i>
 								<i><?php echo esc_html( $delivery_time ); ?></i>

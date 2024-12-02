@@ -122,7 +122,7 @@ abstract class Base {
 
 		// Get from the plugin settings
 		$delivery_zone = $this->get_shipping_zone( $order );
-		if ( 'NL' === $delivery_zone && Utils::is_eligible_auto_letterbox( $order ) ) {
+		if ( 'NL' === $delivery_zone && Utils::is_order_eligible_auto_letterbox( $order ) ) {
 			return array( 'letterbox' => 'yes' );
 		}
 

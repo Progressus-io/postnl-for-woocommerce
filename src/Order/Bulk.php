@@ -150,6 +150,7 @@ class Bulk extends Base {
 
 				if ( $have_label_file ) {
 					$array_messages[] = array(
+						// Translators: %1$d is the order ID.
 						'message' => sprintf( esc_html__( 'Order #%1$d already has a label.', 'postnl-for-woocommerce' ), $order_id ),
 						'type'    => 'error',
 					);
@@ -157,6 +158,7 @@ class Bulk extends Base {
 
 				if ( ! $match_shipping_zones ) {
 					$array_messages[] = array(
+						// Translators: %1$d is the order ID.
 						'message' => sprintf( esc_html__( 'Order #%1$d is from another shipping zone.', 'postnl-for-woocommerce' ), $order_id ),
 						'type'    => 'error',
 					);
@@ -666,6 +668,7 @@ class Bulk extends Base {
 			$order->add_order_note( $tracking_note, $customer_note );
 			$label_link        = esc_url( $this->get_download_label_url( $order_id ) );
 			$result['message'] = array(
+				// Translators: %1$s is the order ID, %2$s is the link to download the file, %3$s is the closing link tag.
 				'message' => sprintf( esc_html__( '#%1$s : PostNL label has been created - %2$sdownload file%3$s', 'postnl-for-woocommerce' ),
 					$order_id, '<a href="' . $label_link . '" download>', '</a>' ),
 				'type'    => 'success',

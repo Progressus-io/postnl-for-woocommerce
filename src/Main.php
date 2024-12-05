@@ -428,12 +428,10 @@ class Main {
 		// Initialize classes that depend on WooCommerce
 		new Extend_Block_Core();
 		Extend_Store_Endpoint::init();
-		if(is_checkout()){
-			// Register the blocks integration
-			add_action( 'woocommerce_blocks_checkout_block_registration', function( $integration_registry ) {
-				$integration_registry->register( new  Blocks_Integration() );
-			} );
-		}
+		// Register the blocks integration
+		add_action( 'woocommerce_blocks_checkout_block_registration', function( $integration_registry ) {
+			$integration_registry->register( new  Blocks_Integration() );
+		} );
 	}
 	/**
 	 * Registers the slug as a block category with WordPress.

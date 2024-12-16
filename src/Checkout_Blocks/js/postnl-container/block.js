@@ -1,34 +1,32 @@
 /**
  * External dependencies
  */
-import { useCallback, useEffect, useState, useRef } from '@wordpress/element';
-import { __ } from '@wordpress/i18n';
-import { getSetting } from '@woocommerce/settings';
-import { useDispatch, useSelect } from '@wordpress/data';
+import {useEffect, useState, useRef} from '@wordpress/element';
+import {__} from '@wordpress/i18n';
+import {getSetting} from '@woocommerce/settings';
+import {useDispatch, useSelect} from '@wordpress/data';
 import axios from 'axios';
+import {Spinner} from '@wordpress/components';
 
 /**
  * Internal dependencies
  */
-import { Block as DeliveryDayBlock } from '../postnl-delivery-day/block';
-import { Block as DropoffPointsBlock } from '../postnl-dropoff-points/block';
-import debounce from 'lodash/debounce';
+import {Block as DeliveryDayBlock} from '../postnl-delivery-day/block';
+import {Block as DropoffPointsBlock} from '../postnl-dropoff-points/block';
 
-export const Block = ({ checkoutExtensionData }) => {
-	const { setExtensionData } = checkoutExtensionData;
+export const Block = ({checkoutExtensionData}) => {
+	const {setExtensionData} = checkoutExtensionData;
 
 	const tabs = [
-		{ id: 'delivery_day', name: __('Delivery Day', 'postnl-for-woocommerce') },
-		{ id: 'dropoff_points', name: __('Dropoff Points', 'postnl-for-woocommerce') },
+		{id: 'delivery_day', name: __('Delivery Day', 'postnl-for-woocommerce')},
+		{id: 'dropoff_points', name: __('Dropoff Points', 'postnl-for-woocommerce')},
 	];
 
-	// State for the active tab
 	const [activeTab, setActiveTab] = useState(tabs[0].id);
 
-	// Get the letterbox status from settings
 	const postnlData = getSetting('postnl-for-woocommerce-blocks_data', {});
 	const letterbox = postnlData.letterbox || false;
-	const { CART_STORE_KEY } = window.wc.wcBlocksData;
+	const {CART_STORE_KEY, CHECKOUT_STORE_KEY} = window.wc.wcBlocksData;
 
 	// Retrieve customer data from WooCommerce cart store
 	const customerData = useSelect(
@@ -39,202 +37,266 @@ export const Block = ({ checkoutExtensionData }) => {
 		[CART_STORE_KEY]
 	);
 
-	// Extract shipping and billing addresses
 	const shippingAddress = customerData ? customerData.shippingAddress : null;
+	const {setShippingAddress, updateCustomerData} = useDispatch(CART_STORE_KEY);
 
-	// State to determine whether to show the container
 	const [showContainer, setShowContainer] = useState(false);
+	const [loading, setLoading] = useState(false);
 
-	const { setShippingAddress, updateCustomerData } = useDispatch(CART_STORE_KEY);
+	const [deliveryOptions, setDeliveryOptions] = useState([]);
+	const [dropoffOptions, setDropoffOptions] = useState([]);
 
-	// Create a debounced shipping address state
-	const [debouncedShippingAddress, setDebouncedShippingAddress] = useState(shippingAddress);
-
-	const ADDRESS_DEBOUNCE_DELAY = 1000;
-
-	const SHOW_CONTAINER_DEBOUNCE_DELAY = 2000;
-
-	// Ref to prevent infinite loop when updating shipping address
+	// To prevent infinite loops if we update the address programmatically
 	const isUpdatingAddress = useRef(false);
 
-	// Update debouncedShippingAddress after user stops typing
-	useEffect(() => {
-		const handler = setTimeout(() => {
-			setDebouncedShippingAddress(shippingAddress);
-		}, ADDRESS_DEBOUNCE_DELAY);
+	// Ref to store the previous shipping address
+	const previousShippingAddress = useRef(null);
 
-		return () => {
-			clearTimeout(handler);
-		};
-	}, [shippingAddress]);
+	const empty = (value) => value === undefined || value === null || value === '';
 
-	// Debounced function to update showContainer
-	const debouncedSetShowContainer = useCallback(
-		debounce((value) => {
-			setShowContainer(value);
-		}, SHOW_CONTAINER_DEBOUNCE_DELAY),
+	const isComplete = useSelect(
+		(select) => select(CHECKOUT_STORE_KEY).isComplete(),
 		[]
 	);
 
-	// Main useEffect dependent on debouncedShippingAddress
+	// Helper function to compare two addresses
+	const isAddressEqual = (addr1, addr2) => {
+		if (!addr1 || !addr2) return false;
+		return (
+			addr1.country === addr2.country &&
+			addr1.postcode === addr2.postcode &&
+			addr1['postnl/house_number'] === addr2['postnl/house_number'] &&
+			addr1.address_1 === addr2.address_1 &&
+			addr1.address_2 === addr2.address_2 &&
+			addr1.city === addr2.city &&
+			addr1.state === addr2.state &&
+			addr1.phone === addr2.phone &&
+			addr1.email === addr2.email
+		);
+	};
+
+	// Fetch data shipping address
 	useEffect(() => {
-		// Prevent running if we're updating the address programmatically
+
+		if (!shippingAddress || empty(shippingAddress.postcode) || empty(shippingAddress['postnl/house_number'])) {
+			// If we have no valid postcode/house number, hide container
+			setShowContainer(false);
+			return;
+		}
+
 		if (isUpdatingAddress.current) {
 			isUpdatingAddress.current = false;
 			return;
 		}
 
-		// Proceed only if debouncedShippingAddress exists
-		if (debouncedShippingAddress) {
-			const postcode = debouncedShippingAddress.postcode;
-			const houseNumber = debouncedShippingAddress['postnl/house_number'];
+		// Check if the shipping address has changed
+		if (isAddressEqual(previousShippingAddress.current, shippingAddress)) {
+			return;
+		}
 
-			if (!empty(postcode) && !empty(houseNumber)) {
-				const data = {
-					shipping_country: debouncedShippingAddress.country || '',
-					shipping_postcode: debouncedShippingAddress.postcode || '',
-					shipping_house_number: debouncedShippingAddress['postnl/house_number'] || '',
-					shipping_address_2: debouncedShippingAddress.address_2 || '',
-					shipping_address_1: debouncedShippingAddress.address_1 || '',
-					shipping_city: debouncedShippingAddress.city || '',
-					shipping_state: debouncedShippingAddress.state || '',
-					shipping_phone: debouncedShippingAddress.phone || '',
-					shipping_email: debouncedShippingAddress.email || '',
-					shipping_method: 'postnl',
-					ship_to_different_address: '1',
-				};
 
-				// Create URL-encoded form data
-				const formData = new URLSearchParams();
-				formData.append('action', 'postnl_set_checkout_post_data');
-				formData.append('nonce', postnlData.nonce);
+		const debounceDelay = 1000; //
+		const handler = setTimeout(() => {
+			// Update the previous shipping address
+			previousShippingAddress.current = {...shippingAddress};
 
-				// Append each data field
-				Object.keys(data).forEach((key) => {
-					formData.append(`data[${key}]`, data[key]);
-				});
+			const data = {
+				shipping_country: shippingAddress.country || '',
+				shipping_postcode: shippingAddress.postcode || '',
+				shipping_house_number: shippingAddress['postnl/house_number'] || '',
+				shipping_address_2: shippingAddress.address_2 || '',
+				shipping_address_1: shippingAddress.address_1 || '',
+				shipping_city: shippingAddress.city || '',
+				shipping_state: shippingAddress.state || '',
+				shipping_phone: shippingAddress.phone || '',
+				shipping_email: shippingAddress.email || '',
+				shipping_method: 'postnl',
+				ship_to_different_address: '1',
+			};
 
-				axios
-					.post(postnlData.ajax_url, formData, {
-						headers: {
-							'Content-Type': 'application/x-www-form-urlencoded',
-						},
-					})
-					.then((response) => {
-						if (response.data.success) {
-							// Check if validated_address is returned
+			const formData = new URLSearchParams();
+			formData.append('action', 'postnl_set_checkout_post_data');
+			formData.append('nonce', postnlData.nonce);
+
+			Object.keys(data).forEach((key) => {
+				formData.append(`data[${key}]`, data[key]);
+			});
+
+			setLoading(true);
+
+			axios
+				.post(postnlData.ajax_url, formData, {
+					headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+				})
+				.then((response) => {
+					if (response.data.success && response.data.data) {
+						const respData = response.data.data;
+
+						// If validated_address returned, update shipping address if needed
+						if (
+							respData.validated_address &&
+							respData.validated_address.street &&
+							respData.validated_address.city &&
+							respData.validated_address.house_number
+						) {
+							const {street, city, house_number} = respData.validated_address;
+							const newShippingAddress = {
+								...shippingAddress,
+								address_1: street,
+								city: city,
+								'postnl/house_number': house_number,
+							};
+
 							if (
-								response.data.data.validated_address &&
-								response.data.data.validated_address.street &&
-								response.data.data.validated_address.city &&
-								response.data.data.validated_address.house_number
+								shippingAddress.address_1 !== street ||
+								shippingAddress.city !== city ||
+								shippingAddress['postnl/house_number'] !== house_number
 							) {
-								const {street, city, house_number} = response.data.data.validated_address;
-								const newShippingAddress = {
-									...debouncedShippingAddress, // Preserve existing address fields
-									address_1: street, // Update address_1 with validated street
-									city: city, // Update city with validated city
-									'postnl/house_number': house_number, // Include validated house_number
-								};
-
-								if (
-									debouncedShippingAddress.address_1 !== street ||
-									debouncedShippingAddress.city !== city ||
-									debouncedShippingAddress['postnl/house_number'] !== house_number
-								) {
-									isUpdatingAddress.current = true;
-									setShippingAddress(newShippingAddress);
-									updateCustomerData(newShippingAddress);
-								}
+								isUpdatingAddress.current = true;
+								setShippingAddress(newShippingAddress);
+								updateCustomerData(newShippingAddress);
 							}
-
-							// Determine whether to show the container based on postcode and house number
-							const show = !empty(debouncedShippingAddress.postcode) && !empty(debouncedShippingAddress['postnl/house_number']);
-							debouncedSetShowContainer(show);
-						} else {
-							debouncedSetShowContainer(false);
 						}
 
-						// Dispatch custom event to notify other components
-						const event = new Event('postnl_address_updated');
-						window.dispatchEvent(event);
-					})
-					.catch((error) => {
-						debouncedSetShowContainer(false);
-						// Dispatch custom event to notify other components
-						const event = new Event('postnl_address_updated');
-						window.dispatchEvent(event);
-					});
-			} else {
-				debouncedSetShowContainer(false);
-			}
-		} else {
-			debouncedSetShowContainer(false);
+						setShowContainer(respData.show_container || false);
+						setDeliveryOptions(respData.delivery_options || []);
+						setDropoffOptions(respData.dropoff_options || []);
+					} else {
+						// Response not success or no data: hide container
+						setShowContainer(false);
+						setDeliveryOptions([]);
+						setDropoffOptions([]);
+					}
+
+					const event = new Event('postnl_address_updated');
+					window.dispatchEvent(event);
+				})
+				.catch(() => {
+					// On error, hide container and clear options
+					setShowContainer(false);
+					setDeliveryOptions([]);
+					setDropoffOptions([]);
+
+					const event = new Event('postnl_address_updated');
+					window.dispatchEvent(event);
+				})
+				.finally(() => {
+					setLoading(false);
+				});
+		}, debounceDelay);
+
+		// Cleanup function to cancel the timeout if address changes before debounceDelay
+		return () => clearTimeout(handler);
+	}, [shippingAddress, postnlData.ajax_url, postnlData.nonce, setShippingAddress, updateCustomerData]);
+
+	// Clear session storage if checkout is complete, letterbox, or container hidden
+	useEffect(() => {
+		if (isComplete || letterbox || !showContainer) {
+			sessionStorage.removeItem('postnl_selected_option');
+			sessionStorage.removeItem('postnl_deliveryDay');
+			sessionStorage.removeItem('postnl_deliveryDayDate');
+			sessionStorage.removeItem('postnl_deliveryDayFrom');
+			sessionStorage.removeItem('postnl_deliveryDayTo');
+			sessionStorage.removeItem('postnl_deliveryDayPrice');
+			sessionStorage.removeItem('postnl_deliveryDayType');
+			sessionStorage.removeItem('postnl_dropoffPoints');
+			sessionStorage.removeItem('postnl_dropoffPointsAddressCompany');
+			sessionStorage.removeItem('postnl_dropoffPointsAddress1');
+			sessionStorage.removeItem('postnl_dropoffPointsAddress2');
+			sessionStorage.removeItem('postnl_dropoffPointsCity');
+			sessionStorage.removeItem('postnl_dropoffPointsPostcode');
+			sessionStorage.removeItem('postnl_dropoffPointsCountry');
+			sessionStorage.removeItem('postnl_dropoffPointsPartnerID');
+			sessionStorage.removeItem('postnl_dropoffPointsDate');
+			sessionStorage.removeItem('postnl_dropoffPointsTime');
+			sessionStorage.removeItem('postnl_dropoffPointsDistance');
 		}
-	}, [
-		debouncedShippingAddress,
-		postnlData.ajax_url,
-		postnlData.nonce,
-		debouncedSetShowContainer,
-	]);
+	}, [isComplete, letterbox, showContainer]);
 
-	// Utility function to check if a value is empty
-	const empty = (value) => {
-		return value === undefined || value === null || value === '';
-	};
+	return (
+		<div
+			id="postnl_checkout_option"
+			className={`postnl_checkout_container ${loading ? 'loading' : ''}`} // Conditionally add 'loading' class
+			style={{position: 'relative'}}
+			aria-busy={loading}
+		>
+			{/* Spinner Overlay */}
+			{loading && (
+				<div
+					className="postnl-spinner-overlay"
+					style={{
+						position: 'absolute',
+						top: 0,
+						right: 0,
+						bottom: 0,
+						left: 0,
+						display: 'flex',
+						alignItems: 'center',
+						justifyContent: 'center',
+						backgroundColor: 'rgba(255,255,255,0.7)',
+						zIndex: 9999,
+					}}
+				>
+					<Spinner/>
+				</div>
 
-	if (letterbox) {
-		return (
-			<div className="postnl-letterbox-message">
-				{__('These items are eligible for letterbox delivery.', 'postnl-for-woocommerce')}
-			</div>
-		);
-	} else if (!showContainer) {
-		return null;
-	} else {
-		return (
-			<div id="postnl_checkout_option" className="postnl_checkout_container">
-				<div className="postnl_checkout_tab_container">
-					<ul className="postnl_checkout_tab_list">
-						{tabs.map((tab) => (
-							<li key={tab.id} className={activeTab === tab.id ? 'active' : ''}>
-								<label htmlFor={`postnl_option_${tab.id}`} className="postnl_checkout_tab">
-									<span>{tab.name}</span>
-									<input
-										type="radio"
-										name="postnl_option"
-										id={`postnl_option_${tab.id}`}
-										className="postnl_option"
-										value={tab.id}
-										checked={activeTab === tab.id}
-										onChange={() => setActiveTab(tab.id)}
-									/>
-								</label>
-							</li>
-						))}
-					</ul>
-				</div>
-				<div className="postnl_checkout_content_container">
-					<div
-						className={`postnl_content ${activeTab === 'delivery_day' ? 'active' : ''}`}
-						id="postnl_delivery_day_content"
-					>
-						<DeliveryDayBlock
-							checkoutExtensionData={checkoutExtensionData}
-							isActive={activeTab === 'delivery_day'}
-						/>
+			)}
+
+			{/* Content when not letterbox and showContainer */}
+			{!letterbox && showContainer && (
+				<>
+					<div className="postnl_checkout_tab_container">
+						<ul className="postnl_checkout_tab_list">
+							{tabs.map((tab) => (
+								<li key={tab.id} className={activeTab === tab.id ? 'active' : ''}>
+									<label htmlFor={`postnl_option_${tab.id}`} className="postnl_checkout_tab">
+										<span>{tab.name}</span>
+										<input
+											type="radio"
+											name="postnl_option"
+											id={`postnl_option_${tab.id}`}
+											className="postnl_option"
+											value={tab.id}
+											checked={activeTab === tab.id}
+											onChange={() => setActiveTab(tab.id)}
+										/>
+									</label>
+								</li>
+							))}
+						</ul>
 					</div>
-					<div
-						className={`postnl_content ${activeTab === 'dropoff_points' ? 'active' : ''}`}
-						id="postnl_dropoff_points_content"
-					>
-						<DropoffPointsBlock
-							checkoutExtensionData={checkoutExtensionData}
-							isActive={activeTab === 'dropoff_points'}
-						/>
+					<div className="postnl_checkout_content_container">
+						<div
+							className={`postnl_content ${activeTab === 'delivery_day' ? 'active' : ''}`}
+							id="postnl_delivery_day_content"
+						>
+							<DeliveryDayBlock
+								checkoutExtensionData={checkoutExtensionData}
+								isActive={activeTab === 'delivery_day'}
+								deliveryOptions={deliveryOptions}
+							/>
+						</div>
+						<div
+							className={`postnl_content ${activeTab === 'dropoff_points' ? 'active' : ''}`}
+							id="postnl_dropoff_points_content"
+						>
+							<DropoffPointsBlock
+								checkoutExtensionData={checkoutExtensionData}
+								isActive={activeTab === 'dropoff_points'}
+								dropoffOptions={dropoffOptions}
+							/>
+						</div>
 					</div>
+				</>
+			)}
+
+			{/* Content when letterbox is true */}
+			{letterbox && showContainer && (
+				<div className="postnl-letterbox-message">
+					{__('These items are eligible for letterbox delivery.', 'postnl-for-woocommerce')}
 				</div>
-			</div>
-		);
-	}
+			)}
+
+		</div>
+	);
 };

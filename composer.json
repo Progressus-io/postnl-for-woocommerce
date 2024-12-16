@@ -9,5 +9,30 @@
     "psr-4": {
       "PostNLWooCommerce\\": "src/"
     }
+  },
+  "archive": {
+    "exclude": [
+      "!/assets",
+      "!/languages",
+      "/node_modules",
+      "bin",
+      "tests",
+      "README.md",
+      "DEVELOPER.md",
+      "package.json",
+      "phpunit.xml.dist",
+      "webpack.config.js",
+      "postcss.config.js",
+      "phpcs.xml",
+      "package-lock.json",
+      "composer.json",
+      "composer.lock",
+      "babel.config.js",
+      "phpunit.xml",
+      "jest-puppeteer.config.js",
+      ".*",
+      "woocommerce-warranty.zip",
+      ".phpcs.security.xml"
+    ]
   }
 }

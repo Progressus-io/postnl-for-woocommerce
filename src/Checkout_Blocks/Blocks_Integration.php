@@ -90,7 +90,7 @@ class Blocks_Integration implements IntegrationInterface {
 
 		wp_set_script_translations(
 			'postnl-delivery-day-integration',
-			'postnl-for-woocommerce-blocks',
+			'postnl-for-woocommerce',
 			POSTNL_WC_PLUGIN_DIR_PATH . '/languages'
 		);
 	}
@@ -135,7 +135,7 @@ class Blocks_Integration implements IntegrationInterface {
 
 		wp_set_script_translations(
 			$handle,
-			'postnl-for-woocommerce-blocks',
+			'postnl-for-woocommerce',
 			POSTNL_WC_PLUGIN_DIR_PATH . '/languages'
 		);
 	}
@@ -165,7 +165,7 @@ class Blocks_Integration implements IntegrationInterface {
 
 		wp_set_script_translations(
 			$handle,
-			'postnl-for-woocommerce-blocks',
+			'postnl-for-woocommerce',
 			POSTNL_WC_PLUGIN_DIR_PATH . '/languages'
 		);
 	}

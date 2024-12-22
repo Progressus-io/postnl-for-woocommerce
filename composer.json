@@ -1,37 +1,74 @@
 {
-  "name": "postnl/postnl-for-woocommerce",
-  "license": "GPL-3.0",
-  "type": "wordpress-plugin",
-  "autoload": {
-    "psr-4": {
-      "PostNLWooCommerce\\": "src/"
-    }
-  },
-  "archive": {
-    "exclude": [
-      "!/assets",
-      "!/languages",
-      "/node_modules",
-      "bin",
-      "tests",
-      "README.md",
-      "DEVELOPER.md",
-      "package.json",
-      "composer.lock",
-      "pnpm-lock.yaml",
-      "phpunit.xml.dist",
-      "webpack.config.js",
-      "postcss.config.js",
-      "phpcs.xml",
-      "package-lock.json",
-      "composer.json",
-      "composer.lock",
-      "babel.config.js",
-      "phpunit.xml",
-      "jest-puppeteer.config.js",
-      ".*",
-      "woocommerce-warranty.zip",
-      ".phpcs.security.xml"
-    ]
-  }
+	"name": "postnl/postnl-for-woocommerce",
+	"license": "GPL-3.0",
+	"type": "wordpress-plugin",
+	"autoload": {
+	"psr-4": {
+		"PostNLWooCommerce\\": "src/"
+	}
+	},
+	"archive": {
+	"exclude": [
+		"!/assets",
+		"!/languages",
+		"/node_modules",
+		"/vendor",
+		"!/vendor/composer",
+		"!/vendor/autoload.php",
+		"bin",
+		"tests",
+		"LICENSE",
+		"README.md",
+		"DEVELOPER.md",
+		"package.json",
+		"composer.lock",
+		"pnpm-lock.yaml",
+		"phpunit.xml.dist",
+		"webpack.config.js",
+		"postcss.config.js",
+		"phpcs.xml",
+		"package-lock.json",
+		"composer.json",
+		"composer.lock",
+		"babel.config.js",
+		"phpunit.xml",
+		"jest-puppeteer.config.js",
+		".*",
+		"*.zip"
+	]
+	},
+	"require-dev": {
+		"wp-cli/i18n-command": "^2.6",
+		"squizlabs/php_codesniffer": "*",
+		"dealerdirect/phpcodesniffer-composer-installer": "*",
+		"wp-coding-standards/wpcs": "*",
+		"woocommerce/woocommerce-sniffs": "*"
+	},
+	"config": {
+	"allow-plugins": {
+		"dealerdirect/phpcodesniffer-composer-installer": true
+	},
+	"phpcs-ignore": ".git,vendor,node_modules,assets,build"
+	},
+	"scripts": {
+		"check-security": [
+			"sh -c './vendor/bin/phpcs . --ignore=$(composer config phpcs-ignore) --standard=./.phpcs.security.xml --report-full --report-summary'"
+		],
+		"check-php": [
+			"sh -c './vendor/bin/phpcs . --ignore=$(composer config phpcs-ignore) --standard=./.phpcs.xml --report-full --report-summary --colors'"
+		],
+		"check-php:fix": [
+			"sh -c './vendor/bin/phpcbf . --ignore=$(composer config phpcs-ignore) --standard=./.phpcs.xml --report-full --report-summary --colors'"
+		],
+		"check-all": [
+			"sh -c './vendor/bin/phpcs . --ignore=$(composer config phpcs-ignore) --standard=./.phpcs.xml --report-full --report-summary --colors -s'"
+		],
+		"check-all:fix": [
+			"sh -c './vendor/bin/phpcbf . --ignore=$(composer config phpcs-ignore) --standard=./.phpcs.xml --report-full --report-summary --colors'"
+		],
+		"check-l18n": [
+			"sh -c './vendor/bin/phpcs . --ignore=$(composer config phpcs-ignore) --standard=./.phpcs-l18n.xml --report-full --report-summary --colors -s'"
+		],
+		"test": [ "composer config name"]
+		}
 }

@@ -67,7 +67,7 @@
 			"sh -c './vendor/bin/phpcbf . --ignore=$(composer config phpcs-ignore) --standard=./.phpcs.xml --report-full --report-summary --colors'"
 		],
 		"check-l18n": [
-			"sh -c './vendor/bin/phpcs . --ignore=$(composer config phpcs-ignore) --standard=./.phpcs-l18n.xml --report-full --report-summary --colors -s'"
+			"sh -c './vendor/bin/phpcs . --ignore=$(composer config phpcs-ignore) --standard=./.phpcs.l18n.xml --report-full --report-summary --colors -s'"
 		],
 		"test": [ "composer config name"]
 		}

@@ -2,9 +2,6 @@
   "name": "postnl/postnl-for-woocommerce",
   "license": "GPL-3.0",
   "type": "wordpress-plugin",
-  "require": {
-	"clegginabox/pdf-merger": "dev-master"
-  },
   "autoload": {
     "psr-4": {
       "PostNLWooCommerce\\": "src/"

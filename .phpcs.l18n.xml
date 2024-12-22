@@ -84,7 +84,10 @@
 			</property>
 		</properties>
 	</rule>
-
+	<rule ref="WordPress.Files.FileName">
+		<exclude name="WordPress.Files.FileName.InvalidClassFileName"/>
+		<exclude name="WordPress.Files.FileName.NotHyphenatedLowercase"/>
+	</rule>
 
 	<!--
 	#############################################################################

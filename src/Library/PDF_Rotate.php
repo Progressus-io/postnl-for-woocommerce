@@ -30,10 +30,10 @@ class PDF_Rotate extends FPDI {
 		$this->angle = $angle;
 		if ( $angle != 0 ) {
 			$angle *= M_PI / 180;
-			$c     = cos( $angle );
-			$s     = sin( $angle );
-			$cx    = $x * $this->k;
-			$cy    = ( $this->h - $y ) * $this->k;
+			$c      = cos( $angle );
+			$s      = sin( $angle );
+			$cx     = $x * $this->k;
+			$cy     = ( $this->h - $y ) * $this->k;
 			$this->_out( sprintf( 'q %.5F %.5F %.5F %.5F %.2F %.2F cm 1 0 0 1 %.2F %.2F cm', $c, $s, - $s, $c, $cx, $cy, - $cx, - $cy ) );
 		}
 	}

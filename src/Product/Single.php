@@ -94,7 +94,7 @@ class Single {
 				'desc_tip'          => 'true',
 				'placeholder'       => esc_html__( 'Enter max quantity', 'postnl-for-woocommerce' ),
 				'custom_attributes' => array(
-					'min' => 1
+					'min' => 1,
 				),
 			),
 			array(

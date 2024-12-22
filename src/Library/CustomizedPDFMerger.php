@@ -22,7 +22,7 @@ class CustomizedPDFMerger {
 	 *
 	 * @var array
 	 */
-	private $_files;    //['form.pdf']  ["1,2,4, 5-19"]
+	private $_files;    // ['form.pdf']  ["1,2,4, 5-19"]
 
 	/**
 	 * Settings class instance.
@@ -39,7 +39,7 @@ class CustomizedPDFMerger {
 	 * Add a PDF for inclusion in the merge with a valid file path. Pages should be formatted: 1,3,6, 12-16.
 	 *
 	 * @param $filepath
-	 * @param string $pages
+	 * @param string      $pages
 	 * @param string|null $orientation
 	 *
 	 * @return CustomizedPDFMerger
@@ -72,7 +72,7 @@ class CustomizedPDFMerger {
 	 */
 	public function merge( $outputmode = 'browser', $outputpath = 'newfile.pdf', $orientation = 'A', $start_position = 'top-left' ) {
 		if ( ! isset( $this->_files ) || ! is_array( $this->_files ) ) {
-			throw new Exception( "No PDFs to merge." );
+			throw new Exception( 'No PDFs to merge.' );
 		}
 
 		$fpdi  = new PDF_Rotate();
@@ -86,9 +86,9 @@ class CustomizedPDFMerger {
 
 			$count = $fpdi->setSourceFile( $filename );
 
-			//add the pages
+			// add the pages
 			if ( $filepages == 'all' ) {
-				for ( $i = 1; $i <= $count; $i ++ ) {
+				for ( $i = 1; $i <= $count; $i++ ) {
 					$template = $fpdi->importPage( $i );
 					$size     = $fpdi->getTemplateSize( $template );
 					if ( $fileorientation === 'A' ) {
@@ -101,8 +101,8 @@ class CustomizedPDFMerger {
 						'orientation' => $fileorientation,
 					);
 
-					//$fpdi->AddPage($fileorientation, array($size['width'], $size['height']));
-					//$fpdi->useTemplate($template);
+					// $fpdi->AddPage($fileorientation, array($size['width'], $size['height']));
+					// $fpdi->useTemplate($template);
 				}
 			} else {
 				foreach ( $filepages as $page ) {
@@ -117,8 +117,8 @@ class CustomizedPDFMerger {
 						'orientation' => $fileorientation,
 					);
 
-					//$fpdi->AddPage($fileorientation, array($size['width'], $size['height']));
-					//$fpdi->useTemplate($template);
+					// $fpdi->AddPage($fileorientation, array($size['width'], $size['height']));
+					// $fpdi->useTemplate($template);
 				}
 			}
 		}
@@ -165,10 +165,13 @@ class CustomizedPDFMerger {
 		foreach ( $files as $filename => $file_templates ) {
 			foreach ( $file_templates as $file_template ) {
 				if ( 'A6' === $label_format ) {
-					$fpdi->AddPage( $file_template['size']['orientation'], array(
-						$file_template['size']['width'],
-						$file_template['size']['height']
-					) );
+					$fpdi->AddPage(
+						$file_template['size']['orientation'],
+						array(
+							$file_template['size']['width'],
+							$file_template['size']['height'],
+						)
+					);
 					$fpdi->useTemplate( $file_template['template'] );
 					$label_number = 1;
 					continue;
@@ -191,10 +194,13 @@ class CustomizedPDFMerger {
 					&& intval( $file_template['size']['width'] ) !== intval( $a6_size['width'] )
 					&& intval( $file_template['size']['height'] ) !== intval( $a6_size['height'] )
 				) {
-					$fpdi->AddPage( $file_template['orientation'], array(
-						$file_template['size']['width'],
-						$file_template['size']['height']
-					) );
+					$fpdi->AddPage(
+						$file_template['orientation'],
+						array(
+							$file_template['size']['width'],
+							$file_template['size']['height'],
+						)
+					);
 					$fpdi->useTemplate( $file_template['template'] );
 					$label_number = 1;
 					continue;
@@ -227,26 +233,22 @@ class CustomizedPDFMerger {
 					$fpdi->useTemplate( $file_template['template'], $coords[0], $coords[1], $file_template['size']['width'], $file_template['size']['height'], false );
 				}
 
-				$label_number ++;
+				++$label_number;
 			}
 		}
 
-		//output operations
+		// output operations
 		$mode = $this->_switchmode( $outputmode );
 
 		if ( $mode == 'S' ) {
 			return $fpdi->Output( $outputpath, 'S' );
-		} else {
-			if ( $fpdi->Output( $outputpath, $mode ) == '' ) {
+		} elseif ( $fpdi->Output( $outputpath, $mode ) == '' ) {
 				return true;
-			} else {
-				throw new Exception( "Error outputting PDF to '$outputmode'." );
+		} else {
+			throw new Exception( "Error outputting PDF to '$outputmode'." );
 
-				return false;
-			}
+			return false;
 		}
-
-
 	}
 
 	/**
@@ -285,13 +287,13 @@ class CustomizedPDFMerger {
 		$pages = str_replace( ' ', '', $pages );
 		$part  = explode( ',', $pages );
 
-		//parse hyphens
+		// parse hyphens
 		foreach ( $part as $i ) {
 			$ind = explode( '-', $i );
 
 			if ( count( $ind ) == 2 ) {
-				$x = $ind[0]; //start page
-				$y = $ind[1]; //end page
+				$x = $ind[0]; // start page
+				$y = $ind[1]; // end page
 
 				if ( $x > $y ) {
 					throw new Exception( "Starting page, '$x' is greater than ending page '$y'." );
@@ -299,10 +301,10 @@ class CustomizedPDFMerger {
 					return false;
 				}
 
-				//add middle pages
+				// add middle pages
 				while ( $x <= $y ) {
 					$newpages[] = (int) $x;
-					$x ++;
+					++$x;
 				}
 			} else {
 				$newpages[] = (int) $ind[0];

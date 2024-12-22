@@ -44,5 +44,4 @@ class Client extends Base {
 			'Barcode'        => $this->item_info->body['Barcode'],
 		);
 	}
-
 }

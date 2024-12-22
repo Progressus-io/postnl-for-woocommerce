@@ -68,15 +68,15 @@ class Blocks_Integration implements IntegrationInterface {
 		$script_asset_path = POSTNL_WC_PLUGIN_DIR_PATH . '/build/index.asset.php';
 		$script_asset      = file_exists( $script_asset_path )
 			? require $script_asset_path
-			: [
-				'dependencies' => [],
+			: array(
+				'dependencies' => array(),
 				'version'      => $this->get_file_version( $script_path ),
-			];
+			);
 
 		wp_enqueue_style(
 			'postnl-delivery-day-integration',
 			$style_url,
-			[],
+			array(),
 			$this->get_file_version( $style_path )
 		);
 
@@ -105,7 +105,7 @@ class Blocks_Integration implements IntegrationInterface {
 		wp_enqueue_style(
 			'postnl-delivery-day',
 			$block_style_url,
-			[],
+			array(),
 			$this->get_file_version( $block_style_path )
 		);
 	}
@@ -120,10 +120,10 @@ class Blocks_Integration implements IntegrationInterface {
 	private function register_block_script( $handle, $script_path, $asset_path ) {
 		$script_url = POSTNL_WC_PLUGIN_DIR_URL . $script_path;
 		$asset_file = POSTNL_WC_PLUGIN_DIR_PATH . $asset_path;
-		$asset      = file_exists( $asset_file ) ? require $asset_file : [
-			'dependencies' => [],
+		$asset      = file_exists( $asset_file ) ? require $asset_file : array(
+			'dependencies' => array(),
 			'version'      => $this->get_file_version( $script_path ),
-		];
+		);
 
 		wp_register_script(
 			$handle,
@@ -150,10 +150,10 @@ class Blocks_Integration implements IntegrationInterface {
 	private function register_frontend_script( $handle, $script_path, $asset_path ) {
 		$script_url = POSTNL_WC_PLUGIN_DIR_URL . $script_path;
 		$asset_file = POSTNL_WC_PLUGIN_DIR_PATH . $asset_path;
-		$asset      = file_exists( $asset_file ) ? require $asset_file : [
-			'dependencies' => [],
+		$asset      = file_exists( $asset_file ) ? require $asset_file : array(
+			'dependencies' => array(),
 			'version'      => $this->get_file_version( $script_path ),
-		];
+		);
 
 		wp_enqueue_script(
 			$handle,
@@ -194,10 +194,10 @@ class Blocks_Integration implements IntegrationInterface {
 	 * @return string[]
 	 */
 	public function get_script_handles() {
-		return [
+		return array(
 			'postnl-delivery-day-integration',
 			'postnl-container-frontend',
-		];
+		);
 	}
 
 	/**
@@ -206,10 +206,10 @@ class Blocks_Integration implements IntegrationInterface {
 	 * @return string[]
 	 */
 	public function get_editor_script_handles() {
-		return [
+		return array(
 			'postnl-delivery-day-integration',
 			'postnl-container-editor',
-		];
+		);
 	}
 
 
@@ -221,13 +221,11 @@ class Blocks_Integration implements IntegrationInterface {
 	public function get_script_data() {
 		$letterbox = Utils::is_eligible_auto_letterbox( WC()->cart );
 
-		return [
+		return array(
 			'pluginUrl' => POSTNL_WC_PLUGIN_DIR_URL,
 			'ajax_url'  => admin_url( 'admin-ajax.php' ),
 			'nonce'     => wp_create_nonce( 'postnl_delivery_day_nonce' ),
 			'letterbox' => $letterbox, // Add the letterbox status here
-		];
+		);
 	}
-
-
 }

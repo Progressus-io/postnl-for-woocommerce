@@ -17,6 +17,8 @@
       "README.md",
       "DEVELOPER.md",
       "package.json",
+      "composer.lock",
+      "pnpm-lock.yaml",
       "phpunit.xml.dist",
       "webpack.config.js",
       "postcss.config.js",

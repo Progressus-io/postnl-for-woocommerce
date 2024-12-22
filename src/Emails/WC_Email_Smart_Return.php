@@ -43,7 +43,6 @@ if ( ! class_exists( 'WC_Email_Smart_Return' ) ) :
 
 			// Call parent constructor.
 			parent::__construct();
-
 		}
 
 		/**
@@ -92,14 +91,19 @@ if ( ! class_exists( 'WC_Email_Smart_Return' ) ) :
 		 * @return string
 		 */
 		public function get_content_html() {
-			return wc_get_template_html( $this->template_html, array(
-				'order'              => $this->object,
-				'email_heading'      => $this->get_heading(),
-				'additional_content' => $this->get_additional_content(),
-				'sent_to_admin'      => false,
-				'plain_text'         => false,
-				'email'              => $this,
-			), '', $this->template_base );
+			return wc_get_template_html(
+				$this->template_html,
+				array(
+					'order'              => $this->object,
+					'email_heading'      => $this->get_heading(),
+					'additional_content' => $this->get_additional_content(),
+					'sent_to_admin'      => false,
+					'plain_text'         => false,
+					'email'              => $this,
+				),
+				'',
+				$this->template_base
+			);
 		}
 
 		/**
@@ -108,14 +112,19 @@ if ( ! class_exists( 'WC_Email_Smart_Return' ) ) :
 		 * @return string
 		 */
 		public function get_content_plain() {
-			return wc_get_template_html( $this->template_plain, array(
-				'order'              => $this->object,
-				'email_heading'      => $this->get_heading(),
-				'additional_content' => $this->get_additional_content(),
-				'sent_to_admin'      => false,
-				'plain_text'         => true,
-				'email'              => $this,
-			), '', $this->template_base );
+			return wc_get_template_html(
+				$this->template_plain,
+				array(
+					'order'              => $this->object,
+					'email_heading'      => $this->get_heading(),
+					'additional_content' => $this->get_additional_content(),
+					'sent_to_admin'      => false,
+					'plain_text'         => true,
+					'email'              => $this,
+				),
+				'',
+				$this->template_base
+			);
 		}
 
 		/**
@@ -135,7 +144,6 @@ if ( ! class_exists( 'WC_Email_Smart_Return' ) ) :
 			// Allow other code to modify or add attachments
 			return apply_filters( 'woocommerce_email_attachments', $attachments, $this->id, $this->object, $this );
 		}
-
 	}
 
 endif;

@@ -43,11 +43,11 @@ class Order {
 		$this->meta_name = '_' . $this->prefix . 'order_metadata';
 		add_filter( 'woocommerce_order_data_store_cpt_get_orders_query', array( $this, 'handle_custom_query_variable' ), 10, 2 );
 
-        if ( ! get_transient( 'updated_postnl_orders' ) ) {
-            $this->update_existing_orders();
+		if ( ! get_transient( 'updated_postnl_orders' ) ) {
+			$this->update_existing_orders();
 
-            set_transient( 'updated_postnl_orders', 'done', YEAR_IN_SECONDS );
-        }
+			set_transient( 'updated_postnl_orders', 'done', YEAR_IN_SECONDS );
+		}
 	}
 
 	public function update_existing_orders() {
@@ -63,7 +63,7 @@ class Order {
 					array(
 						'key'     => '_postnl_old_orders_delivery_date',
 						'compare' => 'NOT EXISTS',
-					)
+					),
 				),
 				'limit'      => - 1,
 				'return'     => 'ids',
@@ -104,13 +104,13 @@ class Order {
 
 		if ( ! empty( $query_vars['postnl_has_single_deliverydate'] ) ) {
 			$has_single_value = esc_attr( $query_vars['postnl_has_single_deliverydate'] );
-			
+
 			$query['meta_query'][] = array(
 				'key'     => '_' . $this->prefix . 'frontend_delivery_day_date',
 				'compare' => ( 'yes' === $has_single_value ) ? 'EXISTS' : 'NOT EXISTS',
 			);
 		}
-	
+
 		return $query;
 	}
 }

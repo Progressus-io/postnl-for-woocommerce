@@ -256,7 +256,7 @@ abstract class Base_Info {
 	 * Sanitization for float value.
 	 *
 	 * @param Float $float Float value.
-	 * @param Int $numcomma Number of character after the comma.
+	 * @param Int   $numcomma Number of character after the comma.
 	 *
 	 * @return Float
 	 */
@@ -269,7 +269,7 @@ abstract class Base_Info {
 	/**
 	 * Converts a given weight into grams, if necessary.
 	 *
-	 * @param float $weight The weight amount.
+	 * @param float  $weight The weight amount.
 	 * @param string $uom The unit of measurement of the $weight parameter.
 	 *
 	 * @return float The potentially converted weight.
@@ -291,7 +291,7 @@ abstract class Base_Info {
 	 * Sanitization for string length.
 	 *
 	 * @param String $string String value.
-	 * @param Int $max Maximum of character.
+	 * @param Int    $max Maximum of character.
 	 *
 	 * @return String
 	 */

@@ -31,9 +31,9 @@ class Client extends Base {
 	 */
 	public function compose_body_request() {
 		return array(
-			'postalcode'            => $this->item_info->receiver['postcode'],
-			'housenumber'           => $this->item_info->receiver['house_number'],
-			'housenumberaddition'   => $this->item_info->receiver['address_2']
+			'postalcode'          => $this->item_info->receiver['postcode'],
+			'housenumber'         => $this->item_info->receiver['house_number'],
+			'housenumberaddition' => $this->item_info->receiver['address_2'],
 		);
 	}
 }

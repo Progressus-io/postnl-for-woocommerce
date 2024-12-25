@@ -118,13 +118,13 @@ class Item_Info extends Base_Info {
 				'rename' => 'order_date',
 				'error'  => __( 'Order date is empty!', 'postnl-for-woocommerce' ),
 			),
-			'transit_time' => array(
+			'transit_time'             => array(
 				'rename' => 'shipping_duration',
 				'error'  => __( 'Shipping duration is empty!', 'postnl-for-woocommerce' ),
 			),
 			'cut_off_time'             => array(
 				'default'  => '23:00',
-				'validate' => function( $time ) {
+				'validate' => function ( $time ) {
 					$result = preg_match( '/^(?:2[0-4]|[01][1-9]|10):([0-5][0-9])$/', $time );
 					if ( 1 !== $result ) {
 						throw new \Exception(
@@ -132,13 +132,13 @@ class Item_Info extends Base_Info {
 						);
 					}
 				},
-				'sanitize' => function( $time ) use ( $self ) {
+				'sanitize' => function ( $time ) use ( $self ) {
 					return $self->string_length_sanitization( $time, 5 );
 				},
 			),
 			'dropoff_days'             => array(
 				'default'  => array(),
-				'sanitize' => function( $dropoff_days ) use ( $self ) {
+				'sanitize' => function ( $dropoff_days ) use ( $self ) {
 					if ( empty( $dropoff_days ) || ! is_array( $dropoff_days ) ) {
 						return array();
 					}
@@ -153,7 +153,7 @@ class Item_Info extends Base_Info {
 			),
 			'excluded_dropoff_days'    => array(
 				'default'  => array(),
-				'sanitize' => function( $dropoff_days ) use ( $self ) {
+				'sanitize' => function ( $dropoff_days ) use ( $self ) {
 					if ( empty( $dropoff_days ) || ! is_array( $dropoff_days ) ) {
 						return array();
 					}
@@ -168,7 +168,7 @@ class Item_Info extends Base_Info {
 			),
 			'pickup_points_enabled'    => array(
 				'default'  => false,
-				'sanitize' => function( $enabled ) {
+				'sanitize' => function ( $enabled ) {
 					if ( ! is_bool( $enabled ) ) {
 						return false;
 					}
@@ -178,7 +178,7 @@ class Item_Info extends Base_Info {
 			),
 			'delivery_days_enabled'    => array(
 				'default'  => false,
-				'sanitize' => function( $enabled ) {
+				'sanitize' => function ( $enabled ) {
 					if ( ! is_bool( $enabled ) ) {
 						return false;
 					}
@@ -188,7 +188,7 @@ class Item_Info extends Base_Info {
 			),
 			'evening_delivery_enabled' => array(
 				'default'  => false,
-				'sanitize' => function( $enabled ) {
+				'sanitize' => function ( $enabled ) {
 					if ( ! is_bool( $enabled ) ) {
 						return false;
 					}
@@ -198,7 +198,7 @@ class Item_Info extends Base_Info {
 			),
 			'morning_delivery_enabled' => array(
 				'default'  => false,
-				'sanitize' => function( $enabled ) {
+				'sanitize' => function ( $enabled ) {
 					if ( ! is_bool( $enabled ) ) {
 						return false;
 					}
@@ -209,21 +209,21 @@ class Item_Info extends Base_Info {
 			'number_pickup_points'     => array(
 				'rename'   => 'locations',
 				'default'  => 10,
-				'validate' => function( $value ) {
+				'validate' => function ( $value ) {
 					if ( ! is_numeric( $value ) ) {
 						throw new \Exception(
 							__( 'Locations value is not a number!', 'postnl-for-woocommerce' )
 						);
 					}
 				},
-				'sanitize' => function( $value ) {
+				'sanitize' => function ( $value ) {
 					return intval( $value );
 				},
 			),
 			'number_delivery_days'     => array(
 				'rename'   => 'days',
 				'default'  => 10,
-				'sanitize' => function( $value ) {
+				'sanitize' => function ( $value ) {
 					return intval( $value );
 				},
 			),
@@ -243,13 +243,13 @@ class Item_Info extends Base_Info {
 		return array(
 			'address_1' => array(
 				'default'  => '',
-				'sanitize' => function( $value ) use ( $self ) {
+				'sanitize' => function ( $value ) use ( $self ) {
 					return $self->string_length_sanitization( $value, 35 );
 				},
 			),
 			'address_2' => array(
 				'default'  => '',
-				'sanitize' => function( $value ) use ( $self ) {
+				'sanitize' => function ( $value ) use ( $self ) {
 					return $self->string_length_sanitization( $value, 5 );
 				},
 			),
@@ -258,14 +258,14 @@ class Item_Info extends Base_Info {
 			),
 			'postcode'  => array(
 				'error'    => esc_html__( 'Shipping "Postcode" is empty!', 'postnl-for-woocommerce' ),
-				'sanitize' => function( $value ) use ( $self ) {
+				'sanitize' => function ( $value ) use ( $self ) {
 					$value = str_replace( ' ', '', $value );
 					return $self->string_length_sanitization( $value, 7 );
 				},
 			),
 			'country'   => array(
 				'default'  => '',
-				'sanitize' => function( $value ) use ( $self ) {
+				'sanitize' => function ( $value ) use ( $self ) {
 					return $self->string_length_sanitization( $value, 2 );
 				},
 			),

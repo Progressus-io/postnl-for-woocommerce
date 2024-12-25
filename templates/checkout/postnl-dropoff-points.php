@@ -100,7 +100,7 @@ function postnl_display_dropoff_desc( $data ) {
 	<div class="postnl_content_desc">
 		<?php
 			// translators: %1$s is <strong> opener and %2$s is <strong> closer.
-			echo sprintf( esc_html__( 'Receive shipment at home? Continue %1$swithout%2$s selecting a Pick-up Point.', 'postnl-for-woocommerce' ), '<strong>', '</strong>' );
+			printf( esc_html__( 'Receive shipment at home? Continue %1$swithout%2$s selecting a Pick-up Point.', 'postnl-for-woocommerce' ), '<strong>', '</strong>' );
 		?>
 	</div>
 	<?php
@@ -111,13 +111,13 @@ function postnl_display_dropoff_desc( $data ) {
 	<ul class="postnl_dropoff_points_list postnl_list">
 		<?php foreach ( $data['dropoff_options'] as $point ) { ?>
 			<?php
-			$value      = sanitize_title( $point['partner_id'] . '-' . $point['loc_code'] );
-			$radio_id   = sanitize_title( $point['partner_id'] . '-' . $point['loc_code'] );
+			$value    = sanitize_title( $point['partner_id'] . '-' . $point['loc_code'] );
+			$radio_id = sanitize_title( $point['partner_id'] . '-' . $point['loc_code'] );
 
 			$address    = implode( ' ', array_values( postnl_generate_pickup_address( $point['address'] ) ) );
 			$is_checked = ( $value === $data['value'] ) ? 'checked="checked"' : '';
 
-			$point_key  = $point;
+			$point_key = $point;
 			?>
 		<li>
 			<div class="list_title"><span class="company"><?php echo esc_html( $point['address']['company'] ); ?></span><span class="distance"><?php echo esc_html( Utils::maybe_convert_km( $point['distance'] ) ); ?></span></div>

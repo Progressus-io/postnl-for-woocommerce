@@ -110,7 +110,7 @@ class Single extends Base {
 	/**
 	 * Adding meta box in order admin page.
 	 *
-	 * @param String $post_type Post type for current admin page.
+	 * @param String           $post_type Post type for current admin page.
 	 * @param WP_POST|WC_Order $post_or_order_object Either WP_Post or WC_Order object.
 	 */
 	public function add_meta_box( $post_type, $post_or_order_object ) {
@@ -129,10 +129,17 @@ class Single extends Base {
 		}
 
 		// translators: %s will be replaced by service name.
-		add_meta_box( 'woocommerce-shipment-postnl-label', esc_html__( 'Label & Tracking', 'postnl-for-woocommerce' ), array(
-			$this,
-			'meta_box_html'
-		), $screen, 'side', 'high' );
+		add_meta_box(
+			'woocommerce-shipment-postnl-label',
+			esc_html__( 'Label & Tracking', 'postnl-for-woocommerce' ),
+			array(
+				$this,
+				'meta_box_html',
+			),
+			$screen,
+			'side',
+			'high'
+		);
 	}
 
 	/**
@@ -249,12 +256,12 @@ class Single extends Base {
 			return;
 		}
 		?>
-        <div class="postnl-info-container delivery-type-info">
-            <label for="postnl_delivery_type"><?php esc_html_e( 'Delivery Type:', 'postnl-for-woocommerce' ); ?></label>
-            <div class="postnl-info delivery-type">
+		<div class="postnl-info-container delivery-type-info">
+			<label for="postnl_delivery_type"><?php esc_html_e( 'Delivery Type:', 'postnl-for-woocommerce' ); ?></label>
+			<div class="postnl-info delivery-type">
 				<?php echo esc_html( $delivery_type ); ?>
-            </div>
-        </div>
+			</div>
+		</div>
 		<?php
 	}
 
@@ -280,21 +287,21 @@ class Single extends Base {
 			return;
 		}
 		?>
-        <div class="postnl-info-container delivery-date-info">
-            <label for="postnl_pickup_points"><?php esc_html_e( 'Delivery Date:', 'postnl-for-woocommerce' ); ?></label>
+		<div class="postnl-info-container delivery-date-info">
+			<label for="postnl_pickup_points"><?php esc_html_e( 'Delivery Date:', 'postnl-for-woocommerce' ); ?></label>
 			<?php
 			foreach ( $filtered_infos as $info_idx => $info_val ) {
 				// Convert to the Dutch date format
 				$date_obj   = date_create_from_format( 'Y-m-d', $info_val );
 				$dutch_date = date_format( $date_obj, 'd/m/Y' );
 				?>
-                <div class="postnl-info <?php echo esc_attr( $info_idx ); ?>">
+				<div class="postnl-info <?php echo esc_attr( $info_idx ); ?>">
 					<?php echo esc_html( $dutch_date ); ?>
-                </div>
+				</div>
 				<?php
 			}
 			?>
-        </div>
+		</div>
 		<?php
 	}
 
@@ -304,14 +311,14 @@ class Single extends Base {
 	 * @param Array $infos Dropoff points informations.
 	 */
 	public function generate_pickup_points_html( $infos ) {
-		$filtered_infos = Utils::get_filtered_pickup_points_infos($infos);
+		$filtered_infos = Utils::get_filtered_pickup_points_infos( $infos );
 
 		if ( empty( $filtered_infos ) ) {
 			return;
 		}
 		?>
-        <div class="postnl-info-container pickup-points-info">
-            <label for="postnl_pickup_points"><?php esc_html_e( 'Pickup Address:', 'postnl-for-woocommerce' ); ?></label>
+		<div class="postnl-info-container pickup-points-info">
+			<label for="postnl_pickup_points"><?php esc_html_e( 'Pickup Address:', 'postnl-for-woocommerce' ); ?></label>
 			<?php
 			foreach ( $filtered_infos as $info_idx => $info_val ) {
 				switch ( $info_idx ) {
@@ -328,13 +335,13 @@ class Single extends Base {
 						break;
 				}
 				?>
-                <div class="postnl-info <?php echo esc_attr( $info_idx ); ?>">
+				<div class="postnl-info <?php echo esc_attr( $info_idx ); ?>">
 					<?php echo esc_html( $additional_text . ' ' . $info_val ); ?>
-                </div>
+				</div>
 				<?php
 			}
 			?>
-        </div>
+		</div>
 		<?php
 	}
 
@@ -344,19 +351,19 @@ class Single extends Base {
 	public function activate_return_function_html( $order ) {
 		if ( 'shipping_return' === $this->settings->get_return_shipment_and_labels() && 'no' === $this->settings->get_return_shipment_and_labels_all() && 'NL' === $order->get_shipping_country() && 'NL' === Utils::get_base_country() && ! Utils::is_eligible_auto_letterbox( $order ) ) {
 			?>
-            <hr id="postnl_break_2">
-            <p class="form-field">
+			<hr id="postnl_break_2">
+			<p class="form-field">
 
 				<?php wp_nonce_field( 'postnl_activate_return_function', 'activate_return_function_nonce' ); ?>
-                <button type="button" class="button button-activate-return" <?php disabled( $this->is_return_function_activated( $order ) ); ?>><?php esc_html_e( 'Activate return function', 'postnl-for-woocommerce' ); ?></button>
+				<button type="button" class="button button-activate-return" <?php disabled( $this->is_return_function_activated( $order ) ); ?>><?php esc_html_e( 'Activate return function', 'postnl-for-woocommerce' ); ?></button>
 
-                <div class="postnl-info activated-return-info" <?php echo ( $this->is_return_function_activated( $order ) ) ? '' : 'style="display:none;"'; ?> >
-                    <?php esc_html_e( 'Return function is activated for this label', 'postnl-for-woocommerce' ); ?>
-                </div>
-                <div class="postnl-info activate-return-info" <?php echo ( $this->is_return_function_activated( $order ) ) ? 'style="display:none;"' : ''; ?> >
-                    <?php esc_html_e( 'Click here to activate the return function of this label', 'postnl-for-woocommerce' ); ?>
-                </div>
-            </p>
+				<div class="postnl-info activated-return-info" <?php echo ( $this->is_return_function_activated( $order ) ) ? '' : 'style="display:none;"'; ?> >
+					<?php esc_html_e( 'Return function is activated for this label', 'postnl-for-woocommerce' ); ?>
+				</div>
+				<div class="postnl-info activate-return-info" <?php echo ( $this->is_return_function_activated( $order ) ) ? 'style="display:none;"' : ''; ?> >
+					<?php esc_html_e( 'Click here to activate the return function of this label', 'postnl-for-woocommerce' ); ?>
+				</div>
+			</p>
 			<?php
 		}
 	}
@@ -368,12 +375,12 @@ class Single extends Base {
 		if ( 'NL' === $order->get_shipping_country() && $this->settings->get_activate_smart_return() ) {
 			$check_for_barcode = empty( $this->get_backend_data( $order->get_ID() ) );
 			?>
-            <hr id="postnl_break_2">
-            <p class="form-field">
+			<hr id="postnl_break_2">
+			<p class="form-field">
 				<?php wp_nonce_field( 'postnl_send_smart_return_email', 'send_smart_return_email_nonce' ); ?>
-                <button type="button"
-                        class="button button-send-smart-return" <?php disabled( $check_for_barcode ); ?>><?php esc_html_e( 'Send email with Smart Return', 'postnl-for-woocommerce' ); ?></button>
-            </p>
+				<button type="button"
+						class="button button-send-smart-return" <?php disabled( $check_for_barcode ); ?>><?php esc_html_e( 'Send email with Smart Return', 'postnl-for-woocommerce' ); ?></button>
+			</p>
 			<?php
 		}
 	}
@@ -404,32 +411,32 @@ class Single extends Base {
 		$available_options = $this->get_available_options( $order );
 		$available_fields  = $this->filter_available_fields( $fields_with_value, $available_options );
 		?>
-        <div id="shipment-postnl-label-form" class="<?php echo esc_attr( $form_class ); ?>">
+		<div id="shipment-postnl-label-form" class="<?php echo esc_attr( $form_class ); ?>">
 			<?php $this->generate_delivery_type_html( $order ); ?>
 			<?php $this->generate_delivery_date_html( $delivery_info ); ?>
 			<?php $this->generate_pickup_points_html( $pickup_info ); ?>
 			<?php Utils::fields_generator( $available_fields ); ?>
-            <div class="button-container">
-                <button class="button button-primary button-save-form"><?php esc_html_e( 'Create Shipment', 'postnl-for-woocommerce' ); ?></button>
-                <a href="<?php echo esc_url( $this->get_download_label_url( $order->get_id() ) ); ?>"
-                   class="button button-primary button-download-label"><?php esc_html_e( 'Print Label', 'postnl-for-woocommerce' ); ?></a>
-                <a class="button button-secondary delete-label"
-                   href="#"><?php esc_html_e( 'Delete Label', 'postnl-for-woocommerce' ); ?></a>
-            </div>
-			<?php $this->activate_return_function_html( $order ) ?>
-			<?php $this->send_smart_return_email_html( $order ) ?>
-            <!--
+			<div class="button-container">
+				<button class="button button-primary button-save-form"><?php esc_html_e( 'Create Shipment', 'postnl-for-woocommerce' ); ?></button>
+				<a href="<?php echo esc_url( $this->get_download_label_url( $order->get_id() ) ); ?>"
+					class="button button-primary button-download-label"><?php esc_html_e( 'Print Label', 'postnl-for-woocommerce' ); ?></a>
+				<a class="button button-secondary delete-label"
+					href="#"><?php esc_html_e( 'Delete Label', 'postnl-for-woocommerce' ); ?></a>
+			</div>
+			<?php $this->activate_return_function_html( $order ); ?>
+			<?php $this->send_smart_return_email_html( $order ); ?>
+			<!--
 			<div class="button-container return-container">
 				<a href="<?php echo esc_url( $this->get_download_label_url( $order->get_id(), 'return-label' ) ); ?>" class="button button-primary button-download-label"><?php esc_html_e( 'Print Return Label', 'postnl-for-woocommerce' ); ?></a>
 			</div>
 			-->
-            <!--
+			<!--
 			<div class="button-container letterbox-container">
 				<a href="<?php echo esc_url( $this->get_download_label_url( $order->get_id(), 'buspakjeextra' ) ); ?>" class="button button-primary button-download-label"><?php esc_html_e( 'Print Letterbox', 'postnl-for-woocommerce' ); ?></a>
 			</div>
 			-->
-            <div id="shipment-postnl-error-text"></div>
-        </div>
+			<div id="shipment-postnl-error-text"></div>
+		</div>
 		<?php
 	}
 
@@ -543,9 +550,9 @@ class Single extends Base {
 	/**
 	 * Modify address and add house number.
 	 *
-	 * @param array $address Array of shipping address.
+	 * @param array     $address Array of shipping address.
 	 * @param \WC_Order $order Order object.
-	 * @param String $type Address type.
+	 * @param String    $type Address type.
 	 *
 	 * @return mixed
 	 */
@@ -568,7 +575,7 @@ class Single extends Base {
 	/**
 	 * Add house number to the shipping address within the order.
 	 *
-	 * @param array $address Array of shipping address.
+	 * @param array     $address Array of shipping address.
 	 * @param \WC_Order $order Order object.
 	 *
 	 * @return array
@@ -580,7 +587,7 @@ class Single extends Base {
 	/**
 	 * Add house number to the billing address within the order.
 	 *
-	 * @param array $address Array of shipping address.
+	 * @param array     $address Array of shipping address.
 	 * @param \WC_Order $order Order object.
 	 *
 	 * @return array
@@ -627,7 +634,7 @@ class Single extends Base {
 
 				wp_send_json_success();
 			} else {
-				throw new \Exception( esc_html__( print_r( $response['errorsPerBarcode'][0]['errors'][0], true ) ) );
+				throw new \Exception( esc_html( print_r( $response['errorsPerBarcode'][0]['errors'][0], true ) ) );
 			}
 		} catch ( \Exception $e ) {
 			wp_send_json_error(
@@ -682,7 +689,7 @@ class Single extends Base {
 						}
 					}
 				}
-				//wp_send_json_success($printcodeLabelContent);
+				// wp_send_json_success($printcodeLabelContent);
 			} else {
 				throw new \Exception( esc_html__( 'PrintcodeLabel could not found', 'postnl-for-woocommerce' ) );
 			}

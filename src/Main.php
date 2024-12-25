@@ -77,7 +77,7 @@ class Main {
 	 * @var PostNLWooCommerce\Shipping_Method\Settings
 	 */
 	public $shipping_settings = null;
-	
+
 
 	/**
 	 * Instance to call certain functions globally within the plugin
@@ -102,7 +102,6 @@ class Main {
 		add_action( 'before_woocommerce_init', array( $this, 'declare_product_editor_compatibility' ), 10 );
 		// Register the block category.
 		add_action( 'block_categories_all', array( $this, 'register_postnl_block_category' ), 10, 2 );
-
 	}
 
 	/**
@@ -429,9 +428,12 @@ class Main {
 		new Extend_Block_Core();
 		Extend_Store_Endpoint::init();
 		// Register the blocks integration
-		add_action( 'woocommerce_blocks_checkout_block_registration', function( $integration_registry ) {
-			$integration_registry->register( new  Blocks_Integration() );
-		} );
+		add_action(
+			'woocommerce_blocks_checkout_block_registration',
+			function ( $integration_registry ) {
+				$integration_registry->register( new Blocks_Integration() );
+			}
+		);
 	}
 	/**
 	 * Registers the slug as a block category with WordPress.
@@ -442,12 +444,12 @@ class Main {
 	public function register_postnl_block_category( $categories ) {
 		return array_merge(
 			$categories,
-			[
-				[
+			array(
+				array(
 					'slug'  => 'postnl',
 					'title' => __( 'Postnl Checkout Blocks', 'postnl-for-woocommerce' ),
-				],
-			]
+				),
+			)
 		);
 	}
 

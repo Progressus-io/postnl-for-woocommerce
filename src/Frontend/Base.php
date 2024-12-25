@@ -183,14 +183,14 @@ abstract class Base {
 					break;
 			}
 
-			$value .= "
+			$value .= '
 				<div>
-					" . esc_html( $additional_text . ' ' . $info_val ) . "
+					' . esc_html( $additional_text . ' ' . $info_val ) . '
 				</div>
-				";
+				';
 		}
 
-		$value .= " </div> <br>";
+		$value .= ' </div> <br>';
 
 		return $value;
 	}
@@ -546,7 +546,7 @@ abstract class Base {
 	public static function non_standard_fees_data() {
 		return array(
 			'08:00-12:00' => self::morning_fee_data(),
-			'Evening'     => self::evening_fee_data()
+			'Evening'     => self::evening_fee_data(),
 		);
 	}
 }

@@ -1,6 +1,7 @@
 <?php
 
 namespace PostNLWooCommerce\Checkout_Blocks;
+
 use PostNLWooCommerce\Shipping_Method\Settings;
 use PostNLWooCommerce\Frontend\Delivery_Day;
 use PostNLWooCommerce\Frontend\Dropoff_Points;
@@ -26,10 +27,15 @@ class Extend_Block_Core {
 	public function __construct() {
 
 		// Initialize hooks
-		add_action( 'woocommerce_store_api_checkout_update_order_from_request', [
-			$this,
-			'save_postnl_checkout_fields'
-		], 10, 2 );
+		add_action(
+			'woocommerce_store_api_checkout_update_order_from_request',
+			array(
+				$this,
+				'save_postnl_checkout_fields',
+			),
+			10,
+			2
+		);
 
 		// Register the update callback when WooCommerce Blocks is loaded
 		add_action( 'init', array( $this, 'register_store_api_callback' ) );
@@ -38,16 +44,14 @@ class Extend_Block_Core {
 		add_action( 'woocommerce_cart_calculate_fees', array( $this, 'postnl_add_custom_fee' ) );
 		$this->register_additional_checkout_fields();
 
-		//Validate adress in cart
-		add_action( 'woocommerce_store_api_cart_errors',array($this, 'postnl_validate_address_in_cart'), 10, 2 );
-
+		// Validate adress in cart
+		add_action( 'woocommerce_store_api_cart_errors', array( $this, 'postnl_validate_address_in_cart' ), 10, 2 );
 
 		/**
 		 * Registers AJAX actions.
 		 */
-		add_action( 'wp_ajax_postnl_set_checkout_post_data', [ $this, 'handle_set_checkout_post_data' ] );
-		add_action( 'wp_ajax_nopriv_postnl_set_checkout_post_data', [ $this, 'handle_set_checkout_post_data' ] );
-
+		add_action( 'wp_ajax_postnl_set_checkout_post_data', array( $this, 'handle_set_checkout_post_data' ) );
+		add_action( 'wp_ajax_nopriv_postnl_set_checkout_post_data', array( $this, 'handle_set_checkout_post_data' ) );
 	}
 
 
@@ -55,8 +59,8 @@ class Extend_Block_Core {
 	 * Validate address in cart.
 	 */
 	public function postnl_validate_address_in_cart( $errors, $cart ) {
-		$customer              = WC()->customer;
-		$validated_address     = WC()->session->get( POSTNL_SETTINGS_ID . '_validated_address' );
+		$customer          = WC()->customer;
+		$validated_address = WC()->session->get( POSTNL_SETTINGS_ID . '_validated_address' );
 		$shipping_country  = $customer->get_shipping_country();
 		$shipping_postcode = $customer->get_shipping_postcode();
 
@@ -109,7 +113,7 @@ class Extend_Block_Core {
 			woocommerce_store_api_register_update_callback(
 				array(
 					'namespace' => $this->name,
-					'callback'  => [ $this, 'postnl_store_api_callback' ],
+					'callback'  => array( $this, 'postnl_store_api_callback' ),
 				)
 			);
 		}
@@ -171,7 +175,7 @@ class Extend_Block_Core {
 	/**
 	 * Saves the PostNL delivery day or dropoff points fields to the order's metadata.
 	 *
-	 * @param \WC_Order $order Order object.
+	 * @param \WC_Order        $order Order object.
 	 * @param \WP_REST_Request $request REST request object.
 	 */
 	public function save_postnl_checkout_fields( \WC_Order $order, \WP_REST_Request $request ) {
@@ -189,8 +193,8 @@ class Extend_Block_Core {
 		/**
 		 * Prepare Dropoff Points Data
 		 */
-		$drop_data = [
-			'frontend' => [
+		$drop_data = array(
+			'frontend' => array(
 				'dropoff_points'                   => isset( $postnl_request_data['dropoffPoints'] ) ? sanitize_text_field( $postnl_request_data['dropoffPoints'] ) : '',
 				'dropoff_points_address_company'   => isset( $postnl_request_data['dropoffPointsAddressCompany'] ) ? sanitize_text_field( $postnl_request_data['dropoffPointsAddressCompany'] ) : '',
 				'dropoff_points_distance'          => isset( $postnl_request_data['dropoffPointsDistance'] ) ? sanitize_text_field( $postnl_request_data['dropoffPointsDistance'] ) : '',
@@ -203,22 +207,22 @@ class Extend_Block_Core {
 				'dropoff_points_date'              => isset( $postnl_request_data['dropoffPointsDate'] ) ? sanitize_text_field( $postnl_request_data['dropoffPointsDate'] ) : '',
 				'dropoff_points_time'              => isset( $postnl_request_data['dropoffPointsTime'] ) ? sanitize_text_field( $postnl_request_data['dropoffPointsTime'] ) : '',
 				'dropoff_points_type'              => isset( $postnl_request_data['dropoffPointsType'] ) ? sanitize_text_field( $postnl_request_data['dropoffPointsType'] ) : '',
-			],
-		];
+			),
+		);
 
 		/**
 		 * Prepare Delivery Day Data
 		 */
-		$delivery_day_data = [
-			'frontend' => [
+		$delivery_day_data = array(
+			'frontend' => array(
 				'delivery_day'       => isset( $postnl_request_data['deliveryDay'] ) ? sanitize_text_field( $postnl_request_data['deliveryDay'] ) : '',
 				'delivery_day_date'  => isset( $postnl_request_data['deliveryDayDate'] ) ? sanitize_text_field( $postnl_request_data['deliveryDayDate'] ) : '',
 				'delivery_day_from'  => isset( $postnl_request_data['deliveryDayFrom'] ) ? sanitize_text_field( $postnl_request_data['deliveryDayFrom'] ) : '',
 				'delivery_day_to'    => isset( $postnl_request_data['deliveryDayTo'] ) ? sanitize_text_field( $postnl_request_data['deliveryDayTo'] ) : '',
 				'delivery_day_price' => isset( $postnl_request_data['deliveryDayPrice'] ) ? sanitize_text_field( $postnl_request_data['deliveryDayPrice'] ) : '',
 				'delivery_day_type'  => isset( $postnl_request_data['deliveryDayType'] ) ? sanitize_text_field( $postnl_request_data['deliveryDayType'] ) : '',
-			],
-		];
+			),
+		);
 
 		if ( ! empty( $drop_data['frontend']['dropoff_points'] ) ) {
 			$order->update_meta_data( '_postnl_order_metadata', $drop_data );
@@ -236,25 +240,24 @@ class Extend_Block_Core {
 	/**
 	 * Handle AJAX request to set checkout post data and return updated delivery options.
 	 */
-
 	public function handle_set_checkout_post_data() {
 
 		// Verify nonce
 		if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( $_POST['nonce'], 'postnl_delivery_day_nonce' ) ) {
-			wp_send_json_error( [ 'message' => 'Invalid nonce' ], 400 );
+			wp_send_json_error( array( 'message' => 'Invalid nonce' ), 400 );
 			wp_die();
 		}
 
 		// Check if data is provided
 		if ( ! isset( $_POST['data'] ) || ! is_array( $_POST['data'] ) ) {
-			wp_send_json_error( [ 'message' => 'No data provided.' ], 400 );
+			wp_send_json_error( array( 'message' => 'No data provided.' ), 400 );
 			wp_die();
 		}
 
 		// Sanitize data
 		$sanitized_data = array_map( 'sanitize_text_field', wp_unslash( $_POST['data'] ) );
 
-		$settings = new Settings();
+		$settings         = new Settings();
 		$shipping_country = isset( $sanitized_data['shipping_country'] ) ? $sanitized_data['shipping_country'] : '';
 
 		// Check letterbox eligibility
@@ -270,30 +273,36 @@ class Extend_Block_Core {
 		// If not NL, clear session and return
 		if ( 'NL' !== $shipping_country ) {
 			WC()->session->__unset( 'postnl_checkout_post_data' );
-			wp_send_json_success( [
-				'message'          => 'No delivery options available outside NL.',
-				'show_container'   => false,
-				'delivery_options' => [],
-				'dropoff_options'  => [],
-			], 200 );
+			wp_send_json_success(
+				array(
+					'message'          => 'No delivery options available outside NL.',
+					'show_container'   => false,
+					'delivery_options' => array(),
+					'dropoff_options'  => array(),
+				),
+				200
+			);
 			wp_die();
 		}
 
 		// Check if required fields are present
 		if ( empty( $sanitized_data['shipping_postcode'] ) || empty( $sanitized_data['shipping_house_number'] ) ) {
 			WC()->session->__unset( 'postnl_checkout_post_data' );
-			wp_send_json_success( [
-				'message'          => 'Postcode or house number is missing.',
-				'show_container'   => false,
-				'delivery_options' => [],
-				'dropoff_options'  => [],
-			], 200 );
+			wp_send_json_success(
+				array(
+					'message'          => 'Postcode or house number is missing.',
+					'show_container'   => false,
+					'delivery_options' => array(),
+					'dropoff_options'  => array(),
+				),
+				200
+			);
 			wp_die();
 		}
 
 		// Retrieve previously sanitized data from session
 		$previous_sanitized_data = WC()->session->get( 'postnl_checkout_post_data' );
-		$address_changed = $previous_sanitized_data !== $sanitized_data;
+		$address_changed         = $previous_sanitized_data !== $sanitized_data;
 
 		if ( $address_changed ) {
 			// Clear previous validated address
@@ -305,7 +314,6 @@ class Extend_Block_Core {
 
 		// Retrieve validated address from session
 		$validated_address = WC()->session->get( POSTNL_SETTINGS_ID . '_validated_address' );
-
 
 		// If validation is enabled and address changed or not validated yet
 		if ( $settings->is_validate_nl_address_enabled() && ( $address_changed || empty( $validated_address ) ) ) {
@@ -333,13 +341,16 @@ class Extend_Block_Core {
 		}
 		// **Letterbox is Eligible**
 		if ( $letterbox ) {
-			wp_send_json_success( [
-				'message'          => 'Eligible for letterbox.',
-				'show_container'   => true,
-				'validated_address'=> $validated_address,
-				'delivery_options' => [],
-				'dropoff_options'  => [],
-			], 200 );
+			wp_send_json_success(
+				array(
+					'message'           => 'Eligible for letterbox.',
+					'show_container'    => true,
+					'validated_address' => $validated_address,
+					'delivery_options'  => array(),
+					'dropoff_options'   => array(),
+				),
+				200
+			);
 			wp_die();
 		}
 
@@ -355,42 +366,51 @@ class Extend_Block_Core {
 			$delivery_options = $delivery_day->get_content_data( $checkout_data['response'], $checkout_data['post_data'] );
 			$dropoff_options  = $dropoff->get_content_data( $checkout_data['response'], $checkout_data['post_data'] );
 
-			$delivery_options_array = isset( $delivery_options['delivery_options'] ) ? $delivery_options['delivery_options'] : [];
-			$dropoff_options_array  = isset( $dropoff_options['dropoff_options'] ) ? $dropoff_options['dropoff_options'] : [];
+			$delivery_options_array = isset( $delivery_options['delivery_options'] ) ? $delivery_options['delivery_options'] : array();
+			$dropoff_options_array  = isset( $dropoff_options['dropoff_options'] ) ? $dropoff_options['dropoff_options'] : array();
 
 			// Determine whether to show the container
 			if ( empty( $delivery_options_array ) && empty( $dropoff_options_array ) ) {
 				WC()->session->__unset( 'postnl_checkout_post_data' );
-				wp_send_json_success( [
-					'message'          => 'No delivery or dropoff options available.',
-					'show_container'   => false,
-					'validated_address'=> $validated_address,
-					'delivery_options' => [],
-					'dropoff_options'  => [],
-				], 200 );
+				wp_send_json_success(
+					array(
+						'message'           => 'No delivery or dropoff options available.',
+						'show_container'    => false,
+						'validated_address' => $validated_address,
+						'delivery_options'  => array(),
+						'dropoff_options'   => array(),
+					),
+					200
+				);
 				wp_die();
 			}
 
 			// If there are delivery or dropoff options, show the container
-			wp_send_json_success( [
-				'message'          => 'Data saved successfully.',
-				'show_container'   => true,
-				'validated_address'=> $validated_address,
-				'delivery_options' => $delivery_options_array,
-				'dropoff_options'  => $dropoff_options_array,
-			], 200 );
+			wp_send_json_success(
+				array(
+					'message'           => 'Data saved successfully.',
+					'show_container'    => true,
+					'validated_address' => $validated_address,
+					'delivery_options'  => $delivery_options_array,
+					'dropoff_options'   => $dropoff_options_array,
+				),
+				200
+			);
 			wp_die();
 
 		} catch ( \Exception $e ) {
 			// If fetching delivery options fails
 			WC()->session->__unset( 'postnl_checkout_post_data' );
-			wp_send_json_success( [
-				'message'          => 'Failed to fetch delivery options.',
-				'show_container'   => false,
-				'validated_address'=> $validated_address,
-				'delivery_options' => [],
-				'dropoff_options'  => [],
-			], 200 );
+			wp_send_json_success(
+				array(
+					'message'           => 'Failed to fetch delivery options.',
+					'show_container'    => false,
+					'validated_address' => $validated_address,
+					'delivery_options'  => array(),
+					'dropoff_options'   => array(),
+				),
+				200
+			);
 			wp_die();
 		}
 	}

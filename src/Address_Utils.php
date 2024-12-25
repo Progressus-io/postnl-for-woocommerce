@@ -60,7 +60,6 @@ class Address_Utils {
 
 	/**
 	 * Get house number from address.
-	 *
 	 */
 	public static function set_address_house_number( $post_data ) {
 		// Return house number if posted

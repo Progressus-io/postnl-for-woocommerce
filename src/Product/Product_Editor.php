@@ -18,7 +18,7 @@ use Automattic\WooCommerce\Admin\BlockTemplates\BlockInterface;
  */
 class Product_Editor {
 
-    /**
+	/**
 	 * Class constructor.
 	 */
 	public function __construct() {
@@ -78,13 +78,22 @@ class Product_Editor {
 					'label'    => __( 'Country of Origin', 'postnl-for-woocommerce' ),
 					'property' => 'meta_data.' . Single::ORIGIN_FIELD,
 					'options'  => array_merge(
-						array( array( 'value' => '0', 'label' => __( '- select country -', 'postnl-for-woocommerce' ) ) ),
-						array_map( function( $key, $value ) {
-							return array(
-								'value' => $key,
-								'label' => $value,
-							);
-						}, array_keys( WC()->countries->get_countries() ), WC()->countries->get_countries() )
+						array(
+							array(
+								'value' => '0',
+								'label' => __( '- select country -', 'postnl-for-woocommerce' ),
+							),
+						),
+						array_map(
+							function ( $key, $value ) {
+								return array(
+									'value' => $key,
+									'label' => $value,
+								);
+							},
+							array_keys( WC()->countries->get_countries() ),
+							WC()->countries->get_countries()
+						)
 					),
 					'tooltip'  => __( 'Select the country of origin for this product.', 'postnl-for-woocommerce' ),
 				),

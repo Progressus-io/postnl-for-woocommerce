@@ -52,11 +52,10 @@ class Item_Info extends Base_Info {
 	public function convert_data_to_args( $post_data ) {
 
 		$this->api_args['shipping_address'] = array(
-			'address_2'     => $post_data['shipping_address_2'] ?? '',
-			'house_number'  => $post_data['shipping_house_number'] ?? '',
-			'postcode'      => $post_data['shipping_postcode'] ?? ''
+			'address_2'    => $post_data['shipping_address_2'] ?? '',
+			'house_number' => $post_data['shipping_house_number'] ?? '',
+			'postcode'     => $post_data['shipping_postcode'] ?? '',
 		);
-
 	}
 
 	/**
@@ -70,22 +69,22 @@ class Item_Info extends Base_Info {
 		$self = $this;
 
 		return array(
-			'first_name'     => array(
-				'default'   => ''
+			'first_name'   => array(
+				'default' => '',
 			),
-			'address_1'     => array(
-				'default'   => ''
+			'address_1'    => array(
+				'default' => '',
 			),
-			'address_2'     => array(
-				'default'   => ''
+			'address_2'    => array(
+				'default' => '',
 			),
-			'city'     => array(
-				'default'   => ''
+			'city'         => array(
+				'default' => '',
 			),
-			'house_number'  => array(
-				'error'     => __( 'Shipping "House number" is empty!', 'postnl-for-woocommerce' ),
+			'house_number' => array(
+				'error' => __( 'Shipping "House number" is empty!', 'postnl-for-woocommerce' ),
 			),
-			'postcode'      => array(
+			'postcode'     => array(
 				'error' => __( 'Shipping "Postcode" is empty!', 'postnl-for-woocommerce' ),
 			),
 		);

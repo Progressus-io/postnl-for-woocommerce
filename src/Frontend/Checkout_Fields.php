@@ -39,8 +39,8 @@ class Checkout_Fields {
 	 * Collection of hooks when initiation.
 	 */
 	public function init_hooks() {
-		if ( $this->settings->is_reorder_nl_address_enabled()) {
-			if(!$this->is_using_checkout_block()){
+		if ( $this->settings->is_reorder_nl_address_enabled() ) {
+			if ( ! $this->is_using_checkout_block() ) {
 				add_filter( 'woocommerce_default_address_fields', array( $this, 'add_house_number' ) );
 			}
 			add_filter( 'woocommerce_get_country_locale', array( $this, 'get_country_locale' ) );
@@ -160,21 +160,16 @@ class Checkout_Fields {
 	 *
 	 * @return boolean
 	 */
-
 	public function is_using_checkout_block() {
-		$checkout_page_id = wc_get_page_id( 'checkout' );
+		$checkout_page_id   = wc_get_page_id( 'checkout' );
 		$has_block_checkout = $checkout_page_id && has_block( 'woocommerce/checkout', $checkout_page_id );
 
-		if ( $has_block_checkout) {
-			$is_using_checkout_block=true;
+		if ( $has_block_checkout ) {
+			$is_using_checkout_block = true;
+		} else {
+			$is_using_checkout_block = false;
 		}
-		else{
-			$is_using_checkout_block=false;
-		}
-
 
 		return $is_using_checkout_block;
-
 	}
-
 }

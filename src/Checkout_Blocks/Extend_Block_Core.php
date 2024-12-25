@@ -93,7 +93,7 @@ class Extend_Block_Core {
 				woocommerce_register_additional_checkout_field(
 					array(
 						'id'         => 'postnl/house_number',
-						'label'      => 'House Number',
+						'label'      => __( 'House number', 'postnl-for-woocommerce' ),
 						'location'   => 'address',
 						'required'   => true,
 						'attributes' => array(

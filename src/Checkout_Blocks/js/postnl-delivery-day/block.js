@@ -215,7 +215,6 @@ export const Block = ({checkoutExtensionData, isActive, deliveryOptions}) => {
 											} else if (optionType === 'Morning' || optionType === '08:00-12:00') {
 												delivery_time = __('Morning', 'postnl-for-woocommerce');
 											} else {
-												delivery_time = __(optionType, 'postnl-for-woocommerce');
 											}
 
 											return (

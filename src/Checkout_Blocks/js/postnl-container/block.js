@@ -18,7 +18,7 @@ export const Block = ({checkoutExtensionData}) => {
 	const {setExtensionData} = checkoutExtensionData;
 
 	const tabs = [
-		{id: 'delivery_day', name: __('Delivery Day', 'postnl-for-woocommerce')},
+		{id: 'delivery_day', name: __('Delivery Days', 'postnl-for-woocommerce')},
 		{id: 'dropoff_points', name: __('Dropoff Points', 'postnl-for-woocommerce')},
 	];
 

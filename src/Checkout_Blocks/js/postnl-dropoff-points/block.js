@@ -200,6 +200,25 @@ export const Block = ({checkoutExtensionData, isActive, dropoffOptions}) => {
 		setExtensionData('postnl', 'deliveryDayTo', '');
 		setExtensionData('postnl', 'deliveryDayPrice', '');
 		setExtensionData('postnl', 'deliveryDayType', '');
+
+		// Call extensionCartUpdate to update the cart total
+		try {
+			const {extensionCartUpdate} = window.wc.blocksCheckout || {};
+			if (typeof extensionCartUpdate === 'function') {
+				await extensionCartUpdate({
+					namespace: 'postnl',
+					data: {
+						action: 'update_delivery_fee',
+						price: 0,
+						type: '',
+					},
+				});
+			}
+		} catch (error) {
+			// Handle error
+		} finally {
+			isSelecting.current = false; // Reset the selection flag
+		}
 	};
 
 	/**

@@ -271,7 +271,7 @@ class Extend_Block_Core {
 		}
 
 		// If not NL, clear session and return
-		if ( 'NL' !== $shipping_country ) {
+		if ( ! in_array( $shipping_country, [ 'NL', 'BE' ], true )) {
 			WC()->session->__unset( 'postnl_checkout_post_data' );
 			wp_send_json_success(
 				array(
@@ -286,7 +286,7 @@ class Extend_Block_Core {
 		}
 
 		// Check if required fields are present
-		if ( empty( $sanitized_data['shipping_postcode'] ) || empty( $sanitized_data['shipping_house_number'] ) ) {
+		if ( empty( $sanitized_data['shipping_postcode'] ) || empty( $sanitized_data['shipping_house_number'] ) && 'NL' == $shipping_country ) {
 			WC()->session->__unset( 'postnl_checkout_post_data' );
 			wp_send_json_success(
 				array(
@@ -331,14 +331,28 @@ class Extend_Block_Core {
 		WC()->session->set( 'postnl_checkout_post_data', $sanitized_data );
 
 		// Save address_1 and city if available
-		if ( isset( $validated_address['street'] ) && isset( $validated_address['city'] ) ) {
-			// Update shipping address fields
+		if (
+			! empty( $validated_address )
+			&& isset( $validated_address['street'], $validated_address['city'] )
+			&& $validated_address['street'] !== ''
+			&& $validated_address['city'] !== ''
+		) {
+			// Use validated data
 			WC()->customer->set_shipping_address_1( $validated_address['street'] );
 			WC()->customer->set_shipping_city( $validated_address['city'] );
-
-			// Save the customer data
-			WC()->customer->save();
+			WC()->customer->set_shipping_country( $sanitized_data['shipping_country'] );
+		} else {
+			WC()->customer->set_shipping_address_1( $sanitized_data['shipping_address_1'] ?? '' );
+			WC()->customer->set_shipping_address_2( $sanitized_data['shipping_address_2'] ?? '' );
+			WC()->customer->set_shipping_city( $sanitized_data['shipping_city'] ?? '' );
+			WC()->customer->set_shipping_state( $sanitized_data['shipping_state'] ?? '' );
+			WC()->customer->set_shipping_postcode( $sanitized_data['shipping_postcode'] ?? '' );
+			WC()->customer->set_shipping_country( $sanitized_data['shipping_country'] ?? '' );
 		}
+
+		// Save the customer data
+		WC()->customer->save();
+
 		// **Letterbox is Eligible**
 		if ( $letterbox ) {
 			wp_send_json_success(

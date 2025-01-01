@@ -77,8 +77,11 @@ export const Block = ({checkoutExtensionData}) => {
 
 	// Fetch data shipping address
 	useEffect(() => {
-
-		if (!shippingAddress || empty(shippingAddress.postcode) || empty(shippingAddress['postnl/house_number'])) {
+		if (
+			!shippingAddress ||
+			empty(shippingAddress.postcode) ||
+			(shippingAddress.country === 'NL' && empty(shippingAddress['postnl/house_number']))
+		) {
 			// If we have no valid postcode/house number, hide container
 			setShowContainer(false);
 			return;

@@ -132,6 +132,16 @@ class Checkout_Fields {
 			}
 		}
 
+		/**
+		 * Hide house number from the other countries .
+		 */
+		$countries_codes = array_keys( WC()->countries->get_countries() );
+		foreach ( $countries_codes as $country_code ) {
+			if ( 'NL' !== $country_code ) {
+				$checkout_fields[ $country_code ]['postnl/house_number']['hidden']   = true;
+				$checkout_fields[ $country_code ]['postnl/house_number']['required'] = false;
+			}
+		}
 		return $checkout_fields;
 	}
 

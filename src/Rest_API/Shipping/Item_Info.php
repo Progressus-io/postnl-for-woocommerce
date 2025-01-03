@@ -249,7 +249,7 @@ class Item_Info extends Base_Info {
 				'product_id'       => $product->get_id(),
 				'qty'              => $item->get_quantity(),
 				'sku'              => $product->get_sku(),
-				'item_value'       => $product->get_regular_price(),
+				'item_value'       => $item->get_subtotal() != 0 ? $item->get_subtotal() : $product->get_regular_price(),
 				'item_description' => $product->get_name(),
 				'item_weight'      => $product->get_weight(),
 				'hs_code'          => $hs_code,

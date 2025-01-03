@@ -179,3 +179,45 @@ tr.postnl-co-tr-container > td {
 .postnl_content .postnl_list .postnl_sub_list .postnl_sub_radio_label i:last-child {
 	margin-left: 0;
 }
+.postnl_checkout_container {
+	position: relative;
+	/* No min-height by default */
+}
+
+.postnl_checkout_container.loading {
+	min-height: 200px; /* Adjust as needed */
+}
+
+.postnl-spinner-overlay {
+	position: absolute;
+	top: 0;
+	right: 0;
+	bottom: 0;
+	left: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background-color: rgba(255, 255, 255, 0.7);
+	z-index: 9999;
+	transition: opacity 0.3s ease;
+	opacity: 1;
+	visibility: visible;
+}
+
+.postnl-spinner-overlay.hidden {
+	opacity: 0;
+	visibility: hidden;
+}
+
+/* Optional: Screen reader text styling */
+.screen-reader-text {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	padding: 0;
+	margin: -1px;
+	overflow: hidden;
+	clip: rect(0, 0, 0, 0);
+	white-space: nowrap;
+	border: 0;
+}

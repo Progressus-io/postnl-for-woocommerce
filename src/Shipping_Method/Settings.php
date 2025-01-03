@@ -159,8 +159,8 @@ class Settings extends \WC_Settings_API {
 				'title'       => esc_html__( 'Standard return option', 'postnl-for-woocommerce' ),
 				'type'        => 'select',
 				'description' => esc_html__( '- None: return labels are not automatically created', 'postnl-for-woocommerce' ) . '<br>' .
-				                 esc_html__( '- Shipment & Return: the label of the outward shipment can also be used for the return shipment.', 'postnl-for-woocommerce' ) . '<br>' .
-				                 esc_html__( '- Label in the box: a separate return label is created at the same time as the label for the outward shipment and can be included in the box.', 'postnl-for-woocommerce' ),
+								esc_html__( '- Shipment & Return: the label of the outward shipment can also be used for the return shipment.', 'postnl-for-woocommerce' ) . '<br>' .
+								esc_html__( '- Label in the box: a separate return label is created at the same time as the label for the outward shipment and can be included in the box.', 'postnl-for-woocommerce' ),
 
 				'options'     => array(
 					'none'            => esc_html__( 'None', 'postnl-for-woocommerce' ),
@@ -170,13 +170,13 @@ class Settings extends \WC_Settings_API {
 				'for_country' => array( 'NL' ),
 			),
 			// 'return_address_default'         => array(
-			// 	'title'       => esc_html__( 'Always print returnlabel together with shipping label', 'postnl-for-woocommerce' ),
-			// 	'type'        => 'checkbox',
-			// 	'description' => esc_html__( 'With this setting enabled, the return-label of a shipment will automatically be downloaded and printed when the shipping label created.', 'postnl-for-woocommerce' ),
-			// 	'desc_tip'    => true,
-			// 	'default'     => '',
-			// 	'label'       => esc_html__( 'Enable', 'postnl-for-woocommerce' ),
-			// 	'placeholder' => '',
+			// 'title'       => esc_html__( 'Always print returnlabel together with shipping label', 'postnl-for-woocommerce' ),
+			// 'type'        => 'checkbox',
+			// 'description' => esc_html__( 'With this setting enabled, the return-label of a shipment will automatically be downloaded and printed when the shipping label created.', 'postnl-for-woocommerce' ),
+			// 'desc_tip'    => true,
+			// 'default'     => '',
+			// 'label'       => esc_html__( 'Enable', 'postnl-for-woocommerce' ),
+			// 'placeholder' => '',
 			// ),
 			'return_shipment_and_labels_all' => array(
 				'title'       => esc_html__( 'Directly activate return function for all labels', 'postnl-for-woocommerce' ),
@@ -539,19 +539,19 @@ class Settings extends \WC_Settings_API {
 				'default'     => 'standard_shipment',
 				'for_country' => array( 'NL' ),
 				'options'     => array(
-					'standard_shipment'                                        => __( 'Standard shipment', 'postnl-for-woocommerce' ),
-					'id_check'                                                 => __( 'ID Check', 'postnl-for-woocommerce' ),
+					'standard_shipment'                  => __( 'Standard shipment', 'postnl-for-woocommerce' ),
+					'id_check'                           => __( 'ID Check', 'postnl-for-woocommerce' ),
 					// 'insured_shipping'                                         => __( 'Insured Shipping', 'postnl-for-woocommerce' ),
-					'return_no_answer'                                         => __( 'Return if no answer', 'postnl-for-woocommerce' ),
-					'signature_on_delivery'                                    => __( 'Signature on Delivery', 'postnl-for-woocommerce' ),
-					'only_home_address'                                        => __( 'Only Home Address', 'postnl-for-woocommerce' ),
-					'letterbox'                                                => __( 'Letterbox', 'postnl-for-woocommerce' ),
-					'signature_on_delivery|insured_shipping'                   => __( 'Signature on Delivery + Insured Shipping', 'postnl-for-woocommerce' ),
-					'signature_on_delivery|return_no_answer'                   => __( 'Signature on Delivery + Return if no answer', 'postnl-for-woocommerce' ),
-					'insured_shipping|return_no_answer|signature_on_delivery'  => __( 'Insured Shipping + Return if no answer + Signature on Delivery', 'postnl-for-woocommerce' ),
-					'only_home_address|return_no_answer'                       => __( 'Only Home Address + Return if no answer', 'postnl-for-woocommerce' ),
+					'return_no_answer'                   => __( 'Return if no answer', 'postnl-for-woocommerce' ),
+					'signature_on_delivery'              => __( 'Signature on Delivery', 'postnl-for-woocommerce' ),
+					'only_home_address'                  => __( 'Only Home Address', 'postnl-for-woocommerce' ),
+					'letterbox'                          => __( 'Letterbox', 'postnl-for-woocommerce' ),
+					'signature_on_delivery|insured_shipping' => __( 'Signature on Delivery + Insured Shipping', 'postnl-for-woocommerce' ),
+					'signature_on_delivery|return_no_answer' => __( 'Signature on Delivery + Return if no answer', 'postnl-for-woocommerce' ),
+					'insured_shipping|return_no_answer|signature_on_delivery' => __( 'Insured Shipping + Return if no answer + Signature on Delivery', 'postnl-for-woocommerce' ),
+					'only_home_address|return_no_answer' => __( 'Only Home Address + Return if no answer', 'postnl-for-woocommerce' ),
 					'only_home_address|return_no_answer|signature_on_delivery' => __( 'Only Home Address + Return if no answer + Signature on Delivery', 'postnl-for-woocommerce' ),
-					'only_home_address|signature_on_delivery'                  => __( 'Only Home Address + Signature on Delivery', 'postnl-for-woocommerce' ),
+					'only_home_address|signature_on_delivery' => __( 'Only Home Address + Signature on Delivery', 'postnl-for-woocommerce' ),
 				),
 			),
 			'default_shipping_options_be'    => array(
@@ -561,14 +561,14 @@ class Settings extends \WC_Settings_API {
 				'default'     => 'standard_belgium',
 				'for_country' => array( 'NL' ),
 				'options'     => array(
-					'standard_belgium'                         => __( 'Standard Shipment Belgium', 'postnl-for-woocommerce' ),
-					'standard_belgium|only_home_address'       => __( 'Standard Shipment Belgium + Only Home Address', 'postnl-for-woocommerce' ),
-					'standard_belgium|signature_on_delivery'   => __( 'Standard Shipment Belgium + Signature on Delivery', 'postnl-for-woocommerce' ),
-					'standard_belgium|insured_shipping'        => __( 'Standard Shipment Belgium + Insured Shipping', 'postnl-for-woocommerce' ),
-					'mailboxpacket'                            => __( 'Boxable Packet', 'postnl-for-woocommerce' ),
-					'mailboxpacket|track_and_trace'            => __( 'Boxable Packet + Track & Trace', 'postnl-for-woocommerce' ),
-					'packets'                                  => __( 'Packets', 'postnl-for-woocommerce' ),
-					'packets|track_and_trace'                  => __( 'Packets + Track & Trace', 'postnl-for-woocommerce' ),
+					'standard_belgium'                   => __( 'Standard Shipment Belgium', 'postnl-for-woocommerce' ),
+					'standard_belgium|only_home_address' => __( 'Standard Shipment Belgium + Only Home Address', 'postnl-for-woocommerce' ),
+					'standard_belgium|signature_on_delivery' => __( 'Standard Shipment Belgium + Signature on Delivery', 'postnl-for-woocommerce' ),
+					'standard_belgium|insured_shipping'  => __( 'Standard Shipment Belgium + Insured Shipping', 'postnl-for-woocommerce' ),
+					'mailboxpacket'                      => __( 'Boxable Packet', 'postnl-for-woocommerce' ),
+					'mailboxpacket|track_and_trace'      => __( 'Boxable Packet + Track & Trace', 'postnl-for-woocommerce' ),
+					'packets'                            => __( 'Packets', 'postnl-for-woocommerce' ),
+					'packets|track_and_trace'            => __( 'Packets + Track & Trace', 'postnl-for-woocommerce' ),
 					'packets|track_and_trace|insured_shipping' => __( 'Packets + Track & Trace + Insured', 'postnl-for-woocommerce' ),
 				),
 			),
@@ -579,14 +579,14 @@ class Settings extends \WC_Settings_API {
 				'default'     => 'eu_parcel|track_and_trace',
 				'for_country' => array( 'NL' ),
 				'options'     => array(
-					'eu_parcel|track_and_trace'                  => __( 'EU Parcel + Track & Trace', 'postnl-for-woocommerce' ),
+					'eu_parcel|track_and_trace'     => __( 'EU Parcel + Track & Trace', 'postnl-for-woocommerce' ),
 					'eu_parcel|track_and_trace|insured_shipping' => __( 'EU Parcel + Track & Trace + Insured', 'postnl-for-woocommerce' ),
-					'eu_parcel|track_and_trace|insured_plus'     => __( 'EU Parcel + Track & Trace + Insured Plus', 'postnl-for-woocommerce' ),
-					'mailboxpacket'                              => __( 'Boxable Packet', 'postnl-for-woocommerce' ),
-					'mailboxpacket|track_and_trace'              => __( 'Boxable Packet + Track & Trace', 'postnl-for-woocommerce' ),
-					'packets'                                    => __( 'Packets', 'postnl-for-woocommerce' ),
-					'packets|track_and_trace'                    => __( 'Packets + Track & Trace', 'postnl-for-woocommerce' ),
-					'packets|track_and_trace|insured_shipping'   => __( 'Packets + Track & Trace + Insured', 'postnl-for-woocommerce' ),
+					'eu_parcel|track_and_trace|insured_plus' => __( 'EU Parcel + Track & Trace + Insured Plus', 'postnl-for-woocommerce' ),
+					'mailboxpacket'                 => __( 'Boxable Packet', 'postnl-for-woocommerce' ),
+					'mailboxpacket|track_and_trace' => __( 'Boxable Packet + Track & Trace', 'postnl-for-woocommerce' ),
+					'packets'                       => __( 'Packets', 'postnl-for-woocommerce' ),
+					'packets|track_and_trace'       => __( 'Packets + Track & Trace', 'postnl-for-woocommerce' ),
+					'packets|track_and_trace|insured_shipping' => __( 'Packets + Track & Trace + Insured', 'postnl-for-woocommerce' ),
 				),
 			),
 			'default_shipping_options_row'   => array(
@@ -596,14 +596,14 @@ class Settings extends \WC_Settings_API {
 				'default'     => 'parcel_non_eu|track_and_trace',
 				'for_country' => array( 'NL' ),
 				'options'     => array(
-					'parcel_non_eu|track_and_trace'                  => __( 'Parcel non-EU + Track & Trace', 'postnl-for-woocommerce' ),
+					'parcel_non_eu|track_and_trace' => __( 'Parcel non-EU + Track & Trace', 'postnl-for-woocommerce' ),
 					'parcel_non_eu|track_and_trace|insured_shipping' => __( 'Parcel non-EU + Track & Trace + Insured', 'postnl-for-woocommerce' ),
-					'parcel_non_eu|track_and_trace|insured_plus'     => __( 'Parcel non-EU + Track & Trace + Insured Plus', 'postnl-for-woocommerce' ),
-					'mailboxpacket'                                  => __( 'Boxable Packet', 'postnl-for-woocommerce' ),
-					'mailboxpacket|track_and_trace'                  => __( 'Boxable Packet + Track & Trace', 'postnl-for-woocommerce' ),
-					'packets'                                        => __( 'Packets', 'postnl-for-woocommerce' ),
-					'packets|track_and_trace'                        => __( 'Packets + Track & Trace', 'postnl-for-woocommerce' ),
-					'packets|track_and_trace|insured_shipping'       => __( 'Packets + Track & Trace + Insured', 'postnl-for-woocommerce' ),
+					'parcel_non_eu|track_and_trace|insured_plus' => __( 'Parcel non-EU + Track & Trace + Insured Plus', 'postnl-for-woocommerce' ),
+					'mailboxpacket'                 => __( 'Boxable Packet', 'postnl-for-woocommerce' ),
+					'mailboxpacket|track_and_trace' => __( 'Boxable Packet + Track & Trace', 'postnl-for-woocommerce' ),
+					'packets'                       => __( 'Packets', 'postnl-for-woocommerce' ),
+					'packets|track_and_trace'       => __( 'Packets + Track & Trace', 'postnl-for-woocommerce' ),
+					'packets|track_and_trace|insured_shipping' => __( 'Packets + Track & Trace + Insured', 'postnl-for-woocommerce' ),
 				),
 			),
 			'auto_complete_order'            => array(
@@ -623,7 +623,7 @@ class Settings extends \WC_Settings_API {
 	 * Filter the setting fields based on store country.
 	 *
 	 * @param String $country Two characters country code.
-	 * @param bool $only_field_country Flag to check if it only return for the field with 'for_country' array exists.
+	 * @param bool   $only_field_country Flag to check if it only return for the field with 'for_country' array exists.
 	 *
 	 * @return array
 	 */
@@ -1330,12 +1330,12 @@ class Settings extends \WC_Settings_API {
 
 		switch ( $printer_type ) {
 			case 'JPG':
-				return sprintf( "GraphicFile|JPG %d dpi", $resolution );
+				return sprintf( 'GraphicFile|JPG %d dpi', $resolution );
 			case 'GIF':
-				return sprintf( "GraphicFile|GIF %d dpi", $resolution );
+				return sprintf( 'GraphicFile|GIF %d dpi', $resolution );
 			case 'ZPL':
-				return sprintf( "Zebra|Generic ZPL II %d dpi", $resolution );
-			default :
+				return sprintf( 'Zebra|Generic ZPL II %d dpi', $resolution );
+			default:
 				return 'GraphicFile|PDF';
 		}
 	}

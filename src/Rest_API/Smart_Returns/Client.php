@@ -80,7 +80,7 @@ class Client extends Base {
 					'Option'         => '025',
 				),
 				'Reference'           => 'cust order ref ' . $this->item_info->order_id,
-			)
+			),
 		);
 	}
 }

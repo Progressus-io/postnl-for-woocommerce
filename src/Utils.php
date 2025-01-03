@@ -246,7 +246,7 @@ class Utils {
 	/**
 	 * Generate the label file name.
 	 *
-	 * @param Int $order_id ID of the order object.
+	 * @param Int    $order_id ID of the order object.
 	 * @param String $label_type Type of label.
 	 * @param String $barcode Barcode string.
 	 * @param String $label_format Label Format whether A4 or A6.
@@ -296,7 +296,6 @@ class Utils {
 	 *
 	 * @throws \Exception If an argument does not exist in $args and has no `default` in the $scheme.
 	 * @since [*next-version*]
-	 *
 	 */
 	public static function parse_args( $args, $scheme ) {
 		$final_args = array();
@@ -419,7 +418,7 @@ class Utils {
 
 			if ( ! empty( $field['container'] ) && true === $field['container'] ) {
 				?>
-                <div class="shipment-postnl-row-container shipment-<?php echo esc_attr( $field['id'] ); ?>">
+				<div class="shipment-postnl-row-container shipment-<?php echo esc_attr( $field['id'] ); ?>">
 				<?php
 			}
 
@@ -457,7 +456,7 @@ class Utils {
 
 			if ( ! empty( $field['container'] ) && true === $field['container'] ) {
 				?>
-                </div>
+				</div>
 				<?php
 			}
 		}
@@ -607,7 +606,7 @@ class Utils {
 	 */
 	public static function get_shipping_options( $order_id ) {
 		$order                = wc_get_order( $order_id );
-		$shipping_destination = Utils::get_shipping_zone( $order->get_shipping_country() );
+		$shipping_destination = self::get_shipping_zone( $order->get_shipping_country() );
 
 		// Base shipping options (common to all destinations).
 		$base_options = array(
@@ -675,7 +674,7 @@ class Utils {
 			if ( $order->meta_exists( '_postnl_letterbox' ) ) {
 				return (bool) $order->get_meta( '_postnl_letterbox', true );
 			}
-			if ( ! in_array( $order->get_shipping_country(), Utils::get_available_country_for_letterbox(), true ) ) {
+			if ( ! in_array( $order->get_shipping_country(), self::get_available_country_for_letterbox(), true ) ) {
 				$order->update_meta_data( '_postnl_letterbox', false );
 				$order->save();
 
@@ -686,7 +685,7 @@ class Utils {
 
 		// Check cart items.
 		if ( is_a( $order, 'WC_Cart' ) ) {
-			if ( ! in_array( WC()->customer->get_shipping_country(), Utils::get_available_country_for_letterbox(), true ) ) {
+			if ( ! in_array( WC()->customer->get_shipping_country(), self::get_available_country_for_letterbox(), true ) ) {
 				return false;
 			}
 			$products = $order->get_cart();
@@ -733,10 +732,10 @@ class Utils {
 				return false;
 			}
 
-			$has_letterbox_product      = true;
-			$quantity                   = $item['quantity'] ?? $item->get_quantity();
-			$qty_per_letterbox          = intval( $product->get_meta( Product\Single::MAX_QTY_PER_LETTERBOX ) );
-			$ratio_letterbox_item       = 0 != $qty_per_letterbox ? 1 / $qty_per_letterbox : 0;
+			$has_letterbox_product       = true;
+			$quantity                    = $item['quantity'] ?? $item->get_quantity();
+			$qty_per_letterbox           = intval( $product->get_meta( Product\Single::MAX_QTY_PER_LETTERBOX ) );
+			$ratio_letterbox_item        = 0 != $qty_per_letterbox ? 1 / $qty_per_letterbox : 0;
 			$total_ratio_letterbox_item += ( $ratio_letterbox_item * $quantity );
 		}
 

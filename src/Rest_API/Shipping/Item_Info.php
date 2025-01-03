@@ -169,8 +169,11 @@ class Item_Info extends Base_Info {
 			'state'        => $order->get_shipping_state(),
 			'country'      => $order->get_shipping_country(),
 			'postcode'     => $order->get_shipping_postcode(),
-			'house_number' => $order->get_meta( '_shipping_house_number' ),
-		);
+			'house_number' => $order->get_meta( '_shipping_house_number' )
+				? $order->get_meta( '_shipping_house_number' )
+				: $order->get_meta( '_wc_billing/postnl/house_number' ),
+
+	);
 
 		// Check the house number.
 		$this->api_args['shipping_address'] = Address_Utils::split_address( $shipping_address );

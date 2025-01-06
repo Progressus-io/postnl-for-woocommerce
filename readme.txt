@@ -4,7 +4,8 @@ Tags: woocommerce, export, delivery, packages, PostNL, Shipping
 Requires at least: 4.6
 Requires PHP: 5.6
 Tested up to: 6.7
-Stable tag: 5.6.2
+Stable tag: 5.6.3
+Requires Plugins: woocommerce
 WC requires at least: 4.0
 WC tested up to: 9.5
 License: GPLv2 or later
@@ -80,7 +81,7 @@ Follow these instructions (https://www.postnl.nl/Images/aanvragen-api-key-stappe
 
 == Changelog ==
 
-= 5.6.3 (2025-xx-xx) =
+= 5.6.3 (2025-01-06) =
 * Tweak: WordPress 6.7 and WooCommerce 9.5 compatibility.
 * Add: ID check as a shipping option for pick-up point deliveries.
 * Add: "ID Check + Insured Shipping" option for domestic orders.

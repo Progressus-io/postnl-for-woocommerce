@@ -675,7 +675,6 @@ class Utils {
 	 * @return boolean
 	 */
 	public static function is_order_eligible_auto_letterbox( $order ) {
-
 		if ( wc_get_base_location()['country'] == 'BE' ) {
 			return false;
 		}

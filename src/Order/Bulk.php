@@ -140,14 +140,15 @@ class Bulk extends Base {
 
 		$selected_shipping_options = $this->prepare_default_options( $_REQUEST );
 		$zone                      = strtoupper( sanitize_text_field( $_REQUEST['postnl_shipping_zone'] ) );
-
-		foreach ( $object_ids as $order_id ) {
+    
+    foreach ( $object_ids as $order_id ) {
 			$order                = wc_get_order( $order_id );
 			$have_label_file      = $this->have_label_file( $order );
 			$match_shipping_zones = $zone === $this->get_shipping_zone( $order );
 			$match_pickup_zone 	  = 'PICKUP' === $zone && 'NL' === $this->get_shipping_zone( $order );
 			if ( $have_label_file ) {
 				$array_messages[] = array(
+			    // Translators: %1$d is the order ID.
 					'message' => sprintf( esc_html__( 'Order #%1$d already has a label.', 'postnl-for-woocommerce' ), $order_id ),
 					'type'    => 'error',
 				);
@@ -157,6 +158,7 @@ class Bulk extends Base {
 
 			if ( ! $match_shipping_zones && ! $match_pickup_zone ) {
 				$array_messages[] = array(
+			    // Translators: %1$d is the order ID.
 					'message' => sprintf( esc_html__( 'Order #%1$d is from another shipping zone.', 'postnl-for-woocommerce' ), $order_id ),
 					'type'    => 'error',
 				);
@@ -233,10 +235,6 @@ class Bulk extends Base {
 		}
 
 		$merged_info = $this->merge_labels( $label_paths, $filename, $start_position );
-
-		foreach ( $gen_labels as $labels ) {
-			$this->delete_label_files( $labels );
-		}
 
 		if ( file_exists( $merged_info ['filepath'] ) ) {
 			// We're saving the bulk file path temporarily and access it later during the download process.
@@ -681,6 +679,7 @@ class Bulk extends Base {
 			$order->add_order_note( $tracking_note, $customer_note );
 			$label_link        = esc_url( $this->get_download_label_url( $order_id ) );
 			$result['message'] = array(
+				// Translators: %1$s is the order ID, %2$s is the link to download the file, %3$s is the closing link tag.
 				'message' => sprintf( esc_html__( '#%1$s : PostNL label has been created - %2$sdownload file%3$s', 'postnl-for-woocommerce' ),
 					$order_id, '<a href="' . $label_link . '" download>', '</a>' ),
 				'type'    => 'success',

@@ -143,7 +143,7 @@ class OrdersList extends Base {
 				return;
 			}
 
-			if ( Utils::is_eligible_auto_letterbox( $order ) ) {
+			if ( Utils::is_order_eligible_auto_letterbox( $order ) ) {
 				esc_html_e( 'As soon as possible', 'postnl-for-woocommerce' );
 				return;
 			}
@@ -271,7 +271,7 @@ class OrdersList extends Base {
 	 */
 	public function add_eligible_auto_letterbox_column_content( $column, $order_id ) {
 		if ( 'postnl_eligible_auto_letterbox' === $column ) {
-			if ( Utils::is_eligible_auto_letterbox( $order_id ) ) {
+			if ( Utils::is_order_eligible_auto_letterbox( $order_id ) ) {
 				?>
 				<span class="postnl_eligible_auto_letterbox eligible">&#10003;</span>
 				<?php

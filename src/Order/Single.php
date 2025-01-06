@@ -342,7 +342,7 @@ class Single extends Base {
 	 * Adds an 'Activate return function' button.
 	 */
 	public function activate_return_function_html( $order ) {
-		if ( 'shipping_return' === $this->settings->get_return_shipment_and_labels() && 'no' === $this->settings->get_return_shipment_and_labels_all() && 'NL' === $order->get_shipping_country() && 'NL' === Utils::get_base_country() && ! Utils::is_eligible_auto_letterbox( $order ) ) {
+		if ( 'shipping_return' === $this->settings->get_return_shipment_and_labels() && 'no' === $this->settings->get_return_shipment_and_labels_all() && 'NL' === $order->get_shipping_country() && 'NL' === Utils::get_base_country() && ! Utils::is_order_eligible_auto_letterbox( $order ) ) {
 			?>
             <hr id="postnl_break_2">
             <p class="form-field">
@@ -625,7 +625,10 @@ class Single extends Base {
 
 				wp_send_json_success();
 			} else {
-				throw new \Exception( esc_html__( print_r( $response['errorsPerBarcode'][0]['errors'][0], true ) ) );
+				$error_message = isset($response['errorsPerBarcode'][0]['errors'][0]) ? $response['errorsPerBarcode'][0]['errors'][0] : 'Unknown error';
+
+				// Translators: %s is the error message.
+				throw new \Exception( sprintf( esc_html__( 'Error: %s', 'postnl-for-woocommerce' ), esc_html( $error_message ) ) );
 			}
 		} catch ( \Exception $e ) {
 			wp_send_json_error(

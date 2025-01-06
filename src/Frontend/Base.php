@@ -240,7 +240,7 @@ abstract class Base {
 		$nonce_value    = wc_get_var( $_REQUEST['woocommerce-process-checkout-nonce'], wc_get_var( $_REQUEST['_wpnonce'], '' ) ); // phpcs:ignore
 		$expiry_message = sprintf(
 			/* translators: %s: shop cart url */
-			__( 'Sorry, your session has expired. <a href="%s" class="wc-backward">Return to shop</a>', 'woocommerce' ),
+			__( 'Sorry, your session has expired. <a href="%s" class="wc-backward">Return to shop</a>', 'postnl-for-woocommerce' ),
 			esc_url( wc_get_page_permalink( 'shop' ) )
 		);
 
@@ -492,7 +492,7 @@ abstract class Base {
 			return;
 		}
 
-		$eligible_for_letterbox = Utils::is_eligible_auto_letterbox( $order );
+		$eligible_for_letterbox = Utils::is_order_eligible_auto_letterbox( $order );
 
 		if ( $eligible_for_letterbox ) {
 			$order->update_meta_data( $this->letterbox_meta_name, 1 );

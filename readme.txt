@@ -80,6 +80,9 @@ Follow these instructions (https://www.postnl.nl/Images/aanvragen-api-key-stappe
 
 == Changelog ==
 
+= 5.6.3 (2025-xx-xx) =
+* Fix: Enabled performing the same bulk action for generating combined PDF labels multiple times.
+
 = 5.6.2 (2024-09-24) =
 * Fix: Ensured that when the return option is set to "None," no return labels are generated for orders.
 

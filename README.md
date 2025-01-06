@@ -36,6 +36,9 @@ PostNL’s official extension for WooCommerce on WordPress. Manage your national
 
 ## Changelog
 
+### 5.6.3
+* Fix: Enabled performing the same bulk action for generating combined PDF labels multiple times.
+
 ### 5.6.2
 * Fix: Ensured that when the return option is set to "None," no return labels are generated for orders.
 

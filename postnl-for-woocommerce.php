@@ -5,10 +5,13 @@
  * Description: With this plug-in you can easily confirm your PostNL shipments and print shipping labels in no time. In addition, your customers are more in control because they choose where and when they receive their order.
  * Author: PostNL
  * Author URI: https://postnl.post/
+ * License: GPLv2 or later
+ * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  * Version: 5.6.2
- * Tested up to: 6.6
+ * Tested up to: 6.7
+ * Requires Plugins: woocommerce
  * WC requires at least: 4.0
- * WC tested up to: 9.3
+ * WC tested up to: 9.5
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by

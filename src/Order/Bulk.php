@@ -130,8 +130,7 @@ class Bulk extends Base {
 	 * @return string
 	 */
 	public function bulk_action_change_shipping_options( $redirect, $doaction, $object_ids ) {
-
-		if ( 'postnl-change-shipping-options' !== $doaction ) {
+		if ( 'postnl-change-shipping-options' !== $doaction || empty( $object_ids ) ) {
 			return $redirect;
 		}
 
@@ -141,33 +140,41 @@ class Bulk extends Base {
 
 		$selected_shipping_options = $this->prepare_default_options( $_REQUEST );
 		$zone                      = strtoupper( sanitize_text_field( $_REQUEST['postnl_shipping_zone'] ) );
+    
+    foreach ( $object_ids as $order_id ) {
+			$order                = wc_get_order( $order_id );
+			$have_label_file      = $this->have_label_file( $order );
+			$match_shipping_zones = $zone === $this->get_shipping_zone( $order );
+			$match_pickup_zone 	  = 'PICKUP' === $zone && 'NL' === $this->get_shipping_zone( $order );
+			if ( $have_label_file ) {
+				$array_messages[] = array(
+			    // Translators: %1$d is the order ID.
+					'message' => sprintf( esc_html__( 'Order #%1$d already has a label.', 'postnl-for-woocommerce' ), $order_id ),
+					'type'    => 'error',
+				);
 
-		if ( ! empty( $object_ids ) ) {
-			foreach ( $object_ids as $order_id ) {
-				$order                = wc_get_order( $order_id );
-				$have_label_file      = $this->have_label_file( $order );
-				$match_shipping_zones = $zone === $this->get_shipping_zone( $order );
-
-				if ( $have_label_file ) {
-					$array_messages[] = array(
-						'message' => sprintf( esc_html__( 'Order #%1$d already has a label.', 'postnl-for-woocommerce' ), $order_id ),
-						'type'    => 'error',
-					);
-				}
-
-				if ( ! $match_shipping_zones ) {
-					$array_messages[] = array(
-						'message' => sprintf( esc_html__( 'Order #%1$d is from another shipping zone.', 'postnl-for-woocommerce' ), $order_id ),
-						'type'    => 'error',
-					);
-				}
-
-				if ( ! $have_label_file && $match_shipping_zones ) {
-					$order->delete_meta_data( $this->meta_name );
-					$order->update_meta_data( $this->meta_name, array( 'backend' => $selected_shipping_options ) );
-					$order->save();
-				}
+				continue;
 			}
+
+			if ( ! $match_shipping_zones && ! $match_pickup_zone ) {
+				$array_messages[] = array(
+			    // Translators: %1$d is the order ID.
+					'message' => sprintf( esc_html__( 'Order #%1$d is from another shipping zone.', 'postnl-for-woocommerce' ), $order_id ),
+					'type'    => 'error',
+				);
+
+				continue;
+			}
+
+			$meta = $order->get_meta( $this->meta_name );
+
+			if ( ! is_array( $meta ) ) {
+				$meta = array();
+			}
+
+			$meta['backend'] = $selected_shipping_options;
+			$order->update_meta_data( $this->meta_name, $meta );
+			$order->save();
 		}
 
 		update_option( $this->bulk_option_text_name, $array_messages );
@@ -228,10 +235,6 @@ class Bulk extends Base {
 		}
 
 		$merged_info = $this->merge_labels( $label_paths, $filename, $start_position );
-
-		foreach ( $gen_labels as $labels ) {
-			$this->delete_label_files( $labels );
-		}
 
 		if ( file_exists( $merged_info ['filepath'] ) ) {
 			// We're saving the bulk file path temporarily and access it later during the download process.
@@ -487,10 +490,11 @@ class Bulk extends Base {
 				'value'     => 'nl',
 				'container' => true,
 				'options'   => array(
-					'nl'  => __( 'Domestic', 'postnl-for-woocommerce' ),
-					'be'  => __( 'Belgium', 'postnl-for-woocommerce' ),
-					'eu'  => __( 'EU Parcel', 'postnl-for-woocommerce' ),
-					'row' => __( 'Non-EU Shipment', 'postnl-for-woocommerce' ),
+					'nl'  	 => __( 'Domestic', 'postnl-for-woocommerce' ),
+					'be'  	 => __( 'Belgium', 'postnl-for-woocommerce' ),
+					'eu'  	 => __( 'EU Parcel', 'postnl-for-woocommerce' ),
+					'row' 	 => __( 'Non-EU Shipment', 'postnl-for-woocommerce' ),
+					'pickup' => __( 'Pick-up at PostNL', 'postnl-for-woocommerce' ),
 				),
 			),
 			array(
@@ -528,6 +532,15 @@ class Bulk extends Base {
 				'container'     => true,
 				'value'         => $this->settings->get_country_option( 'default_shipping_options_' . 'row' ),
 				'options'       => $this->get_available_shipping_options_per_zone( 'row' ),
+			),
+			array(
+				'id'            => $this->prefix . 'default_shipping_options_pickup',
+				'type'          => 'select',
+				'label'         => __( 'Shipping options for Pick-up at PostNL', 'postnl-for-woocommerce' ),
+				'wrapper_class' => 'conditional pickup',
+				'container'     => true,
+				'value'         => $this->settings->get_country_option( 'default_shipping_options_' . 'pickup' ),
+				'options'       => $this->get_available_shipping_options_per_zone( 'pickup' ),
 			),
 		);
 	}
@@ -666,6 +679,7 @@ class Bulk extends Base {
 			$order->add_order_note( $tracking_note, $customer_note );
 			$label_link        = esc_url( $this->get_download_label_url( $order_id ) );
 			$result['message'] = array(
+				// Translators: %1$s is the order ID, %2$s is the link to download the file, %3$s is the closing link tag.
 				'message' => sprintf( esc_html__( '#%1$s : PostNL label has been created - %2$sdownload file%3$s', 'postnl-for-woocommerce' ),
 					$order_id, '<a href="' . $label_link . '" download>', '</a>' ),
 				'type'    => 'success',

@@ -3,10 +3,10 @@ Contributors: PostNL, shadim, abdalsalaam
 Tags: woocommerce, export, delivery, packages, PostNL, Shipping
 Requires at least: 4.6
 Requires PHP: 5.6
-Tested up to: 6.6
+Tested up to: 6.7
 Stable tag: 5.6.2
 WC requires at least: 4.0
-WC tested up to: 9.3
+WC tested up to: 9.5
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -79,6 +79,13 @@ Follow these instructions (https://www.postnl.nl/Images/aanvragen-api-key-stappe
 5. PostNL information on the order details page
 
 == Changelog ==
+
+= 5.6.3 (2025-xx-xx) =
+* Fix: Enabled performing the same bulk action for generating combined PDF labels multiple times.
+* Fix: Removed 6-character limit for Shipping Postcode to support longer postcodes like in Portugal and Brazil.
+* Tweak: WordPress 6.7 and WooCommerce 9.5 compatibility.
+* Add: ID check as a shipping option for pick-up point deliveries.
+* Add: "ID Check + Insured Shipping" option for domestic orders.
 
 = 5.6.2 (2024-09-24) =
 * Fix: Ensured that when the return option is set to "None," no return labels are generated for orders.

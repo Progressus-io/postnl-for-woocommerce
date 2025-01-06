@@ -135,6 +135,16 @@ class Mapping {
 								),
 							),
 						),
+						array(
+							'combination' => array( 'id_check', 'insured_shipping' ),
+							'code'        => '3443',
+							'options'     => array(
+								array(
+									'characteristic' => '002',
+									'option'         => '014',
+								),
+							),
+						),
 					),
 					'pickup_points' => array(
 						array(
@@ -146,6 +156,16 @@ class Mapping {
 							'combination' => array( 'insured_shipping' ),
 							'code'        => '3534',
 							'options'     => array(),
+						),
+						array(
+							'combination' => array( 'id_check' ),
+							'code'        => '3571',
+							'options'     => array(
+								array(
+									'characteristic' => '002',
+									'option'         => '014',
+								),
+							),
 						),
 					)
 				),
@@ -639,6 +659,8 @@ class Mapping {
 							'3089',
 							'3533',
 							'3534',
+							'3443',
+							'3571',
 						),
 						'options'  => array(
 							array(
@@ -662,6 +684,8 @@ class Mapping {
 							'3089',
 							'3533',
 							'3534',
+							'3443',
+							'3571',
 						),
 						'options'  => array(
 							array(

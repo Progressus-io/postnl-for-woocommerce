@@ -52,3 +52,4 @@ composer.lock
 
 # Customize PHPCS
 phpcs.xml
+.codegpt

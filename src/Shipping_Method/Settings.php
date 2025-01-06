@@ -541,6 +541,7 @@ class Settings extends \WC_Settings_API {
 				'options'     => array(
 					'standard_shipment'                                        => __( 'Standard shipment', 'postnl-for-woocommerce' ),
 					'id_check'                                                 => __( 'ID Check', 'postnl-for-woocommerce' ),
+					'id_check|insured_shipping'                                => __( 'ID Check + Insured Shipping', 'postnl-for-woocommerce' ),
 					// 'insured_shipping'                                         => __( 'Insured Shipping', 'postnl-for-woocommerce' ),
 					'return_no_answer'                                         => __( 'Return if no answer', 'postnl-for-woocommerce' ),
 					'signature_on_delivery'                                    => __( 'Signature on Delivery', 'postnl-for-woocommerce' ),
@@ -604,6 +605,17 @@ class Settings extends \WC_Settings_API {
 					'packets'                                        => __( 'Packets', 'postnl-for-woocommerce' ),
 					'packets|track_and_trace'                        => __( 'Packets + Track & Trace', 'postnl-for-woocommerce' ),
 					'packets|track_and_trace|insured_shipping'       => __( 'Packets + Track & Trace + Insured', 'postnl-for-woocommerce' ),
+				),
+			),
+			'default_shipping_options_pickup'   => array(
+				'title'       => __( 'Default Shipping Pickup', 'postnl-for-woocommerce' ),
+				'type'        => 'select',
+				'description' => __( 'Shipping options Pickup.', 'postnl-for-woocommerce' ),
+				'default'     => 'id_check',
+				'for_country' => array( 'NL' ),
+				'options'     => array(
+					'id_check'         => __( 'ID Check', 'postnl-for-woocommerce' ),
+					'insured_shipping' => __( 'Insured Shipping', 'postnl-for-woocommerce' ),
 				),
 			),
 			'auto_complete_order'            => array(

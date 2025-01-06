@@ -40,6 +40,8 @@ PostNL’s official extension for WooCommerce on WordPress. Manage your national
 * Fix: Enabled performing the same bulk action for generating combined PDF labels multiple times.
 * Fix: Removed 6-character limit for Shipping Postcode to support longer postcodes like in Portugal and Brazil.
 * Tweak: WordPress 6.7 and WooCommerce 9.5 compatibility.
+* Add: ID check as a shipping option for pick-up point deliveries.
+* Add: "ID Check + Insured Shipping" option for domestic orders.
 
 ### 5.6.2
 * Fix: Ensured that when the return option is set to "None," no return labels are generated for orders.

@@ -122,6 +122,12 @@ abstract class Base {
 
 		// Get from the plugin settings
 		$delivery_zone = $this->get_shipping_zone( $order );
+		$frontend_data = $this->get_frontend_data( $order->get_id() );
+
+		if ( ! empty( $frontend_data['dropoff_points'] ) ) {
+			$delivery_zone = 'PICKUP';
+		}
+
 		if ( 'NL' === $delivery_zone && Utils::is_order_eligible_auto_letterbox( $order ) ) {
 			return array( 'letterbox' => 'yes' );
 		}

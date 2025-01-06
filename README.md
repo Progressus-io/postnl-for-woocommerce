@@ -5,7 +5,7 @@
 * Tags: PostNL, Shipping
 * Requires at least: 4.6
 * Requires PHP: 5.6
-* Tested up to: 6.6
+* Tested up to: 6.7
 * Stable tag: 5.6.2
 * WC requires at least: 4.0
 * WC tested up to: 9.5

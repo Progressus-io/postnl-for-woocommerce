@@ -92,9 +92,9 @@ class Delivery_Day extends Base {
 	 * @return array
 	 */
 	public function add_checkout_tab( $tabs, $response ) {
-		if ( empty( $response['DeliveryOptions'] ) ) {
-			return $tabs;
-		}
+		// if ( empty( $response['DeliveryOptions'] ) ) {
+		// 	return $tabs;
+		// }
 
 		$tabs[] = array(
 			'id'   => $this->primary_field,
@@ -117,8 +117,13 @@ class Delivery_Day extends Base {
 			return array();
 		}
 
+		if( ! $this->is_enabled() ){
+			return $return_data['enabled'] = false;
+		}
+
 		$non_standard_fees = Base::non_standard_fees_data();
 		$return_data       = $this->get_init_content_data( $post_data );
+		$return_data['enabled'] = true;
 
 		foreach ( $response['DeliveryOptions'] as $delivery_option ) {
 			if ( empty( $delivery_option['DeliveryDate'] ) || empty( $delivery_option['Timeframe'] ) ) {

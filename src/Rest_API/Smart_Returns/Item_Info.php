@@ -105,8 +105,8 @@ class Item_Info extends Base_Info {
 			'return_address_1'           => $this->settings->get_return_address_or_reply_no() ? $this->settings->get_return_address_street() : 'Antwoordnummer',
 			'return_address_2'           => $this->settings->get_return_address_or_reply_no() ? $this->settings->get_return_address_house_no() : $this->settings->get_return_reply_number(),
 			'return_address_house_noext' => $this->settings->get_return_address_house_noext(),
-			'return_address_city'        => $this->settings->get_return_city(),
-			'return_address_zip'         => $this->settings->get_return_zipcode(),
+			'return_address_city'        => $this->settings->get_return_address_or_reply_no() ? $this->settings->get_return_city() : $this->settings->get_freepost_city(),
+			'return_address_zip'         => $this->settings->get_return_address_or_reply_no() ? $this->settings->get_return_zipcode() : $this->settings->get_freepost_zipcode(),
 			'return_customer_code'       => $this->settings->get_return_customer_code(),
 		);
 

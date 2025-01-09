@@ -122,8 +122,18 @@ class Delivery_Day extends Base {
 			$transit_days 			  = $this->settings->get_transit_time();
 			$cut_off	  			  = $this->settings->get_cut_off_time();
 			$date 					  = new \DateTime();
-			$cutoffDateTime 		  = new \DateTime($cut_off);
+			$current_time 			  = date('H:i');
 
+			if( ! empty( $transit_days ) ){
+				$date->modify( "+{$transit_days} days" );			
+			}
+
+			if( ! empty( $cut_off ) ){
+				if ( strtotime( $current_time ) > strtotime( $cut_off ) ) {
+					$date->modify( "+1 days" );				
+				}
+			}
+			
 			if( ! empty( $transit_days ) ){
 				$date->modify( "+{$transit_days} days" );			
 			}
@@ -137,9 +147,13 @@ class Delivery_Day extends Base {
 			$date = $this->check_dropoff_day( $date );
 
 			$return_data['disabled_options'] = array(
-				'date'  => $date->format( 'Y-m-d' ),
+				'from'         => '8:30',
+				'to'		   => '21:30',
+				'type'  	   => 'Daytime',
+				'price'		   => 0,
+				'date'  	   => $date->format( 'Y-m-d' ),
 				'transit_days' => $transit_days,
-				'cut_off' => $cut_off
+				'cut_off'	   => $cut_off
 			);
 
 			return $return_data;
@@ -192,7 +206,7 @@ class Delivery_Day extends Base {
 		}
 		return $date;
 	}
-	
+
 	/**
 	 * Validate delivery type fields.
 	 *

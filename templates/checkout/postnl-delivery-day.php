@@ -17,10 +17,14 @@ if ( ! $data['enabled'] || empty( $data['delivery_options'] ) ) {
 			<li>
 				<ul class="postnl_sub_list" style="list-style-type: none">
 					<?php
-						$value      = sanitize_title( $data['disabled_options']['date'] . '_0-0_0' );
+						$value = sanitize_title( $data['disabled_options']['date'] . '_' . $data['disabled_options']['from'] . '-' . $data['disabled_options']['to'] . '_' . $data['disabled_options']['price'] );
 					?>
 					<li 
 						data-date="<?php echo esc_attr( $data['disabled_options']['date'] ); ?>"
+						data-from="<?php echo esc_attr( $data['disabled_options']['from'] ); ?>"
+						data-to="<?php echo esc_attr( $data['disabled_options']['to'] ); ?>"
+						data-price="<?php echo esc_attr( $data['disabled_options']['price'] ); ?>"
+						data-type="<?php echo esc_attr( $data['disabled_options']['type'] ); ?>"
 					>
 						<label class="postnl_sub_radio_label" for="postnl_delivery_day_<?php echo esc_attr( $value ); ?>">
 							<input 
@@ -37,6 +41,10 @@ if ( ! $data['enabled'] || empty( $data['delivery_options'] ) ) {
 					</li>
 				</ul>
 				<input type="hidden" name="postnl_delivery_day_date" id="postnl_delivery_day_date" value="" />
+				<input type="hidden" name="postnl_delivery_day_from" id="postnl_delivery_day_from" value="" />
+				<input type="hidden" name="postnl_delivery_day_to" id="postnl_delivery_day_to" value="" />
+				<input type="hidden" name="postnl_delivery_day_type" id="postnl_delivery_day_type" value="" />
+				<input type="hidden" name="postnl_delivery_day_price" id="postnl_delivery_day_price" value="" />
 			</li>
 		</ul>
 	</div>

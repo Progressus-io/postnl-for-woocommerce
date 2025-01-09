@@ -118,13 +118,36 @@ class Delivery_Day extends Base {
 		}
 
 		if( ! $this->is_enabled() ){
-			return $return_data['enabled'] = false;
+			$return_data[ 'enabled' ] = false;
+			$transit_days 			  = $this->settings->get_transit_time();
+			$cut_off	  			  = $this->settings->get_cut_off_time();
+			$date 					  = new \DateTime();
+			$cutoffDateTime 		  = new \DateTime($cut_off);
+
+			if( ! empty( $transit_days ) ){
+				$date->modify( "+{$transit_days} days" );			
+			}
+
+			if( ! empty( $cut_off ) ){
+				if ( $date > $cutoffDateTime ) {
+					$date->modify( "+1 days" );				
+				}
+			}
+
+			$date = $this->check_dropoff_day( $date );
+
+			$return_data['disabled_options'] = array(
+				'date'  => $date->format( 'Y-m-d' ),
+				'transit_days' => $transit_days,
+				'cut_off' => $cut_off
+			);
+
+			return $return_data;
 		}
 
-		$non_standard_fees = Base::non_standard_fees_data();
-		$return_data       = $this->get_init_content_data( $post_data );
+		$non_standard_fees 		= Base::non_standard_fees_data();
+		$return_data       		= $this->get_init_content_data( $post_data );
 		$return_data['enabled'] = true;
-
 		foreach ( $response['DeliveryOptions'] as $delivery_option ) {
 			if ( empty( $delivery_option['DeliveryDate'] ) || empty( $delivery_option['Timeframe'] ) ) {
 				continue;
@@ -160,6 +183,16 @@ class Delivery_Day extends Base {
 		return $return_data;
 	}
 
+	public function check_dropoff_day( $date ){
+		$day_name = strtolower( $date->format( 'l' ) );
+		$method_name = "is_dropoff_{$day_name}_enabled";
+		if( ! $this->settings->$method_name() ){
+			return $date->modify( "+1 days" );
+			// $this->check_dropoff_day( $date );
+		}
+		return $date;
+	}
+	
 	/**
 	 * Validate delivery type fields.
 	 *

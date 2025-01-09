@@ -13,11 +13,37 @@ if ( ! $data['enabled'] || empty( $data['delivery_options'] ) ) {
 
 	?>
 	<div class="postnl_content" id="postnl_delivery_day_content">
-		<p><?php echo esc_html__( 'As soon as possible', 'postnl-for-woocommerce' ); ?></p>
+		<ul class="postnl_delivery_day_list postnl_list">
+			<li>
+				<ul class="postnl_sub_list" style="list-style-type: none">
+					<?php
+						$value      = sanitize_title( $data['disabled_options']['date'] . '_0-0_0' );
+					?>
+					<li 
+						data-date="<?php echo esc_attr( $data['disabled_options']['date'] ); ?>"
+					>
+						<label class="postnl_sub_radio_label" for="postnl_delivery_day_<?php echo esc_attr( $value ); ?>">
+							<input 
+								type="radio" 
+								id="postnl_delivery_day_<?php echo esc_attr( $value ); ?>" 
+								name="postnl_delivery_day" 
+								class="postnl_sub_radio" 
+								value="<?php echo esc_attr( $value ); ?>"
+								checked="checked"
+							/>
+							<span><?php echo esc_html__( 'As soon as possible', 'postnl-for-woocommerce' ); ?></span>
+
+						</label>
+					</li>
+				</ul>
+				<input type="hidden" name="postnl_delivery_day_date" id="postnl_delivery_day_date" value="" />
+			</li>
+		</ul>
 	</div>
 
 	<?php
 } else {
+
 	?>
 	<div class="postnl_content" id="postnl_delivery_day_content">
 		<ul class="postnl_delivery_day_list postnl_list">

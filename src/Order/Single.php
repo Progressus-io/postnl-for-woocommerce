@@ -619,13 +619,13 @@ class Single extends Base {
 			$api_call  = new Client( $item_info );
 			$response  = $api_call->send_request();
 
-			if ( empty( $response ) ) {
+			if ( isset( $response['successFulBarcodes'][0] ) ) {
 				$order->update_meta_data( $this->is_return_activated_meta, 'yes' );
 				$order->save_meta_data();
 
 				wp_send_json_success();
 			} else {
-				$error_message = isset($response['errorsPerBarcode'][0]['errors'][0]) ? $response['errorsPerBarcode'][0]['errors'][0] : 'Unknown error';
+				$error_message = isset( $response['errorsPerBarcode'][0]['errors'][0]) ? $response['errorsPerBarcode'][0]['errors'][0]['description'] : 'Unknown error';
 
 				// Translators: %s is the error message.
 				throw new \Exception( sprintf( esc_html__( 'Error: %s', 'postnl-for-woocommerce' ), esc_html( $error_message ) ) );

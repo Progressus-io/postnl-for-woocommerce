@@ -133,16 +133,6 @@ class Delivery_Day extends Base {
 					$date->modify( "+1 days" );				
 				}
 			}
-			
-			if( ! empty( $transit_days ) ){
-				$date->modify( "+{$transit_days} days" );			
-			}
-
-			if( ! empty( $cut_off ) ){
-				if ( $date > $cutoffDateTime ) {
-					$date->modify( "+1 days" );				
-				}
-			}
 
 			$date = $this->check_dropoff_day( $date );
 
@@ -151,9 +141,7 @@ class Delivery_Day extends Base {
 				'to'		   => '21:30',
 				'type'  	   => 'Daytime',
 				'price'		   => 0,
-				'date'  	   => $date->format( 'Y-m-d' ),
-				'transit_days' => $transit_days,
-				'cut_off'	   => $cut_off
+				'date'  => $date->format( 'Y-m-d' ),
 			);
 
 			return $return_data;
@@ -197,6 +185,13 @@ class Delivery_Day extends Base {
 		return $return_data;
 	}
 
+	/**
+	 * Check if the day is enabled.
+	 *
+	 * @param $date datetime.
+	 *
+	 * @return datetime
+	 */
 	public function check_dropoff_day( $date ){
 		$day_name = strtolower( $date->format( 'l' ) );
 		$method_name = "is_dropoff_{$day_name}_enabled";

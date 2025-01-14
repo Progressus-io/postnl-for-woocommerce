@@ -253,6 +253,8 @@ class Extend_Block_Core {
 		if ( isset( $sanitized_data['shipping_house_number'] ) && isset( $sanitized_data['shipping_postcode'] ) ) {
 			WC()->customer->set_shipping_postcode( $sanitized_data['shipping_postcode'] );
 			WC()->customer->update_meta_data( '_wc_shipping/postnl/house_number', $sanitized_data['shipping_house_number'] );
+			WC()->customer->set_shipping_country( $sanitized_data['shipping_country'] );
+			WC()->customer->set_shipping_address_2( $sanitized_data['shipping_address_2'] ?? '' );
 			WC()->customer->save();
 		}
 
@@ -324,14 +326,10 @@ class Extend_Block_Core {
 			// Use validated data
 			WC()->customer->set_shipping_address_1( $validated_address['street'] );
 			WC()->customer->set_shipping_city( $validated_address['city'] );
-			WC()->customer->set_shipping_country( $sanitized_data['shipping_country'] );
-			WC()->customer->set_shipping_address_2( $sanitized_data['shipping_address_2'] ?? '' );
 		} else {
 			WC()->customer->set_shipping_address_1( $sanitized_data['shipping_address_1'] ?? '' );
-			WC()->customer->set_shipping_address_2( $sanitized_data['shipping_address_2'] ?? '' );
 			WC()->customer->set_shipping_city( $sanitized_data['shipping_city'] ?? '' );
 			WC()->customer->set_shipping_state( $sanitized_data['shipping_state'] ?? '' );
-			WC()->customer->set_shipping_country( $sanitized_data['shipping_country'] ?? '' );
 		}
 
 		// Save the customer data

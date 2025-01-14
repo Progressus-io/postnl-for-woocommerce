@@ -65,13 +65,7 @@ export const Block = ({checkoutExtensionData}) => {
 		return (
 			addr1.country === addr2.country &&
 			addr1.postcode === addr2.postcode &&
-			addr1['postnl/house_number'] === addr2['postnl/house_number'] &&
-			addr1.address_1 === addr2.address_1 &&
-			addr1.address_2 === addr2.address_2 &&
-			addr1.city === addr2.city &&
-			addr1.state === addr2.state &&
-			addr1.phone === addr2.phone &&
-			addr1.email === addr2.email
+			addr1['postnl/house_number'] === addr2['postnl/house_number']
 		);
 	};
 
@@ -98,7 +92,7 @@ export const Block = ({checkoutExtensionData}) => {
 		}
 
 
-		const debounceDelay = 1000; //
+		const debounceDelay = 1500; //
 		const handler = setTimeout(() => {
 			// Update the previous shipping address
 			previousShippingAddress.current = {...shippingAddress};

@@ -59,27 +59,13 @@ class Extend_Block_Core {
 	 * Validate address in cart.
 	 */
 	public function postnl_validate_address_in_cart( $errors, $cart ) {
-		$customer          = WC()->customer;
-		$validated_address = WC()->session->get( POSTNL_SETTINGS_ID . '_validated_address' );
-		$shipping_country  = $customer->get_shipping_country();
-		$shipping_postcode = $customer->get_shipping_postcode();
+		$invalid_marker = WC()->session->get( POSTNL_SETTINGS_ID . '_invalid_address_marker', false );
 
-		$customer_data = wc()->session->get( 'customer' );
-		if ( isset( $customer_data['meta_data'] ) && is_array( $customer_data['meta_data'] ) ) {
-			// Create an associative array with keys and values
-			$meta_keys = array_column( $customer_data['meta_data'], 'value', 'key' );
-
-			// Check if the specific shipping house number exists
-			if ( isset( $meta_keys['_wc_shipping/postnl/house_number'] ) ) {
-				$shipping_house_number = sanitize_text_field( $meta_keys['_wc_shipping/postnl/house_number'] );
-			}
-		}
-		$settings = Settings::get_instance();
-
-		if ( $settings->is_validate_nl_address_enabled() && 'NL' === $shipping_country ) {
-			if ( empty( $validated_address ) && ! empty( $shipping_postcode ) && ! empty( $shipping_house_number ) ) {
-				$errors->add( 'invalid_address', __( 'This is not a valid address!', 'postnl-for-woocommerce' ) );
-			}
+		if ( $invalid_marker ) {
+			$errors->add(
+				'invalid_address',
+				__( 'This is not a valid address!', 'postnl-for-woocommerce' )
+			);
 		}
 	}
 
@@ -309,8 +295,6 @@ class Extend_Block_Core {
 			WC()->session->__unset( POSTNL_SETTINGS_ID . '_validated_address' );
 		}
 
-		// Retrieve validated address from session
-		$validated_address = WC()->session->get( POSTNL_SETTINGS_ID . '_validated_address' );
 
 		// Retrieve validated address from session
 		$validated_address = WC()->session->get( POSTNL_SETTINGS_ID . '_validated_address' );
@@ -341,12 +325,12 @@ class Extend_Block_Core {
 			WC()->customer->set_shipping_address_1( $validated_address['street'] );
 			WC()->customer->set_shipping_city( $validated_address['city'] );
 			WC()->customer->set_shipping_country( $sanitized_data['shipping_country'] );
+			WC()->customer->set_shipping_address_2( $sanitized_data['shipping_address_2'] ?? '' );
 		} else {
 			WC()->customer->set_shipping_address_1( $sanitized_data['shipping_address_1'] ?? '' );
 			WC()->customer->set_shipping_address_2( $sanitized_data['shipping_address_2'] ?? '' );
 			WC()->customer->set_shipping_city( $sanitized_data['shipping_city'] ?? '' );
 			WC()->customer->set_shipping_state( $sanitized_data['shipping_state'] ?? '' );
-			WC()->customer->set_shipping_postcode( $sanitized_data['shipping_postcode'] ?? '' );
 			WC()->customer->set_shipping_country( $sanitized_data['shipping_country'] ?? '' );
 		}
 

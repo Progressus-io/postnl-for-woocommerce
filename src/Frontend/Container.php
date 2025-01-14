@@ -323,7 +323,8 @@ class Container {
 		if ( empty( $response[0] ) ) {
 			// Clear validated address.
 			WC()->session->set( POSTNL_SETTINGS_ID . '_validated_address', array() );
-
+			// Mark the address as invalid in the session:
+			WC()->session->set( POSTNL_SETTINGS_ID . '_invalid_address_marker', true );
 			// Add notice without blocking checkout call.
 			wc_add_notice( esc_html__( 'This is not a valid address!', 'postnl-for-woocommerce' ), 'notice' );
 		} else {
@@ -337,6 +338,7 @@ class Container {
 					'ship_to_different_address' => ! empty( $post_data['ship_to_different_address'] ),
 				)
 			);
+			WC()->session->__unset( POSTNL_SETTINGS_ID . '_invalid_address_marker' );
 		}
 	}
 

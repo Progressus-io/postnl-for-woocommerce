@@ -150,6 +150,11 @@ class Delivery_Day extends Base {
 				'date'    => gmdate( 'Y-m-d', $timestamp ),
 				'options' => $options,
 			);
+
+			if( !$this->is_enabled() ) {
+				$return_data[ 'enabled' ] = false;
+				return $return_data;
+			}
 		}
 
 		return $return_data;

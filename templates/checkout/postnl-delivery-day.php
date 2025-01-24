@@ -24,7 +24,7 @@ if ( empty( $data['delivery_options'] ) ) {
 			?>
 			<li>
 			<?php
-				if ( !isset( $data['enabled'] ) ) {
+				if ( $data['is_delivery_days_enabled'] ) {
 					?>
 					<div class="list_title">
 						<span><?php echo esc_html( $delivery['date'] . ' ' . $delivery['day'] ); ?></span>
@@ -64,28 +64,29 @@ if ( empty( $data['delivery_options'] ) ) {
 									<?php echo $is_checked; ?>
 								/>
 								<?php
-								if ( isset( $data['enabled'] ) && !$data['enabled'] ) {
-									?>
-									<span><?php echo esc_html__( 'As soon as possible', 'postnl-for-woocommerce' ); ?></span>
-									<?php
-								} else {
+								if ( $data['is_delivery_days_enabled'] ) {
 									?>
 									<i><?php echo wp_kses_post( $is_charged ); ?></i>
 									<i><?php echo esc_html( $delivery_time ); ?></i>
 									<span><?php echo esc_html( $option['from'] . ' - ' . $option['to'] ); ?></span>
+									<?php
+								} else {
+									?>
+									<span><?php echo esc_html__( 'As soon as possible', 'postnl-for-woocommerce' ); ?></span>
 									<?php 
 								}
 								?>
 							</label>
 						</li>
-						<?php
-							if ( isset( $data['enabled'] ) && !$data['enabled'] ) {
-								break;
-							}
-						?>
+						
 					<?php } ?>
 				</ul>
 			</li>
+			<?php
+				if ( !$data['is_delivery_days_enabled'] ) {
+					break;
+				}
+			?>
 		<?php } ?>
 	</ul>
 	<input type="hidden" name="<?php echo esc_attr( $data['field_name'] ); ?>_date" id="<?php echo esc_attr( $data['field_name'] ); ?>_date" value="" />

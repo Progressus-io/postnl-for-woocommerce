@@ -91,7 +91,7 @@ abstract class Base_Info {
 			'dropoff_days'               => $this->settings->get_dropoff_days(),
 			'excluded_dropoff_days'      => $this->settings->get_excluded_dropoff_days(),
 			'pickup_points_enabled'      => $this->settings->is_pickup_points_enabled(),
-			'delivery_days_enabled'      => $this->settings->is_delivery_days_enabled(),
+			'delivery_days_enabled'      => true,
 			'morning_delivery_enabled'   => $this->settings->is_morning_delivery_enabled(),
 			'evening_delivery_enabled'   => $this->settings->is_evening_delivery_enabled(),
 			'transit_time'               => $this->settings->get_transit_time(),

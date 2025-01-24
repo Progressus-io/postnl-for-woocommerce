@@ -78,6 +78,11 @@ if ( empty( $data['delivery_options'] ) ) {
 								?>
 							</label>
 						</li>
+						<?php
+							if ( isset( $data['enabled'] ) && !$data['enabled'] ) {
+								break;
+							}
+						?>
 					<?php } ?>
 				</ul>
 			</li>

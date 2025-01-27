@@ -619,17 +619,32 @@ class Single extends Base {
 			$api_call  = new Client( $item_info );
 			$response  = $api_call->send_request();
 
-			if ( isset( $response['successFulBarcodes'][0] ) ) {
+			if ( ! empty( $response['successFulBarcodes'] ) && is_array( $response['successFulBarcodes'] ) ) {
 				$order->update_meta_data( $this->is_return_activated_meta, 'yes' );
 				$order->save_meta_data();
 
 				wp_send_json_success();
-			} else {
-				$error_message = isset( $response['errorsPerBarcode'][0]['errors'][0] ) ? $response['errorsPerBarcode'][0]['errors'][0]['description'] : 'Unknown error';
-
-				// Translators: %s is the error message.
-				throw new \Exception( sprintf( esc_html__( 'Error: %s', 'postnl-for-woocommerce' ), esc_html( $error_message ) ) );
+        return;
 			}
+
+			$error_message = '';
+
+			if ( ! empty( $response['errorsPerBarcode'][0]['errors'] ) ) {
+				$error_message .= '<ul>';
+
+				foreach ( $response['errorsPerBarcode'] as $barcode_errors ) {
+					foreach ( $barcode_errors['errors'] as $error ) {
+						$error_message .= '<li>' . esc_html( $error['description'] ) . '</li>';
+					}
+				}
+
+				$error_message .= '</ul>';
+			} else {
+				$error_message = esc_html__( 'Unknown error.', 'postnl-for-woocommerce' );
+			}
+
+			// Translators: %s is the error message.
+			throw new \Exception( sprintf( esc_html__( 'Error: %s', 'postnl-for-woocommerce' ), $error_message ) );
 		} catch ( \Exception $e ) {
 			wp_send_json_error(
 				array( 'message' => $e->getMessage() ),

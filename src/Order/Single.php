@@ -365,7 +365,7 @@ class Single extends Base {
 	 * Adds an 'Send Smart Return' button.
 	 */
 	public function send_smart_return_email_html( $order ) {
-		if ( 'NL' === $order->get_shipping_country() && $this->settings->get_activate_smart_return() ) {
+		if ( 'NL' === $order->get_shipping_country() && $this->settings->is_smart_return_enabled() ) {
 			$check_for_barcode = empty( $this->get_backend_data( $order->get_ID() ) );
 			?>
             <hr id="postnl_break_2">

@@ -814,7 +814,7 @@ class Settings extends \WC_Settings_API {
 	 *
 	 * @return bool
 	 */
-	public function get_return_address_or_reply_no() {
+	public function is_return_to_home_enabled() {
 		if ( 'yes' === $this->get_country_option( 'return_address_or_reply_no', '' ) ) {
 			return true;
 		}
@@ -827,7 +827,7 @@ class Settings extends \WC_Settings_API {
 	 *
 	 * @return bool
 	 */
-	public function get_activate_smart_return() {
+	public function is_smart_return_enabled() {
 		if ( 'yes' === $this->get_country_option( 'activate_smart_return', '' ) ) {
 			return true;
 		}

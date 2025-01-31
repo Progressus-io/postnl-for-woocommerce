@@ -185,7 +185,8 @@ class Item_Info extends Base_Info {
 	 */
 	public function is_rest_of_world() {
 		$to_country  = $this->api_args['shipping_address']['country'];
-		$destination = Utils::get_shipping_zone( $to_country );
+		$to_state    = $this->api_args['shipping_address']['state'];
+		$destination = Utils::get_shipping_zone( $to_country, $to_state );
 
 		return ( 'ROW' === $destination );
 	}
@@ -197,7 +198,8 @@ class Item_Info extends Base_Info {
 	 */
 	public function is_europe() {
 		$to_country  = $this->api_args['shipping_address']['country'];
-		$destination = Utils::get_shipping_zone( $to_country );
+		$to_state    = $this->api_args['shipping_address']['state'];
+		$destination = Utils::get_shipping_zone( $to_country, $to_state );
 
 		return ( 'EU' === $destination );
 	}

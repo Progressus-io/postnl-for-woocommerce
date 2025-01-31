@@ -313,7 +313,8 @@ class Item_Info extends Base_Info {
 	 */
 	public function is_rest_of_world() {
 		$to_country  = $this->api_args['shipping_address']['country'];
-		$destination = Utils::get_shipping_zone( $to_country );
+		$to_state    = $this->api_args['shipping_address']['state'];
+		$destination = Utils::get_shipping_zone( $to_country, $to_state );
 
 		return ( 'ROW' === $destination );
 	}
@@ -877,13 +878,13 @@ class Item_Info extends Base_Info {
 		$shipping_feature = $this->get_selected_shipping_features();
 		$from_country     = $this->api_args['store_address']['country'];
 		$to_country       = $this->api_args['shipping_address']['country'];
+        $to_state         = $this->api_args['shipping_address']['state'];
 
 		$features = array_keys( $checked_features );
 		$code_map = Mapping::products_data();
 
 		$selected_product = array();
-		$destination      = Utils::get_shipping_zone( $to_country );
-
+		$destination      = Utils::get_shipping_zone( $to_country, $to_state );
 		if ( empty( $code_map[ $from_country ][ $destination ][ $shipping_feature ] ) ) {
 			return $selected_product;
 		}
@@ -933,7 +934,8 @@ class Item_Info extends Base_Info {
 		$option_map   = Mapping::additional_product_options();
 		$from_country = $this->api_args['store_address']['country'];
 		$to_country   = $this->api_args['shipping_address']['country'];
-		$destination  = Utils::get_shipping_zone( $to_country );
+		$to_state    = $this->api_args['shipping_address']['state'];
+		$destination = Utils::get_shipping_zone( $to_country, $to_state );
 
 		foreach ( $this->api_args as $arg_keys => $arg_data ) {
 			if ( empty( $option_map[ $from_country ][ $destination ][ $arg_keys ] ) ) {
@@ -1015,7 +1017,8 @@ class Item_Info extends Base_Info {
 		$return_label_options = Mapping::shipping_return_labels_options();
 		$from_country         = $this->api_args['store_address']['country'];
 		$to_country           = $this->api_args['shipping_address']['country'];
-		$destination          = Utils::get_shipping_zone( $to_country );
+		$to_state             = $this->api_args['shipping_address']['state'];
+		$destination          = Utils::get_shipping_zone( $to_country, $to_state );
 		$is_letterbox         = 'yes' === $this->api_args['backend_data']['letterbox'];
 		$is_return_activated  = 'yes' === $this->api_args['order_details']['is_return_activated'];
 

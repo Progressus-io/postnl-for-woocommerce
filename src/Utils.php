@@ -373,15 +373,18 @@ class Utils {
 	}
 
 	/**
-	 * Get shipping zone base on the shipping country.
+	 * Get shipping zone base on the shipping country and state.
 	 *
 	 * @param String $to_country 2 digit country code.
+	 * @param String $to_state 2 digit state code.
 	 *
 	 * @return String
 	 */
-	public static function get_shipping_zone( $to_country ) {
+	public static function get_shipping_zone( $to_country, $to_state ) {
 		if ( 'NL' === $to_country || 'BE' === $to_country ) {
 			return $to_country;
+		} elseif ( 'TF' === $to_state || 'GC' === $to_state ) {
+			return 'ROW';
 		} elseif ( in_array( $to_country, WC()->countries->get_european_union_countries(), true ) ) {
 			return 'EU';
 		}
@@ -607,7 +610,7 @@ class Utils {
 	 */
 	public static function get_shipping_options( $order_id ) {
 		$order                = wc_get_order( $order_id );
-		$shipping_destination = Utils::get_shipping_zone( $order->get_shipping_country() );
+		$shipping_destination = Utils::get_shipping_zone( $order->get_shipping_country(),  $order->get_shipping_state() );
 
 		// Base shipping options (common to all destinations).
 		$base_options = array(

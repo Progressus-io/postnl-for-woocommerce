@@ -144,9 +144,14 @@ abstract class Base {
 	 */
 	public function get_shipping_zone( $order ) {
 		$shipping_destination = $order->get_shipping_country();
+		$shipping_state 	  = $order->get_shipping_state();
 
 		if ( in_array( $shipping_destination, array( 'NL', 'BE' ) ) ) {
 			return $shipping_destination;
+		}
+
+		if ( in_array( $shipping_state, array( 'TF', 'GC' ) ) ) {
+			return 'ROW';
 		}
 
 		if ( in_array( $shipping_destination, WC()->countries->get_european_union_countries() ) ) {
@@ -377,7 +382,7 @@ abstract class Base {
 
 		$product_map  = Mapping::products_data();
 		$from_country = Utils::get_base_country();
-		$to_country   = Utils::get_shipping_zone( $order->get_shipping_country() );
+		$to_country   = Utils::get_shipping_zone( $order->get_shipping_country(), $order->get_shipping_state() );
 		$saved_data   = $this->get_data( $order->get_id() );
 
 		if ( empty( $saved_data['frontend'] ) ) {
@@ -626,9 +631,10 @@ abstract class Base {
 	public function get_delivery_type( $order ) {
 		$from_country      = Utils::get_base_country();
 		$to_country        = $order->get_shipping_country();
+		$to_state          = $order->get_shipping_state();
 		$delivery_type_map = Mapping::delivery_type();
 		$filtered_frontend = $this->get_order_frontend_info( $order, '_type' );
-		$destination       = Utils::get_shipping_zone( $to_country );
+		$destination       = Utils::get_shipping_zone( $to_country, $to_state );
 
 
 		if ( ! is_array( $delivery_type_map[ $from_country ][ $destination ] ) ) {
@@ -914,7 +920,8 @@ abstract class Base {
 
 		$from_country    = Utils::get_base_country();
 		$to_country      = $order->get_shipping_country();
-		$destination     = Utils::get_shipping_zone( $to_country );
+		$to_state        = $order->get_shipping_state();
+		$destination     = Utils::get_shipping_zone( $to_country, $to_state );
 		$label_type_list = Mapping::label_type_list();
 
 		$available_type = ( ! empty( $label_type_list[ $from_country ][ $destination ] ) ) ? $label_type_list[ $from_country ][ $destination ] : array( 'label' );

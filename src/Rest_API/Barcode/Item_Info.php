@@ -81,7 +81,7 @@ class Item_Info extends Base_Info {
 			'address_2'  => $order->get_shipping_address_2(),
 			'city'       => $order->get_shipping_city(),
 			'state'      => $order->get_shipping_state(),
-			'country'    => $order->get_shipping_country(),
+			'country'    => in_array( $order->get_shipping_state(), array( 'TF', 'GC' ) ) ? 'IC' : $order->get_shipping_country(),
 			'postcode'   => $order->get_shipping_postcode(),
 		);
 

@@ -878,7 +878,7 @@ class Item_Info extends Base_Info {
 		$shipping_feature = $this->get_selected_shipping_features();
 		$from_country     = $this->api_args['store_address']['country'];
 		$to_country       = $this->api_args['shipping_address']['country'];
-        $to_state         = $this->api_args['shipping_address']['state'];
+		$to_state         = $this->api_args['shipping_address']['state'];
 
 		$features = array_keys( $checked_features );
 		$code_map = Mapping::products_data();
@@ -934,8 +934,8 @@ class Item_Info extends Base_Info {
 		$option_map   = Mapping::additional_product_options();
 		$from_country = $this->api_args['store_address']['country'];
 		$to_country   = $this->api_args['shipping_address']['country'];
-		$to_state    = $this->api_args['shipping_address']['state'];
-		$destination = Utils::get_shipping_zone( $to_country, $to_state );
+		$to_state     = $this->api_args['shipping_address']['state'];
+		$destination  = Utils::get_shipping_zone( $to_country, $to_state );
 
 		foreach ( $this->api_args as $arg_keys => $arg_data ) {
 			if ( empty( $option_map[ $from_country ][ $destination ][ $arg_keys ] ) ) {

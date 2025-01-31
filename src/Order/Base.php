@@ -144,7 +144,7 @@ abstract class Base {
 	 */
 	public function get_shipping_zone( $order ) {
 		$shipping_destination = $order->get_shipping_country();
-		$shipping_state 	  = $order->get_shipping_state();
+		$shipping_state       = $order->get_shipping_state();
 
 		if ( in_array( $shipping_destination, array( 'NL', 'BE' ) ) ) {
 			return $shipping_destination;

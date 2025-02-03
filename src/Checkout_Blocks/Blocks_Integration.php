@@ -51,8 +51,6 @@ class Blocks_Integration implements IntegrationInterface {
 			'/build/postnl-container-frontend.asset.php'
 		);
 
-		// Register block styles
-		$this->register_styles();
 	}
 
 	/**
@@ -60,10 +58,8 @@ class Blocks_Integration implements IntegrationInterface {
 	 */
 	private function register_main_integration() {
 		$script_path = '/build/index.js';
-		$style_path  = '/build/style-index.css';
 
 		$script_url = POSTNL_WC_PLUGIN_DIR_URL . $script_path;
-		$style_url  = POSTNL_WC_PLUGIN_DIR_URL . $style_path;
 
 		$script_asset_path = POSTNL_WC_PLUGIN_DIR_PATH . '/build/index.asset.php';
 		$script_asset      = file_exists( $script_asset_path )
@@ -73,12 +69,6 @@ class Blocks_Integration implements IntegrationInterface {
 				'version'      => $this->get_file_version( $script_path ),
 			);
 
-		wp_enqueue_style(
-			'postnl-delivery-day-integration',
-			$style_url,
-			array(),
-			$this->get_file_version( $style_path )
-		);
 
 		wp_register_script(
 			'postnl-delivery-day-integration',
@@ -95,20 +85,6 @@ class Blocks_Integration implements IntegrationInterface {
 		);
 	}
 
-	/**
-	 * Registers block styles for the block editor.
-	 */
-	private function register_styles() {
-		$block_style_path = '/build/style-postnl-delivery-day.css';
-		$block_style_url  = POSTNL_WC_PLUGIN_DIR_URL . $block_style_path;
-
-		wp_enqueue_style(
-			'postnl-delivery-day',
-			$block_style_url,
-			array(),
-			$this->get_file_version( $block_style_path )
-		);
-	}
 
 	/**
 	 * Helper method to register block editor scripts.

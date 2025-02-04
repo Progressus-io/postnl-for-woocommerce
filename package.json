@@ -5,8 +5,7 @@
   "license": "GPL-2.0-or-later",
   "main": "build/index.js",
   "scripts": {
-    "prebuild": "composer install",
-    "build": "wp-scripts build && npm run makepot && npm run archive",
+    "build": "composer install && wp-scripts build && npm run makepot && composer install --no-dev && npm run archive",
     "format": "wp-scripts format",
     "lint:css": "wp-scripts lint-style",
     "lint:js": "wp-scripts lint-js",

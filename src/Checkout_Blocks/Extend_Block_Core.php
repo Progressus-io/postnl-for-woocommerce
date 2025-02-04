@@ -247,7 +247,7 @@ class Extend_Block_Core {
 		$shipping_country = isset( $sanitized_data['shipping_country'] ) ? $sanitized_data['shipping_country'] : '';
 
 		// Check letterbox eligibility
-		$letterbox = Utils::is_eligible_auto_letterbox( WC()->cart );
+		$letterbox = Utils::is_cart_eligible_auto_letterbox( WC()->cart );
 
 		// Save the house number and postcode on WC customer if provided
 		if ( isset( $sanitized_data['shipping_house_number'] ) && isset( $sanitized_data['shipping_postcode'] ) ) {

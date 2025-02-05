@@ -82,11 +82,7 @@ if ( empty( $data['delivery_options'] ) ) {
 					<?php } ?>
 				</ul>
 			</li>
-			<?php
-				if ( !$data['is_delivery_days_enabled'] ) {
-					break;
-				}
-			?>
+			
 		<?php } ?>
 	</ul>
 	<input type="hidden" name="<?php echo esc_attr( $data['field_name'] ); ?>_date" id="<?php echo esc_attr( $data['field_name'] ); ?>_date" value="" />

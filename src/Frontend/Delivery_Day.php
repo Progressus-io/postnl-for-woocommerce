@@ -171,6 +171,10 @@ class Delivery_Day extends Base {
 				'options' => $options,
 			);
 
+			if ( ! $this->is_customer_allowed_to_pick_delivery_day() ) {
+				break;
+			}
+
 		}
 
 		return $return_data;

@@ -580,6 +580,35 @@ class Item_Info extends Base_Info {
 		$self = $this;
 
 		return array(
+			'date'  => array(
+				'default'  => '',
+				'validate' => function ( $date ) use ( $self ) {
+					if ( empty( $date ) && $self->is_pickup_points() ) {
+						throw new \Exception(
+							__( 'Pickup "Date" is empty!', 'postnl-for-woocommerce' )
+						);
+					}
+				},
+				'sanitize' => function ( $value ) {
+					$timestamp = strtotime( $value );
+					$date      = gmdate( 'd-m-Y', $timestamp );
+
+					return $date;
+				},
+			),
+			'time'  => array(
+				'default'  => '',
+				'validate' => function ( $hour ) use ( $self ) {
+					if ( empty( $hour ) && $self->is_pickup_points() ) {
+						throw new \Exception(
+							__( 'Pickup "Time" is empty!', 'postnl-for-woocommerce' )
+						);
+					}
+				},
+				'sanitize' => function ( $value ) {
+					return $value . ':00';
+				},
+			),
 			'company'   => array(
 				'validate' => function ( $company ) use ( $self ) {
 					if ( empty( $company ) && $self->is_pickup_points() ) {

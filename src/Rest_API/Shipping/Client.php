@@ -105,6 +105,8 @@ class Client extends Base {
 
 		if ( $this->item_info->is_delivery_day() ) {
 			$shipment['DeliveryDate'] = $this->item_info->delivery_day['date'] . ' ' . $this->item_info->delivery_day['from'];
+		} elseif ( $this->item_info->is_pickup_points() ) {
+			$shipment['DeliveryDate'] = $this->item_info->pickup_points['date'] . ' ' . $this->item_info->pickup_points['time'];
 		}
 
 		if ( ! empty( $this->item_info->shipment['product_options']['characteristic'] ) ) {

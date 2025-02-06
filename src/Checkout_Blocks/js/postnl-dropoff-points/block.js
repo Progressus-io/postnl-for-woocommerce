@@ -217,19 +217,9 @@ export const Block = ({checkoutExtensionData, isActive, dropoffOptions}) => {
 		} catch (error) {
 			// Handle error
 		} finally {
-			isSelecting.current = false; // Reset the selection flag
 		}
 	};
 
-	/**
-	 * Helper function to find matching option
-	 */
-	const findMatchingOption = (selectedValue, dropoffOptions) => {
-		return dropoffOptions.find((point) => {
-			const pointValue = `${point.partner_id}-${point.loc_code}`;
-			return pointValue === selectedValue;
-		});
-	};
 
 	/**
 	 * Update hidden fields and extension data based on selected dropoff point
@@ -315,7 +305,6 @@ export const Block = ({checkoutExtensionData, isActive, dropoffOptions}) => {
 									data-date={point.date}
 									data-time={point.time}
 									data-distance={point.distance}
-									data-type={point.type}
 									data-address_company={point.address.company}
 									data-address_address_1={point.address.address_1}
 									data-address_address_2={point.address.address_2}

@@ -81,6 +81,9 @@ Follow these instructions (https://www.postnl.nl/Images/aanvragen-api-key-stappe
 
 == Changelog ==
 
+= 5.6.5 (2025-xx-xx) =
+* Fix: Improved error messages for Shipping & Return label activation.
+
 = 5.6.4 (2025-02-04) =
 * Fix: Add Standard Shipping to Default Shipping Pickup options.
 

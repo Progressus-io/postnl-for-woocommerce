@@ -619,17 +619,40 @@ class Single extends Base {
 			$api_call  = new Client( $item_info );
 			$response  = $api_call->send_request();
 
-			if ( empty( $response ) ) {
+			if ( ! empty( $response['successFulBarcodes'] ) && is_array( $response['successFulBarcodes'] ) ) {
 				$order->update_meta_data( $this->is_return_activated_meta, 'yes' );
 				$order->save_meta_data();
 
 				wp_send_json_success();
-			} else {
-				$error_message = isset($response['errorsPerBarcode'][0]['errors'][0]) ? $response['errorsPerBarcode'][0]['errors'][0] : 'Unknown error';
 
-				// Translators: %s is the error message.
-				throw new \Exception( sprintf( esc_html__( 'Error: %s', 'postnl-for-woocommerce' ), esc_html( $error_message ) ) );
+				return;
 			}
+
+			$error_message = esc_html__( 'Unknown error.', 'postnl-for-woocommerce' );
+			$error_items   = [];
+
+			if ( isset( $response['errorsPerBarcode'] ) && is_array( $response['errorsPerBarcode'] ) ) {
+				foreach ( $response['errorsPerBarcode'] as $barcode_errors ) {
+					if ( ! isset( $barcode_errors['errors'] ) || ! is_array( $barcode_errors['errors'] ) ) {
+						continue;
+					}
+
+					foreach ( $barcode_errors['errors'] as $error ) {
+						if ( empty( $error['description'] ) ) {
+							continue;
+						}
+
+						$error_items[] = sprintf( '<li>%s</li>', esc_html( $error['description'] ) );
+					}
+				}
+			}
+
+			if ( ! empty( $error_items ) ) {
+				$error_message = '<ul>' . implode( '', $error_items ) . '</ul>';
+			}
+
+			// Translators: %s is the error message.
+			throw new \Exception( sprintf( esc_html__( 'Error: %s', 'postnl-for-woocommerce' ), $error_message ) );
 		} catch ( \Exception $e ) {
 			wp_send_json_error(
 				array( 'message' => $e->getMessage() ),

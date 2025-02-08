@@ -133,7 +133,7 @@ class Container {
 		$item_info = new Checkout\Item_Info( $post_data );
 		$api_call  = new Checkout\Client( $item_info );
 		$response  = $api_call->send_request();
-		$letterbox = Utils::is_eligible_auto_letterbox( \WC()->cart );
+		$letterbox = Utils::is_cart_eligible_auto_letterbox( \WC()->cart );
 
 		return array(
 			'response'  => $response,

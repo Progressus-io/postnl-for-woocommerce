@@ -342,7 +342,7 @@ class Single extends Base {
 	 * Adds an 'Activate return function' button.
 	 */
 	public function activate_return_function_html( $order ) {
-		if ( 'shipping_return' === $this->settings->get_return_shipment_and_labels() && 'no' === $this->settings->get_return_shipment_and_labels_all() && 'NL' === $order->get_shipping_country() && 'NL' === Utils::get_base_country() && ! Utils::is_eligible_auto_letterbox( $order ) ) {
+		if ( 'shipping_return' === $this->settings->get_return_shipment_and_labels() && 'no' === $this->settings->get_return_shipment_and_labels_all() && 'NL' === $order->get_shipping_country() && 'NL' === Utils::get_base_country() && ! Utils::is_order_eligible_auto_letterbox( $order ) ) {
 			?>
             <hr id="postnl_break_2">
             <p class="form-field">
@@ -459,8 +459,6 @@ class Single extends Base {
 			$return_data   = $result['saved_data'];
 			$labels        = $result['labels'];
 			$tracking_note = $this->get_tracking_note( $order_id );
-
-			$this->delete_label_files( $labels );
 
 			if ( ! empty( $tracking_note ) ) {
 				$return_data = array_merge(
@@ -621,14 +619,40 @@ class Single extends Base {
 			$api_call  = new Client( $item_info );
 			$response  = $api_call->send_request();
 
-			if ( empty( $response ) ) {
+			if ( ! empty( $response['successFulBarcodes'] ) && is_array( $response['successFulBarcodes'] ) ) {
 				$order->update_meta_data( $this->is_return_activated_meta, 'yes' );
 				$order->save_meta_data();
 
 				wp_send_json_success();
-			} else {
-				throw new \Exception( esc_html__( print_r( $response['errorsPerBarcode'][0]['errors'][0], true ) ) );
+
+				return;
 			}
+
+			$error_message = esc_html__( 'Unknown error.', 'postnl-for-woocommerce' );
+			$error_items   = [];
+
+			if ( isset( $response['errorsPerBarcode'] ) && is_array( $response['errorsPerBarcode'] ) ) {
+				foreach ( $response['errorsPerBarcode'] as $barcode_errors ) {
+					if ( ! isset( $barcode_errors['errors'] ) || ! is_array( $barcode_errors['errors'] ) ) {
+						continue;
+					}
+
+					foreach ( $barcode_errors['errors'] as $error ) {
+						if ( empty( $error['description'] ) ) {
+							continue;
+						}
+
+						$error_items[] = sprintf( '<li>%s</li>', esc_html( $error['description'] ) );
+					}
+				}
+			}
+
+			if ( ! empty( $error_items ) ) {
+				$error_message = '<ul>' . implode( '', $error_items ) . '</ul>';
+			}
+
+			// Translators: %s is the error message.
+			throw new \Exception( sprintf( esc_html__( 'Error: %s', 'postnl-for-woocommerce' ), $error_message ) );
 		} catch ( \Exception $e ) {
 			wp_send_json_error(
 				array( 'message' => $e->getMessage() ),

@@ -180,9 +180,7 @@ abstract class Base_Info {
 			'postcode'     => array(
 				'error'    => __( 'Shipping "Postcode" is empty!', 'postnl-for-woocommerce' ),
 				'sanitize' => function ( $value ) use ( $self ) {
-					$value = str_replace( ' ', '', $value );
-
-					return $self->string_length_sanitization( $value, 7 );
+					return str_replace( ' ', '', $value );
 				},
 			),
 			'state'        => array(

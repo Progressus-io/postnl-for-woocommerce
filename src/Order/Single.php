@@ -628,20 +628,27 @@ class Single extends Base {
 				return;
 			}
 
-			$error_message = '';
+			$error_message = esc_html__( 'Unknown error.', 'postnl-for-woocommerce' );
+			$error_items   = [];
 
-			if ( ! empty( $response['errorsPerBarcode'][0]['errors'] ) ) {
-				$error_message .= '<ul>';
-
+			if ( isset( $response['errorsPerBarcode'] ) && is_array( $response['errorsPerBarcode'] ) ) {
 				foreach ( $response['errorsPerBarcode'] as $barcode_errors ) {
+					if ( ! isset( $barcode_errors['errors'] ) || ! is_array( $barcode_errors['errors'] ) ) {
+						continue;
+					}
+
 					foreach ( $barcode_errors['errors'] as $error ) {
-						$error_message .= '<li>' . esc_html( $error['description'] ) . '</li>';
+						if ( empty( $error['description'] ) ) {
+							continue;
+						}
+
+						$error_items[] = sprintf( '<li>%s</li>', esc_html( $error['description'] ) );
 					}
 				}
+			}
 
-				$error_message .= '</ul>';
-			} else {
-				$error_message = esc_html__( 'Unknown error.', 'postnl-for-woocommerce' );
+			if ( ! empty( $error_items ) ) {
+				$error_message = '<ul>' . implode( '', $error_items ) . '</ul>';
 			}
 
 			// Translators: %s is the error message.

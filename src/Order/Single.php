@@ -624,7 +624,8 @@ class Single extends Base {
 				$order->save_meta_data();
 
 				wp_send_json_success();
-        return;
+
+				return;
 			}
 
 			$error_message = '';

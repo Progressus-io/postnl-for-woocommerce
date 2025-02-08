@@ -37,6 +37,9 @@ PostNL’s official extension for WooCommerce on WordPress. Manage your national
 
 ## Changelog
 
+### 5.6.5
+* Fix: Improved error messages for Shipping & Return label activation.
+
 ### 5.6.4
 * Fix: Add Standard Shipping to Default Shipping Pickup options.
 

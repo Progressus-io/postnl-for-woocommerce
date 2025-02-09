@@ -83,7 +83,7 @@ class Item_Info extends Base_Info {
 			'address_2'  => $order->get_shipping_address_2(),
 			'city'       => $order->get_shipping_city(),
 			'state'      => $shipping_state,
-			'country'    => Utils::is_canary_island( $shipping_state, $shipping_country ) ? 'IC' : $shipping_state,
+			'country'    => Utils::is_canary_island( $shipping_state, $shipping_country ) ? 'IC' : $shipping_country,
 			'postcode'   => $order->get_shipping_postcode(),
 		);
 

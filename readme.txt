@@ -1,6 +1,6 @@
 === PostNL for WooCommerce ===
 Contributors: PostNL, shadim, abdalsalaam
-Tags: woocommerce, export, delivery, packages, PostNL, Shipping
+Tags: woocommerce, PostNL, Labels, Shipping
 Requires at least: 4.6
 Requires PHP: 5.6
 Tested up to: 6.7
@@ -87,6 +87,7 @@ Follow these instructions (https://www.postnl.nl/Images/aanvragen-api-key-stappe
 * Fix: Adjusted shipping classification for the Canary Islands to use the correct product code and country code.
 * Fix: Ensure home delivery option is always visible at checkout, even if Delivery Days are disabled.
 * Fix: Labels now always include a delivery date, even for "as soon as possible" orders.
+* Add: `postnl_shipment_addresses` filter to allow third parties to modify shipping addresses and improve compatibility.
 
 = 5.6.4 (2025-02-04) =
 * Fix: Add Standard Shipping to Default Shipping Pickup options.

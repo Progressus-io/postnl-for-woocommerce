@@ -1,6 +1,6 @@
 === PostNL for WooCommerce ===
 Contributors: PostNL, shadim, abdalsalaam
-Tags: woocommerce, export, delivery, packages, PostNL, Shipping
+Tags: woocommerce, PostNL, Labels, Shipping
 Requires at least: 4.6
 Requires PHP: 5.6
 Tested up to: 6.7

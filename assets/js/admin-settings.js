@@ -68,12 +68,20 @@
                 jQuery('#woocommerce_postnl_return_address_street').closest('tr').show();
                 jQuery('#woocommerce_postnl_return_address_house_no').closest('tr').show();
                 jQuery('#woocommerce_postnl_return_address_house_noext').closest('tr').show();
+                jQuery('#woocommerce_postnl_freepost_zip').closest('tr').hide();
+                jQuery('#woocommerce_postnl_freepost_city').closest('tr').hide();
+                jQuery('#woocommerce_postnl_return_address_zip').closest('tr').show();
+                jQuery('#woocommerce_postnl_return_address_city').closest('tr').show();
             } else {
                 jQuery('#woocommerce_postnl_return_replynumber').closest('tr').show();
                 jQuery('#woocommerce_postnl_return_address_street').closest('tr').hide();
                 jQuery('#woocommerce_postnl_return_address_house').closest('tr').hide();
                 jQuery('#woocommerce_postnl_return_address_house_no').closest('tr').hide();
                 jQuery('#woocommerce_postnl_return_address_house_noext').closest('tr').hide();
+                jQuery('#woocommerce_postnl_return_address_zip').closest('tr').hide();
+                jQuery('#woocommerce_postnl_return_address_city').closest('tr').hide();
+                jQuery('#woocommerce_postnl_freepost_zip').closest('tr').show();
+                jQuery('#woocommerce_postnl_freepost_city').closest('tr').show();
             }
         }
 

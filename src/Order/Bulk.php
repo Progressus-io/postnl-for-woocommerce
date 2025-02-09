@@ -140,15 +140,17 @@ class Bulk extends Base {
 
 		$selected_shipping_options = $this->prepare_default_options( $_REQUEST );
 		$zone                      = strtoupper( sanitize_text_field( $_REQUEST['postnl_shipping_zone'] ) );
-    
-    foreach ( $object_ids as $order_id ) {
+
+		foreach ( $object_ids as $order_id ) {
 			$order                = wc_get_order( $order_id );
 			$have_label_file      = $this->have_label_file( $order );
-			$match_shipping_zones = $zone === $this->get_shipping_zone( $order );
-			$match_pickup_zone 	  = 'PICKUP' === $zone && 'NL' === $this->get_shipping_zone( $order );
+			$order_shipping_zone  = Utils::get_shipping_zone( $order->get_shipping_country(), $order->get_shipping_state() );
+			$match_shipping_zones = $zone === $order_shipping_zone;
+			$match_pickup_zone    = 'PICKUP' === $zone && 'NL' === $order_shipping_zone;
+
 			if ( $have_label_file ) {
 				$array_messages[] = array(
-			    // Translators: %1$d is the order ID.
+					// Translators: %1$d is the order ID.
 					'message' => sprintf( esc_html__( 'Order #%1$d already has a label.', 'postnl-for-woocommerce' ), $order_id ),
 					'type'    => 'error',
 				);
@@ -158,7 +160,7 @@ class Bulk extends Base {
 
 			if ( ! $match_shipping_zones && ! $match_pickup_zone ) {
 				$array_messages[] = array(
-			    // Translators: %1$d is the order ID.
+					// Translators: %1$d is the order ID.
 					'message' => sprintf( esc_html__( 'Order #%1$d is from another shipping zone.', 'postnl-for-woocommerce' ), $order_id ),
 					'type'    => 'error',
 				);

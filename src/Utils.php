@@ -373,16 +373,23 @@ class Utils {
 	}
 
 	/**
-	 * Get shipping zone base on the shipping country.
+	 * Get shipping zone base on the shipping country and state.
 	 *
 	 * @param String $to_country 2 digit country code.
+	 * @param String $to_state 2 digit state code.
 	 *
 	 * @return String
 	 */
-	public static function get_shipping_zone( $to_country ) {
-		if ( 'NL' === $to_country || 'BE' === $to_country ) {
+	public static function get_shipping_zone( string $to_country, string $to_state ): string {
+		if ( in_array( $to_country, array( 'NL', 'BE' ) ) ) {
 			return $to_country;
-		} elseif ( in_array( $to_country, WC()->countries->get_european_union_countries(), true ) ) {
+		}
+
+		if ( self::is_canary_island( $to_state, $to_country ) ) {
+			return 'ROW';
+		}
+
+		if ( in_array( $to_country, WC()->countries->get_european_union_countries(), true ) ) {
 			return 'EU';
 		}
 
@@ -607,7 +614,7 @@ class Utils {
 	 */
 	public static function get_shipping_options( $order_id ) {
 		$order                = wc_get_order( $order_id );
-		$shipping_destination = Utils::get_shipping_zone( $order->get_shipping_country() );
+		$shipping_destination = Utils::get_shipping_zone( $order->get_shipping_country(),  $order->get_shipping_state() );
 
 		// Base shipping options (common to all destinations).
 		$base_options = array(
@@ -798,5 +805,29 @@ class Utils {
 		}
 
 		return $filtered_infos;
+	}
+
+	/**
+     * The Canary Islands, due to the distance from mainland Spain, count as a non-EU destination from a transport point of view.
+     * This means the regular EU shipments cannot be used for these destinations,
+     * and instead the non-EU product code must be used, along with country code IC.
+     *
+     * Return true if for Spanish states "Santa Cruz de Tenerife" or "Las Palmas".
+     *
+	 * @param $state String Shipping state.
+	 * @param $country String Shipping country.
+	 *
+	 * @return bool
+	 */
+	public static function is_canary_island( string $state, string $country ): bool {
+		if ( 'ES' !== strtoupper( $country ) ) {
+			return false;
+		}
+
+		if ( in_array( $state, array( 'TF', 'GC' ) ) ) {
+			return true;
+		}
+
+		return false;
 	}
 }

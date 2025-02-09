@@ -212,6 +212,20 @@ class Settings extends \WC_Settings_API {
 				'for_country' => array( 'NL' ),
 				'class'       => 'country-nl',
 			),
+			'freepost_zip'             => array(
+				'title'       => esc_html__( 'Freepost Zipcode', 'postnl-for-woocommerce' ),
+				'type'        => 'text',
+				'description' => esc_html__( 'Enter Freepost Zipcode.', 'postnl-for-woocommerce' ),
+				'desc_tip'    => true,
+				'default'     => '',
+			),
+			'freepost_city'            => array(
+				'title'       => esc_html__( 'Freepost City', 'postnl-for-woocommerce' ),
+				'type'        => 'text',
+				'description' => esc_html__( 'Enter Freepost City.', 'postnl-for-woocommerce' ),
+				'desc_tip'    => true,
+				'default'     => '',
+			),
 			'return_address_street'          => array(
 				'title'       => esc_html__( 'Street Address', 'postnl-for-woocommerce' ),
 				'type'        => 'text',
@@ -614,6 +628,7 @@ class Settings extends \WC_Settings_API {
 				'default'     => 'id_check',
 				'for_country' => array( 'NL' ),
 				'options'     => array(
+					''         		   => esc_html__( 'Standard Shipping', 'postnl-for-woocommerce' ),
 					'id_check'         => __( 'ID Check', 'postnl-for-woocommerce' ),
 					'insured_shipping' => __( 'Insured Shipping', 'postnl-for-woocommerce' ),
 				),
@@ -812,7 +827,7 @@ class Settings extends \WC_Settings_API {
 	 *
 	 * @return bool
 	 */
-	public function get_return_address_or_reply_no() {
+	public function is_return_to_home_enabled() {
 		if ( 'yes' === $this->get_country_option( 'return_address_or_reply_no', '' ) ) {
 			return true;
 		}
@@ -825,7 +840,7 @@ class Settings extends \WC_Settings_API {
 	 *
 	 * @return bool
 	 */
-	public function get_activate_smart_return() {
+	public function is_smart_return_enabled() {
 		if ( 'yes' === $this->get_country_option( 'activate_smart_return', '' ) ) {
 			return true;
 		}
@@ -840,6 +855,24 @@ class Settings extends \WC_Settings_API {
 	 */
 	public function get_return_reply_number() {
 		return $this->get_country_option( 'return_replynumber', '' );
+	}
+
+	/**
+	 * Get freepost city from the settings.
+	 *
+	 * @return String
+	 */
+	public function get_freepost_city() {
+		return $this->get_country_option( 'freepost_city', '' );
+	}
+
+	/**
+	 * Get freepost zipcode from the settings.
+	 *
+	 * @return String
+	 */
+	public function get_freepost_zipcode() {
+		return $this->get_country_option( 'freepost_zip', '' );
 	}
 
 	/**

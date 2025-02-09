@@ -7,11 +7,11 @@
  * Author URI: https://postnl.post/
  * License: GPLv2 or later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
- * Version: 5.6.3
+ * Version: 5.6.4
  * Tested up to: 6.7
  * Requires Plugins: woocommerce
  * WC requires at least: 4.0
- * WC tested up to: 9.5
+ * WC tested up to: 9.6
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by

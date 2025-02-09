@@ -1,5 +1,6 @@
 
 ( function( $ ) {
+	const label_form = jQuery( '#shipment-postnl-label-form' );
 
 	var postnl_order_single = {
 
@@ -14,7 +15,6 @@
 
 		// When a user enters a new tracking item
 		save_form: function () {
-			var label_form = jQuery( '#shipment-postnl-label-form' );
 			var error_cont = label_form.find( '#shipment-postnl-error-text' );
 
 			label_form.block( {
@@ -100,7 +100,6 @@
 
 		// Delete a tracking item
 		delete_label: function() {
-			var label_form = jQuery( '#shipment-postnl-label-form' );
 			var error_cont = label_form.find( '#shipment-postnl-error-text' );
 			label_form.block( {
 				message: null,
@@ -198,6 +197,14 @@
 		},
 
 		activate_return: function() {
+			label_form.block( {
+				message: null,
+				overlayCSS: {
+					background: '#fff',
+					opacity: 0.6
+				}
+			} );
+
             var data = {
                 action:   'postnl_activate_return_function',
                 security: $( '#activate_return_function_nonce' ).val(),
@@ -210,16 +217,24 @@
 					jQuery('.activate-return-info').css('display', 'none');
 					jQuery('.activated-return-info').css('display', 'block');
 				} else {
-					var label_form = jQuery( '#shipment-postnl-label-form' );
 					var error_cont = label_form.find( '#shipment-postnl-error-text' );
 					error_cont.empty();
 					var error_text = response.data.hasOwnProperty( 'message' ) ? response.data.message : 'Unknown error!';
 					error_cont.html( error_text );
 				}
+	            label_form.unblock();
             });
         },
 
 		send_smart_return: function() {
+			label_form.block( {
+				message: null,
+				overlayCSS: {
+					background: '#fff',
+					opacity: 0.6
+				}
+			} );
+
             var error_cont = jQuery( '#shipment-postnl-error-text' );
             var data = {
                 action:   'postnl_send_smart_return_email',
@@ -235,6 +250,7 @@
 					console.log(response);
 					error_cont.html( 'Email sent successfully' );					
 				}
+	            label_form.unblock();
             });
         }
 	}

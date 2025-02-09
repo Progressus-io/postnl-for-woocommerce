@@ -63,18 +63,18 @@ class Client extends Base {
 			'Shipments' => array(
 				'Addresses'           => array(
 					'AddressType' => '01',
-					'City'        => $this->item_info->store['city'],
+					'City'        => $this->item_info->customer['return_address_city'],
 					'CompanyName' => $this->item_info->store['company'],
 					'Countrycode' => $this->item_info->store['country'],
 					'HouseNr'     => $this->item_info->customer['return_address_2'],
 					'Street'      => $this->item_info->customer['return_address_1'],
-					'Zipcode'     => $this->item_info->store['postcode'],
+					'Zipcode'     => $this->item_info->customer['return_address_zip'],
 				),
 				'Contacts'            => array(
 					'ContactType' => '01',
 					'Email'       => $this->item_info->store['email'],
 				),
-				'ProductCodeDelivery' => $this->settings->get_return_address_or_reply_no() ? '3285' : '2285',
+				'ProductCodeDelivery' => $this->settings->is_return_to_home_enabled() ? '3285' : '2285',
 				'ProductOptions'      => array(
 					'Characteristic' => '152',
 					'Option'         => '025',

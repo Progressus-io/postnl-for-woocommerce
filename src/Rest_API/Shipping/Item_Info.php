@@ -141,9 +141,11 @@ class Item_Info extends Base_Info {
 			);
 		}
 
-		$order        = $post_data['order'];
-		$saved_data   = $post_data['saved_data'];
-		$order_weight = $this->calculate_order_weight( $order );
+		$order            = $post_data['order'];
+		$saved_data       = $post_data['saved_data'];
+		$order_weight     = $this->calculate_order_weight( $order );
+		$shipping_country = $order->get_shipping_country();
+		$shipping_state   = $order->get_shipping_state();
 
 		$this->api_args['billing_address'] = array(
 			'first_name' => $order->get_billing_first_name(),
@@ -166,8 +168,8 @@ class Item_Info extends Base_Info {
 			'address_1'    => $order->get_shipping_address_1(),
 			'address_2'    => $order->get_shipping_address_2(),
 			'city'         => $order->get_shipping_city(),
-			'state'        => $order->get_shipping_state(),
-			'country'      => in_array( $order->get_shipping_state(), array( 'TF', 'GC' ) ) ? 'IC' : $order->get_shipping_country(),
+			'state'        => $shipping_state,
+			'country'      => Utils::is_canary_island( $shipping_state, $shipping_country ) ? 'IC' : $shipping_country,
 			'postcode'     => $order->get_shipping_postcode(),
 			'house_number' => $order->get_meta( '_shipping_house_number' ),
 		);

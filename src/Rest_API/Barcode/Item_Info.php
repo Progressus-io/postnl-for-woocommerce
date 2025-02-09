@@ -67,7 +67,9 @@ class Item_Info extends Base_Info {
 			);
 		}
 
-		$order = $post_data['order'];
+		$order            = $post_data['order'];
+		$shipping_country = $order->get_shipping_country();
+		$shipping_state   = $order->get_shipping_state();
 
 		if ( ! empty( $post_data['customer_code'] ) ) {
 			$this->api_args['custom']['customer_code'] = $post_data['customer_code'];
@@ -80,8 +82,8 @@ class Item_Info extends Base_Info {
 			'address_1'  => $order->get_shipping_address_1(),
 			'address_2'  => $order->get_shipping_address_2(),
 			'city'       => $order->get_shipping_city(),
-			'state'      => $order->get_shipping_state(),
-			'country'    => in_array( $order->get_shipping_state(), array( 'TF', 'GC' ) ) ? 'IC' : $order->get_shipping_country(),
+			'state'      => $shipping_state,
+			'country'    => Utils::is_canary_island( $shipping_state, $shipping_country ) ? 'IC' : $shipping_state,
 			'postcode'   => $order->get_shipping_postcode(),
 		);
 

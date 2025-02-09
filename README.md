@@ -40,6 +40,7 @@ PostNL’s official extension for WooCommerce on WordPress. Manage your national
 ### 5.6.5
 * Fix: Improved error messages for Shipping & Return label activation.
 * Fix: Postcode and city fields were incorrectly applied to both Freepost and home addresses in Smart Return shipments.
+* Fix: Adjusted shipping classification for the Canary Islands to use the correct product code and country code.
 
 ### 5.6.4
 * Fix: Add Standard Shipping to Default Shipping Pickup options.

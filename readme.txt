@@ -84,6 +84,7 @@ Follow these instructions (https://www.postnl.nl/Images/aanvragen-api-key-stappe
 = 5.6.5 (2025-xx-xx) =
 * Fix: Improved error messages for Shipping & Return label activation.
 * Fix: Postcode and city fields were incorrectly applied to both Freepost and home addresses in Smart Return shipments.
+* Fix: Adjusted shipping classification for the Canary Islands to use the correct product code and country code.
 
 = 5.6.4 (2025-02-04) =
 * Fix: Add Standard Shipping to Default Shipping Pickup options.

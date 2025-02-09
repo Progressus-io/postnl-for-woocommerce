@@ -808,6 +808,12 @@ class Utils {
 	}
 
 	/**
+     * The Canary Islands, due to the distance from mainland Spain, count as a non-EU destination from a transport point of view.
+     * This means the regular EU shipments cannot be used for these destinations,
+     * and instead the non-EU product code must be used, along with country code IC.
+     *
+     * Return true if for Spanish states "Santa Cruz de Tenerife" or "Las Palmas".
+     *
 	 * @param $state String Shipping state.
 	 * @param $country String Shipping country.
 	 *

@@ -380,12 +380,16 @@ class Utils {
 	 *
 	 * @return String
 	 */
-	public static function get_shipping_zone( $to_country, $to_state ) {
-		if ( 'NL' === $to_country || 'BE' === $to_country ) {
+	public static function get_shipping_zone( string $to_country, string $to_state ): string {
+		if ( in_array( $to_country, array( 'NL', 'BE' ) ) ) {
 			return $to_country;
-		} elseif ( 'TF' === $to_state || 'GC' === $to_state ) {
+		}
+
+		if ( self::is_canary_island( $to_state, $to_country ) ) {
 			return 'ROW';
-		} elseif ( in_array( $to_country, WC()->countries->get_european_union_countries(), true ) ) {
+		}
+
+		if ( in_array( $to_country, WC()->countries->get_european_union_countries(), true ) ) {
 			return 'EU';
 		}
 
@@ -801,5 +805,23 @@ class Utils {
 		}
 
 		return $filtered_infos;
+	}
+
+	/**
+	 * @param $state String Shipping state.
+	 * @param $country String Shipping country.
+	 *
+	 * @return bool
+	 */
+	public static function is_canary_island( string $state, string $country ): bool {
+		if ( 'ES' !== strtoupper( $country ) ) {
+			return false;
+		}
+
+		if ( in_array( $state, array( 'TF', 'GC' ) ) ) {
+			return true;
+		}
+
+		return false;
 	}
 }

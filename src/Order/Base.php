@@ -121,7 +121,7 @@ abstract class Base {
 		}
 
 		// Get from the plugin settings
-		$delivery_zone = $this->get_shipping_zone( $order );
+		$delivery_zone = Utils::get_shipping_zone( $order->get_shipping_country(), $order->get_shipping_state() );
 		$frontend_data = $this->get_frontend_data( $order->get_id() );
 
 		if ( ! empty( $frontend_data['dropoff_points'] ) ) {
@@ -133,32 +133,6 @@ abstract class Base {
 		}
 
 		return $this->settings->get_default_shipping_options( $delivery_zone );
-	}
-
-	/**
-	 * Get delivery zone out of the given order ( 1 of 4 - nl, be, eu, row )
-	 *
-	 * @param \WC_Order $order
-	 *
-	 * @return string
-	 */
-	public function get_shipping_zone( $order ) {
-		$shipping_destination = $order->get_shipping_country();
-		$shipping_state       = $order->get_shipping_state();
-
-		if ( in_array( $shipping_destination, array( 'NL', 'BE' ) ) ) {
-			return $shipping_destination;
-		}
-
-		if ( in_array( $shipping_state, array( 'TF', 'GC' ) ) ) {
-			return 'ROW';
-		}
-
-		if ( in_array( $shipping_destination, WC()->countries->get_european_union_countries() ) ) {
-			return 'EU';
-		}
-
-		return 'ROW';
 	}
 
 	/**

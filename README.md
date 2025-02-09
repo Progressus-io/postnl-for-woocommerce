@@ -1,8 +1,7 @@
 # PostNL for WooCommerce
 
 * Contributors: PostNL
-* Donate link: 
-* Tags: PostNL, Shipping
+* Tags: woocommerce, PostNL, Labels, Shipping
 * Requires at least: 4.6
 * Requires PHP: 5.6
 * Tested up to: 6.7
@@ -41,6 +40,7 @@ PostNL’s official extension for WooCommerce on WordPress. Manage your national
 * Fix: Improved error messages for Shipping & Return label activation.
 * Fix: Postcode and city fields were incorrectly applied to both Freepost and home addresses in Smart Return shipments.
 * Fix: Adjusted shipping classification for the Canary Islands to use the correct product code and country code.
+* Add: `postnl_shipment_addresses` filter to allow third parties to modify shipping addresses and improve compatibility.
 
 ### 5.6.4
 * Fix: Add Standard Shipping to Default Shipping Pickup options.

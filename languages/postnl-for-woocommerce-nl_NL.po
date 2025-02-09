@@ -1379,8 +1379,8 @@ msgstr "Ochtend"
 
 #. translators: %1$s is <strong> opener and %2$s is <strong> closer.
 #: templates/checkout/postnl-dropoff-points.php:103
-msgid "Receive shipment at home? Continue %1$swithout%2$s selecting a Pick-up Point."
-msgstr "Zending thuis ontvangen? Ga door %1$szonder%2$s een PostNL-punt te selecteren."
+msgid "Receive shipment at home? Make a selection from the Delivery Days."
+msgstr "Zending thuis ontvangen? Maak een selectie uit de bezorgdagen."
 
 #: templates/checkout/postnl-dropoff-points.php:137
 msgid "Vanaf"

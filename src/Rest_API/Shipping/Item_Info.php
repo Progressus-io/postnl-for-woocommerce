@@ -141,9 +141,11 @@ class Item_Info extends Base_Info {
 			);
 		}
 
-		$order        = $post_data['order'];
-		$saved_data   = $post_data['saved_data'];
-		$order_weight = $this->calculate_order_weight( $order );
+		$order            = $post_data['order'];
+		$saved_data       = $post_data['saved_data'];
+		$order_weight     = $this->calculate_order_weight( $order );
+		$shipping_country = $order->get_shipping_country();
+		$shipping_state   = $order->get_shipping_state();
 
 		$this->api_args['billing_address'] = array(
 			'first_name' => $order->get_billing_first_name(),
@@ -166,8 +168,8 @@ class Item_Info extends Base_Info {
 			'address_1'    => $order->get_shipping_address_1(),
 			'address_2'    => $order->get_shipping_address_2(),
 			'city'         => $order->get_shipping_city(),
-			'state'        => $order->get_shipping_state(),
-			'country'      => $order->get_shipping_country(),
+			'state'        => $shipping_state,
+			'country'      => Utils::is_canary_island( $shipping_state, $shipping_country ) ? 'IC' : $shipping_country,
 			'postcode'     => $order->get_shipping_postcode(),
 			'house_number' => $order->get_meta( '_shipping_house_number' )
 				? $order->get_meta( '_shipping_house_number' )
@@ -316,7 +318,8 @@ class Item_Info extends Base_Info {
 	 */
 	public function is_rest_of_world() {
 		$to_country  = $this->api_args['shipping_address']['country'];
-		$destination = Utils::get_shipping_zone( $to_country );
+		$to_state    = $this->api_args['shipping_address']['state'];
+		$destination = Utils::get_shipping_zone( $to_country, $to_state );
 
 		return ( 'ROW' === $destination );
 	}
@@ -366,7 +369,7 @@ class Item_Info extends Base_Info {
 				'default'  => '',
 				'sanitize' => function ( $value ) use ( $self ) {
 					if ( 'NL' === $self->api_args['store_address']['country'] ) {
-						return ( $self->api_args['settings']['return_address_or_reply_no'] || $this->get_product_code() == '2928' ) ? $self->api_args['settings']['return_address_street'] : 'Antwoordnummer';
+						return ( $self->api_args['settings']['is_return_to_home_enabled'] || $this->get_product_code() == '2928' ) ? $self->api_args['settings']['return_address_street'] : 'Antwoordnummer';
 					}
 
 					return $self->string_length_sanitization( $value, 95 );
@@ -376,7 +379,7 @@ class Item_Info extends Base_Info {
 				'default'  => '',
 				'sanitize' => function ( $value ) use ( $self ) {
 					if ( 'NL' === $self->api_args['store_address']['country'] ) {
-						$value = ( $self->api_args['settings']['return_address_or_reply_no'] || $this->get_product_code() == '2928' ) ? $self->api_args['settings']['return_address_house_no'] : $self->api_args['settings']['return_replynumber'];
+						$value = ( $self->api_args['settings']['is_return_to_home_enabled'] || $this->get_product_code() == '2928' ) ? $self->api_args['settings']['return_address_house_no'] : $self->api_args['settings']['return_replynumber'];
 					}
 
 					return $self->string_length_sanitization( $value, 35 );
@@ -583,6 +586,35 @@ class Item_Info extends Base_Info {
 		$self = $this;
 
 		return array(
+			'date'  => array(
+				'default'  => '',
+				'validate' => function ( $date ) use ( $self ) {
+					if ( empty( $date ) && $self->is_pickup_points() ) {
+						throw new \Exception(
+							__( 'Pickup "Date" is empty!', 'postnl-for-woocommerce' )
+						);
+					}
+				},
+				'sanitize' => function ( $value ) {
+					$timestamp = strtotime( $value );
+					$date      = gmdate( 'd-m-Y', $timestamp );
+
+					return $date;
+				},
+			),
+			'time'  => array(
+				'default'  => '',
+				'validate' => function ( $hour ) use ( $self ) {
+					if ( empty( $hour ) && $self->is_pickup_points() ) {
+						throw new \Exception(
+							__( 'Pickup "Time" is empty!', 'postnl-for-woocommerce' )
+						);
+					}
+				},
+				'sanitize' => function ( $value ) {
+					return $value . ':00';
+				},
+			),
 			'company'   => array(
 				'validate' => function ( $company ) use ( $self ) {
 					if ( empty( $company ) && $self->is_pickup_points() ) {
@@ -879,13 +911,13 @@ class Item_Info extends Base_Info {
 		$shipping_feature = $this->get_selected_shipping_features();
 		$from_country     = $this->api_args['store_address']['country'];
 		$to_country       = $this->api_args['shipping_address']['country'];
+		$to_state         = $this->api_args['shipping_address']['state'];
 
 		$features = array_keys( $checked_features );
 		$code_map = Mapping::products_data();
 
 		$selected_product = array();
-		$destination      = Utils::get_shipping_zone( $to_country );
-
+		$destination      = Utils::get_shipping_zone( $to_country, $to_state );
 		if ( empty( $code_map[ $from_country ][ $destination ][ $shipping_feature ] ) ) {
 			return $selected_product;
 		}
@@ -935,7 +967,8 @@ class Item_Info extends Base_Info {
 		$option_map   = Mapping::additional_product_options();
 		$from_country = $this->api_args['store_address']['country'];
 		$to_country   = $this->api_args['shipping_address']['country'];
-		$destination  = Utils::get_shipping_zone( $to_country );
+		$to_state     = $this->api_args['shipping_address']['state'];
+		$destination  = Utils::get_shipping_zone( $to_country, $to_state );
 
 		foreach ( $this->api_args as $arg_keys => $arg_data ) {
 			if ( empty( $option_map[ $from_country ][ $destination ][ $arg_keys ] ) ) {
@@ -1017,7 +1050,8 @@ class Item_Info extends Base_Info {
 		$return_label_options = Mapping::shipping_return_labels_options();
 		$from_country         = $this->api_args['store_address']['country'];
 		$to_country           = $this->api_args['shipping_address']['country'];
-		$destination          = Utils::get_shipping_zone( $to_country );
+		$to_state             = $this->api_args['shipping_address']['state'];
+		$destination          = Utils::get_shipping_zone( $to_country, $to_state );
 		$is_letterbox         = 'yes' === $this->api_args['backend_data']['letterbox'];
 		$is_return_activated  = 'yes' === $this->api_args['order_details']['is_return_activated'];
 

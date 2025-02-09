@@ -121,18 +121,18 @@ abstract class Base {
 		}
 
 		// Get from the plugin settings
-		$delivery_zone = Utils::get_shipping_zone( $order->get_shipping_country(), $order->get_shipping_state() );
+		$shipping_zone = Utils::get_shipping_zone( $order->get_shipping_country(), $order->get_shipping_state() );
 		$frontend_data = $this->get_frontend_data( $order->get_id() );
 
 		if ( ! empty( $frontend_data['dropoff_points'] ) ) {
-			$delivery_zone = 'PICKUP';
+			$shipping_zone = 'PICKUP';
 		}
 
-		if ( 'NL' === $delivery_zone && Utils::is_order_eligible_auto_letterbox( $order ) ) {
+		if ( 'NL' === $shipping_zone && Utils::is_order_eligible_auto_letterbox( $order ) ) {
 			return array( 'letterbox' => 'yes' );
 		}
 
-		return $this->settings->get_default_shipping_options( $delivery_zone );
+		return $this->settings->get_default_shipping_options( $shipping_zone );
 	}
 
 	/**

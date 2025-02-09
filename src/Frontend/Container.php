@@ -222,10 +222,6 @@ class Container {
 	 * @throws \Exception.
 	 */
 	public function display_fields( $post_data ) {
-		// Only display the fields if these two options are enabled in the settings.
-		if ( ! $this->settings->is_delivery_days_enabled() && ! $this->settings->is_pickup_points_enabled() ) {
-			return;
-		}
 
 		$checkout_data = $this->get_checkout_data( $post_data );
 

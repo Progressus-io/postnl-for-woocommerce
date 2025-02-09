@@ -100,7 +100,7 @@ function postnl_display_dropoff_desc( $data ) {
 	<div class="postnl_content_desc">
 		<?php
 			// translators: %1$s is <strong> opener and %2$s is <strong> closer.
-			echo sprintf( esc_html__( 'Receive shipment at home? Continue %1$swithout%2$s selecting a Pick-up Point.', 'postnl-for-woocommerce' ), '<strong>', '</strong>' );
+			echo sprintf( esc_html__( 'Receive shipment at home? Make a selection from the Delivery Days.', 'postnl-for-woocommerce' ) );
 		?>
 	</div>
 	<?php

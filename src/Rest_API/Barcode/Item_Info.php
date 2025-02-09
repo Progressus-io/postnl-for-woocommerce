@@ -209,7 +209,7 @@ class Item_Info extends Base_Info {
 	/**
 	 * Use specific barcode types for some products.
 	 *
-	 * @param string  $barcode_type Selected GlobalPack barcode type.
+	 * @param string $barcode_type Selected GlobalPack barcode type.
 	 *
 	 * @return string.
 	 */

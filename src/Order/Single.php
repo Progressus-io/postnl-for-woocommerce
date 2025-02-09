@@ -152,7 +152,8 @@ class Single extends Base {
 		$option_map   = Mapping::option_available_list();
 		$from_country = Utils::get_base_country();
 		$to_country   = $order->get_shipping_country();
-		$destination  = Utils::get_shipping_zone( $to_country );
+		$to_state     = $order->get_shipping_state();
+		$destination  = Utils::get_shipping_zone( $to_country, $to_state );
 
 		foreach ( $meta_fields as $index => $field ) {
 			if ( isset( $field['nonce'] ) && true === $field['nonce'] ) {

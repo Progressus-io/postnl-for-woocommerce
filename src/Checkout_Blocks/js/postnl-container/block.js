@@ -128,6 +128,25 @@ export const Block = ({checkoutExtensionData}) => {
 				.then((response) => {
 					if (response.data.success && response.data.data) {
 						const respData = response.data.data;
+						// If delivery days are not enabled, override delivery_options with a single "As soon as possible" option.
+						if (!respData.is_delivery_days_enabled) {
+							const asapText = __('As soon as possible', 'postnl-for-woocommerce');
+							respData.delivery_options = [
+								{
+									day: asapText,
+									date: asapText,
+									options: [
+										{
+											from: asapText, // This text will now appear when rendered.
+											to: '',        // Leave empty so no dash or second value appears.
+											type: 'ASAP',
+											price: 0,
+										},
+									],
+								},
+							];
+						}
+
 
 						// If validated_address returned, update shipping address if needed
 						if (

@@ -192,12 +192,21 @@ export const Block = ({checkoutExtensionData, isActive, deliveryOptions}) => {
 			{deliveryOptions.length > 0 && (
 				<div>
 					<ul className="postnl_delivery_day_list postnl_list">
-						{deliveryOptions.map((delivery, index) =>
-							Array.isArray(delivery.options) && delivery.options.length > 0 ? (
+						{deliveryOptions.map((delivery, index) => {
+							// Determine if the current delivery option is ASAP
+							const isASAP =
+								Array.isArray(delivery.options) &&
+								delivery.options.length > 0 &&
+								delivery.options[0].type === 'ASAP';
+
+							return (
 								<li key={index}>
-									<div className="list_title">
-										<span>{`${delivery.date} ${delivery.day}`}</span>
-									</div>
+									{/* Only render the list title if this is not an ASAP option */}
+									{!isASAP && (
+										<div className="list_title">
+											<span>{`${delivery.date} ${delivery.day}`}</span>
+										</div>
+									)}
 									<ul className="postnl_sub_list">
 										{delivery.options.map((option, optionIndex) => {
 											const from = option.from || '';
@@ -214,7 +223,6 @@ export const Block = ({checkoutExtensionData, isActive, deliveryOptions}) => {
 												delivery_time = __('Evening', 'postnl-for-woocommerce');
 											} else if (optionType === 'Morning' || optionType === '08:00-12:00') {
 												delivery_time = __('Morning', 'postnl-for-woocommerce');
-											} else {
 											}
 
 											return (
@@ -226,8 +234,10 @@ export const Block = ({checkoutExtensionData, isActive, deliveryOptions}) => {
 													data-to={to}
 													data-type={optionType}
 												>
-													<label className="postnl_sub_radio_label"
-														   htmlFor={`delivery_day_${value}`}>
+													<label
+														className="postnl_sub_radio_label"
+														htmlFor={`delivery_day_${value}`}
+													>
 														<input
 															type="radio"
 															id={`delivery_day_${value}`}
@@ -236,27 +246,61 @@ export const Block = ({checkoutExtensionData, isActive, deliveryOptions}) => {
 															value={value}
 															checked={isChecked}
 															onChange={() =>
-																handleOptionChange(value, delivery.date, from, to, optionType, price)
+																handleOptionChange(
+																	value,
+																	delivery.date,
+																	from,
+																	to,
+																	optionType,
+																	price
+																)
 															}
 														/>
 														{price > 0 && <i>+€{price.toFixed(2)}</i>}
-														<i>{delivery_time}</i>
-														<span>{`${from} - ${to}`}</span>
+														{/* Only render delivery_time if not ASAP */}
+														{!isASAP && <i>{delivery_time}</i>}
+														{/* For ASAP, show only one label; otherwise, show from-to range */}
+														<span>{isASAP ? from : `${from} - ${to}`}</span>
 													</label>
 												</li>
 											);
 										})}
 									</ul>
 								</li>
-							) : null
-						)}
+							);
+						})}
 					</ul>
-					<input type="hidden" name="deliveryDay" id="deliveryDay" value={deliveryDay}/>
-					<input type="hidden" name="deliveryDayDate" id="deliveryDayDate" value={deliveryDayDate}/>
-					<input type="hidden" name="deliveryDayFrom" id="deliveryDayFrom" value={deliveryDayFrom}/>
-					<input type="hidden" name="deliveryDayTo" id="deliveryDayTo" value={deliveryDayTo}/>
-					<input type="hidden" name="deliveryDayPrice" id="deliveryDayPrice" value={deliveryDayPrice}/>
-					<input type="hidden" name="deliveryDayType" id="deliveryDayType" value={deliveryDayType}/>
+					<input type="hidden" name="deliveryDay" id="deliveryDay" value={deliveryDay} />
+					<input
+						type="hidden"
+						name="deliveryDayDate"
+						id="deliveryDayDate"
+						value={deliveryDayDate}
+					/>
+					<input
+						type="hidden"
+						name="deliveryDayFrom"
+						id="deliveryDayFrom"
+						value={deliveryDayFrom}
+					/>
+					<input
+						type="hidden"
+						name="deliveryDayTo"
+						id="deliveryDayTo"
+						value={deliveryDayTo}
+					/>
+					<input
+						type="hidden"
+						name="deliveryDayPrice"
+						id="deliveryDayPrice"
+						value={deliveryDayPrice}
+					/>
+					<input
+						type="hidden"
+						name="deliveryDayType"
+						id="deliveryDayType"
+						value={deliveryDayType}
+					/>
 				</div>
 			)}
 		</div>

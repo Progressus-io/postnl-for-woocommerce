@@ -87,9 +87,22 @@ export const Block = ({checkoutExtensionData, isActive, deliveryOptions}) => {
 		setExtensionData('postnl', 'deliveryDayType', '');
 	};
 
+	// Determine ASAP mode based on the first delivery option:
+	const isASAPMode =
+		Array.isArray(deliveryOptions) &&
+		deliveryOptions.length > 0 &&
+		Array.isArray(deliveryOptions[0].options) &&
+		deliveryOptions[0].options.length > 0 &&
+		deliveryOptions[0].options[0].type === 'ASAP';
+
 	useEffect(() => {
 		if (!isActive || !Array.isArray(deliveryOptions) || deliveryOptions.length === 0) {
 			// If tab is not active or no options, clear selections
+			clearSelections(true);
+			return;
+		}
+		// If ASAP mode is active, clear selections and do not auto-select.
+		if (isASAPMode) {
 			clearSelections(true);
 			return;
 		}
@@ -112,6 +125,14 @@ export const Block = ({checkoutExtensionData, isActive, deliveryOptions}) => {
 	}, [isActive, deliveryOptions]);
 
 	const handleOptionChange = async (value, deliveryDate, from, to, type, price) => {
+
+		// In ASAP mode, do not update any state or hidden fields.
+		if (isASAPMode) {
+			setSelectedOption(value);
+			sessionStorage.setItem('postnl_selected_option', value);
+			return;
+		}
+
 		setSelectedOption(value);
 		sessionStorage.setItem('postnl_selected_option', value);
 

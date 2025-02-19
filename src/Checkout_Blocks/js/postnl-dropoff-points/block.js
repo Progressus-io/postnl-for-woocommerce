@@ -277,9 +277,7 @@ export const Block = ({checkoutExtensionData, isActive, dropoffOptions}) => {
 		<div className="postnl-dropoff-container">
 			{dropoffOptions.some(point => point.show_desc) && (
 				<div className="postnl_content_desc">
-					{__('Receive shipment at home? Continue ', 'postnl-for-woocommerce')}
-					<strong>{__('without', 'postnl-for-woocommerce')}</strong>
-					{__(' selecting a Drop-off Point.', 'postnl-for-woocommerce')}
+					{__('Receive shipment at home? Make a selection from the Delivery Days.', 'postnl-for-woocommerce')}
 				</div>
 			)}
 			<ul className="postnl_dropoff_points_list postnl_list">

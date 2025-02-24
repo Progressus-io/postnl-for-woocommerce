@@ -126,6 +126,14 @@ class CustomizedPDFMerger {
 		$label_number   = 1;
 		$a4_size        = Utils::get_paper_size( 'A4' );
 		$a6_size        = Utils::get_paper_size( 'A6' );
+
+		/*
+		 * Temp - Adding 1cm to handel to fix EU labels merging.
+		 * PostNL backend system generate labels with extra mm margins.
+		 */
+		$a6_size['height'] = $a6_size['height'] + 10;
+		$a6_size['width']  = $a6_size['width'] + 10;
+
 		$label_format   = $this->settings->get_label_format();
 		$first_page     = true;
 		$coordinate_map = array(
@@ -178,8 +186,8 @@ class CustomizedPDFMerger {
 
 				if (
 					count( $files ) > 1 &&
-					intval( $file_template['size']['width'] ) === intval( $a6_size['height'] )
-					&& intval( $file_template['size']['height'] ) === intval( $a6_size['width'] )
+					intval( $file_template['size']['width'] ) <= intval( $a6_size['height'] )
+					&& intval( $file_template['size']['height'] ) <= intval( $a6_size['width'] )
 				) {
 					$rotation_needed = true;
 				}
@@ -188,8 +196,8 @@ class CustomizedPDFMerger {
 					! $rotation_needed
 					&& intval( $file_template['size']['width'] ) !== intval( $a4_size['width'] )
 					&& intval( $file_template['size']['height'] ) !== intval( $a4_size['height'] )
-					&& intval( $file_template['size']['width'] ) !== intval( $a6_size['width'] )
-					&& intval( $file_template['size']['height'] ) !== intval( $a6_size['height'] )
+					&& intval( $file_template['size']['width'] ) > intval( $a6_size['width'] )
+					&& intval( $file_template['size']['height'] ) > intval( $a6_size['height'] )
 				) {
 					$fpdi->AddPage( $file_template['orientation'], array(
 						$file_template['size']['width'],

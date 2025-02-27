@@ -5,7 +5,7 @@ import {useEffect, useState, useCallback} from '@wordpress/element';
 import {__} from '@wordpress/i18n';
 import {debounce} from 'lodash';
 
-export const Block = ({checkoutExtensionData, isActive, deliveryOptions}) => {
+export const Block = ({checkoutExtensionData, isActive, deliveryOptions, isDeliveryDaysEnabled}) => {
 	const {setExtensionData} = checkoutExtensionData;
 
 	// Debounce setting extension data to optimize performance
@@ -87,13 +87,6 @@ export const Block = ({checkoutExtensionData, isActive, deliveryOptions}) => {
 		setExtensionData('postnl', 'deliveryDayType', '');
 	};
 
-	// Determine ASAP mode based on the first delivery option:
-	const isASAPMode =
-		Array.isArray(deliveryOptions) &&
-		deliveryOptions.length > 0 &&
-		Array.isArray(deliveryOptions[0].options) &&
-		deliveryOptions[0].options.length > 0 &&
-		deliveryOptions[0].options[0].type === 'ASAP';
 
 	useEffect(() => {
 		if (!isActive || !Array.isArray(deliveryOptions) || deliveryOptions.length === 0) {
@@ -101,11 +94,7 @@ export const Block = ({checkoutExtensionData, isActive, deliveryOptions}) => {
 			clearSelections(true);
 			return;
 		}
-		// If ASAP mode is active, clear selections and do not auto-select.
-		if (isASAPMode) {
-			clearSelections(true);
-			return;
-		}
+
 
 		// If active and no option selected, select the default (first) option if available
 		if (isActive && !selectedOption) {
@@ -126,12 +115,6 @@ export const Block = ({checkoutExtensionData, isActive, deliveryOptions}) => {
 
 	const handleOptionChange = async (value, deliveryDate, from, to, type, price) => {
 
-		// In ASAP mode, do not update any state or hidden fields.
-		if (isASAPMode) {
-			setSelectedOption(value);
-			sessionStorage.setItem('postnl_selected_option', value);
-			return;
-		}
 
 		setSelectedOption(value);
 		sessionStorage.setItem('postnl_selected_option', value);
@@ -214,20 +197,10 @@ export const Block = ({checkoutExtensionData, isActive, deliveryOptions}) => {
 				<div>
 					<ul className="postnl_delivery_day_list postnl_list">
 						{deliveryOptions.map((delivery, index) => {
-							// Determine if the current delivery option is ASAP
-							const isASAP =
-								Array.isArray(delivery.options) &&
-								delivery.options.length > 0 &&
-								delivery.options[0].type === 'ASAP';
 
 							return (
 								<li key={index}>
-									{/* Only render the list title if this is not an ASAP option */}
-									{!isASAP && (
-										<div className="list_title">
-											<span>{`${delivery.date} ${delivery.day}`}</span>
-										</div>
-									)}
+
 									<ul className="postnl_sub_list">
 										{delivery.options.map((option, optionIndex) => {
 											const from = option.from || '';
@@ -278,10 +251,9 @@ export const Block = ({checkoutExtensionData, isActive, deliveryOptions}) => {
 															}
 														/>
 														{price > 0 && <i>+€{price.toFixed(2)}</i>}
-														{/* Only render delivery_time if not ASAP */}
-														{!isASAP && <i>{delivery_time}</i>}
-														{/* For ASAP, show only one label; otherwise, show from-to range */}
-														<span>{isASAP ? from : `${from} - ${to}`}</span>
+														<i>{delivery_time}</i>
+														<span>{!isDeliveryDaysEnabled ? __('As soon as possible', 'postnl-for-woocommerce') : `${from} - ${to}`}</span>
+
 													</label>
 												</li>
 											);

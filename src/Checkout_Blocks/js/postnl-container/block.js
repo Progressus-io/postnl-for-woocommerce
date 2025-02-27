@@ -45,6 +45,7 @@ export const Block = ({checkoutExtensionData}) => {
 
 	const [deliveryOptions, setDeliveryOptions] = useState([]);
 	const [dropoffOptions, setDropoffOptions] = useState([]);
+	const [deliveryDaysEnabled, setDeliveryDaysEnabled] = useState(true);
 
 	// To prevent infinite loops if we update the address programmatically
 	const isUpdatingAddress = useRef(false);
@@ -128,24 +129,6 @@ export const Block = ({checkoutExtensionData}) => {
 				.then((response) => {
 					if (response.data.success && response.data.data) {
 						const respData = response.data.data;
-						// If delivery days are not enabled, override delivery_options with a single "As soon as possible" option.
-						if (!respData.is_delivery_days_enabled) {
-							const asapText = __('As soon as possible', 'postnl-for-woocommerce');
-							respData.delivery_options = [
-								{
-									day: asapText,
-									date: asapText,
-									options: [
-										{
-											from: asapText, // This text will now appear when rendered.
-											to: '',        // Leave empty so no dash or second value appears.
-											type: 'ASAP',
-											price: 0,
-										},
-									],
-								},
-							];
-						}
 
 
 						// If validated_address returned, update shipping address if needed
@@ -174,6 +157,7 @@ export const Block = ({checkoutExtensionData}) => {
 							}
 						}
 
+						setDeliveryDaysEnabled(respData.is_delivery_days_enabled);
 						setShowContainer(respData.show_container || false);
 						setDeliveryOptions(respData.delivery_options || []);
 						setDropoffOptions(respData.dropoff_options || []);
@@ -290,6 +274,7 @@ export const Block = ({checkoutExtensionData}) => {
 								checkoutExtensionData={checkoutExtensionData}
 								isActive={activeTab === 'delivery_day'}
 								deliveryOptions={deliveryOptions}
+								isDeliveryDaysEnabled={deliveryDaysEnabled}
 							/>
 						</div>
 						<div

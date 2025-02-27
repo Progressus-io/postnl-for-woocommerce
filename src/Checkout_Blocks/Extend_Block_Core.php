@@ -361,7 +361,6 @@ class Extend_Block_Core {
 			$checkout_data    = $container->get_checkout_data( $order_data );
 			$delivery_options = $delivery_day->get_content_data( $checkout_data['response'], $checkout_data['post_data'] );
 			$dropoff_options  = $dropoff->get_content_data( $checkout_data['response'], $checkout_data['post_data'] );
-			$is_delivery_days_enabled=$settings->is_delivery_days_enabled();
 			$delivery_options_array = isset( $delivery_options['delivery_options'] ) ? $delivery_options['delivery_options'] : array();
 			$dropoff_options_array  = isset( $dropoff_options['dropoff_options'] ) ? $dropoff_options['dropoff_options'] : array();
 
@@ -389,7 +388,7 @@ class Extend_Block_Core {
 					'validated_address' => $validated_address,
 					'delivery_options'  => $delivery_options_array,
 					'dropoff_options'   => $dropoff_options_array,
-					'is_delivery_days_enabled'   => $is_delivery_days_enabled,
+					'is_delivery_days_enabled'   => $delivery_options['is_delivery_days_enabled'],
 				),
 				200
 			);

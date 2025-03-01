@@ -213,6 +213,27 @@ export const Block = ({checkoutExtensionData}) => {
 		}
 	}, [isComplete, letterbox, showContainer]);
 
+	useEffect(() => {
+		if (!letterbox || !showContainer || deliveryOptions.length === 0) {
+			return;
+		}
+		const firstDelivery = deliveryOptions[0];
+		if (!Array.isArray(firstDelivery.options) || firstDelivery.options.length === 0) {
+			return;
+		}
+		const firstOption = firstDelivery.options[0];
+
+		// Build the combined value (like in DeliveryDayBlock):
+		const deliveryDay = `${firstDelivery.date}_${firstOption.from}-${firstOption.to}_${firstOption.price}`;
+
+		setExtensionData('postnl', 'deliveryDay', deliveryDay);
+		setExtensionData('postnl', 'deliveryDayDate', firstDelivery.date || '');
+		setExtensionData('postnl', 'deliveryDayFrom', firstOption.from || '');
+		setExtensionData('postnl', 'deliveryDayTo', firstOption.to || '');
+		setExtensionData('postnl', 'deliveryDayPrice', String(firstOption.price || '0'));
+		setExtensionData('postnl', 'deliveryDayType', firstOption.type || 'Letterbox');
+	}, [letterbox, showContainer, deliveryOptions, setExtensionData]);
+
 	return (
 		<div
 			id="postnl_checkout_option"

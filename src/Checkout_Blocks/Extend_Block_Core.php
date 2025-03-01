@@ -335,6 +335,16 @@ class Extend_Block_Core {
 		// Save the customer data
 		WC()->customer->save();
 
+		// Proceed to fetch delivery and dropoff options
+		$order_data = $sanitized_data;
+
+		$container        = new Container();
+		$delivery_day     = new Delivery_Day();
+		$dropoff          = new Dropoff_Points();
+		$checkout_data    = $container->get_checkout_data( $order_data );
+		$delivery_options = $delivery_day->get_content_data( $checkout_data['response'], $checkout_data['post_data'] );
+		$dropoff_options  = $dropoff->get_content_data( $checkout_data['response'], $checkout_data['post_data'] );
+
 		// **Letterbox is Eligible**
 		if ( $letterbox ) {
 			wp_send_json_success(
@@ -342,25 +352,18 @@ class Extend_Block_Core {
 					'message'           => 'Eligible for letterbox.',
 					'show_container'    => true,
 					'validated_address' => $validated_address,
-					'delivery_options'  => array(),
+					'delivery_options'  => $delivery_options['delivery_options'],
 					'dropoff_options'   => array(),
+					'is_letterbox'      => true,
 				),
 				200
 			);
 			wp_die();
 		}
 
-		// Proceed to fetch delivery and dropoff options only if not letterbox
-		$order_data = $sanitized_data;
 
 		// Attempt to retrieve checkout data, delivery, and dropoff options
 		try {
-			$container        = new Container();
-			$delivery_day     = new Delivery_Day();
-			$dropoff          = new Dropoff_Points();
-			$checkout_data    = $container->get_checkout_data( $order_data );
-			$delivery_options = $delivery_day->get_content_data( $checkout_data['response'], $checkout_data['post_data'] );
-			$dropoff_options  = $dropoff->get_content_data( $checkout_data['response'], $checkout_data['post_data'] );
 			$delivery_options_array = isset( $delivery_options['delivery_options'] ) ? $delivery_options['delivery_options'] : array();
 			$dropoff_options_array  = isset( $dropoff_options['dropoff_options'] ) ? $dropoff_options['dropoff_options'] : array();
 

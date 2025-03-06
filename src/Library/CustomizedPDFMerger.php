@@ -12,7 +12,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 use Exception;
-use PostNLWooCommerce\Main;
 use PostNLWooCommerce\Shipping_Method\Settings;
 use PostNLWooCommerce\Utils;
 

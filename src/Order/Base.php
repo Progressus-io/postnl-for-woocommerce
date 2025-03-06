@@ -15,7 +15,6 @@ use PostNLWooCommerce\Rest_API\Letterbox;
 use PostNLWooCommerce\Shipping_Method\Settings;
 use PostNLWooCommerce\Helper\Mapping;
 use PostNLWooCommerce\Library\CustomizedPDFMerger;
-use PostNLWooCommerce\Product;
 use \Imagick;
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -690,8 +689,7 @@ abstract class Base {
 					$label_extension = ! empty( $label_contents['OutputType'] ) ? sanitize_title( $label_contents['OutputType'] ) : 'pdf';
 					$barcode         = $response[ $type ][ $shipment_idx ][ $content_type['barcode_key'] ];
 					$barcode         = is_array( $barcode ) ? array_shift( $barcode ) : $barcode;
-					$label_format  	 = $this->settings->get_label_format();
-					$filename        = Utils::generate_label_name( $order->get_id(), $label_type, $barcode, $label_format, $label_extension );
+					$filename        = Utils::generate_label_name( $order->get_id(), $label_type, $barcode, 'A6', $label_extension );
 					$filepath        = trailingslashit( POSTNL_UPLOADS_DIR ) . $filename;
 
 					if ( wp_mkdir_p( POSTNL_UPLOADS_DIR ) && ! file_exists( $filepath ) ) {
@@ -910,7 +908,7 @@ abstract class Base {
 		}
 		$extension = pathinfo( $file_paths[0], PATHINFO_EXTENSION );
 
-		$filename    = Utils::generate_label_name( $order->get_id(), $label_type, $barcode, $label_format, $extension );
+		$filename    = Utils::generate_label_name( $order->get_id(), $label_type, $barcode, $label_format . '-merged', $extension );
 		$merged_info = $this->merge_labels( $file_paths, $filename );
 
 		$merged_labels[ $label_type ] = array(
@@ -918,7 +916,7 @@ abstract class Base {
 			'barcode'      => $barcode,
 			'created_at'   => current_time( 'timestamp' ),
 			'filepath'     => $merged_info['filepath'],
-			'merged_files' => $merged_info['merged_filepaths'],
+			'merged_files' => $file_paths,
 		);
 
 		return $merged_labels;

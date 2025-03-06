@@ -162,20 +162,20 @@ class CustomizedPDFMerger {
 			foreach ( $file_templates as $file_template ) {
 				$rotation_needed  = false;
 				$tolerance        = 5; // Tolerance in mm for A6 only.
-				$fileWidth        = intval( $file_template['size']['width'] );
-				$fileHeight       = intval( $file_template['size']['height'] );
+				$file_width       = intval( $file_template['size']['width'] );
+				$file_height      = intval( $file_template['size']['height'] );
 				$file_orientation = $file_template['size']['orientation'];
 
 				// Check if the file matches A6 dimensions (vertical or horizontal) within tolerance.
-				$isA6 = ( abs( $fileWidth - intval( $a6_size['height'] ) ) <= $tolerance &&
-				          abs( $fileHeight - intval( $a6_size['width'] ) ) <= $tolerance )
-				        || ( abs( $fileWidth - intval( $a6_size['width'] ) ) <= $tolerance &&
-				             abs( $fileHeight - intval( $a6_size['height'] ) ) <= $tolerance );
+				$isA6 = ( abs( $file_width - intval( $a6_size['height'] ) ) <= $tolerance &&
+				          abs( $file_height - intval( $a6_size['width'] ) ) <= $tolerance )
+				        || ( abs( $file_width - intval( $a6_size['width'] ) ) <= $tolerance &&
+				             abs( $file_height - intval( $a6_size['height'] ) ) <= $tolerance );
 
 				if ( 'A6' === $label_format || ! $isA6 || 1 === count( $files ) ) {
 					$fpdi->AddPage( $file_orientation, array(
-						$fileWidth,
-						$fileHeight,
+						$file_width,
+						$file_height,
 					) );
 					$fpdi->useTemplate( $file_template['template'] );
 					$label_number = 1;
@@ -183,8 +183,8 @@ class CustomizedPDFMerger {
 				}
 
 				if (
-					$fileWidth <= ( intval( $a6_size['height'] ) + $tolerance ) &&
-					$fileHeight <= ( intval( $a6_size['width'] ) + $tolerance )
+					$file_width <= ( intval( $a6_size['height'] ) + $tolerance ) &&
+					$file_height <= ( intval( $a6_size['width'] ) + $tolerance )
 				) {
 					$rotation_needed = true;
 				}
@@ -211,14 +211,14 @@ class CustomizedPDFMerger {
 
 				// Scale A6 PDF.
 				if ( $rotation_needed ) {
-					$scaleX = $a6_size['width'] / $fileHeight;
-					$scaleY = $a6_size['height'] / $fileWidth;
+					$scale_x = $a6_size['width'] / $file_height;
+					$scale_y = $a6_size['height'] / $file_width;
 				} else {
-					$scaleX = $a6_size['width'] / $fileWidth;
-					$scaleY = $a6_size['height'] / $fileHeight;
+					$scale_x = $a6_size['width'] / $file_width;
+					$scale_y = $a6_size['height'] / $file_height;
 				}
 
-				$scale = min( $scaleX, $scaleY );
+				$scale = min( $scale_x, $scale_y );
 
 				if ( $rotation_needed ) {
 					$fpdi->Rotate( 90, 0, 0 );

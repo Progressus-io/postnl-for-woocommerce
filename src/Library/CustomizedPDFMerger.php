@@ -164,6 +164,7 @@ class CustomizedPDFMerger {
 				$file_width       = intval( $file_template['size']['width'] );
 				$file_height      = intval( $file_template['size']['height'] );
 				$file_orientation = $file_template['size']['orientation'];
+				$is_cn23          = ( stripos( $filename, '-cn23-' ) !== false );
 
 				// Check if the file matches A6 dimensions (vertical or horizontal) within tolerance.
 				$isA6 = ( abs( $file_width - intval( $a6_size['height'] ) ) <= $tolerance &&
@@ -171,7 +172,7 @@ class CustomizedPDFMerger {
 				        || ( abs( $file_width - intval( $a6_size['width'] ) ) <= $tolerance &&
 				             abs( $file_height - intval( $a6_size['height'] ) ) <= $tolerance );
 
-				if ( 'A6' === $label_format || ! $isA6 || 1 === count( $files ) ) {
+				if ( 'A6' === $label_format || $is_cn23 || ! $isA6 || 1 === count( $files ) ) {
 					$fpdi->AddPage( $file_orientation, array(
 						$file_width,
 						$file_height,

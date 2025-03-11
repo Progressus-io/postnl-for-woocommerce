@@ -381,6 +381,23 @@ msgstr "Kan nonce-veld niet vinden!"
 msgid "Nonce is invalid!"
 msgstr "Nonce is ongeldig!"
 
+#: src/Order/Single.php:604
+#: src/Order/Single.php:677
+msgid "Nonce is invalid"
+msgstr "Nonce is ongeldig"
+
+#: src/Product/Product_Editor.php:47
+msgid "PostNL extra settings"
+msgstr "PostNL extra instellingen"
+
+#: src/Product/Product_Editor.php:48
+msgid "Enable Letterbox Parcel"
+msgstr "Activeer automatische brievenbuspakjes"
+
+#: src/Product/Product_Editor.php:50
+msgid "When enabled, PostNL plugin automatically determines whether a shipment fits through a letterbox."
+msgstr "Wanneer deze geactiveerd wordt zal de plug-in nagaan of een zending door de brievenbus past"
+
 #. translators: %s will be replaced by service name.
 #: src/Product/Single.php:84
 msgid "Enable Letterbox Parcel (%s)"
@@ -396,6 +413,30 @@ msgstr ""
 "past en deze verzendoptie toewijzen. Deze toewijzing kan ongedaan gemaakt worden door handmatig de verzendopties "
 "aan te passen vanuit het bulkactie-menu of het Label & Tracking menu. Automatische toewijzing van "
 "brievenbuspakjes werkt alleen voor zendingen binnen Nederland."
+
+#: src/Product/Product_Editor.php:63
+msgid "Maximum Quantity per Letterbox Parcel"
+msgstr "Maximum aantal per brievenbuspakje"
+
+#: src/Product/Product_Editor.php:67
+msgid "Specify how many times this product fits in a letterbox parcel."
+msgstr "Geef aan hoe vaak het product in een brievenbuspakje past"
+
+#: src/Product/Product_Editor.php:78
+msgid "Country of Origin"
+msgstr "Land van herkomst"
+
+#: src/Product/Product_Editor.php:98
+msgid "Select the country of origin for this product."
+msgstr "Selecteer het land van herkomst voor dit product"
+
+#: src/Product/Product_Editor.php:109
+msgid "HS Tariff Code"
+msgstr ""
+
+#: src/Product/Product_Editor.php:112
+msgid "HS Tariff Code for international shipping."
+msgstr "HS Tariff Code voor internationale zendingen"
 
 #. translators: %s will be replaced by service name.
 #: src/Product/Single.php:92
@@ -831,6 +872,22 @@ msgstr "Antwoordnummer"
 msgid "Enter replynumber."
 msgstr "Vul de cijfers van het antwoordnummer in."
 
+#: src/Shipping_Method/Settings.php:216
+msgid "Freepost Zipcode"
+msgstr "Postcode antwoordnummer"
+
+#: src/Shipping_Method/Settings.php:218
+msgid "Enter Freepost Zipcode."
+msgstr "Vul de Postcode antwoordnummer"
+
+#: src/Shipping_Method/Settings.php:223
+msgid "Freepost City"
+msgstr "Stad antwoordnummer"
+
+#: src/Shipping_Method/Settings.php:225
+msgid "Enter Freepost City."
+msgstr "Vul de Stad antwoordnummer"
+
 #: src/Shipping_Method/Settings.php:177
 msgid "Street Address"
 msgstr "Straat"
@@ -1228,6 +1285,14 @@ msgstr "Non-EU Pakket + Track & Trace + Verzekerd Verzenden"
 #: src/Shipping_Method/Settings.php:539 src/Shipping_Method/Settings.php:587
 msgid "Parcel non-EU + Track & Trace + Insured Plus"
 msgstr "Non-EU Pakket + Track & Trace + Verzekerd Verzenden Plus"
+
+#: src/Shipping_Method/Settings.php:625
+msgid "Default Shipping Pickup"
+msgstr "Standaard verzendmethode afhalen"
+
+#: src/Shipping_Method/Settings.php:627
+msgid "Shipping options Pickup."
+msgstr "Selecteer een standaard verzendoptie voor afhalen bij PostNL"
 
 #: src/Shipping_Method/Settings.php:548
 msgid "Automatically change order status to Completed"

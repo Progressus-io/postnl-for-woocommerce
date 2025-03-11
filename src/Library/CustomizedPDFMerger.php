@@ -100,9 +100,6 @@ class CustomizedPDFMerger {
 						'size'        => $size,
 						'orientation' => $fileorientation,
 					);
-
-					//$fpdi->AddPage($fileorientation, array($size['width'], $size['height']));
-					//$fpdi->useTemplate($template);
 				}
 			} else {
 				foreach ( $filepages as $page ) {
@@ -116,9 +113,6 @@ class CustomizedPDFMerger {
 						'size'        => $size,
 						'orientation' => $fileorientation,
 					);
-
-					//$fpdi->AddPage($fileorientation, array($size['width'], $size['height']));
-					//$fpdi->useTemplate($template);
 				}
 			}
 		}
@@ -126,6 +120,7 @@ class CustomizedPDFMerger {
 		$label_number   = 1;
 		$a4_size        = Utils::get_paper_size( 'A4' );
 		$a6_size        = Utils::get_paper_size( 'A6' );
+
 		$label_format   = $this->settings->get_label_format();
 		$first_page     = true;
 		$coordinate_map = array(
@@ -164,67 +159,75 @@ class CustomizedPDFMerger {
 
 		foreach ( $files as $filename => $file_templates ) {
 			foreach ( $file_templates as $file_template ) {
-				if ( 'A6' === $label_format ) {
-					$fpdi->AddPage( $file_template['size']['orientation'], array(
-						$file_template['size']['width'],
-						$file_template['size']['height']
+				$rotation_needed  = false;
+				$tolerance        = 5; // Tolerance in mm for A6 only.
+				$file_width       = intval( $file_template['size']['width'] );
+				$file_height      = intval( $file_template['size']['height'] );
+				$file_orientation = $file_template['size']['orientation'];
+				$is_cn23          = ( stripos( $filename, '-cn23-' ) !== false );
+
+				// Check if the file matches A6 dimensions (vertical or horizontal) within tolerance.
+				$isA6 = ( abs( $file_width - intval( $a6_size['height'] ) ) <= $tolerance &&
+				          abs( $file_height - intval( $a6_size['width'] ) ) <= $tolerance )
+				        || ( abs( $file_width - intval( $a6_size['width'] ) ) <= $tolerance &&
+				             abs( $file_height - intval( $a6_size['height'] ) ) <= $tolerance );
+
+				if ( 'A6' === $label_format || $is_cn23 || ! $isA6 || 1 === count( $files ) ) {
+					$fpdi->AddPage( $file_orientation, array(
+						$file_width,
+						$file_height,
 					) );
 					$fpdi->useTemplate( $file_template['template'] );
 					$label_number = 1;
 					continue;
 				}
 
-				$rotation_needed = false;
-
 				if (
-					count( $files ) > 1 &&
-					intval( $file_template['size']['width'] ) === intval( $a6_size['height'] )
-					&& intval( $file_template['size']['height'] ) === intval( $a6_size['width'] )
+					$file_width <= ( intval( $a6_size['height'] ) + $tolerance ) &&
+					$file_height <= ( intval( $a6_size['width'] ) + $tolerance )
 				) {
 					$rotation_needed = true;
-				}
-
-				if (
-					! $rotation_needed
-					&& intval( $file_template['size']['width'] ) !== intval( $a4_size['width'] )
-					&& intval( $file_template['size']['height'] ) !== intval( $a4_size['height'] )
-					&& intval( $file_template['size']['width'] ) !== intval( $a6_size['width'] )
-					&& intval( $file_template['size']['height'] ) !== intval( $a6_size['height'] )
-				) {
-					$fpdi->AddPage( $file_template['orientation'], array(
-						$file_template['size']['width'],
-						$file_template['size']['height']
-					) );
-					$fpdi->useTemplate( $file_template['template'] );
-					$label_number = 1;
-					continue;
 				}
 
 				$new_page_condition = $new_page_condition_map[ $start_position ];
 
 				if ( 1 === $label_number % $new_page_condition || $start_position == 'bottom-right' ) {
-					$fpdi->AddPage( 'L', array( $a4_size['width'], $a4_size['height'] ) );
+					$fpdi->AddPage( 'L', array(
+						$a4_size['width'],
+						$a4_size['height']
+					) );
 					$label_number = 1;
 
 					if ( $first_page ) {
-						// If it's the first page, use the given start_position
+						// If it's the first page, use the given start_position.
 						$first_page = false;
 					} else {
-						// For other pages, always start from top-left
+						// For other pages, always start from top-left.
 						$start_position = 'top-left';
 					}
 				}
 
 				$coords = $coordinate_map[ $start_position ][ $label_number ];
 
+				// Scale A6 PDF.
+				if ( $rotation_needed ) {
+					$scale_x = $a6_size['width'] / $file_height;
+					$scale_y = $a6_size['height'] / $file_width;
+				} else {
+					$scale_x = $a6_size['width'] / $file_width;
+					$scale_y = $a6_size['height'] / $file_height;
+				}
+
+				$scale = min( $scale_x, $scale_y );
+
 				if ( $rotation_needed ) {
 					$fpdi->Rotate( 90, 0, 0 );
-					$fpdi->useTemplate( $file_template['template'], - $file_template['size']['width'] - $coords[1], $coords[0], $file_template['size']['width'], $file_template['size']['height'] );
+					$fpdi->useTemplate( $file_template['template'], - $file_template['size']['width'] - $coords[1], $coords[0], ( $file_template['size']['width'] * $scale ), ( $file_template['size']['height'] * $scale ) );
 
 					$fpdi->Rotate( 0 ); // Reset rotation
 				} else {
 					// Portrait - place as is
-					$fpdi->useTemplate( $file_template['template'], $coords[0], $coords[1], $file_template['size']['width'], $file_template['size']['height'], false );
+					$fpdi->useTemplate( $file_template['template'], $coords[0], $coords[1], ( $file_template['size']['width'] * $scale ), ( $file_template['size']['height'] * $scale ), false );
 				}
 
 				$label_number ++;

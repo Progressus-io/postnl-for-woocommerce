@@ -88,6 +88,7 @@ Follow these instructions (https://www.postnl.nl/Images/aanvragen-api-key-stappe
 * Fix: Ensure home delivery option is always visible at checkout, even if Delivery Days are disabled.
 * Fix: Labels now always include a delivery date, even for "as soon as possible" orders.
 * Add: `postnl_shipment_addresses` filter to allow third parties to modify shipping addresses and improve compatibility.
+* Fix: Merging EU Parcel product labels into a single A4 sheet with four A6 labels per page.
 
 = 5.6.4 (2025-02-04) =
 * Fix: Add Standard Shipping to Default Shipping Pickup options.

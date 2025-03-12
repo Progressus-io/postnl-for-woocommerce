@@ -45,6 +45,7 @@ PostNL’s official extension for WooCommerce on WordPress. Manage your national
 * Fix: Labels now always include a delivery date, even for "as soon as possible" orders.
 * Fix: Merging EU Parcel product labels into a single A4 sheet with four A6 labels per page.
 * Add: postnl_shipment_addresses filter to allow third parties to modify shipping addresses and improve compatibility.
+* Tweak: WooCommerce 9.7 compatibility.
 
 ### 5.6.4
 * Fix: Add Standard Shipping to Default Shipping Pickup options.

@@ -90,6 +90,7 @@ Follow these instructions (https://www.postnl.nl/Images/aanvragen-api-key-stappe
 * Fix: Labels now always include a delivery date, even for "as soon as possible" orders.
 * Fix: Merging EU Parcel product labels into a single A4 sheet with four A6 labels per page.
 * Add: postnl_shipment_addresses filter to allow third parties to modify shipping addresses and improve compatibility.
+* Tweak: WooCommerce 9.7 compatibility.
 
 = 5.6.4 (2025-02-04) =
 * Fix: Add Standard Shipping to Default Shipping Pickup options.

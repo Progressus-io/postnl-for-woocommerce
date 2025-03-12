@@ -21,7 +21,7 @@ dist/
 
 # Maven
 target/
-dist/
+build/
 
 # JetBrains IDE
 .idea/
@@ -48,6 +48,10 @@ Thumbs.db
 *.mov
 *.wmv
 
-# Customize PHPCS
 phpcs.xml
 .codegpt
+.vscode
+/vendor/
+
+postnl-for-woocommerce.zip
+woo-postnl.zip

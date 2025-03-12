@@ -11,7 +11,7 @@
  * Tested up to: 6.7
  * Requires Plugins: woocommerce
  * WC requires at least: 4.0
- * WC tested up to: 9.6
+ * WC tested up to: 9.7
  * Text Domain: postnl-for-woocommerce
  * Domain Path: /languages/
  *

@@ -71,13 +71,7 @@ class Extend_Store_Endpoint {
 	 */
 	public static function extend_checkout_schema() {
 		return array(
-			'billingHouseNumber'          => array(
-				'description' => 'Billing house number PostNL',
-				'context'     => array( 'view', 'edit' ),
-				'readonly'    => false,
-				'default'     => '',
-			),
-			'shippingHouseNumber'         => array(
+			'houseNumber'         => array(
 				'description' => 'Shipping house number PostNL',
 				'context'     => array( 'view', 'edit' ),
 				'readonly'    => false,
@@ -85,7 +79,6 @@ class Extend_Store_Endpoint {
 			),
 			'deliveryDay'                 => array(
 				'description' => 'Selected delivery day for PostNL',
-
 				'context'     => array( 'view', 'edit' ),
 				'readonly'    => false,
 				'default'     => '',

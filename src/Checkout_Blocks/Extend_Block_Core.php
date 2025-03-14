@@ -169,11 +169,9 @@ class Extend_Block_Core {
 		$postnl_request_data = $request['extensions'][ $this->name ];
 
 		// Extract billing and shipping house numbers with sanitization
-		$billing_house_number  = isset( $postnl_request_data['postnl/house_number'] ) ? sanitize_text_field( $postnl_request_data['postnl/house_number'] ) : '';
-		$shipping_house_number = isset( $postnl_request_data['postnl/house_number'] ) ? sanitize_text_field( $postnl_request_data['postnl/house_number'] ) : '';
+		$shipping_house_number = isset( $postnl_request_data['houseNumber'] ) ? sanitize_text_field( $postnl_request_data['houseNumber'] ) : '';
 
 		// Update billing and shipping house numbers
-		$order->update_meta_data( '_billing_house_number', $billing_house_number );
 		$order->update_meta_data( '_shipping_house_number', $shipping_house_number );
 
 		/**
@@ -220,8 +218,9 @@ class Extend_Block_Core {
 		/**
 		 * Save the order to persist changes
 		 */
-		$order->save_meta_data();
+		$order->save();
 	}
+
 
 	/**
 	 * Handle AJAX request to set checkout post data and return updated delivery options.

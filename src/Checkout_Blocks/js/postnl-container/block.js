@@ -59,6 +59,13 @@ export const Block = ({checkoutExtensionData}) => {
 		(select) => select(CHECKOUT_STORE_KEY).isComplete(),
 		[]
 	);
+	const currentHouseNumber = shippingAddress?.['postnl/house_number'] || '';
+
+	useEffect( () => {
+		if ( currentHouseNumber ) {
+			setExtensionData( 'postnl', 'houseNumber', currentHouseNumber );
+		}
+	}, [ shippingAddress, setExtensionData ]);
 
 	// Helper function to compare two addresses
 	const isAddressEqual = (addr1, addr2) => {

@@ -15,7 +15,8 @@ use PostNLWooCommerce\Rest_API\Letterbox;
 use PostNLWooCommerce\Shipping_Method\Settings;
 use PostNLWooCommerce\Helper\Mapping;
 use PostNLWooCommerce\Library\CustomizedPDFMerger;
-use \Imagick;
+use PostNLWooCommerce\Product;
+use Imagick;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -446,7 +447,7 @@ abstract class Base {
 	/**
 	 * Saving meta box in order admin page.
 	 *
-	 * @param int $order_id Order post ID.
+	 * @param int   $order_id Order post ID.
 	 * @param array $meta_values PostNL meta values.
 	 *
 	 * @throws \Exception Throw error for invalid order id.
@@ -568,7 +569,7 @@ abstract class Base {
 	 * Get order information from frontend data.
 	 *
 	 * @param WC_Order $order Order object.
-	 * @param String $needle String that will be used to search the frontend value.
+	 * @param String   $needle String that will be used to search the frontend value.
 	 *
 	 * @return array.
 	 */
@@ -608,7 +609,6 @@ abstract class Base {
 		$delivery_type_map = Mapping::delivery_type();
 		$filtered_frontend = $this->get_order_frontend_info( $order, '_type' );
 		$destination       = Utils::get_shipping_zone( $to_country, $to_state );
-
 
 		if ( ! is_array( $delivery_type_map[ $from_country ][ $destination ] ) ) {
 			return ! empty( $delivery_type_map[ $from_country ][ $destination ] ) ? $delivery_type_map[ $from_country ][ $destination ] : '';
@@ -658,10 +658,10 @@ abstract class Base {
 	/**
 	 * Put the label content into PDF files.
 	 *
-	 * @param array $response Response from PostNL API.
+	 * @param array    $response Response from PostNL API.
 	 * @param WC_Order $order Order object.
-	 * @param String $parent_barcode Generated barcode string.
-	 * @param String $parent_label_type Type of label.
+	 * @param String   $parent_barcode Generated barcode string.
+	 * @param String   $parent_label_type Type of label.
 	 *
 	 * @return array
 	 */
@@ -761,7 +761,7 @@ abstract class Base {
 			$num_labels = intval( $saved_data['backend']['num_labels'] );
 		}
 
-		for ( $i = 0; $i < $num_labels; $i ++ ) {
+		for ( $i = 0; $i < $num_labels; $i++ ) {
 			// Check if barcode has been created on the last 7 days before creating a new one.
 			if ( ! empty( $saved_data['barcodes'][ $i ]['created_at'] ) && ! empty( $saved_data['barcodes'][ $i ]['value'] ) ) {
 				$time_deviation = current_time( 'timestamp' ) - intval( $saved_data['barcodes'][ $i ]['created_at'] );
@@ -830,13 +830,13 @@ abstract class Base {
 		}
 
 		if ( 'shipping_return' === $shipment_return_type &&
-		     'BE' !== $shipping_item_info->receiver['country'] ) {
+			'BE' !== $shipping_item_info->receiver['country'] ) {
 			return '';
 		}
 
 		if ( 'in_box' === $shipment_return_type &&
-		     ( ! isset( $post_data['saved_data']['backend']['create_return_label'] ) ||
-		       'yes' !== $post_data['saved_data']['backend']['create_return_label'] )
+			( ! isset( $post_data['saved_data']['backend']['create_return_label'] ) ||
+				'yes' !== $post_data['saved_data']['backend']['create_return_label'] )
 		) {
 			return '';
 		}
@@ -862,17 +862,17 @@ abstract class Base {
 				esc_html__( 'Cannot create return barcode.', 'postnl-for-woocommerce' )
 			);
 		}
-		
+
 		return $response['Barcode'];
 	}
 
 	/**
 	 * Merging the label.
 	 *
-	 * @param Array $labels List of labels.
+	 * @param Array    $labels List of labels.
 	 * @param WC_Order $order Order object.
-	 * @param String $barcode Generated barcode string.
-	 * @param String $label_type Type of label.
+	 * @param String   $barcode Generated barcode string.
+	 * @param String   $label_type Type of label.
 	 *
 	 * @return Array.
 	 */
@@ -925,7 +925,7 @@ abstract class Base {
 	/**
 	 * Merge given files into the single one.
 	 *
-	 * @param array $label_paths Array of files to be merged.
+	 * @param array  $label_paths Array of files to be merged.
 	 * @param string $merge_filename The final/merged filename with extension.
 	 * @param string $start_position Start position for the pdf file only.
 	 *
@@ -952,7 +952,7 @@ abstract class Base {
 	/**
 	 * Merge PDF Labels.
 	 *
-	 * @param array $label_paths List of label path.
+	 * @param array  $label_paths List of label path.
 	 * @param String $merge_filename Name of the file after the merge process.
 	 *
 	 * @return array List of filepath that has been merged.
@@ -983,13 +983,13 @@ abstract class Base {
 	/**
 	 * Merge JPG Labels.
 	 *
-	 * @param array $image_paths List of label path.
+	 * @param array  $image_paths List of label path.
 	 * @param String $merge_filename Name of the file after the merge process.
 	 *
 	 * @return array List of filepath that has been merged.
 	 */
 	protected function merge_jpg_files( $image_paths, $merge_filename, $direction = 'vertical' ) {
-		$images = [];
+		$images = array();
 		$width  = 0;
 		$height = 0;
 
@@ -998,7 +998,7 @@ abstract class Base {
 			$img      = imagecreatefromjpeg( $path );
 			$images[] = $img;
 			$width    = max( $width, imagesx( $img ) );
-			$height   += imagesy( $img );
+			$height  += imagesy( $img );
 		}
 
 		// Create a blank canvas for the merged image
@@ -1041,7 +1041,7 @@ abstract class Base {
 	/**
 	 * Merge graphic labels.
 	 *
-	 * @param Array $label_paths List of label path.
+	 * @param Array  $label_paths List of label path.
 	 * @param String $merge_filename Name of the file after the merge process.
 	 *
 	 * @return array
@@ -1074,13 +1074,12 @@ abstract class Base {
 			'merged_filepaths' => $merged_paths,
 			'filepath'         => $final_label_path,
 		);
-
 	}
 
 	/**
 	 * Merge text files, for the ZEBRA printer.
 	 *
-	 * @param array $label_paths List of label path.
+	 * @param array  $label_paths List of label path.
 	 * @param String $merge_filename Name of the file after the merge process.
 	 *
 	 * @return array
@@ -1089,14 +1088,14 @@ abstract class Base {
 		$merged_paths = array();
 		$filepath     = trailingslashit( POSTNL_UPLOADS_DIR ) . $merge_filename;
 
-		$output = fopen( $filepath, "w" );
+		$output = fopen( $filepath, 'w' );
 
 		foreach ( $label_paths as $path ) {
 			if ( ! file_exists( $path ) ) {
 				continue; // Skip if the file does not exist
 			}
 
-			$input = fopen( $path, "r" );
+			$input = fopen( $path, 'r' );
 			if ( ! $input ) {
 				continue; // Skip if unable to open the file
 			}
@@ -1128,10 +1127,10 @@ abstract class Base {
 	 * @throws \Exception Error when response has an error.
 	 */
 	public function create_label( $post_data ) {
-		$order 	   			= $post_data['order'];
+		$order              = $post_data['order'];
 		$shipping_item_info = new Shipping\Item_Info( $post_data );
-		$shipping  			= new Shipping\Client( $shipping_item_info );
-		$response  			= $shipping->send_request();
+		$shipping           = new Shipping\Client( $shipping_item_info );
+		$response           = $shipping->send_request();
 
 		// Check any errors.
 		$this->check_label_and_barcode( $response );
@@ -1268,7 +1267,7 @@ abstract class Base {
 	/**
 	 * Generate download label url
 	 *
-	 * @param int $order_id ID of the order post.
+	 * @param int    $order_id ID of the order post.
 	 * @param String $label_type Type of the label. Possible options : 'label', 'return-label'.
 	 *
 	 * @return String.
@@ -1408,7 +1407,7 @@ abstract class Base {
 	 * Check if the order have the label data.
 	 *
 	 * @param WC_Order $order current order object.
-	 * @param String $field Backend field name.
+	 * @param String   $field Backend field name.
 	 *
 	 * @return boolean
 	 */

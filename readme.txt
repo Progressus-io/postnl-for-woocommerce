@@ -7,7 +7,7 @@ Tested up to: 6.7
 Stable tag: 5.6.4
 Requires Plugins: woocommerce
 WC requires at least: 4.0
-WC tested up to: 9.6
+WC tested up to: 9.7
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -81,14 +81,16 @@ Follow these instructions (https://www.postnl.nl/Images/aanvragen-api-key-stappe
 
 == Changelog ==
 
-= 5.6.5 (2025-xx-xx) =
+= 5.7.0 (2025-xx-xx) =
+* Add: Cart/Checkout blocks compatibility.
 * Fix: Improved error messages for Shipping & Return label activation.
 * Fix: Postcode and city fields were incorrectly applied to both Freepost and home addresses in Smart Return shipments.
 * Fix: Adjusted shipping classification for the Canary Islands to use the correct product code and country code.
 * Fix: Ensure home delivery option is always visible at checkout, even if Delivery Days are disabled.
 * Fix: Labels now always include a delivery date, even for "as soon as possible" orders.
-* Add: `postnl_shipment_addresses` filter to allow third parties to modify shipping addresses and improve compatibility.
 * Fix: Merging EU Parcel product labels into a single A4 sheet with four A6 labels per page.
+* Add: postnl_shipment_addresses filter to allow third parties to modify shipping addresses and improve compatibility.
+* Tweak: WooCommerce 9.7 compatibility.
 
 = 5.6.4 (2025-02-04) =
 * Fix: Add Standard Shipping to Default Shipping Pickup options.

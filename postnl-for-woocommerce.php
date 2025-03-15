@@ -11,7 +11,9 @@
  * Tested up to: 6.7
  * Requires Plugins: woocommerce
  * WC requires at least: 4.0
- * WC tested up to: 9.6
+ * WC tested up to: 9.7
+ * Text Domain: postnl-for-woocommerce
+ * Domain Path: /languages/
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -43,7 +45,7 @@ if ( ! defined( 'POSTNL_WC_PLUGIN_BASENAME' ) ) {
 	define( 'POSTNL_WC_PLUGIN_BASENAME', plugin_basename( POSTNL_WC_PLUGIN_FILE ) );
 }
 
-require_once ( plugin_dir_path( __FILE__ ) . '/vendor/autoload.php' );
+require_once plugin_dir_path( __FILE__ ) . '/vendor/autoload.php';
 
 /**
  * Main PostNL for WooCommerce.

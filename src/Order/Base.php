@@ -928,24 +928,26 @@ abstract class Base {
 	 * @param string $merge_filename The final/merged filename with extension.
 	 * @param string $start_position Start position for the pdf file only.
 	 *
-	 * @return array|\PostNLWooCommerce\Order\Array|void
+	 * @return array
 	 */
 	protected function merge_labels( $label_paths, $merge_filename, $start_position = 'top-left' ) {
 		$extension = pathinfo( $label_paths[0], PATHINFO_EXTENSION );
-		switch ( $extension ) {
-			case 'pdf':
-				return $this->merge_pdf_labels( $label_paths, $merge_filename, $start_position );
-			case 'jpg':
-				return $this->merge_jpg_files( $label_paths, $merge_filename, 'horizontal' );
-			case 'gif':
-				try {
+
+		try {
+			switch ( $extension ) {
+				case 'pdf':
+					return $this->merge_pdf_labels( $label_paths, $merge_filename, $start_position );
+				case 'jpg':
+					return $this->merge_jpg_files( $label_paths, $merge_filename, 'horizontal' );
+				case 'gif':
 					return $this->merge_graphic_labels( $label_paths, $merge_filename );
-				} catch ( \Exception $e ) {
-					wc_add_notice( $e->getMessage(), 'error' );
-				}
-			case 'zpl_rle':
-				return $this->merge_text_files( $label_paths, $merge_filename );
+				case 'zpl_rle':
+					return $this->merge_text_files( $label_paths, $merge_filename );
+			}
+		} catch ( \Exception $e ) {
 		}
+
+		return array();
 	}
 
 	/**

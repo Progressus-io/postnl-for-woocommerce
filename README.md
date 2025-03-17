@@ -2,13 +2,12 @@
 
 * Contributors: PostNL
 * Tags: woocommerce, PostNL, Labels, Shipping
-* Requires at least: 4.6
-* Requires PHP: 5.6
+* Requires PHP: 7.4
+* Requires at least: 6.6
 * Tested up to: 6.7
+* WC requires at least: 9.5
+* WC tested up to: 9.7
 * Stable tag: 5.7.0
-* Requires Plugins: woocommerce
-* WC requires at least: 4.0
-* WC tested up to: 9.6
 * License: GPLv2 or later
 * License URI: https://www.gnu.org/licenses/gpl-2.0.html
 

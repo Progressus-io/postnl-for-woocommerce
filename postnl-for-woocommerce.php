@@ -8,9 +8,11 @@
  * License: GPLv2 or later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  * Version: 5.7.0
- * Tested up to: 6.7
  * Requires Plugins: woocommerce
- * WC requires at least: 4.0
+ * Requires PHP: 7.4
+ * Requires at least: 6.6
+ * Tested up to: 6.7
+ * WC requires at least: 9.5
  * WC tested up to: 9.7
  * Text Domain: postnl-for-woocommerce
  * Domain Path: /languages/

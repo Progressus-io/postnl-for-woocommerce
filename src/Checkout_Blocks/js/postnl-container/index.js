@@ -10,10 +10,10 @@ import { Icon, box } from '@wordpress/icons';
 import { Edit, Save } from './edit';
 import metadata from './block.json';
 
-registerBlockType(metadata, {
+registerBlockType( metadata, {
 	icon: {
-		src: <Icon icon={box} />,
+		src: <Icon icon={ box } />,
 	},
 	edit: Edit,
 	save: Save,
-});
+} );

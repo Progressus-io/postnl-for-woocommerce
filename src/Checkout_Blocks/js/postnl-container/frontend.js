@@ -8,7 +8,7 @@ import { registerCheckoutBlock } from '@woocommerce/blocks-checkout';
 import { Block } from './block';
 import metadata from './block.json';
 
-registerCheckoutBlock({
+registerCheckoutBlock( {
 	metadata,
 	component: Block,
-});
+} );

@@ -81,7 +81,7 @@ Follow these instructions (https://www.postnl.nl/Images/aanvragen-api-key-stappe
 
 == Changelog ==
 
-= 5.7.0 (2025-xx-xx) =
+= 5.7.0 (2025-03-17) =
 * Add: Cart/Checkout blocks compatibility.
 * Fix: Improved error messages for Shipping & Return label activation.
 * Fix: Postcode and city fields were incorrectly applied to both Freepost and home addresses in Smart Return shipments.

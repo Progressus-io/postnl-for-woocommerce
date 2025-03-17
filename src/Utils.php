@@ -246,7 +246,7 @@ class Utils {
 	/**
 	 * Generate the label file name.
 	 *
-	 * @param Int $order_id ID of the order object.
+	 * @param Int    $order_id ID of the order object.
 	 * @param String $label_type Type of label.
 	 * @param String $barcode Barcode string.
 	 * @param String $label_format Label Format whether A4 or A6.
@@ -296,7 +296,6 @@ class Utils {
 	 *
 	 * @throws \Exception If an argument does not exist in $args and has no `default` in the $scheme.
 	 * @since [*next-version*]
-	 *
 	 */
 	public static function parse_args( $args, $scheme ) {
 		$final_args = array();
@@ -426,7 +425,7 @@ class Utils {
 
 			if ( ! empty( $field['container'] ) && true === $field['container'] ) {
 				?>
-                <div class="shipment-postnl-row-container shipment-<?php echo esc_attr( $field['id'] ); ?>">
+				<div class="shipment-postnl-row-container shipment-<?php echo esc_attr( $field['id'] ); ?>">
 				<?php
 			}
 
@@ -464,7 +463,7 @@ class Utils {
 
 			if ( ! empty( $field['container'] ) && true === $field['container'] ) {
 				?>
-                </div>
+				</div>
 				<?php
 			}
 		}
@@ -614,7 +613,7 @@ class Utils {
 	 */
 	public static function get_shipping_options( $order_id ) {
 		$order                = wc_get_order( $order_id );
-		$shipping_destination = Utils::get_shipping_zone( $order->get_shipping_country(),  $order->get_shipping_state() );
+		$shipping_destination = self::get_shipping_zone( $order->get_shipping_country(), $order->get_shipping_state() );
 
 		// Base shipping options (common to all destinations).
 		$base_options = array(
@@ -667,7 +666,7 @@ class Utils {
 	 * @return boolean
 	 */
 	public static function is_cart_eligible_auto_letterbox( $cart ) {
-		if ( ! in_array( WC()->customer->get_shipping_country(), Utils::get_available_country_for_letterbox(), true ) ) {
+		if ( ! in_array( WC()->customer->get_shipping_country(), self::get_available_country_for_letterbox(), true ) ) {
 			return false;
 		}
 
@@ -699,7 +698,7 @@ class Utils {
 			return (bool) $order->get_meta( '_postnl_letterbox', true );
 		}
 
-		if ( ! in_array( $order->get_shipping_country(), Utils::get_available_country_for_letterbox(), true ) ) {
+		if ( ! in_array( $order->get_shipping_country(), self::get_available_country_for_letterbox(), true ) ) {
 			$order->update_meta_data( '_postnl_letterbox', false );
 			$order->save_meta_data();
 
@@ -745,10 +744,10 @@ class Utils {
 				return false;
 			}
 
-			$has_letterbox_product      = true;
-			$quantity                   = $item['quantity'] ?? $item->get_quantity();
-			$qty_per_letterbox          = intval( $product->get_meta( Product\Single::MAX_QTY_PER_LETTERBOX ) );
-			$ratio_letterbox_item       = 0 != $qty_per_letterbox ? 1 / $qty_per_letterbox : 0;
+			$has_letterbox_product       = true;
+			$quantity                    = $item['quantity'] ?? $item->get_quantity();
+			$qty_per_letterbox           = intval( $product->get_meta( Product\Single::MAX_QTY_PER_LETTERBOX ) );
+			$ratio_letterbox_item        = 0 != $qty_per_letterbox ? 1 / $qty_per_letterbox : 0;
 			$total_ratio_letterbox_item += ( $ratio_letterbox_item * $quantity );
 		}
 
@@ -808,12 +807,12 @@ class Utils {
 	}
 
 	/**
-     * The Canary Islands, due to the distance from mainland Spain, count as a non-EU destination from a transport point of view.
-     * This means the regular EU shipments cannot be used for these destinations,
-     * and instead the non-EU product code must be used, along with country code IC.
-     *
-     * Return true if for Spanish states "Santa Cruz de Tenerife" or "Las Palmas".
-     *
+	 * The Canary Islands, due to the distance from mainland Spain, count as a non-EU destination from a transport point of view.
+	 * This means the regular EU shipments cannot be used for these destinations,
+	 * and instead the non-EU product code must be used, along with country code IC.
+	 *
+	 * Return true if for Spanish states "Santa Cruz de Tenerife" or "Las Palmas".
+	 *
 	 * @param $state String Shipping state.
 	 * @param $country String Shipping country.
 	 *

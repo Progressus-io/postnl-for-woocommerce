@@ -175,7 +175,7 @@ class Item_Info extends Base_Info {
 				? $order->get_meta( '_shipping_house_number' )
 				: $order->get_meta( '_wc_billing/postnl/house_number' ),
 
-	);
+		);
 
 		// Check the house number.
 		$this->api_args['shipping_address'] = Address_Utils::split_address( $shipping_address );
@@ -586,7 +586,7 @@ class Item_Info extends Base_Info {
 		$self = $this;
 
 		return array(
-			'date'  => array(
+			'date'      => array(
 				'default'  => '',
 				'validate' => function ( $date ) use ( $self ) {
 					if ( empty( $date ) && $self->is_pickup_points() ) {
@@ -602,7 +602,7 @@ class Item_Info extends Base_Info {
 					return $date;
 				},
 			),
-			'time'  => array(
+			'time'      => array(
 				'default'  => '',
 				'validate' => function ( $hour ) use ( $self ) {
 					if ( empty( $hour ) && $self->is_pickup_points() ) {

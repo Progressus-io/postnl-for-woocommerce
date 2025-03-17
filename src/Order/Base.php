@@ -15,7 +15,6 @@ use PostNLWooCommerce\Rest_API\Letterbox;
 use PostNLWooCommerce\Shipping_Method\Settings;
 use PostNLWooCommerce\Helper\Mapping;
 use PostNLWooCommerce\Library\CustomizedPDFMerger;
-use PostNLWooCommerce\Product;
 use Imagick;
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -1260,7 +1259,7 @@ abstract class Base {
 				unlink( $label_path );
 			}
 		}
-		
+
 		return unlink( $saved_data['labels']['label']['filepath'] );
 	}
 

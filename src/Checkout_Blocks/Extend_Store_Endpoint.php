@@ -71,7 +71,7 @@ class Extend_Store_Endpoint {
 	 */
 	public static function extend_checkout_schema() {
 		return array(
-			'houseNumber'         => array(
+			'houseNumber'                 => array(
 				'description' => 'Shipping house number PostNL',
 				'context'     => array( 'view', 'edit' ),
 				'readonly'    => false,

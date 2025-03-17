@@ -33,20 +33,35 @@ class Bulk extends Base {
 	public function init_hooks() {
 		add_filter( 'bulk_actions-edit-shop_order', array( $this, 'add_order_bulk_actions' ), 10, 1 );
 		add_filter( 'handle_bulk_actions-edit-shop_order', array( $this, 'bulk_action_create_label' ), 10, 3 );
-		add_filter( 'handle_bulk_actions-edit-shop_order', array(
-			$this,
-			'bulk_action_change_shipping_options'
-		), 10, 3 );
+		add_filter(
+			'handle_bulk_actions-edit-shop_order',
+			array(
+				$this,
+				'bulk_action_change_shipping_options',
+			),
+			10,
+			3
+		);
 
 		add_filter( 'bulk_actions-woocommerce_page_wc-orders', array( $this, 'add_order_bulk_actions' ), 10, 1 );
-		add_filter( 'handle_bulk_actions-woocommerce_page_wc-orders', array(
-			$this,
-			'bulk_action_create_label'
-		), 10, 3 );
-		add_filter( 'handle_bulk_actions-woocommerce_page_wc-orders', array(
-			$this,
-			'bulk_action_change_shipping_options'
-		), 10, 3 );
+		add_filter(
+			'handle_bulk_actions-woocommerce_page_wc-orders',
+			array(
+				$this,
+				'bulk_action_create_label',
+			),
+			10,
+			3
+		);
+		add_filter(
+			'handle_bulk_actions-woocommerce_page_wc-orders',
+			array(
+				$this,
+				'bulk_action_change_shipping_options',
+			),
+			10,
+			3
+		);
 
 		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_bulk_assets' ) );
 		add_action( 'admin_footer', array( $this, 'modal_create_label' ) );
@@ -84,7 +99,7 @@ class Bulk extends Base {
 	 *
 	 * @param String $redirect Redirect URL after the bulk has been processed.
 	 * @param String $doaction The chosen action.
-	 * @param array $object_ids All chose IDs.
+	 * @param array  $object_ids All chose IDs.
 	 *
 	 * @return string
 	 */
@@ -125,7 +140,7 @@ class Bulk extends Base {
 	 *
 	 * @param String $redirect Redirect URL after the bulk has been processed.
 	 * @param String $doaction Chosen action.
-	 * @param array $object_ids Chose IDs.
+	 * @param array  $object_ids Chose IDs.
 	 *
 	 * @return string
 	 */
@@ -371,7 +386,7 @@ class Bulk extends Base {
 	 * Create modal wrapper with given id and fields definition.
 	 *
 	 * @param string $modal_id Modal id.
-	 * @param array $fields Fields to be added to the modal contend.
+	 * @param array  $fields Fields to be added to the modal contend.
 	 *
 	 * @return void
 	 */
@@ -390,13 +405,13 @@ class Bulk extends Base {
 
 		if ( $is_legacy_order || $is_hpos_order ) {
 			?>
-            <div id="<?php echo esc_attr( $modal_id ); ?>-modal" style="display:none;">
-                <div class="postnl-modal <?php echo esc_attr( $modal_id . '-content' ) ?>">
+			<div id="<?php echo esc_attr( $modal_id ); ?>-modal" style="display:none;">
+				<div class="postnl-modal <?php echo esc_attr( $modal_id . '-content' ); ?>">
 					<?php Utils::fields_generator( $fields ); ?>
-                    <button type="button" class="button button-primary"
-                            id="<?php echo esc_attr( $modal_id ); ?>-proceed"><?php esc_html_e( 'Submit', 'postnl-for-woocommerce' ); ?></button>
-                </div>
-            </div>
+					<button type="button" class="button button-primary"
+							id="<?php echo esc_attr( $modal_id ); ?>-proceed"><?php esc_html_e( 'Submit', 'postnl-for-woocommerce' ); ?></button>
+				</div>
+			</div>
 			<?php
 		}
 	}
@@ -422,7 +437,7 @@ class Bulk extends Base {
 						'step' => 'any',
 						'min'  => '0',
 					),
-			)
+			),
 
 		);
 
@@ -457,7 +472,6 @@ class Bulk extends Base {
 		}
 
 		return $fields;
-
 	}
 
 	/**
@@ -492,10 +506,10 @@ class Bulk extends Base {
 				'value'     => 'nl',
 				'container' => true,
 				'options'   => array(
-					'nl'  	 => __( 'Domestic', 'postnl-for-woocommerce' ),
-					'be'  	 => __( 'Belgium', 'postnl-for-woocommerce' ),
-					'eu'  	 => __( 'EU Parcel', 'postnl-for-woocommerce' ),
-					'row' 	 => __( 'Non-EU Shipment', 'postnl-for-woocommerce' ),
+					'nl'     => __( 'Domestic', 'postnl-for-woocommerce' ),
+					'be'     => __( 'Belgium', 'postnl-for-woocommerce' ),
+					'eu'     => __( 'EU Parcel', 'postnl-for-woocommerce' ),
+					'row'    => __( 'Non-EU Shipment', 'postnl-for-woocommerce' ),
 					'pickup' => __( 'Pick-up at PostNL', 'postnl-for-woocommerce' ),
 				),
 			),
@@ -560,10 +574,14 @@ class Bulk extends Base {
 	public function render_messages() {
 		$current_screen = get_current_screen();
 
-		$is_legacy_order = isset( $current_screen->id ) && in_array( $current_screen->id, array(
+		$is_legacy_order = isset( $current_screen->id ) && in_array(
+			$current_screen->id,
+			array(
 				'shop_order',
-				'edit-shop_order'
-			), true );
+				'edit-shop_order',
+			),
+			true
+		);
 		$is_hpos_order   = ! empty( $current_screen->id ) && 'woocommerce_page_wc-orders' === $current_screen->id;
 
 		if ( $is_legacy_order || $is_hpos_order ) {
@@ -602,9 +620,8 @@ class Bulk extends Base {
 	/**
 	 * Add Crete Label button to the action buttons within the order list table.
 	 *
-	 * @param array $actions Order actions.
+	 * @param array     $actions Order actions.
 	 * @param \WC_Order $order Current order object.
-	 *
 	 */
 	public function add_create_label_actions_button( array $actions, \WC_Order $order ) {
 		// Display the button for all orders that have a PostNL as a shipping method.
@@ -653,7 +670,7 @@ class Bulk extends Base {
 	/**
 	 * Generate shipping label and add order note.
 	 *
-	 * @param int $order_id Order post ID.
+	 * @param int   $order_id Order post ID.
 	 * @param array $post_data posted data.
 	 *
 	 * @return array Array of labels & messages.
@@ -682,8 +699,12 @@ class Bulk extends Base {
 			$label_link        = esc_url( $this->get_download_label_url( $order_id ) );
 			$result['message'] = array(
 				// Translators: %1$s is the order ID, %2$s is the link to download the file, %3$s is the closing link tag.
-				'message' => sprintf( esc_html__( '#%1$s : PostNL label has been created - %2$sdownload file%3$s', 'postnl-for-woocommerce' ),
-					$order_id, '<a href="' . $label_link . '" download>', '</a>' ),
+				'message' => sprintf(
+					esc_html__( '#%1$s : PostNL label has been created - %2$sdownload file%3$s', 'postnl-for-woocommerce' ),
+					$order_id,
+					'<a href="' . $label_link . '" download>',
+					'</a>'
+				),
 				'type'    => 'success',
 			);
 		} catch ( \Exception $e ) {

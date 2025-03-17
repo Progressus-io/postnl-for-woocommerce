@@ -258,7 +258,7 @@ class Extend_Block_Core {
 		}
 
 		// If not NL, clear session and return
-		if ( ! in_array( $shipping_country, [ 'NL', 'BE' ], true )) {
+		if ( ! in_array( $shipping_country, array( 'NL', 'BE' ), true ) ) {
 			WC()->session->__unset( 'postnl_checkout_post_data' );
 			wp_send_json_success(
 				array(
@@ -295,7 +295,6 @@ class Extend_Block_Core {
 			// Clear previous validated address
 			WC()->session->__unset( POSTNL_SETTINGS_ID . '_validated_address' );
 		}
-
 
 		// Retrieve validated address from session
 		$validated_address = WC()->session->get( POSTNL_SETTINGS_ID . '_validated_address' );
@@ -360,7 +359,6 @@ class Extend_Block_Core {
 			wp_die();
 		}
 
-
 		// Attempt to retrieve checkout data, delivery, and dropoff options
 		try {
 			$delivery_options_array = isset( $delivery_options['delivery_options'] ) ? $delivery_options['delivery_options'] : array();
@@ -385,12 +383,12 @@ class Extend_Block_Core {
 			// If there are delivery or dropoff options, show the container
 			wp_send_json_success(
 				array(
-					'message'           => 'Data saved successfully.',
-					'show_container'    => true,
-					'validated_address' => $validated_address,
-					'delivery_options'  => $delivery_options_array,
-					'dropoff_options'   => $dropoff_options_array,
-					'is_delivery_days_enabled'   => $delivery_options['is_delivery_days_enabled'],
+					'message'                  => 'Data saved successfully.',
+					'show_container'           => true,
+					'validated_address'        => $validated_address,
+					'delivery_options'         => $delivery_options_array,
+					'dropoff_options'          => $dropoff_options_array,
+					'is_delivery_days_enabled' => $delivery_options['is_delivery_days_enabled'],
 				),
 				200
 			);

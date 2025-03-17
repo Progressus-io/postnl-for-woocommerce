@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2025-03-17T08:28:57+00:00\n"
+"POT-Creation-Date: 2025-03-17T09:12:12+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.11.0\n"
 "X-Domain: postnl-for-woocommerce\n"
@@ -47,7 +47,7 @@ msgstr ""
 #: src/Checkout_Blocks/Extend_Block_Core.php:82
 #: src/Frontend/Checkout_Fields.php:61
 #: src/Frontend/Checkout_Fields.php:62
-#: src/Order/Single.php:531
+#: src/Order/Single.php:538
 msgid "House number"
 msgstr ""
 
@@ -65,19 +65,19 @@ msgstr ""
 msgid "PostNL Evening Fee"
 msgstr ""
 
-#: src/Emails/WC_Email_Smart_Return.php:36
+#: src/Emails/WC_Email_Smart_Return.php:43
 msgid "Smart Return Email"
 msgstr ""
 
-#: src/Emails/WC_Email_Smart_Return.php:37
+#: src/Emails/WC_Email_Smart_Return.php:44
 msgid "This is a smart return email sent for return purposes."
 msgstr ""
 
-#: src/Emails/WC_Email_Smart_Return.php:55
+#: src/Emails/WC_Email_Smart_Return.php:62
 msgid "[{site_title}]: PostNL Smart Returns"
 msgstr ""
 
-#: src/Emails/WC_Email_Smart_Return.php:65
+#: src/Emails/WC_Email_Smart_Return.php:72
 msgid "PostNL Smart Returns"
 msgstr ""
 
@@ -86,12 +86,12 @@ msgid "Pick up at PostNL-point"
 msgstr ""
 
 #: src/Frontend/Base.php:171
-#: src/Order/Single.php:320
+#: src/Order/Single.php:327
 msgid "Date:"
 msgstr ""
 
 #: src/Frontend/Base.php:175
-#: src/Order/Single.php:324
+#: src/Order/Single.php:331
 msgid "Time:"
 msgstr ""
 
@@ -154,7 +154,7 @@ msgstr ""
 
 #: src/Helper/Mapping.php:40
 #: src/Shipping_Method/Settings.php:579
-#: src/Utils.php:628
+#: src/Utils.php:627
 msgid "Standard Shipment Belgium"
 msgstr ""
 
@@ -165,13 +165,13 @@ msgstr ""
 #: src/Helper/Mapping.php:46
 #: src/Helper/Mapping.php:51
 #: src/Helper/Mapping.php:52
-#: src/Order/Bulk.php:497
+#: src/Order/Bulk.php:511
 msgid "EU Parcel"
 msgstr ""
 
 #: src/Helper/Mapping.php:47
 #: src/Helper/Mapping.php:53
-#: src/Order/Bulk.php:498
+#: src/Order/Bulk.php:512
 msgid "Non-EU Shipment"
 msgstr ""
 
@@ -195,200 +195,199 @@ msgstr ""
 msgid "Postnl Checkout Blocks"
 msgstr ""
 
-#: src/Order/Base.php:150
+#: src/Order/Base.php:149
 msgid "ID Check: "
 msgstr ""
 
-#: src/Order/Base.php:162
+#: src/Order/Base.php:161
 msgid "Insured Shipping: "
 msgstr ""
 
-#: src/Order/Base.php:174
+#: src/Order/Base.php:173
 msgid "Insured Plus: "
 msgstr ""
 
-#: src/Order/Base.php:186
+#: src/Order/Base.php:185
 msgid "Return if no answer: "
 msgstr ""
 
-#: src/Order/Base.php:198
+#: src/Order/Base.php:197
 msgid "Signature on Delivery: "
 msgstr ""
 
-#: src/Order/Base.php:210
+#: src/Order/Base.php:209
 msgid "Only Home Address: "
 msgstr ""
 
-#: src/Order/Base.php:222
+#: src/Order/Base.php:221
 msgid "Letterbox: "
 msgstr ""
 
-#: src/Order/Base.php:234
+#: src/Order/Base.php:233
 msgid "Packets: "
 msgstr ""
 
-#: src/Order/Base.php:246
+#: src/Order/Base.php:245
 msgid "Mailbox Packet (International): "
 msgstr ""
 
-#: src/Order/Base.php:258
+#: src/Order/Base.php:257
 msgid "Track & Trace: "
 msgstr ""
 
-#: src/Order/Base.php:276
-#: src/Order/Bulk.php:414
+#: src/Order/Base.php:275
+#: src/Order/Bulk.php:429
 msgid "Number of Labels: "
 msgstr ""
 
-#: src/Order/Base.php:307
-#: src/Order/Bulk.php:433
+#: src/Order/Base.php:306
+#: src/Order/Bulk.php:448
 msgid "Create Return Label: "
 msgstr ""
 
-#: src/Order/Base.php:322
-#: src/Order/Bulk.php:445
+#: src/Order/Base.php:321
+#: src/Order/Bulk.php:460
 msgid "Start position printing label: "
 msgstr ""
 
-#: src/Order/Base.php:326
-#: src/Order/Bulk.php:451
+#: src/Order/Base.php:325
+#: src/Order/Bulk.php:466
 msgid "Top Left"
 msgstr ""
 
-#: src/Order/Base.php:327
-#: src/Order/Bulk.php:452
+#: src/Order/Base.php:326
+#: src/Order/Bulk.php:467
 msgid "Top Right"
 msgstr ""
 
-#: src/Order/Base.php:328
-#: src/Order/Bulk.php:453
+#: src/Order/Base.php:327
+#: src/Order/Bulk.php:468
 msgid "Bottom Left"
 msgstr ""
 
-#: src/Order/Base.php:329
-#: src/Order/Bulk.php:454
+#: src/Order/Base.php:328
+#: src/Order/Bulk.php:469
 msgid "Bottom Right"
 msgstr ""
 
-#: src/Order/Base.php:460
-#: src/Order/Base.php:641
-#: src/Order/Single.php:507
-#: src/Order/Single.php:612
-#: src/Order/Single.php:685
+#: src/Order/Base.php:459
+#: src/Order/Base.php:640
+#: src/Order/Single.php:514
+#: src/Order/Single.php:619
+#: src/Order/Single.php:692
 msgid "Order does not exist!"
 msgstr ""
 
-#: src/Order/Base.php:738
+#: src/Order/Base.php:737
 msgid "Cannot create the barcode."
 msgstr ""
 
-#: src/Order/Base.php:862
+#: src/Order/Base.php:861
 msgid "Cannot create return barcode."
 msgstr ""
 
-#: src/Order/Base.php:1053
+#: src/Order/Base.php:1052
 msgid "There are no files to merge."
 msgstr ""
 
-#: src/Order/Base.php:1057
+#: src/Order/Base.php:1056
 msgid "\"Imagick\" must be installed on the server to merge png files."
 msgstr ""
 
-#: src/Order/Base.php:1142
-#: src/Order/Base.php:1241
+#: src/Order/Base.php:1141
+#: src/Order/Base.php:1240
 msgid "Cannot create the label. Label content is missing"
 msgstr ""
 
-#: src/Order/Base.php:1173
+#: src/Order/Base.php:1172
 msgid "Cannot create the return label. Label content is missing"
 msgstr ""
 
-#: src/Order/Base.php:1204
+#: src/Order/Base.php:1203
 msgid "Cannot create the letterbox. Label content is missing"
 msgstr ""
 
-#: src/Order/Base.php:1235
+#: src/Order/Base.php:1234
 msgid "Cannot create the label. Barcode data is missing"
 msgstr ""
 
 #. translators: %s the current service.
-#: src/Order/Base.php:1370
+#: src/Order/Base.php:1369
 msgid "%s Tracking Number: {tracking-link}"
 msgstr ""
 
-#: src/Order/Bulk.php:74
-#: src/Order/Bulk.php:624
+#: src/Order/Bulk.php:89
+#: src/Order/Bulk.php:641
 msgid "PostNL Create Label"
 msgstr ""
 
-#: src/Order/Bulk.php:76
+#: src/Order/Bulk.php:91
 msgid "PostNL Change Shipping Options"
 msgstr ""
 
 #. Translators: %1$d is the order ID.
-#: src/Order/Bulk.php:154
+#: src/Order/Bulk.php:169
 msgid "Order #%1$d already has a label."
 msgstr ""
 
 #. Translators: %1$d is the order ID.
-#: src/Order/Bulk.php:164
+#: src/Order/Bulk.php:179
 msgid "Order #%1$d is from another shipping zone."
 msgstr ""
 
 #. translators: %1$s is anchor tag opener. %2$s is anchor tag closer.
-#: src/Order/Bulk.php:252
+#: src/Order/Bulk.php:267
 msgid "Bulk PostNL labels file created - %1$sdownload file%2$s"
 msgstr ""
 
-#: src/Order/Bulk.php:258
+#: src/Order/Bulk.php:273
 msgid "Could not create bulk PostNL label file, download individually."
 msgstr ""
 
-#: src/Order/Bulk.php:397
+#: src/Order/Bulk.php:412
 msgid "Submit"
 msgstr ""
 
-#: src/Order/Bulk.php:491
+#: src/Order/Bulk.php:505
 msgid "Shipping zone"
 msgstr ""
 
-#: src/Order/Bulk.php:495
+#: src/Order/Bulk.php:509
 msgid "Domestic"
 msgstr ""
 
-#: src/Order/Bulk.php:496
-#: src/Order/Bulk.php:514
+#: src/Order/Bulk.php:510
+#: src/Order/Bulk.php:528
 msgid "Belgium"
 msgstr ""
 
-#: src/Order/Bulk.php:499
+#: src/Order/Bulk.php:513
 msgid "Pick-up at PostNL"
 msgstr ""
 
-#: src/Order/Bulk.php:505
+#: src/Order/Bulk.php:519
 #: src/Shipping_Method/Settings.php:550
 msgid "Shipping options domestic"
 msgstr ""
 
-#: src/Order/Bulk.php:523
+#: src/Order/Bulk.php:537
 #: src/Shipping_Method/Settings.php:591
 msgid "Shipping options EU"
 msgstr ""
 
-#: src/Order/Bulk.php:532
+#: src/Order/Bulk.php:546
 msgid "Shipping options non-EU"
 msgstr ""
 
-#: src/Order/Bulk.php:541
+#: src/Order/Bulk.php:555
 msgid "Shipping options for Pick-up at PostNL"
 msgstr ""
 
-#: src/Order/Bulk.php:618
+#: src/Order/Bulk.php:635
 msgid "PostNL Print Label"
 msgstr ""
 
-#. Translators: %1$s is the order ID, %2$s is the link to download the file, %3$s is the closing link tag.
-#: src/Order/Bulk.php:685
+#: src/Order/Bulk.php:703
 msgid "#%1$s : PostNL label has been created - %2$sdownload file%3$s"
 msgstr ""
 
@@ -401,7 +400,7 @@ msgid "Delivery Date"
 msgstr ""
 
 #: src/Order/OrdersList.php:147
-#: src/Utils.php:573
+#: src/Utils.php:572
 #: templates/checkout/postnl-delivery-day.php:75
 #: build/postnl-container-frontend.js:1
 #: src/Checkout_Blocks/js/postnl-delivery-day/block.js:317
@@ -416,94 +415,93 @@ msgstr ""
 msgid "Fits through letterbox"
 msgstr ""
 
-#. translators: %s will be replaced by service name.
-#: src/Order/Single.php:132
+#: src/Order/Single.php:134
 msgid "Label & Tracking"
 msgstr ""
 
-#: src/Order/Single.php:254
+#: src/Order/Single.php:261
 msgid "Delivery Type:"
 msgstr ""
 
-#: src/Order/Single.php:285
+#: src/Order/Single.php:292
 msgid "Delivery Date:"
 msgstr ""
 
-#: src/Order/Single.php:315
+#: src/Order/Single.php:322
 msgid "Pickup Address:"
 msgstr ""
 
-#: src/Order/Single.php:352
+#: src/Order/Single.php:359
 msgid "Activate return function"
 msgstr ""
 
-#: src/Order/Single.php:355
+#: src/Order/Single.php:362
 msgid "Return function is activated for this label"
 msgstr ""
 
-#: src/Order/Single.php:358
+#: src/Order/Single.php:365
 msgid "Click here to activate the return function of this label"
 msgstr ""
 
-#: src/Order/Single.php:376
+#: src/Order/Single.php:383
 msgid "Send email with Smart Return"
 msgstr ""
 
-#: src/Order/Single.php:414
+#: src/Order/Single.php:421
 msgid "Create Shipment"
 msgstr ""
 
-#: src/Order/Single.php:416
+#: src/Order/Single.php:423
 msgid "Print Label"
 msgstr ""
 
-#: src/Order/Single.php:418
+#: src/Order/Single.php:425
 msgid "Delete Label"
 msgstr ""
 
-#: src/Order/Single.php:424
+#: src/Order/Single.php:431
 msgid "Print Return Label"
 msgstr ""
 
-#: src/Order/Single.php:429
+#: src/Order/Single.php:436
 msgid "Print Letterbox"
 msgstr ""
 
-#: src/Order/Single.php:448
-#: src/Order/Single.php:493
-#: src/Order/Single.php:599
-#: src/Order/Single.php:672
+#: src/Order/Single.php:455
+#: src/Order/Single.php:500
+#: src/Order/Single.php:606
+#: src/Order/Single.php:679
 msgid "Cannot find nonce field!"
 msgstr ""
 
-#: src/Order/Single.php:454
-#: src/Order/Single.php:499
+#: src/Order/Single.php:461
+#: src/Order/Single.php:506
 msgid "Nonce is invalid!"
 msgstr ""
 
-#: src/Order/Single.php:604
-#: src/Order/Single.php:677
+#: src/Order/Single.php:611
+#: src/Order/Single.php:684
 msgid "Nonce is invalid"
 msgstr ""
 
-#: src/Order/Single.php:616
+#: src/Order/Single.php:623
 msgid "Already activated!"
 msgstr ""
 
-#: src/Order/Single.php:632
+#: src/Order/Single.php:639
 msgid "Unknown error."
 msgstr ""
 
 #. Translators: %s is the error message.
-#: src/Order/Single.php:656
+#: src/Order/Single.php:663
 msgid "Error: %s"
 msgstr ""
 
-#: src/Order/Single.php:712
+#: src/Order/Single.php:719
 msgid "PrintcodeLabel could not found"
 msgstr ""
 
-#: src/Order/Single.php:743
+#: src/Order/Single.php:750
 msgid "Email could not be send"
 msgstr ""
 
@@ -1280,13 +1278,13 @@ msgid "Select a default shipping option for domestic orders that are shipped wit
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:556
-#: src/Utils.php:621
+#: src/Utils.php:620
 msgid "Standard shipment"
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:557
 #: src/Shipping_Method/Settings.php:632
-#: src/Utils.php:622
+#: src/Utils.php:621
 msgid "ID Check"
 msgstr ""
 
@@ -1295,22 +1293,22 @@ msgid "ID Check + Insured Shipping"
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:560
-#: src/Utils.php:623
+#: src/Utils.php:622
 msgid "Return if no answer"
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:561
-#: src/Utils.php:624
+#: src/Utils.php:623
 msgid "Signature on Delivery"
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:562
-#: src/Utils.php:625
+#: src/Utils.php:624
 msgid "Only Home Address"
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:563
-#: src/Utils.php:626
+#: src/Utils.php:625
 msgid "Letterbox"
 msgstr ""
 
@@ -1361,7 +1359,7 @@ msgstr ""
 #: src/Shipping_Method/Settings.php:583
 #: src/Shipping_Method/Settings.php:600
 #: src/Shipping_Method/Settings.php:617
-#: src/Utils.php:629
+#: src/Utils.php:628
 msgid "Boxable Packet"
 msgstr ""
 
@@ -1440,7 +1438,7 @@ msgid "Standard Shipping"
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:633
-#: src/Utils.php:631
+#: src/Utils.php:630
 msgid "Insured Shipping"
 msgstr ""
 
@@ -1458,36 +1456,36 @@ msgid "Select a default shipping option for the orders shipped internationally (
 msgstr ""
 
 #. translators: %s is a field argument.
-#: src/Utils.php:327
+#: src/Utils.php:326
 msgid "Please specify a \"%s\" argument"
 msgstr ""
 
-#: src/Utils.php:627
+#: src/Utils.php:626
 msgid "Packet"
 msgstr ""
 
-#: src/Utils.php:630
+#: src/Utils.php:629
 msgid "Track & Trace"
 msgstr ""
 
-#: src/Utils.php:639
+#: src/Utils.php:638
 msgid "Parcels Non-EU Insured"
 msgstr ""
 
-#: src/Utils.php:640
+#: src/Utils.php:639
 msgid "Parcels non-EU Insured Plus"
 msgstr ""
 
-#: src/Utils.php:646
+#: src/Utils.php:645
 msgid "Parcels EU"
 msgstr ""
 
-#: src/Utils.php:647
-#: src/Utils.php:654
+#: src/Utils.php:646
+#: src/Utils.php:653
 msgid "Insured Plus"
 msgstr ""
 
-#: src/Utils.php:653
+#: src/Utils.php:652
 msgid "Parcels Non-EU"
 msgstr ""
 

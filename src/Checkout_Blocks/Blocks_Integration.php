@@ -50,7 +50,6 @@ class Blocks_Integration implements IntegrationInterface {
 			'/build/postnl-container-frontend.js',
 			'/build/postnl-container-frontend.asset.php'
 		);
-
 	}
 
 	/**
@@ -68,7 +67,6 @@ class Blocks_Integration implements IntegrationInterface {
 				'dependencies' => array(),
 				'version'      => $this->get_file_version( $script_path ),
 			);
-
 
 		wp_register_script(
 			'postnl-delivery-day-integration',

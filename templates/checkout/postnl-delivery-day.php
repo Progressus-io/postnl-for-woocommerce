@@ -24,14 +24,14 @@ if ( empty( $data['delivery_options'] ) ) {
 			?>
 			<li>
 			<?php
-				if ( $data['is_delivery_days_enabled'] ) {
-					?>
+			if ( $data['is_delivery_days_enabled'] ) {
+				?>
 					<div class="list_title">
 						<span><?php echo esc_html( $delivery['date'] . ' ' . $delivery['day'] ); ?></span>
 					</div>
 				<?php
-				}
-				?>
+			}
+			?>
 				<ul class="postnl_sub_list">
 					<?php foreach ( $delivery['options'] as $option_index => $option ) { ?>
 						<?php
@@ -73,7 +73,7 @@ if ( empty( $data['delivery_options'] ) ) {
 								} else {
 									?>
 									<span><?php echo esc_html__( 'As soon as possible', 'postnl-for-woocommerce' ); ?></span>
-									<?php 
+									<?php
 								}
 								?>
 							</label>

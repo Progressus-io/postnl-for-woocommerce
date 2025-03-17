@@ -26,9 +26,16 @@ if ( ! class_exists( 'WC_Email_Smart_Return' ) ) :
 	 * @extends     WC_Email
 	 */
 	class WC_Email_Smart_Return extends WC_Email {
-		// Define the attachment property
-		public $attachment;
+		/**
+		 * Attachment property.
+		 *
+		 * @var string
+		 */
+		public string $attachment;
 
+		/**
+		 * Constructor.
+		 */
 		public function __construct() {
 			// Set email ID, title, description, and other options.
 			$this->id             = 'wc_smart_return_email';
@@ -70,7 +77,7 @@ if ( ! class_exists( 'WC_Email_Smart_Return' ) ) :
 		 *
 		 * @param int $order_id The order ID.
 		 */
-		public function trigger( $order_id ) {
+		public function trigger( int $order_id ) {
 			$this->object = wc_get_order( $order_id );
 
 			if ( ! $this->is_enabled() || ! $this->get_recipient() ) {
@@ -133,15 +140,15 @@ if ( ! class_exists( 'WC_Email_Smart_Return' ) ) :
 		 * @return array
 		 */
 		public function get_attachments() {
-			// Start with an empty attachments array
+			// Start with an empty attachments array.
 			$attachments = array();
 
-			// Add your custom attachment file path, if provided and if the file exists
+			// Add your custom attachment file path, if provided and if the file exists.
 			if ( ! empty( $this->attachment ) && file_exists( $this->attachment ) ) {
 				$attachments[] = $this->attachment;
 			}
 
-			// Allow other code to modify or add attachments
+			// Allow other code to modify or add attachments.
 			return apply_filters( 'woocommerce_email_attachments', $attachments, $this->id, $this->object, $this );
 		}
 	}

@@ -81,9 +81,9 @@ class Mapping {
 							'options'     => array(),
 						),
 						// array(
-						// 	'combination' => array( 'insured_shipping' ),
-						// 	'code'        => '3087',
-						// 	'options'     => array(),
+						// 'combination' => array( 'insured_shipping' ),
+						// 'code'        => '3087',
+						// 'options'     => array(),
 						// ),
 						array(
 							'combination' => array( 'signature_on_delivery' ),
@@ -167,7 +167,7 @@ class Mapping {
 								),
 							),
 						),
-					)
+					),
 				),
 				'BE'  => array(
 					'delivery_day'  => array(
@@ -258,7 +258,7 @@ class Mapping {
 							),
 						),
 					),
-				)
+				),
 			),
 			'BE' => array(
 				'BE'  => array(
@@ -497,8 +497,8 @@ class Mapping {
 					array(
 						'characteristic' => '005',
 						'option'         => '025',
-					)
-				)
+					),
+				),
 			),
 			array(
 				'combination' => array( 'track_and_trace', 'insured_plus' ),
@@ -701,7 +701,7 @@ class Mapping {
 				),
 				'BE' => array(
 					'in_box' => array(
-						'products' => array( '4946', '4941', '4912', '4914', '4936', ),
+						'products' => array( '4946', '4941', '4912', '4914', '4936' ),
 						'options'  => array(
 							array(
 								'characteristic' => '152',

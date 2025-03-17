@@ -152,9 +152,12 @@ class Delivery_Day extends Base {
 			);
 
 			if ( ! $show_delivery_days ) {
-				$options = array_filter( $options, function ( $option ) {
-					return $option['price'] === 0;
-				} );
+				$options = array_filter(
+					$options,
+					function ( $option ) {
+						return $option['price'] === 0;
+					}
+				);
 
 				if ( empty( $options ) ) {
 					continue; // Looking for a delivery day with free option.
@@ -177,7 +180,6 @@ class Delivery_Day extends Base {
 			if ( ! $this->is_customer_allowed_to_pick_delivery_day() ) {
 				break;
 			}
-
 		}
 
 		return $return_data;

@@ -12,13 +12,13 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Class AddressUtils
+ * Class AddressUtils.
  *
  * @package PostNLWooCommerce
  */
 class Address_Utils {
 	/**
-	 * Get Cart Billing country
+	 * Get Cart Billing country.
 	 *
 	 * @return string|null
 	 */
@@ -27,7 +27,7 @@ class Address_Utils {
 	}
 
 	/**
-	 * Get Cart Shipping country
+	 * Get Cart Shipping country.
 	 *
 	 * @return string|null
 	 */
@@ -80,28 +80,29 @@ class Address_Utils {
 	/**
 	 * Split address into street and house number.
 	 *
-	 * @param $post_data
+	 * @param array $post_data
+	 * @param bool $is_checkout_data
 	 *
-	 * @return mixed|string
+	 * @return array
 	 */
-	public static function split_address( $post_data, $is_checkout_data = false ) {
-		// If its checkout posted data, add shipping_ prefix to array keys
+	public static function split_address( array $post_data, bool $is_checkout_data = false ): array {
+		// If its checkout posted data, add shipping_ prefix to array keys.
 		$address_type = '';
 		if ( $is_checkout_data ) {
 			$address_type = 'shipping_';
 		}
 
-		// If its contain house number, nothing to do
+		// If its contain house number, nothing to do.
 		if ( ! empty( $post_data[ $address_type . 'house_number' ] ) ) {
 			return $post_data;
 		}
 
-		// Break address into pieces by spaces
+		// Break address into pieces by spaces.
 		$address_exploded   = explode( ' ', $post_data[ $address_type . 'address_1' ] );
 		$address_has_number = false;
 
 		foreach ( $address_exploded as $address_key => $address_value ) {
-			// Number count in address 1
+			// Number count in address 1.
 			if ( is_numeric( $address_value ) ) {
 				$set_key            = $address_key;
 				$address_has_number = true;
@@ -112,16 +113,16 @@ class Address_Utils {
 			return $post_data;
 		}
 
-		// The number is the first part of address 1
+		// The number is the first part of address 1.
 		if ( 0 === $set_key ) {
-			// Set "house_number" first, as first part
+			// Set "house_number" first, as first part.
 			$post_data[ $address_type . 'house_number' ] = implode( ' ', array_slice( $address_exploded, 0, 1 ) );
 
-			// Remove "house_number" from "address_1"
+			// Remove "house_number" from "address_1".
 			$post_data[ $address_type . 'address_1' ] = implode( ' ', array_slice( $address_exploded, 1 ) );
 		} else {
 			if ( empty( $post_data[ $address_type . 'address_2' ] ) ) {
-				// Set "address_2" to be house number extension
+				// Set "address_2" to be house number extension.
 				$post_data[ $address_type . 'address_2' ] = implode( ' ', array_slice( $address_exploded, $set_key + 1, count( $address_exploded ) ) );
 			}
 

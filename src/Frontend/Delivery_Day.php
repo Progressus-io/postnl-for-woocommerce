@@ -107,7 +107,7 @@ class Delivery_Day extends Base {
 
 		$tabs[] = array(
 			'id'   => $this->primary_field,
-			'name' => esc_html__( 'Delivery Day', 'postnl-for-woocommerce' ),
+			'name' => esc_html__( 'Delivery Days', 'postnl-for-woocommerce' ),
 		);
 
 		return $tabs;
@@ -137,7 +137,7 @@ class Delivery_Day extends Base {
 			}
 
 			$options = array_map(
-				function( $timeframe ) use ( $non_standard_fees ) {
+				function ( $timeframe ) use ( $non_standard_fees ) {
 					$type  = array_shift( $timeframe['Options'] );
 					$price = isset( $non_standard_fees[ $type ] ) ? $non_standard_fees[ $type ]['fee_price'] : 0;
 

@@ -121,5 +121,4 @@ class Logger {
 	public static function get_log_url() {
 		return admin_url( 'admin.php?page=wc-status&tab=logs' );
 	}
-
 }

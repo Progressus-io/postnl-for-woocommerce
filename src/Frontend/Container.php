@@ -53,7 +53,7 @@ class Container {
 	public function init_hooks() {
 		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_scripts_styles' ) );
 
-		add_action( 'woocommerce_review_order_after_shipping', array( $this, 'postnl_fields' ),10 );
+		add_action( 'woocommerce_review_order_after_shipping', array( $this, 'postnl_fields' ), 10 );
 		add_action( 'woocommerce_cart_calculate_fees', array( $this, 'add_cart_fees' ), 10, 1 );
 
 		add_filter( 'woocommerce_update_order_review_fragments', array( $this, 'fill_validated_address' ) );
@@ -124,7 +124,7 @@ class Container {
 	/**
 	 * Get data from PostNL Checkout Rest API.
 	 *
-	 * @param  array  $post_data  Checkout post input.
+	 * @param  array $post_data  Checkout post input.
 	 *
 	 * @return array.
 	 * @throws \Exception If the checkout data process has error.
@@ -138,7 +138,7 @@ class Container {
 		return array(
 			'response'  => $response,
 			'post_data' => $post_data,
-			'letterbox' => $letterbox
+			'letterbox' => $letterbox,
 		);
 	}
 
@@ -173,7 +173,7 @@ class Container {
 			}
 
 			$options = array_map(
-				function( $timeframe ) use ( $non_standard_fees ) {
+				function ( $timeframe ) use ( $non_standard_fees ) {
 					$type  = array_shift( $timeframe['Options'] );
 					$price = isset( $non_standard_fees[ $type ] ) ? $non_standard_fees[ $type ]['fee_price'] : 0;
 
@@ -189,7 +189,7 @@ class Container {
 
 			$options = array_filter(
 				$options,
-				function( $option ) use ( $non_standard_fees ) {
+				function ( $option ) use ( $non_standard_fees ) {
 					return ! isset( $non_standard_fees[ $option['type'] ] );
 				}
 			);
@@ -198,7 +198,7 @@ class Container {
 				continue;
 			}
 
-			$timestamp = strtotime( $delivery_option['DeliveryDate'] );
+			$timestamp            = strtotime( $delivery_option['DeliveryDate'] );
 			$default_val['day']   = gmdate( 'l', $timestamp );
 			$default_val['date']  = gmdate( 'Y-m-d', $timestamp );
 			$default_val['from']  = $options[0]['from'];
@@ -216,7 +216,7 @@ class Container {
 	/**
 	 * Add delivery day & Pickup points fields.
 	 *
-	 * @param  array  $post_data  Checkout post input.
+	 * @param  array $post_data  Checkout post input.
 	 *
 	 * @return void.
 	 * @throws \Exception.
@@ -283,7 +283,7 @@ class Container {
 
 			$post_data = Address_Utils::set_post_data_address( $post_data );
 
-			//Validate address.
+			// Validate address.
 			if ( $this->is_address_validation_required() ) {
 				if ( empty( $post_data['shipping_postcode'] ) ) {
 					return;
@@ -319,7 +319,8 @@ class Container {
 		if ( empty( $response[0] ) ) {
 			// Clear validated address.
 			WC()->session->set( POSTNL_SETTINGS_ID . '_validated_address', array() );
-
+			// Mark the address as invalid in the session:
+			WC()->session->set( POSTNL_SETTINGS_ID . '_invalid_address_marker', true );
 			// Add notice without blocking checkout call.
 			wc_add_notice( esc_html__( 'This is not a valid address!', 'postnl-for-woocommerce' ), 'notice' );
 		} else {
@@ -333,6 +334,7 @@ class Container {
 					'ship_to_different_address' => ! empty( $post_data['ship_to_different_address'] ),
 				)
 			);
+			WC()->session->__unset( POSTNL_SETTINGS_ID . '_invalid_address_marker' );
 		}
 	}
 
@@ -413,7 +415,7 @@ class Container {
 	/**
 	 * Replace shipping method title with Icon.
 	 *
-	 * @param String             $label String of label html.
+	 * @param String            $label String of label html.
 	 * @param \WC_Shipping_Rate $method Shipping method object.
 	 *
 	 * @return string

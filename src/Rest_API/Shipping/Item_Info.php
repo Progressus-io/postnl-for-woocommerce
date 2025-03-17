@@ -171,8 +171,11 @@ class Item_Info extends Base_Info {
 			'state'        => $shipping_state,
 			'country'      => Utils::is_canary_island( $shipping_state, $shipping_country ) ? 'IC' : $shipping_country,
 			'postcode'     => $order->get_shipping_postcode(),
-			'house_number' => $order->get_meta( '_shipping_house_number' ),
-		);
+			'house_number' => $order->get_meta( '_shipping_house_number' )
+				? $order->get_meta( '_shipping_house_number' )
+				: $order->get_meta( '_wc_billing/postnl/house_number' ),
+
+	);
 
 		// Check the house number.
 		$this->api_args['shipping_address'] = Address_Utils::split_address( $shipping_address );
@@ -434,7 +437,7 @@ class Item_Info extends Base_Info {
 							__( 'Wrong format for product code!', 'postnl-for-woocommerce' )
 						);
 					}
-				}
+				},
 			),
 			'product_options'         => array(
 				'default'  => array(
@@ -771,7 +774,6 @@ class Item_Info extends Base_Info {
 	 *
 	 * @return array
 	 * @since [*next-version*]
-	 *
 	 */
 	protected function get_content_item_info_schema() {
 		// Closures in PHP 5.3 do not inherit class context.
@@ -1057,10 +1059,10 @@ class Item_Info extends Base_Info {
 			$shipment_return_type = 'return_all_labels_not_active';
 		}
 
-		//Domestic Letterbox parcel (product code 2928) cannot be used in combination with Shipment and Return.
+		// Domestic Letterbox parcel (product code 2928) cannot be used in combination with Shipment and Return.
 		if ( ( $is_letterbox && 'yes' === $this->api_args['backend_data']['create_return_label'] ) || 'BE' == $destination ) {
 			$shipment_return_type = 'in_box';
-		} else if ( $is_letterbox ) {
+		} elseif ( $is_letterbox ) {
 			return array();
 		}
 
@@ -1074,5 +1076,4 @@ class Item_Info extends Base_Info {
 
 		return array();
 	}
-
 }

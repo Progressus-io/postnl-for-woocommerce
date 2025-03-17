@@ -35,16 +35,16 @@ if ( empty( $data['delivery_options'] ) ) {
 				<ul class="postnl_sub_list">
 					<?php foreach ( $delivery['options'] as $option_index => $option ) { ?>
 						<?php
-							$value      = sanitize_title( $delivery['date'] . '_' . $option['from'] . '-' . $option['to'] . '_' . $option['price'] );
-							$is_charged = ( empty( $option['price'] ) ) ? '' : '+' . wc_price( $option['price'] );
-							$is_checked = ( $value === $data['value'] || 0 === $index && 0 === $option_index ) ? 'checked="checked"' : '';
-							$is_active  = ( $value === $data['value'] ) ? 'active' : '';
+							$value         = sanitize_title( $delivery['date'] . '_' . $option['from'] . '-' . $option['to'] . '_' . $option['price'] );
+							$is_charged    = ( empty( $option['price'] ) ) ? '' : '+' . wc_price( $option['price'] );
+							$is_checked    = ( $value === $data['value'] || 0 === $index && 0 === $option_index ) ? 'checked="checked"' : '';
+							$is_active     = ( $value === $data['value'] ) ? 'active' : '';
 							$delivery_time = '';
-							if ( 'Evening' === $option['type'] ) {
-								$delivery_time = esc_html__( 'Evening', 'postnl-for-woocommerce' );
-							} elseif ( '08:00-12:00' === $option['type'] ) {
-								$delivery_time = esc_html__( 'Morning', 'postnl-for-woocommerce' );
-							}
+						if ( 'Evening' === $option['type'] ) {
+							$delivery_time = esc_html__( 'Evening', 'postnl-for-woocommerce' );
+						} elseif ( '08:00-12:00' === $option['type'] ) {
+							$delivery_time = esc_html__( 'Morning', 'postnl-for-woocommerce' );
+						}
 						?>
 						<li 
 							class="<?php echo esc_attr( $option['type'] . ' ' . $is_active ); ?>"

@@ -1,4 +1,4 @@
-# Copyright (C) 2024 PostNL
+x# Copyright (C) 2024 PostNL
 # This file is distributed under the same license as the PostNL for WooCommerce plugin.
 msgid ""
 msgstr ""

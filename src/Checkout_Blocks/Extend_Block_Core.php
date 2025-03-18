@@ -218,7 +218,7 @@ class Extend_Block_Core {
 		/**
 		 * Save the order to persist changes
 		 */
-		$order->save();
+		$order->save_meta_data();
 	}
 
 

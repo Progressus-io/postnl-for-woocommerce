@@ -108,6 +108,10 @@ class Checkout_Fields {
 			'city'            => array( 'priority' => 9 ),
 		);
 
+		if ( $is_blocks_checkout ) {
+			unset( $fields_to_order['company'] );
+		}
+
 		foreach ( $fields_to_order as $field_key => $field ) {
 			foreach ( $field as $override => $value ) {
 				$checkout_fields['NL'][ $field_key ][ $override ] = $value;

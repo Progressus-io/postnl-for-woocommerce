@@ -69,120 +69,187 @@ class Extend_Store_Endpoint {
 	 *
 	 * @return array Schema structure.
 	 */
-	public static function extend_checkout_schema() {
+	public static function extend_checkout_schema(): array {
 		return array(
 			'houseNumber'                 => array(
 				'description' => 'Shipping house number PostNL',
-				'context'     => array( 'view', 'edit' ),
+				'context'     => array(
+					'view',
+					'edit'
+				),
 				'readonly'    => false,
 				'default'     => '',
+				'type'        => 'string',
 			),
 			'deliveryDay'                 => array(
 				'description' => 'Selected delivery day for PostNL',
-				'context'     => array( 'view', 'edit' ),
+				'context'     => array(
+					'view',
+					'edit'
+				),
 				'readonly'    => false,
 				'default'     => '',
+				'type'        => 'string',
 			),
 			'deliveryDayDate'             => array(
 				'description' => 'Selected delivery day date for PostNL',
-				'context'     => array( 'view', 'edit' ),
+				'context'     => array(
+					'view',
+					'edit'
+				),
 				'readonly'    => false,
 				'default'     => '',
+				'type'        => 'string',
 			),
 			'deliveryDayFrom'             => array(
 				'description' => 'Delivery start time for PostNL delivery day',
-				'context'     => array( 'view', 'edit' ),
+				'context'     => array(
+					'view',
+					'edit'
+				),
 				'readonly'    => false,
 				'default'     => '',
+				'type'        => 'string',
 			),
 			'deliveryDayTo'               => array(
 				'description' => 'Delivery end time for PostNL delivery day',
-				'context'     => array( 'view', 'edit' ),
+				'context'     => array(
+					'view',
+					'edit'
+				),
 				'readonly'    => false,
 				'default'     => '',
+				'type'        => 'string',
 			),
 			'deliveryDayPrice'            => array(
 				'description' => 'Price for the selected PostNL delivery time',
-				'context'     => array( 'view', 'edit' ),
+				'context'     => array(
+					'view',
+					'edit'
+				),
 				'readonly'    => false,
+				'type'        => 'string',
 			),
 			'deliveryDayType'             => array(
 				'description' => 'Type of delivery (Morning, Evening, etc.) for PostNL delivery day',
-				'context'     => array( 'view', 'edit' ),
+				'context'     => array(
+					'view',
+					'edit'
+				),
 				'readonly'    => false,
 				'default'     => '',
+				'type'        => 'string',
 			),
-			// Updated hidden fields for the drop-off point
 			'dropoffPoints'               => array(
 				'description' => 'Selected drop-off point identifier',
-				'context'     => array( 'view', 'edit' ),
+				'context'     => array(
+					'view',
+					'edit'
+				),
 				'readonly'    => false,
 				'default'     => '',
+				'type'        => 'string',
 			),
 			'dropoffPointsAddressCompany' => array(
 				'description' => 'Company name of the drop-off point',
-				'context'     => array( 'view', 'edit' ),
+				'context'     => array(
+					'view',
+					'edit'
+				),
 				'readonly'    => false,
 				'default'     => '',
+				'type'        => 'string',
 			),
 			'dropoffPointsAddress1'       => array(
 				'description' => 'Address line 1 of the drop-off point',
-				'context'     => array( 'view', 'edit' ),
+				'context'     => array(
+					'view',
+					'edit'
+				),
 				'readonly'    => false,
 				'default'     => '',
+				'type'        => 'string',
 			),
 			'dropoffPointsAddress2'       => array(
 				'description' => 'Address line 2 of the drop-off point',
-				'context'     => array( 'view', 'edit' ),
+				'context'     => array(
+					'view',
+					'edit'
+				),
 				'readonly'    => false,
 				'default'     => '',
+				'type'        => 'string',
 			),
 			'dropoffPointsCity'           => array(
 				'description' => 'City of the drop-off point',
-				'context'     => array( 'view', 'edit' ),
+				'context'     => array(
+					'view',
+					'edit'
+				),
 				'readonly'    => false,
 				'default'     => '',
+				'type'        => 'string',
 			),
 			'dropoffPointsPostcode'       => array(
 				'description' => 'Postcode of the drop-off point',
-				'context'     => array( 'view', 'edit' ),
+				'context'     => array(
+					'view',
+					'edit'
+				),
 				'readonly'    => false,
 				'default'     => '',
+				'type'        => 'string',
 			),
 			'dropoffPointsCountry'        => array(
 				'description' => 'Country of the drop-off point',
-				// Use 'country' format if applicable
-				'context'     => array( 'view', 'edit' ),
+				'context'     => array(
+					'view',
+					'edit'
+				),
 				'readonly'    => false,
 				'default'     => '',
+				'type'        => 'string',
 			),
 			'dropoffPointsPartnerID'      => array(
 				'description' => 'Partner ID of the drop-off point',
-				// Change to 'number' if it's numeric
-				'context'     => array( 'view', 'edit' ),
+				'context'     => array(
+					'view',
+					'edit'
+				),
 				'readonly'    => false,
 				'default'     => '',
+				'type'        => 'string',
 			),
 			'dropoffPointsDate'           => array(
 				'description' => 'Date of the drop-off point selection',
-				// Use 'date' format if applicable
-				'context'     => array( 'view', 'edit' ),
+				'context'     => array(
+					'view',
+					'edit'
+				),
 				'readonly'    => false,
 				'default'     => '',
+				'type'        => 'string',
 			),
 			'dropoffPointsTime'           => array(
 				'description' => 'Time of the drop-off point selection',
-				// Use 'time' format if applicable
-				'context'     => array( 'view', 'edit' ),
+				'context'     => array(
+					'view',
+					'edit'
+				),
 				'readonly'    => false,
 				'default'     => '',
+				'type'        => 'string',
 			),
 			'dropoffPointsDistance'       => array(
 				'description' => 'Distance to the drop-off point',
-				'context'     => array( 'view', 'edit' ),
+				'context'     => array(
+					'view',
+					'edit'
+				),
 				'readonly'    => false,
 				'default'     => 0.0,
 				'nullable'    => true,
+				'type'        => array( 'string', 'null' ),
 			),
 		);
 	}

@@ -39,14 +39,16 @@ class Checkout_Fields {
 	 * Collection of hooks when initiation.
 	 */
 	public function init_hooks() {
-		if ( $this->settings->is_reorder_nl_address_enabled() ) {
-			if ( ! $this->is_blocks_checkout() ) {
-				add_filter( 'woocommerce_default_address_fields', array( $this, 'add_house_number' ) );
-			}
-
-			add_filter( 'woocommerce_get_country_locale', array( $this, 'get_country_locale' ) );
-			add_filter( 'woocommerce_country_locale_field_selectors', array( $this, 'country_locale_field_selectors' ) );
+		if ( ! $this->settings->is_reorder_nl_address_enabled() ) {
+			return;
 		}
+
+		if ( ! $this->is_blocks_checkout() ) {
+			add_filter( 'woocommerce_default_address_fields', array( $this, 'add_house_number' ) );
+		}
+
+		add_filter( 'woocommerce_get_country_locale', array( $this, 'get_country_locale' ) );
+		add_filter( 'woocommerce_country_locale_field_selectors', array( $this, 'country_locale_field_selectors' ) );
 	}
 
 	/**

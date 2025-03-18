@@ -79,7 +79,7 @@ class Extend_Store_Endpoint {
 				),
 				'readonly'    => false,
 				'default'     => '',
-				'type'        => 'string',
+				'type'        => array( 'string', 'integer' ),
 			),
 			'deliveryDay'                 => array(
 				'description' => 'Selected delivery day for PostNL',

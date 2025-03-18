@@ -661,11 +661,15 @@ class Utils {
 	/**
 	 * Check if current cart is eligible for automatically use letterbox.
 	 *
-	 * @param \WC_Cart|int \WC_Cart.
+	 * @param \WC_Cart|null $cart Cart object.
 	 *
 	 * @return boolean
 	 */
-	public static function is_cart_eligible_auto_letterbox( $cart ) {
+	public static function is_cart_eligible_auto_letterbox( ?\WC_Cart $cart ): bool {
+		if ( is_null( $cart ) ) {
+			return false;
+		}
+
 		if ( ! in_array( WC()->customer->get_shipping_country(), self::get_available_country_for_letterbox(), true ) ) {
 			return false;
 		}

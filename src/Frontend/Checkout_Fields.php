@@ -84,8 +84,6 @@ class Checkout_Fields {
 			$house_number_key = 'house_number';
 		}
 
-		error_log($house_number_key);
-
 		$fields_to_order = array(
 			'first_name'      => array( 'priority' => 1 ),
 			'last_name'       => array( 'priority' => 2 ),

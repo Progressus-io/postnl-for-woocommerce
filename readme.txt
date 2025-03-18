@@ -81,6 +81,9 @@ Follow these instructions (https://www.postnl.nl/Images/aanvragen-api-key-stappe
 
 == Changelog ==
 
+= 5.7.1 (2025-xx-xx) =
+* Fixed: Fatal error when editing pages with certain themes.
+
 = 5.7.0 (2025-03-17) =
 * Add: Cart/Checkout blocks compatibility.
 * Fix: Improved error messages for Shipping & Return label activation.

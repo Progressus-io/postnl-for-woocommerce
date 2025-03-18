@@ -35,6 +35,9 @@ PostNL’s official extension for WooCommerce on WordPress. Manage your national
 
 ## Changelog
 
+### 5.7.1
+* Fixed: Fatal error when editing pages with certain themes.
+
 ### 5.7.0
 * Add: Cart/Checkout blocks compatibility.
 * Fix: Improved error messages for Shipping & Return label activation.

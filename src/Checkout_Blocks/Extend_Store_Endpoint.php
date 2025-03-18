@@ -178,7 +178,7 @@ class Extend_Store_Endpoint {
 				),
 				'readonly'    => false,
 				'default'     => '',
-				'type'        => 'string',
+				'type'        => array( 'number', 'string' ),
 			),
 			'dropoffPointsCity'           => array(
 				'description' => 'City of the drop-off point',
@@ -249,7 +249,7 @@ class Extend_Store_Endpoint {
 				'readonly'    => false,
 				'default'     => 0.0,
 				'nullable'    => true,
-				'type'        => array( 'string', 'null' ),
+				'type'        => array( 'string', 'number', 'null' ),
 			),
 		);
 	}

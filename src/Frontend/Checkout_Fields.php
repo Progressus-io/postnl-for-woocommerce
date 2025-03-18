@@ -121,8 +121,8 @@ class Checkout_Fields {
 			$countries_codes = array_keys( WC()->countries->get_countries() );
 			foreach ( $countries_codes as $country_code ) {
 				if ( 'NL' !== $country_code ) {
-					$checkout_fields[ $country_code ][$house_number_key]['hidden']   = true;
-					$checkout_fields[ $country_code ][$house_number_key]['required'] = false;
+					$checkout_fields[ $country_code ][ $house_number_key ]['hidden']   = true;
+					$checkout_fields[ $country_code ][ $house_number_key ]['required'] = false;
 				}
 			}
 		}

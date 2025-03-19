@@ -1,6 +1,6 @@
 {
   "name": "postnl-for-woocommerce",
-  "version": "5.7.0",
+  "version": "5.7.1",
   "author": "The WordPress Contributors",
   "license": "GPL-2.0-or-later",
   "main": "build/index.js",

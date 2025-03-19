@@ -2,14 +2,14 @@
 # This file is distributed under the GPLv2 or later.
 msgid ""
 msgstr ""
-"Project-Id-Version: PostNL for WooCommerce 5.7.0\n"
+"Project-Id-Version: PostNL for WooCommerce 5.7.1\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/postnl-for-woocommerce\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2025-03-18T11:58:07+00:00\n"
+"POT-Creation-Date: 2025-03-19T10:35:11+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.11.0\n"
 "X-Domain: postnl-for-woocommerce\n"
@@ -45,8 +45,8 @@ msgid "This is not a valid address!"
 msgstr ""
 
 #: src/Checkout_Blocks/Extend_Block_Core.php:82
-#: src/Frontend/Checkout_Fields.php:61
-#: src/Frontend/Checkout_Fields.php:62
+#: src/Frontend/Checkout_Fields.php:64
+#: src/Frontend/Checkout_Fields.php:65
 #: src/Order/Single.php:538
 msgid "House number"
 msgstr ""
@@ -100,17 +100,17 @@ msgstr ""
 msgid "Sorry, your session has expired. <a href=\"%s\" class=\"wc-backward\">Return to shop</a>"
 msgstr ""
 
-#: src/Frontend/Checkout_Fields.php:96
-#: src/Frontend/Checkout_Fields.php:97
+#: src/Frontend/Checkout_Fields.php:101
+#: src/Frontend/Checkout_Fields.php:102
 #: src/Shipping_Method/Settings.php:244
 msgid "House Number Extension"
 msgstr ""
 
-#: src/Frontend/Checkout_Fields.php:101
+#: src/Frontend/Checkout_Fields.php:106
 msgid "Street"
 msgstr ""
 
-#: src/Frontend/Checkout_Fields.php:102
+#: src/Frontend/Checkout_Fields.php:107
 msgid "Street Name"
 msgstr ""
 

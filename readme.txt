@@ -7,7 +7,7 @@ Requires at least: 6.6
 Tested up to: 6.7
 WC requires at least: 9.5
 WC tested up to: 9.7
-Stable tag: 5.7.0
+Stable tag: 5.7.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -81,7 +81,7 @@ Follow these instructions (https://www.postnl.nl/Images/aanvragen-api-key-stappe
 
 == Changelog ==
 
-= 5.7.1 (2025-xx-xx) =
+= 5.7.1 (2025-03-19) =
 * Fix: Fatal error when editing pages with certain themes.
 * Fix: Required house number for non-NL destinations in blocks checkout.
 

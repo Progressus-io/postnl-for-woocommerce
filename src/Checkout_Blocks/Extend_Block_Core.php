@@ -64,7 +64,7 @@ class Extend_Block_Core {
 		if ( $invalid_marker ) {
 			$errors->add(
 				'invalid_address',
-				__( 'This is not a valid address!', 'postnl-for-woocommerce' )
+				esc_html__( 'This is not a valid address!', 'postnl-for-woocommerce' )
 			);
 		}
 	}
@@ -81,9 +81,9 @@ class Extend_Block_Core {
 						'id'         => 'postnl/house_number',
 						'label'      => __( 'House number', 'postnl-for-woocommerce' ),
 						'location'   => 'address',
-						'required'   => true,
+						'required'   => false,
 						'attributes' => array(
-							'autocomplete' => 'house-number',
+							'autocomplete' => 'house_number',
 						),
 					),
 				);
@@ -218,7 +218,7 @@ class Extend_Block_Core {
 		/**
 		 * Save the order to persist changes
 		 */
-		$order->save();
+		$order->save_meta_data();
 	}
 
 

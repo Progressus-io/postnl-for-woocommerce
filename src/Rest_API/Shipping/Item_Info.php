@@ -171,10 +171,7 @@ class Item_Info extends Base_Info {
 			'state'        => $shipping_state,
 			'country'      => Utils::is_canary_island( $shipping_state, $shipping_country ) ? 'IC' : $shipping_country,
 			'postcode'     => $order->get_shipping_postcode(),
-			'house_number' => $order->get_meta( '_shipping_house_number' )
-				? $order->get_meta( '_shipping_house_number' )
-				: $order->get_meta( '_wc_billing/postnl/house_number' ),
-
+			'house_number' => $order->get_meta( '_shipping_house_number' ),
 		);
 
 		// Check the house number.

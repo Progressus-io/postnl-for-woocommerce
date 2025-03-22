@@ -70,7 +70,7 @@ export const Block = ( { checkoutExtensionData } ) => {
 	const currentHouseNumber = shippingAddress?.[ 'postnl/house_number' ] || '';
 
 	useEffect( () => {
-		if ( currentHouseNumber ) {
+		if ( currentHouseNumber && postnlData.is_nl_address_enabled && false) {
 			setExtensionData( 'postnl', 'houseNumber', currentHouseNumber );
 		}
 	}, [ shippingAddress, setExtensionData ] );
@@ -93,7 +93,7 @@ export const Block = ( { checkoutExtensionData } ) => {
 			! shippingAddress ||
 			empty( shippingAddress.postcode ) ||
 			( shippingAddress.country === 'NL' &&
-				empty( shippingAddress[ 'postnl/house_number' ] ) )
+				(postnlData.is_nl_address_enabled && empty( shippingAddress[ 'postnl/house_number' ] )) )
 		) {
 			// If we have no valid postcode/house number, hide container
 			setShowContainer( false );
@@ -120,8 +120,12 @@ export const Block = ( { checkoutExtensionData } ) => {
 			const data = {
 				shipping_country: shippingAddress.country || '',
 				shipping_postcode: shippingAddress.postcode || '',
-				shipping_house_number:
-					shippingAddress[ 'postnl/house_number' ] || '',
+				...( postnlData.is_nl_address_enabled
+					? {
+						shipping_house_number:
+							shippingAddress[ 'postnl/house_number' ] || '',
+					}
+					: {} ),
 				shipping_address_2: shippingAddress.address_2 || '',
 				shipping_address_1: shippingAddress.address_1 || '',
 				shipping_city: shippingAddress.city || '',
@@ -278,6 +282,18 @@ export const Block = ( { checkoutExtensionData } ) => {
 			'deliveryDayType',
 			firstOption.type || 'Letterbox'
 		);
+		setExtensionData( 'postnl', 'dropoffPoints', '' );
+		setExtensionData( 'postnl', 'dropoffPointsAddressCompany', '' );
+		setExtensionData( 'postnl', 'dropoffPointsAddress1', '' );
+		setExtensionData( 'postnl', 'dropoffPointsAddress2', '' );
+		setExtensionData( 'postnl', 'dropoffPointsCity', '' );
+		setExtensionData( 'postnl', 'dropoffPointsPostcode', '' );
+		setExtensionData( 'postnl', 'dropoffPointsCountry', '' );
+		setExtensionData( 'postnl', 'dropoffPointsPartnerID', '' );
+		setExtensionData( 'postnl', 'dropoffPointsDate', '' );
+		setExtensionData( 'postnl', 'dropoffPointsTime', '' );
+		setExtensionData( 'postnl', 'dropoffPointsDistance', '' );
+
 	}, [ letterbox, showContainer, deliveryOptions, setExtensionData ] );
 
 	return (

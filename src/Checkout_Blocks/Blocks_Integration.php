@@ -203,6 +203,7 @@ class Blocks_Integration implements IntegrationInterface {
 			'nonce'     => wp_create_nonce( 'postnl_delivery_day_nonce' ),
 			'letterbox' => $letterbox,
 			'is_nl_address_enabled' => $settings->is_reorder_nl_address_enabled(),
+			'is_pickup_points_enabled' => $settings->is_pickup_points_enabled(),
 		);
 	}
 }

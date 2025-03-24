@@ -16,21 +16,22 @@ import { Block as DropoffPointsBlock } from '../postnl-dropoff-points/block';
 
 export const Block = ( { checkoutExtensionData } ) => {
 	const { setExtensionData } = checkoutExtensionData;
+	const postnlData = getSetting( 'postnl-for-woocommerce-blocks_data', {} );
 
 	const tabs = [
 		{
 			id: 'delivery_day',
 			name: __( 'Delivery Days', 'postnl-for-woocommerce' ),
 		},
-		{
+	];
+	if ( postnlData.is_pickup_points_enabled ) {
+		tabs.push({
 			id: 'dropoff_points',
 			name: __( 'Dropoff Points', 'postnl-for-woocommerce' ),
-		},
-	];
-
+		});
+	}
 	const [ activeTab, setActiveTab ] = useState( tabs[ 0 ].id );
 
-	const postnlData = getSetting( 'postnl-for-woocommerce-blocks_data', {} );
 	const letterbox = postnlData.letterbox || false;
 	const { CART_STORE_KEY, CHECKOUT_STORE_KEY } = window.wc.wcBlocksData;
 
@@ -373,18 +374,20 @@ export const Block = ( { checkoutExtensionData } ) => {
 								isDeliveryDaysEnabled={ deliveryDaysEnabled }
 							/>
 						</div>
-						<div
-							className={ `postnl_content ${
-								activeTab === 'dropoff_points' ? 'active' : ''
-							}` }
-							id="postnl_dropoff_points_content"
-						>
-							<DropoffPointsBlock
-								checkoutExtensionData={ checkoutExtensionData }
-								isActive={ activeTab === 'dropoff_points' }
-								dropoffOptions={ dropoffOptions }
-							/>
-						</div>
+						{ postnlData.is_pickup_points_enabled && (
+							<div
+								className={ `postnl_content ${
+									activeTab === 'dropoff_points' ? 'active' : ''
+								}` }
+								id="postnl_dropoff_points_content"
+							>
+								<DropoffPointsBlock
+									checkoutExtensionData={ checkoutExtensionData }
+									isActive={ activeTab === 'dropoff_points' }
+									dropoffOptions={ dropoffOptions }
+								/>
+							</div>
+						) }
 					</div>
 				</>
 			) }

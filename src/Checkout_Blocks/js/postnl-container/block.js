@@ -71,7 +71,7 @@ export const Block = ( { checkoutExtensionData } ) => {
 	const currentHouseNumber = shippingAddress?.[ 'postnl/house_number' ] || '';
 
 	useEffect( () => {
-		if ( currentHouseNumber && postnlData.is_nl_address_enabled && false) {
+		if ( currentHouseNumber && postnlData.is_nl_address_enabled) {
 			setExtensionData( 'postnl', 'houseNumber', currentHouseNumber );
 		}
 	}, [ shippingAddress, setExtensionData ] );

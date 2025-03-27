@@ -182,7 +182,15 @@ class Extend_Block_Core {
 		$postnl_request_data = $request['extensions'][ $this->name ];
 
 		// Extract billing and shipping house numbers with sanitization
-		$shipping_house_number = isset( $postnl_request_data['houseNumber'] ) ? sanitize_text_field( $postnl_request_data['houseNumber'] ) : '';
+		$shipping_house_number = '';
+
+		if ( ! empty( $postnl_request_data['houseNumber'] ) ) {
+			$shipping_house_number = sanitize_text_field( $postnl_request_data['houseNumber'] );
+		} elseif ( ! empty( WC()->session->get( 'postnl_extracted_house_number', '' ) ) ) {
+			$shipping_house_number = WC()->session->get( 'postnl_extracted_house_number', '' );
+		} else {
+			$shipping_house_number = '';
+		}
 
 		// Update billing and shipping house numbers
 		$order->update_meta_data( '_shipping_house_number', $shipping_house_number );
@@ -256,6 +264,12 @@ class Extend_Block_Core {
 		$sanitized_data = array_map( 'sanitize_text_field', wp_unslash( $_POST['data'] ) );
 
 		$sanitized_data = Address_Utils::set_post_data_address( $sanitized_data );
+
+		// Store the parsed house number in the session if the field was disabled
+		if(!$this->settings->is_reorder_nl_address_enabled()){
+			$shipping_house_number = $sanitized_data['shipping_house_number'] ?? '';
+			WC()->session->set( 'postnl_extracted_house_number', $shipping_house_number );
+		}
 
 		$shipping_country = isset( $sanitized_data['shipping_country'] ) ? $sanitized_data['shipping_country'] : '';
 

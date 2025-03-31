@@ -168,16 +168,21 @@ export const Block = ( { checkoutExtensionData } ) => {
 								respData.validated_address;
 							const newShippingAddress = {
 								...shippingAddress,
-								address_1: street,
 								city,
 								'postnl/house_number': house_number,
 							};
 
+							if ( ! postnlData.is_nl_address_enabled ) {
+								newShippingAddress.address_1 = `${street} ${house_number}`;
+							} else {
+								newShippingAddress.address_1 = street;
+							}
+
 							if (
-								shippingAddress.address_1 !== street ||
+								(shippingAddress.address_1 !== street ||
 								shippingAddress.city !== city ||
 								shippingAddress[ 'postnl/house_number' ] !==
-									house_number
+									house_number)
 							) {
 								isUpdatingAddress.current = true;
 								setShippingAddress( newShippingAddress );

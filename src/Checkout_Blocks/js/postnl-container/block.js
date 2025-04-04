@@ -84,6 +84,7 @@ export const Block = ( { checkoutExtensionData } ) => {
 		return (
 			addr1.country === addr2.country &&
 			addr1.postcode === addr2.postcode &&
+			addr1.address_1 === addr2.address_1 &&
 			addr1[ 'postnl/house_number' ] === addr2[ 'postnl/house_number' ]
 		);
 	};

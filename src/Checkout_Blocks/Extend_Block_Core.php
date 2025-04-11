@@ -278,6 +278,7 @@ class Extend_Block_Core {
 		// If not NL, clear session and return
 		if ( ! in_array( $shipping_country, array( 'NL', 'BE' ), true ) ) {
 			WC()->session->__unset( 'postnl_checkout_post_data' );
+			WC()->session->__unset( POSTNL_SETTINGS_ID . '_invalid_address_marker' );
 			wp_send_json_success(
 				array(
 					'message'          => 'No delivery options available outside NL.',
@@ -324,9 +325,10 @@ class Extend_Block_Core {
 		// Retrieve validated address from session
 		$validated_address = WC()->session->get( POSTNL_SETTINGS_ID . '_validated_address' );
 
+		$container = new Container();
+
 		// If validation is enabled and address changed or not validated yet
-		if ( $this->settings->is_validate_nl_address_enabled() && ( $address_changed || empty( $validated_address ) ) ) {
-			$container = new Container();
+		if ( $container->is_address_validation_required() && 'NL' == $shipping_country && ( $address_changed || empty( $validated_address ) ) ) {
 			try {
 				$container->validated_address( $sanitized_data );
 				// Attempt to fetch validated address again

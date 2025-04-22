@@ -81,6 +81,9 @@ Follow these instructions (https://www.postnl.nl/Images/aanvragen-api-key-stappe
 
 == Changelog ==
 
+= 5.7.2 (2025-04-22) =
+Fix: Single label now printed according to the selected start position.
+
 = 5.7.1 (2025-03-19) =
 * Fix: Fatal error when editing pages with certain themes.
 * Fix: Required house number for non-NL destinations in blocks checkout.

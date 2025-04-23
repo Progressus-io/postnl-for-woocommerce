@@ -382,7 +382,7 @@ class Settings extends \WC_Settings_API {
 				'type'        => 'time',
 				'description' => esc_html__( 'If an order is ordered after this time, one day will be added to the transit time.', 'postnl-for-woocommerce' ),
 				'desc_tip'    => true,
-				'default'     => '18',
+				'default'     => '18:00',
 				'placeholder' => '',
 			),
 			'dropoff_day_mon'                 => array(

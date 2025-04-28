@@ -54,7 +54,6 @@ class Extend_Block_Core {
 		add_action( 'woocommerce_cart_calculate_fees', array( $this, 'postnl_add_custom_fee' ) );
 		if ( $this->settings->is_reorder_nl_address_enabled() ) {
 			$this->register_additional_checkout_fields();
-
 		}
 
 		// Validate adress in cart

@@ -72,7 +72,7 @@ class Extend_Store_Endpoint {
 	 */
 	public static function extend_checkout_schema(): array {
 
-		$schema = [];
+		$schema = array();
 
 		$settings = postnl()->get_shipping_settings();
 

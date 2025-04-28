@@ -198,11 +198,11 @@ class Blocks_Integration implements IntegrationInterface {
 		$settings = postnl()->get_shipping_settings();
 
 		return array(
-			'pluginUrl' => POSTNL_WC_PLUGIN_DIR_URL,
-			'ajax_url'  => admin_url( 'admin-ajax.php' ),
-			'nonce'     => wp_create_nonce( 'postnl_delivery_day_nonce' ),
-			'letterbox' => $letterbox,
-			'is_nl_address_enabled' => $settings->is_reorder_nl_address_enabled(),
+			'pluginUrl'                => POSTNL_WC_PLUGIN_DIR_URL,
+			'ajax_url'                 => admin_url( 'admin-ajax.php' ),
+			'nonce'                    => wp_create_nonce( 'postnl_delivery_day_nonce' ),
+			'letterbox'                => $letterbox,
+			'is_nl_address_enabled'    => $settings->is_reorder_nl_address_enabled(),
 			'is_pickup_points_enabled' => $settings->is_pickup_points_enabled(),
 		);
 	}

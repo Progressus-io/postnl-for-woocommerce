@@ -302,7 +302,7 @@ class Extend_Block_Core {
 				WC()->session->__unset( 'postnl_checkout_post_data' );
 			wp_send_json_success(
 				array(
-					'message'          => 'Postcode or house number is missing.',
+					'message'          => esc_html__( 'Postcode or house number is missing.', 'postnl-for-woocommerce' ),
 					'show_container'   => false,
 					'delivery_options' => array(),
 					'dropoff_options'  => array(),

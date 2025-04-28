@@ -183,7 +183,7 @@ class Extend_Block_Core {
 		// Extract billing and shipping house numbers with sanitization
 		$shipping_house_number = '';
 
-		if ( ! empty( $postnl_request_data['houseNumber'] ) && $this->settings->is_reorder_nl_address_enabled()) {
+		if ( ! empty( $postnl_request_data['houseNumber'] ) && $this->settings->is_reorder_nl_address_enabled() ) {
 			$shipping_house_number = sanitize_text_field( $postnl_request_data['houseNumber'] );
 		}
 		// Update billing and shipping house numbers

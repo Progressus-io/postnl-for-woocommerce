@@ -362,7 +362,6 @@ class Extend_Block_Core {
 		// Proceed to fetch delivery and dropoff options
 		$order_data = $sanitized_data;
 
-		$container        = new Container();
 		$delivery_day     = new Delivery_Day();
 		$dropoff          = new Dropoff_Points();
 		$checkout_data    = $container->get_checkout_data( $order_data );

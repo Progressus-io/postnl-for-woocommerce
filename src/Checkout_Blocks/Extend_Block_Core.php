@@ -327,7 +327,7 @@ class Extend_Block_Core {
 		$container = new Container();
 
 		// If validation is enabled and address changed or not validated yet
-		if ( $container->is_address_validation_required() && 'NL' == $shipping_country && ( $address_changed || empty( $validated_address ) ) ) {
+		if ( $container->is_address_validation_required() && 'NL' === $shipping_country && ( $address_changed || empty( $validated_address ) ) ) {
 			try {
 				$container->validated_address( $sanitized_data );
 				// Attempt to fetch validated address again

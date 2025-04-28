@@ -75,10 +75,6 @@ class Extend_Store_Endpoint {
 		$schema = [];
 
 		$settings = postnl()->get_shipping_settings();
-		$log_file = WP_CONTENT_DIR . '/postnl-response-log.txt'; // Path to the log file
-		$log_data = json_encode( $settings->is_reorder_nl_address_enabled(), JSON_PRETTY_PRINT );
-		// Append the log data to the file
-		//file_put_contents( $log_file, $log_data . PHP_EOL, FILE_APPEND );
 
 		if ( $settings && $settings->is_reorder_nl_address_enabled() ) {
 			$schema['houseNumber'] = array(

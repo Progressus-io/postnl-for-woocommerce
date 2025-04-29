@@ -172,7 +172,7 @@ class CustomizedPDFMerger {
 						|| ( abs( $file_width - intval( $a6_size['width'] ) ) <= $tolerance &&
 							abs( $file_height - intval( $a6_size['height'] ) ) <= $tolerance );
 
-				if ( 'A6' === $label_format || $is_cn23 || ! $isA6 || 1 === count( $files ) ) {
+				if ( 'A6' === $label_format || $is_cn23 || ! $isA6 ) {
 					$fpdi->AddPage(
 						$file_orientation,
 						array(

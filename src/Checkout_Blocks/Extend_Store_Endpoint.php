@@ -7,6 +7,7 @@
 
 namespace PostNLWooCommerce\Checkout_Blocks;
 
+use function PostNLWooCommerce\postnl;
 use Automattic\WooCommerce\StoreApi\StoreApi;
 use Automattic\WooCommerce\StoreApi\Schemas\ExtendSchema;
 use Automattic\WooCommerce\StoreApi\Schemas\V1\CheckoutSchema;
@@ -70,17 +71,22 @@ class Extend_Store_Endpoint {
 	 * @return array Schema structure.
 	 */
 	public static function extend_checkout_schema(): array {
-		return array(
-			'houseNumber'                 => array(
+
+		$schema = array();
+
+		$settings = postnl()->get_shipping_settings();
+
+		if ( $settings && $settings->is_reorder_nl_address_enabled() ) {
+			$schema['houseNumber'] = array(
 				'description' => 'Shipping house number PostNL',
-				'context'     => array(
-					'view',
-					'edit'
-				),
+				'context'     => array( 'view', 'edit' ),
 				'readonly'    => false,
-				'default'     => '',
-				'type'        => array( 'string', 'integer' ),
-			),
+				'default'     => null,
+				'nullable'    => true,
+				'type'        => array( 'string', 'integer', 'null' ),
+			);
+		}
+		$schema += array(
 			'deliveryDay'                 => array(
 				'description' => 'Selected delivery day for PostNL',
 				'context'     => array(
@@ -140,7 +146,7 @@ class Extend_Store_Endpoint {
 				'default'     => '',
 				'type'        => 'string',
 			),
-			'dropoffPoints'               => array(
+			'dropoffPoints' => array(
 				'description' => 'Selected drop-off point identifier',
 				'context'     => array(
 					'view',
@@ -252,5 +258,6 @@ class Extend_Store_Endpoint {
 				'type'        => array( 'string', 'number', 'null' ),
 			),
 		);
+		return $schema;
 	}
 }

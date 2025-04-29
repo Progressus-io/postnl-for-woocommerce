@@ -16,21 +16,22 @@ import { Block as DropoffPointsBlock } from '../postnl-dropoff-points/block';
 
 export const Block = ( { checkoutExtensionData } ) => {
 	const { setExtensionData } = checkoutExtensionData;
+	const postnlData = getSetting( 'postnl-for-woocommerce-blocks_data', {} );
 
 	const tabs = [
 		{
 			id: 'delivery_day',
 			name: __( 'Delivery Days', 'postnl-for-woocommerce' ),
 		},
-		{
+	];
+	if ( postnlData.is_pickup_points_enabled ) {
+		tabs.push({
 			id: 'dropoff_points',
 			name: __( 'Dropoff Points', 'postnl-for-woocommerce' ),
-		},
-	];
-
+		});
+	}
 	const [ activeTab, setActiveTab ] = useState( tabs[ 0 ].id );
 
-	const postnlData = getSetting( 'postnl-for-woocommerce-blocks_data', {} );
 	const letterbox = postnlData.letterbox || false;
 	const { CART_STORE_KEY, CHECKOUT_STORE_KEY } = window.wc.wcBlocksData;
 
@@ -70,7 +71,7 @@ export const Block = ( { checkoutExtensionData } ) => {
 	const currentHouseNumber = shippingAddress?.[ 'postnl/house_number' ] || '';
 
 	useEffect( () => {
-		if ( currentHouseNumber ) {
+		if ( currentHouseNumber && postnlData.is_nl_address_enabled) {
 			setExtensionData( 'postnl', 'houseNumber', currentHouseNumber );
 		}
 	}, [ shippingAddress, setExtensionData ] );
@@ -83,6 +84,7 @@ export const Block = ( { checkoutExtensionData } ) => {
 		return (
 			addr1.country === addr2.country &&
 			addr1.postcode === addr2.postcode &&
+			addr1.address_1 === addr2.address_1 &&
 			addr1[ 'postnl/house_number' ] === addr2[ 'postnl/house_number' ]
 		);
 	};
@@ -93,7 +95,7 @@ export const Block = ( { checkoutExtensionData } ) => {
 			! shippingAddress ||
 			empty( shippingAddress.postcode ) ||
 			( shippingAddress.country === 'NL' &&
-				empty( shippingAddress[ 'postnl/house_number' ] ) )
+				(postnlData.is_nl_address_enabled && empty( shippingAddress[ 'postnl/house_number' ] )) )
 		) {
 			// If we have no valid postcode/house number, hide container
 			setShowContainer( false );
@@ -120,8 +122,12 @@ export const Block = ( { checkoutExtensionData } ) => {
 			const data = {
 				shipping_country: shippingAddress.country || '',
 				shipping_postcode: shippingAddress.postcode || '',
-				shipping_house_number:
-					shippingAddress[ 'postnl/house_number' ] || '',
+				...( postnlData.is_nl_address_enabled
+					? {
+						shipping_house_number:
+							shippingAddress[ 'postnl/house_number' ] || '',
+					}
+					: {} ),
 				shipping_address_2: shippingAddress.address_2 || '',
 				shipping_address_1: shippingAddress.address_1 || '',
 				shipping_city: shippingAddress.city || '',
@@ -163,16 +169,21 @@ export const Block = ( { checkoutExtensionData } ) => {
 								respData.validated_address;
 							const newShippingAddress = {
 								...shippingAddress,
-								address_1: street,
 								city,
 								'postnl/house_number': house_number,
 							};
 
+							if ( ! postnlData.is_nl_address_enabled ) {
+								newShippingAddress.address_1 = `${street} ${house_number}`;
+							} else {
+								newShippingAddress.address_1 = street;
+							}
+
 							if (
-								shippingAddress.address_1 !== street ||
+								(shippingAddress.address_1 !== street ||
 								shippingAddress.city !== city ||
 								shippingAddress[ 'postnl/house_number' ] !==
-									house_number
+									house_number)
 							) {
 								isUpdatingAddress.current = true;
 								setShippingAddress( newShippingAddress );
@@ -278,6 +289,18 @@ export const Block = ( { checkoutExtensionData } ) => {
 			'deliveryDayType',
 			firstOption.type || 'Letterbox'
 		);
+		setExtensionData( 'postnl', 'dropoffPoints', '' );
+		setExtensionData( 'postnl', 'dropoffPointsAddressCompany', '' );
+		setExtensionData( 'postnl', 'dropoffPointsAddress1', '' );
+		setExtensionData( 'postnl', 'dropoffPointsAddress2', '' );
+		setExtensionData( 'postnl', 'dropoffPointsCity', '' );
+		setExtensionData( 'postnl', 'dropoffPointsPostcode', '' );
+		setExtensionData( 'postnl', 'dropoffPointsCountry', '' );
+		setExtensionData( 'postnl', 'dropoffPointsPartnerID', '' );
+		setExtensionData( 'postnl', 'dropoffPointsDate', '' );
+		setExtensionData( 'postnl', 'dropoffPointsTime', '' );
+		setExtensionData( 'postnl', 'dropoffPointsDistance', '' );
+
 	}, [ letterbox, showContainer, deliveryOptions, setExtensionData ] );
 
 	return (
@@ -357,18 +380,20 @@ export const Block = ( { checkoutExtensionData } ) => {
 								isDeliveryDaysEnabled={ deliveryDaysEnabled }
 							/>
 						</div>
-						<div
-							className={ `postnl_content ${
-								activeTab === 'dropoff_points' ? 'active' : ''
-							}` }
-							id="postnl_dropoff_points_content"
-						>
-							<DropoffPointsBlock
-								checkoutExtensionData={ checkoutExtensionData }
-								isActive={ activeTab === 'dropoff_points' }
-								dropoffOptions={ dropoffOptions }
-							/>
-						</div>
+						{ postnlData.is_pickup_points_enabled && (
+							<div
+								className={ `postnl_content ${
+									activeTab === 'dropoff_points' ? 'active' : ''
+								}` }
+								id="postnl_dropoff_points_content"
+							>
+								<DropoffPointsBlock
+									checkoutExtensionData={ checkoutExtensionData }
+									isActive={ activeTab === 'dropoff_points' }
+									dropoffOptions={ dropoffOptions }
+								/>
+							</div>
+						) }
 					</div>
 				</>
 			) }

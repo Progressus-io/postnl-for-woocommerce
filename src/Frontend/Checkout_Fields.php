@@ -39,7 +39,7 @@ class Checkout_Fields {
 	 * Collection of hooks when initiation.
 	 */
 	public function init_hooks() {
-		if ( ! $this->settings->is_reorder_nl_address_enabled() && ! $this->is_blocks_checkout() ) {
+		if ( ! $this->settings->is_reorder_nl_address_enabled() ) {
 			return;
 		}
 

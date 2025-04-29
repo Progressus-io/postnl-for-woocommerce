@@ -2,11 +2,12 @@
 
 namespace PostNLWooCommerce\Checkout_Blocks;
 
-use PostNLWooCommerce\Shipping_Method\Settings;
+use function PostNLWooCommerce\postnl;
 use PostNLWooCommerce\Frontend\Delivery_Day;
 use PostNLWooCommerce\Frontend\Dropoff_Points;
 use PostNLWooCommerce\Frontend\Container;
 use PostNLWooCommerce\Utils;
+use PostNLWooCommerce\Address_Utils;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -22,9 +23,18 @@ class Extend_Block_Core {
 	private $name = 'postnl';
 
 	/**
+	 * Settings class instance.
+	 *
+	 * @var Settings
+	 */
+	protected $settings;
+
+	/**
 	 * Bootstraps the class and hooks required data.
 	 */
 	public function __construct() {
+
+		$this->settings = postnl()->get_shipping_settings();
 
 		// Initialize hooks
 		add_action(
@@ -42,7 +52,9 @@ class Extend_Block_Core {
 
 		// Register fee calculation
 		add_action( 'woocommerce_cart_calculate_fees', array( $this, 'postnl_add_custom_fee' ) );
-		$this->register_additional_checkout_fields();
+		if ( $this->settings->is_reorder_nl_address_enabled() ) {
+			$this->register_additional_checkout_fields();
+		}
 
 		// Validate adress in cart
 		add_action( 'woocommerce_store_api_cart_errors', array( $this, 'postnl_validate_address_in_cart' ), 10, 2 );
@@ -169,8 +181,11 @@ class Extend_Block_Core {
 		$postnl_request_data = $request['extensions'][ $this->name ];
 
 		// Extract billing and shipping house numbers with sanitization
-		$shipping_house_number = isset( $postnl_request_data['houseNumber'] ) ? sanitize_text_field( $postnl_request_data['houseNumber'] ) : '';
+		$shipping_house_number = '';
 
+		if ( ! empty( $postnl_request_data['houseNumber'] ) && $this->settings->is_reorder_nl_address_enabled() ) {
+			$shipping_house_number = sanitize_text_field( $postnl_request_data['houseNumber'] );
+		}
 		// Update billing and shipping house numbers
 		$order->update_meta_data( '_shipping_house_number', $shipping_house_number );
 
@@ -242,7 +257,9 @@ class Extend_Block_Core {
 		// Sanitize data
 		$sanitized_data = array_map( 'sanitize_text_field', wp_unslash( $_POST['data'] ) );
 
-		$settings         = new Settings();
+		$sanitized_data = Address_Utils::set_post_data_address( $sanitized_data );
+
+
 		$shipping_country = isset( $sanitized_data['shipping_country'] ) ? $sanitized_data['shipping_country'] : '';
 
 		// Check letterbox eligibility
@@ -260,6 +277,7 @@ class Extend_Block_Core {
 		// If not NL, clear session and return
 		if ( ! in_array( $shipping_country, array( 'NL', 'BE' ), true ) ) {
 			WC()->session->__unset( 'postnl_checkout_post_data' );
+			WC()->session->__unset( POSTNL_SETTINGS_ID . '_invalid_address_marker' );
 			wp_send_json_success(
 				array(
 					'message'          => 'No delivery options available outside NL.',
@@ -273,11 +291,18 @@ class Extend_Block_Core {
 		}
 
 		// Check if required fields are present
-		if ( empty( $sanitized_data['shipping_postcode'] ) || empty( $sanitized_data['shipping_house_number'] ) && 'NL' == $shipping_country ) {
-			WC()->session->__unset( 'postnl_checkout_post_data' );
+		if (
+			empty( $sanitized_data['shipping_postcode'] )
+			||
+			(
+				$this->settings->is_reorder_nl_address_enabled()
+				&& empty( $sanitized_data['shipping_house_number'] )
+				&& 'NL' == $shipping_country
+			) ) {
+				WC()->session->__unset( 'postnl_checkout_post_data' );
 			wp_send_json_success(
 				array(
-					'message'          => 'Postcode or house number is missing.',
+					'message'          => esc_html__( 'Postcode or house number is missing.', 'postnl-for-woocommerce' ),
 					'show_container'   => false,
 					'delivery_options' => array(),
 					'dropoff_options'  => array(),
@@ -299,9 +324,10 @@ class Extend_Block_Core {
 		// Retrieve validated address from session
 		$validated_address = WC()->session->get( POSTNL_SETTINGS_ID . '_validated_address' );
 
+		$container = new Container();
+
 		// If validation is enabled and address changed or not validated yet
-		if ( $settings->is_validate_nl_address_enabled() && ( $address_changed || empty( $validated_address ) ) ) {
-			$container = new Container();
+		if ( $container->is_address_validation_required() && 'NL' === $shipping_country && ( $address_changed || empty( $validated_address ) ) ) {
 			try {
 				$container->validated_address( $sanitized_data );
 				// Attempt to fetch validated address again
@@ -336,7 +362,6 @@ class Extend_Block_Core {
 		// Proceed to fetch delivery and dropoff options
 		$order_data = $sanitized_data;
 
-		$container        = new Container();
 		$delivery_day     = new Delivery_Day();
 		$dropoff          = new Dropoff_Points();
 		$checkout_data    = $container->get_checkout_data( $order_data );
@@ -410,4 +435,5 @@ class Extend_Block_Core {
 			wp_die();
 		}
 	}
+
 }

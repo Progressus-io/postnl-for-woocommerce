@@ -230,6 +230,11 @@ export const Block = ( {
 						{ deliveryOptions.map( ( delivery, index ) => {
 							return (
 								<li key={ index }>
+									{ isDeliveryDaysEnabled && (
+										<div className="list_title">
+											<span>{ delivery.date } { delivery.day }</span>
+										</div>
+									) }
 									<ul className="postnl_sub_list">
 										{ delivery.options.map(
 											( option, optionIndex ) => {

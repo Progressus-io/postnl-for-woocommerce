@@ -37,6 +37,7 @@ PostNL’s official extension for WooCommerce on WordPress. Manage your national
 
 ### 5.7.2
 * Fix: Single label now printed according to the selected start position.
+* Fix: Checkout not working properly with PostNL Address Fields disabled.
 * Fix: Cut Off time default value to prevent "Wrong format for cut off time!" checkout error for new installations.
 
 ### 5.7.1

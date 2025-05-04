@@ -81,7 +81,7 @@ Follow these instructions (https://www.postnl.nl/Images/aanvragen-api-key-stappe
 
 == Changelog ==
 
-= 5.7.2 (2025-xx-xx) =
+= 5.7.2 (2025-04-29) =
 * Fix: Single label now printed according to the selected start position.
 * Fix: Checkout not working properly with PostNL Address Fields disabled.
 * Fix: Cut Off time default value to prevent "Wrong format for cut off time!" checkout error for new installations.

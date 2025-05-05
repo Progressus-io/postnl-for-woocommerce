@@ -81,6 +81,9 @@ Follow these instructions (https://www.postnl.nl/Images/aanvragen-api-key-stappe
 
 == Changelog ==
 
+= 5.7.3 (2025-xx-xx) =
+* Tweak : Use `plugins_loaded` hook to add the shipping method for Flexible shipping and Polylang plugins compatibility.
+
 = 5.7.2 (2025-04-29) =
 * Fix: Single label now printed according to the selected start position.
 * Fix: Checkout not working properly with PostNL Address Fields disabled.

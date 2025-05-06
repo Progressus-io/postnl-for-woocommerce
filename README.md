@@ -7,7 +7,7 @@
 * Tested up to: 6.8
 * WC requires at least: 9.6
 * WC tested up to: 9.8
-* Stable tag: 5.7.2
+* Stable tag: 5.7.3
 * License: GPLv2 or later
 * License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -34,6 +34,10 @@ PostNL’s official extension for WooCommerce on WordPress. Manage your national
 
 
 ## Changelog
+
+
+### 5.7.3
+* Tweak : Use `plugins_loaded` hook to add the shipping method for Flexible shipping and Polylang plugins compatibility.
 
 ### 5.7.2
 * Fix: Single label now printed according to the selected start position.

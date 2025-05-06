@@ -114,8 +114,7 @@ class Main {
 		add_action( 'init', array( $this, 'load_plugin' ), 1 );
 		add_action( 'before_woocommerce_init', array( $this, 'declare_wc_hpos_compatibility' ), 10 );
 		add_action( 'before_woocommerce_init', array( $this, 'declare_product_editor_compatibility' ), 10 );
-		// Register the block category.
-		add_action( 'block_categories_all', array( $this, 'register_postnl_block_category' ), 10, 2 );
+		
 		add_filter( 'woocommerce_shipping_methods', array( $this, 'add_shipping_method' ) );
 	}
 
@@ -199,7 +198,8 @@ class Main {
 	public function init_hooks() {
 		add_action( 'init', array( $this, 'init' ), 5 );
 		add_action( 'init', array( $this, 'load_textdomain' ) );
-
+		// Register the block category.
+		add_action( 'block_categories_all', array( $this, 'register_postnl_block_category' ), 10, 2 );
 		// Locate woocommerce template.
 		add_filter( 'woocommerce_locate_template', array( $this, 'woocommerce_locate_template' ), 20, 3 );
 

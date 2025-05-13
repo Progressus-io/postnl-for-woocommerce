@@ -244,8 +244,9 @@ class Item_Info extends Base_Info {
 				continue;
 			}
 
-			$hs_code = ! empty( $product->get_meta( Single::HS_CODE_FIELD ) ) ? $product->get_meta( Single::HS_CODE_FIELD ) : $this->settings->get_hs_tariff_code();
-			$origin  = ! empty( $product->get_meta( Single::ORIGIN_FIELD ) ) ? $product->get_meta( Single::ORIGIN_FIELD ) : $this->settings->get_country_origin();
+			$is_adult = $product->get_meta( '_is_adult_product' );
+			$hs_code  = ! empty( $product->get_meta( Single::HS_CODE_FIELD ) ) ? $product->get_meta( Single::HS_CODE_FIELD ) : $this->settings->get_hs_tariff_code();
+			$origin   = ! empty( $product->get_meta( Single::ORIGIN_FIELD ) ) ? $product->get_meta( Single::ORIGIN_FIELD ) : $this->settings->get_country_origin();
 
 			$content = array(
 				'product_id'       => $product->get_id(),
@@ -256,6 +257,7 @@ class Item_Info extends Base_Info {
 				'item_weight'      => $product->get_weight(),
 				'hs_code'          => $hs_code,
 				'origin'           => $origin,
+				'is_adult'         => $is_adult,
 			);
 
 			$this->api_args['order_details']['contents'][] = $content;

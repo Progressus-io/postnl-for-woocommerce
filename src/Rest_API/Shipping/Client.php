@@ -214,6 +214,7 @@ class Client extends Base {
 				'Value'           => $item['value'],
 				'HSTariffNr'      => $item['hs_code'],
 				'CountryOfOrigin' => $item['origin'],
+				'is_adult'        => $item['is_adult'],
 			);
 		}
 

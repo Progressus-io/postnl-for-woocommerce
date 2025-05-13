@@ -94,6 +94,11 @@ class Client extends Base {
 					'Email'       => $this->item_info->shipment['email'],
 					'SMSNr'       => $this->item_info->shipment['phone'],
 				),
+				array(
+					'ContactType' => '02',
+					'Email'       => $this->item_info->shipper['email'],
+					'SMSNr'       => '',
+				),
 			),
 			'Dimension'           => array(
 				'Weight' => $this->item_info->shipment['total_weight'],

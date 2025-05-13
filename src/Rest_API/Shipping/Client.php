@@ -97,7 +97,6 @@ class Client extends Base {
 				array(
 					'ContactType' => '02',
 					'Email'       => $this->item_info->shipper['email'],
-					'SMSNr'       => '',
 				),
 			),
 			'Dimension'           => array(

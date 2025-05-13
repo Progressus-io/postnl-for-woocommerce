@@ -62,6 +62,13 @@ class Single {
 	const HS_CODE_FIELD = '_postnl_hs_tariff_code';
 
 	/**
+	 * Adults Only (18+) field.
+	 *
+	 * @var adults_only
+	 */
+	const ADULTS_ONLY_FIELD = '_is_adult_product';
+
+	/**
 	 * Init and hook in the integration.
 	 */
 	public function __construct() {
@@ -117,6 +124,13 @@ class Single {
 				'description' => esc_html__( 'HS Tariff Code is a number assigned to every possible commodity that can be imported or exported from any country.', 'postnl-for-woocommerce' ),
 				'desc_tip'    => 'true',
 				'placeholder' => esc_html__( 'HS Code', 'postnl-for-woocommerce' ),
+			),
+			array(
+				'id'          => self::ADULTS_ONLY_FIELD,
+				'type'        => 'checkbox',
+				'label'       => esc_html__( 'Mark as 18+ (Adults Only)', 'postnl-for-woocommerce' ),
+				'description' => esc_html__( 'Enable this for products intended only for adults (18+).', 'postnl-for-woocommerce' ),
+				'desc_tip'    => 'true',
 			),
 		);
 	}

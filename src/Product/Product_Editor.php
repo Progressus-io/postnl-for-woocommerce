@@ -113,5 +113,21 @@ class Product_Editor {
 				),
 			)
 		);
+
+		// Add 18+ Adults Only Checkbox Block.
+		$parent->add_block(
+			array(
+				'id'         => 'postnl-adults-only-checkbox',
+				'blockName'  => 'woocommerce/product-checkbox-field',
+				'attributes' => array(
+					'title'          => esc_html__( 'Adult Product Settings', 'postnl-for-woocommerce' ),
+					'label'          => esc_html__( 'Mark as 18+ (Adults Only)', 'postnl-for-woocommerce' ),
+					'property'       => 'meta_data._is_adult_product',
+					'tooltip'        => esc_html__( 'Enable this for products intended only for adults (18+).', 'postnl-for-woocommerce' ),
+					'checkedValue'   => 'yes',
+					'uncheckedValue' => '',
+				),
+			)
+		);
 	}
 }

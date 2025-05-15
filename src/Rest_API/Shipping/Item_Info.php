@@ -244,7 +244,7 @@ class Item_Info extends Base_Info {
 				continue;
 			}
 
-			$is_adult = $product->get_meta( '_is_adult_product' );
+			$is_adult = ! empty( $product->get_meta( Single::ADULTS_ONLY_FIELD ) ) ? $product->get_meta( Single::ADULTS_ONLY_FIELD ) : 'No';
 			$hs_code  = ! empty( $product->get_meta( Single::HS_CODE_FIELD ) ) ? $product->get_meta( Single::HS_CODE_FIELD ) : $this->settings->get_hs_tariff_code();
 			$origin   = ! empty( $product->get_meta( Single::ORIGIN_FIELD ) ) ? $product->get_meta( Single::ORIGIN_FIELD ) : $this->settings->get_country_origin();
 
@@ -271,6 +271,20 @@ class Item_Info extends Base_Info {
 	 */
 	public function is_pickup_points() {
 		return ! empty( $this->api_args['frontend_data']['pickup_points']['value'] );
+	}
+
+	/**
+	 * Is order has an adult item.
+	 *
+	 * @return Boolean
+	 */
+	public function is_adult_order(): bool {
+		foreach ( $this->api_args['order_details']['contents'] as $item ) {
+			if ( ! empty( $item['is_adult'] ) && 'yes' === $item['is_adult'] ) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	/**
@@ -1059,7 +1073,9 @@ class Item_Info extends Base_Info {
 		}
 
 		// Domestic Letterbox parcel (product code 2928) cannot be used in combination with Shipment and Return.
-		if ( ( $is_letterbox && 'yes' === $this->api_args['backend_data']['create_return_label'] ) || 'BE' == $destination ) {
+		if ( ( $is_letterbox && 'yes' === $this->api_args['backend_data']['create_return_label'] )
+			|| 'BE' === $destination
+			|| self::is_adult_order() && 'yes' === $this->api_args['backend_data']['create_return_label'] ) {
 			$shipment_return_type = 'in_box';
 		} elseif ( $is_letterbox ) {
 			return array();

@@ -122,7 +122,7 @@ class Product_Editor {
 				'attributes' => array(
 					'title'          => esc_html__( 'Adult Product Settings', 'postnl-for-woocommerce' ),
 					'label'          => esc_html__( 'Mark as 18+ (Adults Only)', 'postnl-for-woocommerce' ),
-					'property'       => 'meta_data._is_adult_product',
+					'property'       => 'meta_data' . Single::ADULTS_ONLY_FIELD,
 					'tooltip'        => esc_html__( 'Enable this for products intended only for adults (18+).', 'postnl-for-woocommerce' ),
 					'checkedValue'   => 'yes',
 					'uncheckedValue' => '',

@@ -66,7 +66,7 @@ class Single {
 	 *
 	 * @var adults_only
 	 */
-	const ADULTS_ONLY_FIELD = '_is_adult_product';
+	const ADULTS_ONLY_FIELD = '_postnl_adult_product';
 
 	/**
 	 * Init and hook in the integration.
@@ -128,7 +128,8 @@ class Single {
 			array(
 				'id'          => self::ADULTS_ONLY_FIELD,
 				'type'        => 'checkbox',
-				'label'       => esc_html__( 'Mark as 18+ (Adults Only)', 'postnl-for-woocommerce' ),
+				// translators: %s will be replaced by service name.
+				'label'       => sprintf( esc_html__( 'Mark as 18+ (Adults Only) (%s)', 'postnl-for-woocommerce' ), $service ),
 				'description' => esc_html__( 'Enable this for products intended only for adults (18+).', 'postnl-for-woocommerce' ),
 				'desc_tip'    => 'true',
 			),

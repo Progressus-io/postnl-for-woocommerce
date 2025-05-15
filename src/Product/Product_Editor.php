@@ -41,12 +41,12 @@ class Product_Editor {
 		// Add 18+ Adults Only Checkbox Block.
 		$parent->add_block(
 			array(
-				'id'         => 'postnl-adults-only-checkbox',
+				'id'         => 'postnl-adult-product',
 				'blockName'  => 'woocommerce/product-checkbox-field',
 				'attributes' => array(
 					'title'          => esc_html__( 'PostNL extra settings', 'postnl-for-woocommerce' ),
 					'label'          => esc_html__( 'Mark as 18+ (Adults Only)', 'postnl-for-woocommerce' ),
-					'property'       => 'meta_data' . Single::ADULTS_ONLY_FIELD,
+					'property'       => 'meta_data.' . Single::ADULTS_ONLY_FIELD,
 					'tooltip'        => esc_html__( 'Enable this for products intended only for adults (18+).', 'postnl-for-woocommerce' ),
 					'checkedValue'   => 'yes',
 					'uncheckedValue' => '',

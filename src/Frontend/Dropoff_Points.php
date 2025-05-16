@@ -50,6 +50,7 @@ class Dropoff_Points extends Base {
 		$tabs[] = array(
 			'id'   => $this->primary_field,
 			'name' => esc_html__( 'Dropoff Points', 'postnl-for-woocommerce' ),
+			'fee'  => Base::pickup_points_fee_data()['fee_price'],
 		);
 
 		return $tabs;

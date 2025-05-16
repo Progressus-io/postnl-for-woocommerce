@@ -292,7 +292,16 @@ class Settings extends \WC_Settings_API {
 				'for_country' => array( 'NL', 'BE' ),
 				'class'       => 'country-nl country-be',
 			),
-
+			'pickup_points_fee'      => array(
+				'title'             => esc_html__( 'Pickup Points Fee', 'postnl-for-woocommerce' ),
+				'type'              => 'text',
+				'description'       => esc_html__( 'Fee for the pickup points displayed in the frontend.', 'postnl-for-woocommerce' ),
+				'desc_tip'          => true,
+				'class'             => '',
+				'default'           => '0',
+				'for_country'       => array( 'NL', 'BE' ),
+				'class'             => 'wc_input_price country-nl',
+			),
 			/*
 			Temporarily commented out.
 			'number_pickup_points'      => array(
@@ -1026,6 +1035,15 @@ class Settings extends \WC_Settings_API {
 	 */
 	public function is_pickup_points_enabled() {
 		return ( 'yes' === $this->get_enable_pickup_points() );
+	}
+
+	/**
+	 * Get pickup points fees from the settings.
+	 *
+	 * @return Int
+	 */
+	public function get_pickup_points_fee() {
+		return $this->get_country_option( 'pickup_points_fee' );
 	}
 
 	/**

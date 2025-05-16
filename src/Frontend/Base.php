@@ -536,6 +536,25 @@ abstract class Base {
 	}
 
 	/**
+	 * Get pickup points fee data.
+	 *
+	 * @return array
+	 */
+	public static function pickup_points_fee_data() {
+		$settings   = Settings::get_instance();
+		$pickup_fee = $settings->get_pickup_points_fee();
+
+		return array(
+			'fee_name'  => esc_html__( 'PostNL Pickup Up Fee', 'postnl-for-woocommerce' ),
+			'fee_price' => floatval( $pickup_fee ),
+			'condition' => array(
+				'key'   => 'dropoff_points_type',
+				'value' => 'Pickup',
+			),
+		);
+	}
+
+	/**
 	 * Get available nonstandard delivery time fees data
 	 *
 	 * @return array
@@ -544,6 +563,7 @@ abstract class Base {
 		return array(
 			'08:00-12:00' => self::morning_fee_data(),
 			'Evening'     => self::evening_fee_data(),
+			'Pickup'      => self::pickup_points_fee_data(),
 		);
 	}
 }

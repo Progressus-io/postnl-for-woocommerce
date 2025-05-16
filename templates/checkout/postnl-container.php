@@ -32,7 +32,12 @@ $field = array_shift( $fields );
 
 						<li class="<?php echo esc_attr( $active_class ); ?>">
 							<label for="<?php echo esc_attr( $field['name'] . '_' . $field_tab['id'] ); ?>" class="postnl_checkout_tab">
-								<span><?php echo esc_html( $field_tab['name'] ); ?></span>
+								<span style="float: left;"><?php echo esc_html( $field_tab['name'] ); ?></span>
+								<?php if ( ! empty( $field_tab['fee'] ) ) : ?>
+									<span style="float: right;">
+										<?php echo wc_price( $field_tab['fee'] ); ?>
+									</span>
+								<?php endif; ?>
 								<input 
 									type="radio" 
 									name="<?php echo esc_attr( $field['name'] ); ?>" 

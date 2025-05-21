@@ -11,10 +11,11 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-use PostNLWooCommerce\Checkout_Blocks\Blocks_Integration;
-use PostNLWooCommerce\Checkout_Blocks\Extend_Block_Core;
-use PostNLWooCommerce\Checkout_Blocks\Extend_Store_Endpoint;
 use PostNLWooCommerce\Product\Product_Editor;
+use PostNLWooCommerce\Checkout_Blocks\Extend_Block_Core;
+use PostNLWooCommerce\Checkout_Blocks\Blocks_Integration;
+use PostNLWooCommerce\Checkout_Blocks\Extend_Store_Endpoint;
+use PostNLWooCommerce\Shipping_Method\FillInWithPostNLSettings;
 
 /**
  * Class Main
@@ -327,6 +328,11 @@ class Main {
 		return $this->shipping_settings;
 	}
 
+	public function load_fill_in_with_postnl_settings() {
+		if ( class_exists( 'PostNLWooCommerce\Shipping_Method\FillInWithPostNLSettings' ) ) {
+			new FillInWithPostNLSettings();
+		}
+	}
 
 	/**
 	 * Define constant if not already set.

@@ -35,6 +35,8 @@ PostNL’s official extension for WooCommerce on WordPress. Manage your national
 
 ## Changelog
 
+### 5.8.0
+* Add: A new contact type 02 with sender email to the shipping API request.
 
 ### 5.7.3
 * Tweak : Use `plugins_loaded` hook to add the shipping method for Flexible shipping and Polylang plugins compatibility.

@@ -145,8 +145,26 @@ class Single {
 		add_action( 'woocommerce_process_product_meta', array( $this, 'save_additional_product_parent_options' ) );
 		add_action( 'woocommerce_variation_options_pricing', array( $this, 'additional_product_variation_shipping_options' ), 10, 3 );
 		add_action( 'woocommerce_save_product_variation', array( $this, 'save_additional_product_variation_options' ), 10, 2 );
+		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_product_single_css_script' ) );
 	}
 
+	/**
+	 * Enqueue JS file in product single page.
+	 */
+	public function enqueue_product_single_css_script() {
+		if ( ! is_admin() ) {
+			return;
+		}
+
+		wp_enqueue_script(
+			'admin-product-single',
+			POSTNL_WC_PLUGIN_DIR_URL . '/assets/js/admin-product-single.js',
+			array( 'jquery' ),
+			POSTNL_WC_VERSION,
+			true
+		);
+	}
+	
 	/**
 	 * Add the meta box for shipment info on the product page.
 	 *

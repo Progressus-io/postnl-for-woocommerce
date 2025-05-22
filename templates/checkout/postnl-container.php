@@ -17,10 +17,10 @@ $field = array_shift( $fields );
 ?>
 <tr class="postnl-co-tr postnl-co-tr-container">
 	<td colspan="2">
-		<?php if ( $letterbox ) : ?>
+		<?php if ( $letterbox && ! $adults_only ) : ?>
 			<?php echo esc_html( apply_filters( 'postnl_checkout_letterbox_message', __( 'These items are eligible for letterbox delivery.', 'postnl-for-woocommerce' ) ) ); ?>
 		<?php endif; ?>
-		<div id="postnl_checkout_option" class="postnl_checkout_container <?php echo esc_attr( $letterbox ? 'is-hidden' : '' ); ?>">
+		<div id="postnl_checkout_option" class="postnl_checkout_container <?php echo esc_attr( $letterbox && ! $adults_only ? 'is-hidden' : '' ); ?>">
 			<div class="postnl_checkout_tab_container">
 				<ul class="postnl_checkout_tab_list">
 					<?php foreach ( $tabs as $index => $field_tab ) { ?>

@@ -313,6 +313,7 @@ class Main {
 		new Frontend\Delivery_Day();
 		new Frontend\Dropoff_Points();
 		new Frontend\Checkout_Fields();
+		new Frontend\Fill_In_With_Postnl();
 	}
 
 	/**

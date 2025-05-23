@@ -144,30 +144,65 @@ class Extend_Block_Core {
 		}
 
 		// Get the fee amount and type from session
-		$fee_amount = WC()->session->get( 'postnl_delivery_fee', 0 );
-		$fee_type   = WC()->session->get( 'postnl_delivery_type', '' );
+		$settings     = postnl()->get_shipping_settings();
+		$fee_type     = WC()->session->get( 'postnl_delivery_type', '' );
+		$base_day_fee = (float) $settings->get_delivery_days_fee();
+		$morning_fee  = (float) $settings->get_morning_delivery_fee();
+		$evening_fee  = (float) $settings->get_evening_delivery_fee();
+		$pickup_fee   = (float) $settings->get_pickup_delivery_fee();
 
-		// Define the fee label based on the type
-		$fee_label = __( 'PostNL Delivery Fee', 'postnl-for-woocommerce' );
-		if ( '08:00-12:00' === $fee_type || 'Morning' === $fee_type ) {
-			$fee_label = __( 'PostNL Morning Fee', 'postnl-for-woocommerce' );
-		} elseif ( 'Evening' === $fee_type ) {
-			$fee_label = __( 'PostNL Evening Fee', 'postnl-for-woocommerce' );
+		$cart->fees_api()->set_fees(
+			array_filter(
+				$cart->get_fees(),
+				static fn( $fee ) => stripos( $fee->name, 'PostNL' ) === false
+			)
+		);
+
+		if ( $base_day_fee > 0 && $fee_type !== 'Pickup' ) {
+			$cart->add_fee(
+				__( 'PostNL Delivery Day Fee', 'postnl-for-woocommerce' ),
+				$base_day_fee,
+				true,
+				''
+			);
 		}
 
-		// Remove existing PostNL fees if they exist
-		$new_fees = array();
-		foreach ( $cart->get_fees() as $fee ) {
-			if ( strpos( $fee->name, 'PostNL' ) === false ) {
-				$new_fees[] = $fee;
-			}
+		switch ( $fee_type ) {
+			case '08:00-12:00':
+			case 'Morning':
+				if ( $morning_fee > 0 ) {
+					$cart->add_fee(
+						__( 'PostNL Morning Fee', 'postnl-for-woocommerce' ),
+						$morning_fee,
+						true,
+						''
+					);
+				}
+				break;
+			case 'Evening':
+				if ( $evening_fee > 0 ) {
+					$cart->add_fee(
+						__( 'PostNL Evening Fee', 'postnl-for-woocommerce' ),
+						$evening_fee,
+						true,
+						''
+					);
+				}
+				break;
+			case 'Pickup':
+				if ( $pickup_fee > 0 ) {
+					$cart->add_fee(
+						__( 'PostNL Dropoff Points Fee', 'postnl-for-woocommerce' ),
+						$pickup_fee,
+						true,
+						''
+					);
+				}
+				break;
+			default:
+				break;
 		}
-		$cart->fees_api()->set_fees( $new_fees );
 
-		if ( $fee_amount > 0 ) {
-			// Add the fee to the cart
-			$cart->add_fee( $fee_label, $fee_amount, true, '' );
-		}
 	}
 
 	/**

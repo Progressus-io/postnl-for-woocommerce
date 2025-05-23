@@ -24,11 +24,23 @@ export const Block = ( { checkoutExtensionData } ) => {
 			name: __( 'Delivery Days', 'postnl-for-woocommerce' ),
 		},
 	];
-	if ( postnlData.is_pickup_points_enabled ) {
+	if ( Number( postnlData.delivery_day_fee ) > 0 ) {
+		tabs[0].name += ` (+€${ Number(
+			postnlData.delivery_day_fee
+		).toFixed( 2 ) })`;
+	}
+
+	if (postnlData.is_pickup_points_enabled) {
 		tabs.push({
 			id: 'dropoff_points',
-			name: __( 'Dropoff Points', 'postnl-for-woocommerce' ),
+			name: __('Dropoff Points', 'postnl-for-woocommerce'),
 		});
+
+		if (Number(postnlData.pickup_fee) > 0) {
+			tabs[1].name += ` (+€${Number(
+				postnlData.pickup_fee
+			).toFixed(2)})`;
+		}
 	}
 	const [ activeTab, setActiveTab ] = useState( tabs[ 0 ].id );
 

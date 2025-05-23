@@ -408,46 +408,48 @@ abstract class Base {
 
 		$data = $this->get_data( $order->get_id() );
 
-		$add_optional_fee  = true;
 		$non_standard_fees = self::non_standard_fees_data();
-
 		foreach ( $non_standard_fees as $type => $fee ) {
+			$fee_name  = $fee['fee_name'];
+			$fee_price = $fee['fee_price'];
+
 			if ( ! isset( $data['frontend'][ $fee['condition']['key'] ] ) ) {
+				continue;
+			}
+			$already_on_order = false;
+			foreach ( $order->get_fees() as $item_fee ) {
+				if ( $item_fee->get_name() === $fee_name ) {
+					$already_on_order = true;
+					break;
+				}
+			}
+			if ( $already_on_order ) {
 				continue;
 			}
 
 			if ( $type === $data['frontend'][ $fee['condition']['key'] ] ) {
-				$fee_name  = $fee['fee_name'];
-				$fee_price = $fee['fee_price'];
-				break;
+				$item_fee = new \WC_Order_Item_Fee();
+				$item_fee->set_name( $fee_name );
+				$item_fee->set_amount( $fee_price );
+				$item_fee->set_tax_class( '' );
+				$item_fee->set_tax_status( 'taxable' );
+				$item_fee->set_total( $fee_price );
+
+				$order->add_item( $item_fee );
+
+				$order->calculate_totals();
+				$order->save();
+
 			}
+
+
 		}
 
 		if ( ! isset( $fee_name ) ) {
 			return;
 		}
 
-		foreach ( $order->get_fees() as $item_fee ) {
-			if ( $item_fee->get_name() === $fee_name ) {
-				$add_optional_fee = false;
-			}
-		}
 
-		if ( true === $add_optional_fee ) {
-			$item_fee = new \WC_Order_Item_Fee();
-
-			$item_fee->set_name( $fee_name );
-			$item_fee->set_amount( $fee_price );
-			$item_fee->set_tax_class( '' );
-			$item_fee->set_tax_status( 'taxable' );
-			$item_fee->set_total( $fee_price );
-
-			$order->add_item( $item_fee );
-
-			$order->calculate_totals();
-		}
-
-		$order->save();
 	}
 
 	/**
@@ -498,9 +500,29 @@ abstract class Base {
 	}
 
 	/**
+	 * Get Delivery day fee
+	 *
+	 * @return array
+	 */
+	public static function delivery_day_fee_data() {
+		$settings  = Settings::get_instance();
+		$day_price = $settings->get_delivery_days_fee();
+
+		return array(
+			'fee_name'  => esc_html__( 'PostNL Delivery Day Fee', 'postnl-for-woocommerce' ),
+			'fee_price' => $day_price,
+			'condition' => array(
+				'key'   => 'delivery_day_fees',
+				'value' => 'fees',
+			),
+		);
+	}
+
+
+	/**
 	 * Get evening fee data.
 	 *
-	 * @return Array
+	 * @return array
 	 */
 	public static function evening_fee_data() {
 		$settings    = Settings::get_instance();
@@ -536,14 +558,35 @@ abstract class Base {
 	}
 
 	/**
+	 * Get pickup points fee data.
+	 *
+	 * @return array
+	 */
+	public static function pickup_points_fee_data() {
+		$settings   = Settings::get_instance();
+		$pickup_fee = $settings->get_pickup_delivery_fee();
+
+		return array(
+			'fee_name'  => esc_html__( 'PostNL Dropoff Points Fee', 'postnl-for-woocommerce' ),
+			'fee_price' => floatval( $pickup_fee ),
+			'condition' => array(
+				'key'   => 'dropoff_points_type',
+				'value' => 'Pickup',
+			),
+		);
+	}
+
+	/**
 	 * Get available nonstandard delivery time fees data
 	 *
 	 * @return array
 	 */
 	public static function non_standard_fees_data() {
 		return array(
+			'fees' => self::delivery_day_fee_data(),
 			'08:00-12:00' => self::morning_fee_data(),
 			'Evening'     => self::evening_fee_data(),
+			'Pickup'      => self::pickup_points_fee_data(),
 		);
 	}
 }

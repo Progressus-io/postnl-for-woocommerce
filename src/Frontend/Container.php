@@ -241,6 +241,8 @@ class Container {
 					'value' => $this->get_tab_field_value( $checkout_data['post_data'] ),
 				),
 			),
+			'pickup_fee'       => (float) $this->settings->get_pickup_delivery_fee(),
+			'delivery_day_fee' => (float) $this->settings->get_delivery_days_fee(),
 		);
 
 		wc_get_template( 'checkout/postnl-container.php', $template_args, '', POSTNL_WC_PLUGIN_DIR_PATH . '/templates/' );
@@ -393,8 +395,30 @@ class Container {
 		if ( ! empty( $post_data['postnl_delivery_day_price'] ) && 'delivery_day' === $post_data['postnl_option'] && $is_non_standard_delivery ) {
 			$cart->add_fee( $non_standard_fees[ $post_data['postnl_delivery_day_type'] ]['fee_name'], wc_format_decimal( $post_data['postnl_delivery_day_price'] ) );
 		}
-	}
 
+		if ( ! empty( $post_data['postnl_option'] ) && 'dropoff_points' === $post_data['postnl_option'] ) {
+			$pickup_fee = (float) $this->settings->get_pickup_delivery_fee();
+
+			if ( $pickup_fee > 0 ) {
+				$cart->add_fee(
+					__( 'PostNL Dropoff Points Fee', 'postnl-for-woocommerce' ),
+					wc_format_decimal( $pickup_fee )
+				);
+			}
+		}
+
+		if ( ! empty( $post_data['postnl_option'] ) && 'delivery_day' === $post_data['postnl_option'] ) {
+
+
+			$day_fee = (float) $this->settings->get_delivery_days_fee();
+			if ( $day_fee > 0 ) {
+				$cart->add_fee(
+					__( 'PostNL Delivery Day Fee', 'postnl-for-woocommerce' ),
+					wc_format_decimal( $day_fee )
+				);
+			}
+		}
+	}
 	/**
 	 * Check if address validation required.
 	 *

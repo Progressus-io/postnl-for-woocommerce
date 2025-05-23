@@ -292,7 +292,14 @@ class Settings extends \WC_Settings_API {
 				'for_country' => array( 'NL', 'BE' ),
 				'class'       => 'country-nl country-be',
 			),
-
+			'pickup_delivery_fee'            => array(
+				'title'       => __( 'Pick-up Delivery Fee', 'postnl-for-woocommerce' ),
+				'type'        => 'text',
+				'description' => __( 'Extra fee added when the customer selects a PostNL pick-up point.', 'postnl-for-woocommerce' ),
+				'desc_tip'    => true,
+				'for_country' => array( 'NL', 'BE' ),
+				'class'       => 'wc_input_price country-nl country-be',
+			),
 			/*
 			Temporarily commented out.
 			'number_pickup_points'      => array(
@@ -310,6 +317,7 @@ class Settings extends \WC_Settings_API {
 				'class'             => 'country-nl country-be',
 			),
 			*/
+
 			'enable_delivery_days'            => array(
 				'title'       => __( 'Delivery Days', 'postnl-for-woocommerce' ),
 				'type'        => 'checkbox',
@@ -319,6 +327,14 @@ class Settings extends \WC_Settings_API {
 				'default'     => '',
 				'for_country' => array( 'NL' ),
 				'class'       => 'country-nl',
+			),
+			'delivery_days_fee'               => array(
+				'title'       => __( 'Delivery days Delivery Fee', 'postnl-for-woocommerce' ),
+				'type'        => 'text',
+				'description' => __( 'Extra fee added when the customer selects a PostNL pick-up point.', 'postnl-for-woocommerce' ),
+				'desc_tip'    => true,
+				'for_country' => array( 'NL', 'BE' ),
+				'class'       => 'wc_input_price country-nl country-be',
 			),
 			'number_delivery_days'            => array(
 				'title'             => __( 'Number of Delivery Days', 'postnl-for-woocommerce' ),
@@ -1019,6 +1035,16 @@ class Settings extends \WC_Settings_API {
 		return $this->get_country_option( 'enable_pickup_points' );
 	}
 
+
+	/**
+	 * Get pick-up delivery fee from the settings.
+	 *
+	 * @return string
+	 */
+	public function get_pickup_delivery_fee() {
+		return $this->get_country_option( 'pickup_delivery_fee' );
+	}
+
 	/**
 	 * Return true if delivery days field is ticked.
 	 *
@@ -1058,6 +1084,15 @@ class Settings extends \WC_Settings_API {
 	 */
 	public function is_delivery_days_enabled() {
 		return ( 'yes' === $this->get_enable_delivery_days() );
+	}
+
+	/**
+	 * Get delivery days fees the settings.
+	 *
+	 * @return Int
+	 */
+	public function get_delivery_days_fee() {
+		return $this->get_country_option( 'delivery_days_fee' );
 	}
 
 	/**

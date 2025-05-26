@@ -1,6 +1,6 @@
 <?php
 /**
- * Class Shipping_Method/FillInWithPostNLSettings file.
+ * Class Shipping_Method/Fill_In_With_PostNL_Settings file.
  *
  * @package PostNLWooCommerce\Shipping_Method
  */
@@ -12,10 +12,10 @@ use WC_Admin_Settings;
 defined( 'ABSPATH' ) || exit;
 
 /**
- * Class FillInWithPostNLSettings
+ * Class Fill_In_With_PostNL_Settings
  * Handles the 'Fill in with PostNL' WooCommerce shipping settings tab.
  */
-class FillInWithPostNLSettings {
+class Fill_In_With_PostNL_Settings {
 
 	/**
 	 * Constructor.

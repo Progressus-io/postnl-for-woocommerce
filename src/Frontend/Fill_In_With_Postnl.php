@@ -97,7 +97,7 @@ class Fill_In_With_Postnl {
 		$client_id     = sanitize_text_field( get_option( 'postnl_fill_in_with_client_id' ) );
 		$redirect_base = 'https://dil-login.postnl.nl/oauth2/login_options/';
 		$callback_url  = home_url( '/checkout/default/details/?callback=postnl' );
-		$redirect_uri  = esc_url( $redirect_base . '?client_id=' . $client_id . '&redirect_uri=' . rawurlencode( $callback_url ) );
+		$redirect_uri  = esc_url( $redirect_base . '?client_id=' . $client_id . '&redirect_uri=' . rawurlencode( $callback_url ) . '&response_type=code&scope=base&code_challenge=&code_challenge_method=S256' );
 
 		wc_get_template(
 			'checkout/postnl-fill-in-with-button.php',

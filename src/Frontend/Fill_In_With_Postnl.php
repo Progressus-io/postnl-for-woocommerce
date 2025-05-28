@@ -20,13 +20,31 @@ class Fill_In_With_Postnl {
 	 * Initializes the button rendering based on admin settings.
 	 */
 	public function __construct() {
+		add_shortcode( 'print_fill_in_with_postnl_button', array( $this, 'print_fill_in_button' ) );
 		$this->maybe_add_hooks();
+	}
+
+	/**
+	 * Print the "Fill in with PostNL" button.
+	 *
+	 * This method is used to render the button via a shortcode.
+	 *
+	 * @return string Rendered button HTML or empty string if not enabled.
+	 */
+	public function print_fill_in_button(): string {
+		if ( ! $this->is_enabled() ) {
+			return '';
+		}
+
+		ob_start();
+		$this->render_button();
+		return ob_get_clean();
 	}
 
 	/**
 	 * Conditionally add hooks based on admin settings.
 	 *
-	 * Return void
+	 * @return void
 	 */
 	private function maybe_add_hooks(): void {
 		$locations = array(
@@ -48,7 +66,7 @@ class Fill_In_With_Postnl {
 	/**
 	 * Check if the global feature is enabled and client ID is present.
 	 *
-	 * Return bool
+	 * @return bool
 	 */
 	private function is_enabled(): bool {
 		$is_enabled = 'yes' === get_option( 'postnl_enable_fill_in_with', 'no' );
@@ -58,11 +76,11 @@ class Fill_In_With_Postnl {
 	}
 
 	/**
-	 * Helper to check if button rendering is enabled for a specific position.
+	 * Check if the button should be rendered for a specific location.
 	 *
 	 * @param string $location The location to check.
 	 *
-	 * Return bool
+	 * @return bool True if the button should be rendered, false otherwise.
 	 */
 	private function is_enabled_for( string $location ): bool {
 		$mapping = array(
@@ -87,7 +105,7 @@ class Fill_In_With_Postnl {
 	/**
 	 * Render the "Fill in with PostNL" button using a WooCommerce template.
 	 *
-	 * Return void
+	 * @return void
 	 */
 	public function render_button(): void {
 		if ( ! $this->is_enabled() ) {

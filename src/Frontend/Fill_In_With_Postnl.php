@@ -21,6 +21,8 @@ class Fill_In_With_Postnl {
 	 */
 	public function __construct() {
 		add_shortcode( 'print_fill_in_with_postnl_button', array( $this, 'print_fill_in_button' ) );
+		add_action( 'wp_head', array( $this, 'add_custom_css' ) );
+
 		$this->maybe_add_hooks();
 	}
 
@@ -39,6 +41,25 @@ class Fill_In_With_Postnl {
 		ob_start();
 		$this->render_button();
 		return ob_get_clean();
+	}
+
+	/**
+	 * Add custom CSS for the "Fill in with PostNL" button.
+	 *
+	 * This method is used to add custom styles to the head section of the page.
+	 *
+	 * @return void
+	 */
+	public function add_custom_css(): void {
+		if ( ! $this->is_enabled() ) {
+			return;
+		}
+
+		$css = wp_strip_all_tags( get_option( 'postnl_custom_css', '' ) );
+
+		if ( ! empty( $css ) ) {
+			echo '<style id="postnl-custom-css">' . wp_kses_post( wp_strip_all_tags( $css ) ) . '</style>';
+		}
 	}
 
 	/**

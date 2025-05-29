@@ -295,6 +295,7 @@ class Fill_In_With_PostNL_Settings {
 		return ( 'yes' === get_option( 'postnl_enable_fill_in_with', 'no' ) )
 			&& ! empty( $this->get_client_id() );
 	}
+
 	/**
 	 * Get the Client ID for Fill in with PostNL.
 	 *
@@ -303,12 +304,16 @@ class Fill_In_With_PostNL_Settings {
 	public function get_client_id(): string {
 		return sanitize_text_field( get_option( 'postnl_fill_in_with_client_id', '' ) );
 	}
-	
+
+	/**
+	 * Get the Redirect URI for Fill in with PostNL.
+	 *
+	 * @return string
+	 */
 	public function get_redirect_uri(): string {
 		$client_id     = $this->get_client_id();
 		$redirect_base = 'https://dil-login.postnl.nl/oauth2/login_options/';
 		$callback_url  = home_url( '/checkout/default/details/?callback=postnl' );
 		return esc_url( $redirect_base . '?client_id=' . $client_id . '&redirect_uri=' . rawurlencode( $callback_url ) . '&response_type=code&scope=base&code_challenge=&code_challenge_method=S256' );
 	}
-
 }

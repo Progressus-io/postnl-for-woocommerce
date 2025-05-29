@@ -3,13 +3,13 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PostNL for WooCommerce 5.7.3\n"
-"Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/postnl-for-woocommerce\n"
+"Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/woo-postnl\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2025-05-06T11:04:17+00:00\n"
+"POT-Creation-Date: 2025-05-29T12:36:22+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.11.0\n"
 "X-Domain: postnl-for-woocommerce\n"
@@ -180,19 +180,19 @@ msgstr ""
 msgid "Belgium Domestic"
 msgstr ""
 
-#: src/Main.php:350
+#: src/Main.php:358
 msgid "PostNL plugin requires WooCommerce to be installed and activated!"
 msgstr ""
 
-#: src/Main.php:363
+#: src/Main.php:371
 msgid "PostNL plugin requires store country to be Netherlands (NL) or Belgium (BE)!"
 msgstr ""
 
-#: src/Main.php:376
+#: src/Main.php:384
 msgid "PostNL plugin requires store currency to be EUR, USD, GBP or CNY!"
 msgstr ""
 
-#: src/Main.php:450
+#: src/Main.php:458
 msgid "Postnl Checkout Blocks"
 msgstr ""
 
@@ -800,6 +800,143 @@ msgstr ""
 msgid "Insurance amount for EU shipments cannot exceed €5000. Your total is: %d"
 msgstr ""
 
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:38
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:70
+#: templates/checkout/postnl-fill-in-with-button.php:13
+#: templates/checkout/postnl-fill-in-with-button.php:23
+#: build/postnl-fill-in-with-frontend.js:1
+#: src/Checkout_Blocks/js/postnl-fill-in-with/block.js:30
+msgid "Fill in with PostNL"
+msgstr ""
+
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:55
+msgid "With this functionality your customers can easily and automatically fill in their shipping address via their PostNL account. This functionality is only available for consumers with a Dutch shipping address. Follow the next steps in order to use Fill in with:"
+msgstr ""
+
+#. translators: %s is an external url for postnl portal.
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:60
+msgid "Log in at the business portal (%s) with your business account."
+msgstr ""
+
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:63
+msgid "Select \"Fill in with PostNL\"."
+msgstr ""
+
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:64
+msgid "Update the Redirect URL and choose your application."
+msgstr ""
+
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:65
+msgid "You will receive your Client ID via email."
+msgstr ""
+
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:76
+#: src/Shipping_Method/Settings.php:110
+#: src/Shipping_Method/Settings.php:184
+#: src/Shipping_Method/Settings.php:288
+#: src/Shipping_Method/Settings.php:316
+#: src/Shipping_Method/Settings.php:339
+#: src/Shipping_Method/Settings.php:357
+#: src/Shipping_Method/Settings.php:428
+#: src/Shipping_Method/Settings.php:436
+msgid "Enable"
+msgstr ""
+
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:77
+msgid "Enable Fill in with PostNL functionality."
+msgstr ""
+
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:83
+msgid "Client ID"
+msgstr ""
+
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:84
+msgid "Enter your PostNL Client ID from the Digital Business Portal."
+msgstr ""
+
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:95
+msgid "Cart Button"
+msgstr ""
+
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:100
+msgid "Automatically render button in cart page"
+msgstr ""
+
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:101
+msgid "Automatically render checkout button in cart page"
+msgstr ""
+
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:107
+msgid "Cart page button placement"
+msgstr ""
+
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:112
+msgid "Before Checkout"
+msgstr ""
+
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:113
+msgid "After Checkout"
+msgstr ""
+
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:123
+msgid "Checkout Page"
+msgstr ""
+
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:128
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:129
+msgid "Automatically render button in checkout page"
+msgstr ""
+
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:135
+msgid "Checkout page button placement"
+msgstr ""
+
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:140
+msgid "Before Customer Details"
+msgstr ""
+
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:141
+msgid "After Customer Details"
+msgstr ""
+
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:151
+msgid "Minicart"
+msgstr ""
+
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:156
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:157
+msgid "Automatically render button in Minicart"
+msgstr ""
+
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:163
+msgid "Minicart button placement"
+msgstr ""
+
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:168
+msgid "Before Buttons"
+msgstr ""
+
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:169
+msgid "After Buttons"
+msgstr ""
+
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:179
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:184
+msgid "Custom CSS"
+msgstr ""
+
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:185
+msgid "Add your custom styles for the PostNL button. This will be printed in the site header."
+msgstr ""
+
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:196
+msgid "I understand that the PostNL address fields are activated (= separate field for zipcode, housnumber, housenumber extension and street) to let consumers fill in their shipping address with the PostNL app."
+msgstr ""
+
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:280
+msgid "You must enable at least one \"Automatically render button\" option in Cart, Checkout, or Minicart."
+msgstr ""
+
 #. translators: %1$s & %2$s is replaced with <a> tag.
 #: src/Shipping_Method/PostNL.php:33
 msgid "Below you will find all functions for controlling, preparing and processing your shipment with PostNL. Prerequisite is a valid PostNL business customer contract. If you are not yet a PostNL business customer, you can request a quote %1$shere%2$s."
@@ -873,17 +1010,6 @@ msgstr ""
 #. translators: %1$s is anchor opener tag and %2$s is anchor closer tag.
 #: src/Shipping_Method/Settings.php:106
 msgid "A log file containing the communication to the PostNL server will be maintained if this option is checked. This can be used in case of technical issues and can be found %1$shere%2$s."
-msgstr ""
-
-#: src/Shipping_Method/Settings.php:110
-#: src/Shipping_Method/Settings.php:184
-#: src/Shipping_Method/Settings.php:288
-#: src/Shipping_Method/Settings.php:316
-#: src/Shipping_Method/Settings.php:339
-#: src/Shipping_Method/Settings.php:357
-#: src/Shipping_Method/Settings.php:428
-#: src/Shipping_Method/Settings.php:436
-msgid "Enable"
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:116
@@ -1519,6 +1645,12 @@ msgstr ""
 msgid "Vanaf"
 msgstr ""
 
+#: templates/checkout/postnl-fill-in-with-button.php:32
+#: build/postnl-fill-in-with-frontend.js:1
+#: src/Checkout_Blocks/js/postnl-fill-in-with/block.js:31
+msgid "Your name and address are automatically filled in via your PostNL account. That saves you from having to fill in the form!"
+msgstr ""
+
 #. translators: %s: Order number
 #: templates/emails/plain/smart-return-email.php:27
 #: templates/emails/smart-return-email.php:30
@@ -1537,4 +1669,16 @@ msgstr ""
 #: src/Checkout_Blocks/js/postnl-container/block.json
 msgctxt "block title"
 msgid "Postnl Tabs"
+msgstr ""
+
+#: build/Checkout_Blocks/js/postnl-fill-in-with/block.json
+#: src/Checkout_Blocks/js/postnl-fill-in-with/block.json
+msgctxt "block title"
+msgid "PostNL Fill Button"
+msgstr ""
+
+#: build/Checkout_Blocks/js/postnl-fill-in-with/block.json
+#: src/Checkout_Blocks/js/postnl-fill-in-with/block.json
+msgctxt "block description"
+msgid "Fill in address with PostNL account"
 msgstr ""

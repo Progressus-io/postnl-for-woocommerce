@@ -3,6 +3,7 @@
 namespace PostNLWooCommerce\Checkout_Blocks;
 
 use Automattic\WooCommerce\Blocks\Integrations\IntegrationInterface;
+use PostNLWooCommerce\Shipping_Method\Fill_In_With_PostNL_Settings;
 use PostNLWooCommerce\Utils;
 use function PostNLWooCommerce\postnl;
 
@@ -14,6 +15,13 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Class for integrating with WooCommerce Blocks
  */
 class Blocks_Integration implements IntegrationInterface {
+
+	/**
+	 * Settings class instance.
+	 *
+	 * @var Fill_In_With_PostNL_Settings
+	 */
+	protected $fill_in_with_settings;
 
 	/**
 	 * The name of the integration.
@@ -44,12 +52,23 @@ class Blocks_Integration implements IntegrationInterface {
 			'/build/postnl-container.js',
 			'/build/postnl-container.asset.php'
 		);
+		$this->register_block_script(
+			'postnl-fill-in-with-editor',
+			'/build/postnl-fill-in-with-editor.js',
+			'/build/postnl-fill-in-with-editor.asset.php'
+		);
 
 		// Register frontend scripts for blocks
 		$this->register_frontend_script(
 			'postnl-container-frontend',
 			'/build/postnl-container-frontend.js',
 			'/build/postnl-container-frontend.asset.php'
+		);
+
+		$this->register_frontend_script(
+			'postnl-fill-in-with-frontend',
+			'/build/postnl-fill-in-with-frontend.js',
+			'/build/postnl-fill-in-with-frontend.asset.php'
 		);
 	}
 
@@ -172,6 +191,7 @@ class Blocks_Integration implements IntegrationInterface {
 		return array(
 			'postnl-delivery-day-integration',
 			'postnl-container-frontend',
+			'postnl-fill-in-with-frontend',
 		);
 	}
 
@@ -184,6 +204,7 @@ class Blocks_Integration implements IntegrationInterface {
 		return array(
 			'postnl-delivery-day-integration',
 			'postnl-container-editor',
+			'postnl-fill-in-with-editor',
 		);
 	}
 
@@ -196,6 +217,7 @@ class Blocks_Integration implements IntegrationInterface {
 	public function get_script_data() {
 		$letterbox = Utils::is_cart_eligible_auto_letterbox( WC()->cart );
 		$settings = postnl()->get_shipping_settings();
+		$this->fill_in_with_settings = new Fill_In_With_PostNL_Settings();
 
 		return array(
 			'pluginUrl'                => POSTNL_WC_PLUGIN_DIR_URL,
@@ -204,6 +226,10 @@ class Blocks_Integration implements IntegrationInterface {
 			'letterbox'                => $letterbox,
 			'is_nl_address_enabled'    => $settings->is_reorder_nl_address_enabled(),
 			'is_pickup_points_enabled' => $settings->is_pickup_points_enabled(),
+			'fill_in_with_postnl_settings' => array(
+				'is_fill_in_with_postnl_enabled' => $this->fill_in_with_settings->is_fill_in_with_postnl_enabled(),
+				'redirect_uri'                   => $this->fill_in_with_settings->get_redirect_uri(),
+			)
 		);
 	}
 }

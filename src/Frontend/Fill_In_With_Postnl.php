@@ -7,6 +7,8 @@
 
 namespace PostNLWooCommerce\Frontend;
 
+use PostNLWooCommerce\Shipping_Method\Fill_In_With_PostNL_Settings;
+
 defined( 'ABSPATH' ) || exit;
 
 /**
@@ -16,10 +18,18 @@ defined( 'ABSPATH' ) || exit;
 class Fill_In_With_Postnl {
 
 	/**
+	 * Settings class instance.
+	 *
+	 * @var Fill_In_With_PostNL_Settings
+	 */
+	protected $settings;
+
+	/**
 	 * Constructor.
 	 * Initializes the button rendering based on admin settings.
 	 */
 	public function __construct() {
+		$this->settings = new Fill_In_With_PostNL_Settings();
 		add_shortcode( 'print_fill_in_with_postnl_button', array( $this, 'print_fill_in_button' ) );
 		add_action( 'wp_head', array( $this, 'add_custom_css' ) );
 
@@ -90,10 +100,7 @@ class Fill_In_With_Postnl {
 	 * @return bool
 	 */
 	private function is_enabled(): bool {
-		$is_enabled = 'yes' === get_option( 'postnl_enable_fill_in_with', 'no' );
-		$client_id  = sanitize_text_field( get_option( 'postnl_fill_in_with_client_id' ) );
-
-		return $is_enabled && ! empty( $client_id );
+		return $this->settings->is_fill_in_with_postnl_enabled();
 	}
 
 	/**
@@ -133,15 +140,10 @@ class Fill_In_With_Postnl {
 			return;
 		}
 
-		$client_id     = sanitize_text_field( get_option( 'postnl_fill_in_with_client_id' ) );
-		$redirect_base = 'https://dil-login.postnl.nl/oauth2/login_options/';
-		$callback_url  = home_url( '/checkout/default/details/?callback=postnl' );
-		$redirect_uri  = esc_url( $redirect_base . '?client_id=' . $client_id . '&redirect_uri=' . rawurlencode( $callback_url ) . '&response_type=code&scope=base&code_challenge=&code_challenge_method=S256' );
-
 		wc_get_template(
 			'checkout/postnl-fill-in-with-button.php',
 			array(
-				'redirect_uri' => $redirect_uri,
+				'redirect_uri' => $this->settings->get_redirect_uri(),
 			),
 			'',
 			POSTNL_WC_PLUGIN_DIR_PATH . '/templates/'

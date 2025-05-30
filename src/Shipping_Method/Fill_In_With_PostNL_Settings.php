@@ -316,4 +316,16 @@ class Fill_In_With_PostNL_Settings {
 		$callback_url  = home_url( '/checkout/default/details/?callback=postnl' );
 		return esc_url( $redirect_base . '?client_id=' . $client_id . '&redirect_uri=' . rawurlencode( $callback_url ) . '&response_type=code&scope=base&code_challenge=&code_challenge_method=S256' );
 	}
+	
+	/**
+	 * Get the button placement for a specific context.
+	 *
+	 * @param string $context The context for which to get the button placement (e.g., 'checkout', 'cart', 'minicart').
+	 *
+	 * @return string The button placement option value.
+	 */
+	public function get_button_placement( string $context ): string {
+		$option_name = 'postnl_' . $context . '_button_placement';
+		return get_option( $option_name, '' );
+	}
 }

@@ -11,9 +11,6 @@
     "multiple": false,
     "reusable": false
   },
-  "parent": [
-    "woocommerce/checkout-contact-information-block"
-  ],
   "attributes": {
 	"lock": {
 	  "type": "object",

@@ -36,7 +36,8 @@ class Blocks_Integration implements IntegrationInterface {
 	 * When called invokes any initialization/setup for the integration.
 	 */
 	public function initialize() {
-			$this->register_scripts_and_styles();
+		$this->fill_in_with_settings = new Fill_In_With_PostNL_Settings();
+		$this->register_scripts_and_styles();
 	}
 
 	/**
@@ -157,6 +158,23 @@ class Blocks_Integration implements IntegrationInterface {
 			true
 		);
 
+		if ( 'postnl-fill-in-with-frontend' === $handle ) {
+			$selected_location = $this->fill_in_with_settings->get_button_placement( 'checkout' );
+			if ( 'after_customer_details' === $selected_location ) {
+				$selected_location = 'woocommerce/checkout-shipping-address-block';
+			} else {
+				$selected_location = 'woocommerce/checkout-contact-information-block';
+			}
+			wp_localize_script(
+				$handle,
+				'postnlSettings',
+				array(
+					'blockLocation'     => get_option( 'postnl_block_location', $selected_location ),
+					'cartBlockLocation' => 'woocommerce/cart-totals-block',
+				)
+			);
+		}
+
 		wp_set_script_translations(
 			$handle,
 			'postnl-for-woocommerce',
@@ -217,7 +235,6 @@ class Blocks_Integration implements IntegrationInterface {
 	public function get_script_data() {
 		$letterbox = Utils::is_cart_eligible_auto_letterbox( WC()->cart );
 		$settings = postnl()->get_shipping_settings();
-		$this->fill_in_with_settings = new Fill_In_With_PostNL_Settings();
 
 		return array(
 			'pluginUrl'                => POSTNL_WC_PLUGIN_DIR_URL,
@@ -229,7 +246,7 @@ class Blocks_Integration implements IntegrationInterface {
 			'fill_in_with_postnl_settings' => array(
 				'is_fill_in_with_postnl_enabled' => $this->fill_in_with_settings->is_fill_in_with_postnl_enabled(),
 				'redirect_uri'                   => $this->fill_in_with_settings->get_redirect_uri(),
-			)
+			),
 		);
 	}
 }

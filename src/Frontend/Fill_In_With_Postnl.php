@@ -32,6 +32,7 @@ class Fill_In_With_Postnl {
 		$this->settings = new Fill_In_With_PostNL_Settings();
 		add_shortcode( 'print_fill_in_with_postnl_button', array( $this, 'print_fill_in_button' ) );
 		add_action( 'wp_head', array( $this, 'add_custom_css' ) );
+		add_filter( 'render_block', array( $this, 'postnl_woocommerce_cart_block_do_actions' ), 9999, 2 );
 
 		$this->maybe_add_hooks();
 	}
@@ -51,6 +52,31 @@ class Fill_In_With_Postnl {
 		ob_start();
 		$this->render_button();
 		return ob_get_clean();
+	}
+
+	/**
+	 * Add actions to render the "Fill in with PostNL" button in specific blocks.
+	 *
+	 * This method is used to add actions to specific blocks in the cart and checkout pages.
+	 *
+	 * @param string $block_content The content of the block.
+	 * @param array  $block         The block data.
+	 *
+	 * @return string Modified block content with actions added.
+	 */
+	public function postnl_woocommerce_cart_block_do_actions( $block_content, $block ) {
+		$blocks = array(
+			'woocommerce/proceed-to-checkout-block',
+		);
+		if ( in_array( $block['blockName'], $blocks, true ) ) {
+			ob_start();
+			do_action( 'postnl_before_' . $block['blockName'] );
+			echo $block_content;
+			do_action( 'postnl_after_' . $block['blockName'] );
+			$block_content = ob_get_contents();
+			ob_end_clean();
+		}
+		return $block_content;
 	}
 
 	/**
@@ -79,17 +105,25 @@ class Fill_In_With_Postnl {
 	 */
 	private function maybe_add_hooks(): void {
 		$locations = array(
-			'cart_before_checkout'             => 'woocommerce_proceed_to_checkout',
-			'cart_after_checkout'              => 'woocommerce_after_cart_totals',
-			'checkout_before_customer_details' => 'woocommerce_checkout_before_customer_details',
-			'checkout_after_customer_details'  => 'woocommerce_checkout_after_customer_details',
-			'minicart_before_buttons'          => 'woocommerce_widget_shopping_cart_before_buttons',
-			'minicart_after_buttons'           => 'woocommerce_widget_shopping_cart_after_buttons',
+			'cart_before_checkout'             => array(
+				'woocommerce_proceed_to_checkout',
+				'postnl_before_woocommerce/proceed-to-checkout-block',
+			),
+			'cart_after_checkout'              => array(
+				'woocommerce_after_cart_totals',
+				'postnl_after_woocommerce/proceed-to-checkout-block',
+			),
+			'checkout_before_customer_details' => array( 'woocommerce_checkout_before_customer_details' ),
+			'checkout_after_customer_details'  => array( 'woocommerce_checkout_after_customer_details' ),
+			'minicart_before_buttons'          => array( 'woocommerce_widget_shopping_cart_before_buttons' ),
+			'minicart_after_buttons'           => array( 'woocommerce_widget_shopping_cart_after_buttons' ),
 		);
 
-		foreach ( $locations as $key => $hook ) {
+		foreach ( $locations as $key => $hooks ) {
 			if ( $this->is_enabled_for( $key ) ) {
-				add_action( $hook, array( $this, 'render_button' ), 20 );
+				foreach ( (array) $hooks as $hook ) {
+					add_action( $hook, array( $this, 'render_button' ), 20 );
+				}
 			}
 		}
 	}

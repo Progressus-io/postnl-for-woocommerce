@@ -146,6 +146,8 @@ class Single {
 		add_action( 'woocommerce_variation_options_pricing', array( $this, 'additional_product_variation_shipping_options' ), 10, 3 );
 		add_action( 'woocommerce_save_product_variation', array( $this, 'save_additional_product_variation_options' ), 10, 2 );
 		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_product_single_css_script' ) );
+		add_action( 'woocommerce_before_product_object_save', array( $this, 'validate_product_before_save' ), 100, 1 );
+
 	}
 
 	/**
@@ -258,4 +260,39 @@ class Single {
 	public function save_additional_product_variation_options( $product_id, $i ) {
 		$this->save_additional_product_shipping_options( $product_id, $i );
 	}
+
+	/**
+	 * Run the 18+ / Letterbox conflict check right before WooCommerce
+	 * saves the product object.
+	 *
+	 * @param \WC_Product $product
+	 */
+	public function validate_product_before_save( \WC_Product $product ) {
+		self::validate_conflicting_options( $product ); // uses the same logic
+	}
+
+	/**
+	 * Make sure a product cannot have BOTH “18+” and “Letterbox Parcel”.
+	 *
+	 * @param \WC_Product $product Current product object.
+	 */
+	public static function validate_conflicting_options( \WC_Product $product ) {
+
+		// Read the current meta values.
+		$is_adult     = 'yes' === $product->get_meta( self::ADULTS_ONLY_FIELD );
+		$is_letterbox = 'yes' === $product->get_meta( self::LETTERBOX_PARCEL );
+
+		// If both check-boxes are turned on, fix the data.
+		if ( $is_adult && $is_letterbox ) {
+
+			$product->update_meta_data( self::LETTERBOX_PARCEL, '' );
+			$product->save_meta_data();
+
+			// Show a notice in the admin screen.
+			\WC_Admin_Meta_Boxes::add_error(
+				__( '“18+” and “Letterbox Parcel” cannot be enabled together. Letterbox has been disabled automatically.', 'postnl-for-woocommerce' )
+			);
+		}
+	}
+
 }

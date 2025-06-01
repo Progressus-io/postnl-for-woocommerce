@@ -1,7 +1,7 @@
 /**
  * External dependencies
  */
-import { useEffect, useState, useRef } from '@wordpress/element';
+import {useEffect, useState, useRef, useCallback} from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 import { getSetting } from '@woocommerce/settings';
 import { useDispatch, useSelect } from '@wordpress/data';
@@ -18,30 +18,33 @@ export const Block = ( { checkoutExtensionData } ) => {
 	const { setExtensionData } = checkoutExtensionData;
 	const postnlData = getSetting( 'postnl-for-woocommerce-blocks_data', {} );
 
+	// stores the Morning/Evening surcharge currently selected
+	const [extraDeliveryFee, setExtraDeliveryFee] = useState(() => {
+		return Number(sessionStorage.getItem('postnl_deliveryDayPrice') || 0);
+	});
+
 	const tabs = [
-		{
-			id: 'delivery_day',
-			name: __( 'Delivery Days', 'postnl-for-woocommerce' ),
-		},
-	];
-	if ( Number( postnlData.delivery_day_fee ) > 0 ) {
-		tabs[0].name += ` (+€${ Number(
-			postnlData.delivery_day_fee
-		).toFixed( 2 ) })`;
-	}
-
-	if (postnlData.is_pickup_points_enabled) {
-		tabs.push({
+		{id: 'delivery_day', base: Number(postnlData.delivery_day_fee || 0)},
+		...(postnlData.is_pickup_points_enabled ? [{
 			id: 'dropoff_points',
-			name: __('Dropoff Points', 'postnl-for-woocommerce'),
-		});
+			base: Number(postnlData.pickup_fee || 0)
+		}] : []),
+	].map((tab) => {
+		let title =
+			tab.id === 'delivery_day'
+				? __('Delivery Days', 'postnl-for-woocommerce')
+				: __('Dropoff Points', 'postnl-for-woocommerce');
 
-		if (Number(postnlData.pickup_fee) > 0) {
-			tabs[1].name += ` (+€${Number(
-				postnlData.pickup_fee
-			).toFixed(2)})`;
+		const base = tab.base;
+		const extra = tab.id === 'delivery_day' ? extraDeliveryFee : 0;
+
+		if (base > 0 || extra > 0) {
+			title += ` (+€${base.toFixed(2)}${extra > 0 ? `+€${extra.toFixed(2)}` : ''})`;
 		}
-	}
+
+		return {id: tab.id, name: title};
+	});
+
 	const [ activeTab, setActiveTab ] = useState( tabs[ 0 ].id );
 
 	const letterbox = postnlData.letterbox || false;
@@ -390,6 +393,7 @@ export const Block = ( { checkoutExtensionData } ) => {
 								isActive={ activeTab === 'delivery_day' }
 								deliveryOptions={ deliveryOptions }
 								isDeliveryDaysEnabled={ deliveryDaysEnabled }
+								onPriceChange={ setExtraDeliveryFee }
 							/>
 						</div>
 						{ postnlData.is_pickup_points_enabled && (

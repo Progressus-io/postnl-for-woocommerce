@@ -98,7 +98,7 @@ class Fill_In_With_PostNL_Settings {
 			),
 			array(
 				'title'   => esc_html__( 'Automatically render button in cart page', 'postnl-for-woocommerce' ),
-				'desc'    => esc_html__( 'Automatically render checkout button in cart page', 'postnl-for-woocommerce' ),
+				'desc'    => esc_html__( 'Automatically render button in cart page', 'postnl-for-woocommerce' ),
 				'id'      => 'postnl_cart_auto_render_button',
 				'type'    => 'checkbox',
 				'default' => 'no',
@@ -174,6 +174,57 @@ class Fill_In_With_PostNL_Settings {
 				'id'   => 'postnl_minicart_section_end',
 			),
 
+			// Button Styling section.
+			array(
+				'title' => esc_html__( 'Button Styling', 'postnl-for-woocommerce' ),
+				'type'  => 'title',
+				'id'    => 'postnl_button_styling_title',
+			),
+			array(
+				'title'    => esc_html__( 'Button Background Color', 'postnl-for-woocommerce' ),
+				'desc'     => esc_html__( 'Select the background color for the PostNL button.', 'postnl-for-woocommerce' ),
+				'desc_tip' => true,
+				'id'       => 'postnl_button_background_color',
+				'type'     => 'color',
+				'default'  => '#ff6200',
+				'css'      => 'width: 80px;',
+			),
+			array(
+				'title'    => esc_html__( 'Button Border', 'postnl-for-woocommerce' ),
+				'desc'     => esc_html__( 'Define the border style for the PostNL button (e.g., 1px solid #000000).', 'postnl-for-woocommerce' ),
+				'desc_tip' => true,
+				'id'       => 'postnl_button_border',
+				'type'     => 'text',
+				'default'  => '1px solid #000000',
+				'css'      => 'width: 150px;',
+			),
+			array(
+				'title'    => esc_html__( 'Button Alignment', 'postnl-for-woocommerce' ),
+				'desc'     => esc_html__( 'Select the alignment for the PostNL button.', 'postnl-for-woocommerce' ),
+				'desc_tip' => true,
+				'id'       => 'postnl_button_alignment',
+				'type'     => 'select',
+				'default'  => 'left',
+				'options'  => array(
+					'left'   => esc_html__( 'Left', 'postnl-for-woocommerce' ),
+					'center' => esc_html__( 'Center', 'postnl-for-woocommerce' ),
+					'right'  => esc_html__( 'Right', 'postnl-for-woocommerce' ),
+				),
+			),
+			array(
+				'title'    => esc_html__( 'Button Hover Background Color', 'postnl-for-woocommerce' ),
+				'desc'     => esc_html__( 'Select the background color for the PostNL button on hover.', 'postnl-for-woocommerce' ),
+				'desc_tip' => true,
+				'id'       => 'postnl_button_hover_background_color',
+				'type'     => 'color',
+				'default'  => '#e55500',
+				'css'      => 'width: 80px;',
+			),
+			array(
+				'type' => 'sectionend',
+				'id'   => 'postnl_button_styling_section_end',
+			),
+
 			// Custom css section.
 			array(
 				'title' => esc_html__( 'Custom CSS', 'postnl-for-woocommerce' ),
@@ -192,6 +243,7 @@ class Fill_In_With_PostNL_Settings {
 				'type' => 'sectionend',
 				'id'   => 'postnl_custom_css_section_end',
 			),
+
 			array(
 				'desc'    => esc_html__( 'I understand that the PostNL address fields are activated (= separate field for zipcode, housnumber, housenumber extension and street) to let consumers fill in their shipping address with the PostNL app.', 'postnl-for-woocommerce' ),
 				'id'      => 'postnl_consent_checkbox',
@@ -221,18 +273,25 @@ class Fill_In_With_PostNL_Settings {
 		wp_enqueue_script( 'wp-theme-plugin-editor' );
 		wp_enqueue_style( 'wp-codemirror' );
 
-		// Init script.
 		wp_add_inline_script(
 			'wp-theme-plugin-editor',
-			<<<JS
-			jQuery( function( $ ) {
-				wp.codeEditor.initialize( $('.postnl-css-editor'), {
-					codemirror: {
-						mode: 'css',
-						lineNumbers: true,
-						indentUnit: 2,
-						viewportMargin: Infinity,
+			<<<'JS'
+			jQuery(function($) {
+				$('.postnl-css-editor').each(function() {
+					// Guard: Prevent initializing again
+					if ($(this).data('codeEditorInitialized')) {
+						return;
 					}
+					wp.codeEditor.initialize(this, {
+						codemirror: {
+							mode: 'css',
+							lineNumbers: true,
+							indentUnit: 2,
+							viewportMargin: Infinity
+						}
+					});
+					// Mark as initialized
+					$(this).data('codeEditorInitialized', true);
 				});
 			});
 		JS

@@ -91,10 +91,39 @@ class Fill_In_With_Postnl {
 			return;
 		}
 
-		$css = wp_strip_all_tags( get_option( 'postnl_custom_css', '' ) );
+		$border                 = sanitize_text_field( get_option( 'postnl_button_border', '1px solid #000000' ) );
+		$alignment              = sanitize_text_field( get_option( 'postnl_button_alignment', 'left' ) );
+		$custom_css             = wp_strip_all_tags( get_option( 'postnl_custom_css', '' ) );
+		$background_color       = sanitize_hex_color( get_option( 'postnl_button_background_color', '#ff6200' ) );
+		$hover_background_color = sanitize_hex_color( get_option( 'postnl_button_hover_background_color', '#e55500' ) );
+
+		$css = '';
+
+		// Dynamic CSS for the PostNL button.
+		$css .= '#postnl-login-button {';
+		$css .= 'background-color: ' . $background_color . ';';
+		$css .= 'border: ' . $border . ';';
+		if ( 'center' === $alignment ) {
+			$css .= 'display: block; margin-left: auto; margin-right: auto;';
+		} elseif ( 'right' === $alignment ) {
+			$css .= 'display: block; margin-left: auto;';
+		} else {
+			$css .= 'display: block;';
+		}
+		$css .= '}';
+
+		// Hover effect.
+		$css .= '#postnl-login-button:hover {';
+		$css .= 'background-color: ' . $hover_background_color . ';';
+		$css .= '}';
+
+		// Append custom CSS from the textarea field.
+		if ( ! empty( $custom_css ) ) {
+			$css .= wp_strip_all_tags( $custom_css );
+		}
 
 		if ( ! empty( $css ) ) {
-			echo '<style id="postnl-custom-css">' . wp_kses_post( wp_strip_all_tags( $css ) ) . '</style>';
+			echo '<style id="postnl-custom-css">' . wp_kses_post( $css ) . '</style>';
 		}
 	}
 

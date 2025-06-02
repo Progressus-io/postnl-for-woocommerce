@@ -226,8 +226,8 @@ tr.postnl-co-tr-container > td {
 	min-height: 35px;
 	max-height: 60px;
 	width: -webkit-fill-available;
-	border: 1px solid #F56900 !important;
-	background-color: #F56900 !important;
+	border: 1px solid #F56900;
+	background-color: #F56900;
 	cursor: pointer;
 	outline: none;
 	box-sizing: border-box;
@@ -256,6 +256,5 @@ tr.postnl-co-tr-container > td {
 
 #postnl-login-button:hover,
 #postnl-login-button:focus {
-	background-color: #ed7000 !important;
-	border-color: #ed7000 !important;
+	background-color: #ed7000;
 }

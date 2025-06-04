@@ -8,6 +8,7 @@
 namespace PostNLWooCommerce;
 
 use PostNLWooCommerce\Helper\Mapping;
+use PostNLWooCommerce\Product\Single;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -51,6 +52,15 @@ class Utils {
 	 * @return array.
 	 */
 	public static function get_available_country_for_letterbox() {
+		return array( 'NL' );
+	}
+
+	/**
+	 * Get available country for the adult orders.
+	 *
+	 * @return array.
+	 */
+	public static function get_available_country_for_adult(): array {
 		return array( 'NL' );
 	}
 
@@ -678,6 +688,25 @@ class Utils {
 	}
 
 	/**
+	 * Check if current cart contains adults only item.
+	 *
+	 * @param \WC_Cart|null $cart Cart object.
+	 *
+	 * @return boolean
+	 */
+	public static function is_cart_eligible_adults_only( ?\WC_Cart $cart ): bool {
+		if ( is_null( $cart ) ) {
+			return false;
+		}
+
+		if ( ! in_array( WC()->customer->get_shipping_country(), self::get_available_country_for_letterbox(), true ) ) {
+			return false;
+		}
+
+		return self::check_products_for_adults( $cart->get_cart() );
+	}
+
+	/**
 	 * Check if current order/cart is eligible for automatically use letterbox.
 	 *
 	 * @param \WC_Order|int $order \WC_order or Order ID.
@@ -757,6 +786,66 @@ class Utils {
 
 		// If the total ratio is more than 1, that means order items cannot be packed using letterbox.
 		return $has_letterbox_product && $total_ratio_letterbox_item <= 1;
+	}
+
+	/**
+	 * Check if current order is for adult.
+	 *
+	 * @param \WC_Order|int $order \WC_order or Order ID.
+	 *
+	 * @return boolean
+	 */
+	public static function is_order_for_adults( $order ): bool {
+		if ( 'BE' === wc_get_base_location()['country'] ) {
+			return false;
+		}
+
+		// Check if order id provided.
+		if ( is_int( $order ) ) {
+			$order = wc_get_order( $order );
+		}
+
+		if ( ! is_a( $order, 'WC_Order' ) ) {
+			return false;
+		}
+
+		if ( ! in_array( $order->get_shipping_country(), self::get_available_country_for_adult(), true ) ) {
+			return false;
+		}
+
+		$products = $order->get_items();
+		$is_adult = self::check_products_for_adults( $products );
+
+		return $is_adult;
+	}
+
+	/**
+	 * Check if any product is for adult.
+	 *
+	 * @param array $products WC_Products[] or order_item[].
+	 *
+	 * @return bool
+	 */
+	public static function check_products_for_adults( $products ): bool {
+
+		foreach ( $products as $item_id => $item ) {
+			$product = wc_get_product( $item['product_id'] ?? $item->get_product_id() );
+			if ( ! is_a( $product, 'WC_Product' ) ) {
+				continue;
+			}
+
+			if ( ! $product->needs_shipping() ) {
+				continue;
+			}
+
+			$is_adult_product = $product->get_meta( Single::ADULTS_ONLY_FIELD );
+
+			if ( 'yes' === $is_adult_product ) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	/**

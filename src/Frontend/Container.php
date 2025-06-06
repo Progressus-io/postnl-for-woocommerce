@@ -283,11 +283,12 @@ class Container {
 
 			$post_data = Address_Utils::set_post_data_address( $post_data );
 
+			if ( empty( $post_data['shipping_postcode'] ) ) {
+				return;
+			}
+
 			// Validate address.
 			if ( $this->is_address_validation_required() ) {
-				if ( empty( $post_data['shipping_postcode'] ) ) {
-					return;
-				}
 
 				if ( empty( $post_data['shipping_house_number'] ) && $this->settings->is_reorder_nl_address_enabled() ) {
 					return;

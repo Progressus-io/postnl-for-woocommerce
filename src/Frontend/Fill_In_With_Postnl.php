@@ -7,6 +7,7 @@
 
 namespace PostNLWooCommerce\Frontend;
 
+use WP_REST_Response;
 use PostNLWooCommerce\Shipping_Method\Fill_In_With_PostNL_Settings;
 
 defined( 'ABSPATH' ) || exit;
@@ -33,7 +34,8 @@ class Fill_In_With_Postnl {
 		add_shortcode( 'print_fill_in_with_postnl_button', array( $this, 'print_fill_in_button' ) );
 		add_action( 'wp_head', array( $this, 'add_custom_css' ) );
 		add_filter( 'render_block', array( $this, 'postnl_woocommerce_cart_block_do_actions' ), 9999, 2 );
-
+		add_action( 'rest_api_init', array( $this, 'register_rest_routes' ) );
+		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_scripts' ) );
 		$this->maybe_add_hooks();
 	}
 
@@ -144,8 +146,8 @@ class Fill_In_With_Postnl {
 			),
 			'checkout_before_customer_details' => array( 'woocommerce_checkout_before_customer_details' ),
 			'checkout_after_customer_details'  => array( 'woocommerce_checkout_after_customer_details' ),
-			'minicart_before_buttons'          => array( 'woocommerce_widget_shopping_cart_before_buttons' ),
-			'minicart_after_buttons'           => array( 'woocommerce_widget_shopping_cart_after_buttons' ),
+			'minicart_before_buttons'          => array( 'woocommerce_widget_shopping_cart_before_buttons', 'woocommerce/mini-cart-footer-block' ),
+			'minicart_after_buttons'           => array( 'woocommerce_widget_shopping_cart_after_buttons', 'woocommerce/mini-cart-footer-block' ),
 		);
 
 		foreach ( $locations as $key => $hooks ) {
@@ -194,6 +196,77 @@ class Fill_In_With_Postnl {
 	}
 
 	/**
+	 * Register REST API routes.
+	 *
+	 * @return void
+	 */
+	public function register_rest_routes(): void {
+		register_rest_route(
+			'postnl/v1',
+			'/get-redirect-uri',
+			array(
+				'methods'             => 'POST',
+				'callback'            => array( $this, 'handle_get_redirect_uri' ),
+				'permission_callback' => '__return_true',
+			)
+		);
+	}
+
+	/**
+	 * Handle the REST API request to get the redirect URI.
+	 *
+	 * @return WP_REST_Response
+	 */
+	public function handle_get_redirect_uri(): WP_REST_Response {
+
+		if ( ! $this->settings->is_fill_in_with_postnl_enabled() ) {
+			return new WP_REST_Response(
+				array(
+					'success' => false,
+					'message' => esc_html__( 'Fill in with PostNL is not enabled or Client ID is missing.', 'postnl-for-woocommerce' ),
+				),
+				400
+			);
+		}
+
+		$redirect_uri = $this->settings->get_redirect_uri();
+
+		return new WP_REST_Response(
+			array(
+				'success' => true,
+				'data'    => array(
+					'redirect_uri' => $redirect_uri,
+				),
+			),
+			200
+		);
+	}
+
+	/**
+	 * Enqueue scripts.
+	 */
+	public function enqueue_scripts(): void {
+		$postnl_checkout_params = array(
+			'rest_url' => rest_url( 'postnl/v1/get-redirect-uri' ),
+			'nonce'    => wp_create_nonce( 'wp_rest' ),
+		);
+
+		wp_enqueue_script(
+			'fill-in-with-postnl',
+			POSTNL_WC_PLUGIN_DIR_URL . '/assets/js/fill_in_with_postnl.js',
+			array( 'jquery' ),
+			'1.0',
+			true
+		);
+
+		wp_localize_script(
+			'fill-in-with-postnl',
+			'postnlCheckoutParams',
+			$postnl_checkout_params
+		);
+	}
+
+	/**
 	 * Render the "Fill in with PostNL" button using a WooCommerce template.
 	 *
 	 * @return void
@@ -205,9 +278,7 @@ class Fill_In_With_Postnl {
 
 		wc_get_template(
 			'checkout/postnl-fill-in-with-button.php',
-			array(
-				'redirect_uri' => $this->settings->get_redirect_uri(),
-			),
+			array(),
 			'',
 			POSTNL_WC_PLUGIN_DIR_PATH . '/templates/'
 		);

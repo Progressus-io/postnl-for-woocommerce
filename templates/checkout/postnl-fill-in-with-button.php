@@ -10,7 +10,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 ?>
 <div class="button--postnl-container">
-	<a type="button" id="postnl-login-button" aria-label="<?php esc_html_e( 'Fill in with PostNL', 'postnl-for-woocommerce' ); ?>" href="<?php echo esc_url( $redirect_uri ); ?>">
+	<a type="button" id="postnl-login-button" aria-label="<?php esc_html_e( 'Fill in with PostNL', 'postnl-for-woocommerce' ); ?>" href="#">
 		<div id="postnl-login-button__outline"></div>
 		<span id="postnl-login-button__text">
 			<span id="postnl-login-button__first-text">

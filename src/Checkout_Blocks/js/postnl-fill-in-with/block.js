@@ -13,10 +13,9 @@ export const FillBlock = ( { checkoutExtensionData } ) => {
 			// Register your data under the “postnl” key
 			if ( setExtensionData ) {
 				setExtensionData( 'postnl', {
-					// you can fill these from form inputs later
 					houseNumber: '',
-					dropoffPoints: '',
-					deliveryDay: '',
+					billingCountry: '',
+					billingState: '',
 				} );
 			}
 		}

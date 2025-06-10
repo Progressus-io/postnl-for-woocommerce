@@ -6,6 +6,7 @@ export const FillBlock = ( { checkoutExtensionData } ) => {
 	const { setExtensionData } = checkoutExtensionData || {};
 	const postnlData = getSetting( 'postnl-for-woocommerce-blocks_data', {} );
 	const [ showButton, setShowButton ] = useState( false );
+	const [ isLoading, setIsLoading ]   = useState( false );
 
 	useEffect( () => {
 		if ( postnlData?.fill_in_with_postnl_settings?.is_fill_in_with_postnl_enabled ) {
@@ -25,7 +26,36 @@ export const FillBlock = ( { checkoutExtensionData } ) => {
 		return null;
 	}
 
-	const redirectUri = postnlData?.fill_in_with_postnl_settings?.redirect_uri || '#';
+	const handleButtonClick = async ( event ) => {
+        event.preventDefault();
+        if ( isLoading ) return;
+
+        setIsLoading( true );
+
+        try {
+            const response = await fetch( postnlSettings.restUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify( {
+                    nonce: postnlSettings.nonce,
+                } ),
+            });
+
+            const data = await response.json();
+
+            if ( data.success && data.data.redirect_uri ) {
+                window.location.href = data.data.redirect_uri;
+            } else {
+                alert( __( 'Unable to connect to PostNL. Please try again later.', 'postnl-for-woocommerce' ) );
+            }
+        } catch ( error ) {
+            alert( __( 'An error occurred. Please try again.', 'postnl-for-woocommerce' ) );
+        } finally {
+            setIsLoading( false );
+        }
+    };
 	const title       = __( 'Fill in with PostNL', 'postnl-for-woocommerce' );
 	const description = __( 'Your name and address are automatically filled in via your PostNL account. That saves you from having to fill in the form!', 'postnl-for-woocommerce' );
 
@@ -35,7 +65,9 @@ export const FillBlock = ( { checkoutExtensionData } ) => {
 				type="button"
 				id="postnl-login-button"
 				aria-label={ title }
-				href={ redirectUri }
+				href="#"
+                onClick={ handleButtonClick }
+                className={ isLoading ? 'disabled' : '' }
 			>
 				<span id="postnl-login-button__text">
 					<span id="postnl-login-button__first-text">

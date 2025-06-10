@@ -44,10 +44,10 @@ class Blocks_Integration implements IntegrationInterface {
 	 * Registers scripts and styles for both editor and frontend.
 	 */
 	private function register_scripts_and_styles() {
-		// Register main integration script and style
+		// Register main integration script and style.
 		$this->register_main_integration();
 
-		// Register block editor scripts
+		// Register block editor scripts.
 		$this->register_block_script(
 			'postnl-container-editor',
 			'/build/postnl-container.js',
@@ -59,7 +59,7 @@ class Blocks_Integration implements IntegrationInterface {
 			'/build/postnl-fill-in-with-editor.asset.php'
 		);
 
-		// Register frontend scripts for blocks
+		// Register frontend scripts for blocks.
 		$this->register_frontend_script(
 			'postnl-container-frontend',
 			'/build/postnl-container-frontend.js',
@@ -170,6 +170,8 @@ class Blocks_Integration implements IntegrationInterface {
 				'postnlSettings',
 				array(
 					'blockLocation' => get_option( 'postnl_block_location', $selected_location ),
+					'restUrl'       => esc_url_raw( rest_url( 'postnl/v1/get-redirect-uri' ) ),
+					'nonce'         => wp_create_nonce( 'postnl_redirect_nonce' ),
 				)
 			);
 		}
@@ -244,7 +246,6 @@ class Blocks_Integration implements IntegrationInterface {
 			'is_pickup_points_enabled'     => $settings->is_pickup_points_enabled(),
 			'fill_in_with_postnl_settings' => array(
 				'is_fill_in_with_postnl_enabled' => $this->fill_in_with_settings->is_fill_in_with_postnl_enabled(),
-				'redirect_uri'                   => $this->fill_in_with_settings->get_redirect_uri(),
 			),
 		);
 	}

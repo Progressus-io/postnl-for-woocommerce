@@ -134,12 +134,10 @@ class Container {
 		$api_call    = new Checkout\Client( $item_info );
 		$response    = $api_call->send_request();
 		$letterbox   = Utils::is_cart_eligible_auto_letterbox( \WC()->cart );
-		$adults_only = Utils::is_cart_eligible_adults_only( \WC()->cart );
 		return array(
 			'response'    => $response,
 			'post_data'   => $post_data,
 			'letterbox'   => $letterbox,
-			'adults_only' => $adults_only,
 		);
 	}
 
@@ -236,7 +234,6 @@ class Container {
 			'post_data'   => $checkout_data['post_data'],
 			'default_val' => $this->get_default_value( $checkout_data['response'], $checkout_data['post_data'] ),
 			'letterbox'   => $checkout_data['letterbox'],
-			'adults_only' => $checkout_data['adults_only'],
 			'fields'      => array(
 				array(
 					'name'  => $this->tab_field,

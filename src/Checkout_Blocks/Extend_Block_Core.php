@@ -264,7 +264,6 @@ class Extend_Block_Core {
 
 		// Check letterbox eligibility
 		$letterbox   = Utils::is_cart_eligible_auto_letterbox( WC()->cart );
-		$adults_only = Utils::is_cart_eligible_adults_only( WC()->cart );
 
 		// Save the house number and postcode on WC customer if provided
 		if ( isset( $sanitized_data['shipping_house_number'] ) && isset( $sanitized_data['shipping_postcode'] ) ) {
@@ -370,7 +369,7 @@ class Extend_Block_Core {
 		$dropoff_options  = $dropoff->get_content_data( $checkout_data['response'], $checkout_data['post_data'] );
 
 		// **Letterbox is Eligible**
-		if ( $letterbox && ! $adults_only ) {
+		if ( $letterbox ) {
 			wp_send_json_success(
 				array(
 					'message'           => 'Eligible for letterbox.',

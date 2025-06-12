@@ -195,7 +195,6 @@ class Blocks_Integration implements IntegrationInterface {
 	 */
 	public function get_script_data() {
 		$letterbox   = Utils::is_cart_eligible_auto_letterbox( WC()->cart );
-		$adults_only = Utils::is_cart_eligible_adults_only( WC()->cart );
 		$settings = postnl()->get_shipping_settings();
 
 		return array(
@@ -203,7 +202,6 @@ class Blocks_Integration implements IntegrationInterface {
 			'ajax_url'                 => admin_url( 'admin-ajax.php' ),
 			'nonce'                    => wp_create_nonce( 'postnl_delivery_day_nonce' ),
 			'letterbox'                => $letterbox,
-			'adults_only'              => $adults_only,
 			'is_nl_address_enabled'    => $settings->is_reorder_nl_address_enabled(),
 			'is_pickup_points_enabled' => $settings->is_pickup_points_enabled(),
 		);

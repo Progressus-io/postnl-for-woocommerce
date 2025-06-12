@@ -32,8 +32,7 @@ export const Block = ( { checkoutExtensionData } ) => {
 	}
 	const [ activeTab, setActiveTab ] = useState( tabs[ 0 ].id );
 
-	const adultsOnly = postnlData.adults_only || false;
-	const letterbox  = ( postnlData.letterbox && ! adultsOnly ) || false;
+	const letterbox  = ( postnlData.letterbox ) || false;
 
 	const { CART_STORE_KEY, CHECKOUT_STORE_KEY } = window.wc.wcBlocksData;
 

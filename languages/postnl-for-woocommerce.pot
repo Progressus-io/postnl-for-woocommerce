@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2025-05-15T07:30:02+00:00\n"
+"POT-Creation-Date: 2025-06-12T13:53:49+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.11.0\n"
 "X-Domain: postnl-for-woocommerce\n"
@@ -40,7 +40,7 @@ msgid "https://postnl.post/"
 msgstr ""
 
 #: src/Checkout_Blocks/Extend_Block_Core.php:79
-#: src/Frontend/Container.php:325
+#: src/Frontend/Container.php:324
 msgid "This is not a valid address!"
 msgstr ""
 
@@ -515,108 +515,108 @@ msgid "PostNL extra settings"
 msgstr ""
 
 #: src/Product/Product_Editor.php:48
-msgid "Enable Letterbox Parcel"
-msgstr ""
-
-#: src/Product/Product_Editor.php:50
-msgid "When enabled, PostNL plugin automatically determines whether a shipment fits through a letterbox."
-msgstr ""
-
-#: src/Product/Product_Editor.php:63
-msgid "Maximum Quantity per Letterbox Parcel"
-msgstr ""
-
-#: src/Product/Product_Editor.php:65
-#: src/Product/Single.php:102
-msgid "Enter max quantity"
-msgstr ""
-
-#: src/Product/Product_Editor.php:67
-msgid "Specify how many times this product fits in a letterbox parcel."
-msgstr ""
-
-#: src/Product/Product_Editor.php:78
-msgid "Country of Origin"
-msgstr ""
-
-#: src/Product/Product_Editor.php:84
-#: src/Product/Single.php:115
-msgid "- select country -"
-msgstr ""
-
-#: src/Product/Product_Editor.php:98
-msgid "Select the country of origin for this product."
-msgstr ""
-
-#: src/Product/Product_Editor.php:109
-msgid "HS Tariff Code"
-msgstr ""
-
-#: src/Product/Product_Editor.php:111
-#: src/Product/Single.php:126
-msgid "HS Code"
-msgstr ""
-
-#: src/Product/Product_Editor.php:112
-msgid "HS Tariff Code for international shipping."
-msgstr ""
-
-#: src/Product/Product_Editor.php:123
-msgid "Adult Product Settings"
-msgstr ""
-
-#: src/Product/Product_Editor.php:124
 msgid "Mark as 18+ (Adults Only)"
 msgstr ""
 
-#: src/Product/Product_Editor.php:126
-#: src/Product/Single.php:133
+#: src/Product/Product_Editor.php:50
+#: src/Product/Single.php:92
 msgid "Enable this for products intended only for adults (18+)."
+msgstr ""
+
+#: src/Product/Product_Editor.php:63
+msgid "Enable Letterbox Parcel"
+msgstr ""
+
+#: src/Product/Product_Editor.php:65
+msgid "When enabled, PostNL plugin automatically determines whether a shipment fits through a letterbox."
+msgstr ""
+
+#: src/Product/Product_Editor.php:78
+msgid "Maximum Quantity per Letterbox Parcel"
+msgstr ""
+
+#: src/Product/Product_Editor.php:80
+#: src/Product/Single.php:110
+msgid "Enter max quantity"
+msgstr ""
+
+#: src/Product/Product_Editor.php:82
+msgid "Specify how many times this product fits in a letterbox parcel."
+msgstr ""
+
+#: src/Product/Product_Editor.php:93
+msgid "Country of Origin"
+msgstr ""
+
+#: src/Product/Product_Editor.php:99
+#: src/Product/Single.php:123
+msgid "- select country -"
+msgstr ""
+
+#: src/Product/Product_Editor.php:113
+msgid "Select the country of origin for this product."
+msgstr ""
+
+#: src/Product/Product_Editor.php:124
+msgid "HS Tariff Code"
+msgstr ""
+
+#: src/Product/Product_Editor.php:126
+#: src/Product/Single.php:134
+msgid "HS Code"
+msgstr ""
+
+#: src/Product/Product_Editor.php:127
+msgid "HS Tariff Code for international shipping."
 msgstr ""
 
 #. translators: %s will be replaced by service name.
 #: src/Product/Single.php:91
-msgid "Enable Letterbox Parcel (%s)"
-msgstr ""
-
-#: src/Product/Single.php:92
-msgid "When this setting is enabled the PostNL plug-in automatically determines whether a shipment fits through a letterbox. This choice can be overridden when creating a shipment manually via the Label & Tracking menu. This only works for orders with destination Netherlands."
+msgid "Mark as 18+ (Adults Only) (%s)"
 msgstr ""
 
 #. translators: %s will be replaced by service name.
 #: src/Product/Single.php:99
-msgid "Maximum amount per letterbox parcel (%s)"
+msgid "Enable Letterbox Parcel (%s)"
 msgstr ""
 
 #: src/Product/Single.php:100
+msgid "When this setting is enabled the PostNL plug-in automatically determines whether a shipment fits through a letterbox. This choice can be overridden when creating a shipment manually via the Label & Tracking menu. This only works for orders with destination Netherlands."
+msgstr ""
+
+#. translators: %s will be replaced by service name.
+#: src/Product/Single.php:107
+msgid "Maximum amount per letterbox parcel (%s)"
+msgstr ""
+
+#: src/Product/Single.php:108
 msgid "Please fill in how many times this product fits in a letterbox parcel. A letterbox parcel may weigh a maximum of 2 kilograms and has the following maximum dimensions: 38x26.5x3.2 cm"
 msgstr ""
 
 #. translators: %s will be replaced by service name.
-#: src/Product/Single.php:111
+#: src/Product/Single.php:119
 msgid "Country of Origin (%s)"
 msgstr ""
 
-#: src/Product/Single.php:112
+#: src/Product/Single.php:120
 msgid "Country of Origin."
 msgstr ""
 
 #. translators: %s will be replaced by service name.
-#: src/Product/Single.php:123
+#: src/Product/Single.php:131
 msgid "HS Tariff Code (%s)"
 msgstr ""
 
-#: src/Product/Single.php:124
+#: src/Product/Single.php:132
 msgid "HS Tariff Code is a number assigned to every possible commodity that can be imported or exported from any country."
 msgstr ""
 
-#. translators: %s will be replaced by service name.
-#: src/Product/Single.php:132
-msgid "Mark as 18+ (Adults Only) (%s)"
+#: src/Product/Single.php:222
+msgid "Product ID does not exists!"
 msgstr ""
 
-#: src/Product/Single.php:201
-msgid "Product ID does not exists!"
+#: src/Product/Single.php:293
+msgid "“18+” and “Letterbox Parcel” cannot be enabled together. Letterbox has been disabled automatically."
 msgstr ""
 
 #: src/Rest_API/Barcode/Item_Info.php:66
@@ -1514,7 +1514,7 @@ msgstr ""
 
 #: templates/checkout/postnl-container.php:21
 #: build/postnl-container-frontend.js:1
-#: src/Checkout_Blocks/js/postnl-container/block.js:404
+#: src/Checkout_Blocks/js/postnl-container/block.js:405
 msgid "These items are eligible for letterbox delivery."
 msgstr ""
 

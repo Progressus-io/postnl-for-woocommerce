@@ -171,6 +171,11 @@ class Blocks_Integration implements IntegrationInterface {
 				array(
 					'blockLocation' => get_option( 'postnl_block_location', $selected_location ),
 					'restUrl'       => esc_url_raw( rest_url( 'postnl/v1/get-redirect-uri' ) ),
+					'getUserInfoUrl'=> esc_url_raw(
+						admin_url(
+							'admin-ajax.php?action=get_postnl_user_info'
+						)
+					),
 					'nonce'         => wp_create_nonce( 'postnl_redirect_nonce' ),
 				)
 			);

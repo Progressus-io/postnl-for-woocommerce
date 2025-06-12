@@ -1,12 +1,14 @@
 import { useEffect, useState } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 import { getSetting } from '@woocommerce/settings';
+import { useDispatch } from '@wordpress/data';
 
 export const FillBlock = ( { checkoutExtensionData } ) => {
 	const { setExtensionData } = checkoutExtensionData || {};
 	const postnlData = getSetting( 'postnl-for-woocommerce-blocks_data', {} );
 	const [ showButton, setShowButton ] = useState( false );
 	const [ isLoading, setIsLoading ]   = useState( false );
+	const { __experimentalSetBillingAddress, __experimentalSetShippingAddress } = useDispatch('wc/store/checkout');
 
 	useEffect( () => {
 		if ( postnlData?.fill_in_with_postnl_settings?.is_fill_in_with_postnl_enabled ) {
@@ -48,16 +50,49 @@ export const FillBlock = ( { checkoutExtensionData } ) => {
             if ( data.success && data.data.redirect_uri ) {
                 window.location.href = data.data.redirect_uri;
             } else {
-                alert( __( 'Unable to connect to PostNL. Please try again later.', 'postnl-for-woocommerce' ) );
+                alert( esc_html__( 'Unable to connect to PostNL. Please try again later.', 'postnl-for-woocommerce' ) );
             }
         } catch ( error ) {
-            alert( __( 'An error occurred. Please try again.', 'postnl-for-woocommerce' ) );
+            alert( esc_html__( 'An error occurred. Please try again.', 'postnl-for-woocommerce' ) );
         } finally {
             setIsLoading( false );
         }
     };
-	const title       = __( 'Fill in with PostNL', 'postnl-for-woocommerce' );
-	const description = __( 'Your name and address are automatically filled in via your PostNL account. That saves you from having to fill in the form!', 'postnl-for-woocommerce' );
+
+	const handlePostnlReturn = async ( token ) => {
+		try {
+			const response = await fetch( postnlSettings.getUserInfoUrl, {
+				method: 'GET',
+			} );
+
+			const data = await response.json();
+			if ( data.success && data.data ) {
+				const { person, primaryAddress } = data.data;
+				// Update WooCommerce blocks billing address
+				const addressFields = {
+                    first_name: person.givenName || '',
+                    last_name: person.familyName || '',
+                    email: person.email || '',
+                    address_1: primaryAddress.streetName || '',
+                    address_2: primaryAddress.houseNumberAddition || '',
+                    city: primaryAddress.cityName || '',
+					house_number: primaryAddress.houseNumber || '',
+                    postcode: primaryAddress.postalCode || '',
+                    country: primaryAddress.countryName || 'NL', // Default to NL for PostNL
+                };
+
+                // Update both billing and shipping addresses.
+                await __experimentalSetBillingAddress( addressFields );
+                await __experimentalSetShippingAddress( addressFields );
+			}
+		} catch ( err ) {
+			console.error( 'Failed to retrieve PostNL address:', err );
+			alert( esc_html__( 'Failed to retrieve PostNL address. Please try again.', 'postnl-for-woocommerce' ) );
+		}
+	};
+
+	const title       = esc_html__( 'Fill in with PostNL', 'postnl-for-woocommerce' );
+	const description = esc_html__( 'Your name and address are automatically filled in via your PostNL account. That saves you from having to fill in the form!', 'postnl-for-woocommerce' );
 
 	return (
 		<div className="button--postnl-container">

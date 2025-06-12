@@ -250,18 +250,22 @@ class Fill_In_With_Postnl {
 			);
 		}
 
-		$code_verifier = bin2hex( random_bytes( 32 ) );
-		// phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.obfuscation_base64_encode
-		$code_challenge = rtrim( strtr( base64_encode( hash( 'sha256', $code_verifier, true ) ), '+/', '-_' ), '=' );
-
 		if ( null === WC()->session ) {
 			if ( function_exists( 'wc_load_cart' ) ) {
 				wc_load_cart(); // Force session start
 			}
 		}
-		WC()->session->set( 'postnl_code_verifier', $code_verifier );
+		
+		if ( ! WC()->session->get( 'postnl_code_verifier' ) ) {
+			$code_verifier = bin2hex( random_bytes( 32 ) );
+			WC()->session->set( 'postnl_code_verifier', $code_verifier );
+		} else {
+			$code_verifier = WC()->session->get( 'postnl_code_verifier' );
+		}
 
-		$redirect_uri = $this->settings->get_redirect_uri( $code_challenge );
+		// phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.obfuscation_base64_encode
+		$code_challenge = rtrim( strtr( base64_encode( hash( 'sha256', $code_verifier, true ) ), '+/', '-_' ), '=' );
+		$redirect_uri   = $this->settings->get_redirect_uri( $code_challenge );
 
 		return new WP_REST_Response(
 			array(

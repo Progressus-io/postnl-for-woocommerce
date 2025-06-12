@@ -13,16 +13,8 @@ export const FillBlock = ( { checkoutExtensionData } ) => {
 	useEffect( () => {
 		if ( postnlData?.fill_in_with_postnl_settings?.is_fill_in_with_postnl_enabled ) {
 			setShowButton( true );
-			// Register your data under the “postnl” key
-			if ( setExtensionData ) {
-				setExtensionData( 'postnl', {
-					houseNumber: '',
-					billingCountry: '',
-					billingState: '',
-				} );
-			}
 		}
-	}, [ postnlData, setExtensionData ] );
+	}, [ postnlData ] );
 
 	if ( ! showButton ) {
 		return null;
@@ -50,10 +42,10 @@ export const FillBlock = ( { checkoutExtensionData } ) => {
             if ( data.success && data.data.redirect_uri ) {
                 window.location.href = data.data.redirect_uri;
             } else {
-                alert( esc_html__( 'Unable to connect to PostNL. Please try again later.', 'postnl-for-woocommerce' ) );
+                alert( __( 'Unable to connect to PostNL. Please try again later.', 'postnl-for-woocommerce' ) );
             }
         } catch ( error ) {
-            alert( esc_html__( 'An error occurred. Please try again.', 'postnl-for-woocommerce' ) );
+            alert( __( 'An error occurred. Please try again.', 'postnl-for-woocommerce' ) );
         } finally {
             setIsLoading( false );
         }
@@ -87,12 +79,12 @@ export const FillBlock = ( { checkoutExtensionData } ) => {
 			}
 		} catch ( err ) {
 			console.error( 'Failed to retrieve PostNL address:', err );
-			alert( esc_html__( 'Failed to retrieve PostNL address. Please try again.', 'postnl-for-woocommerce' ) );
+			alert( __( 'Failed to retrieve PostNL address. Please try again.', 'postnl-for-woocommerce' ) );
 		}
 	};
 
-	const title       = esc_html__( 'Fill in with PostNL', 'postnl-for-woocommerce' );
-	const description = esc_html__( 'Your name and address are automatically filled in via your PostNL account. That saves you from having to fill in the form!', 'postnl-for-woocommerce' );
+	const title       = __( 'Fill in with PostNL', 'postnl-for-woocommerce' );
+	const description = __( 'Your name and address are automatically filled in via your PostNL account. That saves you from having to fill in the form!', 'postnl-for-woocommerce' );
 
 	return (
 		<div className="button--postnl-container">

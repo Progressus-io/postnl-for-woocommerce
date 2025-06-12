@@ -36,7 +36,28 @@ class Fill_In_With_Postnl {
 		add_filter( 'render_block', array( $this, 'postnl_woocommerce_cart_block_do_actions' ), 9999, 2 );
 		add_action( 'rest_api_init', array( $this, 'register_rest_routes' ) );
 		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_scripts' ) );
+		add_action( 'wp_ajax_nopriv_get_postnl_user_info', array( $this, 'handle_postnl_user_info' ) );
+		add_action( 'wp_ajax_get_postnl_user_info', array( $this, 'handle_postnl_user_info' ) );
+
 		$this->maybe_add_hooks();
+	}
+
+	/**
+	 * Handle the AJAX request to get PostNL user info.
+	 *
+	 * This method retrieves user data stored in the WooCommerce session and returns it as a JSON response.
+	 *
+	 * @return void
+	 */
+	public function handle_postnl_user_info(): void {
+		if ( ! $this->settings->is_fill_in_with_postnl_enabled() ) {
+			wp_send_json_error( 'Fill in with PostNL is not enabled or Client ID is missing.' );
+		}
+		$data = WC()->session->get( 'postnl_user_data' );
+		if ( ! $data ) {
+			wp_send_json_error( 'No user data' );
+		}
+		wp_send_json_success( $data );
 	}
 
 	/**
@@ -229,7 +250,13 @@ class Fill_In_With_Postnl {
 			);
 		}
 
-		$redirect_uri = $this->settings->get_redirect_uri();
+		$code_verifier = bin2hex( random_bytes( 32 ) );
+		// phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.obfuscation_base64_encode
+		$code_challenge = rtrim( strtr( base64_encode( hash( 'sha256', $code_verifier, true ) ), '+/', '-_' ), '=' );
+
+		WC()->session->set( 'postnl_code_verifier', $code_verifier );
+
+		$redirect_uri = $this->settings->get_redirect_uri( $code_challenge );
 
 		return new WP_REST_Response(
 			array(

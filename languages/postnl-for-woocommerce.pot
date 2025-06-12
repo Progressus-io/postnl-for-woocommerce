@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2025-05-29T12:36:22+00:00\n"
+"POT-Creation-Date: 2025-06-12T13:14:46+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.11.0\n"
 "X-Domain: postnl-for-woocommerce\n"
@@ -133,6 +133,32 @@ msgstr ""
 #: build/postnl-container-frontend.js:1
 #: src/Checkout_Blocks/js/postnl-container/block.js:30
 msgid "Dropoff Points"
+msgstr ""
+
+#: src/Frontend/Fill_In_With_Postnl.php:247
+msgid "Fill in with PostNL is not enabled or Client ID is missing."
+msgstr ""
+
+#: src/Frontend/Fill_In_With_Postnl_Handler.php:71
+msgid "Login session expired. Please try again."
+msgstr ""
+
+#. translators: %s is the error message from PostNL
+#: src/Frontend/Fill_In_With_Postnl_Handler.php:95
+msgid "PostNL Token Request Error: %s"
+msgstr ""
+
+#: src/Frontend/Fill_In_With_Postnl_Handler.php:108
+msgid "PostNL: Access token not found"
+msgstr ""
+
+#. translators: %s is the error message from PostNL
+#: src/Frontend/Fill_In_With_Postnl_Handler.php:127
+msgid "PostNL User Info Error: %s"
+msgstr ""
+
+#: src/Frontend/Fill_In_With_Postnl_Handler.php:142
+msgid "Incomplete user data."
 msgstr ""
 
 #: src/Helper/Mapping.php:30
@@ -805,7 +831,7 @@ msgstr ""
 #: templates/checkout/postnl-fill-in-with-button.php:13
 #: templates/checkout/postnl-fill-in-with-button.php:23
 #: build/postnl-fill-in-with-frontend.js:1
-#: src/Checkout_Blocks/js/postnl-fill-in-with/block.js:30
+#: src/Checkout_Blocks/js/postnl-fill-in-with/block.js:86
 msgid "Fill in with PostNL"
 msgstr ""
 
@@ -859,11 +885,8 @@ msgid "Cart Button"
 msgstr ""
 
 #: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:100
-msgid "Automatically render button in cart page"
-msgstr ""
-
 #: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:101
-msgid "Automatically render checkout button in cart page"
+msgid "Automatically render button in cart page"
 msgstr ""
 
 #: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:107
@@ -921,19 +944,67 @@ msgid "After Buttons"
 msgstr ""
 
 #: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:179
+msgid "Button Styling"
+msgstr ""
+
 #: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:184
-msgid "Custom CSS"
+msgid "Button Background Color"
 msgstr ""
 
 #: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:185
+msgid "Select the background color for the PostNL button."
+msgstr ""
+
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:193
+msgid "Button Border"
+msgstr ""
+
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:194
+msgid "Define the border style for the PostNL button (e.g., 1px solid #000000)."
+msgstr ""
+
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:202
+msgid "Button Alignment"
+msgstr ""
+
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:203
+msgid "Select the alignment for the PostNL button."
+msgstr ""
+
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:209
+msgid "Left"
+msgstr ""
+
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:210
+msgid "Center"
+msgstr ""
+
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:211
+msgid "Right"
+msgstr ""
+
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:215
+msgid "Button Hover Background Color"
+msgstr ""
+
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:216
+msgid "Select the background color for the PostNL button on hover."
+msgstr ""
+
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:230
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:235
+msgid "Custom CSS"
+msgstr ""
+
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:236
 msgid "Add your custom styles for the PostNL button. This will be printed in the site header."
 msgstr ""
 
-#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:196
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:248
 msgid "I understand that the PostNL address fields are activated (= separate field for zipcode, housnumber, housenumber extension and street) to let consumers fill in their shipping address with the PostNL app."
 msgstr ""
 
-#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:280
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:339
 msgid "You must enable at least one \"Automatically render button\" option in Cart, Checkout, or Minicart."
 msgstr ""
 
@@ -1647,7 +1718,7 @@ msgstr ""
 
 #: templates/checkout/postnl-fill-in-with-button.php:32
 #: build/postnl-fill-in-with-frontend.js:1
-#: src/Checkout_Blocks/js/postnl-fill-in-with/block.js:31
+#: src/Checkout_Blocks/js/postnl-fill-in-with/block.js:87
 msgid "Your name and address are automatically filled in via your PostNL account. That saves you from having to fill in the form!"
 msgstr ""
 
@@ -1657,12 +1728,26 @@ msgstr ""
 msgid "In this email you will find the barcode you need to return your order. Scan this barcode at a PostNL point to print your return label. Please note, wait at least 10 minutes before scanning the barcode after receipt of this mail."
 msgstr ""
 
+#: build/postnl-fill-in-with-frontend.js:1
+#: src/Checkout_Blocks/js/postnl-fill-in-with/block.js:45
+msgid "Unable to connect to PostNL. Please try again later."
+msgstr ""
+
+#: build/postnl-fill-in-with-frontend.js:1
+#: src/Checkout_Blocks/js/postnl-fill-in-with/block.js:48
+msgid "An error occurred. Please try again."
+msgstr ""
+
 #: src/Checkout_Blocks/js/postnl-delivery-day/edit.js:12
 msgid "PostNL dilvery day Options"
 msgstr ""
 
 #: src/Checkout_Blocks/js/postnl-dropoff-points/edit.js:12
 msgid "PostNL Dropof point Options"
+msgstr ""
+
+#: src/Checkout_Blocks/js/postnl-fill-in-with/block.js:82
+msgid "Failed to retrieve PostNL address. Please try again."
 msgstr ""
 
 #: build/Checkout_Blocks/js/postnl-container/block.json

@@ -6,7 +6,7 @@
             this.prefill_checkout_fields();
 		},
 
-		handle_login_button: function () {
+        handle_login_button: function () {
             const button = $( '#postnl-login-button' );
             if ( button.length ) {
                 button.on( 'click', function (e) {

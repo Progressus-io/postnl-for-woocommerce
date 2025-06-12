@@ -25,9 +25,17 @@ class Fill_In_With_Postnl_Handler {
 	protected $settings;
 
 	/**
+	 * Logger instance.
+	 *
+	 * @var \WC_Logger
+	 */
+	protected $logger;
+
+	/**
 	 * Constructor.
 	 */
 	public function __construct() {
+		$this->logger   = wc_get_logger();
 		$this->settings = new Fill_In_With_PostNL_Settings();
 		add_action( 'template_redirect', array( $this, 'maybe_handle_oauth_callback' ) );
 	}
@@ -59,6 +67,7 @@ class Fill_In_With_Postnl_Handler {
 		$verifier = isset( $_SESSION['postnl_code_verifier'] ) ? sanitize_text_field( wp_unslash( $_SESSION['postnl_code_verifier'] ) ) : null;
 
 		if ( ! $verifier ) {
+			$this->logger->error( 'Login session expired. Please try again.', array( 'source' => 'postnl-for-woocommerce' ) );
 			wc_add_notice( esc_html__( 'Login session expired. Please try again.', 'postnl-for-woocommerce' ), 'error' );
 			return;
 		}
@@ -79,7 +88,7 @@ class Fill_In_With_Postnl_Handler {
 		);
 
 		if ( is_wp_error( $token_response ) ) {
-			error_log( 'PostNL Token Request Error: ' . $token_response->get_error_message() );
+			$this->logger->error( 'PostNL Token Request Error: ' . $token_response->get_error_message(), array( 'source' => 'postnl-for-woocommerce' ) );
 			wc_add_notice(
 				sprintf(
 					/* translators: %s is the error message from PostNL */
@@ -95,7 +104,7 @@ class Fill_In_With_Postnl_Handler {
 		$access_token = $body['access_token'] ?? null;
 
 		if ( ! $access_token ) {
-			error_log( 'PostNL: Access token not found in response' );
+			$this->logger->error( 'PostNL: Access token not found in response', array( 'source' => 'postnl-for-woocommerce' ) );
 			wc_add_notice( esc_html__( 'PostNL: Access token not found', 'postnl-for-woocommerce' ), 'error' );
 			return;
 		}
@@ -111,7 +120,7 @@ class Fill_In_With_Postnl_Handler {
 		);
 
 		if ( is_wp_error( $user_info_response ) ) {
-			error_log( 'PostNL User Info Error: ' . $user_info_response->get_error_message() );
+			$this->logger->error( 'PostNL User Info Error: ' . $user_info_response->get_error_message(), array( 'source' => 'postnl-for-woocommerce' ) );
 			wc_add_notice(
 				sprintf(
 					/* translators: %s is the error message from PostNL */
@@ -130,7 +139,6 @@ class Fill_In_With_Postnl_Handler {
 			empty( $user_data['person'] ) ||
 			empty( $user_data['primaryAddress'] )
 		) {
-			error_log( 'PostNL: Incomplete user data' );
 			wc_add_notice( esc_html__( 'Incomplete user data.', 'postnl-for-woocommerce' ), 'error' );
 			return;
 		}

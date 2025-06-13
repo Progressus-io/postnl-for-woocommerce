@@ -56,7 +56,7 @@ class Utils {
 	}
 
 	/**
-	 * Get available country for the adult orders.
+	 * Get the list of countries where adults-only products can be shipped.
 	 *
 	 * @return array.
 	 */

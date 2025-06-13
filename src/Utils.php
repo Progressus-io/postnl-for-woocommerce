@@ -755,11 +755,9 @@ class Utils {
 				continue;
 			}
 
-			$is_letterbox_product = $product->get_meta( Product\Single::LETTERBOX_PARCEL );
-
 			// If one of the item is not letterbox product, then the order is not eligible automatic letterbox.
 			// Thus should return false immediately.
-			if ( 'yes' !== $is_letterbox_product ) {
+			if ( ! self::is_letterbox_parcel_product( $product ) ) {
 				return false;
 			}
 
@@ -837,6 +835,16 @@ class Utils {
 	 */
 	public static function is_adults_only_product( WC_Product $product ): bool {
 		return 'yes' === $product->get_meta( Single::ADULTS_ONLY_FIELD );
+	}
+
+	/**
+	 * Check if the given product is marked as Letterbox Parcel.
+	 *
+	 * @param WC_Product $product Product object.
+	 * @return bool
+	 */
+	public static function is_letterbox_parcel_product( WC_Product $product ): bool {
+		return 'yes' === $product->get_meta( Single::LETTERBOX_PARCEL );
 	}
 
 	/**

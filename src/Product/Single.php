@@ -146,7 +146,7 @@ class Single {
 		add_action( 'woocommerce_variation_options_pricing', array( $this, 'additional_product_variation_shipping_options' ), 10, 3 );
 		add_action( 'woocommerce_save_product_variation', array( $this, 'save_additional_product_variation_options' ), 10, 2 );
 		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_admin_product_edit_script' ) );
-		add_action( 'woocommerce_before_product_object_save', array( $this, 'validate_product_before_save' ), 100, 1 );
+		add_action( 'woocommerce_before_product_object_save', array( $this, 'validate_conflicting_options' ), 100, 1 );
 
 	}
 
@@ -262,24 +262,14 @@ class Single {
 	}
 
 	/**
-	 * Run the 18+ / Letterbox conflict check right before WooCommerce
-	 * saves the product object.
-	 *
-	 * @param \WC_Product $product
-	 */
-	public function validate_product_before_save( \WC_Product $product ) {
-		self::validate_conflicting_options( $product ); // uses the same logic
-	}
-
-	/**
-	 * Make sure a product cannot have BOTH “18+” and “Letterbox Parcel”.
+	 * Prevent a product from being marked as both "18+" and "Letterbox Parcel".
 	 *
 	 * @param \WC_Product $product Current product object.
 	 */
 	public static function validate_conflicting_options( \WC_Product $product ) {
 		// Read the current meta values.
 		$is_adult     = Utils::is_adults_only_product( $product );
-		$is_letterbox = 'yes' === $product->get_meta( self::LETTERBOX_PARCEL );
+		$is_letterbox = Utils::is_letterbox_parcel_product( $product );
 
 		// If both check-boxes are turned on, remove letterbox metadata.
 		if ( $is_adult && $is_letterbox ) {

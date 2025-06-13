@@ -799,10 +799,7 @@ class Utils {
 			return false;
 		}
 
-		$products = $order->get_items();
-		$is_adult = self::contains_adults_only_products( $products );
-
-		return $is_adult;
+		return self::contains_adults_only_products( $order->get_items() );
 	}
 
 	/**

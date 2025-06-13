@@ -805,7 +805,7 @@ class Utils {
 	}
 
 	/**
-	 * Check if any product is for adult.
+	 * Determine if any products are marked as adults-only.
 	 *
 	 * @param array $products WC_Products[] or order_item[].
 	 *

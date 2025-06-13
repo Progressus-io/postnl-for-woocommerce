@@ -24,11 +24,11 @@
                             if ( response.success && response.data.redirect_uri ) {
                                 window.location.href = response.data.redirect_uri;
                             } else {
-                                alert('Failed to initiate PostNL login.');
+                                alert( __( 'Failed to initiate PostNL login.', 'postnl-for-woocommerce' ) );  
                             }
                         },
-                        error: function ( xhr, status, error ) {
-                            alert( 'Error fetching redirect URI: ' + error );
+                        error: function ( response ) {
+                            alert( response.data.message );
                         },
                         complete: function () {
                             button.prop( 'disabled', false );

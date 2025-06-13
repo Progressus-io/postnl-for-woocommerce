@@ -10,7 +10,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 ?>
 <div class="button--postnl-container">
-	<a type="button" id="postnl-login-button" aria-label="<?php esc_html_e( 'Fill in with PostNL', 'postnl-for-woocommerce' ); ?>" href="#">
+	<button id="postnl-login-button" aria-label="<?php esc_html_e( 'Fill in with PostNL', 'postnl-for-woocommerce' ); ?>" href="#">
 		<div id="postnl-login-button__outline"></div>
 		<span id="postnl-login-button__text">
 			<span id="postnl-login-button__first-text">
@@ -19,19 +19,19 @@ if ( ! defined( 'ABSPATH' ) ) {
 				</svg>
 			</span>
 			<span id="postnl-login-button__second-text">
-				<font style="vertical-align: inherit;">
-					<font style="vertical-align: inherit;"><?php esc_html_e( 'Fill in with PostNL', 'postnl-for-woocommerce' ); ?></font>
-				</font>
+				<span class="vertical-align-inherit">
+					<span class="vertical-align-inherit"><?php esc_html_e( 'Fill in with PostNL', 'postnl-for-woocommerce' ); ?></span>
+				</span>
 			</span>
 		</span>
-	</a>
+	</button>
 	<div class="col-12 hidden-md">
 		<p>
-			<font style="vertical-align: inherit;">
-				<font style="vertical-align: inherit;">
+			<span class="vertical-align-inherit">
+				<span class="vertical-align-inherit">
 					<?php echo esc_html__( 'Your name and address are automatically filled in via your PostNL account. That saves you from having to fill in the form!', 'postnl-for-woocommerce' ); ?>
-				</font>
-			</font>
+				</span>
+			</span>
 		</p>
 	</div>
 </div>

@@ -4,21 +4,17 @@ import { getSetting } from '@woocommerce/settings';
 import { useDispatch } from '@wordpress/data';
 
 export const FillBlock = ( { checkoutExtensionData } ) => {
-	const { setExtensionData } = checkoutExtensionData || {};
-	const postnlData = getSetting( 'postnl-for-woocommerce-blocks_data', {} );
-	const [ showButton, setShowButton ] = useState( false );
-	const [ isLoading, setIsLoading ]   = useState( false );
-	const { __experimentalSetBillingAddress, __experimentalSetShippingAddress } = useDispatch('wc/store/checkout');
+    const postnlData = getSetting( 'postnl-for-woocommerce-blocks_data', {} );
+    const [ showButton, setShowButton ] = useState( false );
+    const [ isLoading, setIsLoading ]   = useState(false);
+    const { __experimentalSetBillingAddress, __experimentalSetShippingAddress } = useDispatch( 'wc/store/checkout' );
 
 	useEffect( () => {
 		if ( postnlData?.fill_in_with_postnl_settings?.is_fill_in_with_postnl_enabled ) {
 			setShowButton( true );
+			prefillCheckoutFields();
 		}
 	}, [ postnlData ] );
-
-	if ( ! showButton ) {
-		return null;
-	}
 
 	const handleButtonClick = async ( event ) => {
         event.preventDefault();
@@ -35,7 +31,7 @@ export const FillBlock = ( { checkoutExtensionData } ) => {
                 body: JSON.stringify( {
                     nonce: postnlSettings.nonce,
                 } ),
-            });
+            } );
 
             const data = await response.json();
 
@@ -51,10 +47,17 @@ export const FillBlock = ( { checkoutExtensionData } ) => {
         }
     };
 
-	const handlePostnlReturn = async ( token ) => {
+	const prefillCheckoutFields = async () => {
 		try {
-			const response = await fetch( postnlSettings.getUserInfoUrl, {
-				method: 'GET',
+			const response = await fetch( postnlSettings.ajaxUrl, {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/x-www-form-urlencoded',
+				},
+				body: new URLSearchParams( {
+					action: 'get_postnl_user_info',
+					nonce: postnlSettings.ajaxNonce,
+				} ),
 			} );
 
 			const data = await response.json();
@@ -70,18 +73,24 @@ export const FillBlock = ( { checkoutExtensionData } ) => {
                     city: primaryAddress.cityName || '',
 					house_number: primaryAddress.houseNumber || '',
                     postcode: primaryAddress.postalCode || '',
-                    country: primaryAddress.countryName || 'NL', // Default to NL for PostNL
+                    country: primaryAddress.countryName || 'NL', // Default to NL for PostNL.
                 };
 
                 // Update both billing and shipping addresses.
                 await __experimentalSetBillingAddress( addressFields );
                 await __experimentalSetShippingAddress( addressFields );
+			} else {
+				console.error( 'Failed to retrieve PostNL user data:', data.message );
 			}
 		} catch ( err ) {
-			console.error( 'Failed to retrieve PostNL address:', err );
+			console.error( 'Error fetching PostNL user data:', err );
 			alert( __( 'Failed to retrieve PostNL address. Please try again.', 'postnl-for-woocommerce' ) );
 		}
 	};
+
+    if ( ! showButton ) {
+        return null;
+    }
 
 	const title       = __( 'Fill in with PostNL', 'postnl-for-woocommerce' );
 	const description = __( 'Your name and address are automatically filled in via your PostNL account. That saves you from having to fill in the form!', 'postnl-for-woocommerce' );

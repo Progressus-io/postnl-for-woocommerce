@@ -153,7 +153,7 @@ class Single {
 	/**
 	 * Enqueue JS file in product single page.
 	 */
-	public function enqueue_product_single_css_script() {
+	public function enqueue_admin_product_edit_script() {
 		if ( ! is_admin() ) {
 			return;
 		}

@@ -33,7 +33,6 @@ export const Block = ( { checkoutExtensionData } ) => {
 	const [ activeTab, setActiveTab ] = useState( tabs[ 0 ].id );
 
 	const letterbox = postnlData.letterbox || false;
-
 	const { CART_STORE_KEY, CHECKOUT_STORE_KEY } = window.wc.wcBlocksData;
 
 	// Retrieve customer data from WooCommerce cart store

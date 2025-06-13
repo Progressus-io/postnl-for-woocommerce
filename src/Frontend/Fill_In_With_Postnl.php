@@ -8,6 +8,7 @@
 namespace PostNLWooCommerce\Frontend;
 
 use WP_REST_Response;
+use PostNLWooCommerce\Session;
 use PostNLWooCommerce\Shipping_Method\Fill_In_With_PostNL_Settings;
 
 defined( 'ABSPATH' ) || exit;
@@ -26,6 +27,13 @@ class Fill_In_With_Postnl {
 	protected $settings;
 
 	/**
+	 * Session variable key for verifier.
+	 *
+	 * @var string
+	 */
+	private static string $session_verifier_key = 'code_verifier';
+
+	/**
 	 * Constructor.
 	 * Initializes the button rendering based on admin settings.
 	 */
@@ -36,28 +44,8 @@ class Fill_In_With_Postnl {
 		add_filter( 'render_block', array( $this, 'postnl_woocommerce_cart_block_do_actions' ), 9999, 2 );
 		add_action( 'rest_api_init', array( $this, 'register_rest_routes' ) );
 		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_scripts' ) );
-		add_action( 'wp_ajax_nopriv_get_postnl_user_info', array( $this, 'handle_postnl_user_info' ) );
-		add_action( 'wp_ajax_get_postnl_user_info', array( $this, 'handle_postnl_user_info' ) );
-
+		
 		$this->maybe_add_hooks();
-	}
-
-	/**
-	 * Handle the AJAX request to get PostNL user info.
-	 *
-	 * This method retrieves user data stored in the WooCommerce session and returns it as a JSON response.
-	 *
-	 * @return void
-	 */
-	public function handle_postnl_user_info(): void {
-		if ( ! $this->settings->is_fill_in_with_postnl_enabled() ) {
-			wp_send_json_error( 'Fill in with PostNL is not enabled or Client ID is missing.' );
-		}
-		$data = WC()->session->get( 'postnl_user_data' );
-		if ( ! $data ) {
-			wp_send_json_error( 'No user data' );
-		}
-		wp_send_json_success( $data );
 	}
 
 	/**
@@ -256,11 +244,11 @@ class Fill_In_With_Postnl {
 			}
 		}
 		
-		if ( ! WC()->session->get( 'postnl_code_verifier' ) ) {
+		if ( ! Session::get( self::$session_verifier_key ) ) {
 			$code_verifier = bin2hex( random_bytes( 32 ) );
-			WC()->session->set( 'postnl_code_verifier', $code_verifier );
+			Session::set( self::$session_verifier_key, $code_verifier );
 		} else {
-			$code_verifier = WC()->session->get( 'postnl_code_verifier' );
+			$code_verifier = Session::get( self::$session_verifier_key );
 		}
 
 		// phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.obfuscation_base64_encode
@@ -283,8 +271,10 @@ class Fill_In_With_Postnl {
 	 */
 	public function enqueue_scripts(): void {
 		$postnl_checkout_params = array(
-			'rest_url' => rest_url( 'postnl/v1/get-redirect-uri' ),
-			'nonce'    => wp_create_nonce( 'wp_rest' ),
+			'rest_url'   => rest_url( 'postnl/v1/get-redirect-uri' ),
+			'ajax_url'   => admin_url( 'admin-ajax.php' ),
+			'nonce'      => wp_create_nonce( 'wp_rest' ),
+			'ajax_nonce' => wp_create_nonce( 'postnl_user_info' ),
 		);
 
 		wp_enqueue_script(

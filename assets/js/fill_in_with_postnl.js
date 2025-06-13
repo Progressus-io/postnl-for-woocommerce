@@ -39,9 +39,14 @@
         },
 
         prefill_checkout_fields: function () {
+
 			$.ajax( {
-				url: '/wp-admin/admin-ajax.php?action=get_postnl_user_info',
-				method: 'GET',
+                type: 'POST',
+                url: postnlCheckoutParams.ajax_url,
+                data: {
+                    action: 'get_postnl_user_info',
+                    nonce: postnlCheckoutParams.ajax_nonce
+                },
 				success: function( res ) {
 					if ( ! res.success || ! res.data ) return;
 
@@ -66,9 +71,9 @@
 						$( '#shipping_country' ).val( primaryAddress.countryName ).trigger( 'change' );
 					}
 				},
-				error: function( xhr, status, error ) {
-                    alert( 'Error retrieving PostNL user info: ' + error );
-				}
+                error: function ( response ) {
+                    alert( response.data.message );
+                }
 			} );
 		}
 	};

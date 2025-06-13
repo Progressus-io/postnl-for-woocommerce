@@ -315,6 +315,7 @@ class Main {
 		new Frontend\Dropoff_Points();
 		new Frontend\Checkout_Fields();
 		new Frontend\Fill_In_With_Postnl();
+		new Frontend\Fill_In_With_Postnl_Handler();
 	}
 
 	/**

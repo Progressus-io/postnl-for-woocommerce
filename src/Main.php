@@ -101,19 +101,25 @@ class Main {
 		// Throw an admin error informing the user this plugin needs WooCommerce to function.
 		add_action( 'admin_notices', array( $this, 'notice_wc_required' ) );
 
+		if ( ! class_exists( 'WooCommerce' ) ) {
+			return;
+		}
+
+		// Declare WooCommerce features compatibility.
+		add_action( 'before_woocommerce_init', array( $this, 'declare_wc_hpos_compatibility' ) );
+		add_action( 'before_woocommerce_init', array( $this, 'declare_product_editor_compatibility' ) );
+
 		// Throw an admin error informing the user this plugin needs country settings to be NL and BE.
 		add_action( 'admin_notices', array( $this, 'notice_nl_be_required' ) );
 
 		// Throw an admin error informing the user this plugin needs currency settings to be EUR, USD, GBP, CNY.
 		add_action( 'admin_notices', array( $this, 'notice_currency_required' ) );
 
-		if ( ! class_exists( 'WooCommerce' ) || ! Utils::use_available_currency() || ! Utils::use_available_country() ) {
+		if ( ! Utils::use_available_currency() || ! Utils::use_available_country() ) {
 			return;
 		}
 
 		add_action( 'init', array( $this, 'load_plugin' ), 1 );
-		add_action( 'before_woocommerce_init', array( $this, 'declare_wc_hpos_compatibility' ), 10 );
-		add_action( 'before_woocommerce_init', array( $this, 'declare_product_editor_compatibility' ), 10 );
 		// Register the block category.
 		add_action( 'block_categories_all', array( $this, 'register_postnl_block_category' ), 10, 2 );
 		add_filter( 'woocommerce_shipping_methods', array( $this, 'add_shipping_method' ) );

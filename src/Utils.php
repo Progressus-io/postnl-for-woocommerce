@@ -60,7 +60,7 @@ class Utils {
 	 *
 	 * @return array.
 	 */
-	public static function get_available_country_for_adult(): array {
+	public static function get_adults_only_shipping_countries(): array {
 		return array( 'NL' );
 	}
 

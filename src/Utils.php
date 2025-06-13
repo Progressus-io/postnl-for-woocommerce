@@ -8,6 +8,8 @@
 namespace PostNLWooCommerce;
 
 use PostNLWooCommerce\Helper\Mapping;
+use PostNLWooCommerce\Product\Single;
+use WC_Product;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -51,6 +53,15 @@ class Utils {
 	 * @return array.
 	 */
 	public static function get_available_country_for_letterbox() {
+		return array( 'NL' );
+	}
+
+	/**
+	 * Get the list of countries where adults-only products can be shipped.
+	 *
+	 * @return array.
+	 */
+	public static function get_adults_only_shipping_countries(): array {
 		return array( 'NL' );
 	}
 
@@ -674,6 +685,10 @@ class Utils {
 			return false;
 		}
 
+		if ( self::contains_adults_only_products( $cart->get_cart() ) ) {
+			return false;
+		}
+
 		return self::check_products_for_letterbox( $cart->get_cart() );
 	}
 
@@ -740,11 +755,9 @@ class Utils {
 				continue;
 			}
 
-			$is_letterbox_product = $product->get_meta( Product\Single::LETTERBOX_PARCEL );
-
 			// If one of the item is not letterbox product, then the order is not eligible automatic letterbox.
 			// Thus should return false immediately.
-			if ( 'yes' !== $is_letterbox_product ) {
+			if ( ! self::is_letterbox_parcel_product( $product ) ) {
 				return false;
 			}
 
@@ -757,6 +770,81 @@ class Utils {
 
 		// If the total ratio is more than 1, that means order items cannot be packed using letterbox.
 		return $has_letterbox_product && $total_ratio_letterbox_item <= 1;
+	}
+
+	/**
+	 * Determine if the given order contains any adults-only products.
+	 *
+	 * @param \WC_Order|int $order \WC_order or Order ID.
+	 *
+	 * @return boolean
+	 */
+	public static function is_adults_only_order( $order ): bool {
+		if ( 'BE' === wc_get_base_location()['country'] ) {
+			return false;
+		}
+
+		// Check if order id provided.
+		if ( is_int( $order ) ) {
+			$order = wc_get_order( $order );
+		}
+
+		if ( ! is_a( $order, 'WC_Order' ) ) {
+			return false;
+		}
+
+		if ( ! in_array( $order->get_shipping_country(), self::get_adults_only_shipping_countries(), true ) ) {
+			return false;
+		}
+
+		return self::contains_adults_only_products( $order->get_items() );
+	}
+
+	/**
+	 * Determine if any products are marked as adults-only.
+	 *
+	 * @param array $products WC_Products[] or order_item[].
+	 *
+	 * @return bool
+	 */
+	public static function contains_adults_only_products( $products ): bool {
+
+		foreach ( $products as $item_id => $item ) {
+			$product = wc_get_product( $item['product_id'] ?? $item->get_product_id() );
+			if ( ! is_a( $product, 'WC_Product' ) ) {
+				continue;
+			}
+
+			if ( ! $product->needs_shipping() ) {
+				continue;
+			}
+
+			if ( self::is_adults_only_product( $product ) ) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	/**
+	 * Check if the given product is marked as adults-only.
+	 *
+	 * @param WC_Product $product Product object.
+	 * @return bool
+	 */
+	public static function is_adults_only_product( WC_Product $product ): bool {
+		return 'yes' === $product->get_meta( Single::ADULTS_ONLY_FIELD );
+	}
+
+	/**
+	 * Check if the given product is marked as Letterbox Parcel.
+	 *
+	 * @param WC_Product $product Product object.
+	 * @return bool
+	 */
+	public static function is_letterbox_parcel_product( WC_Product $product ): bool {
+		return 'yes' === $product->get_meta( Single::LETTERBOX_PARCEL );
 	}
 
 	/**

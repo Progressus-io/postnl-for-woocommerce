@@ -811,7 +811,7 @@ class Utils {
 	 *
 	 * @return bool
 	 */
-	public static function check_products_for_adults( $products ): bool {
+	public static function contains_adults_only_products( $products ): bool {
 
 		foreach ( $products as $item_id => $item ) {
 			$product = wc_get_product( $item['product_id'] ?? $item->get_product_id() );

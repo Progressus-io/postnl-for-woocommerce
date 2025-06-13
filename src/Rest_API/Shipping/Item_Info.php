@@ -244,7 +244,7 @@ class Item_Info extends Base_Info {
 				continue;
 			}
 
-			$is_adult = ! empty( $product->get_meta( Single::ADULTS_ONLY_FIELD ) ) ? $product->get_meta( Single::ADULTS_ONLY_FIELD ) : 'No';
+			$is_adult = ! empty( $product->get_meta( Single::ADULTS_ONLY_FIELD ) ) ? $product->get_meta( Single::ADULTS_ONLY_FIELD ) : 'no';
 			$hs_code  = ! empty( $product->get_meta( Single::HS_CODE_FIELD ) ) ? $product->get_meta( Single::HS_CODE_FIELD ) : $this->settings->get_hs_tariff_code();
 			$origin   = ! empty( $product->get_meta( Single::ORIGIN_FIELD ) ) ? $product->get_meta( Single::ORIGIN_FIELD ) : $this->settings->get_country_origin();
 

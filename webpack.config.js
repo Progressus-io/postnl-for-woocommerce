@@ -27,6 +27,22 @@ module.exports = {
 			'js',
 			'postnl-container',
 			'frontend.js'
+		),
+		'postnl-fill-in-with': path.resolve(
+			process.cwd(),
+			'src',
+			'Checkout_Blocks',
+			'js',
+			'postnl-fill-in-with',
+			'index.js'
+		),
+		'postnl-fill-in-with-frontend': path.resolve(
+			process.cwd(),
+			'src',
+			'Checkout_Blocks',
+			'js',
+			'postnl-fill-in-with',
+			'frontend.js'
 		)
 
 	},

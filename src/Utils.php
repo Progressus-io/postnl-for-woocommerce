@@ -780,7 +780,7 @@ class Utils {
 	 *
 	 * @return boolean
 	 */
-	public static function is_order_for_adults( $order ): bool {
+	public static function is_adults_only_order( $order ): bool {
 		if ( 'BE' === wc_get_base_location()['country'] ) {
 			return false;
 		}

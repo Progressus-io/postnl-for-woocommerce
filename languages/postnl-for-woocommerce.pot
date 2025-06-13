@@ -3,13 +3,13 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PostNL for WooCommerce 5.7.3\n"
-"Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/woo-postnl\n"
+"Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/postnl-for-woocommerce\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2025-06-12T13:53:49+00:00\n"
+"POT-Creation-Date: 2025-06-13T11:21:37+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.11.0\n"
 "X-Domain: postnl-for-woocommerce\n"
@@ -40,7 +40,7 @@ msgid "https://postnl.post/"
 msgstr ""
 
 #: src/Checkout_Blocks/Extend_Block_Core.php:79
-#: src/Frontend/Container.php:324
+#: src/Frontend/Container.php:325
 msgid "This is not a valid address!"
 msgstr ""
 
@@ -155,7 +155,7 @@ msgstr ""
 
 #: src/Helper/Mapping.php:40
 #: src/Shipping_Method/Settings.php:579
-#: src/Utils.php:637
+#: src/Utils.php:638
 msgid "Standard Shipment Belgium"
 msgstr ""
 
@@ -401,7 +401,7 @@ msgid "Delivery Date"
 msgstr ""
 
 #: src/Order/OrdersList.php:147
-#: src/Utils.php:582
+#: src/Utils.php:583
 #: templates/checkout/postnl-delivery-day.php:75
 #: build/postnl-container-frontend.js:1
 #: src/Checkout_Blocks/js/postnl-delivery-day/block.js:322
@@ -1142,7 +1142,7 @@ msgid "Drop off Days"
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:391
-#: src/Utils.php:30
+#: src/Utils.php:31
 msgid "Monday"
 msgstr ""
 
@@ -1151,32 +1151,32 @@ msgid "Select which days orders will be shipped."
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:398
-#: src/Utils.php:31
+#: src/Utils.php:32
 msgid "Tuesday"
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:403
-#: src/Utils.php:32
+#: src/Utils.php:33
 msgid "Wednesday"
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:408
-#: src/Utils.php:33
+#: src/Utils.php:34
 msgid "Thursday"
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:413
-#: src/Utils.php:34
+#: src/Utils.php:35
 msgid "Friday"
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:418
-#: src/Utils.php:35
+#: src/Utils.php:36
 msgid "Saturday"
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:423
-#: src/Utils.php:36
+#: src/Utils.php:37
 msgid "Sunday"
 msgstr ""
 
@@ -1301,13 +1301,13 @@ msgid "Select a default shipping option for domestic orders that are shipped wit
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:556
-#: src/Utils.php:630
+#: src/Utils.php:631
 msgid "Standard shipment"
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:557
 #: src/Shipping_Method/Settings.php:632
-#: src/Utils.php:631
+#: src/Utils.php:632
 msgid "ID Check"
 msgstr ""
 
@@ -1316,22 +1316,22 @@ msgid "ID Check + Insured Shipping"
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:560
-#: src/Utils.php:632
+#: src/Utils.php:633
 msgid "Return if no answer"
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:561
-#: src/Utils.php:633
+#: src/Utils.php:634
 msgid "Signature on Delivery"
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:562
-#: src/Utils.php:634
+#: src/Utils.php:635
 msgid "Only Home Address"
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:563
-#: src/Utils.php:635
+#: src/Utils.php:636
 msgid "Letterbox"
 msgstr ""
 
@@ -1382,7 +1382,7 @@ msgstr ""
 #: src/Shipping_Method/Settings.php:583
 #: src/Shipping_Method/Settings.php:600
 #: src/Shipping_Method/Settings.php:617
-#: src/Utils.php:638
+#: src/Utils.php:639
 msgid "Boxable Packet"
 msgstr ""
 
@@ -1461,7 +1461,7 @@ msgid "Standard Shipping"
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:633
-#: src/Utils.php:640
+#: src/Utils.php:641
 msgid "Insured Shipping"
 msgstr ""
 
@@ -1479,42 +1479,42 @@ msgid "Select a default shipping option for the orders shipped internationally (
 msgstr ""
 
 #. translators: %s is a field argument.
-#: src/Utils.php:336
+#: src/Utils.php:337
 msgid "Please specify a \"%s\" argument"
 msgstr ""
 
-#: src/Utils.php:636
+#: src/Utils.php:637
 msgid "Packet"
 msgstr ""
 
-#: src/Utils.php:639
+#: src/Utils.php:640
 msgid "Track & Trace"
 msgstr ""
 
-#: src/Utils.php:648
+#: src/Utils.php:649
 msgid "Parcels Non-EU Insured"
 msgstr ""
 
-#: src/Utils.php:649
+#: src/Utils.php:650
 msgid "Parcels non-EU Insured Plus"
 msgstr ""
 
-#: src/Utils.php:655
+#: src/Utils.php:656
 msgid "Parcels EU"
 msgstr ""
 
-#: src/Utils.php:656
-#: src/Utils.php:663
+#: src/Utils.php:657
+#: src/Utils.php:664
 msgid "Insured Plus"
 msgstr ""
 
-#: src/Utils.php:662
+#: src/Utils.php:663
 msgid "Parcels Non-EU"
 msgstr ""
 
 #: templates/checkout/postnl-container.php:21
 #: build/postnl-container-frontend.js:1
-#: src/Checkout_Blocks/js/postnl-container/block.js:405
+#: src/Checkout_Blocks/js/postnl-container/block.js:404
 msgid "These items are eligible for letterbox delivery."
 msgstr ""
 

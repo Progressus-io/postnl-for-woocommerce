@@ -81,11 +81,12 @@ Follow these instructions (https://www.postnl.nl/Images/aanvragen-api-key-stappe
 
 == Changelog ==
 
-### 5.8.0 (YYYY-MM-DD) =
+### 5.8.0 (2025-xx-xx) =
+* Add: Ability for marking products as 18+ and automatically apply ID Check to orders containing them.
 * Add: A new contact type 02 with sender email to the shipping API request.
 
 = 5.7.3 (2025-05-06) =
-* Tweak : Use `plugins_loaded` hook to add the shipping method for Flexible shipping and Polylang plugins compatibility.
+* Tweak: Use `plugins_loaded` hook to add the shipping method for Flexible shipping and Polylang plugins compatibility.
 
 = 5.7.2 (2025-04-29) =
 * Fix: Single label now printed according to the selected start position.

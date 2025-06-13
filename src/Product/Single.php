@@ -279,7 +279,7 @@ class Single {
 	public static function validate_conflicting_options( \WC_Product $product ) {
 
 		// Read the current meta values.
-		$is_adult     = 'yes' === $product->get_meta( self::ADULTS_ONLY_FIELD );
+		$is_adult     = Utils::is_adults_only_product( $product );
 		$is_letterbox = 'yes' === $product->get_meta( self::LETTERBOX_PARCEL );
 
 		// If both check-boxes are turned on, fix the data.

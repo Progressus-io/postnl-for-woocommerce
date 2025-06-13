@@ -244,7 +244,7 @@ class Item_Info extends Base_Info {
 				continue;
 			}
 
-			$is_adult = ! empty( $product->get_meta( Single::ADULTS_ONLY_FIELD ) ) ? $product->get_meta( Single::ADULTS_ONLY_FIELD ) : 'no';
+			$is_adult = Utils::is_adults_only_product( $product );
 			$hs_code  = ! empty( $product->get_meta( Single::HS_CODE_FIELD ) ) ? $product->get_meta( Single::HS_CODE_FIELD ) : $this->settings->get_hs_tariff_code();
 			$origin   = ! empty( $product->get_meta( Single::ORIGIN_FIELD ) ) ? $product->get_meta( Single::ORIGIN_FIELD ) : $this->settings->get_country_origin();
 
@@ -280,7 +280,7 @@ class Item_Info extends Base_Info {
 	 */
 	public function is_adult_order(): bool {
 		foreach ( $this->api_args['order_details']['contents'] as $item ) {
-			if ( ! empty( $item['is_adult'] ) && 'yes' === $item['is_adult'] ) {
+			if ( ! empty( $item['is_adult'] ) ) {
 				return true;
 			}
 		}

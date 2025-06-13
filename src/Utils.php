@@ -774,7 +774,7 @@ class Utils {
 	}
 
 	/**
-	 * Check if current order is for adult.
+	 * Determine if the given order contains any adults-only products.
 	 *
 	 * @param \WC_Order|int $order \WC_order or Order ID.
 	 *

@@ -10,7 +10,7 @@ export const FillBlock = ( { checkoutExtensionData } ) => {
     const { __experimentalSetBillingAddress, __experimentalSetShippingAddress } = useDispatch( 'wc/store/checkout' );
 
 	useEffect( () => {
-		if ( postnlData?.fill_in_with_postnl_settings?.is_fill_in_with_postnl_enabled ) {
+		if ( postnlSettings?.is_enabled_for_checkout ) {
 			setShowButton( true );
 			prefillCheckoutFields();
 		}

@@ -161,19 +161,20 @@ class Blocks_Integration implements IntegrationInterface {
 		if ( 'postnl-fill-in-with-frontend' === $handle ) {
 			$selected_location = $this->fill_in_with_settings->get_button_placement( 'checkout' );
 			if ( 'after_customer_details' === $selected_location ) {
-				$selected_location = 'woocommerce/checkout-shipping-address-block';
+				$block_location = 'woocommerce/checkout-billing-address-block';
 			} else {
-				$selected_location = 'woocommerce/checkout-contact-information-block';
+				$block_location = 'woocommerce/checkout-contact-information-block';
 			}
 			wp_localize_script(
 				$handle,
 				'postnlSettings',
 				array(
-					'blockLocation' => get_option( 'postnl_block_location', $selected_location ),
-					'restUrl'       => esc_url_raw( rest_url( 'postnl/v1/get-redirect-uri' ) ),
-					'ajaxUrl'      => esc_url_raw( admin_url( 'admin-ajax.php' ) ),
-					'ajaxNonce'     => wp_create_nonce( 'postnl_user_info' ),
-					'nonce'         => wp_create_nonce( 'postnl_redirect_nonce' ),
+					'is_enabled_for_checkout' => $this->fill_in_with_settings->is_fill_in_with_postnl_enabled_for_checkout(),
+					'blockLocation'           => $block_location,
+					'restUrl'                 => esc_url_raw( rest_url( 'postnl/v1/get-redirect-uri' ) ),
+					'ajaxUrl'                 => esc_url_raw( admin_url( 'admin-ajax.php' ) ),
+					'ajaxNonce'               => wp_create_nonce( 'postnl_user_info' ),
+					'nonce'                   => wp_create_nonce( 'postnl_redirect_nonce' ),
 				)
 			);
 		}

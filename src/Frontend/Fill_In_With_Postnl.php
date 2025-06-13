@@ -44,7 +44,7 @@ class Fill_In_With_Postnl {
 		add_filter( 'render_block', array( $this, 'postnl_woocommerce_cart_block_do_actions' ), 9999, 2 );
 		add_action( 'rest_api_init', array( $this, 'register_rest_routes' ) );
 		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_scripts' ) );
-		
+
 		$this->maybe_add_hooks();
 	}
 
@@ -162,7 +162,7 @@ class Fill_In_With_Postnl {
 		foreach ( $locations as $key => $hooks ) {
 			if ( $this->is_enabled_for( $key ) ) {
 				foreach ( (array) $hooks as $hook ) {
-					add_action( $hook, array( $this, 'render_button' ), 20 );
+					add_action( $hook, array( $this, 'render_button' ), 10 );
 				}
 			}
 		}
@@ -240,10 +240,10 @@ class Fill_In_With_Postnl {
 
 		if ( null === WC()->session ) {
 			if ( function_exists( 'wc_load_cart' ) ) {
-				wc_load_cart(); // Force session start
+				wc_load_cart(); // Force session start.
 			}
 		}
-		
+
 		if ( ! Session::get( self::$session_verifier_key ) ) {
 			$code_verifier = bin2hex( random_bytes( 32 ) );
 			Session::set( self::$session_verifier_key, $code_verifier );

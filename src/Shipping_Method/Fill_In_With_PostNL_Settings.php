@@ -356,6 +356,15 @@ class Fill_In_With_PostNL_Settings {
 	}
 
 	/**
+	 * Check if the 'Fill in with PostNL' feature is enabled for checkout.
+	 *
+	 * @return bool
+	 */
+	public function is_fill_in_with_postnl_enabled_for_checkout(): bool {
+		return $this->is_fill_in_with_postnl_enabled() && 'yes' === get_option( 'postnl_checkout_auto_render_button', 'no' );
+	}
+
+	/**
 	 * Get the Client ID for Fill in with PostNL.
 	 *
 	 * @return string

@@ -194,8 +194,8 @@ class Blocks_Integration implements IntegrationInterface {
 	 * @return array
 	 */
 	public function get_script_data() {
-		$letterbox   = Utils::is_cart_eligible_auto_letterbox( WC()->cart );
-		$settings = postnl()->get_shipping_settings();
+		$letterbox = Utils::is_cart_eligible_auto_letterbox( WC()->cart );
+		$settings  = postnl()->get_shipping_settings();
 
 		return array(
 			'pluginUrl'                => POSTNL_WC_PLUGIN_DIR_URL,

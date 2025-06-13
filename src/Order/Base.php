@@ -113,22 +113,22 @@ abstract class Base {
 			return array();
 		}
 
-		// Get from the plugin settings.
-		$shipping_zone = Utils::get_shipping_zone( $order->get_shipping_country(), $order->get_shipping_state() );
-		$frontend_data = $this->get_frontend_data( $order->get_id() );
-
-		if ( ! empty( $frontend_data['dropoff_points'] ) ) {
-			$shipping_zone = 'PICKUP';
+		// Return shipping options already selected by the user.
+		$default_options = $this->get_backend_data( $order->get_id() );
+		if ( ! empty( $default_options ) ) {
+			return $default_options;
 		}
 
 		if ( Utils::is_adults_only_order( $order ) ) {
 			return array( 'id_check' => 'yes' );
 		}
 
-		// Return shipping options already selected by the user.
-		$default_options = $this->get_backend_data( $order->get_id() );
-		if ( ! empty( $default_options ) ) {
-			return $default_options;
+		// Get from the plugin settings.
+		$shipping_zone = Utils::get_shipping_zone( $order->get_shipping_country(), $order->get_shipping_state() );
+		$frontend_data = $this->get_frontend_data( $order->get_id() );
+
+		if ( ! empty( $frontend_data['dropoff_points'] ) ) {
+			$shipping_zone = 'PICKUP';
 		}
 
 		if ( 'NL' === $shipping_zone && Utils::is_order_eligible_auto_letterbox( $order ) ) {

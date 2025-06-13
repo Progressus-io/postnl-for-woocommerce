@@ -277,15 +277,13 @@ class Single {
 	 * @param \WC_Product $product Current product object.
 	 */
 	public static function validate_conflicting_options( \WC_Product $product ) {
-
 		// Read the current meta values.
 		$is_adult     = Utils::is_adults_only_product( $product );
 		$is_letterbox = 'yes' === $product->get_meta( self::LETTERBOX_PARCEL );
 
-		// If both check-boxes are turned on, fix the data.
+		// If both check-boxes are turned on, remove letterbox metadata.
 		if ( $is_adult && $is_letterbox ) {
-
-			$product->update_meta_data( self::LETTERBOX_PARCEL, '' );
+			$product->delete_meta_data( self::LETTERBOX_PARCEL );
 			$product->save_meta_data();
 
 			// Show a notice in the admin screen.

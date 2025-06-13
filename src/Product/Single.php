@@ -145,7 +145,7 @@ class Single {
 		add_action( 'woocommerce_process_product_meta', array( $this, 'save_additional_product_parent_options' ) );
 		add_action( 'woocommerce_variation_options_pricing', array( $this, 'additional_product_variation_shipping_options' ), 10, 3 );
 		add_action( 'woocommerce_save_product_variation', array( $this, 'save_additional_product_variation_options' ), 10, 2 );
-		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_product_single_css_script' ) );
+		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_admin_product_edit_script' ) );
 		add_action( 'woocommerce_before_product_object_save', array( $this, 'validate_product_before_save' ), 100, 1 );
 
 	}

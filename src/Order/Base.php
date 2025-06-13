@@ -121,7 +121,7 @@ abstract class Base {
 			$shipping_zone = 'PICKUP';
 		}
 
-		if ( Utils::is_order_for_adults( $order ) ) {
+		if ( Utils::is_adults_only_order( $order ) ) {
 			return array( 'id_check' => 'yes' );
 		}
 

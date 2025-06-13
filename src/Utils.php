@@ -9,6 +9,7 @@ namespace PostNLWooCommerce;
 
 use PostNLWooCommerce\Helper\Mapping;
 use PostNLWooCommerce\Product\Single;
+use WC_Product;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -684,7 +685,7 @@ class Utils {
 			return false;
 		}
 
-		if ( self::check_products_for_adults( $cart->get_cart() ) ) {
+		if ( self::contains_adults_only_products( $cart->get_cart() ) ) {
 			return false;
 		}
 
@@ -794,12 +795,12 @@ class Utils {
 			return false;
 		}
 
-		if ( ! in_array( $order->get_shipping_country(), self::get_available_country_for_adult(), true ) ) {
+		if ( ! in_array( $order->get_shipping_country(), self::get_adults_only_shipping_countries(), true ) ) {
 			return false;
 		}
 
 		$products = $order->get_items();
-		$is_adult = self::check_products_for_adults( $products );
+		$is_adult = self::contains_adults_only_products( $products );
 
 		return $is_adult;
 	}
@@ -823,14 +824,22 @@ class Utils {
 				continue;
 			}
 
-			$is_adult_product = $product->get_meta( Single::ADULTS_ONLY_FIELD );
-
-			if ( 'yes' === $is_adult_product ) {
+			if ( self::is_adults_only_product( $product ) ) {
 				return true;
 			}
 		}
 
 		return false;
+	}
+
+	/**
+	 * Check if the given product is marked as adults-only.
+	 *
+	 * @param WC_Product $product Product object.
+	 * @return bool
+	 */
+	public static function is_adults_only_product( WC_Product $product ): bool {
+		return 'yes' === $product->get_meta( Single::ADULTS_ONLY_FIELD );
 	}
 
 	/**

@@ -780,9 +780,9 @@ class Single extends Base {
 			return;
 		}
 
-		$is_adult = $product->get_meta( ProductSingle::ADULTS_ONLY_FIELD );
+		$is_adult = Utils::is_adults_only_product( $product );
 
-		if ( 'yes' === $is_adult ) {
+		if ( $is_adult ) {
 			echo '<p>' . esc_html__( '18+ Adults Only', 'postnl-for-woocommerce' ) . '</p>';
 		}
 	}

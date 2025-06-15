@@ -293,7 +293,7 @@ class Settings extends \WC_Settings_API {
 				'class'       => 'country-nl country-be',
 			),
 			'pickup_delivery_fee'            => array(
-				'title'       => __( 'Pick-up Delivery Fee', 'postnl-for-woocommerce' ),
+				'title'       => __( 'Extra fee pick-up delivery', 'postnl-for-woocommerce' ),
 				'type'        => 'text',
 				'description' => __( 'Extra fee added when the customer selects a PostNL pick-up point.', 'postnl-for-woocommerce' ),
 				'desc_tip'    => true,
@@ -319,7 +319,7 @@ class Settings extends \WC_Settings_API {
 			*/
 
 			'enable_delivery_days'            => array(
-				'title'       => __( 'Delivery Days', 'postnl-for-woocommerce' ),
+				'title'       => __( 'Delivery', 'postnl-for-woocommerce' ),
 				'type'        => 'checkbox',
 				'label'       => __( 'Enable', 'postnl-for-woocommerce' ),
 				'description' => __( 'Show delivery days in the checkout so that your customers can choose which day to receive their order.', 'postnl-for-woocommerce' ),
@@ -329,9 +329,9 @@ class Settings extends \WC_Settings_API {
 				'class'       => 'country-nl',
 			),
 			'delivery_days_fee'               => array(
-				'title'       => __( 'Delivery days Delivery Fee', 'postnl-for-woocommerce' ),
+				'title'       => __( 'Extra fee home delivery', 'postnl-for-woocommerce' ),
 				'type'        => 'text',
-				'description' => __( 'Extra fee added when the customer selects a PostNL pick-up point.', 'postnl-for-woocommerce' ),
+				'description' => __( 'Extra fee added when the customer selects home delivery.', 'postnl-for-woocommerce' ),
 				'desc_tip'    => true,
 				'for_country' => array( 'NL', 'BE' ),
 				'class'       => 'wc_input_price country-nl country-be',

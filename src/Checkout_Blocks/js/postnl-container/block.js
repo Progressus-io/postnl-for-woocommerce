@@ -32,8 +32,8 @@ export const Block = ( { checkoutExtensionData } ) => {
 	].map((tab) => {
 		let title =
 			tab.id === 'delivery_day'
-				? __('Delivery Days', 'postnl-for-woocommerce')
-				: __('Dropoff Points', 'postnl-for-woocommerce');
+				? __('Delivery', 'postnl-for-woocommerce')
+				: __('Pickup', 'postnl-for-woocommerce');
 
 		const base = tab.base;
 		const extra = tab.id === 'delivery_day' ? extraDeliveryFee : 0;

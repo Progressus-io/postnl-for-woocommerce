@@ -401,7 +401,7 @@ class Container {
 
 			if ( $pickup_fee > 0 ) {
 				$cart->add_fee(
-					__( 'PostNL Dropoff Points Fee', 'postnl-for-woocommerce' ),
+					__( 'PostNL Pickup Fee', 'postnl-for-woocommerce' ),
 					wc_format_decimal( $pickup_fee )
 				);
 			}

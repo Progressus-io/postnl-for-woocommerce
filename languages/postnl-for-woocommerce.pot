@@ -126,13 +126,13 @@ msgstr ""
 #: src/Shipping_Method/Settings.php:314
 #: build/postnl-container-frontend.js:1
 #: src/Checkout_Blocks/js/postnl-container/block.js:24
-msgid "Delivery Days"
+msgid "Delivery"
 msgstr ""
 
 #: src/Frontend/Dropoff_Points.php:52
 #: build/postnl-container-frontend.js:1
 #: src/Checkout_Blocks/js/postnl-container/block.js:30
-msgid "Dropoff Points"
+msgid "Pickup"
 msgstr ""
 
 #: src/Helper/Mapping.php:30
@@ -1090,6 +1090,23 @@ msgstr ""
 #: src/Shipping_Method/Settings.php:358
 msgid "Enable evening delivery in the checkout so your customers can choose to receive their orders in the evening."
 msgstr ""
+
+#: src/Shipping_Method/Settings.php:311
+msgid "Extra fee pick-up delivery"
+msgstr ""
+
+#: src/Shipping_Method/Settings.php:322
+msgid "Extra fee home delivery"
+msgstr ""
+
+#: src/Shipping_Method/Settings.php:334
+msgid "Extra fee added when the customer selects home delivery"
+msgstr ""
+
+#: src/Shipping_Method/Settings.php:298
+msgid "Extra fee added when the customer selects a PostNL pick-up point"
+msgstr ""
+
 
 #: src/Shipping_Method/Settings.php:365
 msgid "Evening Delivery Fee"

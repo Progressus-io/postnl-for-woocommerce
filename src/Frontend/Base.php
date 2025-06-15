@@ -567,7 +567,7 @@ abstract class Base {
 		$pickup_fee = $settings->get_pickup_delivery_fee();
 
 		return array(
-			'fee_name'  => esc_html__( 'PostNL Dropoff Points Fee', 'postnl-for-woocommerce' ),
+			'fee_name'  => esc_html__( 'PostNL Pickup Fee', 'postnl-for-woocommerce' ),
 			'fee_price' => floatval( $pickup_fee ),
 			'condition' => array(
 				'key'   => 'dropoff_points_type',

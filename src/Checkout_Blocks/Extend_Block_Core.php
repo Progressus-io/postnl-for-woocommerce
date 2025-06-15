@@ -196,7 +196,7 @@ class Extend_Block_Core {
 				case 'Pickup':
 					if ( $pickup_fee > 0 ) {
 						$cart->add_fee(
-							__( 'PostNL Dropoff Points Fee', 'postnl-for-woocommerce' ),
+							__( 'PostNL Pickup Fee', 'postnl-for-woocommerce' ),
 							$pickup_fee,
 							true,
 							''
@@ -232,7 +232,7 @@ class Extend_Block_Core {
 		$order->update_meta_data( '_shipping_house_number', $shipping_house_number );
 
 		/**
-		 * Prepare Dropoff Points Data
+		 * Prepare Pickup Data
 		 */
 		$drop_data = array(
 			'frontend' => array(

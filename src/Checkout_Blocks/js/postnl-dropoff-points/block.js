@@ -19,7 +19,7 @@ const Utils = {
 };
 
 /**
- * Dropoff Points Block Component
+ * Pickup Block Component
  * @param root0
  * @param root0.checkoutExtensionData
  * @param root0.isActive
@@ -413,7 +413,7 @@ export const Block = ( {
 	};
 
 	/**
-	 * Render the Dropoff Points
+	 * Render the Pickup
 	 */
 	return (
 		<div className="postnl-dropoff-container">

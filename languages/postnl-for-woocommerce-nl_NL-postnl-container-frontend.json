@@ -10,10 +10,10 @@
         "lang": "nl",
         "plural-forms": "nplurals=2; plural=(n != 1);"
       },
-      "Dropoff Points": [
+      "Pickup": [
         "PostNL punten"
       ],
-      "Delivery Days": [
+      "Delivery": [
         "Bezorgdagen"
       ],
       "Evening": [

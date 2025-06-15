@@ -244,8 +244,9 @@ class Item_Info extends Base_Info {
 				continue;
 			}
 
-			$hs_code = ! empty( $product->get_meta( Single::HS_CODE_FIELD ) ) ? $product->get_meta( Single::HS_CODE_FIELD ) : $this->settings->get_hs_tariff_code();
-			$origin  = ! empty( $product->get_meta( Single::ORIGIN_FIELD ) ) ? $product->get_meta( Single::ORIGIN_FIELD ) : $this->settings->get_country_origin();
+			$is_adult = Utils::is_adults_only_product( $product );
+			$hs_code  = ! empty( $product->get_meta( Single::HS_CODE_FIELD ) ) ? $product->get_meta( Single::HS_CODE_FIELD ) : $this->settings->get_hs_tariff_code();
+			$origin   = ! empty( $product->get_meta( Single::ORIGIN_FIELD ) ) ? $product->get_meta( Single::ORIGIN_FIELD ) : $this->settings->get_country_origin();
 
 			$content = array(
 				'product_id'       => $product->get_id(),
@@ -256,6 +257,7 @@ class Item_Info extends Base_Info {
 				'item_weight'      => $product->get_weight(),
 				'hs_code'          => $hs_code,
 				'origin'           => $origin,
+				'is_adult'         => $is_adult,
 			);
 
 			$this->api_args['order_details']['contents'][] = $content;
@@ -269,6 +271,20 @@ class Item_Info extends Base_Info {
 	 */
 	public function is_pickup_points() {
 		return ! empty( $this->api_args['frontend_data']['pickup_points']['value'] );
+	}
+
+	/**
+	 * Is order has an adult item.
+	 *
+	 * @return Boolean
+	 */
+	public function is_adult_order(): bool {
+		foreach ( $this->api_args['order_details']['contents'] as $item ) {
+			if ( ! empty( $item['is_adult'] ) ) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	/**
@@ -1034,43 +1050,77 @@ class Item_Info extends Base_Info {
 	/**
 	 * Get Shipping and Return options.
 	 *
-	 * @return array.
+	 * @return array
 	 */
 	public function get_return_options() {
 		$shipment_return_type = $this->settings->get_return_shipment_and_labels();
-
 		if ( 'none' === $shipment_return_type ) {
 			return array();
 		}
 
-		$return_all_labels    = 'yes' === $this->settings->get_return_shipment_and_labels_all();
-		$return_label_options = Mapping::shipping_return_labels_options();
+		// Extract data from API args.
 		$from_country         = $this->api_args['store_address']['country'];
 		$to_country           = $this->api_args['shipping_address']['country'];
 		$to_state             = $this->api_args['shipping_address']['state'];
 		$destination          = Utils::get_shipping_zone( $to_country, $to_state );
+
 		$is_letterbox         = 'yes' === $this->api_args['backend_data']['letterbox'];
 		$is_return_activated  = 'yes' === $this->api_args['order_details']['is_return_activated'];
+		$create_return_label  = 'yes' === ( $this->api_args['backend_data']['create_return_label'] ?? 'no' );
+		$is_BE_destination    = ( 'BE' === $destination );
+		$is_adult_order       = $this->is_adult_order();
+		$return_all_labels    = 'yes' === $this->settings->get_return_shipment_and_labels_all();
 
-		if ( ! $is_return_activated && ! $is_letterbox && ! $return_all_labels && 'shipping_return' === $shipment_return_type && 'BE' != $destination ) {
-			$shipment_return_type = 'return_all_labels_not_active';
-		}
-
-		// Domestic Letterbox parcel (product code 2928) cannot be used in combination with Shipment and Return.
-		if ( ( $is_letterbox && 'yes' === $this->api_args['backend_data']['create_return_label'] ) || 'BE' == $destination ) {
-			$shipment_return_type = 'in_box';
-		} elseif ( $is_letterbox ) {
+		// Return empty array for letterbox without return label.
+		if ( $is_letterbox && ! $create_return_label ) {
 			return array();
 		}
 
-		if ( isset( $return_label_options[ $from_country ][ $destination ][ $shipment_return_type ] ) ) {
-			$allowed_products = $return_label_options[ $from_country ][ $destination ][ $shipment_return_type ]['products'];
-			$is_allowed       = in_array( $this->api_args['order_details']['shipping_product']['code'], $allowed_products ) || empty( $allowed_products );
-			$options          = $return_label_options[ $from_country ][ $destination ][ $shipment_return_type ]['options'];
+		// Determine the appropriate shipment return type.
+		if ( $this->requires_in_box_return( $is_letterbox, $is_BE_destination, $is_adult_order, $create_return_label ) ) {
+			$shipment_return_type = 'in_box';
+		} elseif ( ! $is_return_activated && 
+				  ! $is_letterbox && 
+				  ! $return_all_labels && 
+				  'shipping_return' === $shipment_return_type && 
+				  ! $is_BE_destination ) {
+			$shipment_return_type = 'return_all_labels_not_active';
+		}
 
-			return $is_allowed ? $options : array();
+		// Get available options from mapping.
+		$return_label_options = Mapping::shipping_return_labels_options();
+		if ( ! isset( $return_label_options[ $from_country ][ $destination ][ $shipment_return_type ] ) ) {
+			return array();
+		}
+
+		// Check if current shipping product is allowed.
+		$option_data       = $return_label_options[ $from_country ][ $destination ][ $shipment_return_type ];
+		$allowed_products  = $option_data['products'];
+		$current_product   = $this->api_args['order_details']['shipping_product']['code'];
+
+		// Return options if product is allowed or if there are no product restrictions.
+		if ( empty( $allowed_products ) || in_array( $current_product, $allowed_products ) ) {
+			return $option_data['options'];
 		}
 
 		return array();
+	}
+
+	/**
+	 * Determine if return type should be forced to 'in_box' based on business logic.
+	 *
+	 * @param bool $is_letterbox
+	 * @param bool $is_BE_destination
+	 * @param bool $is_adult_order
+	 * @param bool $create_return_label
+	 *
+	 * @return bool
+	 */
+	private function requires_in_box_return( bool $is_letterbox, bool $is_BE_destination, bool $is_adult_order, bool $create_return_label ): bool {
+		return (
+			( $is_letterbox && $create_return_label )
+			|| $is_BE_destination
+			|| ( $is_adult_order && $create_return_label )
+		);
 	}
 }

@@ -92,6 +92,14 @@ export const Block = ( {
 		}
 	);
 
+	const [ dropoffPointsType, setDropoffPointsType ] = useState(
+		() => {
+			return (
+				sessionStorage.getItem( 'postnl_dropoffPointsType' ) || ''
+			);
+		}
+	);
+
 	// Debounce setting extension data to optimize performance
 	const debouncedSetExtensionData = useCallback(
 		debounce( ( namespace, key, value ) => {
@@ -185,6 +193,14 @@ export const Block = ( {
 		);
 	}, [ dropoffPointsDistance, debouncedSetExtensionData ] );
 
+	useEffect( () => {
+		debouncedSetExtensionData(
+			'postnl',
+			'dropoffPointsType',
+			dropoffPointsType
+		);
+	}, [ dropoffPointsType, debouncedSetExtensionData ] );
+
 	/**
 	 * Effect to handle tab activation
 	 */
@@ -212,6 +228,7 @@ export const Block = ( {
 		setDropoffPointsPartnerID( '' );
 		setDropoffPointsDate( '' );
 		setDropoffPointsTime( '' );
+		setDropoffPointsType( '' );
 		setDropoffPointsDistance( null );
 		if ( clearSession ) {
 			sessionStorage.removeItem( 'postnl_dropoffPointsAddressCompany' );
@@ -223,6 +240,7 @@ export const Block = ( {
 			sessionStorage.removeItem( 'postnl_dropoffPointsPartnerID' );
 			sessionStorage.removeItem( 'postnl_dropoffPointsDate' );
 			sessionStorage.removeItem( 'postnl_dropoffPointsTime' );
+			sessionStorage.removeItem( 'postnl_dropoffPointsType' );
 			sessionStorage.removeItem( 'postnl_dropoffPointsDistance' );
 		}
 		setExtensionData( 'postnl', 'dropoffPoints', '' );
@@ -235,6 +253,7 @@ export const Block = ( {
 		setExtensionData( 'postnl', 'dropoffPointsPartnerID', '' );
 		setExtensionData( 'postnl', 'dropoffPointsDate', '' );
 		setExtensionData( 'postnl', 'dropoffPointsTime', '' );
+		setExtensionData( 'postnl', 'dropoffPointsType', '' );
 		setExtensionData( 'postnl', 'dropoffPointsDistance', null );
 	};
 
@@ -355,6 +374,12 @@ export const Block = ( {
 			dropoffPoint.time || ''
 		);
 
+		setDropoffPointsType( dropoffPoint.type || '' );
+		sessionStorage.setItem(
+			'postnl_dropoffPointsType',
+			dropoffPoint.type || ''
+		);
+
 		setDropoffPointsDistance( Number( dropoffPoint.distance ) || null );
 		sessionStorage.setItem(
 			'postnl_dropoffPointsDistance',
@@ -405,6 +430,11 @@ export const Block = ( {
 		);
 		setExtensionData(
 			'postnl',
+			'dropoffPointsType',
+			dropoffPoint.type || ''
+		);
+		setExtensionData(
+			'postnl',
 			'dropoffPointsDistance',
 			Number( dropoffPoint.distance ) || null
 		);
@@ -447,6 +477,7 @@ export const Block = ( {
 									data-loc_code={ point.loc_code }
 									data-date={ point.date }
 									data-time={ point.time }
+									data-type={ point.type }
 									data-distance={ point.distance }
 									data-address_company={
 										point.address.company
@@ -555,6 +586,12 @@ export const Block = ( {
 				name="dropoffPointsTime"
 				id="dropoffPointsTime"
 				value={ dropoffPointsTime }
+			/>
+			<input
+				type="hidden"
+				name="dropoffPointsType"
+				id="dropoffPointsType"
+				value={ dropoffPointsType }
 			/>
 			<input
 				type="hidden"

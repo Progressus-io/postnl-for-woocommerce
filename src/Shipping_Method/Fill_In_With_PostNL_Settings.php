@@ -384,7 +384,7 @@ class Fill_In_With_PostNL_Settings {
 	public function get_redirect_uri( string $code_challenge = '', string $state ): string {
 		$client_id    = $this->get_client_id();
 		$callback_url = home_url( '/checkout/default/details/?callback=postnl' );
-		$base_url     = 'https://dil-login.postnl.nl/oauth2/login_options/';
+		$base_url     = 'https://dil-login.postnl.nl/oauth2/authorize';
 
 		$query_args = array(
 			'client_id'             => $client_id,

@@ -377,10 +377,11 @@ class Fill_In_With_PostNL_Settings {
 	 * Get the Redirect URI for Fill in with PostNL.
 	 *
 	 * @param string $code_challenge The PKCE code challenge.
+	 * @param string $state The state parameter for OAuth.
 	 *
 	 * @return string
 	 */
-	public function get_redirect_uri( string $code_challenge = '' ): string {
+	public function get_redirect_uri( string $code_challenge = '', string $state ): string {
 		$client_id    = $this->get_client_id();
 		$callback_url = home_url( '/checkout/default/details/?callback=postnl' );
 		$base_url     = 'https://dil-login.postnl.nl/oauth2/login_options/';
@@ -390,11 +391,11 @@ class Fill_In_With_PostNL_Settings {
 			'redirect_uri'          => $callback_url,
 			'response_type'         => 'code',
 			'scope'                 => 'base',
-			'code_challenge'        => $code_challenge,
+			'code_challenge'        => '',
 			'code_challenge_method' => 'S256',
+			'state'                 => $state,
 		);
-
-		return esc_url( $base_url . '?' . http_build_query( $query_args ) );
+		return $base_url . '?' . http_build_query( $query_args, '', '&' );
 	}
 
 	/**

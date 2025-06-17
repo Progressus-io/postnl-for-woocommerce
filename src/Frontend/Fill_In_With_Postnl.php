@@ -32,6 +32,12 @@ class Fill_In_With_Postnl {
 	 * @var string
 	 */
 	private static string $session_verifier_key = 'code_verifier';
+	/**
+	 * Session variable key for state.
+	 *
+	 * @var string
+	 */
+	private static string $session_state_key = 'state';
 
 	/**
 	 * Constructor.
@@ -251,9 +257,10 @@ class Fill_In_With_Postnl {
 			$code_verifier = Session::get( self::$session_verifier_key );
 		}
 
+		$state = bin2hex( random_bytes( 32 ) );
 		// phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.obfuscation_base64_encode
 		$code_challenge = rtrim( strtr( base64_encode( hash( 'sha256', $code_verifier, true ) ), '+/', '-_' ), '=' );
-		$redirect_uri   = $this->settings->get_redirect_uri( $code_challenge );
+		$redirect_uri   = $this->settings->get_redirect_uri( $code_challenge, $state );
 
 		return new WP_REST_Response(
 			array(

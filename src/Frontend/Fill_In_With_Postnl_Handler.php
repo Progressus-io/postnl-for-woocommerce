@@ -117,7 +117,7 @@ class Fill_In_With_Postnl_Handler {
 				'body'    => array(
 					'grant_type'    => 'authorization_code',
 					'code'          => $code,
-					'redirect_uri'  => site_url( '/checkout/?callback=postnl' ),
+					'redirect_uri'  => home_url( '/checkout/default/details/?callback=postnl' ),
 					'client_id'     => $this->settings->get_client_id(),
 					'code_verifier' => $verifier,
 					'scope'         => 'base',

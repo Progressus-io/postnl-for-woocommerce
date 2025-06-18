@@ -241,7 +241,6 @@ class Blocks_Integration implements IntegrationInterface {
 		$settings  = postnl()->get_shipping_settings();
 
 		return array(
-			'pluginUrl'                    => POSTNL_WC_PLUGIN_DIR_URL,
 			'ajax_url'                     => admin_url( 'admin-ajax.php' ),
 			'nonce'                        => wp_create_nonce( 'postnl_delivery_day_nonce' ),
 			'letterbox'                    => $letterbox,
@@ -249,6 +248,7 @@ class Blocks_Integration implements IntegrationInterface {
 			'is_pickup_points_enabled'     => $settings->is_pickup_points_enabled(),
 			'fill_in_with_postnl_settings' => array(
 				'is_fill_in_with_postnl_enabled' => $this->fill_in_with_settings->is_fill_in_with_postnl_enabled(),
+				'postnl_logo_url'                => POSTNL_WC_PLUGIN_DIR_URL . '/assets/images/postnl-logo.svg',
 			),
 		);
 	}

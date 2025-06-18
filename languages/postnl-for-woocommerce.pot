@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2025-06-13T11:21:37+00:00\n"
+"POT-Creation-Date: 2025-06-18T10:51:49+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.11.0\n"
 "X-Domain: postnl-for-woocommerce\n"
@@ -135,29 +135,29 @@ msgstr ""
 msgid "Dropoff Points"
 msgstr ""
 
-#: src/Frontend/Fill_In_With_Postnl.php:247
+#: src/Frontend/Fill_In_With_Postnl.php:250
 msgid "Fill in with PostNL is not enabled or Client ID is missing."
 msgstr ""
 
-#: src/Frontend/Fill_In_With_Postnl_Handler.php:71
+#: src/Frontend/Fill_In_With_Postnl_Handler.php:110
 msgid "Login session expired. Please try again."
 msgstr ""
 
 #. translators: %s is the error message from PostNL
-#: src/Frontend/Fill_In_With_Postnl_Handler.php:95
+#: src/Frontend/Fill_In_With_Postnl_Handler.php:134
 msgid "PostNL Token Request Error: %s"
 msgstr ""
 
-#: src/Frontend/Fill_In_With_Postnl_Handler.php:108
+#: src/Frontend/Fill_In_With_Postnl_Handler.php:147
 msgid "PostNL: Access token not found"
 msgstr ""
 
 #. translators: %s is the error message from PostNL
-#: src/Frontend/Fill_In_With_Postnl_Handler.php:127
+#: src/Frontend/Fill_In_With_Postnl_Handler.php:166
 msgid "PostNL User Info Error: %s"
 msgstr ""
 
-#: src/Frontend/Fill_In_With_Postnl_Handler.php:142
+#: src/Frontend/Fill_In_With_Postnl_Handler.php:182
 msgid "Incomplete user data."
 msgstr ""
 
@@ -206,19 +206,19 @@ msgstr ""
 msgid "Belgium Domestic"
 msgstr ""
 
-#: src/Main.php:358
+#: src/Main.php:365
 msgid "PostNL plugin requires WooCommerce to be installed and activated!"
 msgstr ""
 
-#: src/Main.php:371
+#: src/Main.php:378
 msgid "PostNL plugin requires store country to be Netherlands (NL) or Belgium (BE)!"
 msgstr ""
 
-#: src/Main.php:384
+#: src/Main.php:391
 msgid "PostNL plugin requires store currency to be EUR, USD, GBP or CNY!"
 msgstr ""
 
-#: src/Main.php:458
+#: src/Main.php:465
 msgid "Postnl Checkout Blocks"
 msgstr ""
 
@@ -641,7 +641,7 @@ msgstr ""
 msgid "Product ID does not exists!"
 msgstr ""
 
-#: src/Product/Single.php:293
+#: src/Product/Single.php:281
 msgid "“18+” and “Letterbox Parcel” cannot be enabled together. Letterbox has been disabled automatically."
 msgstr ""
 
@@ -853,7 +853,7 @@ msgstr ""
 #: templates/checkout/postnl-fill-in-with-button.php:13
 #: templates/checkout/postnl-fill-in-with-button.php:23
 #: build/postnl-fill-in-with-frontend.js:1
-#: src/Checkout_Blocks/js/postnl-fill-in-with/block.js:86
+#: src/Checkout_Blocks/js/postnl-fill-in-with/block.js:97
 msgid "Fill in with PostNL"
 msgstr ""
 
@@ -1740,7 +1740,7 @@ msgstr ""
 
 #: templates/checkout/postnl-fill-in-with-button.php:32
 #: build/postnl-fill-in-with-frontend.js:1
-#: src/Checkout_Blocks/js/postnl-fill-in-with/block.js:87
+#: src/Checkout_Blocks/js/postnl-fill-in-with/block.js:98
 msgid "Your name and address are automatically filled in via your PostNL account. That saves you from having to fill in the form!"
 msgstr ""
 
@@ -1750,13 +1750,22 @@ msgstr ""
 msgid "In this email you will find the barcode you need to return your order. Scan this barcode at a PostNL point to print your return label. Please note, wait at least 10 minutes before scanning the barcode after receipt of this mail."
 msgstr ""
 
+#: assets/js/fill_in_with_postnl.js:27
+msgid "Failed to initiate PostNL login."
+msgstr ""
+
 #: build/postnl-fill-in-with-frontend.js:1
-#: src/Checkout_Blocks/js/postnl-fill-in-with/block.js:45
+#: src/Checkout_Blocks/js/postnl-fill-in-with/block.js:89
+msgid "Failed to retrieve PostNL address. Please try again."
+msgstr ""
+
+#: build/postnl-fill-in-with-frontend.js:1
+#: src/Checkout_Blocks/js/postnl-fill-in-with/block.js:41
 msgid "Unable to connect to PostNL. Please try again later."
 msgstr ""
 
 #: build/postnl-fill-in-with-frontend.js:1
-#: src/Checkout_Blocks/js/postnl-fill-in-with/block.js:48
+#: src/Checkout_Blocks/js/postnl-fill-in-with/block.js:44
 msgid "An error occurred. Please try again."
 msgstr ""
 
@@ -1766,10 +1775,6 @@ msgstr ""
 
 #: src/Checkout_Blocks/js/postnl-dropoff-points/edit.js:12
 msgid "PostNL Dropof point Options"
-msgstr ""
-
-#: src/Checkout_Blocks/js/postnl-fill-in-with/block.js:82
-msgid "Failed to retrieve PostNL address. Please try again."
 msgstr ""
 
 #: build/Checkout_Blocks/js/postnl-container/block.json

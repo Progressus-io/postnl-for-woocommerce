@@ -250,13 +250,9 @@ class Fill_In_With_Postnl {
 			}
 		}
 
-		if ( ! Session::get( self::$session_verifier_key ) ) {
-			$code_verifier = bin2hex( random_bytes( 32 ) );
-			Session::set( self::$session_verifier_key, $code_verifier );
-		} else {
-			$code_verifier = Session::get( self::$session_verifier_key );
-		}
-
+		$code_verifier = bin2hex( random_bytes( 32 ) );
+		set_transient( 'postnl_' . self::$session_verifier_key, $code_verifier, 600 ); // 10 min TTL
+		
 		$state = bin2hex( random_bytes( 32 ) );
 		// phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.obfuscation_base64_encode
 		$code_challenge = rtrim( strtr( base64_encode( hash( 'sha256', $code_verifier, true ) ), '+/', '-_' ), '=' );
@@ -311,7 +307,9 @@ class Fill_In_With_Postnl {
 
 		wc_get_template(
 			'checkout/postnl-fill-in-with-button.php',
-			array(),
+			array(
+				'postnl_logo_url' => POSTNL_WC_PLUGIN_DIR_URL . '/assets/images/postnl-logo.svg',
+			),
 			'',
 			POSTNL_WC_PLUGIN_DIR_PATH . '/templates/'
 		);

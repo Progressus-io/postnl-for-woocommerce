@@ -56,6 +56,8 @@
 						$( '#billing_first_name' ).val( person.givenName ).trigger( 'change' );
 						$( '#billing_last_name' ).val( person.familyName ).trigger( 'change' );
 						$( '#billing_email' ).val( person.email ).trigger( 'change' );
+                        $( '#shipping_first_name' ).val( person.givenName ).trigger( 'change' );
+						$( '#shipping_last_name' ).val( person.familyName ).trigger( 'change' );
 
 						$( '#billing_address_1' ).val( primaryAddress.streetName ).trigger( 'change' );
                         $( '#billing_address_2' ).val( primaryAddress.houseNumberAddition ).trigger( 'change' );
@@ -63,6 +65,7 @@
 						$( '#billing_postcode' ).val( primaryAddress.postalCode).trigger( 'change' );
 						$( '#billing_city' ).val( primaryAddress.cityName).trigger( 'change' );
 						$( '#billing_country' ).val( primaryAddress.countryName ).trigger( 'change' );
+                        
                         $( '#shipping_address_1' ).val( primaryAddress.streetName ).trigger( 'change' );
                         $( '#shipping_address_2' ).val( primaryAddress.houseNumberAddition ).trigger( 'change' );
                         $( '#shipping_house_number' ).val( primaryAddress.houseNumber ).trigger( 'change' );

@@ -9,6 +9,7 @@ namespace PostNLWooCommerce\Frontend;
 
 defined( 'ABSPATH' ) || exit;
 
+use WC_Countries;
 use PostNLWooCommerce\Main;
 use PostNLWooCommerce\Session;
 use PostNLWooCommerce\Shipping_Method\Fill_In_With_PostNL_Settings;
@@ -102,7 +103,7 @@ class Fill_In_With_Postnl_Handler {
 		}
 
 		$code     = sanitize_text_field( wp_unslash( $_GET['code'] ) );
-		$verifier = Session::get( self::$session_verifier_key ) ?? null;
+		$verifier = get_transient( 'postnl_' . self::$session_verifier_key );
 
 		if ( ! $verifier ) {
 			$this->logger->write( 'Login session expired. Please try again.' );
@@ -180,10 +181,47 @@ class Fill_In_With_Postnl_Handler {
 			wc_add_notice( esc_html__( 'Incomplete user data.', 'postnl-for-woocommerce' ), 'error' );
 			return;
 		}
-		Session::set( self::$session_user_data_key, $user_data );
+
+		$person         = $user_data['person'];
+		$primaryAddress = $user_data['primaryAddress'];
+
+		$country_code = $this->get_country_code_by_name( $primaryAddress['countryName'] ?? '' ) ?? 'NL';
+
+		$prepared_user_data = [
+			'person'         => [
+				'givenName'   => $person['givenName'] ?? '',
+				'familyName'  => $person['familyName'] ?? '',
+				'email'       => $person['email'] ?? '',
+			],
+			'primaryAddress' => [
+				'streetName'          => $primaryAddress['streetName'] ?? '',
+				'houseNumber'         => $primaryAddress['houseNumber'] ?? '',
+				'houseNumberAddition' => $primaryAddress['houseNumberAddition'] ?? '',
+				'postalCode'          => $primaryAddress['postalCode'] ?? '',
+				'cityName'            => $primaryAddress['cityName'] ?? '',
+				'countryName'         => $country_code,
+			],
+		];
+
+		Session::set( self::$session_user_data_key, $prepared_user_data );
+
 
 		// Redirect to clean URL (remove callback and code).
 		wp_safe_redirect( remove_query_arg( array( 'callback', 'code', 'state' ) ) );
 		exit;
 	}
+
+	private function get_country_code_by_name( string $name ): ?string {
+		$countries = ( new WC_Countries() )->get_countries();
+		$name = strtolower( $name );
+
+		foreach ( $countries as $code => $country_name ) {
+			if ( strtolower( $country_name ) === $name ) {
+				return $code;
+			}
+		}
+
+		return null;
+	}
+
 }

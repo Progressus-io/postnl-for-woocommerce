@@ -9,7 +9,6 @@ namespace PostNLWooCommerce\Frontend;
 
 defined( 'ABSPATH' ) || exit;
 
-use WC_Countries;
 use PostNLWooCommerce\Main;
 use PostNLWooCommerce\Session;
 use PostNLWooCommerce\Shipping_Method\Fill_In_With_PostNL_Settings;
@@ -66,7 +65,7 @@ class Fill_In_With_Postnl_Handler {
 	 */
 	public function handle_postnl_user_info(): void {
 		// Check for nonce verification if needed.
-		if ( $_REQUEST['nonce'] && ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_REQUEST['nonce'] ) ), 'postnl_user_info' ) ) {
+		if ( isset( $_REQUEST['nonce'] ) && ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_REQUEST['nonce'] ) ), 'postnl_user_info' ) ) {
 			wp_send_json_error( 'Invalid nonce.' );
 		}
 		if ( ! $this->settings->is_fill_in_with_postnl_enabled() ) {
@@ -94,9 +93,9 @@ class Fill_In_With_Postnl_Handler {
 
 		// Redirect to checkout page if user lands on non-checkout URL.
 		if ( ! is_checkout() ) {
-			$redirect_url = wc_get_checkout_url() . '?callback=postnl&code=' . rawurlencode( wp_unslash( $_GET['code'] ) );
+			$redirect_url = wc_get_checkout_url() . '?callback=postnl&code=' . rawurlencode( sanitize_text_field( wp_unslash( $_GET['code'] ) ) );
 			if ( isset( $_GET['state'] ) ) {
-				$redirect_url .= '&state=' . rawurlencode( wp_unslash( $_GET['state'] ) );
+				$redirect_url .= '&state=' . rawurlencode( sanitize_text_field( wp_unslash( $_GET['state'] ) ) );
 			}
 			wp_safe_redirect( $redirect_url );
 			exit;
@@ -182,38 +181,44 @@ class Fill_In_With_Postnl_Handler {
 			return;
 		}
 
-		$person         = $user_data['person'];
-		$primaryAddress = $user_data['primaryAddress'];
+		$person          = $user_data['person'];
+		$primary_address = $user_data['primaryAddress'];
 
-		$country_code = $this->get_country_code_by_name( $primaryAddress['countryName'] ?? '' ) ?? 'NL';
+		$country_code = $this->get_country_code_by_name( $primary_address['countryName'] ?? '' ) ?? 'NL';
 
-		$prepared_user_data = [
-			'person'         => [
-				'givenName'   => $person['givenName'] ?? '',
-				'familyName'  => $person['familyName'] ?? '',
-				'email'       => $person['email'] ?? '',
-			],
-			'primaryAddress' => [
-				'streetName'          => $primaryAddress['streetName'] ?? '',
-				'houseNumber'         => $primaryAddress['houseNumber'] ?? '',
-				'houseNumberAddition' => $primaryAddress['houseNumberAddition'] ?? '',
-				'postalCode'          => $primaryAddress['postalCode'] ?? '',
-				'cityName'            => $primaryAddress['cityName'] ?? '',
+		$prepared_user_data = array(
+			'person'         => array(
+				'givenName'  => $person['givenName'] ?? '',
+				'familyName' => $person['familyName'] ?? '',
+				'email'      => $person['email'] ?? '',
+			),
+			'primaryAddress' => array(
+				'streetName'          => $primary_address['streetName'] ?? '',
+				'houseNumber'         => $primary_address['houseNumber'] ?? '',
+				'houseNumberAddition' => $primary_address['houseNumberAddition'] ?? '',
+				'postalCode'          => $primary_address['postalCode'] ?? '',
+				'cityName'            => $primary_address['cityName'] ?? '',
 				'countryName'         => $country_code,
-			],
-		];
+			),
+		);
 
 		Session::set( self::$session_user_data_key, $prepared_user_data );
-
 
 		// Redirect to clean URL (remove callback and code).
 		wp_safe_redirect( remove_query_arg( array( 'callback', 'code', 'state' ) ) );
 		exit;
 	}
 
+	/**
+	 * Get country code by country name.
+	 *
+	 * @param string $name Country name.
+	 *
+	 * @return string|null Country code or null if not found.
+	 */
 	private function get_country_code_by_name( string $name ): ?string {
-		$countries = ( new WC_Countries() )->get_countries();
-		$name = strtolower( $name );
+		$countries = WC()->countries->get_countries();
+		$name      = strtolower( $name );
 
 		foreach ( $countries as $code => $country_name ) {
 			if ( strtolower( $country_name ) === $name ) {
@@ -223,5 +228,4 @@ class Fill_In_With_Postnl_Handler {
 
 		return null;
 	}
-
 }

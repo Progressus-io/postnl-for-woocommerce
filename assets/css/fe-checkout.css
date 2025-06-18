@@ -225,7 +225,7 @@ tr.postnl-co-tr-container > td {
 #postnl-login-button {
 	min-height: 35px;
 	max-height: 60px;
-	width: -webkit-fill-available;
+	width: 100%;
 	border: 1px solid #F56900;
 	background-color: #F56900;
 	cursor: pointer;

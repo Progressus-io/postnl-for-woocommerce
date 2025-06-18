@@ -248,10 +248,7 @@ tr.postnl-co-tr-container > td {
 
 #postnl-logo {
 	vertical-align: middle;
-}
-
-#postnl-logo path {
-	fill: #ffffff;
+	display: inline;
 }
 
 #postnl-login-button:hover,

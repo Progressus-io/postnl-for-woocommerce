@@ -7,7 +7,7 @@ export const FillBlock = ( { checkoutExtensionData } ) => {
     const postnlData = getSetting( 'postnl-for-woocommerce-blocks_data', {} );
     const [ showButton, setShowButton ] = useState( false );
     const [ isLoading, setIsLoading ]   = useState(false);
-	const { setEditingBillingAddress, setEditingShippingAddress } = useDispatch('wc/store/checkout');
+    const { setBillingAddress, setShippingAddress } = useDispatch('wc/store/cart');
 
 	useEffect( () => {
 		if ( postnlSettings?.is_enabled_for_checkout ) {
@@ -76,11 +76,9 @@ export const FillBlock = ( { checkoutExtensionData } ) => {
                     country: primaryAddress.countryName || 'NL', // Default to NL for PostNL.
                 };
 
-                // Dispatch updates to the checkout block
-				const dispatch = wp.data.dispatch('wc/store/checkout');
+                setShippingAddress(addressFields);
+				setBillingAddress(addressFields);
 
-				await dispatch.setBillingAddress(addressFields);
-				await dispatch.setShippingAddress(addressFields);
 			} else {
 				console.error( 'Failed to retrieve PostNL user data:', data.message );
 			}

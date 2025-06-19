@@ -8,7 +8,7 @@
 namespace PostNLWooCommerce\Frontend;
 
 use WP_REST_Response;
-use PostNLWooCommerce\Session;
+use WP_REST_Request;
 use PostNLWooCommerce\Shipping_Method\Fill_In_With_PostNL_Settings;
 
 defined( 'ABSPATH' ) || exit;
@@ -32,12 +32,6 @@ class Fill_In_With_Postnl {
 	 * @var string
 	 */
 	private static string $session_verifier_key = 'code_verifier';
-	/**
-	 * Session variable key for state.
-	 *
-	 * @var string
-	 */
-	private static string $session_state_key = 'state';
 
 	/**
 	 * Constructor.
@@ -229,10 +223,23 @@ class Fill_In_With_Postnl {
 
 	/**
 	 * Handle the REST API request to get the redirect URI.
+	 * 
+	 * @param WP_REST_Request $request The REST request object.
 	 *
 	 * @return WP_REST_Response
 	 */
-	public function handle_get_redirect_uri(): WP_REST_Response {
+	public function handle_get_redirect_uri( WP_REST_Request $request ): WP_REST_Response {
+		// Check for nonce verification if needed.
+		$nonce = $request->get_header( 'X-WP-Nonce' );
+		if ( ! wp_verify_nonce( $nonce, 'wp_rest' ) ) {
+			return new WP_REST_Response(
+				array(
+					'success' => false,
+					'message' => esc_html__( 'Invalid or expired nonce.', 'postnl-for-woocommerce' ),
+				),
+				403
+			);
+		}
 
 		if ( ! $this->settings->is_fill_in_with_postnl_enabled() ) {
 			return new WP_REST_Response(
@@ -242,12 +249,6 @@ class Fill_In_With_Postnl {
 				),
 				400
 			);
-		}
-
-		if ( null === WC()->session ) {
-			if ( function_exists( 'wc_load_cart' ) ) {
-				wc_load_cart(); // Force session start.
-			}
 		}
 
 		$code_verifier = bin2hex( random_bytes( 32 ) );

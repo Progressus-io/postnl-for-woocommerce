@@ -174,7 +174,7 @@ class Blocks_Integration implements IntegrationInterface {
 					'restUrl'                 => esc_url_raw( rest_url( 'postnl/v1/get-redirect-uri' ) ),
 					'ajaxUrl'                 => esc_url_raw( admin_url( 'admin-ajax.php' ) ),
 					'ajaxNonce'               => wp_create_nonce( 'postnl_user_info' ),
-					'nonce'                   => wp_create_nonce( 'postnl_redirect_nonce' ),
+					'nonce'                   => wp_create_nonce( 'wp_rest' ),
 				)
 			);
 		}

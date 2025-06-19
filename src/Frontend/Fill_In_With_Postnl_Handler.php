@@ -66,14 +66,14 @@ class Fill_In_With_Postnl_Handler {
 	public function handle_postnl_user_info(): void {
 		// Check for nonce verification if needed.
 		if ( isset( $_REQUEST['nonce'] ) && ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_REQUEST['nonce'] ) ), 'postnl_user_info' ) ) {
-			wp_send_json_error( 'Invalid nonce.' );
+			wp_send_json_error( esc_html__( 'Invalid nonce.', 'postnl-for-woocommerce' ) );
 		}
 		if ( ! $this->settings->is_fill_in_with_postnl_enabled() ) {
-			wp_send_json_error( 'Fill in with PostNL is not enabled or Client ID is missing.' );
+			wp_send_json_error( esc_html__( 'Fill in with PostNL is not enabled or Client ID is missing.', 'postnl-for-woocommerce' ) );
 		}
 		$data = Session::get( self::$session_user_data_key );
 		if ( ! $data ) {
-			wp_send_json_error( 'No user data' );
+			wp_send_json_error( esc_html__( 'No user data', 'postnl-for-woocommerce' ) );
 		}
 		wp_send_json_success( $data );
 	}
@@ -177,6 +177,7 @@ class Fill_In_With_Postnl_Handler {
 			empty( $user_data['person'] ) ||
 			empty( $user_data['primaryAddress'] )
 		) {
+			$this->logger->write( 'Incomplete user data received from PostNL.' );
 			wc_add_notice( esc_html__( 'Incomplete user data.', 'postnl-for-woocommerce' ), 'error' );
 			return;
 		}

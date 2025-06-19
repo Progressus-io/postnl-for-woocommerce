@@ -16,8 +16,8 @@
                 $.ajax( {
                     url: postnlCheckoutParams.rest_url,
                     method: 'POST',
-                    data: {
-                        nonce: postnlCheckoutParams.nonce
+                    beforeSend: function ( xhr ) {
+                        xhr.setRequestHeader( 'X-WP-Nonce', postnlCheckoutParams.nonce );
                     },
                     success: function ( response ) {
                         if ( response.success && response.data.redirect_uri ) {

@@ -25,12 +25,11 @@ export const FillBlock = ( { checkoutExtensionData } ) => {
         try {
             const response = await fetch( postnlSettings.restUrl, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify( {
-                    nonce: postnlSettings.nonce,
-                } ),
+				headers: {
+					'Content-Type': 'application/json',
+					'X-WP-Nonce': postnlSettings.nonce,
+				},
+				body: JSON.stringify({}),
             } );
 
             const data = await response.json();

@@ -15,11 +15,10 @@
 
 		let text = 'Delivery Days';
 		if ( baseFee > 0 || extraFee > 0 ) {
-			text += ' (+€' + baseFee.toFixed(2);
+			text += ' €' + baseFee.toFixed(2);
 			if ( extraFee > 0 ) {
 				text += '+€' + extraFee.toFixed(2);
 			}
-			text += ')';
 		}
 		$label.children('span').first().text( text );
 	}

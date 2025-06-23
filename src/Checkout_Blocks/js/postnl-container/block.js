@@ -39,7 +39,7 @@ export const Block = ( { checkoutExtensionData } ) => {
 		const extra = tab.id === 'delivery_day' ? extraDeliveryFee : 0;
 
 		if (base > 0 || extra > 0) {
-			title += ` (+€${base.toFixed(2)}${extra > 0 ? `+€${extra.toFixed(2)}` : ''})`;
+			title += ` €${base.toFixed(2)}${extra > 0 ? `+€${extra.toFixed(2)}` : ''}`;
 		}
 
 		return {id: tab.id, name: title};

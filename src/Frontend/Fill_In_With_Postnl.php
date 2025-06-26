@@ -78,6 +78,7 @@ class Fill_In_With_Postnl {
 	public function postnl_woocommerce_cart_block_do_actions( $block_content, $block ) {
 		$blocks = array(
 			'woocommerce/proceed-to-checkout-block',
+			'woocommerce/mini-cart-footer-block',
 		);
 		if ( in_array( $block['blockName'], $blocks, true ) ) {
 			ob_start();
@@ -153,10 +154,20 @@ class Fill_In_With_Postnl {
 				'woocommerce_after_cart_totals',
 				'postnl_after_woocommerce/proceed-to-checkout-block',
 			),
-			'checkout_before_customer_details' => array( 'woocommerce_checkout_before_customer_details' ),
-			'checkout_after_customer_details'  => array( 'woocommerce_checkout_after_customer_details' ),
-			'minicart_before_buttons'          => array( 'woocommerce_widget_shopping_cart_before_buttons', 'woocommerce/mini-cart-footer-block' ),
-			'minicart_after_buttons'           => array( 'woocommerce_widget_shopping_cart_after_buttons', 'woocommerce/mini-cart-footer-block' ),
+			'checkout_before_customer_details' => array(
+				'woocommerce_checkout_before_customer_details',
+			),
+			'checkout_after_customer_details'  => array(
+				'woocommerce_checkout_after_customer_details',
+			),
+			'minicart_before_buttons'          => array(
+				'woocommerce_widget_shopping_cart_before_buttons',
+				'postnl_before_woocommerce/mini-cart-footer-block',
+			),
+			'minicart_after_buttons'           => array(
+				'woocommerce_widget_shopping_cart_after_buttons',
+				'postnl_after_woocommerce/mini-cart-footer-block',
+			),
 		);
 
 		foreach ( $locations as $key => $hooks ) {
@@ -223,8 +234,6 @@ class Fill_In_With_Postnl {
 
 	/**
 	 * Handle the REST API request to get the redirect URI.
-	 * 
-	 * @param WP_REST_Request $request The REST request object.
 	 *
 	 * @return WP_REST_Response
 	 */

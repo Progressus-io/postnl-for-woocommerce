@@ -10,7 +10,6 @@ namespace PostNLWooCommerce\Frontend;
 defined( 'ABSPATH' ) || exit;
 
 use PostNLWooCommerce\Main;
-use PostNLWooCommerce\Session;
 use PostNLWooCommerce\Shipping_Method\Fill_In_With_PostNL_Settings;
 
 /**
@@ -71,7 +70,8 @@ class Fill_In_With_Postnl_Handler {
 		if ( ! $this->settings->is_fill_in_with_postnl_enabled() ) {
 			wp_send_json_error( esc_html__( 'Fill in with PostNL is not enabled or Client ID is missing.', 'postnl-for-woocommerce' ) );
 		}
-		$data = Session::get( self::$session_user_data_key );
+
+		$data = WC()->session->get( POSTNL_SETTINGS_ID . self::$session_user_data_key );
 		if ( ! $data ) {
 			wp_send_json_error( esc_html__( 'No user data', 'postnl-for-woocommerce' ) );
 		}
@@ -203,7 +203,7 @@ class Fill_In_With_Postnl_Handler {
 			),
 		);
 
-		Session::set( self::$session_user_data_key, $prepared_user_data );
+		WC()->session->set( POSTNL_SETTINGS_ID . self::$session_user_data_key, $prepared_user_data );
 
 		// Redirect to clean URL (remove callback and code).
 		wp_safe_redirect( remove_query_arg( array( 'callback', 'code', 'state' ) ) );

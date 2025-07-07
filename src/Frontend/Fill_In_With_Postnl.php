@@ -10,6 +10,7 @@ namespace PostNLWooCommerce\Frontend;
 use WP_REST_Response;
 use WP_REST_Request;
 use PostNLWooCommerce\Shipping_Method\Fill_In_With_PostNL_Settings;
+use PostNLWooCommerce\Utils;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -145,30 +146,7 @@ class Fill_In_With_Postnl {
 	 * @return void
 	 */
 	private function maybe_add_hooks(): void {
-		$locations = array(
-			'cart_before_checkout'             => array(
-				'woocommerce_proceed_to_checkout',
-				'postnl_before_woocommerce/proceed-to-checkout-block',
-			),
-			'cart_after_checkout'              => array(
-				'woocommerce_after_cart_totals',
-				'postnl_after_woocommerce/proceed-to-checkout-block',
-			),
-			'checkout_before_customer_details' => array(
-				'woocommerce_checkout_before_customer_details',
-			),
-			'checkout_after_customer_details'  => array(
-				'woocommerce_checkout_after_customer_details',
-			),
-			'minicart_before_buttons'          => array(
-				'woocommerce_widget_shopping_cart_before_buttons',
-				'postnl_before_woocommerce/mini-cart-footer-block',
-			),
-			'minicart_after_buttons'           => array(
-				'woocommerce_widget_shopping_cart_after_buttons',
-				'postnl_after_woocommerce/mini-cart-footer-block',
-			),
-		);
+		$locations = Utils::get_frontend_locations();
 
 		foreach ( $locations as $key => $hooks ) {
 			if ( $this->is_enabled_for( $key ) ) {
@@ -196,14 +174,7 @@ class Fill_In_With_Postnl {
 	 * @return bool True if the button should be rendered, false otherwise.
 	 */
 	private function is_enabled_for( string $location ): bool {
-		$mapping = array(
-			'cart_before_checkout'             => array( 'postnl_cart_auto_render_button', 'postnl_cart_button_placement', 'before_checkout' ),
-			'cart_after_checkout'              => array( 'postnl_cart_auto_render_button', 'postnl_cart_button_placement', 'after_checkout' ),
-			'checkout_before_customer_details' => array( 'postnl_checkout_auto_render_button', 'postnl_checkout_button_placement', 'before_customer_details' ),
-			'checkout_after_customer_details'  => array( 'postnl_checkout_auto_render_button', 'postnl_checkout_button_placement', 'after_customer_details' ),
-			'minicart_before_buttons'          => array( 'postnl_minicart_auto_render_button', 'postnl_minicart_button_placement', 'before_buttons' ),
-			'minicart_after_buttons'           => array( 'postnl_minicart_auto_render_button', 'postnl_minicart_button_placement', 'after_buttons' ),
-		);
+		$mapping = Utils::get_frontend_location_mapping();
 
 		if ( ! isset( $mapping[ $location ] ) ) {
 			return false;

@@ -16,36 +16,6 @@ export const FillBlock = ( { checkoutExtensionData } ) => {
 		}
 	}, [ postnlData ] );
 
-	const handleButtonClick = async ( event ) => {
-        event.preventDefault();
-        if ( isLoading ) return;
-
-        setIsLoading( true );
-
-        try {
-            const response = await fetch( postnlSettings.restUrl, {
-                method: 'POST',
-				headers: {
-					'Content-Type': 'application/json',
-					'X-WP-Nonce': postnlSettings.nonce,
-				},
-				body: JSON.stringify({}),
-            } );
-
-            const data = await response.json();
-
-            if ( data.success && data.data.redirect_uri ) {
-                window.location.href = data.data.redirect_uri;
-            } else {
-                alert( __( 'Unable to connect to PostNL. Please try again later.', 'postnl-for-woocommerce' ) );
-            }
-        } catch ( error ) {
-            alert( __( 'An error occurred. Please try again.', 'postnl-for-woocommerce' ) );
-        } finally {
-            setIsLoading( false );
-        }
-    };
-
 	const prefillCheckoutFields = async () => {
 		try {
 			const response = await fetch( postnlSettings.ajaxUrl, {
@@ -101,7 +71,6 @@ export const FillBlock = ( { checkoutExtensionData } ) => {
 				id="postnl-login-button"
 				aria-label={ title }
 				href="#"
-                onClick={ handleButtonClick }
                 className={ isLoading ? 'disabled' : '' }
 			>
 				<span id="postnl-login-button__text">

@@ -34,18 +34,18 @@ export const FillBlock = ( { checkoutExtensionData } ) => {
 				const { person, primaryAddress } = data.data;
 				// Update WooCommerce blocks billing address
 				const addressFields = {
-                    first_name: person.givenName || '',
-                    last_name: person.familyName || '',
-                    email: person.email || '',
-                    address_1: primaryAddress.streetName || '',
-                    address_2: primaryAddress.houseNumberAddition || '',
-                    city: primaryAddress.cityName || '',
+					first_name: person.givenName || '',
+					last_name: person.familyName || '',
+					email: person.email || '',
+					address_1: primaryAddress.streetName || '',
+					address_2: primaryAddress.houseNumberAddition || '',
+					city: primaryAddress.cityName || '',
 					house_number: primaryAddress.houseNumber || '',
-                    postcode: primaryAddress.postalCode || '',
-                    country: primaryAddress.countryName || 'NL', // Default to NL for PostNL.
+					postcode: primaryAddress.postalCode || '',
+					country: primaryAddress.countryName || 'NL', // Default to NL for PostNL.
                 };
 
-                setShippingAddress(addressFields);
+				setShippingAddress(addressFields);
 				setBillingAddress(addressFields);
 
 			} else {
@@ -71,7 +71,7 @@ export const FillBlock = ( { checkoutExtensionData } ) => {
 				id="postnl-login-button"
 				aria-label={ title }
 				href="#"
-                className={ isLoading ? 'disabled' : '' }
+				className={ isLoading ? 'disabled' : '' }
 			>
 				<span id="postnl-login-button__text">
 					<span id="postnl-login-button__first-text">

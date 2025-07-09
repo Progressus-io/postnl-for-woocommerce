@@ -2,17 +2,18 @@ import { useEffect, useState } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 import { getSetting } from '@woocommerce/settings';
 import { useDispatch } from '@wordpress/data';
+import { store as noticesStore } from '@wordpress/notices';
 
 export const FillBlock = ( { checkoutExtensionData } ) => {
     const postnlData = getSetting( 'postnl-for-woocommerce-blocks_data', {} );
     const [ showButton, setShowButton ] = useState( false );
     const [ isLoading, setIsLoading ]   = useState(false);
     const { setBillingAddress, setShippingAddress } = useDispatch('wc/store/cart');
+    const { createErrorNotice } = useDispatch( noticesStore );
 
 	useEffect( () => {
 		if ( postnlSettings?.is_enabled_for_checkout ) {
 			setShowButton( true );
-			prefillCheckoutFields();
 		}
 	}, [ postnlData ] );
 
@@ -49,13 +50,31 @@ export const FillBlock = ( { checkoutExtensionData } ) => {
 				setBillingAddress(addressFields);
 
 			} else {
-				console.error( 'Failed to retrieve PostNL user data:', data.message );
+				createErrorNotice( __( 'Failed to retrieve PostNL user data.', 'postnl-for-woocommerce' ), {
+                    id: 'postnl-fetch-error',
+					context: 'wc/checkout',
+					type: 'default',
+					isDismissible: true,
+                });
+				
 			}
 		} catch ( err ) {
-			console.error( 'Error fetching PostNL user data:', err );
-			alert( __( 'Failed to retrieve PostNL address. Please try again.', 'postnl-for-woocommerce' ) );
+			createErrorNotice( __( 'Failed to retrieve PostNL address. Please try again.', 'postnl-for-woocommerce'), {
+				id: 'postnl-fetch-error',
+				context: 'wc/checkout',
+				type: 'default',
+				isDismissible: true,
+			});
 		}
 	};
+
+	useEffect( () => {
+        const urlParams   = new URLSearchParams( window.location.search );
+        const postnlToken = urlParams.get( 'callback' );
+        if ( postnlToken ) {
+            prefillCheckoutFields();
+        }
+    }, [] );
 
     if ( ! showButton ) {
         return null;

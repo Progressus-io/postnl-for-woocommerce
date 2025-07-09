@@ -206,7 +206,7 @@ class Fill_In_With_Postnl_Handler {
 		WC()->session->set( POSTNL_SETTINGS_ID . self::$session_user_data_key, $prepared_user_data );
 
 		// Redirect to clean URL (remove callback and code).
-		wp_safe_redirect( remove_query_arg( array( 'callback', 'code', 'state' ) ) );
+		wp_safe_redirect( remove_query_arg( array( 'code', 'state' ) ) );
 		exit;
 	}
 

@@ -43,7 +43,7 @@ export const FillBlock = ( { checkoutExtensionData } ) => {
 					house_number: primaryAddress.houseNumber || '',
 					postcode: primaryAddress.postalCode || '',
 					country: primaryAddress.countryName || 'NL', // Default to NL for PostNL.
-                };
+				};
 
 				setShippingAddress(addressFields);
 				setBillingAddress(addressFields);

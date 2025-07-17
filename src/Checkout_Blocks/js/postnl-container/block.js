@@ -18,6 +18,42 @@ export const Block = ( { checkoutExtensionData } ) => {
 	const { setExtensionData } = checkoutExtensionData;
 	const postnlData = getSetting( 'postnl-for-woocommerce-blocks_data', {} );
 
+	const letterbox = postnlData.letterbox || false;
+	const { CART_STORE_KEY, CHECKOUT_STORE_KEY } = window.wc.wcBlocksData;
+
+	const selectedShippingFee = useSelect(
+		( select ) => {
+			const store = select( CART_STORE_KEY );
+			if ( ! store || ! store.getCartData ) {
+				return 0;
+			}
+
+			const packages = store.getCartData().shippingRates || [];
+
+			for ( const pkg of packages ) {
+				const rates = pkg.shipping_rates || [];
+				const chosen = rates.find( ( rate ) => rate && rate.selected );
+				if ( chosen && chosen.price !== undefined ) {
+					const minor = Number( chosen.currency_minor_unit || 0 );
+					const price = parseFloat( chosen.price );
+					if ( ! Number.isNaN( price ) ) {
+						return price / Math.pow( 10, minor );
+					}
+				}
+			}
+
+			if ( store.getCartTotals ) {
+				const totals = store.getCartTotals();
+				if ( totals && totals.shipping_total ) {
+					return Number( totals.shipping_total );
+				}
+			}
+
+			return 0;
+		},
+		[ CART_STORE_KEY ]
+	);
+
 	// stores the Morning/Evening surcharge currently selected
 	const [extraDeliveryFee, setExtraDeliveryFee] = useState(() => {
 		return Number(sessionStorage.getItem('postnl_deliveryDayPrice') || 0);
@@ -35,7 +71,7 @@ export const Block = ( { checkoutExtensionData } ) => {
 				? __('Delivery', 'postnl-for-woocommerce')
 				: __('Pickup', 'postnl-for-woocommerce');
 
-		const base = tab.base;
+		const base = selectedShippingFee;
 		const extra = tab.id === 'delivery_day' ? extraDeliveryFee : 0;
 
 		if (base > 0 || extra > 0) {
@@ -47,8 +83,6 @@ export const Block = ( { checkoutExtensionData } ) => {
 
 	const [ activeTab, setActiveTab ] = useState( tabs[ 0 ].id );
 
-	const letterbox = postnlData.letterbox || false;
-	const { CART_STORE_KEY, CHECKOUT_STORE_KEY } = window.wc.wcBlocksData;
 
 	// Retrieve customer data from WooCommerce cart store
 	const customerData = useSelect(
@@ -196,8 +230,8 @@ export const Block = ( { checkoutExtensionData } ) => {
 
 							if (
 								(shippingAddress.address_1 !== street ||
-								shippingAddress.city !== city ||
-								shippingAddress[ 'postnl/house_number' ] !==
+									shippingAddress.city !== city ||
+									shippingAddress[ 'postnl/house_number' ] !==
 									house_number)
 							) {
 								isUpdatingAddress.current = true;

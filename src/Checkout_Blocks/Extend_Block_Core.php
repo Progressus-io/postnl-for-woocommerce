@@ -6,6 +6,7 @@ use function PostNLWooCommerce\postnl;
 use PostNLWooCommerce\Frontend\Delivery_Day;
 use PostNLWooCommerce\Frontend\Dropoff_Points;
 use PostNLWooCommerce\Frontend\Container;
+use PostNLWooCommerce\Frontend\Checkout_Fields;
 use PostNLWooCommerce\Utils;
 use PostNLWooCommerce\Address_Utils;
 
@@ -49,9 +50,14 @@ class Extend_Block_Core {
 
 		// Register the update callback when WooCommerce Blocks is loaded
 		add_action( 'init', array( $this, 'register_store_api_callback' ) );
+		$checkout_fields = new Checkout_Fields();
 
-		// Register fee calculation
-		add_action( 'woocommerce_cart_calculate_fees', array( $this, 'postnl_add_custom_fee' ) );
+		if ( $checkout_fields->is_blocks_checkout() ) {
+			add_action( 'woocommerce_cart_calculate_fees', array( $this, 'postnl_add_custom_fee' ) );
+			add_filter( 'woocommerce_package_rates', array( $this, 'add_postnl_fees_to_rates' ), 20, 2 );
+		}
+
+
 		if ( $this->settings->is_reorder_nl_address_enabled() ) {
 			$this->register_additional_checkout_fields();
 		}
@@ -130,6 +136,9 @@ class Extend_Block_Core {
 			// Store the fee amount and type in session
 			WC()->session->set( 'postnl_delivery_fee', $price );
 			WC()->session->set( 'postnl_delivery_type', $type );
+		} else {
+			WC()->session->__unset( 'postnl_delivery_fee' );
+			WC()->session->__unset( 'postnl_delivery_type' );
 		}
 	}
 
@@ -144,72 +153,84 @@ class Extend_Block_Core {
 		}
 
 		// Get the fee amount and type from session
-		$settings     = postnl()->get_shipping_settings();
-		$fee_type     = WC()->session->get( 'postnl_delivery_type', '' );
-		$base_day_fee = (float) $settings->get_delivery_days_fee();
-		$morning_fee  = (float) $settings->get_morning_delivery_fee();
-		$evening_fee  = (float) $settings->get_evening_delivery_fee();
-		$pickup_fee   = (float) $settings->get_pickup_delivery_fee();
+		$fee_amount = WC()->session->get( 'postnl_delivery_fee', 0 );
+		$fee_type   = WC()->session->get( 'postnl_delivery_type', '' );
 
-		$session_fee_type = WC()->session->get( 'postnl_delivery_type', '' );
-		$session_fee      = WC()->session->get( 'postnl_delivery_fee', null );
+		$fee_label = __( 'PostNL Delivery Fee', 'postnl-for-woocommerce' );
+		if ( '08:00-12:00' === $fee_type || 'Morning' === $fee_type ) {
+			$fee_label = __( 'PostNL Morning Fee', 'postnl-for-woocommerce' );
+		} elseif ( 'Evening' === $fee_type ) {
+			$fee_label = __( 'PostNL Evening Fee', 'postnl-for-woocommerce' );
+		} else {
+			return;
+		}
 
-		if ( $session_fee_type !== '' && $session_fee !== null ) {
+		$new_fees = array();
+		foreach ( $cart->get_fees() as $fee ) {
+			if ( strpos( $fee->name, 'PostNL' ) === false ) {
+				$new_fees[] = $fee;
+			}
+		}
+		$cart->fees_api()->set_fees( $new_fees );
 
-			$cart->fees_api()->set_fees(
-				array_filter(
-					$cart->get_fees(),
-					static fn( $fee ) => stripos( $fee->name, 'PostNL' ) === false
-				)
-			);
-			if ( $base_day_fee > 0 && $fee_type !== '' && $fee_type !== 'Pickup' ) {
-				$cart->add_fee(
-					__( 'PostNL Delivery Day Fee', 'postnl-for-woocommerce' ),
-					$base_day_fee,
-					true,
-					''
-				);
+		if ( $fee_amount > 0 ) {
+			$cart->add_fee( $fee_label, $fee_amount, true, '' );
+		}
+	}
+
+	/**
+	 * Add Postnl fees to the supported shipping rates
+	 *
+	 * @param array $rates
+	 * @param array $package
+	 * @return array
+	 */
+	public function add_postnl_fees_to_rates( $rates, $package ) {
+
+		$session_type   = WC()->session->get( 'postnl_delivery_type', '' );
+		if ( '' === $session_type ) {
+			return $rates;
+		}
+
+		$pickup_fee     = (float) $this->settings->get_pickup_delivery_fee();
+		$base_day_fee   = (float) $this->settings->get_delivery_days_fee();
+		$supported      = $this->settings->get_supported_shipping_methods();
+
+		foreach ( $rates as $rate_id => $rate ) {
+
+			if ( ! in_array( $rate->get_method_id(), $supported, true ) ) {
+				continue;
 			}
 
-			switch ( $fee_type ) {
-				case '08:00-12:00':
-				case 'Morning':
-					if ( $morning_fee > 0 ) {
-						$cart->add_fee(
-							__( 'PostNL Morning Fee', 'postnl-for-woocommerce' ),
-							$morning_fee,
-							true,
-							''
-						);
-					}
-					break;
-				case 'Evening':
-					if ( $evening_fee > 0 ) {
-						$cart->add_fee(
-							__( 'PostNL Evening Fee', 'postnl-for-woocommerce' ),
-							$evening_fee,
-							true,
-							''
-						);
-					}
-					break;
-				case 'Pickup':
-					if ( $pickup_fee > 0 ) {
-						$cart->add_fee(
-							__( 'PostNL Pickup Fee', 'postnl-for-woocommerce' ),
-							$pickup_fee,
-							true,
-							''
-						);
-					}
-					break;
-				default:
-					break;
+			$extra = 0;
+
+			if ( 'Pickup' === $session_type && $pickup_fee > 0 ) {
+				$extra = $pickup_fee;
+			} elseif ( 'Pickup' !== $session_type && $base_day_fee > 0 ) {
+				$extra = $base_day_fee;
+			}
+
+			if ( 0 === $extra ) {
+				continue;
+			}
+
+			$rate->cost += $extra;
+
+			if ( wc_tax_enabled() && 'taxable' === $rate->get_tax_status() ) {
+				$tax_rates   = \WC_Tax::get_shipping_tax_rates();
+				$extra_taxes = \WC_Tax::calc_tax( $extra, $tax_rates, true );
+				$rate->taxes = array_map(
+					static function ( $old, $key ) use ( $extra_taxes ) {
+						return $old + ( $extra_taxes[ $key ] ?? 0 );
+					},
+					$rate->taxes,
+					array_keys( $rate->taxes )
+				);
 			}
 
 		}
 
-
+		return $rates;
 	}
 
 	/**
@@ -341,7 +362,7 @@ class Extend_Block_Core {
 				&& empty( $sanitized_data['shipping_house_number'] )
 				&& 'NL' == $shipping_country
 			) ) {
-				WC()->session->__unset( 'postnl_checkout_post_data' );
+			WC()->session->__unset( 'postnl_checkout_post_data' );
 			wp_send_json_success(
 				array(
 					'message'          => esc_html__( 'Postcode or house number is missing.', 'postnl-for-woocommerce' ),

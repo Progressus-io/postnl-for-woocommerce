@@ -58,6 +58,9 @@ class Container {
 
 		add_filter( 'woocommerce_update_order_review_fragments', array( $this, 'fill_validated_address' ) );
 		add_filter( 'woocommerce_cart_shipping_method_full_label', array( $this, 'add_shipping_method_icon' ), 10, 2 );
+		add_filter( 'woocommerce_package_rates', array( $this, 'inject_postnl_base_fees' ), 20, 2 );
+		add_filter( 'woocommerce_cart_shipping_packages', array( $this, 'add_postnl_option_to_package' ) );
+
 	}
 
 	/**
@@ -395,30 +398,83 @@ class Container {
 		if ( ! empty( $post_data['postnl_delivery_day_price'] ) && 'delivery_day' === $post_data['postnl_option'] && $is_non_standard_delivery ) {
 			$cart->add_fee( $non_standard_fees[ $post_data['postnl_delivery_day_type'] ]['fee_name'], wc_format_decimal( $post_data['postnl_delivery_day_price'] ) );
 		}
-
-		if ( ! empty( $post_data['postnl_option'] ) && 'dropoff_points' === $post_data['postnl_option'] ) {
-			$pickup_fee = (float) $this->settings->get_pickup_delivery_fee();
-
-			if ( $pickup_fee > 0 ) {
-				$cart->add_fee(
-					__( 'PostNL Pickup Fee', 'postnl-for-woocommerce' ),
-					wc_format_decimal( $pickup_fee )
-				);
-			}
-		}
-
-		if ( ! empty( $post_data['postnl_option'] ) && 'delivery_day' === $post_data['postnl_option'] ) {
-
-
-			$day_fee = (float) $this->settings->get_delivery_days_fee();
-			if ( $day_fee > 0 ) {
-				$cart->add_fee(
-					__( 'PostNL Delivery Day Fee', 'postnl-for-woocommerce' ),
-					wc_format_decimal( $day_fee )
-				);
-			}
-		}
 	}
+	/**
+	 * ِAdd the shipping option fees to the shipping methods
+	 *
+	 * @param array $rates.
+	 * @return array
+	 */
+	public function inject_postnl_base_fees( $rates, $package ) {
+
+		$option = $package['destination']['postnl_option'] ?? '';
+
+		if ( '' === $option ) {
+			return $rates;
+		}
+
+		$pickup_fee   = (float) $this->settings->get_pickup_delivery_fee();
+		$base_day_fee = (float) $this->settings->get_delivery_days_fee();
+		$supported    = $this->settings->get_supported_shipping_methods();
+
+		foreach ( $rates as $rate_id => $rate ) {
+			if ( ! in_array( $rate->get_method_id(), $supported, true ) ) {
+				continue;
+			}
+
+			$extra = 0;
+			if ( 'dropoff_points' === $option && $pickup_fee > 0 ) {
+				$extra = $pickup_fee;
+			} elseif ( 'delivery_day' === $option && $base_day_fee > 0 ) {
+				$extra = $base_day_fee;
+			}
+
+			if ( $extra <= 0 ) {
+				continue;
+			}
+
+			$rate->cost += $extra;
+
+			if ( wc_tax_enabled() && 'taxable' === $rate->get_tax_status() ) {
+				$tax_rates   = \WC_Tax::get_shipping_tax_rates();
+				$extra_taxes = \WC_Tax::calc_tax( $extra, $tax_rates, true );
+				$rate->taxes = array_map(
+					static function ( $old, $key ) use ( $extra_taxes ) {
+						return $old + ( $extra_taxes[ $key ] ?? 0 );
+					},
+					$rate->taxes,
+					array_keys( $rate->taxes )
+				);
+			}
+
+
+		}
+
+		return $rates;
+	}
+
+
+	/**
+	 * Include the selected PostNL option in the shipping package
+	 *
+	 * @param array $packages Shipping packages.
+	 * @return array
+	 */
+	public function add_postnl_option_to_package( $packages ) {
+		$post_data = $this->get_checkout_post_data();
+		$option    = $post_data['postnl_option'] ?? '';
+
+		if ( '' === $option ) {
+			return $packages;
+		}
+
+		foreach ( $packages as $key => $package ) {
+			$packages[ $key ]['destination']['postnl_option'] = $option;
+		}
+
+		return $packages;
+	}
+
 	/**
 	 * Check if address validation required.
 	 *

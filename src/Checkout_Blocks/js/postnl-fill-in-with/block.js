@@ -84,7 +84,8 @@ export const FillBlock = ( { checkoutExtensionData } ) => {
 	const description = __( 'Your name and address are automatically filled in via your PostNL account. That saves you from having to fill in the form!', 'postnl-for-woocommerce' );
 	const postnl_logo = postnlData?.fill_in_with_postnl_settings.postnl_logo_url || '';
 	return (
-		<div className="button--postnl-container">
+
+		<div className="postnl-login-button__container">
 			<a
 				type="button"
 				id="postnl-login-button"
@@ -92,24 +93,18 @@ export const FillBlock = ( { checkoutExtensionData } ) => {
 				href="#"
 				className={ isLoading ? 'disabled' : '' }
 			>
+				<img
+					src={ postnl_logo }
+					alt={ __( 'PostNL Logo', 'postnl-for-woocommerce' ) }
+					id="postnl-logo"
+				/>
 				<span id="postnl-login-button__text">
-					<span id="postnl-login-button__first-text">
-						<img
-							src={ postnl_logo }
-							alt={ __( 'PostNL Logo', 'postnl-for-woocommerce' ) }
-							id="postnl-logo"
-						/>
-					</span>
-					<span id="postnl-login-button__second-text">
-						{ title }
-					</span>
+					{ title }
 				</span>
 			</a>
-			<div className="col-12 hidden-md">
-				<p className="postnl-fill-in-with__description">
-					{ description }
-				</p>
-			</div>
+			<p className="postnl-login-button__description">
+				{ description }
+			</p>
 		</div>
 	);
 };

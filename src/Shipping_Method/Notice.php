@@ -109,7 +109,7 @@ class Notice {
                 </a>
             </p>
             <p>
-                <a href="<?php echo esc_url( 'https://wordpress.org/plugins/postnl-for-woocommerce/#reviews' ); ?>"
+                <a href="<?php echo esc_url( 'https://wordpress.org/support/plugin/woo-postnl/reviews/#new-post' ); ?>"
                    target="_blank"
                    rel="noopener noreferrer">
 					<?php esc_html_e( 'Leave a review on WordPress org', 'postnl-for-woocommerce' ); ?>

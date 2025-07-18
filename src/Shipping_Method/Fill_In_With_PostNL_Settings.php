@@ -273,29 +273,14 @@ class Fill_In_With_PostNL_Settings {
 		wp_enqueue_script( 'wp-theme-plugin-editor' );
 		wp_enqueue_style( 'wp-codemirror' );
 
-		wp_add_inline_script(
-			'wp-theme-plugin-editor',
-			<<<'JS'
-			jQuery(function($) {
-				$('.postnl-css-editor').each(function() {
-					// Guard: Prevent initializing again
-					if ($(this).data('codeEditorInitialized')) {
-						return;
-					}
-					wp.codeEditor.initialize(this, {
-						codemirror: {
-							mode: 'css',
-							lineNumbers: true,
-							indentUnit: 2,
-							viewportMargin: Infinity
-						}
-					});
-					// Mark as initialized
-					$(this).data('codeEditorInitialized', true);
-				});
-			});
-		JS
+		wp_enqueue_script(
+			'postnl-admin-fill-in-with-postnl-settings',
+			POSTNL_WC_PLUGIN_DIR_URL . '/assets/js/admin-fill-in-with-postnl-settings.js',
+			array( 'jquery' ),
+			POSTNL_WC_VERSION,
+			true
 		);
+
 	}
 
 	/**

@@ -98,7 +98,7 @@ class Fill_In_With_PostNL_Settings {
 			),
 			array(
 				'title'   => esc_html__( 'Automatically render button in cart page', 'postnl-for-woocommerce' ),
-				'desc'    => esc_html__( 'Automatically render button in cart page', 'postnl-for-woocommerce' ),
+				'desc'    => esc_html__( 'If enabled, the button will be automatically rendered in the cart page.', 'postnl-for-woocommerce' ),
 				'id'      => 'postnl_cart_auto_render_button',
 				'type'    => 'checkbox',
 				'default' => 'no',
@@ -126,7 +126,7 @@ class Fill_In_With_PostNL_Settings {
 			),
 			array(
 				'title'   => esc_html__( 'Automatically render button in checkout page', 'postnl-for-woocommerce' ),
-				'desc'    => esc_html__( 'Automatically render button in checkout page', 'postnl-for-woocommerce' ),
+				'desc'    => esc_html__( 'If enabled, the button will be automatically rendered in the checkout page.', 'postnl-for-woocommerce' ),
 				'id'      => 'postnl_checkout_auto_render_button',
 				'type'    => 'checkbox',
 				'default' => 'no',
@@ -154,7 +154,7 @@ class Fill_In_With_PostNL_Settings {
 			),
 			array(
 				'title'   => esc_html__( 'Automatically render button in Minicart', 'postnl-for-woocommerce' ),
-				'desc'    => esc_html__( 'Automatically render button in Minicart', 'postnl-for-woocommerce' ),
+				'desc'    => esc_html__( 'If enabled, the button will be automatically rendered in the minicart.', 'postnl-for-woocommerce' ),
 				'id'      => 'postnl_minicart_auto_render_button',
 				'type'    => 'checkbox',
 				'default' => 'no',

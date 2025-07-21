@@ -3,24 +3,116 @@
       * Helper – refresh the “Delivery Days” tab title with base-fee
       *
       */
-	function updateDeliveryDayTabFee() {
-		const $label   = $('.postnl_checkout_tab_list .postnl_option[value="delivery_day"]').closest('label');
-		if ( ! $label.length ) { return; }
+	function parsePrice( text ) {
+		const match = text.replace( /[^0-9.,]/g, '' ).match( /[0-9]+(?:[.,][0-9]+)?/ );
+		return match ? parseFloat( match[0].replace( ',', '.' ) ) : NaN;
+	}
 
-		let baseFee  = parseFloat( $label.data('base-fee') || 0 );
-		let extraFee = parseFloat( $('#postnl_delivery_day_price').val() || 0 );
+	/*
+     * Helper – read the cost of the currently selected shipping method
+     */
+	function getSelectedShippingFee() {
+		const $method = $(
+			'input[name^="shipping_method"]:checked, input.wc-block-components-radio-control__input:checked'
+		);
+		if (!$method.length) {
+			return 0;
+		}
 
-		if ( isNaN( baseFee )  ) { baseFee  = 0; }
-		if ( isNaN( extraFee ) ) { extraFee = 0; }
-
-		let text = 'Delivery Days';
-		if ( baseFee > 0 || extraFee > 0 ) {
-			text += ' €' + baseFee.toFixed(2);
-			if ( extraFee > 0 ) {
-				text += '+€' + extraFee.toFixed(2);
+		let fee = parseFloat($method.data('shipping-cost') || $method.data('rate-cost'));
+		if (isNaN(fee)) {
+			const $priceEl = $method.closest('li').find('.amount').first();
+			if ($priceEl.length) {
+				fee = parsePrice($priceEl.text());
 			}
 		}
-		$label.children('span').first().text( text );
+
+		if (isNaN(fee)) {
+			const label = $('label[for="' + $method.attr('id') + '"]');
+			if (label.length) {
+				fee = parsePrice(label.text());
+			}
+		}
+		console.log(fee);
+
+		return isNaN(fee) ? 0 : fee;
+	}
+
+	function getActiveBaseFee() {
+		const $active = $('.postnl_checkout_tab_list .postnl_option:checked').closest('label');
+		return parseFloat($active.data('base-fee') || 0);
+	}
+
+	/*
+	* Helper – refresh the “Delivery Day” tab title with base-fee
+	* */
+	function updateDeliveryDayTabFee() {
+		const $input = $('.postnl_checkout_tab_list .postnl_option[value="delivery_day"]');
+		const $label = $input.closest('label');
+		if (!$label.length) {
+			return;
+		}
+
+		const selectedFee = getSelectedShippingFee();
+		const activeBase = getActiveBaseFee();
+		const tabBase = parseFloat($label.data('base-fee') || 0);
+
+		let baseFee = selectedFee - activeBase + tabBase;
+		if (isNaN(baseFee)) {
+			baseFee = tabBase;
+		}
+
+		let extraFee = 0;
+		if ($input.is(':checked')) {
+			extraFee = parseFloat($('#postnl_delivery_day_price').val() || 0);
+			if (isNaN(extraFee)) {
+				extraFee = 0;
+			}
+		}
+
+		if (baseFee < 0) {
+			baseFee = 0;
+		}
+
+		let text = 'Delivery Days';
+		if (baseFee > 0) {
+			text += ' €' + baseFee.toFixed(2);
+		}
+		if (extraFee > 0) {
+			text += ' + €' + extraFee.toFixed(2);
+		}
+
+		$label.children('span').first().text(text);
+	}
+
+	/*
+	* Helper – refresh the “Pickup” tab title with base-fee
+	*/
+	function updatePickupTabFee() {
+		const $input = $('.postnl_checkout_tab_list .postnl_option[value="dropoff_points"]');
+		const $label = $input.closest('label');
+		if (!$label.length) {
+			return;
+		}
+
+		const selectedFee = getSelectedShippingFee();
+		const activeBase = getActiveBaseFee();
+		const tabBase = parseFloat($label.data('base-fee') || 0);
+
+		let total = selectedFee - activeBase + tabBase;
+		if (isNaN(total)) {
+			total = tabBase;
+		}
+		if (total < 0) {
+			total = 0;
+		}
+
+		let text = 'Pickup';
+		if (total > 0) {
+			text += ' €' + total.toFixed(2);
+		}
+
+		$label.children('span').first().text(text);
 	}
 
 	var postnl_fe_checkout = {
@@ -69,6 +161,7 @@
 			}
 
 			updateDeliveryDayTabFee();
+			updatePickupTabFee();
 
 			radio_tabs.on('change', function () {
 				const pri_container = $(this).closest('#postnl_checkout_option');
@@ -79,9 +172,12 @@
 				$(this).closest('li').addClass('active');
 
 				pri_container.find('.postnl_checkout_content_container .postnl_content').removeClass('active');
-				pri_container.find('#postnl_' + current_val + '_content').addClass('active');
+				const content = pri_container.find('#postnl_' + current_val + '_content').addClass('active');
 
 				updateDeliveryDayTabFee();
+				content.find('.postnl_sub_radio:checked').trigger('change');
+			//	$('body').trigger('update_checkout');
+
 			});
 
 			radio_options.on('change', function () {

@@ -196,6 +196,18 @@ export const Block = ( {
 		}
 	}, [ isActive ] );
 
+	useEffect( () => {
+		if (
+			isActive &&
+			dropoffOptions.length > 0 &&
+			! dropoffPoints
+		) {
+			const first = dropoffOptions[ 0 ];
+			const value = `${ first.partner_id }-${ first.loc_code }`;
+			handleOptionChange( value );
+		}
+	}, [ isActive, dropoffOptions, dropoffPoints ] );
+
 	/**
 	 * Helper function to clear selections
 	 * @param clearSession

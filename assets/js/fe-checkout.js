@@ -174,9 +174,17 @@
 				pri_container.find('.postnl_checkout_content_container .postnl_content').removeClass('active');
 				const content = pri_container.find('#postnl_' + current_val + '_content').addClass('active');
 
+				let $checked = content.find('.postnl_sub_radio:checked');
+				if (!$checked.length) {
+					$checked = content.find('.postnl_sub_radio').first();
+					if ($checked.length) {
+						$checked.prop('checked', true);
+					}
+				}
+
 				updateDeliveryDayTabFee();
-				content.find('.postnl_sub_radio:checked').trigger('change');
-			//	$('body').trigger('update_checkout');
+				updatePickupTabFee();
+				$checked.trigger('change');
 
 			});
 

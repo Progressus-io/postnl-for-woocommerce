@@ -59,29 +59,41 @@ export const Block = ( { checkoutExtensionData } ) => {
 		return Number(sessionStorage.getItem('postnl_deliveryDayPrice') || 0);
 	});
 
-	const tabs = [
-		{id: 'delivery_day', base: Number(postnlData.delivery_day_fee || 0)},
-		...(postnlData.is_pickup_points_enabled ? [{
-			id: 'dropoff_points',
-			base: Number(postnlData.pickup_fee || 0)
-		}] : []),
-	].map((tab) => {
+	const baseTabs = [
+		{ id: 'delivery_day', base: Number( postnlData.delivery_day_fee || 0 ) },
+		...( postnlData.is_pickup_points_enabled
+			? [ { id: 'dropoff_points', base: Number( postnlData.pickup_fee || 0 ) } ]
+			: [] ),
+	];
+
+	const [ activeTab, setActiveTab ] = useState( baseTabs[ 0 ].id );
+	const activeBase =
+		baseTabs.find( ( tab ) => tab.id === activeTab )?.base || 0;
+
+	const tabs = baseTabs.map( ( tab ) => {
 		let title =
 			tab.id === 'delivery_day'
-				? __('Delivery', 'postnl-for-woocommerce')
-				: __('Pickup', 'postnl-for-woocommerce');
+				? __( 'Delivery', 'postnl-for-woocommerce' )
+				: __( 'Pickup', 'postnl-for-woocommerce' );
 
-		const base = selectedShippingFee;
-		const extra = tab.id === 'delivery_day' ? extraDeliveryFee : 0;
-
-		if (base > 0 || extra > 0) {
-			title += ` €${base.toFixed(2)}${extra > 0 ? `+€${extra.toFixed(2)}` : ''}`;
+		let base = selectedShippingFee - activeBase + tab.base;
+		if ( Number.isNaN( base ) ) {
+			base = tab.base;
+		}
+		if ( base < 0 ) {
+			base = 0;
 		}
 
-		return {id: tab.id, name: title};
-	});
+		const extra = tab.id === 'delivery_day' ? extraDeliveryFee : 0;
 
-	const [ activeTab, setActiveTab ] = useState( tabs[ 0 ].id );
+		if ( base > 0 || extra > 0 ) {
+			title += ` €${ base.toFixed( 2 ) }${
+				extra > 0 ? `+€${ extra.toFixed( 2 ) }` : ''
+			}`;
+		}
+
+		return { id: tab.id, name: title, base: tab.base };
+	} );
 
 
 	// Retrieve customer data from WooCommerce cart store

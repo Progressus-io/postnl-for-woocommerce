@@ -407,7 +407,7 @@ class Container {
 	 */
 	public function inject_postnl_base_fees( $rates, $package ) {
 
-		$option = $package['destination']['postnl_option'] ?? '';
+		$option = $package['destination']['postnl_option'] ?? WC()->session->get( 'postnl_option', '' );
 
 		if ( '' === $option ) {
 			return $rates;
@@ -467,6 +467,8 @@ class Container {
 		if ( '' === $option ) {
 			return $packages;
 		}
+
+		WC()->session->set( 'postnl_option', $option );
 
 		foreach ( $packages as $key => $package ) {
 			$packages[ $key ]['destination']['postnl_option'] = $option;

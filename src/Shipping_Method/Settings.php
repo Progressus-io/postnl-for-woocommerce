@@ -294,7 +294,7 @@ class Settings extends \WC_Settings_API {
 			),
 			'pickup_delivery_fee'            => array(
 				'title'       => __( 'Extra fee pick-up delivery', 'postnl-for-woocommerce' ),
-				'type'        => 'text',
+				'type'        => 'price',
 				'description' => __( 'Extra fee added when the customer selects a PostNL pick-up point.', 'postnl-for-woocommerce' ),
 				'desc_tip'    => true,
 				'for_country' => array( 'NL', 'BE' ),
@@ -330,7 +330,7 @@ class Settings extends \WC_Settings_API {
 			),
 			'delivery_days_fee'               => array(
 				'title'       => __( 'Extra fee home delivery', 'postnl-for-woocommerce' ),
-				'type'        => 'text',
+				'type'        => 'price',
 				'description' => __( 'Extra fee added when the customer selects home delivery.', 'postnl-for-woocommerce' ),
 				'desc_tip'    => true,
 				'for_country' => array( 'NL', 'BE' ),
@@ -361,7 +361,7 @@ class Settings extends \WC_Settings_API {
 			),
 			'morning_delivery_fee'            => array(
 				'title'       => __( 'Morning Delivery Fee', 'postnl-for-woocommerce' ),
-				'type'        => 'text',
+				'type'        => 'price',
 				'description' => __( 'Fee for receiving orders in the morning.', 'postnl-for-woocommerce' ),
 				'desc_tip'    => true,
 				'for_country' => array( 'NL' ),
@@ -379,7 +379,7 @@ class Settings extends \WC_Settings_API {
 			),
 			'evening_delivery_fee'            => array(
 				'title'       => __( 'Evening Delivery Fee', 'postnl-for-woocommerce' ),
-				'type'        => 'text',
+				'type'        => 'price',
 				'description' => __( 'Fee for receiving orders in the evening.', 'postnl-for-woocommerce' ),
 				'desc_tip'    => true,
 				'for_country' => array( 'NL' ),
@@ -1042,7 +1042,7 @@ class Settings extends \WC_Settings_API {
 	 * @return string
 	 */
 	public function get_pickup_delivery_fee() {
-		return $this->get_country_option( 'pickup_delivery_fee' );
+		return (float) $this->get_country_option( 'pickup_delivery_fee' );
 	}
 
 	/**
@@ -1092,7 +1092,7 @@ class Settings extends \WC_Settings_API {
 	 * @return Int
 	 */
 	public function get_delivery_days_fee() {
-		return $this->get_country_option( 'delivery_days_fee' );
+		return (float) $this->get_country_option( 'delivery_days_fee' );
 	}
 
 	/**

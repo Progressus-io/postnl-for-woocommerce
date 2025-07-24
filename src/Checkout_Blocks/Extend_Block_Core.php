@@ -218,14 +218,7 @@ class Extend_Block_Core {
 
 			if ( wc_tax_enabled() && 'taxable' === $rate->get_tax_status() ) {
 				$tax_rates   = \WC_Tax::get_shipping_tax_rates();
-				$extra_taxes = \WC_Tax::calc_tax( $extra, $tax_rates, true );
-				$rate->taxes = array_map(
-					static function ( $old, $key ) use ( $extra_taxes ) {
-						return $old + ( $extra_taxes[ $key ] ?? 0 );
-					},
-					$rate->taxes,
-					array_keys( $rate->taxes )
-				);
+				$rate->taxes = \WC_Tax::calc_shipping_tax( $rate->cost, $tax_rates );
 			}
 
 		}

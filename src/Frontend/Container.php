@@ -13,6 +13,7 @@ use PostNLWooCommerce\Rest_API\Checkout;
 use PostNLWooCommerce\Rest_API\Postcode_Check;
 use PostNLWooCommerce\Utils;
 use PostNLWooCommerce\Helper\Mapping;
+use PostNLWooCommerce\Frontend\Checkout_Fields;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -58,7 +59,11 @@ class Container {
 
 		add_filter( 'woocommerce_update_order_review_fragments', array( $this, 'fill_validated_address' ) );
 		add_filter( 'woocommerce_cart_shipping_method_full_label', array( $this, 'add_shipping_method_icon' ), 10, 2 );
-		add_filter( 'woocommerce_package_rates', array( $this, 'inject_postnl_base_fees' ), 20, 2 );
+
+		$checkout_fields = new Checkout_Fields();
+		if ( ! $checkout_fields->is_blocks_checkout() ) {
+			add_filter( 'woocommerce_package_rates', array( $this, 'inject_postnl_base_fees' ), 20, 2 );
+		}
 		add_filter( 'woocommerce_cart_shipping_packages', array( $this, 'add_postnl_option_to_package' ) );
 
 	}

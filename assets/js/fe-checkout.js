@@ -182,8 +182,6 @@
 					}
 				}
 
-				updateDeliveryDayTabFee();
-				updatePickupTabFee();
 				$checked.trigger('change');
 
 			});
@@ -204,8 +202,6 @@
 
 				$('body').trigger('update_checkout');
 
-				/* every pick may change the surcharge */
-				updateDeliveryDayTabFee();
 			});
 
 			checkout_option

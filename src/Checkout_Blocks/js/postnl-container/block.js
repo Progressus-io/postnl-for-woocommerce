@@ -66,9 +66,27 @@ export const Block = ( { checkoutExtensionData } ) => {
 			: [] ),
 	];
 
-	const [ activeTab, setActiveTab ] = useState( baseTabs[ 0 ].id );
-	const activeBase =
-		baseTabs.find( ( tab ) => tab.id === activeTab )?.base || 0;
+	const [activeTab, setActiveTab] = useState(baseTabs[0].id);
+
+	const [carrierBaseCost, setCarrierBaseCost] = useState(() => {
+		const savedExtra = Number(sessionStorage.getItem('postnl_deliveryDayPrice') || 0);
+		return selectedShippingFee - baseTabs[0].base - savedExtra;
+	});
+
+	const prevShipping = useRef(selectedShippingFee);
+
+	useEffect(() => {
+		if (prevShipping.current === selectedShippingFee) {
+			return;
+		}
+		prevShipping.current = selectedShippingFee;
+
+		const currentTabBase = baseTabs.find((tab) => tab.id === activeTab)?.base || 0;
+		const extra = activeTab === 'delivery_day' ? extraDeliveryFee : 0;
+
+		const raw = selectedShippingFee - currentTabBase - extra;
+		setCarrierBaseCost(raw < 0 ? 0 : raw);
+	}, [selectedShippingFee]);
 
 	const tabs = baseTabs.map( ( tab ) => {
 		let title =
@@ -76,7 +94,7 @@ export const Block = ( { checkoutExtensionData } ) => {
 				? __( 'Delivery', 'postnl-for-woocommerce' )
 				: __( 'Pickup', 'postnl-for-woocommerce' );
 
-		let base = selectedShippingFee - activeBase + tab.base;
+		let base = carrierBaseCost + tab.base;
 		if ( Number.isNaN( base ) ) {
 			base = tab.base;
 		}

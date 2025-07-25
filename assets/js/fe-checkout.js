@@ -139,6 +139,10 @@
 			} );
 		},
 
+		isAddressReady: function () {
+			return !!($('#shipping_postcode').val() || $('#billing_postcode').val());
+		},
+
 		operate: function () {
 			const checkout_option = $('#postnl_checkout_option');
 			if (!checkout_option.length) {
@@ -158,6 +162,11 @@
 
 			for (let name in dropoff_data) {
 				$('#' + field_name + '_' + name).val(dropoff_data[name]);
+			}
+
+			if (!window.__postnlFirstRefreshDone && postnl_fe_checkout.isAddressReady()) {
+				window.__postnlFirstRefreshDone = true;
+				$('body').trigger('update_checkout');
 			}
 
 			updateDeliveryDayTabFee();
@@ -180,6 +189,12 @@
 					if ($checked.length) {
 						$checked.prop('checked', true);
 					}
+
+					if ($checked.length) {
+						$checked.prop('checked', true).trigger('change');
+						return;
+					}
+
 				}
 
 				$checked.trigger('change');

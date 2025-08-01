@@ -261,11 +261,11 @@ class Fill_In_With_Postnl {
 			'ajax_nonce' => wp_create_nonce( 'postnl_user_info' ),
 		);
 
-		wp_enqueue_script(
+		wp_register_script(
 			'fill-in-with-postnl',
 			POSTNL_WC_PLUGIN_DIR_URL . '/assets/js/fill_in_with_postnl.js',
 			array( 'jquery' ),
-			'1.0',
+			POSTNL_WC_VERSION,
 			true
 		);
 
@@ -286,6 +286,8 @@ class Fill_In_With_Postnl {
 			return;
 		}
 
+		wp_enqueue_script( 'fill-in-with-postnl' );
+		
 		wc_get_template(
 			'checkout/postnl-fill-in-with-button.php',
 			array(

@@ -136,7 +136,9 @@ class Fill_In_With_Postnl {
 		}
 
 		if ( ! empty( $css ) ) {
-			echo '<style id="postnl-custom-css">' . wp_kses_post( $css ) . '</style>';
+			wp_register_style( 'postnl-custom-css', false );
+			wp_enqueue_style( 'postnl-custom-css' );
+			wp_add_inline_style( 'postnl-custom-css', $css );
 		}
 	}
 
@@ -287,7 +289,7 @@ class Fill_In_With_Postnl {
 		}
 
 		wp_enqueue_script( 'fill-in-with-postnl' );
-		
+
 		wc_get_template(
 			'checkout/postnl-fill-in-with-button.php',
 			array(

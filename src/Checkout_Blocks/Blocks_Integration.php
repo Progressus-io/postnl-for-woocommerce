@@ -245,6 +245,8 @@ class Blocks_Integration implements IntegrationInterface {
 			'is_nl_address_enabled'        => $settings->is_reorder_nl_address_enabled(),
 			'is_pickup_points_enabled'     => $settings->is_pickup_points_enabled(),
 			'fill_in_with_postnl_settings' => array(
+				'rest_url'                       => rest_url( 'postnl/v1/get-redirect-uri' ),
+				'nonce'                          => wp_create_nonce( 'wp_rest' ),
 				'is_fill_in_with_postnl_enabled' => $this->fill_in_with_settings->is_fill_in_with_postnl_enabled(),
 				'postnl_logo_url'                => POSTNL_WC_PLUGIN_DIR_URL . '/assets/images/postnl-logo.svg',
 			),

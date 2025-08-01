@@ -68,6 +68,46 @@ export const FillBlock = ( { checkoutExtensionData } ) => {
 		}
 	};
 
+	const handleLoginButtonClick = async ( e ) => {
+		e.preventDefault();
+		setIsLoading( true );
+
+		try {
+			const response = await fetch( postnlData?.fill_in_with_postnl_settings?.rest_url, {
+				method: 'POST',
+				headers: {
+					'X-WP-Nonce': postnlData?.fill_in_with_postnl_settings?.nonce,
+					'Content-Type': 'application/json',
+				},
+			} );
+			const result = await response.json();
+			if ( result.success && result.data?.redirect_uri ) {
+				window.location.href = result.data.redirect_uri;
+			} else {
+				createErrorNotice(
+					__( 'Failed to initiate PostNL login.', 'postnl-for-woocommerce' ),
+					{
+						id: 'postnl-login-error',
+						context: 'wc/checkout',
+						type: 'default',
+						isDismissible: true,
+					}
+				);
+			}
+		} catch ( err ) {
+			const message =
+				err?.response?.data?.message ||
+				__( 'An unknown error occurred.', 'postnl-for-woocommerce' );
+			createErrorNotice( message, {
+				id: 'postnl-login-error',
+				context: 'wc/checkout',
+				type: 'default',
+				isDismissible: true,
+			} );
+		}
+		setIsLoading( false );
+	};
+
 	useEffect( () => {
         const urlParams   = new URLSearchParams( window.location.search );
         const postnlToken = urlParams.get( 'callback' );
@@ -92,6 +132,7 @@ export const FillBlock = ( { checkoutExtensionData } ) => {
 				aria-label={ title }
 				href="#"
 				className={ isLoading ? 'disabled' : '' }
+				onClick={ handleLoginButtonClick }
 			>
 				<img
 					src={ postnl_logo }

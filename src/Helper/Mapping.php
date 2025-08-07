@@ -192,6 +192,41 @@ class Mapping {
 							'options'     => array(),
 						),
 						array(
+							'combination' => array( 'insured_shipping', 'track_and_trace' ),
+							'code'        => '4914',
+							'options'     => array(),
+						),
+						array(
+							'combination' => array( 'insured_shipping', 'signature_on_delivery' ),
+							'code'        => '4914',
+							'options'     => array(),
+						),
+						array(
+							'combination' => array( 'insured_shipping', 'only_home_address' ),
+							'code'        => '4914',
+							'options'     => array(),
+						),
+						array(
+							'combination' => array( 'insured_shipping', 'signature_on_delivery', 'only_home_address' ),
+							'code'        => '4914',
+							'options'     => array(),
+						),
+						array(
+							'combination' => array( 'insured_shipping', 'track_and_trace', 'signature_on_delivery' ),
+							'code'        => '4914',
+							'options'     => array(),
+						),
+						array(
+							'combination' => array( 'insured_shipping', 'track_and_trace', 'only_home_address' ),
+							'code'        => '4914',
+							'options'     => array(),
+						),
+						array(
+							'combination' => array( 'insured_shipping', 'track_and_trace', 'signature_on_delivery', 'only_home_address' ),
+							'code'        => '4914',
+							'options'     => array(),
+						),
+						array(
 							'combination' => array( 'mailboxpacket' ),
 							'code'        => '6440',
 							'options'     => array(),

@@ -255,3 +255,8 @@ tr.postnl-co-tr-container > td {
 #postnl-login-button:focus {
 	background-color: #ed7000;
 }
+
+.postnl-button-in-minicart{
+	margin: auto;
+	width: 94%;
+}

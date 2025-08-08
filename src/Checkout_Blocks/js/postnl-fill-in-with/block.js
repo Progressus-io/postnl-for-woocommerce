@@ -125,7 +125,7 @@ export const FillBlock = ( { checkoutExtensionData } ) => {
 	const postnl_logo = postnlData?.fill_in_with_postnl_settings.postnl_logo_url || '';
 	return (
 
-		<div className="postnl-login-button__container">
+		<div className="postnl-login-button__container postnl-button-in-checkout">
 			<a
 				type="button"
 				id="postnl-login-button"

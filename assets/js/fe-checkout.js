@@ -52,6 +52,18 @@
 
 				pri_container.find( '.postnl_checkout_content_container .postnl_content' ).removeClass( 'active' );
 				pri_container.find( '#postnl_' + current_val + '_content' ).addClass( 'active' );
+
+				// Auto-select first option in the newly active tab if no option is currently selected
+				var active_content = pri_container.find( '#postnl_' + current_val + '_content' );
+				var field_name = 'postnl_' + current_val;
+				var current_selection = jQuery( 'input[name=' + field_name + ']:checked' );
+
+				if ( current_selection.length === 0 ) {
+					var first_option = active_content.find( 'input[name=' + field_name + ']:first' );
+					if ( first_option.length > 0 ) {
+						first_option.prop( 'checked', true ).trigger( 'change' );
+					}
+				}
 			} );
 
 			radio_options.on( 'change', function() {
@@ -70,7 +82,11 @@
 				jQuery('body').trigger('update_checkout');
 			} );
 
-			checkout_option.find( '.postnl_checkout_tab_list .active .postnl_option' ).trigger( 'click' );
+			// Trigger the active tab to ensure proper initialization
+			var active_tab_input = checkout_option.find( '.postnl_checkout_tab_list .active .postnl_option' );
+			if ( active_tab_input.length > 0 ) {
+				active_tab_input.trigger( 'change' );
+			}
 		},
 	};
 

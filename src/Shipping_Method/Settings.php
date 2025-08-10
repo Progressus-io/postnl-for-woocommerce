@@ -292,6 +292,19 @@ class Settings extends \WC_Settings_API {
 				'for_country' => array( 'NL', 'BE' ),
 				'class'       => 'country-nl country-be',
 			),
+			'default_checkout_tab'            => array(
+				'title'       => __( 'Default Checkout Tab', 'postnl-for-woocommerce' ),
+				'type'        => 'select',
+				'description' => __( 'Choose which delivery option tab to show first by default in the checkout.', 'postnl-for-woocommerce' ),
+				'desc_tip'    => true,
+				'default'     => 'delivery_day',
+				'options'     => array(
+					'delivery_day'   => __( 'Home Delivery', 'postnl-for-woocommerce' ),
+					'dropoff_points' => __( 'Pickup Points', 'postnl-for-woocommerce' ),
+				),
+				'for_country' => array( 'NL', 'BE' ),
+				'class'       => 'country-nl country-be',
+			),
 
 			/*
 			Temporarily commented out.
@@ -1026,6 +1039,15 @@ class Settings extends \WC_Settings_API {
 	 */
 	public function is_pickup_points_enabled() {
 		return ( 'yes' === $this->get_enable_pickup_points() );
+	}
+
+	/**
+	 * Get default checkout tab from the settings.
+	 *
+	 * @return String
+	 */
+	public function get_default_checkout_tab() {
+		return $this->get_country_option( 'default_checkout_tab', 'delivery_day' );
 	}
 
 	/**

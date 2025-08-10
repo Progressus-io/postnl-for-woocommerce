@@ -210,6 +210,10 @@ class Main {
 		add_filter( 'woocommerce_locate_template', array( $this, 'woocommerce_locate_template' ), 20, 3 );
 
 		add_filter( 'woocommerce_email_classes', array( $this, 'add_wc_smart_return_email' ) );
+
+		add_action( 'admin_notices', array( 'PostNLWooCommerce\Shipping_Method\Notice', 'maybe_render' ) );
+		add_action( 'add_meta_boxes', array( 'PostNLWooCommerce\Shipping_Method\Notice', 'maybe_render' ), 10, 2 );
+
 	}
 
 	/**

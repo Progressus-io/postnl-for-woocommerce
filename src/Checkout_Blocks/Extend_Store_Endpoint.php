@@ -246,6 +246,16 @@ class Extend_Store_Endpoint {
 				'default'     => '',
 				'type'        => 'string',
 			),
+			'dropoffPointsType'           => array(
+				'description' => 'Type of the drop-off point selection',
+				'context'     => array(
+					'view',
+					'edit'
+				),
+				'readonly'    => false,
+				'default'     => '',
+				'type'        => 'string',
+			),
 			'dropoffPointsDistance'       => array(
 				'description' => 'Distance to the drop-off point',
 				'context'     => array(

@@ -5,12 +5,14 @@ import { useEffect, useState, useCallback } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 import { debounce } from 'lodash';
 
-export const Block = ( {
-	checkoutExtensionData,
-	isActive,
-	deliveryOptions,
-	isDeliveryDaysEnabled,
-} ) => {
+export const Block = ({
+						  checkoutExtensionData,
+						  isActive,
+						  deliveryOptions,
+						  isDeliveryDaysEnabled,
+						  onPriceChange = () => {
+						  },
+					  }) => {
 	const { setExtensionData } = checkoutExtensionData;
 
 	// Debounce setting extension data to optimize performance
@@ -106,6 +108,7 @@ export const Block = ( {
 		setExtensionData( 'postnl', 'deliveryDayTo', '' );
 		setExtensionData( 'postnl', 'deliveryDayPrice', '' );
 		setExtensionData( 'postnl', 'deliveryDayType', '' );
+		onPriceChange( 0 );
 	};
 
 	useEffect( () => {
@@ -135,6 +138,7 @@ export const Block = ( {
 					firstOption.type || 'Unknown',
 					firstOption.price || 0
 				);
+				onPriceChange( Number( firstOption.price || 0 ) );
 			}
 		}
 	}, [ isActive, deliveryOptions ] );
@@ -174,6 +178,7 @@ export const Block = ( {
 		setExtensionData( 'postnl', 'deliveryDayFrom', from );
 		setExtensionData( 'postnl', 'deliveryDayTo', to );
 		setExtensionData( 'postnl', 'deliveryDayPrice', price.toString() );
+		onPriceChange( Number( price ) );
 		setExtensionData( 'postnl', 'deliveryDayType', type );
 
 		// Clear dropoff point data

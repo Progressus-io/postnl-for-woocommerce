@@ -204,6 +204,7 @@ class Blocks_Integration implements IntegrationInterface {
 			'letterbox'                => $letterbox,
 			'is_nl_address_enabled'    => $settings->is_reorder_nl_address_enabled(),
 			'is_pickup_points_enabled' => $settings->is_pickup_points_enabled(),
+			'default_checkout_tab'     => $settings->get_default_checkout_tab(),
 		);
 	}
 }

@@ -191,8 +191,16 @@ export const Block = ( {
 	useEffect( () => {
 		if ( ! isActive ) {
 			clearSelections();
+			return;
 		}
-	}, [ isActive ] );
+
+		// If active and no option selected, select the first option if available
+		if ( isActive && ! dropoffPoints && Array.isArray( dropoffOptions ) && dropoffOptions.length > 0 ) {
+			const firstPoint = dropoffOptions[ 0 ];
+			const firstValue = `${ firstPoint.partner_id }-${ firstPoint.loc_code }`;
+			handleOptionChange( firstValue );
+		}
+	}, [ isActive, dropoffOptions ] );
 
 	/**
 	 * Helper function to clear selections

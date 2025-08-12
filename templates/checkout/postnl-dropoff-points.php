@@ -109,13 +109,13 @@ function postnl_display_dropoff_desc( $data ) {
 <div class="postnl_content" id="postnl_dropoff_points_content">
 	<?php postnl_display_dropoff_desc( $data ); ?>
 	<ul class="postnl_dropoff_points_list postnl_list">
-		<?php foreach ( $data['dropoff_options'] as $point ) { ?>
+		<?php foreach ( $data['dropoff_options'] as $index => $point ) { ?>
 			<?php
 			$value    = sanitize_title( $point['partner_id'] . '-' . $point['loc_code'] );
 			$radio_id = sanitize_title( $point['partner_id'] . '-' . $point['loc_code'] );
 
 			$address    = implode( ' ', array_values( postnl_generate_pickup_address( $point['address'] ) ) );
-			$is_checked = ( $value === $data['value'] ) ? 'checked="checked"' : '';
+			$is_checked = ( $value === $data['value'] || ( empty( $data['value'] ) && 0 === $index ) ) ? 'checked="checked"' : '';
 
 			$point_key = $point;
 			?>

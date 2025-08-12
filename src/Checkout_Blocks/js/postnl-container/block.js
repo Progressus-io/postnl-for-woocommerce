@@ -30,7 +30,30 @@ export const Block = ( { checkoutExtensionData } ) => {
 			name: __( 'Dropoff Points', 'postnl-for-woocommerce' ),
 		});
 	}
-	const [ activeTab, setActiveTab ] = useState( tabs[ 0 ].id );
+
+	// Determine default tab based on settings and available tabs
+	const getDefaultTab = () => {
+		const defaultTabSetting = postnlData.default_checkout_tab || 'delivery_day';
+
+		// Check if the preferred tab is available
+		const preferredTab = tabs.find( tab => tab.id === defaultTabSetting );
+		if ( preferredTab ) {
+			return defaultTabSetting;
+		}
+
+		// Fallback to first available tab
+		return tabs.length > 0 ? tabs[ 0 ].id : 'delivery_day';
+	};
+
+	const [ activeTab, setActiveTab ] = useState( getDefaultTab() );
+
+	// Update active tab when tabs change (e.g., pickup points become available/unavailable)
+	useEffect( () => {
+		const currentDefaultTab = getDefaultTab();
+		if ( activeTab !== currentDefaultTab && tabs.find( tab => tab.id === currentDefaultTab ) ) {
+			setActiveTab( currentDefaultTab );
+		}
+	}, [ tabs.length, postnlData.is_pickup_points_enabled ] );
 
 	const letterbox = postnlData.letterbox || false;
 	const { CART_STORE_KEY, CHECKOUT_STORE_KEY } = window.wc.wcBlocksData;

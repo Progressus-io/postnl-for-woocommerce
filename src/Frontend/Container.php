@@ -105,6 +105,31 @@ class Container {
 	}
 
 	/**
+	 * Get default tab based on settings and available tabs.
+	 *
+	 * @param array $tabs Available tabs.
+	 *
+	 * @return String
+	 */
+	public function get_default_tab( array $tabs ): string {
+		if ( empty( $tabs ) ) {
+			return '';
+		}
+
+		$default_tab_setting = $this->settings->get_default_checkout_tab();
+
+		// Check if the preferred tab is available.
+		foreach ( $tabs as $tab ) {
+			if ( $tab['id'] === $default_tab_setting ) {
+				return $default_tab_setting;
+			}
+		}
+
+		// Fallback to first available tab.
+		return $tabs[0]['id'];
+	}
+
+	/**
 	 * Get checkout $_POST['post_data'].
 	 *
 	 * @return array
@@ -229,12 +254,15 @@ class Container {
 			return;
 		}
 
+		$available_tabs = $this->get_available_tabs( $checkout_data['response'] );
+
 		$template_args = array(
-			'tabs'        => $this->get_available_tabs( $checkout_data['response'] ),
+			'tabs'        => $available_tabs,
 			'response'    => $checkout_data['response'],
 			'post_data'   => $checkout_data['post_data'],
 			'default_val' => $this->get_default_value( $checkout_data['response'], $checkout_data['post_data'] ),
 			'letterbox'   => $checkout_data['letterbox'],
+			'default_tab' => $this->get_default_tab( $available_tabs ),
 			'fields'      => array(
 				array(
 					'name'  => $this->tab_field,

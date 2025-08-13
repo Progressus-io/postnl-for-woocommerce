@@ -58,6 +58,23 @@ class Item_Info extends Base_Info {
 	public $receiver;
 
 	/**
+	 * Set API args with data from the shipping settings.
+	 * Override parent method to calculate product-level transit times.
+	 */
+	public function set_settings_data() {
+		// Call parent method to set all other settings
+		parent::set_settings_data();
+
+		// Calculate maximum transit time from cart products
+		$global_transit_time     = $this->settings->get_transit_time();
+		$cart_items              = WC()->cart ? WC()->cart->get_cart() : array();
+		$calculated_transit_time = Utils::get_cart_max_transit_time( $cart_items, $global_transit_time );
+
+		// Override the transit time with calculated value
+		$this->api_args['settings']['transit_time'] = $calculated_transit_time;
+	}
+
+	/**
 	 * Parses the arguments and sets the instance's properties.
 	 *
 	 * @throws \Exception If some data in $args did not pass validation.

@@ -69,6 +69,13 @@ class Single {
 	const ADULTS_ONLY_FIELD = '_postnl_adult_product';
 
 	/**
+	 * Product-level transit time field name.
+	 *
+	 * @var string
+	 */
+	const TRANSIT_TIME_FIELD = '_postnl_product_transit_time';
+
+	/**
 	 * Init and hook in the integration.
 	 */
 	public function __construct() {
@@ -133,7 +140,19 @@ class Single {
 				'desc_tip'    => 'true',
 				'placeholder' => esc_html__( 'HS Code', 'postnl-for-woocommerce' ),
 			),
-			
+			array(
+				'id'                => self::TRANSIT_TIME_FIELD,
+				'type'              => 'number',
+				// translators: %s will be replaced by service name.
+				'label'             => sprintf( esc_html__( 'Product Transit Time (%s)', 'postnl-for-woocommerce' ), $service ),
+				'description'       => esc_html__( 'Override the global transit time for this specific product. Leave empty to use the global transit time setting. This determines how many days it takes for the order to be delivered after the order has been placed.', 'postnl-for-woocommerce' ),
+				'desc_tip'          => 'true',
+				'placeholder'       => esc_html__( 'Leave empty to use global setting', 'postnl-for-woocommerce' ),
+				'custom_attributes' => array(
+					'min' => 0,
+				),
+			),
+
 		);
 	}
 

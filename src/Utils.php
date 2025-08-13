@@ -848,6 +848,32 @@ class Utils {
 	}
 
 	/**
+	 * Calculate maximum transit time from cart products.
+	 *
+	 * @param array $cart_items Cart items array or order items.
+	 * @param int   $default_transit_time Global transit time fallback.
+	 *
+	 * @return int Maximum transit time in days.
+	 */
+	public static function get_cart_max_transit_time( array $cart_items, int $default_transit_time = 1 ): int {
+		$max_transit_time = $default_transit_time;
+
+		foreach ( $cart_items as $item ) {
+			$product = wc_get_product( $item['product_id'] ?? $item->get_product_id() );
+			if ( ! is_a( $product, 'WC_Product' ) || ! $product->needs_shipping() ) {
+				continue;
+			}
+
+			$product_transit_time = $product->get_meta( Single::TRANSIT_TIME_FIELD );
+			if ( ! empty( $product_transit_time ) && is_numeric( $product_transit_time ) ) {
+				$max_transit_time = max( $max_transit_time, intval( $product_transit_time ) );
+			}
+		}
+
+		return $max_transit_time;
+	}
+
+	/**
 	 * Prepare array of selected by the user shipping option.
 	 *
 	 * @param string $selected_value Selected default shipping option value.

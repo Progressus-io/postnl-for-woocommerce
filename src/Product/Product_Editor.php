@@ -129,5 +129,19 @@ class Product_Editor {
 			)
 		);
 
+		// Add Product Transit Time Number Block.
+		$parent->add_block(
+			array(
+				'id'         => 'postnl-product-transit-time',
+				'blockName'  => 'woocommerce/product-number-field',
+				'attributes' => array(
+					'label'       => __( 'Product Transit Time (days)', 'postnl-for-woocommerce' ),
+					'property'    => 'meta_data.' . Single::TRANSIT_TIME_FIELD,
+					'placeholder' => __( 'Leave empty to use global setting', 'postnl-for-woocommerce' ),
+					'min'         => 0,
+					'tooltip'     => __( 'Override the global transit time for this specific product. Leave empty to use the global transit time setting. This determines how many days it takes for the order to be delivered after the order has been placed.', 'postnl-for-woocommerce' ),
+				),
+			)
+		);
 	}
 }

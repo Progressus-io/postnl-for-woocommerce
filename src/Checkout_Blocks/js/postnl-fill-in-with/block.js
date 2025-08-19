@@ -41,13 +41,13 @@ export const FillBlock = ( { checkoutExtensionData } ) => {
 					address_1: primaryAddress.streetName || '',
 					address_2: primaryAddress.houseNumberAddition || '',
 					city: primaryAddress.cityName || '',
-					house_number: primaryAddress.houseNumber || '',
+					'postnl/house_number': primaryAddress.houseNumber || '',
 					postcode: primaryAddress.postalCode || '',
 					country: primaryAddress.countryName || 'NL', // Default to NL for PostNL.
 				};
 
-				setShippingAddress(addressFields);
-				setBillingAddress(addressFields);
+				setShippingAddress( addressFields );
+				setBillingAddress( addressFields );
 
 			} else {
 				createErrorNotice( __( 'Failed to retrieve PostNL user data.', 'postnl-for-woocommerce' ), {
@@ -55,8 +55,7 @@ export const FillBlock = ( { checkoutExtensionData } ) => {
 					context: 'wc/checkout',
 					type: 'default',
 					isDismissible: true,
-                });
-				
+                } );	
 			}
 		} catch ( err ) {
 			createErrorNotice( __( 'Failed to retrieve PostNL address. Please try again.', 'postnl-for-woocommerce'), {
@@ -64,7 +63,7 @@ export const FillBlock = ( { checkoutExtensionData } ) => {
 				context: 'wc/checkout',
 				type: 'default',
 				isDismissible: true,
-			});
+			} );
 		}
 	};
 

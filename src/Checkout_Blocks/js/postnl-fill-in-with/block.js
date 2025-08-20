@@ -81,7 +81,7 @@ export const FillBlock = ( { checkoutExtensionData } ) => {
 			} );
 			const result = await response.json();
 			if ( result.success && result.data?.redirect_uri ) {
-				window.location.href = result.data.redirect_uri;
+				window.open( result.data.redirect_uri, '_blank' );
 			} else {
 				createErrorNotice(
 					__( 'Failed to initiate PostNL login.', 'postnl-for-woocommerce' ),

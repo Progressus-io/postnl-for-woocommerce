@@ -52,18 +52,9 @@ class Fill_In_With_PostNL_Settings {
 			return $settings;
 		}
 
-		$info_block = '<p>' . esc_html__( 'With this functionality your customers can easily and automatically fill in their shipping address via their PostNL account. This functionality is only available for consumers with a Dutch shipping address. Follow the next steps in order to use Fill in with:', 'postnl-for-woocommerce' ) . '</p>';
+		$info_block = '<p>' . esc_html__( 'With this functionality your customers can easily and automatically fill in their shipping address via their PostNL account. This functionality is only available for consumers with a Dutch shipping address. Click the following link to activate the functionality:', 'postnl-for-woocommerce' ) . '</p>';
 
-		$info_block .= '<ol>';
-		$info_block .= '<li>' . sprintf(
-			// translators: %s is an external url for postnl portal.
-			esc_html__( 'Log in at the business portal (%s) with your business account.', 'postnl-for-woocommerce' ),
-			esc_url( 'https://dil-business-portal.postnl.nl/home' )
-		) . '</li>';
-		$info_block .= '<li>' . esc_html__( 'Select "Fill in with PostNL".', 'postnl-for-woocommerce' ) . '</li>';
-		$info_block .= '<li>' . esc_html__( 'Update the Redirect URL and choose your application.', 'postnl-for-woocommerce' ) . '</li>';
-		$info_block .= '<li>' . esc_html__( 'You will receive your Client ID via email.', 'postnl-for-woocommerce' ) . '</li>';
-		$info_block .= '</ol>';
+		$info_block .= '<a href="https://dil-business-portal.postnl.nl/checkout-prefill?referrer=wcplugin&url=' . site_url() . '" target="_blank" style="margin-bottom: 10px;">https://dil-business-portal.postnl.nl/checkout-prefill?referrer=wcplugin&url=' . site_url() . '</a>';
 
 		$settings = array(
 			array(

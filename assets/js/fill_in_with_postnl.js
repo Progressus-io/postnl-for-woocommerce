@@ -21,7 +21,7 @@
                     },
                     success: function ( response ) {
                         if ( response.success && response.data.redirect_uri ) {
-                            window.open( response.data.redirect_uri, '_blank' );
+                            window.location.href = response.data.redirect_uri;
                         } else {
                             fill_in_with_postnl.show_notice( 'Failed to initiate PostNL login.', 'error' );
                         }

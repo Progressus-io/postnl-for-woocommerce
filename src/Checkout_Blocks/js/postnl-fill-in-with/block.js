@@ -1,21 +1,43 @@
 import { useEffect, useState } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 import { getSetting } from '@woocommerce/settings';
-import { useDispatch } from '@wordpress/data';
+import { useDispatch, useSelect } from '@wordpress/data';
 import { store as noticesStore } from '@wordpress/notices';
 
+
 export const FillBlock = ( { checkoutExtensionData } ) => {
-    const postnlData = getSetting( 'postnl-for-woocommerce-blocks_data', {} );
-    const [ showButton, setShowButton ] = useState( false );
-    const [ isLoading, setIsLoading ]   = useState(false);
-    const { setBillingAddress, setShippingAddress } = useDispatch('wc/store/cart');
-    const { createErrorNotice } = useDispatch( noticesStore );
+	const postnlData                    = getSetting( 'postnl-for-woocommerce-blocks_data', {} );
+	const [ showButton, setShowButton ] = useState( false );
+	const [ isLoading, setIsLoading ]   = useState( false );
+	const { setBillingAddress }         = useDispatch( 'wc/store/cart' );
+	const { createErrorNotice }         = useDispatch( noticesStore );
+
+	const { CART_STORE_KEY } = window.wc.wcBlocksData;
+
+	// Retrieve customer data from WooCommerce cart store
+	const customerData = useSelect(
+		( select ) => {
+			const store = select( CART_STORE_KEY );
+			return store ? store.getCustomerData() : {};
+		},
+		[ CART_STORE_KEY ]
+	);
+	const allowedCountries = [ 'NL', 'BE' ];
+	const shippingAddress  = customerData ? customerData.shippingAddress : null;
+	const { setShippingAddress } = useDispatch( CART_STORE_KEY );
 
 	useEffect( () => {
-		if ( postnlSettings?.is_enabled_for_checkout ) {
+		let countryToCheck = shippingAddress?.country || 'NL';
+		if (
+			allowedCountries.includes( countryToCheck ) &&
+			postnlData?.fill_in_with_postnl_settings?.is_fill_in_with_postnl_enabled
+		) {
+
 			setShowButton( true );
+		} else {
+			setShowButton( false );
 		}
-	}, [ postnlData ] );
+	}, [ shippingAddress, postnlData ] );
 
 	const prefillCheckoutFields = async () => {
 		try {

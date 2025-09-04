@@ -18,7 +18,7 @@ if ( is_cart() ) {
 }
 
 ?>
-<div class="postnl-login-button__container <?php echo esc_attr( implode( ' ', $wrapper_classes ) ); ?>">
+<div class="postnl-login-button__container <?php echo esc_attr( implode( ' ', $wrapper_classes ) ); ?> <?php echo esc_attr( $button_class ); ?>">
 	<button id="postnl-login-button" aria-label="<?php esc_html_e( 'Fill in with PostNL', 'postnl-for-woocommerce' ); ?>" href="#">
 		<img src="<?php echo $postnl_logo_url; ?>" alt="<?php esc_attr_e( 'PostNL Logo', 'postnl-for-woocommerce' ); ?>" id="postnl-logo" />
 		<span id="postnl-login-button__text">

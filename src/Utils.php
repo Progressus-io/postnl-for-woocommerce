@@ -976,5 +976,22 @@ class Utils {
 		);
 	}
 
+	/*
+	 * check if customer default country is allowed
+	 * @param WC_Customer $customer Customer object.
+	 * @param array $allowed_countries list of allowed countries.
+	 * 
+	 * @return bool
+	 */
+	public static function is_customer_country_allowed( $customer, $allowed_countries): bool {			
+		$billing_country  = $customer->get_billing_country();
+		$shipping_country = $customer->get_shipping_country();
+
+		if ( ! in_array( $billing_country, $allowed_countries, true ) &&
+			! in_array( $shipping_country, $allowed_countries, true ) ) {
+			return false;
+		}
+		return true;
+	}
 
 }

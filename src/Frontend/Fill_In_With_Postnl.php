@@ -290,10 +290,27 @@ class Fill_In_With_Postnl {
 
 		wp_enqueue_script( 'fill-in-with-postnl' );
 
+		$allowed_countries = array( 'NL', 'BE' );
+		$button_class      = '';
+
+		if ( function_exists( 'WC' ) ) {
+			$customer = WC()->customer;
+			
+			if ( ! $customer ) {
+				$button_class = 'hidden';
+			}
+
+			if ( ! Utils::is_customer_country_allowed( $customer, $allowed_countries ) ) {
+				$button_class = 'hidden';
+			}
+		
+		}
+
 		wc_get_template(
 			'checkout/postnl-fill-in-with-button.php',
 			array(
 				'postnl_logo_url' => POSTNL_WC_PLUGIN_DIR_URL . '/assets/images/postnl-logo.svg',
+				'button_class'    => $button_class,
 			),
 			'',
 			POSTNL_WC_PLUGIN_DIR_PATH . '/templates/'

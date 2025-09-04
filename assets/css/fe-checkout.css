@@ -260,3 +260,7 @@ tr.postnl-co-tr-container > td {
 	margin: auto;
 	width: 94%;
 }
+
+.hidden{
+	visibility: hidden !important;
+}

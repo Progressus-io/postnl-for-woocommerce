@@ -4,6 +4,7 @@
 		init: function () {
 			this.handle_login_button();
             this.prefill_checkout_fields();
+            this.bind_country_listeners();
 		},
 
         handle_login_button: function () {
@@ -78,6 +79,46 @@
                 }
 			} );
 		},
+
+        toggle_login_button: function () {
+            const allowedCountries = [ 'NL', 'BE' ];
+            const billingCountry   = ( $( '#billing_country' ).val() || '' ).toUpperCase();
+            let shippingCountry    = '';
+
+            // Only check shipping country if "Ship to a different address" is enabled
+            if ( $( '#ship-to-different-address-checkbox' ).is( ':checked' ) ) {
+                shippingCountry = ( $( '#shipping_country' ).val() || '' ).toUpperCase();
+            }
+
+            const cartShippingCountry =
+                ( $( '#calc_shipping_country' ).val() || $( 'select.wc-blocks-components-select__select' ).val() || '' ).toUpperCase();
+
+            // Checkout button toggle
+            if ( allowedCountries.includes( billingCountry ) || allowedCountries.includes( shippingCountry ) ) {
+                $( '.postnl-button-in-checkout' ).removeClass( 'hidden' );
+            } else {
+                $( '.postnl-button-in-checkout' ).addClass( 'hidden' );
+            }
+
+            // Cart & mini-cart button toggle
+            if ( allowedCountries.includes( cartShippingCountry ) ) {
+                $( '.postnl-button-in-cart, .postnl-button-in-minicart' ).removeClass( 'hidden' );
+            } else {
+                $( '.postnl-button-in-cart, .postnl-button-in-minicart' ).addClass( 'hidden' );
+            }
+        },
+
+        bind_country_listeners: function () {
+            // Re-check when checkout updates via AJAX
+            $( document.body ).on( 'updated_checkout', function () {
+                fill_in_with_postnl.toggle_login_button();
+            } );
+
+            // Re-check immediately on dropdown change
+            $( document ).on( 'change', '#billing_country, #shipping_country, #calc_shipping_country, select.wc-blocks-components-select__select', function () {
+                fill_in_with_postnl.toggle_login_button();
+            } );
+        },
 
         show_notice: function ( message, type = 'error' ) {
             const noticeId = `postnl-notice-${type}`;

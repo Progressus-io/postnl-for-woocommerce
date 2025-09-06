@@ -81,6 +81,9 @@ Follow these instructions (https://www.postnl.nl/Images/aanvragen-api-key-stappe
 
 == Changelog ==
 
+### 5.8.1 (2025-09-06) =
+* Fix: Postcode required before filling it on the checkout page.
+
 ### 5.8.0 (YYYY-MM-DD) =
 * Add: A new contact type 02 with sender email to the shipping API request.
 

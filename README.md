@@ -35,6 +35,9 @@ PostNL’s official extension for WooCommerce on WordPress. Manage your national
 
 ## Changelog
 
+### 5.8.1
+* Fix: Postcode required before filling it on the checkout page.
+
 ### 5.8.0
 * Add: A new contact type 02 with sender email to the shipping API request.
 

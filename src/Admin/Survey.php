@@ -25,27 +25,35 @@ class Survey {
 	const SURVEY_URL = 'https://surveys.enalyzer.com?pid=m3bs8r6b';
 
 	/**
-	 * Decide whether to output the banner and register a meta‑box when needed.
+	 * Maybe add the survey meta box.
 	 *
-	 * @param string $post_type Optional post type (meta‑boxes hook).
-	 * @param mixed  $post      Optional post object (meta‑boxes hook).
+	 * @param string $post_type Optional post type.
+	 * @param mixed $post Optional post object.
 	 *
 	 * @return void
 	 */
-	public static function maybe_render( $post_type = null, $post = null ) {
+	public static function maybe_add_meta_box( $post_type = null, $post = null ) {
 		if ( ! self::should_show() ) {
 			return;
 		}
 
-		if ( 'add_meta_boxes' === current_action() ) {
-			add_meta_box(
-				'postnl_admin_banner',
-				esc_html__( 'Help us improve PostNL', 'postnl-for-woocommerce' ),
-				array( __CLASS__, 'render_meta_box' ),
-				self::order_screen_id(),
-				'side',
-				'high'
-			);
+		add_meta_box(
+			'postnl_admin_banner',
+			esc_html__( 'Help us improve PostNL', 'postnl-for-woocommerce' ),
+			array( __CLASS__, 'render_meta_box' ),
+			self::order_screen_id(),
+			'side',
+			'high'
+		);
+	}
+
+	/**
+	 * Maybe render the survey notice.
+	 *
+	 * @return void
+	 */
+	public static function maybe_render_notice() {
+		if ( ! self::should_show() ) {
 			return;
 		}
 

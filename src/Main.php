@@ -215,8 +215,8 @@ class Main {
 
 		add_filter( 'woocommerce_email_classes', array( $this, 'add_wc_smart_return_email' ) );
 
-		add_action( 'admin_notices', array( 'PostNLWooCommerce\Admin\Survey', 'maybe_render' ) );
-		add_action( 'add_meta_boxes', array( 'PostNLWooCommerce\Admin\Survey', 'maybe_render' ), 10, 2 );
+		add_action( 'admin_notices', array( 'PostNLWooCommerce\Admin\Survey', 'maybe_render_notice' ) );
+		add_action( 'add_meta_boxes', array( 'PostNLWooCommerce\Admin\Survey', 'maybe_add_meta_box' ), 10, 2 );
 
 	}
 

@@ -22,7 +22,7 @@ class Notice {
 	 *
 	 * @var string
 	 */
-	const SURVEY_URL = 'https://www.postnl.nl';
+	const SURVEY_URL = 'https://surveys.enalyzer.com?pid=m3bs8r6b';
 
 	/**
 	 * Decide whether to output the banner and register a meta‑box when needed.

@@ -5,16 +5,16 @@
  * @package PostNLWooCommerce
  */
 
-namespace PostNLWooCommerce\Shipping_Method;
+namespace PostNLWooCommerce\Admin;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
 /**
- * Class Notice
+ * Class Survey
  */
-class Notice {
+class Survey {
 
 
 	/**

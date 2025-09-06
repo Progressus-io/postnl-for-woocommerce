@@ -14,7 +14,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 use PostNLWooCommerce\Checkout_Blocks\Blocks_Integration;
 use PostNLWooCommerce\Checkout_Blocks\Extend_Block_Core;
 use PostNLWooCommerce\Checkout_Blocks\Extend_Store_Endpoint;
-use PostNLWooCommerce\Product\Product_Editor;
+use PostNLWooCommerce\Admin\Plugin_Links;
 
 /**
  * Class Main
@@ -123,6 +123,10 @@ class Main {
 		// Register the block category.
 		add_action( 'block_categories_all', array( $this, 'register_postnl_block_category' ), 10, 2 );
 		add_filter( 'woocommerce_shipping_methods', array( $this, 'add_shipping_method' ) );
+
+		$links = new Plugin_Links(POSTNL_WC_PLUGIN_BASENAME);
+		$links->register();
+
 	}
 
 	/**
@@ -211,8 +215,8 @@ class Main {
 
 		add_filter( 'woocommerce_email_classes', array( $this, 'add_wc_smart_return_email' ) );
 
-		add_action( 'admin_notices', array( 'PostNLWooCommerce\Shipping_Method\Notice', 'maybe_render' ) );
-		add_action( 'add_meta_boxes', array( 'PostNLWooCommerce\Shipping_Method\Notice', 'maybe_render' ), 10, 2 );
+		add_action( 'admin_notices', array( 'PostNLWooCommerce\Admin\Survey', 'maybe_render' ) );
+		add_action( 'add_meta_boxes', array( 'PostNLWooCommerce\Admin\Survey', 'maybe_render' ), 10, 2 );
 
 	}
 

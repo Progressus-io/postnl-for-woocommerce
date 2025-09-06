@@ -35,9 +35,14 @@ PostNL’s official extension for WooCommerce on WordPress. Manage your national
 
 ## Changelog
 
-### 5.7.3
+### 5.8.1
 * Add: Separate fees for Home delivery and Pick-up point delivery.
 * Tweak: Show fee amounts on checkout tabs.
+
+### 5.8.0
+* Add: Ability for marking products as 18+ and automatically apply ID Check to orders containing them.
+* Add: A new contact type 02 with sender email to the shipping API request.
+* Fix: Ressolve issue where insured NL>BE shipments defaulted to standard shipment instead of insured shipment.
 
 ### 5.7.3
 * Tweak : Use `plugins_loaded` hook to add the shipping method for Flexible shipping and Polylang plugins compatibility.

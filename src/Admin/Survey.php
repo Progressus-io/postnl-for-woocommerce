@@ -157,10 +157,13 @@ class Survey {
 	 *
 	 * @return string
 	 */
-	protected static function order_screen_id() {
-		if ( function_exists( 'wc_get_page_screen_id' ) ) {
-			return wc_get_page_screen_id( 'shop-order' );
+	public static function order_screen_id(): string {
+		try {
+			return wc_get_container()->get( CustomOrdersTableController::class )->custom_orders_table_usage_is_enabled()
+				? wc_get_page_screen_id( 'shop-order' )
+				: 'shop_order';
+		} catch ( \Exception $e ) {
+			return 'shop_order';
 		}
-		return 'shop_order';
 	}
 }

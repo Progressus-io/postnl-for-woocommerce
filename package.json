@@ -16,8 +16,8 @@
     "env": "wp-env",
     "makepot": "vendor/bin/wp i18n make-pot ./ languages/$npm_package_name.pot --exclude=node_modules,tests,docs,vendor",
     "makepot-json": "vendor/bin/wp i18n make-json languages/$npm_package_name-nl_NL.po --no-purge",
-    "archive": "composer archive --file=$npm_package_name --format=zip",
-    "postarchive": "rm -rf $npm_package_name && unzip $npm_package_name.zip -d $npm_package_name && rm $npm_package_name.zip && zip -r $npm_package_name.zip $npm_package_name && rm -rf $npm_package_name"
+    "archive": "composer archive --file=$npm_package_config_archiveName --format=zip",
+    "postarchive": "rm -rf $npm_package_config_archiveName && unzip $npm_package_config_archiveName.zip -d $npm_package_config_archiveName && rm $npm_package_config_archiveName.zip && zip -r $npm_package_config_archiveName.zip $npm_package_config_archiveName && rm -rf $npm_package_config_archiveName"
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^5.62.0",
@@ -47,5 +47,8 @@
     "@wordpress/icons": "^10.10.0",
     "@wordpress/plugins": "^7.20.0",
     "lodash": "^4.17.21"
+  },
+  "config": {
+    "archiveName": "woo-postnl"
   }
 }

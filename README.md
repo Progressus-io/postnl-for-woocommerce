@@ -35,6 +35,9 @@ PostNL’s official extension for WooCommerce on WordPress. Manage your national
 
 ## Changelog
 
+### 5.7.3
+* Add: Separate fees for Home delivery and Pick-up point delivery.
+* Tweak: Show fee amounts on checkout tabs.
 
 ### 5.7.3
 * Tweak : Use `plugins_loaded` hook to add the shipping method for Flexible shipping and Polylang plugins compatibility.

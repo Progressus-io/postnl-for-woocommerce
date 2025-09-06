@@ -81,6 +81,10 @@ Follow these instructions (https://www.postnl.nl/Images/aanvragen-api-key-stappe
 
 == Changelog ==
 
+= 5.7.4 (2025-09-06) =
+* Add: Separate fees for Home delivery and Pick-up point delivery.
+* Tweak: Show fee amounts on checkout tabs.
+
 = 5.7.3 (2025-05-06) =
 * Tweak : Use `plugins_loaded` hook to add the shipping method for Flexible shipping and Polylang plugins compatibility.
 

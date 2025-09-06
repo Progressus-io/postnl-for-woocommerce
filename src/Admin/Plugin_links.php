@@ -59,7 +59,11 @@ class Plugin_Links {
 	 */
 	public function add_row_meta( array $links, string $file ): array {
 		if ( in_array( $file, $this->basenames, true ) ) {
-			$links[] = '<a href="https://wordpress.org/support/plugin/woo-postnl/reviews/#new-post" target="_blank" rel="noopener">Leave a review</a>';
+			$links[] = sprintf(
+				'<a href="%s" target="_blank" rel="noopener">%s</a>',
+				esc_url( 'https://wordpress.org/support/plugin/woo-postnl/reviews/#new-post' ),
+				esc_html__( 'Leave a review', 'postnl-for-woocommerce' )
+			);
 		}
 
 		return $links;
@@ -73,8 +77,17 @@ class Plugin_Links {
 	 * @return string[]
 	 */
 	public function add_action_links( array $links ): array {
-		$links[] = '<a href="https://wordpress.org/support/plugin/woo-postnl/reviews/#new-post" target="_blank" rel="noopener">Settings </a>';
-		$links[] = '<a href="https://wordpress.org/support/plugin/woo-postnl/reviews/#new-post" target="_blank" rel="noopener">Leave a review</a>';
+		$links[] = sprintf(
+			'<a href="%s">%s</a>',
+			esc_url( admin_url( 'admin.php?page=wc-settings&tab=shipping&section=postnl' ) ),
+			esc_html__( 'Settings', 'postnl-for-woocommerce' )
+		);
+
+		$links[] = sprintf(
+			'<a href="%s" target="_blank" rel="noopener">%s</a>',
+			esc_url( 'https://wordpress.org/support/plugin/woo-postnl/reviews/#new-post' ),
+			esc_html__( 'Leave a review', 'postnl-for-woocommerce' )
+		);
 
 		return $links;
 	}

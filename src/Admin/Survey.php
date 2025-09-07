@@ -7,6 +7,7 @@
 
 namespace PostNLWooCommerce\Admin;
 
+use Automattic\WooCommerce\Utilities\OrderUtil;
 use PostNLWooCommerce\Utils;
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -31,9 +32,9 @@ class Survey {
 	 * @return void
 	 */
 	public static function maybe_add_meta_box() {
-		if ( ! self::should_show() ) {
-			return;
-		}
+        if ( ! OrderUtil::is_order_edit_screen() ) {
+            return;
+        }
 
 		add_meta_box(
 			'postnl_admin_banner',
@@ -82,16 +83,10 @@ class Survey {
 			return true;
 		}
 
-		// Orders list.
-		$order_list_screens = array( 'edit-shop_order', 'woocommerce_page_wc-orders' );
-		if ( in_array( $screen->id, $order_list_screens, true ) ) {
-			return true;
-		}
-
-		// Single order.
-		if ( Utils::get_order_screen_id() === $screen->id ) {
-			return true;
-		}
+        // Orders list.
+        if ( OrderUtil::is_order_list_table_screen() ) {
+            return true;
+        }
 
 		return false;
 	}

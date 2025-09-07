@@ -289,10 +289,11 @@ class Container {
 
 			// Validate address.
 			if ( $this->is_address_validation_required() ) {
+				$is_reorder_nl_address_enabled = $this->settings->is_reorder_nl_address_enabled();
 
-				if ( empty( $post_data['shipping_house_number'] ) && $this->settings->is_reorder_nl_address_enabled() ) {
+				if ( empty( $post_data['shipping_house_number'] ) && $is_reorder_nl_address_enabled ) {
 					return;
-				} elseif ( empty( $post_data['shipping_house_number'] ) && ! $this->settings->is_reorder_nl_address_enabled() ) {
+				} elseif ( empty( $post_data['shipping_house_number'] ) && ! $is_reorder_nl_address_enabled ) {
 					throw new \Exception( 'Address does not contain house number!' );
 				}
 

@@ -125,14 +125,6 @@ class Single extends Base {
 			return;
 		}
 
-		try {
-			$screen = wc_get_container()->get( CustomOrdersTableController::class )->custom_orders_table_usage_is_enabled()
-				? wc_get_page_screen_id( 'shop-order' )
-				: 'shop_order';
-		} catch ( \Exception $e ) {
-			$screen = 'shop_order';
-		}
-
 		// translators: %s will be replaced by service name.
 		add_meta_box(
 			'woocommerce-shipment-postnl-label',
@@ -141,7 +133,7 @@ class Single extends Base {
 				$this,
 				'meta_box_html',
 			),
-			$screen,
+			Utils::get_order_screen_id(),
 			'side',
 			'high'
 		);

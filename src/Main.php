@@ -14,6 +14,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 use PostNLWooCommerce\Checkout_Blocks\Blocks_Integration;
 use PostNLWooCommerce\Checkout_Blocks\Extend_Block_Core;
 use PostNLWooCommerce\Checkout_Blocks\Extend_Store_Endpoint;
+use PostNLWooCommerce\Product\Product_Editor;
 
 /**
  * Class Main

@@ -115,14 +115,7 @@ class Main {
 		// Throw an admin error informing the user this plugin needs currency settings to be EUR, USD, GBP, CNY.
 		add_action( 'admin_notices', array( $this, 'notice_currency_required' ) );
 
-		if ( ! Utils::use_available_currency() || ! Utils::use_available_country() ) {
-			return;
-		}
-
 		add_action( 'init', array( $this, 'load_plugin' ), 1 );
-		// Register the block category.
-		add_action( 'block_categories_all', array( $this, 'register_postnl_block_category' ), 10, 2 );
-		add_filter( 'woocommerce_shipping_methods', array( $this, 'add_shipping_method' ) );
 	}
 
 	/**
@@ -183,6 +176,10 @@ class Main {
 	 * Determine which plugin to load.
 	 */
 	public function load_plugin() {
+		if ( ! Utils::use_available_currency() || ! Utils::use_available_country() ) {
+			return;
+		}
+
 		$this->init_hooks();
 		$this->checkout_blocks();
 	}
@@ -210,6 +207,11 @@ class Main {
 		add_filter( 'woocommerce_locate_template', array( $this, 'woocommerce_locate_template' ), 20, 3 );
 
 		add_filter( 'woocommerce_email_classes', array( $this, 'add_wc_smart_return_email' ) );
+
+		// Register the block category.
+		add_action( 'block_categories_all', array( $this, 'register_postnl_block_category' ), 10, 2 );
+
+		add_filter( 'woocommerce_shipping_methods', array( $this, 'add_shipping_method' ) );
 	}
 
 	/**

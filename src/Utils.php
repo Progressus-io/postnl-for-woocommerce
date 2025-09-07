@@ -7,6 +7,7 @@
 
 namespace PostNLWooCommerce;
 
+use Automattic\WooCommerce\Internal\DataStores\Orders\CustomOrdersTableController;
 use PostNLWooCommerce\Helper\Mapping;
 use PostNLWooCommerce\Product\Single;
 use WC_Product;
@@ -994,4 +995,18 @@ class Utils {
 		return true;
 	}
 
+	/**
+	 * Get WooCommerce shop order screen ID.
+	 *
+	 * @return string
+	 */
+	public static function get_order_screen_id(): string {
+		try {
+			return wc_get_container()->get( CustomOrdersTableController::class )->custom_orders_table_usage_is_enabled()
+					? wc_get_page_screen_id( 'shop-order' )
+					: 'shop_order';
+		} catch ( \Exception $e ) {
+			return 'shop_order';
+		}
+	}
 }

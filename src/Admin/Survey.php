@@ -32,9 +32,9 @@ class Survey {
 	 * @return void
 	 */
 	public static function maybe_add_meta_box() {
-        if ( ! OrderUtil::is_order_edit_screen() ) {
-            return;
-        }
+		if ( ! OrderUtil::is_order_edit_screen() ) {
+			return;
+		}
 
 		add_meta_box(
 			'postnl_admin_banner',
@@ -83,10 +83,10 @@ class Survey {
 			return true;
 		}
 
-        // Orders list.
-        if ( OrderUtil::is_order_list_table_screen() ) {
-            return true;
-        }
+		// Orders list.
+		if ( OrderUtil::is_order_list_table_screen() ) {
+			return true;
+		}
 
 		return false;
 	}

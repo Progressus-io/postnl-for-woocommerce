@@ -86,6 +86,7 @@ Follow these instructions (https://www.postnl.nl/Images/aanvragen-api-key-stappe
 * Add: A new contact type 02 with sender email to the shipping API request.
 * Fix: Ressolve issue where insured NL>BE shipments defaulted to standard shipment instead of insured shipment.
 * Fix: PHP waring `Function _load_textdomain_just_in_time was called incorrectly`.
+* Fix: Postcode required before filling it on the checkout page.
 
 = 5.7.3 (2025-05-06) =
 * Tweak: Use `plugins_loaded` hook to add the shipping method for Flexible shipping and Polylang plugins compatibility.

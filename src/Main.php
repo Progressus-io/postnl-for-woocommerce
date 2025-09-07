@@ -208,17 +208,17 @@ class Main {
 
 		add_filter( 'woocommerce_email_classes', array( $this, 'add_wc_smart_return_email' ) );
 
-        // Register the block category.
+		// Register the block category.
 		add_action( 'block_categories_all', array( $this, 'register_postnl_block_category' ), 10, 2 );
 
 		add_filter( 'woocommerce_shipping_methods', array( $this, 'add_shipping_method' ) );
 
-        add_action( 'admin_notices', array( 'PostNLWooCommerce\Admin\Survey', 'maybe_render_notice' ) );
-        add_action( 'add_meta_boxes', array( 'PostNLWooCommerce\Admin\Survey', 'maybe_add_meta_box' ), 10, 2 );
+		add_action( 'admin_notices', array( 'PostNLWooCommerce\Admin\Survey', 'maybe_render_notice' ) );
+		add_action( 'add_meta_boxes', array( 'PostNLWooCommerce\Admin\Survey', 'maybe_add_meta_box' ), 10, 0 );
 
-        add_filter( 'plugin_row_meta', array( $this, 'add_row_meta' ), 10, 2 );
-        add_filter( 'plugin_action_links_' . POSTNL_WC_PLUGIN_BASENAME, array( $this, 'add_action_links' ), 10, 1 );
-    }
+		add_filter( 'plugin_row_meta', array( $this, 'add_row_meta' ), 10, 2 );
+		add_filter( 'plugin_action_links_' . POSTNL_WC_PLUGIN_BASENAME, array( $this, 'add_action_links' ), 10, 1 );
+	}
 
 	/**
 	 * Add the smart return email class.
@@ -471,7 +471,7 @@ class Main {
 	 * Add row meta links.
 	 *
 	 * @param string[] $links Existing links.
-	 * @param string $file Plugin file name.
+	 * @param string   $file Plugin file name.
 	 *
 	 * @return string[]
 	 */
@@ -503,7 +503,6 @@ class Main {
 				esc_html__( 'Settings', 'postnl-for-woocommerce' )
 			)
 		);
-
 
 		return $links;
 	}

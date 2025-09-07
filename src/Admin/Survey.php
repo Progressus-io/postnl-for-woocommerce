@@ -18,7 +18,6 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class Survey {
 
-
 	/**
 	 * URL of the survey.
 	 *
@@ -29,12 +28,9 @@ class Survey {
 	/**
 	 * Maybe add the survey meta box.
 	 *
-	 * @param string $post_type Optional post type.
-	 * @param mixed $post Optional post object.
-	 *
 	 * @return void
 	 */
-	public static function maybe_add_meta_box( $post_type = null, $post = null ) {
+	public static function maybe_add_meta_box() {
 		if ( ! self::should_show() ) {
 			return;
 		}
@@ -43,7 +39,7 @@ class Survey {
 			'postnl_admin_banner',
 			esc_html__( 'Help us improve PostNL', 'postnl-for-woocommerce' ),
 			array( __CLASS__, 'render_meta_box' ),
-			self::order_screen_id(),
+			Utils::get_order_screen_id(),
 			'side',
 			'high'
 		);
@@ -67,11 +63,10 @@ class Survey {
 	 *
 	 * @return bool
 	 */
-	protected static function should_show() {
-		if ( ! is_admin() || ! defined( 'POSTNL_WC_VERSION' ) ) {
+	protected static function should_show(): bool {
+		if ( ! is_admin() ) {
 			return false;
 		}
-
 
 		$screen = get_current_screen();
 		if ( empty( $screen ) ) {
@@ -108,24 +103,24 @@ class Survey {
 	 */
 	protected static function render_notice() {
 		?>
-        <div class="notice notice-info">
-            <p><strong><?php esc_html_e( 'Help us improve PostNL', 'postnl-for-woocommerce' ); ?></strong></p>
-            <p>
-                <a href="<?php echo esc_url( self::SURVEY_URL ); ?>"
-                   class="button button-primary"
-                   target="_blank"
-                   rel="noopener noreferrer">
+		<div class="notice notice-info">
+			<p><strong><?php esc_html_e( 'Help us improve PostNL', 'postnl-for-woocommerce' ); ?></strong></p>
+			<p>
+				<a href="<?php echo esc_url( self::SURVEY_URL ); ?>"
+					class="button button-primary"
+					target="_blank"
+					rel="noopener noreferrer">
 					<?php esc_html_e( 'Take Survey', 'postnl-for-woocommerce' ); ?>
-                </a>
-            </p>
-            <p>
-                <a href="<?php echo esc_url( 'https://wordpress.org/support/plugin/woo-postnl/reviews/#new-post' ); ?>"
-                   target="_blank"
-                   rel="noopener noreferrer">
+				</a>
+			</p>
+			<p>
+				<a href="<?php echo esc_url( 'https://wordpress.org/support/plugin/woo-postnl/reviews/#new-post' ); ?>"
+					target="_blank"
+					rel="noopener noreferrer">
 					<?php esc_html_e( 'Leave a review on WordPress org', 'postnl-for-woocommerce' ); ?>
-                </a>
-            </p>
-        </div>
+				</a>
+			</p>
+		</div>
 		<?php
 	}
 
@@ -136,21 +131,21 @@ class Survey {
 	 */
 	public static function render_meta_box() {
 		?>
-        <p>
-            <a href="<?php echo esc_url( self::SURVEY_URL ); ?>"
-               class="button button-primary"
-               target="_blank"
-               rel="noopener noreferrer">
+		<p>
+			<a href="<?php echo esc_url( self::SURVEY_URL ); ?>"
+				class="button button-primary"
+				target="_blank"
+				rel="noopener noreferrer">
 				<?php esc_html_e( 'Take Survey', 'postnl-for-woocommerce' ); ?>
-            </a>
-        </p>
-        <p>
-            <a href="<?php echo esc_url( 'https://wordpress.org/plugins/postnl-for-woocommerce/#reviews' ); ?>"
-               target="_blank"
-               rel="noopener noreferrer">
+			</a>
+		</p>
+		<p>
+			<a href="<?php echo esc_url( 'https://wordpress.org/plugins/postnl-for-woocommerce/#reviews' ); ?>"
+				target="_blank"
+				rel="noopener noreferrer">
 				<?php esc_html_e( 'Leave a review on WordPress org', 'postnl-for-woocommerce' ); ?>
-            </a>
-        </p>
+			</a>
+		</p>
 		<?php
 	}
 }

@@ -7,6 +7,8 @@
 
 namespace PostNLWooCommerce\Admin;
 
+use PostNLWooCommerce\Utils;
+
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
@@ -71,7 +73,7 @@ class Survey {
 		}
 
 
-		$screen = function_exists( 'get_current_screen' ) ? get_current_screen() : null;
+		$screen = get_current_screen();
 		if ( empty( $screen ) ) {
 			return false;
 		}
@@ -92,7 +94,7 @@ class Survey {
 		}
 
 		// Single order.
-		if ( self::order_screen_id() === $screen->id || 'shop_order' === $screen->id ) {
+		if ( Utils::get_order_screen_id() === $screen->id ) {
 			return true;
 		}
 
@@ -150,20 +152,5 @@ class Survey {
             </a>
         </p>
 		<?php
-	}
-
-	/**
-	 * WooCommerce screen ID helper.
-	 *
-	 * @return string
-	 */
-	public static function order_screen_id(): string {
-		try {
-			return wc_get_container()->get( CustomOrdersTableController::class )->custom_orders_table_usage_is_enabled()
-				? wc_get_page_screen_id( 'shop-order' )
-				: 'shop_order';
-		} catch ( \Exception $e ) {
-			return 'shop_order';
-		}
 	}
 }

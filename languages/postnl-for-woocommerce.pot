@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2025-09-08T20:48:29+00:00\n"
+"POT-Creation-Date: 2025-09-08T20:52:36+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.11.0\n"
 "X-Domain: postnl-for-woocommerce\n"
@@ -455,7 +455,6 @@ msgstr ""
 msgid "PostNL Print Label"
 msgstr ""
 
-#. Translators: %1$s is the order ID, %2$s is the link to download the file, %3$s is the closing link tag.
 #: src/Order/Bulk.php:703
 msgid "#%1$s : PostNL label has been created - %2$sdownload file%3$s"
 msgstr ""
@@ -634,7 +633,6 @@ msgstr ""
 msgid "Enable Letterbox Parcel (%s)"
 msgstr ""
 
-#. translators: %s will be replaced by service name.
 #: src/Product/Single.php:101
 msgid "When this setting is enabled the PostNL plug-in automatically determines whether a shipment fits through a letterbox. This choice can be overridden when creating a shipment manually via the Label & Tracking menu. This only works for orders with destination Netherlands."
 msgstr ""
@@ -644,7 +642,6 @@ msgstr ""
 msgid "Maximum amount per letterbox parcel (%s)"
 msgstr ""
 
-#. translators: %s will be replaced by service name.
 #: src/Product/Single.php:109
 msgid "Please fill in how many times this product fits in a letterbox parcel. A letterbox parcel may weigh a maximum of 2 kilograms and has the following maximum dimensions: 38x26.5x3.2 cm"
 msgstr ""
@@ -654,7 +651,6 @@ msgstr ""
 msgid "Country of Origin (%s)"
 msgstr ""
 
-#. translators: %s will be replaced by service name.
 #: src/Product/Single.php:121
 msgid "Country of Origin."
 msgstr ""
@@ -664,7 +660,6 @@ msgstr ""
 msgid "HS Tariff Code (%s)"
 msgstr ""
 
-#. translators: %s will be replaced by service name.
 #: src/Product/Single.php:133
 msgid "HS Tariff Code is a number assigned to every possible commodity that can be imported or exported from any country."
 msgstr ""

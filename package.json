@@ -5,7 +5,7 @@
   "license": "GPL-2.0-or-later",
   "main": "build/index.js",
   "scripts": {
-    "build": "composer install && wp-scripts build && npm run makepot && composer install --no-dev && npm run archive",
+    "build": "composer install && wp-scripts build && npm run updatepo && composer install --no-dev && npm run archive",
     "format": "wp-scripts format",
     "lint:css": "wp-scripts lint-style",
     "lint": "wp-scripts lint-js ./src",
@@ -15,6 +15,7 @@
     "start": "wp-scripts start",
     "env": "wp-env",
     "makepot": "vendor/bin/wp i18n make-pot ./ languages/$npm_package_name.pot --exclude=node_modules,tests,docs,vendor",
+    "updatepo": "npm run makepot && vendor/bin/wp i18n update-po languages/$npm_package_name.pot languages/",
     "makepot-json": "vendor/bin/wp i18n make-json languages/$npm_package_name-nl_NL.po --no-purge",
     "archive": "composer archive --file=$npm_package_config_archiveName --format=zip",
     "postarchive": "rm -rf $npm_package_config_archiveName && unzip $npm_package_config_archiveName.zip -d $npm_package_config_archiveName && rm $npm_package_config_archiveName.zip && zip -r $npm_package_config_archiveName.zip $npm_package_config_archiveName && rm -rf $npm_package_config_archiveName"

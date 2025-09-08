@@ -39,6 +39,21 @@ msgstr ""
 msgid "https://postnl.post/"
 msgstr ""
 
+#: src/Admin/Survey.php:41
+#: src/Admin/Survey.php:102
+msgid "Help us improve PostNL"
+msgstr ""
+
+#: src/Admin/Survey.php:108
+#: src/Admin/Survey.php:134
+msgid "Take Survey"
+msgstr ""
+
+#: src/Admin/Survey.php:115
+#: src/Admin/Survey.php:141
+msgid "Leave a review on WordPress org"
+msgstr ""
+
 #: src/Checkout_Blocks/Extend_Block_Core.php:79
 #: src/Frontend/Container.php:325
 msgid "This is not a valid address!"
@@ -126,13 +141,52 @@ msgstr ""
 #: src/Shipping_Method/Settings.php:314
 #: build/postnl-container-frontend.js:1
 #: src/Checkout_Blocks/js/postnl-container/block.js:24
-msgid "Delivery"
+msgid "Delivery Days"
 msgstr ""
 
 #: src/Frontend/Dropoff_Points.php:52
 #: build/postnl-container-frontend.js:1
 #: src/Checkout_Blocks/js/postnl-container/block.js:30
-msgid "Pickup"
+msgid "Dropoff Points"
+msgstr ""
+
+#: src/Frontend/Fill_In_With_Postnl.php:220
+msgid "Invalid or expired nonce."
+msgstr ""
+
+#: src/Frontend/Fill_In_With_Postnl.php:230
+#: src/Frontend/Fill_In_With_Postnl_Handler.php:71
+msgid "Fill in with PostNL is not enabled or Client ID is missing."
+msgstr ""
+
+#: src/Frontend/Fill_In_With_Postnl_Handler.php:68
+msgid "Invalid nonce."
+msgstr ""
+
+#: src/Frontend/Fill_In_With_Postnl_Handler.php:76
+msgid "No user data"
+msgstr ""
+
+#: src/Frontend/Fill_In_With_Postnl_Handler.php:109
+msgid "Login session expired. Please try again."
+msgstr ""
+
+#. translators: %s is the error message from PostNL
+#: src/Frontend/Fill_In_With_Postnl_Handler.php:133
+msgid "PostNL Token Request Error: %s"
+msgstr ""
+
+#: src/Frontend/Fill_In_With_Postnl_Handler.php:146
+msgid "PostNL: Access token not found"
+msgstr ""
+
+#. translators: %s is the error message from PostNL
+#: src/Frontend/Fill_In_With_Postnl_Handler.php:165
+msgid "PostNL User Info Error: %s"
+msgstr ""
+
+#: src/Frontend/Fill_In_With_Postnl_Handler.php:181
+msgid "Incomplete user data."
 msgstr ""
 
 #: src/Helper/Mapping.php:30
@@ -188,12 +242,16 @@ msgstr ""
 msgid "PostNL plugin requires store country to be Netherlands (NL) or Belgium (BE)!"
 msgstr ""
 
-#: src/Main.php:376
-msgid "PostNL plugin requires store currency to be EUR, USD, GBP or CNY!"
+#: src/Main.php:456
+msgid "Postnl Checkout Blocks"
 msgstr ""
 
-#: src/Main.php:450
-msgid "Postnl Checkout Blocks"
+#: src/Main.php:475
+msgid "Leave a review"
+msgstr ""
+
+#: src/Main.php:495
+msgid "Settings"
 msgstr ""
 
 #: src/Order/Base.php:153
@@ -820,6 +878,180 @@ msgstr ""
 #. Translators: %s is the order total.
 #: src/Rest_API/Shipping/Item_Info.php:1045
 msgid "Insurance amount for EU shipments cannot exceed €5000. Your total is: %d"
+msgstr ""
+
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:38
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:61
+#: templates/checkout/postnl-fill-in-with-button.php:22
+#: templates/checkout/postnl-fill-in-with-button.php:25
+#: build/postnl-fill-in-with-frontend.js:1
+#: src/Checkout_Blocks/js/postnl-fill-in-with/block.js:144
+msgid "Fill in with PostNL"
+msgstr ""
+
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:55
+msgid "With this functionality your customers can easily and automatically fill in their shipping address via their PostNL account. This functionality is only available for consumers with a Dutch shipping address. Click the following link to activate the functionality:"
+msgstr ""
+
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:67
+#: src/Shipping_Method/Settings.php:110
+#: src/Shipping_Method/Settings.php:184
+#: src/Shipping_Method/Settings.php:288
+#: src/Shipping_Method/Settings.php:316
+#: src/Shipping_Method/Settings.php:339
+#: src/Shipping_Method/Settings.php:357
+#: src/Shipping_Method/Settings.php:428
+#: src/Shipping_Method/Settings.php:436
+msgid "Enable"
+msgstr ""
+
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:68
+msgid "Enable Fill in with PostNL functionality."
+msgstr ""
+
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:74
+msgid "Client ID"
+msgstr ""
+
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:75
+msgid "Enter your PostNL Client ID from the Digital Business Portal."
+msgstr ""
+
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:86
+msgid "Cart Button"
+msgstr ""
+
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:91
+msgid "Automatically render button in cart page"
+msgstr ""
+
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:92
+msgid "If enabled, the button will be automatically rendered in the cart page."
+msgstr ""
+
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:98
+msgid "Cart page button placement"
+msgstr ""
+
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:103
+msgid "Before Checkout"
+msgstr ""
+
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:104
+msgid "After Checkout"
+msgstr ""
+
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:114
+msgid "Checkout Page"
+msgstr ""
+
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:119
+msgid "Automatically render button in checkout page"
+msgstr ""
+
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:120
+msgid "If enabled, the button will be automatically rendered in the checkout page."
+msgstr ""
+
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:126
+msgid "Checkout page button placement"
+msgstr ""
+
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:131
+msgid "Before Customer Details"
+msgstr ""
+
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:132
+msgid "After Customer Details"
+msgstr ""
+
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:142
+msgid "Minicart"
+msgstr ""
+
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:147
+msgid "Automatically render button in Minicart"
+msgstr ""
+
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:148
+msgid "If enabled, the button will be automatically rendered in the minicart."
+msgstr ""
+
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:154
+msgid "Minicart button placement"
+msgstr ""
+
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:159
+msgid "Before Buttons"
+msgstr ""
+
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:160
+msgid "After Buttons"
+msgstr ""
+
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:170
+msgid "Button Styling"
+msgstr ""
+
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:175
+msgid "Button Background Color"
+msgstr ""
+
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:176
+msgid "Select the background color for the PostNL button."
+msgstr ""
+
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:184
+msgid "Button Border"
+msgstr ""
+
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:185
+msgid "Define the border style for the PostNL button (e.g., 1px solid #000000)."
+msgstr ""
+
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:193
+msgid "Button Alignment"
+msgstr ""
+
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:194
+msgid "Select the alignment for the PostNL button."
+msgstr ""
+
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:200
+msgid "Left"
+msgstr ""
+
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:201
+msgid "Center"
+msgstr ""
+
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:202
+msgid "Right"
+msgstr ""
+
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:206
+msgid "Button Hover Background Color"
+msgstr ""
+
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:207
+msgid "Select the background color for the PostNL button on hover."
+msgstr ""
+
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:221
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:226
+msgid "Custom CSS"
+msgstr ""
+
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:227
+msgid "Add your custom styles for the PostNL button. This will be printed in the site header."
+msgstr ""
+
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:239
+msgid "I understand that the PostNL address fields are activated (= separate field for zipcode, housnumber, housenumber extension and street) to let consumers fill in their shipping address with the PostNL app."
+msgstr ""
+
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:315
+msgid "You must enable at least one \"Automatically render button\" option in Cart, Checkout, or Minicart."
 msgstr ""
 
 #. translators: %1$s & %2$s is replaced with <a> tag.
@@ -1558,10 +1790,42 @@ msgstr ""
 msgid "Vanaf"
 msgstr ""
 
+#: templates/checkout/postnl-fill-in-with-button.php:23
+#: build/postnl-fill-in-with-frontend.js:1
+#: src/Checkout_Blocks/js/postnl-fill-in-with/block.js:160
+msgid "PostNL Logo"
+msgstr ""
+
+#: templates/checkout/postnl-fill-in-with-button.php:29
+#: build/postnl-fill-in-with-frontend.js:1
+#: src/Checkout_Blocks/js/postnl-fill-in-with/block.js:145
+msgid "Your name and address are automatically filled in via your PostNL account. That saves you from having to fill in the form!"
+msgstr ""
+
 #. translators: %s: Order number
 #: templates/emails/plain/smart-return-email.php:27
 #: templates/emails/smart-return-email.php:30
 msgid "In this email you will find the barcode you need to return your order. Scan this barcode at a PostNL point to print your return label. Please note, wait at least 10 minutes before scanning the barcode after receipt of this mail."
+msgstr ""
+
+#: build/postnl-fill-in-with-frontend.js:1
+#: src/Checkout_Blocks/js/postnl-fill-in-with/block.js:75
+msgid "Failed to retrieve PostNL user data."
+msgstr ""
+
+#: build/postnl-fill-in-with-frontend.js:1
+#: src/Checkout_Blocks/js/postnl-fill-in-with/block.js:83
+msgid "Failed to retrieve PostNL address. Please try again."
+msgstr ""
+
+#: build/postnl-fill-in-with-frontend.js:1
+#: src/Checkout_Blocks/js/postnl-fill-in-with/block.js:109
+msgid "Failed to initiate PostNL login."
+msgstr ""
+
+#: build/postnl-fill-in-with-frontend.js:1
+#: src/Checkout_Blocks/js/postnl-fill-in-with/block.js:121
+msgid "An unknown error occurred."
 msgstr ""
 
 #: src/Checkout_Blocks/js/postnl-delivery-day/edit.js:12
@@ -1577,6 +1841,19 @@ msgstr ""
 msgctxt "block title"
 msgid "Postnl Tabs"
 msgstr ""
+
+#: build/Checkout_Blocks/js/postnl-fill-in-with/block.json
+#: src/Checkout_Blocks/js/postnl-fill-in-with/block.json
+msgctxt "block title"
+msgid "PostNL Fill Button"
+msgstr ""
+
+#: build/Checkout_Blocks/js/postnl-fill-in-with/block.json
+#: src/Checkout_Blocks/js/postnl-fill-in-with/block.json
+msgctxt "block description"
+msgid "Fill in address with PostNL account"
+msgstr ""
+
 
 #: src/Admin/Survey.php:106
 msgid "Would you like a chance to win a Bol gift card worth €25?"

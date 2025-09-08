@@ -3,6 +3,7 @@
 namespace PostNLWooCommerce\Checkout_Blocks;
 
 use Automattic\WooCommerce\Blocks\Integrations\IntegrationInterface;
+use PostNLWooCommerce\Shipping_Method\Fill_In_With_PostNL_Settings;
 use PostNLWooCommerce\Utils;
 use function PostNLWooCommerce\postnl;
 
@@ -14,6 +15,13 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Class for integrating with WooCommerce Blocks
  */
 class Blocks_Integration implements IntegrationInterface {
+
+	/**
+	 * Settings class instance.
+	 *
+	 * @var Fill_In_With_PostNL_Settings
+	 */
+	protected $fill_in_with_settings;
 
 	/**
 	 * The name of the integration.
@@ -28,28 +36,40 @@ class Blocks_Integration implements IntegrationInterface {
 	 * When called invokes any initialization/setup for the integration.
 	 */
 	public function initialize() {
-			$this->register_scripts_and_styles();
+		$this->fill_in_with_settings = new Fill_In_With_PostNL_Settings();
+		$this->register_scripts_and_styles();
 	}
 
 	/**
 	 * Registers scripts and styles for both editor and frontend.
 	 */
 	private function register_scripts_and_styles() {
-		// Register main integration script and style
+		// Register main integration script and style.
 		$this->register_main_integration();
 
-		// Register block editor scripts
+		// Register block editor scripts.
 		$this->register_block_script(
 			'postnl-container-editor',
 			'/build/postnl-container.js',
 			'/build/postnl-container.asset.php'
 		);
+		$this->register_block_script(
+			'postnl-fill-in-with-editor',
+			'/build/postnl-fill-in-with-editor.js',
+			'/build/postnl-fill-in-with-editor.asset.php'
+		);
 
-		// Register frontend scripts for blocks
+		// Register frontend scripts for blocks.
 		$this->register_frontend_script(
 			'postnl-container-frontend',
 			'/build/postnl-container-frontend.js',
 			'/build/postnl-container-frontend.asset.php'
+		);
+
+		$this->register_frontend_script(
+			'postnl-fill-in-with-frontend',
+			'/build/postnl-fill-in-with-frontend.js',
+			'/build/postnl-fill-in-with-frontend.asset.php'
 		);
 	}
 
@@ -138,6 +158,25 @@ class Blocks_Integration implements IntegrationInterface {
 			true
 		);
 
+		if ( 'postnl-fill-in-with-frontend' === $handle ) {
+			$selected_location = $this->fill_in_with_settings->get_button_placement( 'checkout' );
+			if ( 'after_customer_details' === $selected_location ) {
+				$block_location = 'woocommerce/checkout-billing-address-block';
+			} else {
+				$block_location = 'woocommerce/checkout-contact-information-block';
+			}
+			wp_localize_script(
+				$handle,
+				'postnlSettings',
+				array(
+					'is_enabled_for_checkout' => $this->fill_in_with_settings->is_fill_in_with_postnl_enabled_for_checkout(),
+					'blockLocation'           => $block_location,
+					'ajaxUrl'                 => esc_url_raw( admin_url( 'admin-ajax.php' ) ),
+					'ajaxNonce'               => wp_create_nonce( 'postnl_user_info' ),
+				)
+			);
+		}
+
 		wp_set_script_translations(
 			$handle,
 			'postnl-for-woocommerce',
@@ -172,6 +211,7 @@ class Blocks_Integration implements IntegrationInterface {
 		return array(
 			'postnl-delivery-day-integration',
 			'postnl-container-frontend',
+			'postnl-fill-in-with-frontend',
 		);
 	}
 
@@ -184,6 +224,7 @@ class Blocks_Integration implements IntegrationInterface {
 		return array(
 			'postnl-delivery-day-integration',
 			'postnl-container-editor',
+			'postnl-fill-in-with-editor',
 		);
 	}
 
@@ -198,12 +239,17 @@ class Blocks_Integration implements IntegrationInterface {
 		$settings  = postnl()->get_shipping_settings();
 
 		return array(
-			'pluginUrl'                => POSTNL_WC_PLUGIN_DIR_URL,
-			'ajax_url'                 => admin_url( 'admin-ajax.php' ),
-			'nonce'                    => wp_create_nonce( 'postnl_delivery_day_nonce' ),
-			'letterbox'                => $letterbox,
-			'is_nl_address_enabled'    => $settings->is_reorder_nl_address_enabled(),
-			'is_pickup_points_enabled' => $settings->is_pickup_points_enabled(),
+			'ajax_url'                     => admin_url( 'admin-ajax.php' ),
+			'nonce'                        => wp_create_nonce( 'postnl_delivery_day_nonce' ),
+			'letterbox'                    => $letterbox,
+			'is_nl_address_enabled'        => $settings->is_reorder_nl_address_enabled(),
+			'is_pickup_points_enabled'     => $settings->is_pickup_points_enabled(),
+			'fill_in_with_postnl_settings' => array(
+				'rest_url'                       => rest_url( 'postnl/v1/get-redirect-uri' ),
+				'nonce'                          => wp_create_nonce( 'wp_rest' ),
+				'is_fill_in_with_postnl_enabled' => $this->fill_in_with_settings->is_fill_in_with_postnl_enabled(),
+				'postnl_logo_url'                => POSTNL_WC_PLUGIN_DIR_URL . '/assets/images/postnl-logo.svg',
+			),
 			'delivery_day_fee'         => $settings->get_delivery_days_fee(),
 			'pickup_fee'               => $settings->get_pickup_delivery_fee(),
 		);

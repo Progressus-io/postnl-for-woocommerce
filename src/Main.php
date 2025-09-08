@@ -11,10 +11,11 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-use PostNLWooCommerce\Checkout_Blocks\Blocks_Integration;
-use PostNLWooCommerce\Checkout_Blocks\Extend_Block_Core;
-use PostNLWooCommerce\Checkout_Blocks\Extend_Store_Endpoint;
 use PostNLWooCommerce\Product\Product_Editor;
+use PostNLWooCommerce\Checkout_Blocks\Extend_Block_Core;
+use PostNLWooCommerce\Checkout_Blocks\Blocks_Integration;
+use PostNLWooCommerce\Checkout_Blocks\Extend_Store_Endpoint;
+use PostNLWooCommerce\Shipping_Method\Fill_In_With_PostNL_Settings;
 
 /**
  * Class Main
@@ -190,6 +191,7 @@ class Main {
 		$this->get_shipping_order_bulk();
 		$this->get_orders_list();
 		$this->get_shipping_product();
+		$this->load_fill_in_with_postnl_settings();
 		$this->get_frontend();
 		$this->get_product_editor();
 	}
@@ -322,6 +324,8 @@ class Main {
 		new Frontend\Delivery_Day();
 		new Frontend\Dropoff_Points();
 		new Frontend\Checkout_Fields();
+		new Frontend\Fill_In_With_Postnl();
+		new Frontend\Fill_In_With_Postnl_Handler();
 	}
 
 	/**
@@ -337,6 +341,11 @@ class Main {
 		return $this->shipping_settings;
 	}
 
+	public function load_fill_in_with_postnl_settings() {
+		if ( class_exists( 'PostNLWooCommerce\Shipping_Method\Fill_In_With_PostNL_Settings' ) ) {
+			new Fill_In_With_PostNL_Settings();
+		}
+	}
 
 	/**
 	 * Define constant if not already set.

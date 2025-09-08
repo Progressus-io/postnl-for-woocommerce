@@ -881,6 +881,81 @@ class Utils {
 	}
 
 	/**
+	 * Get the frontend locations.
+	 *
+	 * @return array $locations
+	 */
+	public static function get_frontend_locations(): array {
+		// Allow filtering of the locations.
+		return apply_filters(
+			'postnl_frontend_locations',
+			array(
+				'cart_before_checkout'             => array(
+					'woocommerce_proceed_to_checkout',
+					'postnl_before_woocommerce/proceed-to-checkout-block',
+				),
+				'cart_after_checkout'              => array(
+					'woocommerce_after_cart_totals',
+					'postnl_after_woocommerce/proceed-to-checkout-block',
+				),
+				'checkout_before_customer_details' => array(
+					'woocommerce_checkout_before_customer_details',
+				),
+				'checkout_after_customer_details'  => array(
+					'woocommerce_after_order_notes',
+				),
+				'minicart_before_buttons'          => array(
+					'woocommerce_widget_shopping_cart_before_buttons',
+					'postnl_before_woocommerce/mini-cart-footer-block',
+				),
+				'minicart_after_buttons'           => array(
+					'woocommerce_widget_shopping_cart_after_buttons',
+					'postnl_after_woocommerce/mini-cart-footer-block',
+				),
+			)
+		);
+	}
+
+	/**
+	 * Get the frontend location mapping.
+	 *
+	 * @return array $mapping
+	 */
+	public static function get_frontend_location_mapping(): array {
+		// Allow filtering of the mapping.
+		return apply_filters(
+			'postnl_frontend_location_mapping',
+			array(
+				'cart_before_checkout'             => array( 'postnl_cart_auto_render_button', 'postnl_cart_button_placement', 'before_checkout' ),
+				'cart_after_checkout'              => array( 'postnl_cart_auto_render_button', 'postnl_cart_button_placement', 'after_checkout' ),
+				'checkout_before_customer_details' => array( 'postnl_checkout_auto_render_button', 'postnl_checkout_button_placement', 'before_customer_details' ),
+				'checkout_after_customer_details'  => array( 'postnl_checkout_auto_render_button', 'postnl_checkout_button_placement', 'after_customer_details' ),
+				'minicart_before_buttons'          => array( 'postnl_minicart_auto_render_button', 'postnl_minicart_button_placement', 'before_buttons' ),
+				'minicart_after_buttons'           => array( 'postnl_minicart_auto_render_button', 'postnl_minicart_button_placement', 'after_buttons' ),
+			)
+		);
+	}
+
+	/**
+	 * Check if customer default country is allowed.
+	 *
+	 * @param \WC_Customer $customer Customer object.
+	 * @param array        $allowed_countries list of allowed countries.
+	 *
+	 * @return bool
+	 */
+	public static function is_customer_country_allowed( $customer, $allowed_countries ): bool {
+		$billing_country  = $customer->get_billing_country();
+		$shipping_country = $customer->get_shipping_country();
+
+		if ( ! in_array( $billing_country, $allowed_countries, true ) &&
+			! in_array( $shipping_country, $allowed_countries, true ) ) {
+			return false;
+		}
+		return true;
+	}
+
+	/**
 	 * Get WooCommerce shop order screen ID.
 	 *
 	 * @return string

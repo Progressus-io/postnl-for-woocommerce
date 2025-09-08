@@ -1,0 +1,388 @@
+<?php
+/**
+ * Class Shipping_Method/Fill_In_With_PostNL_Settings file.
+ *
+ * @package PostNLWooCommerce\Shipping_Method
+ */
+
+namespace PostNLWooCommerce\Shipping_Method;
+
+use WC_Admin_Settings;
+
+defined( 'ABSPATH' ) || exit;
+
+/**
+ * Class Fill_In_With_PostNL_Settings
+ * Handles the 'Fill in with PostNL' WooCommerce shipping settings tab.
+ */
+class Fill_In_With_PostNL_Settings {
+
+	/**
+	 * Constructor.
+	 */
+	public function __construct() {
+		add_filter( 'woocommerce_get_sections_shipping', array( $this, 'add_settings_section' ) );
+		add_filter( 'woocommerce_get_settings_shipping', array( $this, 'add_settings_fields' ), 10, 2 );
+		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_admin_scripts' ) );
+		add_filter( 'woocommerce_admin_settings_sanitize_option', array( $this, 'maybe_prevent_saving_invalid_data' ), 10, 3 );
+	}
+
+	/**
+	 * Add new section to the WooCommerce Shipping settings.
+	 *
+	 * @param array $sections Existing WooCommerce shipping sections.
+	 *
+	 * @return array
+	 */
+	public function add_settings_section( array $sections ): array {
+		$sections['fill-in-with-postnl'] = esc_html__( 'Fill in with PostNL', 'postnl-for-woocommerce' );
+		return $sections;
+	}
+
+	/**
+	 * Add settings fields to the custom section.
+	 *
+	 * @param array  $settings Existing settings.
+	 * @param string $current_section Current section being rendered.
+	 *
+	 * @return array
+	 */
+	public function add_settings_fields( $settings, $current_section ): array {
+		if ( 'fill-in-with-postnl' !== $current_section ) {
+			return $settings;
+		}
+
+		$info_block = '<p>' . esc_html__( 'With this functionality your customers can easily and automatically fill in their shipping address via their PostNL account. This functionality is only available for consumers with a Dutch shipping address. Click the following link to activate the functionality:', 'postnl-for-woocommerce' ) . '</p>';
+
+		$info_block .= '<a href="https://dil-business-portal.postnl.nl/checkout-prefill?referrer=wcplugin&url=' . site_url() . '" target="_blank" style="margin-bottom: 10px;">https://dil-business-portal.postnl.nl/checkout-prefill?referrer=wcplugin&url=' . site_url() . '</a>';
+
+		$settings = array(
+			array(
+				'title' => esc_html__( 'Fill in with PostNL', 'postnl-for-woocommerce' ),
+				'type'  => 'title',
+				'desc'  => $info_block,
+				'id'    => 'postnl_fill_in_with_title',
+			),
+			array(
+				'title'   => esc_html__( 'Enable', 'postnl-for-woocommerce' ),
+				'desc'    => esc_html__( 'Enable Fill in with PostNL functionality.', 'postnl-for-woocommerce' ),
+				'id'      => 'postnl_enable_fill_in_with',
+				'default' => 'no',
+				'type'    => 'checkbox',
+			),
+			array(
+				'title' => esc_html__( 'Client ID', 'postnl-for-woocommerce' ),
+				'desc'  => esc_html__( 'Enter your PostNL Client ID from the Digital Business Portal.', 'postnl-for-woocommerce' ),
+				'id'    => 'postnl_fill_in_with_client_id',
+				'type'  => 'text',
+			),
+			array(
+				'type' => 'sectionend',
+				'id'   => 'postnl_fill_in_with_section_end',
+			),
+
+			// Cart Button section.
+			array(
+				'title' => esc_html__( 'Cart Button', 'postnl-for-woocommerce' ),
+				'type'  => 'title',
+				'id'    => 'postnl_cart_button_title',
+			),
+			array(
+				'title'   => esc_html__( 'Automatically render button in cart page', 'postnl-for-woocommerce' ),
+				'desc'    => esc_html__( 'If enabled, the button will be automatically rendered in the cart page.', 'postnl-for-woocommerce' ),
+				'id'      => 'postnl_cart_auto_render_button',
+				'type'    => 'checkbox',
+				'default' => 'no',
+			),
+			array(
+				'title'   => esc_html__( 'Cart page button placement', 'postnl-for-woocommerce' ),
+				'id'      => 'postnl_cart_button_placement',
+				'type'    => 'select',
+				'default' => 'before_checkout',
+				'options' => array(
+					'before_checkout' => esc_html__( 'Before Checkout', 'postnl-for-woocommerce' ),
+					'after_checkout'  => esc_html__( 'After Checkout', 'postnl-for-woocommerce' ),
+				),
+			),
+			array(
+				'type' => 'sectionend',
+				'id'   => 'postnl_cart_button_section_end',
+			),
+
+			// Checkout Page section.
+			array(
+				'title' => esc_html__( 'Checkout Page', 'postnl-for-woocommerce' ),
+				'type'  => 'title',
+				'id'    => 'postnl_checkout_page_title',
+			),
+			array(
+				'title'   => esc_html__( 'Automatically render button in checkout page', 'postnl-for-woocommerce' ),
+				'desc'    => esc_html__( 'If enabled, the button will be automatically rendered in the checkout page.', 'postnl-for-woocommerce' ),
+				'id'      => 'postnl_checkout_auto_render_button',
+				'type'    => 'checkbox',
+				'default' => 'no',
+			),
+			array(
+				'title'   => esc_html__( 'Checkout page button placement', 'postnl-for-woocommerce' ),
+				'id'      => 'postnl_checkout_button_placement',
+				'type'    => 'select',
+				'default' => 'before_customer_details',
+				'options' => array(
+					'before_customer_details' => esc_html__( 'Before Customer Details', 'postnl-for-woocommerce' ),
+					'after_customer_details'  => esc_html__( 'After Customer Details', 'postnl-for-woocommerce' ),
+				),
+			),
+			array(
+				'type' => 'sectionend',
+				'id'   => 'postnl_checkout_section_end',
+			),
+
+			// Minicart section.
+			array(
+				'title' => esc_html__( 'Minicart', 'postnl-for-woocommerce' ),
+				'type'  => 'title',
+				'id'    => 'postnl_minicart_title',
+			),
+			array(
+				'title'   => esc_html__( 'Automatically render button in Minicart', 'postnl-for-woocommerce' ),
+				'desc'    => esc_html__( 'If enabled, the button will be automatically rendered in the minicart.', 'postnl-for-woocommerce' ),
+				'id'      => 'postnl_minicart_auto_render_button',
+				'type'    => 'checkbox',
+				'default' => 'no',
+			),
+			array(
+				'title'   => esc_html__( 'Minicart button placement', 'postnl-for-woocommerce' ),
+				'id'      => 'postnl_minicart_button_placement',
+				'type'    => 'select',
+				'default' => 'before_buttons',
+				'options' => array(
+					'before_buttons' => esc_html__( 'Before Buttons', 'postnl-for-woocommerce' ),
+					'after_buttons'  => esc_html__( 'After Buttons', 'postnl-for-woocommerce' ),
+				),
+			),
+			array(
+				'type' => 'sectionend',
+				'id'   => 'postnl_minicart_section_end',
+			),
+
+			// Button Styling section.
+			array(
+				'title' => esc_html__( 'Button Styling', 'postnl-for-woocommerce' ),
+				'type'  => 'title',
+				'id'    => 'postnl_button_styling_title',
+			),
+			array(
+				'title'    => esc_html__( 'Button Background Color', 'postnl-for-woocommerce' ),
+				'desc'     => esc_html__( 'Select the background color for the PostNL button.', 'postnl-for-woocommerce' ),
+				'desc_tip' => true,
+				'id'       => 'postnl_button_background_color',
+				'type'     => 'color',
+				'default'  => '#ff6200',
+				'css'      => 'width: 80px;',
+			),
+			array(
+				'title'    => esc_html__( 'Button Border', 'postnl-for-woocommerce' ),
+				'desc'     => esc_html__( 'Define the border style for the PostNL button (e.g., 1px solid #000000).', 'postnl-for-woocommerce' ),
+				'desc_tip' => true,
+				'id'       => 'postnl_button_border',
+				'type'     => 'text',
+				'default'  => '1px solid #000000',
+				'css'      => 'width: 150px;',
+			),
+			array(
+				'title'    => esc_html__( 'Button Alignment', 'postnl-for-woocommerce' ),
+				'desc'     => esc_html__( 'Select the alignment for the PostNL button.', 'postnl-for-woocommerce' ),
+				'desc_tip' => true,
+				'id'       => 'postnl_button_alignment',
+				'type'     => 'select',
+				'default'  => 'left',
+				'options'  => array(
+					'left'   => esc_html__( 'Left', 'postnl-for-woocommerce' ),
+					'center' => esc_html__( 'Center', 'postnl-for-woocommerce' ),
+					'right'  => esc_html__( 'Right', 'postnl-for-woocommerce' ),
+				),
+			),
+			array(
+				'title'    => esc_html__( 'Button Hover Background Color', 'postnl-for-woocommerce' ),
+				'desc'     => esc_html__( 'Select the background color for the PostNL button on hover.', 'postnl-for-woocommerce' ),
+				'desc_tip' => true,
+				'id'       => 'postnl_button_hover_background_color',
+				'type'     => 'color',
+				'default'  => '#e55500',
+				'css'      => 'width: 80px;',
+			),
+			array(
+				'type' => 'sectionend',
+				'id'   => 'postnl_button_styling_section_end',
+			),
+
+			// Custom css section.
+			array(
+				'title' => esc_html__( 'Custom CSS', 'postnl-for-woocommerce' ),
+				'type'  => 'title',
+				'id'    => 'postnl_custom_css_title',
+			),
+			array(
+				'title'    => esc_html__( 'Custom CSS', 'postnl-for-woocommerce' ),
+				'desc_tip' => esc_html__( 'Add your custom styles for the PostNL button. This will be printed in the site header.', 'postnl-for-woocommerce' ),
+				'id'       => 'postnl_custom_css',
+				'type'     => 'textarea',
+				'css'      => 'min-height:200px; font-family: monospace;',
+				'class'    => 'postnl-css-editor',
+			),
+			array(
+				'type' => 'sectionend',
+				'id'   => 'postnl_custom_css_section_end',
+			),
+
+			array(
+				'desc'    => esc_html__( 'I understand that the PostNL address fields are activated (= separate field for zipcode, housnumber, housenumber extension and street) to let consumers fill in their shipping address with the PostNL app.', 'postnl-for-woocommerce' ),
+				'id'      => 'postnl_consent_checkbox',
+				'type'    => 'checkbox',
+				'default' => 'no',
+			),
+		);
+
+		return $settings;
+	}
+
+	/**
+	 * Enqueue admin scripts.
+	 * This method is used to load the CodeMirror editor for custom CSS in the settings page.
+	 *
+	 * @param string $hook The current admin page hook.
+	 *
+	 * @return void
+	 */
+	public function enqueue_admin_scripts( $hook ): void {
+		if ( 'woocommerce_page_wc-settings' !== $hook || ! isset( $_GET['section'] ) || 'fill-in-with-postnl' !== $_GET['section'] ) {
+			return;
+		}
+
+		// Load WP's built-in CodeMirror.
+		wp_enqueue_code_editor( array( 'type' => 'text/css' ) );
+		wp_enqueue_script( 'wp-theme-plugin-editor' );
+		wp_enqueue_style( 'wp-codemirror' );
+
+		wp_enqueue_script(
+			'postnl-admin-fill-in-with-postnl-settings',
+			POSTNL_WC_PLUGIN_DIR_URL . '/assets/js/admin-fill-in-with-postnl-settings.js',
+			array( 'jquery' ),
+			POSTNL_WC_VERSION,
+			true
+		);
+
+	}
+
+	/**
+	 * Prevent saving if required conditions aren't met.
+	 *
+	 * @param mixed  $value The value to be saved.
+	 * @param array  $option Option details.
+	 * @param string $raw_value Raw (unsanitized) value.
+	 *
+	 * @return mixed
+	 */
+	public function maybe_prevent_saving_invalid_data( $value, $option, $raw_value ) {
+		static $validation_done = false;
+
+		// Run only for settings prefixed with 'postnl_'.
+		if ( false === strpos( $option['id'], 'postnl_' ) ) {
+			return $value;
+		}
+
+		// Only run once per settings save.
+		if ( $validation_done ) {
+			return $value;
+		}
+
+		$validation_done = true;
+
+		// Validation only needed if 'Fill in with PostNL' is enabled.
+		$is_enabled = isset( $_POST['postnl_enable_fill_in_with'] );
+		if ( ! $is_enabled ) {
+			return $value;
+		}
+
+		// Get checkbox values.
+		$cart_checked     = isset( $_POST['postnl_cart_auto_render_button'] );
+		$checkout_checked = isset( $_POST['postnl_checkout_auto_render_button'] );
+		$minicart_checked = isset( $_POST['postnl_minicart_auto_render_button'] );
+
+		// If all are disabled, add error.
+		if ( ! $cart_checked && ! $checkout_checked && ! $minicart_checked ) {
+			WC_Admin_Settings::add_error(
+				esc_html__( 'You must enable at least one "Automatically render button" option in Cart, Checkout, or Minicart.', 'postnl-for-woocommerce' )
+			);
+
+			return get_option( $option['id'], $option['default'] ?? '' );
+		}
+
+		return $value;
+	}
+
+	/**
+	 * Check if the 'Fill in with PostNL' feature is enabled and the Client ID is set.
+	 *
+	 * @return Bool
+	 */
+	public function is_fill_in_with_postnl_enabled() {
+		return ( 'yes' === get_option( 'postnl_enable_fill_in_with', 'no' ) )
+			&& ! empty( $this->get_client_id() );
+	}
+
+	/**
+	 * Check if the 'Fill in with PostNL' feature is enabled for checkout.
+	 *
+	 * @return bool
+	 */
+	public function is_fill_in_with_postnl_enabled_for_checkout(): bool {
+		return $this->is_fill_in_with_postnl_enabled() && 'yes' === get_option( 'postnl_checkout_auto_render_button', 'no' );
+	}
+
+	/**
+	 * Get the Client ID for Fill in with PostNL.
+	 *
+	 * @return string
+	 */
+	public function get_client_id(): string {
+		return sanitize_text_field( get_option( 'postnl_fill_in_with_client_id', '' ) );
+	}
+
+	/**
+	 * Get the Redirect URI for Fill in with PostNL.
+	 *
+	 * @param string $code_challenge The PKCE code challenge.
+	 * @param string $state The state parameter for OAuth.
+	 *
+	 * @return string
+	 */
+	public function get_redirect_uri( string $state, string $code_challenge = '' ): string {
+		$client_id    = $this->get_client_id();
+		$callback_url = home_url( '/checkout/default/details/?callback=postnl' );
+		$base_url     = 'https://dil-login.postnl.nl/oauth2/authorize';
+
+		$query_args = array(
+			'client_id'             => $client_id,
+			'redirect_uri'          => $callback_url,
+			'response_type'         => 'code',
+			'scope'                 => 'base',
+			'code_challenge'        => '',
+			'code_challenge_method' => 'S256',
+			'state'                 => $state,
+		);
+		return $base_url . '?' . http_build_query( $query_args, '', '&' );
+	}
+
+	/**
+	 * Get the button placement for a specific context.
+	 *
+	 * @param string $context The context for which to get the button placement (e.g., 'checkout', 'cart', 'minicart').
+	 *
+	 * @return string The button placement option value.
+	 */
+	public function get_button_placement( string $context ): string {
+		$option_name = 'postnl_' . $context . '_button_placement';
+		return get_option( $option_name, '' );
+	}
+}

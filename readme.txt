@@ -86,6 +86,7 @@ Follow these instructions (https://www.postnl.nl/Images/aanvragen-api-key-stappe
 
 ### 5.8.0 (2025-xx-xx) =
 * Add: A new contact type 02 with sender email to the shipping API request.
+* Add: A new button on the cart or checkout pages to help customers easily fill in their address details with postnl
 * Fix: Ressolve issue where insured NL>BE shipments defaulted to standard shipment instead of insured shipment.
 * Fix: PHP waring `Function _load_textdomain_just_in_time was called incorrectly`.
 * Fix: Postcode required before filling it on the checkout page.

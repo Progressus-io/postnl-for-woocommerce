@@ -112,12 +112,12 @@ class Main {
 		// Throw an admin error informing the user this plugin needs country settings to be NL and BE.
 		add_action( 'admin_notices', array( $this, 'notice_nl_be_required' ) );
 
-        if ( ! Utils::use_available_country() ) {
-            return;
-        }
+		if ( ! Utils::use_available_country() ) {
+			return;
+		}
 
 		add_action( 'init', array( $this, 'load_plugin' ), 1 );
-        add_filter( 'woocommerce_shipping_methods', array( $this, 'add_shipping_method' ) );
+		add_filter( 'woocommerce_shipping_methods', array( $this, 'add_shipping_method' ) );
     }
 
 	/**

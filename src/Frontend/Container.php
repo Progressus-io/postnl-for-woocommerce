@@ -65,7 +65,6 @@ class Container {
 			add_filter( 'woocommerce_package_rates', array( $this, 'inject_postnl_base_fees' ), 20, 2 );
 		}
 		add_filter( 'woocommerce_cart_shipping_packages', array( $this, 'add_postnl_option_to_package' ) );
-
 	}
 
 	/**
@@ -238,12 +237,12 @@ class Container {
 		}
 
 		$template_args = array(
-			'tabs'        => $this->get_available_tabs( $checkout_data['response'] ),
-			'response'    => $checkout_data['response'],
-			'post_data'   => $checkout_data['post_data'],
-			'default_val' => $this->get_default_value( $checkout_data['response'], $checkout_data['post_data'] ),
-			'letterbox'   => $checkout_data['letterbox'],
-			'fields'      => array(
+			'tabs'             => $this->get_available_tabs( $checkout_data['response'] ),
+			'response'         => $checkout_data['response'],
+			'post_data'        => $checkout_data['post_data'],
+			'default_val'      => $this->get_default_value( $checkout_data['response'], $checkout_data['post_data'] ),
+			'letterbox'        => $checkout_data['letterbox'],
+			'fields'           => array(
 				array(
 					'name'  => $this->tab_field,
 					'value' => $this->get_tab_field_value( $checkout_data['post_data'] ),
@@ -446,8 +445,6 @@ class Container {
 				$tax_rates   = \WC_Tax::get_shipping_tax_rates();
 				$rate->taxes = \WC_Tax::calc_shipping_tax( $rate->cost, $tax_rates );
 			}
-
-
 		}
 
 		return $rates;

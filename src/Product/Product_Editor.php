@@ -39,7 +39,8 @@ class Product_Editor {
 		$parent = $shipping_dimensions_block->get_parent();
 
 		// Add 18+ Adults Only Checkbox Block.
-		/*$parent->add_block(
+		/*
+		$parent->add_block(
 			array(
 				'id'         => 'postnl-adult-product',
 				'blockName'  => 'woocommerce/product-checkbox-field',
@@ -129,6 +130,5 @@ class Product_Editor {
 				),
 			)
 		);
-
 	}
 }

@@ -91,7 +91,7 @@ class Extend_Store_Endpoint {
 				'description' => 'Selected delivery day for PostNL',
 				'context'     => array(
 					'view',
-					'edit'
+					'edit',
 				),
 				'readonly'    => false,
 				'default'     => '',
@@ -101,7 +101,7 @@ class Extend_Store_Endpoint {
 				'description' => 'Selected delivery day date for PostNL',
 				'context'     => array(
 					'view',
-					'edit'
+					'edit',
 				),
 				'readonly'    => false,
 				'default'     => '',
@@ -111,7 +111,7 @@ class Extend_Store_Endpoint {
 				'description' => 'Delivery start time for PostNL delivery day',
 				'context'     => array(
 					'view',
-					'edit'
+					'edit',
 				),
 				'readonly'    => false,
 				'default'     => '',
@@ -121,7 +121,7 @@ class Extend_Store_Endpoint {
 				'description' => 'Delivery end time for PostNL delivery day',
 				'context'     => array(
 					'view',
-					'edit'
+					'edit',
 				),
 				'readonly'    => false,
 				'default'     => '',
@@ -131,7 +131,7 @@ class Extend_Store_Endpoint {
 				'description' => 'Price for the selected PostNL delivery time',
 				'context'     => array(
 					'view',
-					'edit'
+					'edit',
 				),
 				'readonly'    => false,
 				'type'        => 'string',
@@ -140,17 +140,17 @@ class Extend_Store_Endpoint {
 				'description' => 'Type of delivery (Morning, Evening, etc.) for PostNL delivery day',
 				'context'     => array(
 					'view',
-					'edit'
+					'edit',
 				),
 				'readonly'    => false,
 				'default'     => '',
 				'type'        => 'string',
 			),
-			'dropoffPoints' => array(
+			'dropoffPoints'               => array(
 				'description' => 'Selected drop-off point identifier',
 				'context'     => array(
 					'view',
-					'edit'
+					'edit',
 				),
 				'readonly'    => false,
 				'default'     => '',
@@ -160,7 +160,7 @@ class Extend_Store_Endpoint {
 				'description' => 'Company name of the drop-off point',
 				'context'     => array(
 					'view',
-					'edit'
+					'edit',
 				),
 				'readonly'    => false,
 				'default'     => '',
@@ -170,7 +170,7 @@ class Extend_Store_Endpoint {
 				'description' => 'Address line 1 of the drop-off point',
 				'context'     => array(
 					'view',
-					'edit'
+					'edit',
 				),
 				'readonly'    => false,
 				'default'     => '',
@@ -180,7 +180,7 @@ class Extend_Store_Endpoint {
 				'description' => 'Address line 2 of the drop-off point',
 				'context'     => array(
 					'view',
-					'edit'
+					'edit',
 				),
 				'readonly'    => false,
 				'default'     => '',
@@ -190,7 +190,7 @@ class Extend_Store_Endpoint {
 				'description' => 'City of the drop-off point',
 				'context'     => array(
 					'view',
-					'edit'
+					'edit',
 				),
 				'readonly'    => false,
 				'default'     => '',
@@ -200,7 +200,7 @@ class Extend_Store_Endpoint {
 				'description' => 'Postcode of the drop-off point',
 				'context'     => array(
 					'view',
-					'edit'
+					'edit',
 				),
 				'readonly'    => false,
 				'default'     => '',
@@ -210,7 +210,7 @@ class Extend_Store_Endpoint {
 				'description' => 'Country of the drop-off point',
 				'context'     => array(
 					'view',
-					'edit'
+					'edit',
 				),
 				'readonly'    => false,
 				'default'     => '',
@@ -220,7 +220,7 @@ class Extend_Store_Endpoint {
 				'description' => 'Partner ID of the drop-off point',
 				'context'     => array(
 					'view',
-					'edit'
+					'edit',
 				),
 				'readonly'    => false,
 				'default'     => '',
@@ -230,7 +230,7 @@ class Extend_Store_Endpoint {
 				'description' => 'Date of the drop-off point selection',
 				'context'     => array(
 					'view',
-					'edit'
+					'edit',
 				),
 				'readonly'    => false,
 				'default'     => '',
@@ -240,7 +240,7 @@ class Extend_Store_Endpoint {
 				'description' => 'Time of the drop-off point selection',
 				'context'     => array(
 					'view',
-					'edit'
+					'edit',
 				),
 				'readonly'    => false,
 				'default'     => '',
@@ -250,7 +250,7 @@ class Extend_Store_Endpoint {
 				'description' => 'Type of the drop-off point selection',
 				'context'     => array(
 					'view',
-					'edit'
+					'edit',
 				),
 				'readonly'    => false,
 				'default'     => '',
@@ -260,7 +260,7 @@ class Extend_Store_Endpoint {
 				'description' => 'Distance to the drop-off point',
 				'context'     => array(
 					'view',
-					'edit'
+					'edit',
 				),
 				'readonly'    => false,
 				'default'     => 0.0,

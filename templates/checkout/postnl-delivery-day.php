@@ -89,6 +89,6 @@ if ( empty( $data['delivery_options'] ) ) {
 	<input type="hidden" name="<?php echo esc_attr( $data['field_name'] ); ?>_from" id="<?php echo esc_attr( $data['field_name'] ); ?>_from" value="" />
 	<input type="hidden" name="<?php echo esc_attr( $data['field_name'] ); ?>_to" id="<?php echo esc_attr( $data['field_name'] ); ?>_to" value="" />
 	<input type="hidden" name="<?php echo esc_attr( $data['field_name'] ); ?>_price" id="<?php echo esc_attr( $data['field_name'] ); ?>_price" value="" />
-    <input type="hidden" name="<?php echo esc_attr( $data['field_name'] ); ?>_type" id="<?php echo esc_attr( $data['field_name'] ); ?>_type" value="" />
-    <input type="hidden" name="<?php echo esc_attr( $data['field_name'] ); ?>_fees" id="<?php echo esc_attr( $data['field_name'] ); ?>_fees" value="fees" />
+	<input type="hidden" name="<?php echo esc_attr( $data['field_name'] ); ?>_type" id="<?php echo esc_attr( $data['field_name'] ); ?>_type" value="" />
+	<input type="hidden" name="<?php echo esc_attr( $data['field_name'] ); ?>_fees" id="<?php echo esc_attr( $data['field_name'] ); ?>_fees" value="fees" />
 </div>

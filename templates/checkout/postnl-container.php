@@ -31,30 +31,34 @@ $field = array_shift( $fields );
 						?>
 
 						<li class="<?php echo esc_attr( $active_class ); ?>">
-                            <label
-                                    for="<?php echo esc_attr( $field['name'] . '_' . $field_tab['id'] ); ?>"
-                                    class="postnl_checkout_tab"
-                                    data-base-fee="<?php echo esc_attr(
+							<label
+									for="<?php echo esc_attr( $field['name'] . '_' . $field_tab['id'] ); ?>"
+									class="postnl_checkout_tab"
+									data-base-fee="
+									<?php
+									echo esc_attr(
 										'delivery_day' === $field_tab['id']
 											? (float) $delivery_day_fee
 											: ( 'dropoff_points' === $field_tab['id']
 											? (float) $pickup_fee
 											: 0
 										)
-									); ?>"
-                            >
+									);
+									?>
+									"
+							>
 
 								<span>
-                                    <?php
-                                    echo esc_html( $field_tab['name'] );
-                                    if ( 'dropoff_points' === $field_tab['id'] && ! empty( $pickup_fee ) ) {
-	                                    printf( ' (+%s)', wc_price( $pickup_fee ) );
-                                    }
-                                    if ( 'delivery_day' === $field_tab['id'] && ! empty( $delivery_day_fee ) ) {
-	                                    printf( ' (+%s)', wc_price( $delivery_day_fee ) );
-                                    }
-                                    ?>
-                                </span>
+									<?php
+									echo esc_html( $field_tab['name'] );
+									if ( 'dropoff_points' === $field_tab['id'] && ! empty( $pickup_fee ) ) {
+										printf( ' (+%s)', wc_price( $pickup_fee ) );
+									}
+									if ( 'delivery_day' === $field_tab['id'] && ! empty( $delivery_day_fee ) ) {
+										printf( ' (+%s)', wc_price( $delivery_day_fee ) );
+									}
+									?>
+								</span>
 								<input
 									type="radio"
 									name="<?php echo esc_attr( $field['name'] ); ?>"

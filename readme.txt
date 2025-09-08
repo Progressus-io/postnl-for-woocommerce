@@ -81,16 +81,15 @@ Follow these instructions (https://www.postnl.nl/Images/aanvragen-api-key-stappe
 
 == Changelog ==
 
-= 5.8.1 (2025-09-06) =
-* Add: Option to apply extra fees for Home Delivery and Pickup Point Delivery.
-
-### 5.8.0 (2025-xx-xx) =
-* Add: A new contact type 02 with sender email to the shipping API request.
-* Add: A new button on the cart or checkout pages to help customers easily fill in their address details with postnl
-* Fix: Ressolve issue where insured NL>BE shipments defaulted to standard shipment instead of insured shipment.
+### 5.8.0 (2025-09-08) =
+* Add: Fill In With / Invullen met PostNL.
+* Add: ContactType 02 for digital proof of shipping.
+* Add: Allow different fees for home / pick-up delivery.
+* Fix: Label & Tracking menu fixed for NL>BE shipments.
+* Fix: Delivery menu loading while addresschecker is disabled.
+* Fix: WC Rest API issue.
 * Fix: PHP waring `Function _load_textdomain_just_in_time was called incorrectly`.
-* Fix: Postcode required before filling it on the checkout page.
-* Fix: Drop-off point type not saving when orders are created via Blocks checkout.
+* Tweak: WooCommerce 10.2 compatibility.
 
 = 5.7.3 (2025-05-06) =
 * Tweak: Use `plugins_loaded` hook to add the shipping method for Flexible shipping and Polylang plugins compatibility.

@@ -505,13 +505,7 @@ class Item_Info extends Base_Info {
 				},
 			),
 			'currency'                => array(
-				'validate' => function ( $value ) {
-					if ( ! Utils::check_available_currency( $value ) ) {
-						throw new \Exception(
-							__( 'Currency is not available!', 'postnl-for-woocommerce' )
-						);
-					}
-				},
+				'default' => '',
 			),
 			'phone'                   => array(
 				'default' => '',
@@ -1033,15 +1027,14 @@ class Item_Info extends Base_Info {
 	 * @throws \Exception if the order weight exceeds € 5000.
 	 */
 	protected function check_insurance_amount_limit( $backend_data, $order_total ) {
-		$is_non_eu_shipment = $this->is_rest_of_world();
+		if ( $this->is_rest_of_world() ) {
+			// Only for EU.
+			return;
+		}
 
-		// For non-EU shipments, set the insured amount to €500 if insurance is selected
-		if ( $is_non_eu_shipment && 'yes' === $backend_data['insured_shipping'] ) {
-			$insured_amount = 500;
-		} // For EU shipments, validate that insurance does not exceed €5000
-		elseif ( ! $is_non_eu_shipment && 'yes' === $backend_data['insured_shipping'] && $order_total > 5000 ) {
+		if ( 'yes' === $backend_data['insured_shipping'] && $order_total > 5000 ) {
 			throw new \Exception(
-				// Translators: %s is the order total.
+			// Translators: %s is the order total.
 				sprintf( esc_html__( 'Insurance amount for EU shipments cannot exceed €5000. Your total is: %d', 'postnl-for-woocommerce' ), $order_total )
 			);
 		}

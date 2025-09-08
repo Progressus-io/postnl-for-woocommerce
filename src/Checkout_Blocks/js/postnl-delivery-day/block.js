@@ -192,6 +192,7 @@ export const Block = ({
 		sessionStorage.removeItem( 'postnl_dropoffPointsPartnerID' );
 		sessionStorage.removeItem( 'postnl_dropoffPointsDate' );
 		sessionStorage.removeItem( 'postnl_dropoffPointsTime' );
+		sessionStorage.removeItem( 'postnl_dropoffPointsType' );
 		sessionStorage.removeItem( 'postnl_dropoffPointsDistance' );
 
 		setExtensionData( 'postnl', 'dropoffPoints', '' );
@@ -204,6 +205,7 @@ export const Block = ({
 		setExtensionData( 'postnl', 'dropoffPointsPartnerID', '' );
 		setExtensionData( 'postnl', 'dropoffPointsDate', '' );
 		setExtensionData( 'postnl', 'dropoffPointsTime', '' );
+		setExtensionData( 'postnl', 'dropoffPointsType', '' );
 		setExtensionData( 'postnl', 'dropoffPointsDistance', null );
 
 		try {

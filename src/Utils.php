@@ -7,6 +7,7 @@
 
 namespace PostNLWooCommerce;
 
+use Automattic\WooCommerce\Internal\DataStores\Orders\CustomOrdersTableController;
 use PostNLWooCommerce\Helper\Mapping;
 use PostNLWooCommerce\Product\Single;
 use WC_Product;
@@ -63,49 +64,6 @@ class Utils {
 	 */
 	public static function get_adults_only_shipping_countries(): array {
 		return array( 'NL' );
-	}
-
-	/**
-	 * Get available country.
-	 *
-	 * @return array.
-	 */
-	public static function get_available_currency() {
-		// Get all WooCommerce currencies
-		$woocommerce_currencies = array_keys( get_woocommerce_currencies() );
-
-		return $woocommerce_currencies;
-	}
-
-	/**
-	 * Get currency from WooCommerce settings.
-	 */
-	public static function get_woocommerce_currency() {
-		return get_woocommerce_currency();
-	}
-
-	/**
-	 * Check if the current settings use available currency.
-	 *
-	 * @return Boolean.
-	 */
-	public static function use_available_currency() {
-		return self::check_available_currency( self::get_woocommerce_currency() );
-	}
-
-	/**
-	 * Check if the currency use available currency.
-	 *
-	 * @param String $currency Currency code.
-	 *
-	 * @return Boolean.
-	 */
-	public static function check_available_currency( $currency = '' ) {
-		if ( empty( $currency ) ) {
-			return false;
-		}
-
-		return ( in_array( $currency, self::get_available_currency(), true ) );
 	}
 
 	/**
@@ -685,9 +643,9 @@ class Utils {
 			return false;
 		}
 
-		if ( self::contains_adults_only_products( $cart->get_cart() ) ) {
+		/*if ( self::contains_adults_only_products( $cart->get_cart() ) ) {
 			return false;
-		}
+		}*/
 
 		return self::check_products_for_letterbox( $cart->get_cart() );
 	}
@@ -920,5 +878,20 @@ class Utils {
 		}
 
 		return false;
+	}
+
+	/**
+	 * Get WooCommerce shop order screen ID.
+	 *
+	 * @return string
+	 */
+	public static function get_order_screen_id(): string {
+		try {
+			return wc_get_container()->get( CustomOrdersTableController::class )->custom_orders_table_usage_is_enabled()
+					? wc_get_page_screen_id( 'shop-order' )
+					: 'shop_order';
+		} catch ( \Exception $e ) {
+			return 'shop_order';
+		}
 	}
 }

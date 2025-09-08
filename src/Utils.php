@@ -67,49 +67,6 @@ class Utils {
 	}
 
 	/**
-	 * Get available country.
-	 *
-	 * @return array.
-	 */
-	public static function get_available_currency() {
-		// Get all WooCommerce currencies
-		$woocommerce_currencies = array_keys( get_woocommerce_currencies() );
-
-		return $woocommerce_currencies;
-	}
-
-	/**
-	 * Get currency from WooCommerce settings.
-	 */
-	public static function get_woocommerce_currency() {
-		return get_woocommerce_currency();
-	}
-
-	/**
-	 * Check if the current settings use available currency.
-	 *
-	 * @return Boolean.
-	 */
-	public static function use_available_currency() {
-		return self::check_available_currency( self::get_woocommerce_currency() );
-	}
-
-	/**
-	 * Check if the currency use available currency.
-	 *
-	 * @param String $currency Currency code.
-	 *
-	 * @return Boolean.
-	 */
-	public static function check_available_currency( $currency = '' ) {
-		if ( empty( $currency ) ) {
-			return false;
-		}
-
-		return ( in_array( $currency, self::get_available_currency(), true ) );
-	}
-
-	/**
 	 * Get store base country.
 	 *
 	 * @return String.

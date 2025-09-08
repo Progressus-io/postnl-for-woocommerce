@@ -112,9 +112,6 @@ class Main {
 		// Throw an admin error informing the user this plugin needs country settings to be NL and BE.
 		add_action( 'admin_notices', array( $this, 'notice_nl_be_required' ) );
 
-		// Throw an admin error informing the user this plugin needs currency settings to be EUR, USD, GBP, CNY.
-		add_action( 'admin_notices', array( $this, 'notice_currency_required' ) );
-
 		add_action( 'init', array( $this, 'load_plugin' ), 1 );
 	}
 
@@ -176,7 +173,7 @@ class Main {
 	 * Determine which plugin to load.
 	 */
 	public function load_plugin() {
-		if ( ! Utils::use_available_currency() || ! Utils::use_available_country() ) {
+		if ( ! Utils::use_available_country() ) {
 			return;
 		}
 
@@ -375,19 +372,6 @@ class Main {
 			?>
 			<div class="error">
 				<p><?php esc_html_e( 'PostNL plugin requires store country to be Netherlands (NL) or Belgium (BE)!', 'postnl-for-woocommerce' ); ?></p>
-			</div>
-			<?php
-		}
-	}
-
-	/**
-	 * Admin error notifying user that currency must be using EUR, GBP, USD, and CNY.
-	 */
-	public function notice_currency_required() {
-		if ( ! Utils::use_available_currency() ) {
-			?>
-			<div class="error">
-				<p><?php esc_html_e( 'PostNL plugin requires store currency to be EUR, USD, GBP or CNY!', 'postnl-for-woocommerce' ); ?></p>
 			</div>
 			<?php
 		}

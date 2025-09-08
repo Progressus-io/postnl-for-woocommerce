@@ -239,7 +239,7 @@ class Fill_In_With_Postnl {
 		$state = bin2hex( random_bytes( 32 ) );
 		// phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.obfuscation_base64_encode
 		$code_challenge = rtrim( strtr( base64_encode( hash( 'sha256', $code_verifier, true ) ), '+/', '-_' ), '=' );
-		$redirect_uri   = $this->settings->get_redirect_uri( $code_challenge, $state );
+		$redirect_uri   = $this->settings->get_redirect_uri( $state, $code_challenge );
 
 		return new WP_REST_Response(
 			array(

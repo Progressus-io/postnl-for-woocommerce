@@ -99,7 +99,7 @@ class Survey {
 	protected static function render_notice() {
 		?>
         <style>
-            .notice.postnl-admin-banner{border-left-color:#ed8c00;background:#fff7f0}
+            .notice.postnl-admin-banner{border-left-color:#ed8c00;background:#fff7f0;padding:15px;}
             .postnl-admin-banner .button-primary{background:#ed8c00!important;border-color:#e65c00!important;color:#fff!important}
         </style>
 		<div class="notice notice-info postnl-admin-banner">
@@ -135,25 +135,24 @@ class Survey {
             .notice.postnl-admin-banner{border-left-color:#ed8c00;background:#fff7f0}
             .postnl-admin-banner .button-primary{background:#ed8c00!important;border-color:#e65c00!important;color:#fff!important}
         </style>
-        <div class="notice notice-info postnl-admin-banner">
-            <p>
-                <strong><?php esc_html_e( 'Let us know what you think of the PostNL for WooCommerce plugin by completing the survey.', 'postnl-for-woocommerce' ); ?></strong>
-            </p>
-            <p>
-                <a href="<?php echo esc_url( self::SURVEY_URL ); ?>"
-                   class="button button-primary"
-                   target="_blank"
-                   rel="noopener noreferrer">
-					<?php esc_html_e( 'Take survey', 'postnl-for-woocommerce' ); ?>
-                </a>
-            </p>
-            <p>
-                <a href="<?php echo esc_url( 'https://wordpress.org/plugins/postnl-for-woocommerce/#reviews' ); ?>"
-                   target="_blank"
-                   rel="noopener noreferrer">
-					<?php esc_html_e( 'Leave a review', 'postnl-for-woocommerce' ); ?>
-                </a>
-            </p>
+        <p>
+            <strong><?php esc_html_e( 'Let us know what you think of the PostNL for WooCommerce plugin by completing the survey.', 'postnl-for-woocommerce' ); ?></strong>
+        </p>
+        <p class="postnl-admin-banner">
+            <a href="<?php echo esc_url( self::SURVEY_URL ); ?>"
+               class="button button-primary"
+               target="_blank"
+               rel="noopener noreferrer">
+				<?php esc_html_e( 'Take survey', 'postnl-for-woocommerce' ); ?>
+            </a>
+        </p>
+        <p>
+            <a href="<?php echo esc_url( 'https://wordpress.org/plugins/postnl-for-woocommerce/#reviews' ); ?>"
+               target="_blank"
+               rel="noopener noreferrer">
+				<?php esc_html_e( 'Leave a review', 'postnl-for-woocommerce' ); ?>
+            </a>
+        </p>
 
         </div>
 

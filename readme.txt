@@ -82,8 +82,7 @@ Follow these instructions (https://www.postnl.nl/Images/aanvragen-api-key-stappe
 == Changelog ==
 
 = 5.8.1 (2025-09-06) =
-* Add: Separate fees for Home delivery and Pick-up point delivery.
-* Tweak: Show fee amounts on checkout tabs.
+* Add: Option to apply extra fees for Home Delivery and Pickup Point Delivery.
 
 ### 5.8.0 (2025-xx-xx) =
 * Add: Ability for marking products as 18+ and automatically apply ID Check to orders containing them.

@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2025-06-18T10:51:49+00:00\n"
+"POT-Creation-Date: 2025-09-08T12:28:15+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.11.0\n"
 "X-Domain: postnl-for-woocommerce\n"
@@ -39,15 +39,30 @@ msgstr ""
 msgid "https://postnl.post/"
 msgstr ""
 
+#: src/Admin/Survey.php:41
+#: src/Admin/Survey.php:102
+msgid "Help us improve PostNL"
+msgstr ""
+
+#: src/Admin/Survey.php:108
+#: src/Admin/Survey.php:134
+msgid "Take Survey"
+msgstr ""
+
+#: src/Admin/Survey.php:115
+#: src/Admin/Survey.php:141
+msgid "Leave a review on WordPress org"
+msgstr ""
+
 #: src/Checkout_Blocks/Extend_Block_Core.php:79
-#: src/Frontend/Container.php:325
+#: src/Frontend/Container.php:327
 msgid "This is not a valid address!"
 msgstr ""
 
 #: src/Checkout_Blocks/Extend_Block_Core.php:94
 #: src/Frontend/Checkout_Fields.php:64
 #: src/Frontend/Checkout_Fields.php:65
-#: src/Order/Single.php:543
+#: src/Order/Single.php:533
 msgid "House number"
 msgstr ""
 
@@ -90,12 +105,12 @@ msgid "Pick up at PostNL-point"
 msgstr ""
 
 #: src/Frontend/Base.php:171
-#: src/Order/Single.php:332
+#: src/Order/Single.php:322
 msgid "Date:"
 msgstr ""
 
 #: src/Frontend/Base.php:175
-#: src/Order/Single.php:336
+#: src/Order/Single.php:326
 msgid "Time:"
 msgstr ""
 
@@ -135,29 +150,42 @@ msgstr ""
 msgid "Dropoff Points"
 msgstr ""
 
-#: src/Frontend/Fill_In_With_Postnl.php:250
+#: src/Frontend/Fill_In_With_Postnl.php:220
+msgid "Invalid or expired nonce."
+msgstr ""
+
+#: src/Frontend/Fill_In_With_Postnl.php:230
+#: src/Frontend/Fill_In_With_Postnl_Handler.php:71
 msgid "Fill in with PostNL is not enabled or Client ID is missing."
 msgstr ""
 
-#: src/Frontend/Fill_In_With_Postnl_Handler.php:110
+#: src/Frontend/Fill_In_With_Postnl_Handler.php:68
+msgid "Invalid nonce."
+msgstr ""
+
+#: src/Frontend/Fill_In_With_Postnl_Handler.php:76
+msgid "No user data"
+msgstr ""
+
+#: src/Frontend/Fill_In_With_Postnl_Handler.php:109
 msgid "Login session expired. Please try again."
 msgstr ""
 
 #. translators: %s is the error message from PostNL
-#: src/Frontend/Fill_In_With_Postnl_Handler.php:134
+#: src/Frontend/Fill_In_With_Postnl_Handler.php:133
 msgid "PostNL Token Request Error: %s"
 msgstr ""
 
-#: src/Frontend/Fill_In_With_Postnl_Handler.php:147
+#: src/Frontend/Fill_In_With_Postnl_Handler.php:146
 msgid "PostNL: Access token not found"
 msgstr ""
 
 #. translators: %s is the error message from PostNL
-#: src/Frontend/Fill_In_With_Postnl_Handler.php:166
+#: src/Frontend/Fill_In_With_Postnl_Handler.php:165
 msgid "PostNL User Info Error: %s"
 msgstr ""
 
-#: src/Frontend/Fill_In_With_Postnl_Handler.php:182
+#: src/Frontend/Fill_In_With_Postnl_Handler.php:181
 msgid "Incomplete user data."
 msgstr ""
 
@@ -181,7 +209,7 @@ msgstr ""
 
 #: src/Helper/Mapping.php:40
 #: src/Shipping_Method/Settings.php:579
-#: src/Utils.php:638
+#: src/Utils.php:596
 msgid "Standard Shipment Belgium"
 msgstr ""
 
@@ -206,20 +234,24 @@ msgstr ""
 msgid "Belgium Domestic"
 msgstr ""
 
-#: src/Main.php:365
+#: src/Main.php:369
 msgid "PostNL plugin requires WooCommerce to be installed and activated!"
 msgstr ""
 
-#: src/Main.php:378
+#: src/Main.php:382
 msgid "PostNL plugin requires store country to be Netherlands (NL) or Belgium (BE)!"
 msgstr ""
 
-#: src/Main.php:391
-msgid "PostNL plugin requires store currency to be EUR, USD, GBP or CNY!"
+#: src/Main.php:456
+msgid "Postnl Checkout Blocks"
 msgstr ""
 
-#: src/Main.php:465
-msgid "Postnl Checkout Blocks"
+#: src/Main.php:475
+msgid "Leave a review"
+msgstr ""
+
+#: src/Main.php:495
+msgid "Settings"
 msgstr ""
 
 #: src/Order/Base.php:153
@@ -299,9 +331,9 @@ msgstr ""
 
 #: src/Order/Base.php:463
 #: src/Order/Base.php:644
-#: src/Order/Single.php:519
-#: src/Order/Single.php:624
-#: src/Order/Single.php:697
+#: src/Order/Single.php:509
+#: src/Order/Single.php:614
+#: src/Order/Single.php:687
 msgid "Order does not exist!"
 msgstr ""
 
@@ -427,10 +459,10 @@ msgid "Delivery Date"
 msgstr ""
 
 #: src/Order/OrdersList.php:147
-#: src/Utils.php:583
+#: src/Utils.php:541
 #: templates/checkout/postnl-delivery-day.php:75
 #: build/postnl-container-frontend.js:1
-#: src/Checkout_Blocks/js/postnl-delivery-day/block.js:322
+#: src/Checkout_Blocks/js/postnl-delivery-day/block.js:324
 msgid "As soon as possible"
 msgstr ""
 
@@ -442,97 +474,97 @@ msgstr ""
 msgid "Fits through letterbox"
 msgstr ""
 
-#: src/Order/Single.php:139
+#: src/Order/Single.php:129
 msgid "Label & Tracking"
 msgstr ""
 
-#: src/Order/Single.php:266
+#: src/Order/Single.php:256
 msgid "Delivery Type:"
 msgstr ""
 
-#: src/Order/Single.php:297
+#: src/Order/Single.php:287
 msgid "Delivery Date:"
 msgstr ""
 
-#: src/Order/Single.php:327
+#: src/Order/Single.php:317
 msgid "Pickup Address:"
 msgstr ""
 
-#: src/Order/Single.php:364
+#: src/Order/Single.php:354
 msgid "Activate return function"
 msgstr ""
 
-#: src/Order/Single.php:367
+#: src/Order/Single.php:357
 msgid "Return function is activated for this label"
 msgstr ""
 
-#: src/Order/Single.php:370
+#: src/Order/Single.php:360
 msgid "Click here to activate the return function of this label"
 msgstr ""
 
-#: src/Order/Single.php:388
+#: src/Order/Single.php:378
 msgid "Send email with Smart Return"
 msgstr ""
 
-#: src/Order/Single.php:426
+#: src/Order/Single.php:416
 msgid "Create Shipment"
 msgstr ""
 
-#: src/Order/Single.php:428
+#: src/Order/Single.php:418
 msgid "Print Label"
 msgstr ""
 
-#: src/Order/Single.php:430
+#: src/Order/Single.php:420
 msgid "Delete Label"
 msgstr ""
 
-#: src/Order/Single.php:436
+#: src/Order/Single.php:426
 msgid "Print Return Label"
 msgstr ""
 
-#: src/Order/Single.php:441
+#: src/Order/Single.php:431
 msgid "Print Letterbox"
 msgstr ""
 
-#: src/Order/Single.php:460
-#: src/Order/Single.php:505
-#: src/Order/Single.php:611
-#: src/Order/Single.php:684
+#: src/Order/Single.php:450
+#: src/Order/Single.php:495
+#: src/Order/Single.php:601
+#: src/Order/Single.php:674
 msgid "Cannot find nonce field!"
 msgstr ""
 
-#: src/Order/Single.php:466
-#: src/Order/Single.php:511
+#: src/Order/Single.php:456
+#: src/Order/Single.php:501
 msgid "Nonce is invalid!"
 msgstr ""
 
-#: src/Order/Single.php:616
-#: src/Order/Single.php:689
+#: src/Order/Single.php:606
+#: src/Order/Single.php:679
 msgid "Nonce is invalid"
 msgstr ""
 
-#: src/Order/Single.php:628
+#: src/Order/Single.php:618
 msgid "Already activated!"
 msgstr ""
 
-#: src/Order/Single.php:644
+#: src/Order/Single.php:634
 msgid "Unknown error."
 msgstr ""
 
 #. Translators: %s is the error message.
-#: src/Order/Single.php:668
+#: src/Order/Single.php:658
 msgid "Error: %s"
 msgstr ""
 
-#: src/Order/Single.php:724
+#: src/Order/Single.php:714
 msgid "PrintcodeLabel could not found"
 msgstr ""
 
-#: src/Order/Single.php:755
+#: src/Order/Single.php:745
 msgid "Email could not be send"
 msgstr ""
 
-#: src/Order/Single.php:786
+#: src/Order/Single.php:776
 msgid "18+ Adults Only"
 msgstr ""
 
@@ -775,110 +807,89 @@ msgstr ""
 msgid "Customer email is not valid!"
 msgstr ""
 
-#: src/Rest_API/Shipping/Item_Info.php:511
-msgid "Currency is not available!"
-msgstr ""
-
-#: src/Rest_API/Shipping/Item_Info.php:538
+#: src/Rest_API/Shipping/Item_Info.php:532
 msgid "Delivery day \"Date\" is empty!"
 msgstr ""
 
-#: src/Rest_API/Shipping/Item_Info.php:554
+#: src/Rest_API/Shipping/Item_Info.php:548
 msgid "Delivery day \"From\" is empty!"
 msgstr ""
 
-#: src/Rest_API/Shipping/Item_Info.php:567
+#: src/Rest_API/Shipping/Item_Info.php:561
 msgid "Delivery day \"To\" is empty!"
 msgstr ""
 
-#: src/Rest_API/Shipping/Item_Info.php:583
+#: src/Rest_API/Shipping/Item_Info.php:577
 msgid "Delivery day \"Type\" is empty!"
 msgstr ""
 
-#: src/Rest_API/Shipping/Item_Info.php:607
+#: src/Rest_API/Shipping/Item_Info.php:601
 msgid "Pickup \"Date\" is empty!"
 msgstr ""
 
-#: src/Rest_API/Shipping/Item_Info.php:623
+#: src/Rest_API/Shipping/Item_Info.php:617
 msgid "Pickup \"Time\" is empty!"
 msgstr ""
 
-#: src/Rest_API/Shipping/Item_Info.php:635
+#: src/Rest_API/Shipping/Item_Info.php:629
 msgid "Pickup \"Company name\" is empty!"
 msgstr ""
 
-#: src/Rest_API/Shipping/Item_Info.php:644
+#: src/Rest_API/Shipping/Item_Info.php:638
 msgid "Pickup \"Address 1\" is empty!"
 msgstr ""
 
-#: src/Rest_API/Shipping/Item_Info.php:659
+#: src/Rest_API/Shipping/Item_Info.php:653
 msgid "Pickup Point \"City\" is empty!"
 msgstr ""
 
-#: src/Rest_API/Shipping/Item_Info.php:668
+#: src/Rest_API/Shipping/Item_Info.php:662
 msgid "Pickup Point \"Postcode\" is empty!"
 msgstr ""
 
-#: src/Rest_API/Shipping/Item_Info.php:680
+#: src/Rest_API/Shipping/Item_Info.php:674
 msgid "Pickup Point \"Country\" is empty!"
 msgstr ""
 
-#: src/Rest_API/Shipping/Item_Info.php:808
+#: src/Rest_API/Shipping/Item_Info.php:802
 msgid "Item HS Code must be between 6 and 20 characters long"
 msgstr ""
 
-#: src/Rest_API/Shipping/Item_Info.php:821
+#: src/Rest_API/Shipping/Item_Info.php:815
 msgid "Item \"Product ID\" is empty!"
 msgstr ""
 
-#: src/Rest_API/Shipping/Item_Info.php:824
+#: src/Rest_API/Shipping/Item_Info.php:818
 msgid "Item \"Product SKU\" is empty!"
 msgstr ""
 
-#: src/Rest_API/Shipping/Item_Info.php:841
+#: src/Rest_API/Shipping/Item_Info.php:835
 msgid "Item quantity must be more than 1"
 msgstr ""
 
-#: src/Rest_API/Shipping/Item_Info.php:1021
+#: src/Rest_API/Shipping/Item_Info.php:1015
 msgid "Max weight for Mailbox Packet is 2kg!"
 msgstr ""
 
 #. Translators: %s is the order total.
-#: src/Rest_API/Shipping/Item_Info.php:1045
+#: src/Rest_API/Shipping/Item_Info.php:1039
 msgid "Insurance amount for EU shipments cannot exceed €5000. Your total is: %d"
 msgstr ""
 
 #: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:38
-#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:70
-#: templates/checkout/postnl-fill-in-with-button.php:13
-#: templates/checkout/postnl-fill-in-with-button.php:23
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:61
+#: templates/checkout/postnl-fill-in-with-button.php:22
+#: templates/checkout/postnl-fill-in-with-button.php:25
 #: build/postnl-fill-in-with-frontend.js:1
-#: src/Checkout_Blocks/js/postnl-fill-in-with/block.js:97
+#: src/Checkout_Blocks/js/postnl-fill-in-with/block.js:144
 msgid "Fill in with PostNL"
 msgstr ""
 
 #: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:55
-msgid "With this functionality your customers can easily and automatically fill in their shipping address via their PostNL account. This functionality is only available for consumers with a Dutch shipping address. Follow the next steps in order to use Fill in with:"
+msgid "With this functionality your customers can easily and automatically fill in their shipping address via their PostNL account. This functionality is only available for consumers with a Dutch shipping address. Click the following link to activate the functionality:"
 msgstr ""
 
-#. translators: %s is an external url for postnl portal.
-#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:60
-msgid "Log in at the business portal (%s) with your business account."
-msgstr ""
-
-#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:63
-msgid "Select \"Fill in with PostNL\"."
-msgstr ""
-
-#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:64
-msgid "Update the Redirect URL and choose your application."
-msgstr ""
-
-#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:65
-msgid "You will receive your Client ID via email."
-msgstr ""
-
-#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:76
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:67
 #: src/Shipping_Method/Settings.php:110
 #: src/Shipping_Method/Settings.php:184
 #: src/Shipping_Method/Settings.php:288
@@ -890,143 +901,152 @@ msgstr ""
 msgid "Enable"
 msgstr ""
 
-#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:77
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:68
 msgid "Enable Fill in with PostNL functionality."
 msgstr ""
 
-#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:83
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:74
 msgid "Client ID"
 msgstr ""
 
-#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:84
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:75
 msgid "Enter your PostNL Client ID from the Digital Business Portal."
 msgstr ""
 
-#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:95
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:86
 msgid "Cart Button"
 msgstr ""
 
-#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:100
-#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:101
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:91
 msgid "Automatically render button in cart page"
 msgstr ""
 
-#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:107
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:92
+msgid "If enabled, the button will be automatically rendered in the cart page."
+msgstr ""
+
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:98
 msgid "Cart page button placement"
 msgstr ""
 
-#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:112
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:103
 msgid "Before Checkout"
 msgstr ""
 
-#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:113
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:104
 msgid "After Checkout"
 msgstr ""
 
-#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:123
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:114
 msgid "Checkout Page"
 msgstr ""
 
-#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:128
-#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:129
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:119
 msgid "Automatically render button in checkout page"
 msgstr ""
 
-#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:135
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:120
+msgid "If enabled, the button will be automatically rendered in the checkout page."
+msgstr ""
+
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:126
 msgid "Checkout page button placement"
 msgstr ""
 
-#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:140
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:131
 msgid "Before Customer Details"
 msgstr ""
 
-#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:141
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:132
 msgid "After Customer Details"
 msgstr ""
 
-#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:151
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:142
 msgid "Minicart"
 msgstr ""
 
-#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:156
-#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:157
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:147
 msgid "Automatically render button in Minicart"
 msgstr ""
 
-#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:163
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:148
+msgid "If enabled, the button will be automatically rendered in the minicart."
+msgstr ""
+
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:154
 msgid "Minicart button placement"
 msgstr ""
 
-#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:168
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:159
 msgid "Before Buttons"
 msgstr ""
 
-#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:169
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:160
 msgid "After Buttons"
 msgstr ""
 
-#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:179
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:170
 msgid "Button Styling"
 msgstr ""
 
-#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:184
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:175
 msgid "Button Background Color"
 msgstr ""
 
-#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:185
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:176
 msgid "Select the background color for the PostNL button."
 msgstr ""
 
-#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:193
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:184
 msgid "Button Border"
 msgstr ""
 
-#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:194
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:185
 msgid "Define the border style for the PostNL button (e.g., 1px solid #000000)."
 msgstr ""
 
-#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:202
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:193
 msgid "Button Alignment"
 msgstr ""
 
-#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:203
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:194
 msgid "Select the alignment for the PostNL button."
 msgstr ""
 
-#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:209
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:200
 msgid "Left"
 msgstr ""
 
-#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:210
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:201
 msgid "Center"
 msgstr ""
 
-#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:211
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:202
 msgid "Right"
 msgstr ""
 
-#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:215
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:206
 msgid "Button Hover Background Color"
 msgstr ""
 
-#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:216
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:207
 msgid "Select the background color for the PostNL button on hover."
 msgstr ""
 
-#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:230
-#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:235
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:221
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:226
 msgid "Custom CSS"
 msgstr ""
 
-#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:236
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:227
 msgid "Add your custom styles for the PostNL button. This will be printed in the site header."
 msgstr ""
 
-#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:248
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:239
 msgid "I understand that the PostNL address fields are activated (= separate field for zipcode, housnumber, housenumber extension and street) to let consumers fill in their shipping address with the PostNL app."
 msgstr ""
 
-#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:339
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:315
 msgid "You must enable at least one \"Automatically render button\" option in Cart, Checkout, or Minicart."
 msgstr ""
 
@@ -1339,7 +1359,7 @@ msgid "Drop off Days"
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:391
-#: src/Utils.php:31
+#: src/Utils.php:32
 msgid "Monday"
 msgstr ""
 
@@ -1348,32 +1368,32 @@ msgid "Select which days orders will be shipped."
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:398
-#: src/Utils.php:32
+#: src/Utils.php:33
 msgid "Tuesday"
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:403
-#: src/Utils.php:33
+#: src/Utils.php:34
 msgid "Wednesday"
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:408
-#: src/Utils.php:34
+#: src/Utils.php:35
 msgid "Thursday"
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:413
-#: src/Utils.php:35
+#: src/Utils.php:36
 msgid "Friday"
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:418
-#: src/Utils.php:36
+#: src/Utils.php:37
 msgid "Saturday"
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:423
-#: src/Utils.php:37
+#: src/Utils.php:38
 msgid "Sunday"
 msgstr ""
 
@@ -1498,13 +1518,13 @@ msgid "Select a default shipping option for domestic orders that are shipped wit
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:556
-#: src/Utils.php:631
+#: src/Utils.php:589
 msgid "Standard shipment"
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:557
 #: src/Shipping_Method/Settings.php:632
-#: src/Utils.php:632
+#: src/Utils.php:590
 msgid "ID Check"
 msgstr ""
 
@@ -1513,22 +1533,22 @@ msgid "ID Check + Insured Shipping"
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:560
-#: src/Utils.php:633
+#: src/Utils.php:591
 msgid "Return if no answer"
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:561
-#: src/Utils.php:634
+#: src/Utils.php:592
 msgid "Signature on Delivery"
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:562
-#: src/Utils.php:635
+#: src/Utils.php:593
 msgid "Only Home Address"
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:563
-#: src/Utils.php:636
+#: src/Utils.php:594
 msgid "Letterbox"
 msgstr ""
 
@@ -1579,7 +1599,7 @@ msgstr ""
 #: src/Shipping_Method/Settings.php:583
 #: src/Shipping_Method/Settings.php:600
 #: src/Shipping_Method/Settings.php:617
-#: src/Utils.php:639
+#: src/Utils.php:597
 msgid "Boxable Packet"
 msgstr ""
 
@@ -1658,7 +1678,7 @@ msgid "Standard Shipping"
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:633
-#: src/Utils.php:641
+#: src/Utils.php:599
 msgid "Insured Shipping"
 msgstr ""
 
@@ -1676,61 +1696,61 @@ msgid "Select a default shipping option for the orders shipped internationally (
 msgstr ""
 
 #. translators: %s is a field argument.
-#: src/Utils.php:337
+#: src/Utils.php:295
 msgid "Please specify a \"%s\" argument"
 msgstr ""
 
-#: src/Utils.php:637
+#: src/Utils.php:595
 msgid "Packet"
 msgstr ""
 
-#: src/Utils.php:640
+#: src/Utils.php:598
 msgid "Track & Trace"
 msgstr ""
 
-#: src/Utils.php:649
+#: src/Utils.php:607
 msgid "Parcels Non-EU Insured"
 msgstr ""
 
-#: src/Utils.php:650
+#: src/Utils.php:608
 msgid "Parcels non-EU Insured Plus"
 msgstr ""
 
-#: src/Utils.php:656
+#: src/Utils.php:614
 msgid "Parcels EU"
 msgstr ""
 
-#: src/Utils.php:657
-#: src/Utils.php:664
+#: src/Utils.php:615
+#: src/Utils.php:622
 msgid "Insured Plus"
 msgstr ""
 
-#: src/Utils.php:663
+#: src/Utils.php:621
 msgid "Parcels Non-EU"
 msgstr ""
 
 #: templates/checkout/postnl-container.php:21
 #: build/postnl-container-frontend.js:1
-#: src/Checkout_Blocks/js/postnl-container/block.js:404
+#: src/Checkout_Blocks/js/postnl-container/block.js:406
 msgid "These items are eligible for letterbox delivery."
 msgstr ""
 
 #: templates/checkout/postnl-delivery-day.php:44
 #: build/postnl-container-frontend.js:1
-#: src/Checkout_Blocks/js/postnl-delivery-day/block.js:258
+#: src/Checkout_Blocks/js/postnl-delivery-day/block.js:260
 msgid "Evening"
 msgstr ""
 
 #: templates/checkout/postnl-delivery-day.php:46
 #: build/postnl-container-frontend.js:1
-#: src/Checkout_Blocks/js/postnl-delivery-day/block.js:266
+#: src/Checkout_Blocks/js/postnl-delivery-day/block.js:268
 msgid "Morning"
 msgstr ""
 
 #. translators: %1$s is <strong> opener and %2$s is <strong> closer.
 #: templates/checkout/postnl-dropoff-points.php:103
 #: build/postnl-container-frontend.js:1
-#: src/Checkout_Blocks/js/postnl-dropoff-points/block.js:420
+#: src/Checkout_Blocks/js/postnl-dropoff-points/block.js:450
 msgid "Receive shipment at home? Make a selection from the Delivery Days."
 msgstr ""
 
@@ -1738,9 +1758,15 @@ msgstr ""
 msgid "Vanaf"
 msgstr ""
 
-#: templates/checkout/postnl-fill-in-with-button.php:32
+#: templates/checkout/postnl-fill-in-with-button.php:23
 #: build/postnl-fill-in-with-frontend.js:1
-#: src/Checkout_Blocks/js/postnl-fill-in-with/block.js:98
+#: src/Checkout_Blocks/js/postnl-fill-in-with/block.js:160
+msgid "PostNL Logo"
+msgstr ""
+
+#: templates/checkout/postnl-fill-in-with-button.php:29
+#: build/postnl-fill-in-with-frontend.js:1
+#: src/Checkout_Blocks/js/postnl-fill-in-with/block.js:145
 msgid "Your name and address are automatically filled in via your PostNL account. That saves you from having to fill in the form!"
 msgstr ""
 
@@ -1750,23 +1776,24 @@ msgstr ""
 msgid "In this email you will find the barcode you need to return your order. Scan this barcode at a PostNL point to print your return label. Please note, wait at least 10 minutes before scanning the barcode after receipt of this mail."
 msgstr ""
 
-#: assets/js/fill_in_with_postnl.js:27
-msgid "Failed to initiate PostNL login."
+#: build/postnl-fill-in-with-frontend.js:1
+#: src/Checkout_Blocks/js/postnl-fill-in-with/block.js:75
+msgid "Failed to retrieve PostNL user data."
 msgstr ""
 
 #: build/postnl-fill-in-with-frontend.js:1
-#: src/Checkout_Blocks/js/postnl-fill-in-with/block.js:89
+#: src/Checkout_Blocks/js/postnl-fill-in-with/block.js:83
 msgid "Failed to retrieve PostNL address. Please try again."
 msgstr ""
 
 #: build/postnl-fill-in-with-frontend.js:1
-#: src/Checkout_Blocks/js/postnl-fill-in-with/block.js:41
-msgid "Unable to connect to PostNL. Please try again later."
+#: src/Checkout_Blocks/js/postnl-fill-in-with/block.js:109
+msgid "Failed to initiate PostNL login."
 msgstr ""
 
 #: build/postnl-fill-in-with-frontend.js:1
-#: src/Checkout_Blocks/js/postnl-fill-in-with/block.js:44
-msgid "An error occurred. Please try again."
+#: src/Checkout_Blocks/js/postnl-fill-in-with/block.js:121
+msgid "An unknown error occurred."
 msgstr ""
 
 #: src/Checkout_Blocks/js/postnl-delivery-day/edit.js:12

@@ -1,11 +1,10 @@
-x# Copyright (C) 2024 PostNL
 # This file is distributed under the same license as the PostNL for WooCommerce plugin.
 msgid ""
 msgstr ""
 "Project-Id-Version: PostNL for WooCommerce 5.4\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/postnl-for-woocommerce\n"
 "POT-Creation-Date: 2024-05-16T18:07:00+00:00\n"
-"PO-Revision-Date: 2024-12-22 01:47+0300\n"
+"PO-Revision-Date: 2025-09-08 15:03+0300\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: nl\n"
@@ -430,7 +429,7 @@ msgstr "Activeer automatische brievenbuspakjes"
 
 #: src/Product/Product_Editor.php:50
 msgid "When enabled, PostNL plugin automatically determines whether a shipment fits through a letterbox."
-msgstr "Wanneer deze geactiveerd wordt zal de plug-in nagaan of een zending door de brievenbus past"
+msgstr "Wanneer deze geactiveerd wordt zal de plug-in nagaan of een zending door de brievenbus past."
 
 #. translators: %s will be replaced by service name.
 #: src/Product/Single.php:84
@@ -452,7 +451,7 @@ msgstr "Maximum aantal per brievenbuspakje"
 
 #: src/Product/Product_Editor.php:67
 msgid "Specify how many times this product fits in a letterbox parcel."
-msgstr "Geef aan hoe vaak het product in een brievenbuspakje past"
+msgstr "Geef aan hoe vaak het product in een brievenbuspakje past."
 
 #: src/Product/Product_Editor.php:78
 msgid "Country of Origin"
@@ -460,7 +459,7 @@ msgstr "Land van herkomst"
 
 #: src/Product/Product_Editor.php:98
 msgid "Select the country of origin for this product."
-msgstr "Selecteer het land van herkomst voor dit product"
+msgstr "Selecteer het land van herkomst voor dit product."
 
 #: src/Product/Product_Editor.php:109
 msgid "HS Tariff Code"
@@ -468,7 +467,7 @@ msgstr ""
 
 #: src/Product/Product_Editor.php:112
 msgid "HS Tariff Code for international shipping."
-msgstr "HS Tariff Code voor internationale zendingen"
+msgstr "HS Tariff Code voor internationale zendingen."
 
 #. translators: %s will be replaced by service name.
 #: src/Product/Single.php:92
@@ -507,8 +506,7 @@ msgstr "GS tarief code (%s)"
 
 #: src/Product/Single.php:117
 msgid "HS Tariff Code is a number assigned to every possible commodity that can be imported or exported from any country."
-msgstr ""
-"De GS tarief code is een code die wordt toegewezen aan ieder mogelijk product wat geïmporteerd en geëxporteerd kan worden naar iedere bestemming."
+msgstr "De GS tarief code is een code die wordt toegewezen aan ieder mogelijk product wat geïmporteerd en geëxporteerd kan worden naar iedere bestemming."
 
 #: src/Product/Single.php:119
 msgid "HS Code"
@@ -704,14 +702,168 @@ msgstr "Het maximale gewicht van een brievenbuspakje is 2kg!"
 msgid "Insurance amount is required and cannot exceed the maximum allowed amount (€ 5000). Your total is: "
 msgstr "Verzekerde waarde is verplicht en kan niet meer zijn dan het maximaal toegestane bedrag (€5000). Het totaal is: "
 
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:38 src/Shipping_Method/Fill_In_With_PostNL_Settings.php:61 templates/checkout/postnl-fill-in-with-button.php:22 templates/checkout/postnl-fill-in-with-button.php:25 build/postnl-fill-in-with-frontend.js:1
+#: src/Checkout_Blocks/js/postnl-fill-in-with/block.js:144
+msgid "Fill in with PostNL"
+msgstr "Invullen Met PostNL"
+
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:55
+msgid "With this functionality your customers can easily and automatically fill in their shipping address via their PostNL account. This functionality is only available for consumers with a Dutch shipping address. Click the following link to activate the functionality:"
+msgstr "Met deze functie kunnen klanten eenvoudig en automatisch hun adresgegevens invullen via hun PostNL account. Deze functie is alleen beschikbaar voor ontvangers met een bezorgadres in Nederland. Klik op de volgende link om de functie te activeren:"
+
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:67 src/Shipping_Method/Settings.php:110 src/Shipping_Method/Settings.php:184 src/Shipping_Method/Settings.php:288 src/Shipping_Method/Settings.php:316 src/Shipping_Method/Settings.php:339
+#: src/Shipping_Method/Settings.php:357 src/Shipping_Method/Settings.php:428 src/Shipping_Method/Settings.php:436
+msgid "Enable"
+msgstr "Activeer"
+
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:68
+msgid "Enable Fill in with PostNL functionality."
+msgstr "Activeer Invullen Met PostNL."
+
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:75
+msgid "Enter your PostNL Client ID from the Digital Business Portal."
+msgstr "Voer hier je PostNL Client ID in van het Digital Business Portal."
+
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:86
+msgid "Cart Button"
+msgstr "Winkelwagen knop"
+
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:91
+msgid "Automatically render button in cart page"
+msgstr "Geef de knop weer op de winkelwagenpagina"
+
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:92
+msgid "If enabled, the button will be automatically rendered in the cart page."
+msgstr "Indien geactiveerd zal de knop worden weergegeven op de winkelwagenpagina."
+
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:98
+msgid "Cart page button placement"
+msgstr "Weergaveplek van de knop op de winkelwagenpagina"
+
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:103
+msgid "Before Checkout"
+msgstr "Voor de checkout"
+
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:104
+msgid "After Checkout"
+msgstr "Na de checkout"
+
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:114
+msgid "Checkout Page"
+msgstr "Checkout pagina"
+
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:119
+msgid "Automatically render button in checkout page"
+msgstr "Geef de knop weer op de checkoutpagina"
+
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:120
+msgid "If enabled, the button will be automatically rendered in the checkout page."
+msgstr "Indien geactiveerd zal de knop worden weergegeven op de checkoutpagina."
+
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:126
+msgid "Checkout page button placement"
+msgstr "Weergaveplek van de knop op de checkoutpagina"
+
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:131
+msgid "Before Customer Details"
+msgstr "Voor klantgegevens"
+
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:132
+msgid "After Customer Details"
+msgstr "Na klantgegevens"
+
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:142
+msgid "Minicart"
+msgstr ""
+
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:147
+msgid "Automatically render button in Minicart"
+msgstr "Geef de knop weer in de Minicart"
+
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:148
+msgid "If enabled, the button will be automatically rendered in the minicart."
+msgstr "Indien geactiveerd zal de knop worden weergegeven in de minicart."
+
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:154
+msgid "Minicart button placement"
+msgstr "Weergaveplek van de knop in de minicart"
+
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:159
+msgid "Before Buttons"
+msgstr "Voor de knoppen"
+
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:160
+msgid "After Buttons"
+msgstr "Na de knoppen"
+
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:170
+msgid "Button Styling"
+msgstr "Styling van de knop"
+
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:175
+msgid "Button Background Color"
+msgstr "Achtergrondkleur van de knop"
+
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:176
+msgid "Select the background color for the PostNL button."
+msgstr "Selecteer de achtergrondkleur voor de PostNL knop."
+
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:184
+msgid "Button Border"
+msgstr "Border van de knop"
+
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:185
+msgid "Define the border style for the PostNL button (e.g., 1px solid #000000)."
+msgstr "Definieer de randstijl van de PostNL-knop, bijvoorbeeld: 1px solide zwarte lijn (#000000)."
+
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:193
+msgid "Button Alignment"
+msgstr "Uitlijning van de knop"
+
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:194
+msgid "Select the alignment for the PostNL button."
+msgstr "Selecteer de uitlijning van de PostNL knop."
+
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:200
+msgid "Left"
+msgstr "Links"
+
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:201
+msgid "Center"
+msgstr "Midden"
+
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:202
+msgid "Right"
+msgstr "Rechts"
+
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:206
+msgid "Button Hover Background Color"
+msgstr "Achtergrondkleur bij knop-hover"
+
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:207
+msgid "Select the background color for the PostNL button on hover."
+msgstr "Selecteer de achtergrondkleur voor de PostNL-knop wanneer de gebruiker er met de muis overheen beweegt."
+
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:221 src/Shipping_Method/Fill_In_With_PostNL_Settings.php:226
+msgid "Custom CSS"
+msgstr ""
+
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:227
+msgid "Add your custom styles for the PostNL button. This will be printed in the site header."
+msgstr "Voeg je eigen stijlen toe voor de PostNL-knop. Deze worden opgenomen in de site-header."
+
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:239
+msgid "I understand that the PostNL address fields are activated (= separate field for zipcode, housnumber, housenumber extension and street) to let consumers fill in their shipping address with the PostNL app."
+msgstr "Ik begrijp dat de PostNL-adresvelden zijn geactiveerd (oftewel: aparte velden voor postcode, huisnummer, huisnummertoevoeging en straat) zodat consumenten hun verzendadres kunnen invullen via de PostNL-app."
+
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:315
+msgid "You must enable at least one \"Automatically render button\" option in Cart, Checkout, or Minicart."
+msgstr "Er moet ten minste één optie geactiveerd worden in de winkelwagen, checkout of minicart."
+
 #. translators: %1$s & %2$s is replaced with <a> tag.
 #: src/Shipping_Method/PostNL.php:33
-msgid ""
-"Below you will find all functions for controlling, preparing and processing your shipment with PostNL. Prerequisite is a valid PostNL business "
-"customer contract. If you are not yet a PostNL business customer, you can request a quote %1$shere%2$s."
-msgstr ""
-"Hieronder vind je alle functies voor het controleren, voorbereiden en verwerken van jouw zendingen met PostNL. Hiervoor heb je een zakelijk "
-"contract nodig met PostNL. Ben je nog geen klant van PostNL? Dan kan je %1$shier%2$s klant worden."
+msgid "Below you will find all functions for controlling, preparing and processing your shipment with PostNL. Prerequisite is a valid PostNL business customer contract. If you are not yet a PostNL business customer, you can request a quote %1$shere%2$s."
+msgstr "Hieronder vind je alle functies voor het controleren, voorbereiden en verwerken van jouw zendingen met PostNL. Hiervoor heb je een zakelijk contract nodig met PostNL. Ben je nog geen klant van PostNL? Dan kan je %1$shier%2$s klant worden."
 
 #: src/Shipping_Method/PostNL.php:93
 msgid "Free shipping from %s"
@@ -736,12 +888,8 @@ msgstr "Account Instellingen"
 
 #. translators: %1$s & %2$s is replaced with <a> tag.
 #: src/Shipping_Method/Settings.php:68
-msgid ""
-"Please configure your shipping parameters and your access towards the PostNL APIs by means of authentication. You can find the details of your "
-"PostNL account in Mijn %1$sPostNL%2$s under \"My Account > API beheren\"."
-msgstr ""
-"Vul hier je klant gegevens in om de plug-in te koppelen aan jouw PostNL account. Jouw klantgegevens kan je vinden in de Mijn %1$sPostNL%2$s "
-"omgeving onder “Mijn Account > API beheren”."
+msgid "Please configure your shipping parameters and your access towards the PostNL APIs by means of authentication. You can find the details of your PostNL account in Mijn %1$sPostNL%2$s under \"My Account > API beheren\"."
+msgstr "Vul hier je klant gegevens in om de plug-in te koppelen aan jouw PostNL account. Jouw klantgegevens kan je vinden in de Mijn %1$sPostNL%2$s omgeving onder “Mijn Account > API beheren”."
 
 #: src/Shipping_Method/Settings.php:71
 msgid "Environment Mode"
@@ -783,23 +931,8 @@ msgstr "Logging"
 
 #. translators: %1$s is anchor opener tag and %2$s is anchor closer tag.
 #: src/Shipping_Method/Settings.php:106
-msgid ""
-"A log file containing the communication to the PostNL server will be maintained if this option is checked. This can be used in case of technical "
-"issues and can be found %1$shere%2$s."
-msgstr ""
-"Als deze functie is ingeschakeld wordt er een log-bestand opgebouwd die communictie gegevens bevat naar de server van PostNL. Deze gegevens van "
-"toegevoegde waarde zijn in geval van technische issues en kunnen %1$shier%2$s gevonden worden."
-
-#: src/Shipping_Method/Settings.php:110
-#: src/Shipping_Method/Settings.php:164
-#: src/Shipping_Method/Settings.php:233
-#: src/Shipping_Method/Settings.php:261
-#: src/Shipping_Method/Settings.php:285
-#: src/Shipping_Method/Settings.php:303
-#: src/Shipping_Method/Settings.php:375
-#: src/Shipping_Method/Settings.php:383
-msgid "Enable"
-msgstr "Activeren"
+msgid "A log file containing the communication to the PostNL server will be maintained if this option is checked. This can be used in case of technical issues and can be found %1$shere%2$s."
+msgstr "Als deze functie is ingeschakeld wordt er een log-bestand opgebouwd die communictie gegevens bevat naar de server van PostNL. Deze gegevens van toegevoegde waarde zijn in geval van technische issues en kunnen %1$shier%2$s gevonden worden."
 
 #: src/Shipping_Method/Settings.php:116
 msgid "Customer Number"
@@ -871,11 +1004,11 @@ msgstr "Retourfunctie direct activeren voor alle labels"
 
 #: src/Shipping_Method/Settings.php:187
 msgid "Yes, activate return function directly for all orders"
-msgstr "Ja, retourfunctie direct activeren voor alle orders."
+msgstr "Ja, retourfunctie direct activeren voor alle orders"
 
 #: src/Shipping_Method/Settings.php:188
 msgid "No, activate return function per individual order"
-msgstr "Nee, retourfunctie per individuele order activeren."
+msgstr "Nee, retourfunctie per individuele order activeren"
 
 #: src/Shipping_Method/Settings.php:193
 msgid "Activate Smart Return"
@@ -891,8 +1024,7 @@ msgstr "Retour naar huisadres"
 
 #: src/Shipping_Method/Settings.php:161
 msgid "With this setting enabled, the return-label of a shipment will automatically be downloaded and printed when the shipping label created."
-msgstr ""
-"Als deze instelling is ingeschakeld wordt het retourlabel tegelijk met het aanmaken van het verzendlabel van de heenzending gedownload en geprint."
+msgstr "Als deze instelling is ingeschakeld wordt het retourlabel tegelijk met het aanmaken van het verzendlabel van de heenzending gedownload en geprint."
 
 #: src/Shipping_Method/Settings.php:168
 msgid "Replynumber"
@@ -908,7 +1040,7 @@ msgstr "Postcode antwoordnummer"
 
 #: src/Shipping_Method/Settings.php:218
 msgid "Enter Freepost Zipcode."
-msgstr "Vul de Postcode antwoordnummer"
+msgstr "Vul de Postcode antwoordnummer."
 
 #: src/Shipping_Method/Settings.php:223
 msgid "Freepost City"
@@ -916,7 +1048,7 @@ msgstr "Stad antwoordnummer"
 
 #: src/Shipping_Method/Settings.php:225
 msgid "Enter Freepost City."
-msgstr "Vul de Stad antwoordnummer"
+msgstr "Vul de Stad antwoordnummer."
 
 #: src/Shipping_Method/Settings.php:177
 msgid "Street Address"
@@ -956,9 +1088,7 @@ msgstr "Klantcode Retouren"
 
 #: src/Shipping_Method/Settings.php:211
 msgid "Be aware that the Return Customer Code differs from the regular Customer Code. You can find your Return customer code in Mijn PostNL."
-msgstr ""
-"Let op, de klantcode voor retourzendingen is niet hetzelfde als de klantcode voor heenzendingen. De retour klantcode vind je in jouw Mijn PostNL "
-"omgeving."
+msgstr "Let op, de klantcode voor retourzendingen is niet hetzelfde als de klantcode voor heenzendingen. De retour klantcode vind je in jouw Mijn PostNL omgeving."
 
 #: src/Shipping_Method/Settings.php:218
 msgid "Checkout Settings"
@@ -1098,12 +1228,8 @@ msgid "Use PostNL address-field"
 msgstr "Gebruik PostNL adresvelden"
 
 #: src/Shipping_Method/Settings.php:384
-msgid ""
-"For zipcode, housenumber, housenumber extension and street separate address fields are displayed when this settings is enabled. This only applies "
-"for Dutch addresses."
-msgstr ""
-"Voor postcode, huisnummer, huisnummer toevoeging en straat voor losse velden getoond als deze instelling geactiveerd is. Dit geldt alleen voor "
-"Nederlandse adressen."
+msgid "For zipcode, housenumber, housenumber extension and street separate address fields are displayed when this settings is enabled. This only applies for Dutch addresses."
+msgstr "Voor postcode, huisnummer, huisnummer toevoeging en straat voor losse velden getoond als deze instelling geactiveerd is. Dit geldt alleen voor Nederlandse adressen."
 
 #: src/Shipping_Method/Settings.php:391
 msgid "Shipping Outside Europe Settings"
@@ -1135,9 +1261,7 @@ msgstr "Standaard GS tarief code"
 
 #: src/Shipping_Method/Settings.php:416
 msgid "The HS tariff code is used by customs to classify goods. The HS tariff code can be found on the website of the Dutch Chamber of Commerce."
-msgstr ""
-"De GS tarief code wordt gebruikt door de douane om goederen te classificeren. De GS tarief code van goederen is te vinden op de website van de "
-"Nederlandse Kamer van Koophandel."
+msgstr "De GS tarief code wordt gebruikt door de douane om goederen te classificeren. De GS tarief code van goederen is te vinden op de website van de Nederlandse Kamer van Koophandel."
 
 #: src/Shipping_Method/Settings.php:422
 msgid "Default Country of Origin"
@@ -1357,7 +1481,7 @@ msgstr "Standaard verzendmethode afhalen"
 
 #: src/Shipping_Method/Settings.php:627
 msgid "Shipping options Pickup."
-msgstr "Selecteer een standaard verzendoptie voor afhalen bij PostNL"
+msgstr "Selecteer een standaard verzendoptie voor afhalen bij PostNL."
 
 #: src/Shipping_Method/Settings.php:548
 msgid "Automatically change order status to Completed"

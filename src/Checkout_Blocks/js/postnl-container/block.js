@@ -251,6 +251,7 @@ export const Block = ( { checkoutExtensionData } ) => {
 			sessionStorage.removeItem( 'postnl_dropoffPointsPartnerID' );
 			sessionStorage.removeItem( 'postnl_dropoffPointsDate' );
 			sessionStorage.removeItem( 'postnl_dropoffPointsTime' );
+			sessionStorage.removeItem( 'postnl_dropoffPointsType' );
 			sessionStorage.removeItem( 'postnl_dropoffPointsDistance' );
 		}
 	}, [ isComplete, letterbox, showContainer ] );
@@ -299,6 +300,7 @@ export const Block = ( { checkoutExtensionData } ) => {
 		setExtensionData( 'postnl', 'dropoffPointsPartnerID', '' );
 		setExtensionData( 'postnl', 'dropoffPointsDate', '' );
 		setExtensionData( 'postnl', 'dropoffPointsTime', '' );
+		setExtensionData( 'postnl', 'dropoffPointsType', '' );
 		setExtensionData( 'postnl', 'dropoffPointsDistance', '' );
 
 	}, [ letterbox, showContainer, deliveryOptions, setExtensionData ] );

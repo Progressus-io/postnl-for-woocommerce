@@ -7,14 +7,12 @@
 
 namespace PostNLWooCommerce\Order;
 
-use Automattic\WooCommerce\Internal\DataStores\Orders\CustomOrdersTableController;
 use PostNLWooCommerce\Rest_API\Shipment_and_Return\Item_Info;
 use PostNLWooCommerce\Rest_API\Shipment_and_Return\Client;
 use PostNLWooCommerce\Rest_API\Smart_Returns\Item_Info as smart_info;
 use PostNLWooCommerce\Rest_API\Smart_Returns\Client as smart_client;
 use PostNLWooCommerce\Utils;
 use PostNLWooCommerce\Helper\Mapping;
-use PostNLWooCommerce\Product\Single as ProductSingle;
 use WC_Order_Item;
 use WC_Order_Item_Product;
 
@@ -125,14 +123,6 @@ class Single extends Base {
 			return;
 		}
 
-		try {
-			$screen = wc_get_container()->get( CustomOrdersTableController::class )->custom_orders_table_usage_is_enabled()
-				? wc_get_page_screen_id( 'shop-order' )
-				: 'shop_order';
-		} catch ( \Exception $e ) {
-			$screen = 'shop_order';
-		}
-
 		// translators: %s will be replaced by service name.
 		add_meta_box(
 			'woocommerce-shipment-postnl-label',
@@ -141,7 +131,7 @@ class Single extends Base {
 				$this,
 				'meta_box_html',
 			),
-			$screen,
+			Utils::get_order_screen_id(),
 			'side',
 			'high'
 		);

@@ -505,13 +505,7 @@ class Item_Info extends Base_Info {
 				},
 			),
 			'currency'                => array(
-				'validate' => function ( $value ) {
-					if ( ! Utils::check_available_currency( $value ) ) {
-						throw new \Exception(
-							__( 'Currency is not available!', 'postnl-for-woocommerce' )
-						);
-					}
-				},
+				'default' => '',
 			),
 			'phone'                   => array(
 				'default' => '',

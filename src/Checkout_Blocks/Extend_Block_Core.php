@@ -192,8 +192,8 @@ class Extend_Block_Core {
 			return $rates;
 		}
 
-		$pickup_fee     = (float) $this->settings->get_pickup_delivery_fee();
-		$base_day_fee   = (float) $this->settings->get_delivery_days_fee();
+		$pickup_fee       = $this->settings->get_pickup_delivery_fee();
+		$base_day_fee   = $this->settings->get_delivery_days_fee();
 		$supported      = $this->settings->get_supported_shipping_methods();
 
 		foreach ( $rates as $rate_id => $rate ) {

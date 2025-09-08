@@ -1577,3 +1577,19 @@ msgstr ""
 msgctxt "block title"
 msgid "Postnl Tabs"
 msgstr ""
+
+#: src/Admin/Survey.php:106
+msgid "Would you like a chance to win a Bol gift card worth €25?"
+msgstr ""
+
+#: src/Admin/Survey.php:107
+msgid "Let us know what you think of the PostNL for WooCommerce plugin by completing the survey."
+msgstr ""
+
+#: src/Admin/Survey.php:113
+msgid "Take Survey"
+msgstr ""
+
+#: src/Admin/Survey.php:120
+msgid "Leave a review"
+msgstr ""

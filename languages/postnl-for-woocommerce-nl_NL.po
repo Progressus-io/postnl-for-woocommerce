@@ -5,7 +5,7 @@ msgstr ""
 "Project-Id-Version: PostNL for WooCommerce 5.4\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/postnl-for-woocommerce\n"
 "POT-Creation-Date: 2024-05-16T18:07:00+00:00\n"
-"PO-Revision-Date: 2025-06-16 02:38+0300\n"
+"PO-Revision-Date: 2025-09-08 17:57+0300\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: nl\n"
@@ -1353,3 +1353,19 @@ msgstr "Zending thuis ontvangen? Maak een selectie uit de bezorgdagen."
 #: templates/checkout/postnl-dropoff-points.php:137
 msgid "Vanaf"
 msgstr ""
+
+#: src/Admin/Survey.php:106
+msgid "Would you like a chance to win a Bol gift card worth €25?"
+msgstr "Wil jij kans maken op een Bol-cadeaukaart t.w.v. €25?"
+
+#: src/Admin/Survey.php:107
+msgid "Let us know what you think of the PostNL for WooCommerce plugin by completing the survey."
+msgstr "Laat ons weten wat je van de PostNL voor WooCommerce plug-in vindt door de vragenlijst in te vullen."
+
+#: src/Admin/Survey.php:113
+msgid "Take Survey"
+msgstr "Start vragenlijst"
+
+#: src/Admin/Survey.php:120
+msgid "Leave a review"
+msgstr "Laat een beoordeling achter"

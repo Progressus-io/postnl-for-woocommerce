@@ -7,7 +7,10 @@
 
 namespace PostNLWooCommerce;
 
+use Automattic\WooCommerce\Internal\DataStores\Orders\CustomOrdersTableController;
 use PostNLWooCommerce\Helper\Mapping;
+use PostNLWooCommerce\Product\Single;
+use WC_Product;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -55,46 +58,12 @@ class Utils {
 	}
 
 	/**
-	 * Get available country.
+	 * Get the list of countries where adults-only products can be shipped.
 	 *
 	 * @return array.
 	 */
-	public static function get_available_currency() {
-		// Get all WooCommerce currencies
-		$woocommerce_currencies = array_keys( get_woocommerce_currencies() );
-
-		return $woocommerce_currencies;
-	}
-
-	/**
-	 * Get currency from WooCommerce settings.
-	 */
-	public static function get_woocommerce_currency() {
-		return get_woocommerce_currency();
-	}
-
-	/**
-	 * Check if the current settings use available currency.
-	 *
-	 * @return Boolean.
-	 */
-	public static function use_available_currency() {
-		return self::check_available_currency( self::get_woocommerce_currency() );
-	}
-
-	/**
-	 * Check if the currency use available currency.
-	 *
-	 * @param String $currency Currency code.
-	 *
-	 * @return Boolean.
-	 */
-	public static function check_available_currency( $currency = '' ) {
-		if ( empty( $currency ) ) {
-			return false;
-		}
-
-		return ( in_array( $currency, self::get_available_currency(), true ) );
+	public static function get_adults_only_shipping_countries(): array {
+		return array( 'NL' );
 	}
 
 	/**
@@ -674,6 +643,10 @@ class Utils {
 			return false;
 		}
 
+		if ( self::contains_adults_only_products( $cart->get_cart() ) ) {
+			return false;
+		}
+
 		return self::check_products_for_letterbox( $cart->get_cart() );
 	}
 
@@ -740,11 +713,9 @@ class Utils {
 				continue;
 			}
 
-			$is_letterbox_product = $product->get_meta( Product\Single::LETTERBOX_PARCEL );
-
 			// If one of the item is not letterbox product, then the order is not eligible automatic letterbox.
 			// Thus should return false immediately.
-			if ( 'yes' !== $is_letterbox_product ) {
+			if ( ! self::is_letterbox_parcel_product( $product ) ) {
 				return false;
 			}
 
@@ -757,6 +728,81 @@ class Utils {
 
 		// If the total ratio is more than 1, that means order items cannot be packed using letterbox.
 		return $has_letterbox_product && $total_ratio_letterbox_item <= 1;
+	}
+
+	/**
+	 * Determine if the given order contains any adults-only products.
+	 *
+	 * @param \WC_Order|int $order \WC_order or Order ID.
+	 *
+	 * @return boolean
+	 */
+	public static function is_adults_only_order( $order ): bool {
+		if ( 'BE' === wc_get_base_location()['country'] ) {
+			return false;
+		}
+
+		// Check if order id provided.
+		if ( is_int( $order ) ) {
+			$order = wc_get_order( $order );
+		}
+
+		if ( ! is_a( $order, 'WC_Order' ) ) {
+			return false;
+		}
+
+		if ( ! in_array( $order->get_shipping_country(), self::get_adults_only_shipping_countries(), true ) ) {
+			return false;
+		}
+
+		return self::contains_adults_only_products( $order->get_items() );
+	}
+
+	/**
+	 * Determine if any products are marked as adults-only.
+	 *
+	 * @param array $products WC_Products[] or order_item[].
+	 *
+	 * @return bool
+	 */
+	public static function contains_adults_only_products( $products ): bool {
+
+		foreach ( $products as $item_id => $item ) {
+			$product = wc_get_product( $item['product_id'] ?? $item->get_product_id() );
+			if ( ! is_a( $product, 'WC_Product' ) ) {
+				continue;
+			}
+
+			if ( ! $product->needs_shipping() ) {
+				continue;
+			}
+
+			if ( self::is_adults_only_product( $product ) ) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	/**
+	 * Check if the given product is marked as adults-only.
+	 *
+	 * @param WC_Product $product Product object.
+	 * @return bool
+	 */
+	public static function is_adults_only_product( WC_Product $product ): bool {
+		return 'yes' === $product->get_meta( Single::ADULTS_ONLY_FIELD );
+	}
+
+	/**
+	 * Check if the given product is marked as Letterbox Parcel.
+	 *
+	 * @param WC_Product $product Product object.
+	 * @return bool
+	 */
+	public static function is_letterbox_parcel_product( WC_Product $product ): bool {
+		return 'yes' === $product->get_meta( Single::LETTERBOX_PARCEL );
 	}
 
 	/**
@@ -832,5 +878,20 @@ class Utils {
 		}
 
 		return false;
+	}
+
+	/**
+	 * Get WooCommerce shop order screen ID.
+	 *
+	 * @return string
+	 */
+	public static function get_order_screen_id(): string {
+		try {
+			return wc_get_container()->get( CustomOrdersTableController::class )->custom_orders_table_usage_is_enabled()
+					? wc_get_page_screen_id( 'shop-order' )
+					: 'shop_order';
+		} catch ( \Exception $e ) {
+			return 'shop_order';
+		}
 	}
 }

@@ -7,13 +7,14 @@
 
 namespace PostNLWooCommerce\Order;
 
-use Automattic\WooCommerce\Internal\DataStores\Orders\CustomOrdersTableController;
 use PostNLWooCommerce\Rest_API\Shipment_and_Return\Item_Info;
 use PostNLWooCommerce\Rest_API\Shipment_and_Return\Client;
 use PostNLWooCommerce\Rest_API\Smart_Returns\Item_Info as smart_info;
 use PostNLWooCommerce\Rest_API\Smart_Returns\Client as smart_client;
 use PostNLWooCommerce\Utils;
 use PostNLWooCommerce\Helper\Mapping;
+use WC_Order_Item;
+use WC_Order_Item_Product;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -50,6 +51,8 @@ class Single extends Base {
 
 		add_action( 'wp_ajax_postnl_send_smart_return_email', array( $this, 'postnl_send_smart_return_email' ) );
 		add_action( 'wp_ajax_nopriv_postnl_send_smart_return_email', array( $this, 'postnl_send_smart_return_email' ) );
+
+		add_action( 'woocommerce_after_order_itemmeta', array( $this, 'add_adult_product_label_admin_order_page' ), 10, 2 );
 	}
 
 	/**
@@ -120,14 +123,6 @@ class Single extends Base {
 			return;
 		}
 
-		try {
-			$screen = wc_get_container()->get( CustomOrdersTableController::class )->custom_orders_table_usage_is_enabled()
-				? wc_get_page_screen_id( 'shop-order' )
-				: 'shop_order';
-		} catch ( \Exception $e ) {
-			$screen = 'shop_order';
-		}
-
 		// translators: %s will be replaced by service name.
 		add_meta_box(
 			'woocommerce-shipment-postnl-label',
@@ -136,7 +131,7 @@ class Single extends Base {
 				$this,
 				'meta_box_html',
 			),
-			$screen,
+			Utils::get_order_screen_id(),
 			'side',
 			'high'
 		);
@@ -753,6 +748,32 @@ class Single extends Base {
 			wp_send_json_error(
 				array( 'message' => $e->getMessage() ),
 			);
+		}
+	}
+
+	/**
+	 * Add "18+" label beside adult products in the WooCommerce admin order page.
+	 *
+	 * @param int           $item_id Order item ID.
+	 * @param WC_Order_Item $item    Order item object.
+	 *
+	 * @return void
+	 */
+	public function add_adult_product_label_admin_order_page( int $item_id, WC_Order_Item $item ): void {
+		if ( ! $item instanceof WC_Order_Item_Product ) {
+			return; // Only handle product items.
+		}
+
+		$product = $item->get_product();
+
+		if ( ! $product ) {
+			return;
+		}
+
+		$is_adult = Utils::is_adults_only_product( $product );
+
+		if ( $is_adult ) {
+			echo '<p>' . esc_html__( '18+ Adults Only', 'postnl-for-woocommerce' ) . '</p>';
 		}
 	}
 }

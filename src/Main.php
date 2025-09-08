@@ -113,11 +113,13 @@ class Main {
 		// Throw an admin error informing the user this plugin needs country settings to be NL and BE.
 		add_action( 'admin_notices', array( $this, 'notice_nl_be_required' ) );
 
-		// Throw an admin error informing the user this plugin needs currency settings to be EUR, USD, GBP, CNY.
-		add_action( 'admin_notices', array( $this, 'notice_currency_required' ) );
+		if ( ! Utils::use_available_country() ) {
+			return;
+		}
 
 		add_action( 'init', array( $this, 'load_plugin' ), 1 );
-	}
+		add_filter( 'woocommerce_shipping_methods', array( $this, 'add_shipping_method' ) );
+    }
 
 	/**
 	 * Declare WooCommerce HPOS feature compatibility.
@@ -177,10 +179,6 @@ class Main {
 	 * Determine which plugin to load.
 	 */
 	public function load_plugin() {
-		if ( ! Utils::use_available_currency() || ! Utils::use_available_country() ) {
-			return;
-		}
-
 		$this->init_hooks();
 		$this->checkout_blocks();
 	}
@@ -212,8 +210,6 @@ class Main {
 
 		// Register the block category.
 		add_action( 'block_categories_all', array( $this, 'register_postnl_block_category' ), 10, 2 );
-
-		add_filter( 'woocommerce_shipping_methods', array( $this, 'add_shipping_method' ) );
 
 		add_action( 'admin_notices', array( 'PostNLWooCommerce\Admin\Survey', 'maybe_render_notice' ) );
 		add_action( 'add_meta_boxes', array( 'PostNLWooCommerce\Admin\Survey', 'maybe_add_meta_box' ), 10, 0 );
@@ -384,19 +380,6 @@ class Main {
 			?>
 			<div class="error">
 				<p><?php esc_html_e( 'PostNL plugin requires store country to be Netherlands (NL) or Belgium (BE)!', 'postnl-for-woocommerce' ); ?></p>
-			</div>
-			<?php
-		}
-	}
-
-	/**
-	 * Admin error notifying user that currency must be using EUR, GBP, USD, and CNY.
-	 */
-	public function notice_currency_required() {
-		if ( ! Utils::use_available_currency() ) {
-			?>
-			<div class="error">
-				<p><?php esc_html_e( 'PostNL plugin requires store currency to be EUR, USD, GBP or CNY!', 'postnl-for-woocommerce' ); ?></p>
 			</div>
 			<?php
 		}

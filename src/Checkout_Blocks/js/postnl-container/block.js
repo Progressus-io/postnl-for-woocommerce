@@ -1,7 +1,7 @@
 /**
  * External dependencies
  */
-import { useEffect, useState, useRef } from '@wordpress/element';
+import {useEffect, useState, useRef, useCallback} from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 import { getSetting } from '@woocommerce/settings';
 import { useDispatch, useSelect } from '@wordpress/data';
@@ -18,22 +18,101 @@ export const Block = ( { checkoutExtensionData } ) => {
 	const { setExtensionData } = checkoutExtensionData;
 	const postnlData = getSetting( 'postnl-for-woocommerce-blocks_data', {} );
 
-	const tabs = [
-		{
-			id: 'delivery_day',
-			name: __( 'Delivery Days', 'postnl-for-woocommerce' ),
-		},
-	];
-	if ( postnlData.is_pickup_points_enabled ) {
-		tabs.push({
-			id: 'dropoff_points',
-			name: __( 'Dropoff Points', 'postnl-for-woocommerce' ),
-		});
-	}
-	const [ activeTab, setActiveTab ] = useState( tabs[ 0 ].id );
-
 	const letterbox = postnlData.letterbox || false;
 	const { CART_STORE_KEY, CHECKOUT_STORE_KEY } = window.wc.wcBlocksData;
+
+	const selectedShippingFee = useSelect(
+		( select ) => {
+			const store = select( CART_STORE_KEY );
+			if ( ! store || ! store.getCartData ) {
+				return 0;
+			}
+
+			const packages = store.getCartData().shippingRates || [];
+
+			for ( const pkg of packages ) {
+				const rates = pkg.shipping_rates || [];
+				const chosen = rates.find( ( rate ) => rate && rate.selected );
+				if ( chosen && chosen.price !== undefined ) {
+					const minor = Number( chosen.currency_minor_unit || 0 );
+					const price = parseFloat( chosen.price );
+					if ( ! Number.isNaN( price ) ) {
+						return price / Math.pow( 10, minor );
+					}
+				}
+			}
+
+			if ( store.getCartTotals ) {
+				const totals = store.getCartTotals();
+				if ( totals && totals.shipping_total ) {
+					return Number( totals.shipping_total );
+				}
+			}
+
+			return 0;
+		},
+		[ CART_STORE_KEY ]
+	);
+
+	// stores the Morning/Evening surcharge currently selected
+	const [extraDeliveryFee, setExtraDeliveryFee] = useState(() => {
+		return Number(sessionStorage.getItem('postnl_deliveryDayPrice') || 0);
+	});
+
+	const baseTabs = [
+		{ id: 'delivery_day', base: Number( postnlData.delivery_day_fee || 0 ) },
+		...( postnlData.is_pickup_points_enabled
+			? [ { id: 'dropoff_points', base: Number( postnlData.pickup_fee || 0 ) } ]
+			: [] ),
+	];
+
+	const [activeTab, setActiveTab] = useState(baseTabs[0].id);
+
+	const [carrierBaseCost, setCarrierBaseCost] = useState(() => {
+		const savedExtra = Number(sessionStorage.getItem('postnl_deliveryDayPrice') || 0);
+		return selectedShippingFee - baseTabs[0].base - savedExtra;
+	});
+
+	const prevShipping = useRef(selectedShippingFee);
+
+	useEffect(() => {
+		if (prevShipping.current === selectedShippingFee) {
+			return;
+		}
+		prevShipping.current = selectedShippingFee;
+
+		const currentTabBase = baseTabs.find((tab) => tab.id === activeTab)?.base || 0;
+		const extra = activeTab === 'delivery_day' ? extraDeliveryFee : 0;
+
+		const raw = selectedShippingFee - currentTabBase - extra;
+		setCarrierBaseCost(raw < 0 ? 0 : raw);
+	}, [selectedShippingFee]);
+
+	const tabs = baseTabs.map( ( tab ) => {
+		let title =
+			tab.id === 'delivery_day'
+				? __( 'Delivery', 'postnl-for-woocommerce' )
+				: __( 'Pickup', 'postnl-for-woocommerce' );
+
+		let base = carrierBaseCost + tab.base;
+		if ( Number.isNaN( base ) ) {
+			base = tab.base;
+		}
+		if ( base < 0 ) {
+			base = 0;
+		}
+
+		const extra = tab.id === 'delivery_day' ? extraDeliveryFee : 0;
+
+		if ( base > 0 || extra > 0 ) {
+			title += ` €${ base.toFixed( 2 ) }${
+				extra > 0 ? `+€${ extra.toFixed( 2 ) }` : ''
+			}`;
+		}
+
+		return { id: tab.id, name: title, base: tab.base };
+	} );
+
 
 	// Retrieve customer data from WooCommerce cart store
 	const customerData = useSelect(
@@ -181,8 +260,8 @@ export const Block = ( { checkoutExtensionData } ) => {
 
 							if (
 								(shippingAddress.address_1 !== street ||
-								shippingAddress.city !== city ||
-								shippingAddress[ 'postnl/house_number' ] !==
+									shippingAddress.city !== city ||
+									shippingAddress[ 'postnl/house_number' ] !==
 									house_number)
 							) {
 								isUpdatingAddress.current = true;
@@ -380,6 +459,7 @@ export const Block = ( { checkoutExtensionData } ) => {
 								isActive={ activeTab === 'delivery_day' }
 								deliveryOptions={ deliveryOptions }
 								isDeliveryDaysEnabled={ deliveryDaysEnabled }
+								onPriceChange={ setExtraDeliveryFee }
 							/>
 						</div>
 						{ postnlData.is_pickup_points_enabled && (

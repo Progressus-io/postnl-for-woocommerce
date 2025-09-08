@@ -39,7 +39,7 @@ class Product_Editor {
 		$parent = $shipping_dimensions_block->get_parent();
 
 		// Add 18+ Adults Only Checkbox Block.
-		$parent->add_block(
+		/*$parent->add_block(
 			array(
 				'id'         => 'postnl-adult-product',
 				'blockName'  => 'woocommerce/product-checkbox-field',
@@ -52,7 +52,7 @@ class Product_Editor {
 					'uncheckedValue' => '',
 				),
 			)
-		);
+		); */
 
 		// Add Letterbox Parcel Checkbox Block.
 		$parent->add_block(
@@ -60,6 +60,7 @@ class Product_Editor {
 				'id'         => 'postnl-letterbox-parcel',
 				'blockName'  => 'woocommerce/product-checkbox-field',
 				'attributes' => array(
+					'title'          => esc_html__( 'PostNL extra settings', 'postnl-for-woocommerce' ),
 					'label'          => __( 'Enable Letterbox Parcel', 'postnl-for-woocommerce' ),
 					'property'       => 'meta_data.' . Single::LETTERBOX_PARCEL,
 					'tooltip'        => __( 'When enabled, PostNL plugin automatically determines whether a shipment fits through a letterbox.', 'postnl-for-woocommerce' ),

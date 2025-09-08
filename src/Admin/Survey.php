@@ -38,10 +38,10 @@ class Survey {
 
 		add_meta_box(
 			'postnl_admin_banner',
-			esc_html__( 'Help us improve PostNL', 'postnl-for-woocommerce' ),
+			esc_html__( 'PostNL Survey', 'postnl-for-woocommerce' ),
 			array( __CLASS__, 'render_meta_box' ),
 			Utils::get_order_screen_id(),
-			'side',
+			'normal',
 			'high'
 		);
 	}
@@ -98,8 +98,21 @@ class Survey {
 	 */
 	protected static function render_notice() {
 		?>
-		<div class="notice notice-info">
-			<p><strong><?php esc_html_e( 'Help us improve PostNL', 'postnl-for-woocommerce' ); ?></strong></p>
+		<style>
+			#postnl-admin-banner {
+				border-left-color: #ed8c00;
+				background: #fff7f0;
+			}
+
+			#postnl-admin-banner .button-primary {
+				background: #ed8c00;
+				border-color: #e65c00;
+				color: #fff;
+			}
+		</style>
+		<div id="postnl-admin-banner" class="notice notice-info">
+			<h2><?php esc_html_e( 'Would you like a chance to win a Bol gift card worth €25?', 'postnl-for-woocommerce' ); ?></h2>
+			<p><strong><?php esc_html_e( 'Let us know what you think of the PostNL for WooCommerce plugin by completing the survey.', 'postnl-for-woocommerce' ); ?></strong></p>
 			<p>
 				<a href="<?php echo esc_url( self::SURVEY_URL ); ?>"
 					class="button button-primary"
@@ -112,7 +125,7 @@ class Survey {
 				<a href="<?php echo esc_url( 'https://wordpress.org/support/plugin/woo-postnl/reviews/#new-post' ); ?>"
 					target="_blank"
 					rel="noopener noreferrer">
-					<?php esc_html_e( 'Leave a review on WordPress org', 'postnl-for-woocommerce' ); ?>
+					<?php esc_html_e( 'Leave a review', 'postnl-for-woocommerce' ); ?>
 				</a>
 			</p>
 		</div>
@@ -126,19 +139,40 @@ class Survey {
 	 */
 	public static function render_meta_box() {
 		?>
+		<style>
+			#postnl_admin_banner {
+				background: #fff7f0;
+			}
+
+			#postnl_admin_banner .survey-title {
+				padding: 10px 0 !important;
+			}
+
+			#postnl_admin_banner .button-primary {
+				background: #ed8c00;
+				border-color: #e65c00;
+				color: #fff;
+			}
+		</style>
+		<h2 class="survey-title">
+			<strong><?php esc_html_e( 'Would you like a chance to win a Bol gift card worth €25?', 'postnl-for-woocommerce' ); ?></strong>
+		</h2>
+		<p>
+			<?php esc_html_e( 'Let us know what you think of the PostNL for WooCommerce plugin by completing the survey.', 'postnl-for-woocommerce' ); ?>
+		</p>
 		<p>
 			<a href="<?php echo esc_url( self::SURVEY_URL ); ?>"
 				class="button button-primary"
 				target="_blank"
 				rel="noopener noreferrer">
-				<?php esc_html_e( 'Take Survey', 'postnl-for-woocommerce' ); ?>
+				<?php esc_html_e( 'Take survey', 'postnl-for-woocommerce' ); ?>
 			</a>
 		</p>
 		<p>
 			<a href="<?php echo esc_url( 'https://wordpress.org/plugins/postnl-for-woocommerce/#reviews' ); ?>"
 				target="_blank"
 				rel="noopener noreferrer">
-				<?php esc_html_e( 'Leave a review on WordPress org', 'postnl-for-woocommerce' ); ?>
+				<?php esc_html_e( 'Leave a review', 'postnl-for-woocommerce' ); ?>
 			</a>
 		</p>
 		<?php

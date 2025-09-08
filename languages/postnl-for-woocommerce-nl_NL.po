@@ -1574,3 +1574,10 @@ msgstr "Zending thuis ontvangen? Maak een selectie uit de bezorgdagen."
 #: templates/checkout/postnl-dropoff-points.php:137
 msgid "Vanaf"
 msgstr ""
+
+#: templates/checkout/postnl-fill-in-with-button.php:29
+#: build/postnl-fill-in-with-frontend.js:1
+#: src/Checkout_Blocks/js/postnl-fill-in-with/block.js:145
+msgid "Your name and address are automatically filled in via your PostNL account. That saves you from having to fill in the form!"
+msgstr "Je naam en adres worden automatisch ingevuld via je PostNL-account. Zo hoef je het formulier niet zelf in te vullen!"
+

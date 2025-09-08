@@ -69,6 +69,11 @@ class Delivery_Day extends Base {
 				'primary' => false,
 				'hidden'  => true,
 			),
+			array(
+				'id'      => $this->prefix . $this->primary_field . '_fees',
+				'primary' => false,
+				'hidden'  => true,
+			),
 		);
 
 		return apply_filters( 'postnl_frontend_delivery_day_fields', $fields );
@@ -107,7 +112,7 @@ class Delivery_Day extends Base {
 
 		$tabs[] = array(
 			'id'   => $this->primary_field,
-			'name' => esc_html__( 'Delivery Days', 'postnl-for-woocommerce' ),
+			'name' => esc_html__( 'Delivery', 'postnl-for-woocommerce' ),
 		);
 
 		return $tabs;

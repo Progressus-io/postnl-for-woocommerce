@@ -3,6 +3,7 @@
  */
 import { useEffect, useState, useCallback } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
+import { getSetting } from '@woocommerce/settings';
 import { debounce } from 'lodash';
 
 /**
@@ -18,7 +19,7 @@ const Utils = {
 };
 
 /**
- * Dropoff Points Block Component
+ * Pickup Block Component
  * @param root0
  * @param root0.checkoutExtensionData
  * @param root0.isActive
@@ -30,6 +31,7 @@ export const Block = ( {
 	dropoffOptions,
 } ) => {
 	const { setExtensionData } = checkoutExtensionData;
+	const postnlData = getSetting( 'postnl-for-woocommerce-blocks_data', {} );
 
 	// Initialize state from sessionStorage if available
 	const [ dropoffPoints, setDropoffPoints ] = useState( () => {
@@ -210,6 +212,18 @@ export const Block = ( {
 		}
 	}, [ isActive ] );
 
+	useEffect( () => {
+		if (
+			isActive &&
+			dropoffOptions.length > 0 &&
+			! dropoffPoints
+		) {
+			const first = dropoffOptions[ 0 ];
+			const value = `${ first.partner_id }-${ first.loc_code }`;
+			handleOptionChange( value );
+		}
+	}, [ isActive, dropoffOptions, dropoffPoints ] );
+
 	/**
 	 * Helper function to clear selections
 	 * @param clearSession
@@ -302,8 +316,8 @@ export const Block = ( {
 					namespace: 'postnl',
 					data: {
 						action: 'update_delivery_fee',
-						price: 0,
-						type: '',
+						price: postnlData.pickup_fee ?? 0,
+						type: 'Pickup',
 					},
 				} );
 			}
@@ -441,7 +455,7 @@ export const Block = ( {
 	};
 
 	/**
-	 * Render the Dropoff Points
+	 * Render the Pickup
 	 */
 	return (
 		<div className="postnl-dropoff-container">

@@ -81,6 +81,9 @@ Follow these instructions (https://www.postnl.nl/Images/aanvragen-api-key-stappe
 
 == Changelog ==
 
+= 5.8.1 (2025-09-06) =
+* Add: Option to apply extra fees for Home Delivery and Pickup Point Delivery.
+
 ### 5.8.0 (2025-xx-xx) =
 * Add: A new contact type 02 with sender email to the shipping API request.
 * Fix: Ressolve issue where insured NL>BE shipments defaulted to standard shipment instead of insured shipment.

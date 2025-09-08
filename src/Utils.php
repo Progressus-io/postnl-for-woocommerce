@@ -902,7 +902,7 @@ class Utils {
 					'woocommerce_checkout_before_customer_details',
 				),
 				'checkout_after_customer_details'  => array(
-					'woocommerce_checkout_after_customer_details',
+					'woocommerce_after_order_notes',
 				),
 				'minicart_before_buttons'          => array(
 					'woocommerce_widget_shopping_cart_before_buttons',

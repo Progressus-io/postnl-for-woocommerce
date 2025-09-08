@@ -57,7 +57,6 @@ class Extend_Block_Core {
 			add_filter( 'woocommerce_package_rates', array( $this, 'add_postnl_fees_to_rates' ), 20, 2 );
 		}
 
-
 		if ( $this->settings->is_reorder_nl_address_enabled() ) {
 			$this->register_additional_checkout_fields();
 		}
@@ -187,14 +186,14 @@ class Extend_Block_Core {
 	 */
 	public function add_postnl_fees_to_rates( $rates, $package ) {
 
-		$session_type   = WC()->session->get( 'postnl_delivery_type', '' );
+		$session_type = WC()->session->get( 'postnl_delivery_type', '' );
 		if ( '' === $session_type ) {
 			return $rates;
 		}
 
-		$pickup_fee       = $this->settings->get_pickup_delivery_fee();
-		$base_day_fee   = $this->settings->get_delivery_days_fee();
-		$supported      = $this->settings->get_supported_shipping_methods();
+		$pickup_fee   = $this->settings->get_pickup_delivery_fee();
+		$base_day_fee = $this->settings->get_delivery_days_fee();
+		$supported    = $this->settings->get_supported_shipping_methods();
 
 		foreach ( $rates as $rate_id => $rate ) {
 
@@ -220,7 +219,6 @@ class Extend_Block_Core {
 				$tax_rates   = \WC_Tax::get_shipping_tax_rates();
 				$rate->taxes = \WC_Tax::calc_shipping_tax( $rate->cost, $tax_rates );
 			}
-
 		}
 
 		return $rates;
@@ -314,7 +312,6 @@ class Extend_Block_Core {
 		$sanitized_data = array_map( 'sanitize_text_field', wp_unslash( $_POST['data'] ) );
 
 		$sanitized_data = Address_Utils::set_post_data_address( $sanitized_data );
-
 
 		$shipping_country = isset( $sanitized_data['shipping_country'] ) ? $sanitized_data['shipping_country'] : '';
 
@@ -491,5 +488,4 @@ class Extend_Block_Core {
 			wp_die();
 		}
 	}
-
 }

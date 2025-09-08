@@ -81,7 +81,7 @@ class Address_Utils {
 	 * Split address into street and house number.
 	 *
 	 * @param array $post_data
-	 * @param bool $is_checkout_data
+	 * @param bool  $is_checkout_data
 	 *
 	 * @return array
 	 */

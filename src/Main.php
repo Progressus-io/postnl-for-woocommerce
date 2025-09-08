@@ -119,7 +119,7 @@ class Main {
 
 		add_action( 'init', array( $this, 'load_plugin' ), 1 );
 		add_filter( 'woocommerce_shipping_methods', array( $this, 'add_shipping_method' ) );
-    }
+	}
 
 	/**
 	 * Declare WooCommerce HPOS feature compatibility.

@@ -295,7 +295,7 @@ class Fill_In_With_Postnl {
 
 		if ( function_exists( 'WC' ) ) {
 			$customer = WC()->customer;
-			
+
 			if ( ! $customer ) {
 				$button_class = 'hidden';
 			}
@@ -303,7 +303,6 @@ class Fill_In_With_Postnl {
 			if ( ! Utils::is_customer_country_allowed( $customer, $allowed_countries ) ) {
 				$button_class = 'hidden';
 			}
-		
 		}
 
 		wc_get_template(

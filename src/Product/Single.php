@@ -84,7 +84,8 @@ class Single {
 	 */
 	public static function product_field_maps( $service ) {
 		return array(
-			/*array(
+			/*
+			array(
 				'id'          => self::ADULTS_ONLY_FIELD,
 				'type'        => 'checkbox',
 				// translators: %s will be replaced by service name.
@@ -133,7 +134,7 @@ class Single {
 				'desc_tip'    => 'true',
 				'placeholder' => esc_html__( 'HS Code', 'postnl-for-woocommerce' ),
 			),
-			
+
 		);
 	}
 
@@ -145,9 +146,8 @@ class Single {
 		add_action( 'woocommerce_process_product_meta', array( $this, 'save_additional_product_parent_options' ) );
 		add_action( 'woocommerce_variation_options_pricing', array( $this, 'additional_product_variation_shipping_options' ), 10, 3 );
 		add_action( 'woocommerce_save_product_variation', array( $this, 'save_additional_product_variation_options' ), 10, 2 );
-		//add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_admin_product_edit_script' ) );
-		//add_action( 'woocommerce_before_product_object_save', array( $this, 'validate_conflicting_options' ), 100, 1 );
-
+		// add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_admin_product_edit_script' ) );
+		// add_action( 'woocommerce_before_product_object_save', array( $this, 'validate_conflicting_options' ), 100, 1 );
 	}
 
 	/**
@@ -166,7 +166,7 @@ class Single {
 			true
 		);
 	}
-	
+
 	/**
 	 * Add the meta box for shipment info on the product page.
 	 *
@@ -282,5 +282,4 @@ class Single {
 			);
 		}
 	}
-
 }

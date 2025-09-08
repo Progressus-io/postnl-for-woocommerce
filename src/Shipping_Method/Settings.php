@@ -292,7 +292,7 @@ class Settings extends \WC_Settings_API {
 				'for_country' => array( 'NL', 'BE' ),
 				'class'       => 'country-nl country-be',
 			),
-			'pickup_delivery_fee'            => array(
+			'pickup_delivery_fee'             => array(
 				'title'       => __( 'Extra fee pick-up delivery', 'postnl-for-woocommerce' ),
 				'type'        => 'price',
 				'description' => __( 'Extra fee added when the customer selects a PostNL pick-up point.', 'postnl-for-woocommerce' ),

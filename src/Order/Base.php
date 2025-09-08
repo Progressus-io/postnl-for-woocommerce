@@ -119,7 +119,8 @@ abstract class Base {
 			return $default_options;
 		}
 
-		/*if ( Utils::is_adults_only_order( $order ) ) {
+		/*
+		if ( Utils::is_adults_only_order( $order ) ) {
 			return array( 'id_check' => 'yes' );
 		}*/
 

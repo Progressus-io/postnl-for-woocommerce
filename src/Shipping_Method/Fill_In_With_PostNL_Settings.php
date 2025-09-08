@@ -271,7 +271,6 @@ class Fill_In_With_PostNL_Settings {
 			POSTNL_WC_VERSION,
 			true
 		);
-
 	}
 
 	/**

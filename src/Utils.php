@@ -643,7 +643,8 @@ class Utils {
 			return false;
 		}
 
-		/*if ( self::contains_adults_only_products( $cart->get_cart() ) ) {
+		/*
+		if ( self::contains_adults_only_products( $cart->get_cart() ) ) {
 			return false;
 		}*/
 

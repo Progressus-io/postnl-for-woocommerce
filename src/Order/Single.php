@@ -52,7 +52,7 @@ class Single extends Base {
 		add_action( 'wp_ajax_postnl_send_smart_return_email', array( $this, 'postnl_send_smart_return_email' ) );
 		add_action( 'wp_ajax_nopriv_postnl_send_smart_return_email', array( $this, 'postnl_send_smart_return_email' ) );
 
-		//add_action( 'woocommerce_after_order_itemmeta', array( $this, 'add_adult_product_label_admin_order_page' ), 10, 2 );
+		// add_action( 'woocommerce_after_order_itemmeta', array( $this, 'add_adult_product_label_admin_order_page' ), 10, 2 );
 	}
 
 	/**

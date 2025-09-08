@@ -1035,11 +1035,10 @@ class Settings extends \WC_Settings_API {
 		return $this->get_country_option( 'enable_pickup_points' );
 	}
 
-
 	/**
 	 * Get pick-up delivery fee from the settings.
 	 *
-	 * @return string
+	 * @return float
 	 */
 	public function get_pickup_delivery_fee() {
 		return (float) $this->get_country_option( 'pickup_delivery_fee' );

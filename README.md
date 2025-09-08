@@ -6,8 +6,8 @@
 * Requires at least: 6.6
 * Tested up to: 6.8
 * WC requires at least: 9.6
-* WC tested up to: 9.8
-* Stable tag: 5.7.3
+* WC tested up to: 10.2
+* Stable tag: 5.8.0
 * License: GPLv2 or later
 * License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -34,16 +34,15 @@ PostNL’s official extension for WooCommerce on WordPress. Manage your national
 
 ## Changelog
 
-### 5.8.1
-* Add: Separate fees for Home delivery and Pick-up point delivery.
-* Tweak: Show fee amounts on checkout tabs.
-
 ### 5.8.0
-* Add: A new contact type 02 with sender email to the shipping API request.
-* Fix: Ressolve issue where insured NL>BE shipments defaulted to standard shipment instead of insured shipment.
+* Add: Fill In With / Invullen met PostNL.
+* Add: ContactType 02 for digital proof of shipping.
+* Add: Allow different fees for home / pick-up delivery.
+* Fix: Label & Tracking menu fixed for NL>BE shipments.
+* Fix: Delivery menu loading while addresschecker is disabled.
+* Fix: WC Rest API issue.
 * Fix: PHP waring `Function _load_textdomain_just_in_time was called incorrectly`.
-* Fix: Postcode required before filling it on the checkout page.
-* Fix: Drop-off point type not saving when orders are created via Blocks checkout.
+* Tweak: WooCommerce 10.2 compatibility.
 
 ### 5.7.3
 * Tweak : Use `plugins_loaded` hook to add the shipping method for Flexible shipping and Polylang plugins compatibility.

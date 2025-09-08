@@ -2,14 +2,14 @@
 # This file is distributed under the GPLv2 or later.
 msgid ""
 msgstr ""
-"Project-Id-Version: PostNL for WooCommerce 5.7.3\n"
+"Project-Id-Version: PostNL for WooCommerce 5.8.0\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/postnl-for-woocommerce\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2025-06-13T11:21:37+00:00\n"
+"POT-Creation-Date: 2025-09-08T20:52:36+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.11.0\n"
 "X-Domain: postnl-for-woocommerce\n"
@@ -26,7 +26,7 @@ msgstr ""
 
 #. Description of the plugin
 #: postnl-for-woocommerce.php
-msgid "This plugin enables you to confirm PostNL shipments and print shipping labels promptly. Customers can choose their delivery time and location."
+msgid "The official PostNL plugin allows you to automate your e-commerce order process. Covering shipping services from PostNL Netherlands and Belgium."
 msgstr ""
 
 #. Author of the plugin
@@ -40,47 +40,60 @@ msgid "https://postnl.post/"
 msgstr ""
 
 #: src/Admin/Survey.php:41
-#: src/Admin/Survey.php:102
-msgid "Help us improve PostNL"
+msgid "PostNL Survey"
 msgstr ""
 
-#: src/Admin/Survey.php:108
-#: src/Admin/Survey.php:134
-msgid "Take Survey"
+#: src/Admin/Survey.php:114
+#: src/Admin/Survey.php:158
+msgid "Would you like a chance to win a Bol gift card worth €25?"
 msgstr ""
 
 #: src/Admin/Survey.php:115
-#: src/Admin/Survey.php:141
-msgid "Leave a review on WordPress org"
+#: src/Admin/Survey.php:161
+msgid "Let us know what you think of the PostNL for WooCommerce plugin by completing the survey."
 msgstr ""
 
-#: src/Checkout_Blocks/Extend_Block_Core.php:79
-#: src/Frontend/Container.php:325
+#: src/Admin/Survey.php:121
+msgid "Take Survey"
+msgstr ""
+
+#: src/Admin/Survey.php:128
+#: src/Admin/Survey.php:175
+#: src/Main.php:475
+msgid "Leave a review"
+msgstr ""
+
+#: src/Admin/Survey.php:168
+msgid "Take survey"
+msgstr ""
+
+#: src/Checkout_Blocks/Extend_Block_Core.php:84
+#: src/Frontend/Container.php:336
 msgid "This is not a valid address!"
 msgstr ""
 
-#: src/Checkout_Blocks/Extend_Block_Core.php:94
+#: src/Checkout_Blocks/Extend_Block_Core.php:99
 #: src/Frontend/Checkout_Fields.php:64
 #: src/Frontend/Checkout_Fields.php:65
-#: src/Order/Single.php:543
+#: src/Order/Single.php:533
 msgid "House number"
 msgstr ""
 
-#: src/Checkout_Blocks/Extend_Block_Core.php:151
+#: src/Checkout_Blocks/Extend_Block_Core.php:158
 msgid "PostNL Delivery Fee"
 msgstr ""
 
-#: src/Checkout_Blocks/Extend_Block_Core.php:153
+#: src/Checkout_Blocks/Extend_Block_Core.php:160
 #: src/Frontend/Base.php:529
 msgid "PostNL Morning Fee"
 msgstr ""
 
-#: src/Checkout_Blocks/Extend_Block_Core.php:155
+#: src/Checkout_Blocks/Extend_Block_Core.php:162
 #: src/Frontend/Base.php:510
 msgid "PostNL Evening Fee"
 msgstr ""
 
-#: src/Checkout_Blocks/Extend_Block_Core.php:305
+#: src/Checkout_Blocks/Extend_Block_Core.php:358
 msgid "Postcode or house number is missing."
 msgstr ""
 
@@ -105,12 +118,12 @@ msgid "Pick up at PostNL-point"
 msgstr ""
 
 #: src/Frontend/Base.php:171
-#: src/Order/Single.php:332
+#: src/Order/Single.php:322
 msgid "Date:"
 msgstr ""
 
 #: src/Frontend/Base.php:175
-#: src/Order/Single.php:336
+#: src/Order/Single.php:326
 msgid "Time:"
 msgstr ""
 
@@ -137,17 +150,17 @@ msgstr ""
 msgid "Please choose the delivery day!"
 msgstr ""
 
-#: src/Frontend/Delivery_Day.php:110
-#: src/Shipping_Method/Settings.php:314
+#: src/Frontend/Delivery_Day.php:115
+#: src/Shipping_Method/Settings.php:322
 #: build/postnl-container-frontend.js:1
-#: src/Checkout_Blocks/js/postnl-container/block.js:24
-msgid "Delivery Days"
+#: src/Checkout_Blocks/js/postnl-container/block.js:94
+msgid "Delivery"
 msgstr ""
 
 #: src/Frontend/Dropoff_Points.php:52
 #: build/postnl-container-frontend.js:1
-#: src/Checkout_Blocks/js/postnl-container/block.js:30
-msgid "Dropoff Points"
+#: src/Checkout_Blocks/js/postnl-container/block.js:95
+msgid "Pickup"
 msgstr ""
 
 #: src/Frontend/Fill_In_With_Postnl.php:220
@@ -190,7 +203,7 @@ msgid "Incomplete user data."
 msgstr ""
 
 #: src/Helper/Mapping.php:30
-#: src/Shipping_Method/Settings.php:337
+#: src/Shipping_Method/Settings.php:353
 msgid "Morning Delivery"
 msgstr ""
 
@@ -199,7 +212,7 @@ msgid "Standard Shipment"
 msgstr ""
 
 #: src/Helper/Mapping.php:32
-#: src/Shipping_Method/Settings.php:355
+#: src/Shipping_Method/Settings.php:371
 msgid "Evening Delivery"
 msgstr ""
 
@@ -208,8 +221,8 @@ msgid "Pickup at PostNL Point"
 msgstr ""
 
 #: src/Helper/Mapping.php:40
-#: src/Shipping_Method/Settings.php:579
-#: src/Utils.php:638
+#: src/Shipping_Method/Settings.php:595
+#: src/Utils.php:596
 msgid "Standard Shipment Belgium"
 msgstr ""
 
@@ -234,11 +247,11 @@ msgstr ""
 msgid "Belgium Domestic"
 msgstr ""
 
-#: src/Main.php:350
+#: src/Main.php:369
 msgid "PostNL plugin requires WooCommerce to be installed and activated!"
 msgstr ""
 
-#: src/Main.php:363
+#: src/Main.php:382
 msgid "PostNL plugin requires store country to be Netherlands (NL) or Belgium (BE)!"
 msgstr ""
 
@@ -246,132 +259,128 @@ msgstr ""
 msgid "Postnl Checkout Blocks"
 msgstr ""
 
-#: src/Main.php:475
-msgid "Leave a review"
-msgstr ""
-
 #: src/Main.php:495
 msgid "Settings"
 msgstr ""
 
-#: src/Order/Base.php:153
+#: src/Order/Base.php:154
 msgid "ID Check: "
 msgstr ""
 
-#: src/Order/Base.php:165
+#: src/Order/Base.php:166
 msgid "Insured Shipping: "
 msgstr ""
 
-#: src/Order/Base.php:177
+#: src/Order/Base.php:178
 msgid "Insured Plus: "
 msgstr ""
 
-#: src/Order/Base.php:189
+#: src/Order/Base.php:190
 msgid "Return if no answer: "
 msgstr ""
 
-#: src/Order/Base.php:201
+#: src/Order/Base.php:202
 msgid "Signature on Delivery: "
 msgstr ""
 
-#: src/Order/Base.php:213
+#: src/Order/Base.php:214
 msgid "Only Home Address: "
 msgstr ""
 
-#: src/Order/Base.php:225
+#: src/Order/Base.php:226
 msgid "Letterbox: "
 msgstr ""
 
-#: src/Order/Base.php:237
+#: src/Order/Base.php:238
 msgid "Packets: "
 msgstr ""
 
-#: src/Order/Base.php:249
+#: src/Order/Base.php:250
 msgid "Mailbox Packet (International): "
 msgstr ""
 
-#: src/Order/Base.php:261
+#: src/Order/Base.php:262
 msgid "Track & Trace: "
 msgstr ""
 
-#: src/Order/Base.php:279
+#: src/Order/Base.php:280
 #: src/Order/Bulk.php:429
 msgid "Number of Labels: "
 msgstr ""
 
-#: src/Order/Base.php:310
+#: src/Order/Base.php:311
 #: src/Order/Bulk.php:448
 msgid "Create Return Label: "
 msgstr ""
 
-#: src/Order/Base.php:325
+#: src/Order/Base.php:326
 #: src/Order/Bulk.php:460
 msgid "Start position printing label: "
 msgstr ""
 
-#: src/Order/Base.php:329
+#: src/Order/Base.php:330
 #: src/Order/Bulk.php:466
 msgid "Top Left"
 msgstr ""
 
-#: src/Order/Base.php:330
+#: src/Order/Base.php:331
 #: src/Order/Bulk.php:467
 msgid "Top Right"
 msgstr ""
 
-#: src/Order/Base.php:331
+#: src/Order/Base.php:332
 #: src/Order/Bulk.php:468
 msgid "Bottom Left"
 msgstr ""
 
-#: src/Order/Base.php:332
+#: src/Order/Base.php:333
 #: src/Order/Bulk.php:469
 msgid "Bottom Right"
 msgstr ""
 
-#: src/Order/Base.php:463
-#: src/Order/Base.php:644
-#: src/Order/Single.php:519
-#: src/Order/Single.php:624
-#: src/Order/Single.php:697
+#: src/Order/Base.php:464
+#: src/Order/Base.php:645
+#: src/Order/Single.php:509
+#: src/Order/Single.php:614
+#: src/Order/Single.php:687
 msgid "Order does not exist!"
 msgstr ""
 
-#: src/Order/Base.php:741
+#: src/Order/Base.php:742
 msgid "Cannot create the barcode."
 msgstr ""
 
-#: src/Order/Base.php:865
+#: src/Order/Base.php:866
 msgid "Cannot create return barcode."
 msgstr ""
 
-#: src/Order/Base.php:1058
+#: src/Order/Base.php:1059
 msgid "There are no files to merge."
 msgstr ""
 
-#: src/Order/Base.php:1062
+#: src/Order/Base.php:1063
 msgid "\"Imagick\" must be installed on the server to merge png files."
 msgstr ""
 
-#: src/Order/Base.php:1147
-#: src/Order/Base.php:1246
+#: src/Order/Base.php:1148
+#: src/Order/Base.php:1247
 msgid "Cannot create the label. Label content is missing"
 msgstr ""
 
-#: src/Order/Base.php:1178
+#: src/Order/Base.php:1179
 msgid "Cannot create the return label. Label content is missing"
 msgstr ""
 
-#: src/Order/Base.php:1209
+#: src/Order/Base.php:1210
 msgid "Cannot create the letterbox. Label content is missing"
 msgstr ""
 
-#: src/Order/Base.php:1240
+#: src/Order/Base.php:1241
 msgid "Cannot create the label. Barcode data is missing"
 msgstr ""
 
 #. translators: %s the current service.
-#: src/Order/Base.php:1375
+#: src/Order/Base.php:1376
 msgid "%s Tracking Number: {tracking-link}"
 msgstr ""
 
@@ -425,12 +434,12 @@ msgid "Pick-up at PostNL"
 msgstr ""
 
 #: src/Order/Bulk.php:519
-#: src/Shipping_Method/Settings.php:550
+#: src/Shipping_Method/Settings.php:566
 msgid "Shipping options domestic"
 msgstr ""
 
 #: src/Order/Bulk.php:537
-#: src/Shipping_Method/Settings.php:591
+#: src/Shipping_Method/Settings.php:607
 msgid "Shipping options EU"
 msgstr ""
 
@@ -459,10 +468,10 @@ msgid "Delivery Date"
 msgstr ""
 
 #: src/Order/OrdersList.php:147
-#: src/Utils.php:583
+#: src/Utils.php:541
 #: templates/checkout/postnl-delivery-day.php:75
 #: build/postnl-container-frontend.js:1
-#: src/Checkout_Blocks/js/postnl-delivery-day/block.js:322
+#: src/Checkout_Blocks/js/postnl-delivery-day/block.js:329
 msgid "As soon as possible"
 msgstr ""
 
@@ -474,198 +483,184 @@ msgstr ""
 msgid "Fits through letterbox"
 msgstr ""
 
-#: src/Order/Single.php:139
+#: src/Order/Single.php:129
 msgid "Label & Tracking"
 msgstr ""
 
-#: src/Order/Single.php:266
+#: src/Order/Single.php:256
 msgid "Delivery Type:"
 msgstr ""
 
-#: src/Order/Single.php:297
+#: src/Order/Single.php:287
 msgid "Delivery Date:"
 msgstr ""
 
-#: src/Order/Single.php:327
+#: src/Order/Single.php:317
 msgid "Pickup Address:"
 msgstr ""
 
-#: src/Order/Single.php:364
+#: src/Order/Single.php:354
 msgid "Activate return function"
 msgstr ""
 
-#: src/Order/Single.php:367
+#: src/Order/Single.php:357
 msgid "Return function is activated for this label"
 msgstr ""
 
-#: src/Order/Single.php:370
+#: src/Order/Single.php:360
 msgid "Click here to activate the return function of this label"
 msgstr ""
 
-#: src/Order/Single.php:388
+#: src/Order/Single.php:378
 msgid "Send email with Smart Return"
 msgstr ""
 
-#: src/Order/Single.php:426
+#: src/Order/Single.php:416
 msgid "Create Shipment"
 msgstr ""
 
-#: src/Order/Single.php:428
+#: src/Order/Single.php:418
 msgid "Print Label"
 msgstr ""
 
-#: src/Order/Single.php:430
+#: src/Order/Single.php:420
 msgid "Delete Label"
 msgstr ""
 
-#: src/Order/Single.php:436
+#: src/Order/Single.php:426
 msgid "Print Return Label"
 msgstr ""
 
-#: src/Order/Single.php:441
+#: src/Order/Single.php:431
 msgid "Print Letterbox"
 msgstr ""
 
-#: src/Order/Single.php:460
-#: src/Order/Single.php:505
-#: src/Order/Single.php:611
-#: src/Order/Single.php:684
+#: src/Order/Single.php:450
+#: src/Order/Single.php:495
+#: src/Order/Single.php:601
+#: src/Order/Single.php:674
 msgid "Cannot find nonce field!"
 msgstr ""
 
-#: src/Order/Single.php:466
-#: src/Order/Single.php:511
+#: src/Order/Single.php:456
+#: src/Order/Single.php:501
 msgid "Nonce is invalid!"
 msgstr ""
 
-#: src/Order/Single.php:616
-#: src/Order/Single.php:689
+#: src/Order/Single.php:606
+#: src/Order/Single.php:679
 msgid "Nonce is invalid"
 msgstr ""
 
-#: src/Order/Single.php:628
+#: src/Order/Single.php:618
 msgid "Already activated!"
 msgstr ""
 
-#: src/Order/Single.php:644
+#: src/Order/Single.php:634
 msgid "Unknown error."
 msgstr ""
 
 #. Translators: %s is the error message.
-#: src/Order/Single.php:668
+#: src/Order/Single.php:658
 msgid "Error: %s"
 msgstr ""
 
-#: src/Order/Single.php:724
+#: src/Order/Single.php:714
 msgid "PrintcodeLabel could not found"
 msgstr ""
 
-#: src/Order/Single.php:755
+#: src/Order/Single.php:745
 msgid "Email could not be send"
 msgstr ""
 
-#: src/Order/Single.php:786
+#: src/Order/Single.php:776
 msgid "18+ Adults Only"
 msgstr ""
 
-#: src/Product/Product_Editor.php:47
+#: src/Product/Product_Editor.php:64
 msgid "PostNL extra settings"
 msgstr ""
 
-#: src/Product/Product_Editor.php:48
-msgid "Mark as 18+ (Adults Only)"
-msgstr ""
-
-#: src/Product/Product_Editor.php:50
-#: src/Product/Single.php:92
-msgid "Enable this for products intended only for adults (18+)."
-msgstr ""
-
-#: src/Product/Product_Editor.php:63
+#: src/Product/Product_Editor.php:65
 msgid "Enable Letterbox Parcel"
 msgstr ""
 
-#: src/Product/Product_Editor.php:65
+#: src/Product/Product_Editor.php:67
 msgid "When enabled, PostNL plugin automatically determines whether a shipment fits through a letterbox."
 msgstr ""
 
-#: src/Product/Product_Editor.php:78
+#: src/Product/Product_Editor.php:80
 msgid "Maximum Quantity per Letterbox Parcel"
 msgstr ""
 
-#: src/Product/Product_Editor.php:80
-#: src/Product/Single.php:110
+#: src/Product/Product_Editor.php:82
+#: src/Product/Single.php:111
 msgid "Enter max quantity"
 msgstr ""
 
-#: src/Product/Product_Editor.php:82
+#: src/Product/Product_Editor.php:84
 msgid "Specify how many times this product fits in a letterbox parcel."
 msgstr ""
 
-#: src/Product/Product_Editor.php:93
+#: src/Product/Product_Editor.php:95
 msgid "Country of Origin"
 msgstr ""
 
-#: src/Product/Product_Editor.php:99
-#: src/Product/Single.php:123
+#: src/Product/Product_Editor.php:101
+#: src/Product/Single.php:124
 msgid "- select country -"
 msgstr ""
 
-#: src/Product/Product_Editor.php:113
+#: src/Product/Product_Editor.php:115
 msgid "Select the country of origin for this product."
 msgstr ""
 
-#: src/Product/Product_Editor.php:124
+#: src/Product/Product_Editor.php:126
 msgid "HS Tariff Code"
 msgstr ""
 
-#: src/Product/Product_Editor.php:126
-#: src/Product/Single.php:134
+#: src/Product/Product_Editor.php:128
+#: src/Product/Single.php:135
 msgid "HS Code"
 msgstr ""
 
-#: src/Product/Product_Editor.php:127
+#: src/Product/Product_Editor.php:129
 msgid "HS Tariff Code for international shipping."
 msgstr ""
 
 #. translators: %s will be replaced by service name.
-#: src/Product/Single.php:91
-msgid "Mark as 18+ (Adults Only) (%s)"
-msgstr ""
-
-#. translators: %s will be replaced by service name.
-#: src/Product/Single.php:99
+#: src/Product/Single.php:100
 msgid "Enable Letterbox Parcel (%s)"
 msgstr ""
 
-#: src/Product/Single.php:100
+#: src/Product/Single.php:101
 msgid "When this setting is enabled the PostNL plug-in automatically determines whether a shipment fits through a letterbox. This choice can be overridden when creating a shipment manually via the Label & Tracking menu. This only works for orders with destination Netherlands."
 msgstr ""
 
 #. translators: %s will be replaced by service name.
-#: src/Product/Single.php:107
+#: src/Product/Single.php:108
 msgid "Maximum amount per letterbox parcel (%s)"
 msgstr ""
 
-#: src/Product/Single.php:108
+#: src/Product/Single.php:109
 msgid "Please fill in how many times this product fits in a letterbox parcel. A letterbox parcel may weigh a maximum of 2 kilograms and has the following maximum dimensions: 38x26.5x3.2 cm"
 msgstr ""
 
 #. translators: %s will be replaced by service name.
-#: src/Product/Single.php:119
+#: src/Product/Single.php:120
 msgid "Country of Origin (%s)"
 msgstr ""
 
-#: src/Product/Single.php:120
+#: src/Product/Single.php:121
 msgid "Country of Origin."
 msgstr ""
 
 #. translators: %s will be replaced by service name.
-#: src/Product/Single.php:131
+#: src/Product/Single.php:132
 msgid "HS Tariff Code (%s)"
 msgstr ""
 
-#: src/Product/Single.php:132
+#: src/Product/Single.php:133
 msgid "HS Tariff Code is a number assigned to every possible commodity that can be imported or exported from any country."
 msgstr ""
 
@@ -673,7 +668,7 @@ msgstr ""
 msgid "Product ID does not exists!"
 msgstr ""
 
-#: src/Product/Single.php:293
+#: src/Product/Single.php:281
 msgid "“18+” and “Letterbox Parcel” cannot be enabled together. Letterbox has been disabled automatically."
 msgstr ""
 
@@ -807,76 +802,72 @@ msgstr ""
 msgid "Customer email is not valid!"
 msgstr ""
 
-#: src/Rest_API/Shipping/Item_Info.php:511
-msgid "Currency is not available!"
-msgstr ""
-
-#: src/Rest_API/Shipping/Item_Info.php:538
+#: src/Rest_API/Shipping/Item_Info.php:532
 msgid "Delivery day \"Date\" is empty!"
 msgstr ""
 
-#: src/Rest_API/Shipping/Item_Info.php:554
+#: src/Rest_API/Shipping/Item_Info.php:548
 msgid "Delivery day \"From\" is empty!"
 msgstr ""
 
-#: src/Rest_API/Shipping/Item_Info.php:567
+#: src/Rest_API/Shipping/Item_Info.php:561
 msgid "Delivery day \"To\" is empty!"
 msgstr ""
 
-#: src/Rest_API/Shipping/Item_Info.php:583
+#: src/Rest_API/Shipping/Item_Info.php:577
 msgid "Delivery day \"Type\" is empty!"
 msgstr ""
 
-#: src/Rest_API/Shipping/Item_Info.php:607
+#: src/Rest_API/Shipping/Item_Info.php:601
 msgid "Pickup \"Date\" is empty!"
 msgstr ""
 
-#: src/Rest_API/Shipping/Item_Info.php:623
+#: src/Rest_API/Shipping/Item_Info.php:617
 msgid "Pickup \"Time\" is empty!"
 msgstr ""
 
-#: src/Rest_API/Shipping/Item_Info.php:635
+#: src/Rest_API/Shipping/Item_Info.php:629
 msgid "Pickup \"Company name\" is empty!"
 msgstr ""
 
-#: src/Rest_API/Shipping/Item_Info.php:644
+#: src/Rest_API/Shipping/Item_Info.php:638
 msgid "Pickup \"Address 1\" is empty!"
 msgstr ""
 
-#: src/Rest_API/Shipping/Item_Info.php:659
+#: src/Rest_API/Shipping/Item_Info.php:653
 msgid "Pickup Point \"City\" is empty!"
 msgstr ""
 
-#: src/Rest_API/Shipping/Item_Info.php:668
+#: src/Rest_API/Shipping/Item_Info.php:662
 msgid "Pickup Point \"Postcode\" is empty!"
 msgstr ""
 
-#: src/Rest_API/Shipping/Item_Info.php:680
+#: src/Rest_API/Shipping/Item_Info.php:674
 msgid "Pickup Point \"Country\" is empty!"
 msgstr ""
 
-#: src/Rest_API/Shipping/Item_Info.php:808
+#: src/Rest_API/Shipping/Item_Info.php:802
 msgid "Item HS Code must be between 6 and 20 characters long"
 msgstr ""
 
-#: src/Rest_API/Shipping/Item_Info.php:821
+#: src/Rest_API/Shipping/Item_Info.php:815
 msgid "Item \"Product ID\" is empty!"
 msgstr ""
 
-#: src/Rest_API/Shipping/Item_Info.php:824
+#: src/Rest_API/Shipping/Item_Info.php:818
 msgid "Item \"Product SKU\" is empty!"
 msgstr ""
 
-#: src/Rest_API/Shipping/Item_Info.php:841
+#: src/Rest_API/Shipping/Item_Info.php:835
 msgid "Item quantity must be more than 1"
 msgstr ""
 
-#: src/Rest_API/Shipping/Item_Info.php:1021
+#: src/Rest_API/Shipping/Item_Info.php:1015
 msgid "Max weight for Mailbox Packet is 2kg!"
 msgstr ""
 
 #. Translators: %s is the order total.
-#: src/Rest_API/Shipping/Item_Info.php:1045
+#: src/Rest_API/Shipping/Item_Info.php:1038
 msgid "Insurance amount for EU shipments cannot exceed €5000. Your total is: %d"
 msgstr ""
 
@@ -897,11 +888,11 @@ msgstr ""
 #: src/Shipping_Method/Settings.php:110
 #: src/Shipping_Method/Settings.php:184
 #: src/Shipping_Method/Settings.php:288
-#: src/Shipping_Method/Settings.php:316
-#: src/Shipping_Method/Settings.php:339
-#: src/Shipping_Method/Settings.php:357
-#: src/Shipping_Method/Settings.php:428
-#: src/Shipping_Method/Settings.php:436
+#: src/Shipping_Method/Settings.php:324
+#: src/Shipping_Method/Settings.php:355
+#: src/Shipping_Method/Settings.php:373
+#: src/Shipping_Method/Settings.php:444
+#: src/Shipping_Method/Settings.php:452
 msgid "Enable"
 msgstr ""
 
@@ -1050,7 +1041,7 @@ msgstr ""
 msgid "I understand that the PostNL address fields are activated (= separate field for zipcode, housnumber, housenumber extension and street) to let consumers fill in their shipping address with the PostNL app."
 msgstr ""
 
-#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:315
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:314
 msgid "You must enable at least one \"Automatically render button\" option in Cart, Checkout, or Minicart."
 msgstr ""
 
@@ -1127,17 +1118,6 @@ msgstr ""
 #. translators: %1$s is anchor opener tag and %2$s is anchor closer tag.
 #: src/Shipping_Method/Settings.php:106
 msgid "A log file containing the communication to the PostNL server will be maintained if this option is checked. This can be used in case of technical issues and can be found %1$shere%2$s."
-msgstr ""
-
-#: src/Shipping_Method/Settings.php:110
-#: src/Shipping_Method/Settings.php:184
-#: src/Shipping_Method/Settings.php:288
-#: src/Shipping_Method/Settings.php:316
-#: src/Shipping_Method/Settings.php:339
-#: src/Shipping_Method/Settings.php:357
-#: src/Shipping_Method/Settings.php:428
-#: src/Shipping_Method/Settings.php:436
-msgid "Enable"
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:116
@@ -1317,472 +1297,471 @@ msgstr ""
 msgid "Show PostNL pick-up points in the checkout so that your customers can choose to get their orders delivered at a PostNL pick-up point."
 msgstr ""
 
-#: src/Shipping_Method/Settings.php:317
-msgid "Show delivery days in the checkout so that your customers can choose which day to receive their order."
-msgstr ""
-
-#: src/Shipping_Method/Settings.php:324
-msgid "Number of Delivery Days"
-msgstr ""
-
-#: src/Shipping_Method/Settings.php:326
-msgid "Number of delivery days displayed in the frontend. Maximum will be 12."
-msgstr ""
-
-#: src/Shipping_Method/Settings.php:340
-msgid "Enable morning delivery in the checkout so your customers can choose to receive their orders in the morning."
-msgstr ""
-
-#: src/Shipping_Method/Settings.php:347
-msgid "Morning Delivery Fee"
-msgstr ""
-
-#: src/Shipping_Method/Settings.php:349
-msgid "Fee for receiving orders in the morning."
-msgstr ""
-
-#: src/Shipping_Method/Settings.php:358
-msgid "Enable evening delivery in the checkout so your customers can choose to receive their orders in the evening."
-msgstr ""
-
-#: src/Shipping_Method/Settings.php:311
+#: src/Shipping_Method/Settings.php:296
 msgid "Extra fee pick-up delivery"
 msgstr ""
 
-#: src/Shipping_Method/Settings.php:322
+#: src/Shipping_Method/Settings.php:298
+msgid "Extra fee added when the customer selects a PostNL pick-up point."
+msgstr ""
+
+#: src/Shipping_Method/Settings.php:325
+msgid "Show delivery days in the checkout so that your customers can choose which day to receive their order."
+msgstr ""
+
+#: src/Shipping_Method/Settings.php:332
 msgid "Extra fee home delivery"
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:334
-msgid "Extra fee added when the customer selects home delivery"
+msgid "Extra fee added when the customer selects home delivery."
 msgstr ""
 
-#: src/Shipping_Method/Settings.php:298
-msgid "Extra fee added when the customer selects a PostNL pick-up point"
+#: src/Shipping_Method/Settings.php:340
+msgid "Number of Delivery Days"
 msgstr ""
 
+#: src/Shipping_Method/Settings.php:342
+msgid "Number of delivery days displayed in the frontend. Maximum will be 12."
+msgstr ""
+
+#: src/Shipping_Method/Settings.php:356
+msgid "Enable morning delivery in the checkout so your customers can choose to receive their orders in the morning."
+msgstr ""
+
+#: src/Shipping_Method/Settings.php:363
+msgid "Morning Delivery Fee"
+msgstr ""
 
 #: src/Shipping_Method/Settings.php:365
-msgid "Evening Delivery Fee"
+msgid "Fee for receiving orders in the morning."
 msgstr ""
 
-#: src/Shipping_Method/Settings.php:367
-msgid "Fee for receiving orders in the evening."
-msgstr ""
-
-#: src/Shipping_Method/Settings.php:373
-msgid "Transit Time"
-msgstr ""
-
-#: src/Shipping_Method/Settings.php:375
-msgid "The number of days it takes for the order to be delivered after the order has been placed."
+#: src/Shipping_Method/Settings.php:374
+msgid "Enable evening delivery in the checkout so your customers can choose to receive their orders in the evening."
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:381
-msgid "Cut Off Time"
+msgid "Evening Delivery Fee"
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:383
-msgid "If an order is ordered after this time, one day will be added to the transit time."
+msgid "Fee for receiving orders in the evening."
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:389
-msgid "Drop off Days"
+msgid "Transit Time"
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:391
-#: src/Utils.php:31
+msgid "The number of days it takes for the order to be delivered after the order has been placed."
+msgstr ""
+
+#: src/Shipping_Method/Settings.php:397
+msgid "Cut Off Time"
+msgstr ""
+
+#: src/Shipping_Method/Settings.php:399
+msgid "If an order is ordered after this time, one day will be added to the transit time."
+msgstr ""
+
+#: src/Shipping_Method/Settings.php:405
+msgid "Drop off Days"
+msgstr ""
+
+#: src/Shipping_Method/Settings.php:407
+#: src/Utils.php:32
 msgid "Monday"
 msgstr ""
 
-#: src/Shipping_Method/Settings.php:392
+#: src/Shipping_Method/Settings.php:408
 msgid "Select which days orders will be shipped."
 msgstr ""
 
-#: src/Shipping_Method/Settings.php:398
-#: src/Utils.php:32
+#: src/Shipping_Method/Settings.php:414
+#: src/Utils.php:33
 msgid "Tuesday"
 msgstr ""
 
-#: src/Shipping_Method/Settings.php:403
-#: src/Utils.php:33
+#: src/Shipping_Method/Settings.php:419
+#: src/Utils.php:34
 msgid "Wednesday"
 msgstr ""
 
-#: src/Shipping_Method/Settings.php:408
-#: src/Utils.php:34
+#: src/Shipping_Method/Settings.php:424
+#: src/Utils.php:35
 msgid "Thursday"
 msgstr ""
 
-#: src/Shipping_Method/Settings.php:413
-#: src/Utils.php:35
+#: src/Shipping_Method/Settings.php:429
+#: src/Utils.php:36
 msgid "Friday"
 msgstr ""
 
-#: src/Shipping_Method/Settings.php:418
-#: src/Utils.php:36
+#: src/Shipping_Method/Settings.php:434
+#: src/Utils.php:37
 msgid "Saturday"
 msgstr ""
 
-#: src/Shipping_Method/Settings.php:423
-#: src/Utils.php:37
+#: src/Shipping_Method/Settings.php:439
+#: src/Utils.php:38
 msgid "Sunday"
 msgstr ""
 
-#: src/Shipping_Method/Settings.php:426
+#: src/Shipping_Method/Settings.php:442
 msgid "Validate Dutch addresses"
 msgstr ""
 
-#: src/Shipping_Method/Settings.php:429
+#: src/Shipping_Method/Settings.php:445
 msgid "Based on zipcode and housenumber combination the address is checked."
 msgstr ""
 
-#: src/Shipping_Method/Settings.php:434
+#: src/Shipping_Method/Settings.php:450
 msgid "Use PostNL address-field"
 msgstr ""
 
-#: src/Shipping_Method/Settings.php:437
+#: src/Shipping_Method/Settings.php:453
 msgid "For zipcode, housenumber, housenumber extension and street separate address fields are displayed when this settings is enabled. This only applies for Dutch addresses."
 msgstr ""
 
-#: src/Shipping_Method/Settings.php:444
+#: src/Shipping_Method/Settings.php:460
 msgid "Shipping Outside Europe Settings"
 msgstr ""
 
-#: src/Shipping_Method/Settings.php:446
+#: src/Shipping_Method/Settings.php:462
 msgid "Please insert your Globalpack credentials."
 msgstr ""
 
-#: src/Shipping_Method/Settings.php:449
+#: src/Shipping_Method/Settings.php:465
 msgid "GlobalPack Barcode Type"
 msgstr ""
 
-#: src/Shipping_Method/Settings.php:454
+#: src/Shipping_Method/Settings.php:470
 msgid "CD"
 msgstr ""
 
-#: src/Shipping_Method/Settings.php:458
+#: src/Shipping_Method/Settings.php:474
 msgid "GlobalPack Customer Code"
 msgstr ""
 
-#: src/Shipping_Method/Settings.php:463
+#: src/Shipping_Method/Settings.php:479
 msgid "1234"
 msgstr ""
 
-#: src/Shipping_Method/Settings.php:467
+#: src/Shipping_Method/Settings.php:483
 msgid "Default HS Tariff Code"
 msgstr ""
 
-#: src/Shipping_Method/Settings.php:469
+#: src/Shipping_Method/Settings.php:485
 msgid "The HS tariff code is used by customs to classify goods. The HS tariff code can be found on the website of the Dutch Chamber of Commerce."
 msgstr ""
 
-#: src/Shipping_Method/Settings.php:475
+#: src/Shipping_Method/Settings.php:491
 msgid "Default Country of Origin"
 msgstr ""
 
-#: src/Shipping_Method/Settings.php:477
+#: src/Shipping_Method/Settings.php:493
 msgid "Default country of origin is used by customs."
 msgstr ""
 
-#: src/Shipping_Method/Settings.php:486
+#: src/Shipping_Method/Settings.php:502
 msgid "Printer &amp; Email Settings"
 msgstr ""
 
-#: src/Shipping_Method/Settings.php:488
+#: src/Shipping_Method/Settings.php:504
 msgid "Please configure your printer and email preferences."
 msgstr ""
 
-#: src/Shipping_Method/Settings.php:491
+#: src/Shipping_Method/Settings.php:507
 msgid "Printer Type"
 msgstr ""
 
-#: src/Shipping_Method/Settings.php:493
+#: src/Shipping_Method/Settings.php:509
 msgid "It is not recommended to send .pdf files/labels directly to a Zebra printer If you want to send it directly to your Zebra printer, please use .gif files or the native (generic) zpl printer type"
 msgstr ""
 
-#: src/Shipping_Method/Settings.php:504
+#: src/Shipping_Method/Settings.php:520
 msgid "DPI"
 msgstr ""
 
-#: src/Shipping_Method/Settings.php:514
+#: src/Shipping_Method/Settings.php:530
 msgid "Label Format"
 msgstr ""
 
-#: src/Shipping_Method/Settings.php:516
+#: src/Shipping_Method/Settings.php:532
 msgid "Use A6 format in case you use a labelprinter. Use A4 format for other regular printers."
 msgstr ""
 
-#: src/Shipping_Method/Settings.php:526
+#: src/Shipping_Method/Settings.php:542
 msgid "WooCommerce Email"
 msgstr ""
 
-#: src/Shipping_Method/Settings.php:528
-#: src/Shipping_Method/Settings.php:529
+#: src/Shipping_Method/Settings.php:544
+#: src/Shipping_Method/Settings.php:545
 msgid "When PostNL label is created send email to customer."
 msgstr ""
 
-#: src/Shipping_Method/Settings.php:535
+#: src/Shipping_Method/Settings.php:551
 msgid "WooCommerce Email Text"
 msgstr ""
 
-#: src/Shipping_Method/Settings.php:537
+#: src/Shipping_Method/Settings.php:553
 msgid "Text added for tracking note email."
 msgstr ""
 
-#: src/Shipping_Method/Settings.php:539
-#: src/Shipping_Method/Settings.php:540
+#: src/Shipping_Method/Settings.php:555
+#: src/Shipping_Method/Settings.php:556
 msgid "This is your track and track link {tracking-link}"
 msgstr ""
 
-#: src/Shipping_Method/Settings.php:544
-#: src/Shipping_Method/Settings.php:662
+#: src/Shipping_Method/Settings.php:560
+#: src/Shipping_Method/Settings.php:678
 msgid "Default shipping Options Settings"
 msgstr ""
 
-#: src/Shipping_Method/Settings.php:546
-#: src/Shipping_Method/Settings.php:664
+#: src/Shipping_Method/Settings.php:562
+#: src/Shipping_Method/Settings.php:680
 msgid "Please select Default shipping Options."
 msgstr ""
 
-#: src/Shipping_Method/Settings.php:552
+#: src/Shipping_Method/Settings.php:568
 msgid "Select a default shipping option for domestic orders that are shipped with PostNL."
 msgstr ""
 
-#: src/Shipping_Method/Settings.php:556
-#: src/Utils.php:631
+#: src/Shipping_Method/Settings.php:572
+#: src/Utils.php:589
 msgid "Standard shipment"
 msgstr ""
 
-#: src/Shipping_Method/Settings.php:557
-#: src/Shipping_Method/Settings.php:632
-#: src/Utils.php:632
+#: src/Shipping_Method/Settings.php:573
+#: src/Shipping_Method/Settings.php:648
+#: src/Utils.php:590
 msgid "ID Check"
 msgstr ""
 
-#: src/Shipping_Method/Settings.php:558
+#: src/Shipping_Method/Settings.php:574
 msgid "ID Check + Insured Shipping"
 msgstr ""
 
-#: src/Shipping_Method/Settings.php:560
-#: src/Utils.php:633
+#: src/Shipping_Method/Settings.php:576
+#: src/Utils.php:591
 msgid "Return if no answer"
 msgstr ""
 
-#: src/Shipping_Method/Settings.php:561
-#: src/Utils.php:634
+#: src/Shipping_Method/Settings.php:577
+#: src/Utils.php:592
 msgid "Signature on Delivery"
 msgstr ""
 
-#: src/Shipping_Method/Settings.php:562
-#: src/Utils.php:635
+#: src/Shipping_Method/Settings.php:578
+#: src/Utils.php:593
 msgid "Only Home Address"
 msgstr ""
 
-#: src/Shipping_Method/Settings.php:563
-#: src/Utils.php:636
+#: src/Shipping_Method/Settings.php:579
+#: src/Utils.php:594
 msgid "Letterbox"
 msgstr ""
 
-#: src/Shipping_Method/Settings.php:564
+#: src/Shipping_Method/Settings.php:580
 msgid "Signature on Delivery + Insured Shipping"
 msgstr ""
 
-#: src/Shipping_Method/Settings.php:565
+#: src/Shipping_Method/Settings.php:581
 msgid "Signature on Delivery + Return if no answer"
 msgstr ""
 
-#: src/Shipping_Method/Settings.php:566
+#: src/Shipping_Method/Settings.php:582
 msgid "Insured Shipping + Return if no answer + Signature on Delivery"
 msgstr ""
 
-#: src/Shipping_Method/Settings.php:567
+#: src/Shipping_Method/Settings.php:583
 msgid "Only Home Address + Return if no answer"
 msgstr ""
 
-#: src/Shipping_Method/Settings.php:568
+#: src/Shipping_Method/Settings.php:584
 msgid "Only Home Address + Return if no answer + Signature on Delivery"
 msgstr ""
 
-#: src/Shipping_Method/Settings.php:569
+#: src/Shipping_Method/Settings.php:585
 msgid "Only Home Address + Signature on Delivery"
 msgstr ""
 
-#: src/Shipping_Method/Settings.php:573
+#: src/Shipping_Method/Settings.php:589
 msgid "Shipping options Belgium"
 msgstr ""
 
-#: src/Shipping_Method/Settings.php:575
+#: src/Shipping_Method/Settings.php:591
 msgid "Select a default shipping option for the orders shipped to Belgium with PostNL."
 msgstr ""
 
-#: src/Shipping_Method/Settings.php:580
+#: src/Shipping_Method/Settings.php:596
 msgid "Standard Shipment Belgium + Only Home Address"
 msgstr ""
 
-#: src/Shipping_Method/Settings.php:581
+#: src/Shipping_Method/Settings.php:597
 msgid "Standard Shipment Belgium + Signature on Delivery"
 msgstr ""
 
-#: src/Shipping_Method/Settings.php:582
+#: src/Shipping_Method/Settings.php:598
 msgid "Standard Shipment Belgium + Insured Shipping"
 msgstr ""
 
-#: src/Shipping_Method/Settings.php:583
-#: src/Shipping_Method/Settings.php:600
-#: src/Shipping_Method/Settings.php:617
-#: src/Utils.php:639
+#: src/Shipping_Method/Settings.php:599
+#: src/Shipping_Method/Settings.php:616
+#: src/Shipping_Method/Settings.php:633
+#: src/Utils.php:597
 msgid "Boxable Packet"
 msgstr ""
 
-#: src/Shipping_Method/Settings.php:584
-#: src/Shipping_Method/Settings.php:601
-#: src/Shipping_Method/Settings.php:618
+#: src/Shipping_Method/Settings.php:600
+#: src/Shipping_Method/Settings.php:617
+#: src/Shipping_Method/Settings.php:634
 msgid "Boxable Packet + Track & Trace"
 msgstr ""
 
-#: src/Shipping_Method/Settings.php:585
-#: src/Shipping_Method/Settings.php:602
-#: src/Shipping_Method/Settings.php:619
+#: src/Shipping_Method/Settings.php:601
+#: src/Shipping_Method/Settings.php:618
+#: src/Shipping_Method/Settings.php:635
 msgid "Packets"
 msgstr ""
 
-#: src/Shipping_Method/Settings.php:586
-#: src/Shipping_Method/Settings.php:603
-#: src/Shipping_Method/Settings.php:620
+#: src/Shipping_Method/Settings.php:602
+#: src/Shipping_Method/Settings.php:619
+#: src/Shipping_Method/Settings.php:636
 msgid "Packets + Track & Trace"
 msgstr ""
 
-#: src/Shipping_Method/Settings.php:587
-#: src/Shipping_Method/Settings.php:604
-#: src/Shipping_Method/Settings.php:621
+#: src/Shipping_Method/Settings.php:603
+#: src/Shipping_Method/Settings.php:620
+#: src/Shipping_Method/Settings.php:637
 msgid "Packets + Track & Trace + Insured"
 msgstr ""
 
-#: src/Shipping_Method/Settings.php:593
+#: src/Shipping_Method/Settings.php:609
 msgid "Select a default shipping option for the orders shipped within European Union zone."
 msgstr ""
 
-#: src/Shipping_Method/Settings.php:597
+#: src/Shipping_Method/Settings.php:613
 msgid "EU Parcel + Track & Trace"
 msgstr ""
 
-#: src/Shipping_Method/Settings.php:598
+#: src/Shipping_Method/Settings.php:614
 msgid "EU Parcel + Track & Trace + Insured"
 msgstr ""
 
-#: src/Shipping_Method/Settings.php:599
+#: src/Shipping_Method/Settings.php:615
 msgid "EU Parcel + Track & Trace + Insured Plus"
 msgstr ""
 
-#: src/Shipping_Method/Settings.php:608
-#: src/Shipping_Method/Settings.php:670
+#: src/Shipping_Method/Settings.php:624
+#: src/Shipping_Method/Settings.php:686
 msgid "Default Shipping International"
 msgstr ""
 
-#: src/Shipping_Method/Settings.php:610
+#: src/Shipping_Method/Settings.php:626
 msgid "Shipping options non-EU (outside the EU borders)."
 msgstr ""
 
-#: src/Shipping_Method/Settings.php:614
+#: src/Shipping_Method/Settings.php:630
 msgid "Parcel non-EU + Track & Trace"
 msgstr ""
 
-#: src/Shipping_Method/Settings.php:615
+#: src/Shipping_Method/Settings.php:631
 msgid "Parcel non-EU + Track & Trace + Insured"
 msgstr ""
 
-#: src/Shipping_Method/Settings.php:616
-#: src/Shipping_Method/Settings.php:676
+#: src/Shipping_Method/Settings.php:632
+#: src/Shipping_Method/Settings.php:692
 msgid "Parcel non-EU + Track & Trace + Insured Plus"
 msgstr ""
 
-#: src/Shipping_Method/Settings.php:625
+#: src/Shipping_Method/Settings.php:641
 msgid "Default Shipping Pickup"
 msgstr ""
 
-#: src/Shipping_Method/Settings.php:627
+#: src/Shipping_Method/Settings.php:643
 msgid "Shipping options Pickup."
 msgstr ""
 
-#: src/Shipping_Method/Settings.php:631
+#: src/Shipping_Method/Settings.php:647
 msgid "Standard Shipping"
 msgstr ""
 
-#: src/Shipping_Method/Settings.php:633
-#: src/Utils.php:641
+#: src/Shipping_Method/Settings.php:649
+#: src/Utils.php:599
 msgid "Insured Shipping"
 msgstr ""
 
-#: src/Shipping_Method/Settings.php:637
+#: src/Shipping_Method/Settings.php:653
 msgid "Automatically change order status to Completed"
 msgstr ""
 
-#: src/Shipping_Method/Settings.php:639
-#: src/Shipping_Method/Settings.php:640
+#: src/Shipping_Method/Settings.php:655
+#: src/Shipping_Method/Settings.php:656
 msgid "Automatically change order status to Completed once an order has been pre-alerted and printed"
 msgstr ""
 
-#: src/Shipping_Method/Settings.php:672
+#: src/Shipping_Method/Settings.php:688
 msgid "Select a default shipping option for the orders shipped internationally (outside the EU borders)."
 msgstr ""
 
 #. translators: %s is a field argument.
-#: src/Utils.php:337
+#: src/Utils.php:295
 msgid "Please specify a \"%s\" argument"
 msgstr ""
 
-#: src/Utils.php:637
+#: src/Utils.php:595
 msgid "Packet"
 msgstr ""
 
-#: src/Utils.php:640
+#: src/Utils.php:598
 msgid "Track & Trace"
 msgstr ""
 
-#: src/Utils.php:649
+#: src/Utils.php:607
 msgid "Parcels Non-EU Insured"
 msgstr ""
 
-#: src/Utils.php:650
+#: src/Utils.php:608
 msgid "Parcels non-EU Insured Plus"
 msgstr ""
 
-#: src/Utils.php:656
+#: src/Utils.php:614
 msgid "Parcels EU"
 msgstr ""
 
-#: src/Utils.php:657
-#: src/Utils.php:664
+#: src/Utils.php:615
+#: src/Utils.php:622
 msgid "Insured Plus"
 msgstr ""
 
-#: src/Utils.php:663
+#: src/Utils.php:621
 msgid "Parcels Non-EU"
 msgstr ""
 
 #: templates/checkout/postnl-container.php:21
 #: build/postnl-container-frontend.js:1
-#: src/Checkout_Blocks/js/postnl-container/block.js:404
+#: src/Checkout_Blocks/js/postnl-container/block.js:486
 msgid "These items are eligible for letterbox delivery."
 msgstr ""
 
 #: templates/checkout/postnl-delivery-day.php:44
 #: build/postnl-container-frontend.js:1
-#: src/Checkout_Blocks/js/postnl-delivery-day/block.js:258
+#: src/Checkout_Blocks/js/postnl-delivery-day/block.js:265
 msgid "Evening"
 msgstr ""
 
 #: templates/checkout/postnl-delivery-day.php:46
 #: build/postnl-container-frontend.js:1
-#: src/Checkout_Blocks/js/postnl-delivery-day/block.js:266
+#: src/Checkout_Blocks/js/postnl-delivery-day/block.js:273
 msgid "Morning"
 msgstr ""
 
 #. translators: %1$s is <strong> opener and %2$s is <strong> closer.
 #: templates/checkout/postnl-dropoff-points.php:103
 #: build/postnl-container-frontend.js:1
-#: src/Checkout_Blocks/js/postnl-dropoff-points/block.js:420
+#: src/Checkout_Blocks/js/postnl-dropoff-points/block.js:464
 msgid "Receive shipment at home? Make a selection from the Delivery Days."
 msgstr ""
 
@@ -1852,21 +1831,4 @@ msgstr ""
 #: src/Checkout_Blocks/js/postnl-fill-in-with/block.json
 msgctxt "block description"
 msgid "Fill in address with PostNL account"
-msgstr ""
-
-
-#: src/Admin/Survey.php:106
-msgid "Would you like a chance to win a Bol gift card worth €25?"
-msgstr ""
-
-#: src/Admin/Survey.php:107
-msgid "Let us know what you think of the PostNL for WooCommerce plugin by completing the survey."
-msgstr ""
-
-#: src/Admin/Survey.php:113
-msgid "Take Survey"
-msgstr ""
-
-#: src/Admin/Survey.php:120
-msgid "Leave a review"
 msgstr ""

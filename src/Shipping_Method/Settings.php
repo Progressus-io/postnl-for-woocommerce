@@ -1088,7 +1088,7 @@ class Settings extends \WC_Settings_API {
 	/**
 	 * Get delivery days fees the settings.
 	 *
-	 * @return Int
+	 * @return float
 	 */
 	public function get_delivery_days_fee() {
 		return (float) $this->get_country_option( 'delivery_days_fee' );

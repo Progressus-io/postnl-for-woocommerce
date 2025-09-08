@@ -6,8 +6,8 @@
 * Requires at least: 6.6
 * Tested up to: 6.8
 * WC requires at least: 9.6
-* WC tested up to: 9.8
-* Stable tag: 5.7.3
+* WC tested up to: 10.2
+* Stable tag: 5.8.0
 * License: GPLv2 or later
 * License URI: https://www.gnu.org/licenses/gpl-2.0.html
 

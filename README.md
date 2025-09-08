@@ -36,7 +36,6 @@ PostNL’s official extension for WooCommerce on WordPress. Manage your national
 ## Changelog
 
 ### 5.8.0
-* Add: Ability for marking products as 18+ and automatically apply ID Check to orders containing them.
 * Add: A new contact type 02 with sender email to the shipping API request.
 * Fix: Ressolve issue where insured NL>BE shipments defaulted to standard shipment instead of insured shipment.
 * Fix: PHP waring `Function _load_textdomain_just_in_time was called incorrectly`.

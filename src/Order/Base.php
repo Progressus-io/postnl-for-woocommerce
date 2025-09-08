@@ -119,9 +119,9 @@ abstract class Base {
 			return $default_options;
 		}
 
-		if ( Utils::is_adults_only_order( $order ) ) {
+		/*if ( Utils::is_adults_only_order( $order ) ) {
 			return array( 'id_check' => 'yes' );
-		}
+		}*/
 
 		// Get from the plugin settings.
 		$shipping_zone = Utils::get_shipping_zone( $order->get_shipping_country(), $order->get_shipping_state() );

@@ -11,8 +11,7 @@
 * License: GPLv2 or later
 * License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-The official PostNL for WooCommerce plugin allows you to automate your e-commerce order process. Covering shipping services from PostNL Netherlands and Belgium.
-
+The official PostNL plugin allows you to automate your e-commerce order process. Covering shipping services from PostNL Netherlands and Belgium.
 
 ## Description
 
@@ -39,6 +38,7 @@ PostNL’s official extension for WooCommerce on WordPress. Manage your national
 * Add: Ability for marking products as 18+ and automatically apply ID Check to orders containing them.
 * Add: A new contact type 02 with sender email to the shipping API request.
 * Fix: Ressolve issue where insured NL>BE shipments defaulted to standard shipment instead of insured shipment.
+* Tweak: Update plugin description to be less than 150 characters.
 
 ### 5.7.3
 * Tweak : Use `plugins_loaded` hook to add the shipping method for Flexible shipping and Polylang plugins compatibility.

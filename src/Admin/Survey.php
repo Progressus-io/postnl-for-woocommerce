@@ -110,7 +110,7 @@ class Survey {
 				color: #fff;
 			}
 		</style>
-		<div id="postnl-admin-banner" class="notice notice-info">
+		<div id="postnl-admin-banner" class="notice notice-info is-dismissible">
 			<h2><?php esc_html_e( 'Would you like a chance to win a Bol gift card worth €25?', 'postnl-for-woocommerce' ); ?></h2>
 			<p><strong><?php esc_html_e( 'Let us know what you think of the PostNL for WooCommerce plugin by completing the survey.', 'postnl-for-woocommerce' ); ?></strong></p>
 			<p>

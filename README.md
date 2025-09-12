@@ -34,6 +34,9 @@ PostNL’s official extension for WooCommerce on WordPress. Manage your national
 
 ## Changelog
 
+### 5.8.1
+* Add: Close button to the survey banner
+
 ### 5.8.0
 * Add: Fill In With / Invullen met PostNL.
 * Add: ContactType 02 for digital proof of shipping.

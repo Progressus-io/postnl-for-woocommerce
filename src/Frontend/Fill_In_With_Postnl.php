@@ -297,11 +297,11 @@ class Fill_In_With_Postnl {
 			$customer = WC()->customer;
 
 			if ( ! $customer ) {
-				$button_class = 'hidden';
+				$button_class = 'postnl-hidden';
 			}
 
 			if ( ! Utils::is_customer_country_allowed( $customer, $allowed_countries ) ) {
-				$button_class = 'hidden';
+				$button_class = 'postnl-hidden';
 			}
 		}
 

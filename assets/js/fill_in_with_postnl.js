@@ -95,16 +95,16 @@
 
             // Checkout button toggle
             if ( allowedCountries.includes( billingCountry ) || allowedCountries.includes( shippingCountry ) ) {
-                $( '.postnl-button-in-checkout' ).removeClass( 'hidden' );
+                $( '.postnl-button-in-checkout' ).removeClass( 'postnl-hidden' );
             } else {
-                $( '.postnl-button-in-checkout' ).addClass( 'hidden' );
+                $( '.postnl-button-in-checkout' ).addClass( 'postnl-hidden' );
             }
 
             // Cart & mini-cart button toggle
             if ( allowedCountries.includes( cartShippingCountry ) ) {
-                $( '.postnl-button-in-cart, .postnl-button-in-minicart' ).removeClass( 'hidden' );
+                $( '.postnl-button-in-cart, .postnl-button-in-minicart' ).removeClass( 'postnl-hidden' );
             } else {
-                $( '.postnl-button-in-cart, .postnl-button-in-minicart' ).addClass( 'hidden' );
+                $( '.postnl-button-in-cart, .postnl-button-in-minicart' ).addClass( 'postnl-hidden' );
             }
         },
 

@@ -68,14 +68,15 @@ abstract class Base_Info {
 	 */
 	public function set_store_address_data() {
 		$this->api_args['store_address'] = array(
-			'company'   => $this->settings->get_return_company_name(),
-			'email'     => get_bloginfo( 'admin_email' ),
-			'address_1' => WC()->countries->get_base_address(),
-			'address_2' => WC()->countries->get_base_address_2(),
-			'city'      => WC()->countries->get_base_city(),
-			'state'     => WC()->countries->get_base_state(),
-			'country'   => WC()->countries->get_base_country(),
-			'postcode'  => WC()->countries->get_base_postcode(),
+			'company'                     => $this->settings->get_return_company_name(),
+			'email'                       => get_bloginfo( 'admin_email' ),
+			'address_1'                   => WC()->countries->get_base_address(),
+			'address_2'                   => WC()->countries->get_base_address_2(),
+			'city'                        => WC()->countries->get_base_city(),
+			'state'                       => WC()->countries->get_base_state(),
+			'country'                     => WC()->countries->get_base_country(),
+			'postcode'                    => WC()->countries->get_base_postcode(),
+			'shipping_confirmation_email' => $this->settings->get_shipping_confirmation_email(),
 		);
 	}
 
@@ -206,16 +207,16 @@ abstract class Base_Info {
 		$self = $this;
 
 		return array(
-			'company'   => array(
+			'company'                     => array(
 				'default'  => '',
 				'sanitize' => function ( $name ) use ( $self ) {
 					return htmlspecialchars_decode( $name );
 				},
 			),
-			'email'     => array(
+			'email'                       => array(
 				'default' => '',
 			),
-			'address_1' => array(
+			'address_1'                   => array(
 				'error'    => __( 'Store address 1 is not configured!', 'postnl-for-woocommerce' ),
 				'validate' => function ( $address_1 ) use ( $self ) {
 					if ( empty( $address_1 ) ) {
@@ -228,13 +229,13 @@ abstract class Base_Info {
 					return $self->string_length_sanitization( $address_1, 50 );
 				},
 			),
-			'address_2' => array(
+			'address_2'                   => array(
 				'default' => '',
 			),
-			'city'      => array(
+			'city'                        => array(
 				'error' => __( 'Store city is not configured!', 'postnl-for-woocommerce' ),
 			),
-			'postcode'  => array(
+			'postcode'                    => array(
 				'error'    => __( 'Store postcode is not configured!', 'postnl-for-woocommerce' ),
 				'sanitize' => function ( $value ) use ( $self ) {
 					$value = str_replace( ' ', '', $value );
@@ -242,11 +243,14 @@ abstract class Base_Info {
 					return $self->string_length_sanitization( $value, 7 );
 				},
 			),
-			'state'     => array(
+			'state'                       => array(
 				'default' => '',
 			),
-			'country'   => array(
+			'country'                     => array(
 				'error' => __( 'Store country is not configured!', 'postnl-for-woocommerce' ),
+			),
+			'shipping_confirmation_email' => array(
+				'default' => '',
 			),
 		);
 	}

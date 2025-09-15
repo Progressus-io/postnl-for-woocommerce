@@ -213,6 +213,8 @@ class Main {
 
 		add_action( 'admin_notices', array( 'PostNLWooCommerce\Admin\Survey', 'maybe_render_notice' ) );
 		add_action( 'add_meta_boxes', array( 'PostNLWooCommerce\Admin\Survey', 'maybe_add_meta_box' ), 10, 0 );
+		add_action( 'admin_init', array( 'PostNLWooCommerce\Admin\Survey', 'handle_actions' ) );
+
 
 		add_filter( 'plugin_row_meta', array( $this, 'add_row_meta' ), 10, 2 );
 		add_filter( 'plugin_action_links_' . POSTNL_WC_PLUGIN_BASENAME, array( $this, 'add_action_links' ), 10, 1 );

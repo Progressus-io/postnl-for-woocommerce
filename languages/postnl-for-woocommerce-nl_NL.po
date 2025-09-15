@@ -121,11 +121,11 @@ msgstr "Non-EU bezorging"
 msgid "Belgium Domestic"
 msgstr "België binnenland"
 
-#: src/Main.php:369
+#: src/Main.php:371
 msgid "PostNL plugin requires WooCommerce to be installed and activated!"
 msgstr "De PostNL plugin vereist het installeren en activeren van WooCommerce!"
 
-#: src/Main.php:382
+#: src/Main.php:384
 msgid "PostNL plugin requires store country to be Netherlands (NL) or Belgium (BE)!"
 msgstr "De PostNL plugin vereist een winkellocatie in Nederland of België!"
 
@@ -1504,27 +1504,27 @@ msgstr ""
 msgid "PostNL Survey"
 msgstr ""
 
-#: src/Admin/Survey.php:114
-#: src/Admin/Survey.php:158
+#: src/Admin/Survey.php:150
+#: src/Admin/Survey.php:216
 msgid "Would you like a chance to win a Bol gift card worth €25?"
 msgstr "Would you like a chance to win a Bol gift card worth €25?"
 
-#: src/Admin/Survey.php:115
-#: src/Admin/Survey.php:161
+#: src/Admin/Survey.php:151
+#: src/Admin/Survey.php:219
 msgid "Let us know what you think of the PostNL for WooCommerce plugin by completing the survey."
 msgstr "Laat ons weten wat je van de PostNL voor WooCommerce plug-in vindt door de vragenlijst in te vullen."
 
-#: src/Admin/Survey.php:121
+#: src/Admin/Survey.php:157
 msgid "Take Survey"
 msgstr "Start vragenlijst"
 
-#: src/Admin/Survey.php:128
-#: src/Admin/Survey.php:175
-#: src/Main.php:475
+#: src/Admin/Survey.php:164
+#: src/Admin/Survey.php:233
+#: src/Main.php:477
 msgid "Leave a review"
 msgstr "Laat een beoordeling achter"
 
-#: src/Admin/Survey.php:168
+#: src/Admin/Survey.php:226
 msgid "Take survey"
 msgstr ""
 
@@ -1615,11 +1615,11 @@ msgstr ""
 msgid "Standard Shipment Belgium"
 msgstr ""
 
-#: src/Main.php:456
+#: src/Main.php:458
 msgid "Postnl Checkout Blocks"
 msgstr ""
 
-#: src/Main.php:495
+#: src/Main.php:497
 msgid "Settings"
 msgstr ""
 
@@ -1831,3 +1831,11 @@ msgstr ""
 msgctxt "block description"
 msgid "Fill in address with PostNL account"
 msgstr ""
+
+#: src/Admin/Survey.php:169
+msgid "Remind me later"
+msgstr "Herinner me hier later aan"
+
+#: src/Admin/Survey.php:172
+msgid "Hide"
+msgstr "Verbergen"

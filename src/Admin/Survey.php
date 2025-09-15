@@ -1,6 +1,6 @@
 <?php
 /**
- * Non‑dismissible admin banner for PostNL
+ * Admin banner for PostNL survey.
  *
  * @package PostNLWooCommerce
  */
@@ -60,11 +60,37 @@ class Survey {
 	}
 
 	/**
+	 * Handle survey banner actions.
+	 *
+	 * @return void
+	 */
+	public static function handle_actions() {
+		if ( empty( $_GET['postnl_survey_action'] ) ) {
+			return;
+		}
+
+		$action = sanitize_text_field( wp_unslash( $_GET['postnl_survey_action'] ) );
+
+		if ( 'hide' === $action ) {
+			update_user_meta( get_current_user_id(), '_postnl_survey_hidden', 1 );
+		}
+
+		// "remind" just reloads without saving anything, so banner reappears.
+		wp_safe_redirect( remove_query_arg( 'postnl_survey_action' ) );
+		exit;
+	}
+
+	/**
 	 * Determine if the banner is eligible to show on the current screen.
 	 *
 	 * @return bool
 	 */
 	protected static function should_show(): bool {
+		// Permanently hidden by user.
+		if ( get_user_meta( get_current_user_id(), '_postnl_survey_hidden', true ) ) {
+			return false;
+		}
+
 		if ( ! is_admin() ) {
 			return false;
 		}
@@ -97,11 +123,13 @@ class Survey {
 	 * @return void
 	 */
 	protected static function render_notice() {
+		$hide_url   = add_query_arg( 'postnl_survey_action', 'hide' );
 		?>
 		<style>
 			#postnl-admin-banner {
 				border-left-color: #ed8c00;
 				background: #fff7f0;
+				position: relative;
 			}
 
 			#postnl-admin-banner .button-primary {
@@ -109,8 +137,16 @@ class Survey {
 				border-color: #e65c00;
 				color: #fff;
 			}
+
+			#postnl-admin-banner .banner-actions {
+				margin-top: 10px;
+			}
+
+			#postnl-admin-banner .banner-actions a {
+				margin-right: 10px;
+			}
 		</style>
-		<div id="postnl-admin-banner" class="notice notice-info is-dismissible">
+		<div id="postnl-admin-banner" class="notice notice-info">
 			<h2><?php esc_html_e( 'Would you like a chance to win a Bol gift card worth €25?', 'postnl-for-woocommerce' ); ?></h2>
 			<p><strong><?php esc_html_e( 'Let us know what you think of the PostNL for WooCommerce plugin by completing the survey.', 'postnl-for-woocommerce' ); ?></strong></p>
 			<p>
@@ -128,7 +164,29 @@ class Survey {
 					<?php esc_html_e( 'Leave a review', 'postnl-for-woocommerce' ); ?>
 				</a>
 			</p>
+			<p class="banner-actions">
+				<a class="button-secondary" id="postnl-remind-later">
+					<?php esc_html_e( 'Remind me later', 'postnl-for-woocommerce' ); ?>
+				</a>
+				<a href="<?php echo esc_url( $hide_url ); ?>" class="button-secondary">
+					<?php esc_html_e( 'Hide', 'postnl-for-woocommerce' ); ?>
+				</a>
+			</p>
 		</div>
+		<script>
+			document.addEventListener( "DOMContentLoaded", function() {
+				const remindBtn = document.getElementById( "postnl-remind-later" );
+				if ( remindBtn ) {
+					remindBtn.addEventListener( "click", function( e ) {
+						e.preventDefault();
+						const banner = document.getElementById( "postnl-admin-banner" );
+						if ( banner ) {
+							banner.style.display = "none";
+						}
+					} );
+				}
+			} );
+		</script>
 		<?php
 	}
 

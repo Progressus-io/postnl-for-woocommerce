@@ -36,6 +36,10 @@ class Survey {
 			return;
 		}
 
+		if ( get_user_meta( get_current_user_id(), '_postnl_survey_hidden', true ) ) {
+			return;
+		}
+
 		add_meta_box(
 			'postnl_admin_banner',
 			esc_html__( 'PostNL Survey', 'postnl-for-woocommerce' ),
@@ -123,7 +127,6 @@ class Survey {
 	 * @return void
 	 */
 	protected static function render_notice() {
-		$hide_url   = add_query_arg( 'postnl_survey_action', 'hide' );
 		?>
 		<style>
 			#postnl-admin-banner {
@@ -168,7 +171,7 @@ class Survey {
 				<a class="button-secondary" id="postnl-remind-later">
 					<?php esc_html_e( 'Remind me later', 'postnl-for-woocommerce' ); ?>
 				</a>
-				<a href="<?php echo esc_url( $hide_url ); ?>" class="button-secondary">
+				<a href="<?php echo esc_url( add_query_arg( 'postnl_survey_action', 'hide' ) ); ?>" class="button-secondary">
 					<?php esc_html_e( 'Hide', 'postnl-for-woocommerce' ); ?>
 				</a>
 			</p>
@@ -233,6 +236,28 @@ class Survey {
 				<?php esc_html_e( 'Leave a review', 'postnl-for-woocommerce' ); ?>
 			</a>
 		</p>
+		<p class="banner-actions">
+			<a class="button-secondary" id="postnl-remind-later">
+				<?php esc_html_e( 'Remind me later', 'postnl-for-woocommerce' ); ?>
+			</a>
+			<a href="<?php echo esc_url( add_query_arg( 'postnl_survey_action', 'hide' ) ); ?>" class="button-secondary">
+				<?php esc_html_e( 'Hide', 'postnl-for-woocommerce' ); ?>
+			</a>
+		</p>
+		<script>
+			document.addEventListener( "DOMContentLoaded", function() {
+				const remindBtn = document.getElementById( "postnl-remind-later" );
+				if ( remindBtn ) {
+					remindBtn.addEventListener( "click", function( e ) {
+						e.preventDefault();
+						const banner = document.getElementById( "postnl_admin_banner" );
+						if ( banner ) {
+							banner.style.display = "none";
+						}
+					} );
+				}
+			} );
+		</script>
 		<?php
 	}
 }

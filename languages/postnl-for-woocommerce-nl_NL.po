@@ -1500,31 +1500,31 @@ msgstr "Je naam en adres worden automatisch ingevuld via je PostNL-account. Zo h
 msgid "The official PostNL plugin allows you to automate your e-commerce order process. Covering shipping services from PostNL Netherlands and Belgium."
 msgstr ""
 
-#: src/Admin/Survey.php:41
+#: src/Admin/Survey.php:45
 msgid "PostNL Survey"
 msgstr ""
 
-#: src/Admin/Survey.php:150
-#: src/Admin/Survey.php:216
+#: src/Admin/Survey.php:153
+#: src/Admin/Survey.php:219
 msgid "Would you like a chance to win a Bol gift card worth €25?"
 msgstr "Would you like a chance to win a Bol gift card worth €25?"
 
-#: src/Admin/Survey.php:151
-#: src/Admin/Survey.php:219
+#: src/Admin/Survey.php:154
+#: src/Admin/Survey.php:222
 msgid "Let us know what you think of the PostNL for WooCommerce plugin by completing the survey."
 msgstr "Laat ons weten wat je van de PostNL voor WooCommerce plug-in vindt door de vragenlijst in te vullen."
 
-#: src/Admin/Survey.php:157
+#: src/Admin/Survey.php:160
 msgid "Take Survey"
 msgstr "Start vragenlijst"
 
-#: src/Admin/Survey.php:164
-#: src/Admin/Survey.php:233
+#: src/Admin/Survey.php:167
+#: src/Admin/Survey.php:236
 #: src/Main.php:477
 msgid "Leave a review"
 msgstr "Laat een beoordeling achter"
 
-#: src/Admin/Survey.php:226
+#: src/Admin/Survey.php:229
 msgid "Take survey"
 msgstr ""
 
@@ -1832,10 +1832,12 @@ msgctxt "block description"
 msgid "Fill in address with PostNL account"
 msgstr ""
 
-#: src/Admin/Survey.php:169
+#: src/Admin/Survey.php:172
+#: src/Admin/Survey.php:241
 msgid "Remind me later"
 msgstr "Herinner me hier later aan"
 
-#: src/Admin/Survey.php:172
+#: src/Admin/Survey.php:175
+#: src/Admin/Survey.php:244
 msgid "Hide"
 msgstr "Verbergen"

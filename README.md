@@ -35,6 +35,7 @@ PostNL’s official extension for WooCommerce on WordPress. Manage your national
 ## Changelog
 
 ### 5.8.1
+* Add: New email settings field for shipping confirmation.
 * Fix: Style conflict with other frameworks.
 
 ### 5.8.0

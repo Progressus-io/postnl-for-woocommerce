@@ -3,7 +3,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PostNL for WooCommerce 5.8.1\n"
-"Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/postnl-for-woocommerce\n"
+"Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/woo-postnl\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"

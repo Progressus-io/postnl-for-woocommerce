@@ -35,7 +35,7 @@ PostNL’s official extension for WooCommerce on WordPress. Manage your national
 ## Changelog
 
 ### 5.8.1
-* Add: New buttons to dismiss or hide the survey banner.
+* Fix: Allow admin to dismiss the survey/reward notice.
 
 ### 5.8.0
 * Add: Fill In With / Invullen met PostNL.

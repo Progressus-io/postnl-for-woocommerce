@@ -81,6 +81,9 @@ Follow these instructions (https://www.postnl.nl/Images/aanvragen-api-key-stappe
 
 == Changelog ==
 
+### 5.8.1 (2025-xx-xx) =
+* Fix: Allow admin to dismiss the survey/reward notice.
+
 ### 5.8.0 (2025-09-08) =
 * Add: Fill In With / Invullen met PostNL.
 * Add: ContactType 02 for digital proof of shipping.

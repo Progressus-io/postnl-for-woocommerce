@@ -7,7 +7,7 @@ Requires at least: 6.6
 Tested up to: 6.8
 WC requires at least: 9.6
 WC tested up to: 10.2
-Stable tag: 5.8.0
+Stable tag: 5.8.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -81,8 +81,10 @@ Follow these instructions (https://www.postnl.nl/Images/aanvragen-api-key-stappe
 
 == Changelog ==
 
-### 5.8.1 (2025-xx-xx) =
+### 5.8.1 (2025-09-16) =
+* Add: New email settings field for shipping confirmation.
 * Fix: Allow admin to dismiss the survey/reward notice.
+* Fix: Style conflict with other frameworks.
 
 ### 5.8.0 (2025-09-08) =
 * Add: Fill In With / Invullen met PostNL.

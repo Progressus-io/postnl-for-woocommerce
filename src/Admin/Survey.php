@@ -36,7 +36,7 @@ class Survey {
 			return;
 		}
 
-		if ( get_user_meta( get_current_user_id(), '_postnl_survey_hidden', true ) ) {
+		if ( get_user_meta( get_current_user_id(), '_postnl_survey_hidden11', true ) ) {
 			return;
 		}
 
@@ -76,7 +76,11 @@ class Survey {
 		$action = sanitize_text_field( wp_unslash( $_GET['postnl_survey_action'] ) );
 
 		if ( 'hide' === $action ) {
-			update_user_meta( get_current_user_id(), '_postnl_survey_hidden', 1 );
+			update_user_meta( get_current_user_id(), '_postnl_survey_hidden11', 1 );
+		}
+
+		if ( 'remind_later' === $action ) {
+			set_transient( 'postnl_survey_remind_later', true, DAY_IN_SECONDS );
 		}
 
 		// "remind" just reloads without saving anything, so banner reappears.
@@ -90,12 +94,17 @@ class Survey {
 	 * @return bool
 	 */
 	protected static function should_show(): bool {
-		// Permanently hidden by user.
-		if ( get_user_meta( get_current_user_id(), '_postnl_survey_hidden', true ) ) {
+		if ( ! is_admin() || ! current_user_can( 'manage_woocommerce' ) ) {
 			return false;
 		}
 
-		if ( ! is_admin() ) {
+		// Temporary hidden.
+		if ( get_transient( 'postnl_survey_remind_later' ) ) {
+			return false;
+		}
+
+		// Permanently hidden by user.
+		if ( get_user_meta( get_current_user_id(), '_postnl_survey_hidden11', true ) ) {
 			return false;
 		}
 
@@ -141,15 +150,14 @@ class Survey {
 				color: #fff;
 			}
 
-			#postnl-admin-banner .banner-actions {
-				margin-top: 10px;
-			}
-
-			#postnl-admin-banner .banner-actions a {
-				margin-right: 10px;
+			#postnl-admin-banner .notice-dismiss {
+                text-decoration: none;
 			}
 		</style>
 		<div id="postnl-admin-banner" class="notice notice-info">
+            <a href="<?php echo esc_url( add_query_arg( 'postnl_survey_action', 'hide' ) ); ?>" class="notice-dismiss">
+                <span class="screen-reader-text"><?php esc_html_e( 'Dismiss this notice.', 'postnl-for-woocommerce' ); ?></span>
+            </a>
 			<h2><?php esc_html_e( 'Would you like a chance to win a Bol gift card worth €25?', 'postnl-for-woocommerce' ); ?></h2>
 			<p><strong><?php esc_html_e( 'Let us know what you think of the PostNL for WooCommerce plugin by completing the survey.', 'postnl-for-woocommerce' ); ?></strong></p>
 			<p>
@@ -159,37 +167,19 @@ class Survey {
 					rel="noopener noreferrer">
 					<?php esc_html_e( 'Take Survey', 'postnl-for-woocommerce' ); ?>
 				</a>
-			</p>
-			<p>
+
 				<a href="<?php echo esc_url( 'https://wordpress.org/support/plugin/woo-postnl/reviews/#new-post' ); ?>"
+					class="button button-secondary"
 					target="_blank"
 					rel="noopener noreferrer">
 					<?php esc_html_e( 'Leave a review', 'postnl-for-woocommerce' ); ?>
 				</a>
-			</p>
-			<p class="banner-actions">
-				<a class="button-secondary" id="postnl-remind-later">
+
+				<a id="postnl-remind-later" href="<?php echo esc_url( add_query_arg( 'postnl_survey_action', 'remind_later' ) ); ?>">
 					<?php esc_html_e( 'Remind me later', 'postnl-for-woocommerce' ); ?>
-				</a>
-				<a href="<?php echo esc_url( add_query_arg( 'postnl_survey_action', 'hide' ) ); ?>" class="button-secondary">
-					<?php esc_html_e( 'Hide', 'postnl-for-woocommerce' ); ?>
 				</a>
 			</p>
 		</div>
-		<script>
-			document.addEventListener( "DOMContentLoaded", function() {
-				const remindBtn = document.getElementById( "postnl-remind-later" );
-				if ( remindBtn ) {
-					remindBtn.addEventListener( "click", function( e ) {
-						e.preventDefault();
-						const banner = document.getElementById( "postnl-admin-banner" );
-						if ( banner ) {
-							banner.style.display = "none";
-						}
-					} );
-				}
-			} );
-		</script>
 		<?php
 	}
 
@@ -228,36 +218,18 @@ class Survey {
 				rel="noopener noreferrer">
 				<?php esc_html_e( 'Take survey', 'postnl-for-woocommerce' ); ?>
 			</a>
-		</p>
-		<p>
-			<a href="<?php echo esc_url( 'https://wordpress.org/plugins/postnl-for-woocommerce/#reviews' ); ?>"
+
+			<a href="<?php echo esc_url( 'https://wordpress.org/support/plugin/woo-postnl/reviews/#new-post' ); ?>"
+				class="button button-secondary"
 				target="_blank"
 				rel="noopener noreferrer">
 				<?php esc_html_e( 'Leave a review', 'postnl-for-woocommerce' ); ?>
 			</a>
-		</p>
-		<p class="banner-actions">
-			<a class="button-secondary" id="postnl-remind-later">
-				<?php esc_html_e( 'Remind me later', 'postnl-for-woocommerce' ); ?>
-			</a>
-			<a href="<?php echo esc_url( add_query_arg( 'postnl_survey_action', 'hide' ) ); ?>" class="button-secondary">
+
+			<a href="<?php echo esc_url( add_query_arg( 'postnl_survey_action', 'hide' ) ); ?>">
 				<?php esc_html_e( 'Hide', 'postnl-for-woocommerce' ); ?>
 			</a>
 		</p>
-		<script>
-			document.addEventListener( "DOMContentLoaded", function() {
-				const remindBtn = document.getElementById( "postnl-remind-later" );
-				if ( remindBtn ) {
-					remindBtn.addEventListener( "click", function( e ) {
-						e.preventDefault();
-						const banner = document.getElementById( "postnl_admin_banner" );
-						if ( banner ) {
-							banner.style.display = "none";
-						}
-					} );
-				}
-			} );
-		</script>
 		<?php
 	}
 }

@@ -94,10 +94,6 @@ class Client extends Base {
 					'Email'       => $this->item_info->shipment['email'],
 					'SMSNr'       => $this->item_info->shipment['phone'],
 				),
-				array(
-					'ContactType' => '02',
-					'Email'       => $this->item_info->shipper['email'],
-				),
 			),
 			'Dimension'           => array(
 				'Weight' => $this->item_info->shipment['total_weight'],
@@ -106,6 +102,14 @@ class Client extends Base {
 			'ProductCodeDelivery' => $this->item_info->shipment['shipping_product']['code'],
 			'Reference'           => $this->item_info->shipment['order_number'],
 		);
+
+		$confirmation_email = $this->item_info->shipper['shipping_confirmation_email'];
+		if ( ! empty( $confirmation_email ) ) {
+			$shipment['Contacts'][] = array(
+				'ContactType' => '02',
+				'Email'       => $confirmation_email,
+			);
+		}
 
 		if ( $this->item_info->is_delivery_day() ) {
 			$shipment['DeliveryDate'] = $this->item_info->delivery_day['date'] . ' ' . $this->item_info->delivery_day['from'];

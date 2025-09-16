@@ -538,6 +538,12 @@ class Settings extends \WC_Settings_API {
 				),
 				'class'       => 'wc-enhanced-select',
 			),
+			'shipping_confirmation_email'     => array(
+				'title'       => esc_html__( 'Shipping confirmation e-mail address', 'postnl-for-woocommerce' ),
+				'type'        => 'email',
+				'description' => esc_html__( 'This e-mail address will be used by PostNL for shipping confirmations. If left empty, no sender e-mail will be included.', 'postnl-for-woocommerce' ),
+				'desc_tip'    => true,
+			),
 			'woocommerce_email'               => array(
 				'title'       => esc_html__( 'WooCommerce Email', 'postnl-for-woocommerce' ),
 				'type'        => 'checkbox',
@@ -1417,6 +1423,15 @@ class Settings extends \WC_Settings_API {
 			default:
 				return 'GraphicFile|PDF';
 		}
+	}
+
+	/**
+	 * Get shipping confirmation email text value from the settings.
+	 *
+	 * @return String
+	 */
+	public function get_shipping_confirmation_email() {
+		return $this->get_country_option( 'shipping_confirmation_email', '' );
 	}
 
 	/**

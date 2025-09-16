@@ -541,7 +541,8 @@ class Settings extends \WC_Settings_API {
 			'shipping_confirmation_email'     => array(
 				'title'       => esc_html__( 'Shipping confirmation e-mail address', 'postnl-for-woocommerce' ),
 				'type'        => 'email',
-				'description' => esc_html__( 'Text added for Shipping confirmation e-mail address.', 'postnl-for-woocommerce' ),
+				'description' => esc_html__( 'This e-mail address will be used by PostNL for shipping confirmations. If left empty, no sender e-mail will be included.', 'postnl-for-woocommerce' ),
+				'desc_tip'    => true,
 			),
 			'woocommerce_email'               => array(
 				'title'       => esc_html__( 'WooCommerce Email', 'postnl-for-woocommerce' ),

@@ -8,7 +8,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "POT-Creation-Date: 2025-09-08T20:48:30+00:00\n"
-"PO-Revision-Date: 2025-09-08 22:52+0200\n"
+"PO-Revision-Date: 2025-10-11 11:10+0300\n"
 "Language: nl\n"
 "X-Generator: Poedit 3.7\n"
 "X-Domain: postnl-for-woocommerce\n"
@@ -1562,13 +1562,13 @@ msgstr ""
 #: build/postnl-container-frontend.js:1
 #: src/Checkout_Blocks/js/postnl-container/block.js:94
 msgid "Delivery"
-msgstr ""
+msgstr "Bezorgdagen"
 
 #: src/Frontend/Dropoff_Points.php:52
 #: build/postnl-container-frontend.js:1
 #: src/Checkout_Blocks/js/postnl-container/block.js:95
 msgid "Pickup"
-msgstr ""
+msgstr "Ophalen"
 
 #: src/Frontend/Fill_In_With_Postnl.php:220
 msgid "Invalid or expired nonce."
@@ -1716,15 +1716,15 @@ msgstr ""
 
 #: src/Shipping_Method/Settings.php:296
 msgid "Extra fee pick-up delivery"
-msgstr ""
+msgstr "Toeslag ophalen bij PostNL"
 
 #: src/Shipping_Method/Settings.php:298
 msgid "Extra fee added when the customer selects a PostNL pick-up point."
-msgstr ""
+msgstr "Toeslag wanneer er voor ophalen bij PostNL is gekozen."
 
 #: src/Shipping_Method/Settings.php:332
 msgid "Extra fee home delivery"
-msgstr ""
+msgstr "Toeslag thuisbezorging"
 
 #: src/Shipping_Method/Settings.php:334
 msgid "Extra fee added when the customer selects home delivery."

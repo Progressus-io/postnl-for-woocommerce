@@ -429,14 +429,14 @@ export const Block = ( { checkoutExtensionData } ) => {
 									}
 								>
 									<label
-										htmlFor={ `postnl_option_${ tab.id }_${ uniqueId }` }
+										htmlFor={ `postnl_option_${ tab.id }` }
 										className="postnl_checkout_tab"
 									>
 										<span>{ tab.name }</span>
 										<input
 											type="radio"
 											name="postnl_option"
-											id={ `postnl_option_${ tab.id }_${ uniqueId }` }
+											id={ `postnl_option_${ tab.id }` }
 											className="postnl_option"
 											value={ tab.id }
 											checked={ activeTab === tab.id }
@@ -454,7 +454,7 @@ export const Block = ( { checkoutExtensionData } ) => {
 							className={ `postnl_content ${
 								activeTab === 'delivery_day' ? 'active' : ''
 							}` }
-							id={ `postnl_delivery_day_content_${ uniqueId }` }
+							id="postnl_delivery_day_content"
 						>
 							<DeliveryDayBlock
 								checkoutExtensionData={ checkoutExtensionData }
@@ -469,7 +469,7 @@ export const Block = ( { checkoutExtensionData } ) => {
 								className={ `postnl_content ${
 									activeTab === 'dropoff_points' ? 'active' : ''
 								}` }
-								id={ `postnl_dropoff_points_content_${ uniqueId }` }
+								id="postnl_dropoff_points_content"
 							>
 								<DropoffPointsBlock
 									checkoutExtensionData={ checkoutExtensionData }

@@ -1,4 +1,25 @@
 ( function( $ ) {
+
+	/*
+	 * Hide PostNL checkout container in the sidebar order summary
+	 */
+	document.addEventListener( 'DOMContentLoaded', () => {
+		const observer = new MutationObserver( () => {
+			// Only run on mobile screens
+			const containers = document.querySelectorAll(
+				'.is-mobile .wc-block-checkout__sidebar .postnl_checkout_container'
+			);
+
+			if ( containers.length > 0 ) {
+				containers.forEach( el => ( el.style.display = 'none' ) );
+				observer.disconnect();
+			}
+		} );
+
+		observer.observe( document.body, { childList: true, subtree: true } );
+	} );
+
+
 	/*
       * Helper – refresh the “Delivery Days” tab title with base-fee
       *

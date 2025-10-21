@@ -69,7 +69,7 @@ msgid "Street Name"
 msgstr "Straat"
 
 #: src/Checkout_Blocks/Extend_Block_Core.php:84
-#: src/Frontend/Container.php:336
+#: src/Frontend/Container.php:347
 msgid "This is not a valid address!"
 msgstr "Dit is geen geldig adres!"
 
@@ -1564,6 +1564,7 @@ msgstr ""
 msgid "Delivery"
 msgstr "Bezorgdagen"
 
+#: src/Frontend/Container.php:97
 #: src/Frontend/Dropoff_Points.php:52
 #: build/postnl-container-frontend.js:1
 #: src/Checkout_Blocks/js/postnl-container/block.js:95
@@ -1851,3 +1852,7 @@ msgstr "Herinner me hier later aan"
 #: src/Admin/Survey.php:230
 msgid "Hide"
 msgstr "Verbergen"
+
+#: src/Frontend/Container.php:96
+msgid "Delivery Days"
+msgstr "Bezorging"

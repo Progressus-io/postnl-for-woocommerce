@@ -74,9 +74,9 @@
 			baseFee = 0;
 		}
 
-		let text = 'Delivery Days';
-		if (baseFee > 0) {
-			text += ' €' + baseFee.toFixed(2);
+		let text = postnlParams.i18n.deliveryDays;
+		if ( baseFee > 0 ) {
+			text += ' €' + baseFee.toFixed( 2 );
 		}
 		if (extraFee > 0) {
 			text += ' + €' + extraFee.toFixed(2);
@@ -107,9 +107,9 @@
 			total = 0;
 		}
 
-		let text = 'Pickup';
-		if (total > 0) {
-			text += ' €' + total.toFixed(2);
+		let text = postnlParams.i18n.pickup;
+		if ( total > 0 ) {
+			text += ' €' + total.toFixed( 2 );
 		}
 
 		$label.children('span').first().text(text);

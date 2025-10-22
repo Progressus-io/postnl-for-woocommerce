@@ -1,5 +1,4 @@
 ( function( $ ) {
-
 	/*
       * Helper – refresh the “Delivery Days” tab title with base-fee
       *

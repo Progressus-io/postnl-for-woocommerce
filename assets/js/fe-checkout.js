@@ -1,26 +1,6 @@
 ( function( $ ) {
 
 	/*
-	 * Hide PostNL checkout container in the sidebar order summary
-	 */
-	document.addEventListener( 'DOMContentLoaded', () => {
-		const observer = new MutationObserver( () => {
-			// Only run on mobile screens
-			const containers = document.querySelectorAll(
-				'.is-mobile .wc-block-checkout__sidebar .postnl_checkout_container'
-			);
-
-			if ( containers.length > 0 ) {
-				containers.forEach( el => ( el.style.display = 'none' ) );
-				observer.disconnect();
-			}
-		} );
-
-		observer.observe( document.body, { childList: true, subtree: true } );
-	} );
-
-
-	/*
       * Helper – refresh the “Delivery Days” tab title with base-fee
       *
       */
@@ -136,6 +116,28 @@
 		$label.children('span').first().text(text);
 	}
 
+	function handleDuplicateBlocks() {
+		const blocks = document.querySelectorAll(
+			'.postnl_checkout_container'
+		);
+		if ( blocks.length > 1 ) {
+			// Keep the block in the main checkout area for mobile, sidebar for desktop
+			blocks.forEach( ( block ) => {
+				const isInSidebar = block.closest(
+					'.wc-block-checkout__sidebar'
+				);
+				const isMobile = window.innerWidth <= 768;
+
+				if (
+					( isMobile && isInSidebar ) ||
+					( ! isMobile && ! isInSidebar )
+				) {
+					block.remove();
+				}
+			} );
+		}
+	}
+
 	var postnl_fe_checkout = {
 		// init Class
 		init: function() {
@@ -157,6 +159,22 @@
 			} );
 			jQuery('#shipping_postcode').on( 'change', function (){
 				jQuery('body').trigger('update_checkout');
+			} );
+
+			// Handle initial load
+			handleDuplicateBlocks();
+
+			// Handle window resize
+			window.addEventListener( 'resize', handleDuplicateBlocks );
+
+			// Handle dynamic updates
+			const observer = new MutationObserver( () => {
+				handleDuplicateBlocks();
+			} );
+
+			observer.observe( document.body, {
+				childList: true,
+				subtree: true,
 			} );
 		},
 

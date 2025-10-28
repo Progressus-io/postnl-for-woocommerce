@@ -7,8 +7,6 @@
 
 namespace PostNLWooCommerce\Frontend;
 
-use PostNLWooCommerce\Utils;
-
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
@@ -74,26 +72,11 @@ class Dropoff_Points extends Base {
 		$pickup_points = $response['PickupOptions'];
 		$return_data   = $this->get_init_content_data( $post_data );
 
-		// Check if cart has an adult product.
-		$has_adult = false;
-		foreach ( WC()->cart->get_cart() as $cart_item ) {
-			$product = $cart_item['data'];
-			if ( $product && Utils::is_adults_only_product( $product ) ) {
-				$has_adult = true;
-				break;
-			}
-		}
-
 		foreach ( $pickup_points as $pickup_point ) {
 			$date = ! empty( $pickup_point['PickupDate'] ) ? $pickup_point['PickupDate'] : '';
 			$type = ! empty( $pickup_point['Option'] ) ? $pickup_point['Option'] : '';
 
 			if ( empty( $pickup_point['Locations'] ) ) {
-				continue;
-			}
-
-			// If adult product present, exclude ParcelMachine options.
-			if ( $has_adult && 'parcelmachine' === strtolower( $type ) ) {
 				continue;
 			}
 

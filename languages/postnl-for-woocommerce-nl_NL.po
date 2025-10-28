@@ -1707,13 +1707,9 @@ msgstr ""
 msgid "Client ID"
 msgstr ""
 
-#: src/Shipping_Method/Settings.php:203
-msgid "[instead of business replynumber]"
-msgstr ""
-
 #: src/Shipping_Method/Settings.php:246
 msgid "Enter return house number extension."
-msgstr ""
+msgstr "Vul hier een huisnummertoevoeging in voor het retouradres."
 
 #: src/Shipping_Method/Settings.php:296
 msgid "Extra fee pick-up delivery"
@@ -1729,7 +1725,7 @@ msgstr "Toeslag thuisbezorging"
 
 #: src/Shipping_Method/Settings.php:334
 msgid "Extra fee added when the customer selects home delivery."
-msgstr ""
+msgstr "Toeslag voor verzendingen naar een huisadres."
 
 #: src/Shipping_Method/Settings.php:507
 msgid "Printer Type"
@@ -1737,7 +1733,7 @@ msgstr ""
 
 #: src/Shipping_Method/Settings.php:509
 msgid "It is not recommended to send .pdf files/labels directly to a Zebra printer If you want to send it directly to your Zebra printer, please use .gif files or the native (generic) zpl printer type"
-msgstr ""
+msgstr "Het is af te raden om PDF-bestanden af te drukken met een Zebra-printer. Gebruik voor een Zebra-printer labels in GIF-formaat of in ZPL-formaat."
 
 #: src/Shipping_Method/Settings.php:520
 msgid "DPI"
@@ -1856,3 +1852,7 @@ msgstr "Verbergen"
 #: src/Frontend/Container.php:96
 msgid "Delivery Days"
 msgstr "Bezorging"
+
+#: src/Shipping_Method/Settings.php:203
+msgid "Activate this setting to use a home address for return shipments"
+msgstr "Activeer deze instelling om gebruik te maken van een huisadres voor retourzendingen"

@@ -541,7 +541,12 @@ class Utils {
 			return __( 'As soon as possible', 'postnl-for-woocommerce' );
 		}
 
-		$day = date( 'l', strtotime( $delivery_info['delivery_day_date'] ) );
+		// Get the day abbreviation (Mon, Tue, Wed, etc.) and convert to lowercase
+		$day_key = strtolower( date( 'D', strtotime( $delivery_info['delivery_day_date'] ) ) );
+		
+		// Get translated day names from existing method
+		$days_of_week = self::days_of_week();
+		$day          = $days_of_week[ $day_key ];
 
 		// Convert to the Dutch date format
 		$date_obj   = date_create_from_format( 'Y-m-d', $delivery_info['delivery_day_date'] );
@@ -552,9 +557,9 @@ class Utils {
 
 
 	/**
-	 * Generate selected hipping options html.
+	 * Generate selected shipping options html.
 	 *
-	 * @param $backend_data .
+	 * @param $backend_data.
 	 *
 	 * @return string.
 	 */

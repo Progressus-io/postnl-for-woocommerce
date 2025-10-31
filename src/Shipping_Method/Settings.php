@@ -41,6 +41,11 @@ class Settings extends \WC_Settings_API {
 	public static function get_instance() {
 		if ( null === self::$instance ) {
 			self::$instance = new self();
+			// Register custom field type for merchant codes repeater
+			add_action( 'woocommerce_admin_field_merchant_codes_repeater', array( self::$instance, 'render_merchant_codes_repeater' ) );
+			
+			// Hook to save merchant codes
+			add_action( 'woocommerce_update_options_shipping_' . self::$instance->id, array( self::$instance, 'save_merchant_codes' ) );
 		}
 
 		return self::$instance;
@@ -111,6 +116,12 @@ class Settings extends \WC_Settings_API {
 				'desc_tip'    => false,
 				'default'     => '',
 				'placeholder' => '',
+			),
+			'merchant_codes_repeater'         => array(
+				'title'       => esc_html__( 'Merchant Codes for non‑EU countries', 'postnl-for-woocommerce' ),
+				'type'        => 'merchant_codes_repeater',
+				'description' => esc_html__( 'Add merchant codes for specific non-EU countries.', 'postnl-for-woocommerce' ),
+				'desc_tip'    => true,
 			),
 			'customer_num'                    => array(
 				'title'       => esc_html__( 'Customer Number', 'postnl-for-woocommerce' ),
@@ -666,6 +677,48 @@ class Settings extends \WC_Settings_API {
 			),
 
 		);
+	}
+
+	/**
+	 * Render merchant codes repeater field
+	 */
+	public function render_merchant_codes_repeater( $value ) {
+		$merchant_codes   = get_option( self::MERCHANT_CODES_OPTION, array() );
+		$non_eu_countries = $this->get_non_eu_countries();
+		error_log( 'merchant_codes_repeater registered' );
+	}
+
+	/**
+	 * Save merchant codes from repeater
+	 */
+	public function save_merchant_codes() {
+		$merchant_codes = array();
+
+		if ( isset( $_POST[self::MERCHANT_CODES_OPTION . '_countries'] ) && isset( $_POST[self::MERCHANT_CODES_OPTION . '_codes'] ) ) {
+			$countries = $_POST[self::MERCHANT_CODES_OPTION . '_countries'];
+			$codes     = $_POST[self::MERCHANT_CODES_OPTION . '_codes'];
+
+			foreach ( $countries as $index => $country ) {
+				if ( ! empty( $country ) && ! empty( $codes[$index] ) ) {
+					$merchant_codes[sanitize_text_field( $country )] = sanitize_text_field( $codes[$index] );
+				}
+			}
+		}
+
+		update_option( self::MERCHANT_CODES_OPTION, $merchant_codes );
+	}
+
+	/**
+	 * Get non-EU countries
+	 */
+	private function get_non_eu_countries() {
+		$all_countries = WC()->countries->get_countries();
+		$eu_countries  = WC()->countries->get_european_union_countries();
+		
+		// Remove EU countries from the list
+		$non_eu_countries = array_diff_key( $all_countries, array_flip( $eu_countries ) );
+
+		return $non_eu_countries;
 	}
 
 	/**

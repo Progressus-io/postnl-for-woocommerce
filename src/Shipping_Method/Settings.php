@@ -504,7 +504,7 @@ class Settings extends \WC_Settings_API {
 				'placeholder' => '',
 			),
 			'merchant_codes_repeater'         => array(
-				'title'       => esc_html__( 'Merchant Codes for non‑EU countries', 'postnl-for-woocommerce' ),
+				'title'       => esc_html__( 'Merchant Customs Code', 'postnl-for-woocommerce' ),
 				'type'        => 'repeater',
 				'description' => esc_html__( 'Add merchant codes for specific non-EU countries.', 'postnl-for-woocommerce' ),
 				'desc_tip'    => true,

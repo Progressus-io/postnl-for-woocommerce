@@ -73,6 +73,12 @@ class Single extends Base {
 				POSTNL_WC_VERSION,
 				true
 			);
+			wp_enqueue_style(
+				'postnl-admin-settings-styles',
+				POSTNL_WC_PLUGIN_DIR_URL . '/assets/css/admin-settings.css',
+				array(),
+				POSTNL_WC_VERSION
+			);
 		}
 
 		if ( ( 'shop_order' === $screen->id && 'post' === $screen->base ) || 'woocommerce_page_wc-orders' === $screen->id ) {

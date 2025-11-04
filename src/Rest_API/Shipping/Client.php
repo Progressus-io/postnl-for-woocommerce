@@ -189,7 +189,7 @@ class Client extends Base {
 	 * @return Array.
 	 */
 	public function get_customs() {
-		return array(
+		$customs = array(
 			'Certificate'            => false,
 			'Currency'               => $this->item_info->shipment['currency'],
 			'Invoice'                => true,
@@ -201,6 +201,12 @@ class Client extends Base {
 			'ShipmentType'           => 'Commercial Goods',
 			'Content'                => $this->get_custom_contents(),
 		);
+		// Add TrustedShipperID if merchant code exists for non-EU destination.
+		if ( ! empty( $this->item_info->shipment['merchant_code'] ) ) {
+			$customs['TrustedShipperID'] = $this->item_info->shipment['merchant_code'];
+		}
+
+		return $customs;
 	}
 
 	/**

@@ -692,8 +692,8 @@ class Settings extends \WC_Settings_API {
 	 */
 	public function generate_repeater_html( $key, $data ) {		
 		ob_start();
-		$merchant_codes = get_option( self::MERCHANT_CODES_OPTION, array() );
-		$non_eu_countries = $this->get_non_eu_countries();
+		$merchant_codes   = get_option( self::MERCHANT_CODES_OPTION, array() );
+		$non_eu_countries = Utils::get_non_eu_countries();
 		
 		?>
 		<tr valign="top">
@@ -813,19 +813,6 @@ class Settings extends \WC_Settings_API {
 
 			update_option( self::MERCHANT_CODES_OPTION, $merchant_codes );
 		}
-	}
-
-	/**
-	 * Get non-EU countries
-	 */
-	private function get_non_eu_countries() {
-		$all_countries = WC()->countries->get_countries();
-		$eu_countries  = WC()->countries->get_european_union_countries();
-		
-		// Remove EU countries from the list
-		$non_eu_countries = array_diff_key( $all_countries, array_flip( $eu_countries ) );
-
-		return $non_eu_countries;
 	}
 
 	/**

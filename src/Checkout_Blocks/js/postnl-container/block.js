@@ -15,8 +15,6 @@ import { Block as DeliveryDayBlock } from '../postnl-delivery-day/block';
 import { Block as DropoffPointsBlock } from '../postnl-dropoff-points/block';
 
 export const Block = ( { checkoutExtensionData } ) => {
-	const blockRef = useRef( null );
-
 	const { setExtensionData } = checkoutExtensionData;
 	const postnlData = getSetting( 'postnl-for-woocommerce-blocks_data', {} );
 
@@ -388,7 +386,6 @@ export const Block = ( { checkoutExtensionData } ) => {
 
 	return (
 		<div
-			ref={ blockRef }
 			id="postnl_checkout_option"
 			className={ `postnl_checkout_container ${
 				loading ? 'loading' : ''

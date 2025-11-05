@@ -8,6 +8,7 @@
 namespace PostNLWooCommerce\Shipping_Method;
 
 use PostNLWooCommerce\Utils;
+use WC_Admin_Settings;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -808,6 +809,10 @@ class Settings extends \WC_Settings_API {
 			foreach ( $countries as $index => $country ) {
 				if ( ! empty( $country ) && ! empty( $codes[ $index ] ) ) {
 					$merchant_codes[ sanitize_text_field( $country ) ] = sanitize_text_field( $codes[ $index ] );
+				} else {
+					WC_Admin_Settings::add_error( 
+						esc_html__( 'Error: Merchant codes data is missing. Please check your entries and try again.', 'postnl-for-woocommerce' )
+					);
 				}
 			}
 

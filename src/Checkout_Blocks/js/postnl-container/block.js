@@ -1,7 +1,7 @@
 /**
  * External dependencies
  */
-import {useEffect, useState, useRef, useCallback} from '@wordpress/element';
+import {useEffect, useState, useRef} from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 import { getSetting } from '@woocommerce/settings';
 import { useDispatch, useSelect } from '@wordpress/data';
@@ -15,6 +15,29 @@ import { Block as DeliveryDayBlock } from '../postnl-delivery-day/block';
 import { Block as DropoffPointsBlock } from '../postnl-dropoff-points/block';
 
 export const Block = ( { checkoutExtensionData } ) => {
+	const [isSidebar, setIsSidebar] = useState(false);
+	const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768;
+	const blockRef = useRef( null );
+
+	useEffect(() => {
+		if (!blockRef.current) {
+			return;
+		}
+
+		const isSidebar = blockRef.current.closest(
+			'.wc-block-components-sidebar'
+		);
+
+		if (isSidebar) {
+			setIsSidebar(true);
+		}
+
+	}, []);
+
+	if (isMobile && isSidebar) {
+		return null;
+	}
+
 	const { setExtensionData } = checkoutExtensionData;
 	const postnlData = getSetting( 'postnl-for-woocommerce-blocks_data', {} );
 
@@ -386,6 +409,7 @@ export const Block = ( { checkoutExtensionData } ) => {
 
 	return (
 		<div
+			ref={ blockRef }
 			id="postnl_checkout_option"
 			className={ `postnl_checkout_container ${
 				loading ? 'loading' : ''

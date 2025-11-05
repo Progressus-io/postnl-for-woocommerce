@@ -11,29 +11,36 @@ import metadata from './block.json';
 
 /**
  * Wrapper component that checks if block should render
+ * @param props
  */
 const BlockWrapper = ( props ) => {
-	const [shouldRender, setShouldRender] = useState(true);
-	const blockRef = useRef(null);
+	const [ shouldRender, setShouldRender ] = useState( true );
+	const blockRef = useRef( null );
 	const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768;
 
-	useEffect(() => {
-		if (!blockRef.current) {
+	useEffect( () => {
+		if ( ! blockRef.current ) {
 			return;
 		}
 
-		const isSidebar = blockRef.current.closest('.wc-block-components-sidebar');
+		const isSidebar = blockRef.current.closest(
+			'.wc-block-components-sidebar'
+		);
 
-		if (isMobile && isSidebar) {
-			setShouldRender(false);
+		if ( isMobile && isSidebar ) {
+			setShouldRender( false );
 		}
-	}, [isMobile]);
+	}, [ isMobile ] );
 
-	if (!shouldRender) {
+	if ( ! shouldRender ) {
 		return null;
 	}
 
-	return <div ref={blockRef}><Block {...props} /></div>;
+	return (
+		<div ref={ blockRef }>
+			<Block { ...props } />
+		</div>
+	);
 };
 
 registerCheckoutBlock( {

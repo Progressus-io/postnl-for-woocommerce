@@ -800,6 +800,7 @@ class Settings extends \WC_Settings_API {
 		// The actual POST field names are with _countries and _codes suffixes
 		$countries_key = self::MERCHANT_CODES_OPTION . '_countries';
 		$codes_key     = self::MERCHANT_CODES_OPTION . '_codes';
+		$error         = false;
 
 		if ( isset( $_POST[ $countries_key ] ) && isset( $_POST[ $codes_key ] ) ) {
 			$countries = $_POST[ $countries_key ];
@@ -810,13 +811,14 @@ class Settings extends \WC_Settings_API {
 				if ( ! empty( $country ) && ! empty( $codes[ $index ] ) ) {
 					$merchant_codes[ sanitize_text_field( $country ) ] = sanitize_text_field( $codes[ $index ] );
 				} else {
-					WC_Admin_Settings::add_error( 
-						esc_html__( 'Error: Merchant codes data is missing. Please check your entries and try again.', 'postnl-for-woocommerce' )
-					);
+					$error = true;
 				}
 			}
 
 			update_option( self::MERCHANT_CODES_OPTION, $merchant_codes );
+			if ( $error ) {
+				WC_Admin_Settings::add_error( esc_html__( 'Some merchant codes were not saved because of missing country or code.', 'postnl-for-woocommerce' ) );
+			}
 		}
 	}
 

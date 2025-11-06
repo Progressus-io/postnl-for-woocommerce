@@ -35,6 +35,9 @@ PostNL’s official extension for WooCommerce on WordPress. Manage your national
 ## Changelog
 
 ### 5.8.1
+Fix: PostNL delivery options block duplicated in the mobile checkout order summary.
+
+### 5.8.1
 * Add: New email settings field for shipping confirmation.
 * Fix: Allow admin to dismiss the survey/reward notice.
 * Fix: Style conflict with other frameworks.

@@ -81,6 +81,9 @@ Follow these instructions (https://www.postnl.nl/Images/aanvragen-api-key-stappe
 
 == Changelog ==
 
+### 5.8.1 (2025-xx-xx) =
+Fix: PostNL delivery options block duplicated in the mobile checkout order summary.
+
 ### 5.8.1 (2025-09-16) =
 * Add: New email settings field for shipping confirmation.
 * Fix: Allow admin to dismiss the survey/reward notice.

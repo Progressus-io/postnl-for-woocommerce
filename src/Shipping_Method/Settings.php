@@ -47,8 +47,8 @@ class Settings extends \WC_Settings_API {
 	public static function get_instance() {
 		if ( null === self::$instance ) {
 			self::$instance = new self();
-			// Hook to save merchant codes
-        	add_action( 'woocommerce_update_options_shipping_' . POSTNL_SETTINGS_ID, array( self::$instance, 'save_merchant_codes' ) );
+			// Hook to save merchant codes.
+			add_action( 'woocommerce_update_options_shipping_' . POSTNL_SETTINGS_ID, array( self::$instance, 'save_merchant_codes' ) );
 		}
 
 		return self::$instance;
@@ -688,32 +688,32 @@ class Settings extends \WC_Settings_API {
 	 *
 	 * @param string $key Field key.
 	 * @param array  $data Field data.
-	 * 
+	 *
 	 * @return string
 	 */
-	public function generate_repeater_html( $key, $data ) {		
+	public function generate_repeater_html( $key, $data ) {
 		ob_start();
 		$merchant_codes   = get_option( self::MERCHANT_CODES_OPTION, array() );
 		$non_eu_countries = Utils::get_non_eu_countries();
-		
+
 		?>
 		<tr valign="top">
 			<th scope="row" class="titledesc">
-				<label for="<?php echo esc_attr($data['id'] ?? $key); ?>"><?php echo wp_kses_post($data['title'] ?? ''); ?></label>
-				<?php echo $this->get_tooltip_html($data); ?>
+				<label for="<?php echo esc_attr( $data['id'] ?? $key ); ?>"><?php echo wp_kses_post( $data['title'] ?? '' ); ?></label>
+				<?php echo $this->get_tooltip_html( $data ); ?>
 			</th>
 			<td class="forminp">
 				<div id="postnl-merchant-codes-repeater">
 					<div class="merchant-codes-header">
 						<div class="merchant-codes-row merchant-codes-header-row">
 							<div class="country-column">
-								<strong><?php esc_html_e('Country', 'postnl-for-woocommerce'); ?></strong>
+								<strong><?php esc_html_e( 'Country', 'postnl-for-woocommerce' ); ?></strong>
 							</div>
 							<div class="code-column">
-								<strong><?php esc_html_e('Merchant Code', 'postnl-for-woocommerce'); ?></strong>
+								<strong><?php esc_html_e( 'Merchant Code', 'postnl-for-woocommerce' ); ?></strong>
 							</div>
 							<div class="action-column">
-								<strong><?php esc_html_e('Action', 'postnl-for-woocommerce'); ?></strong>
+								<strong><?php esc_html_e( 'Action', 'postnl-for-woocommerce' ); ?></strong>
 							</div>
 						</div>
 					</div>
@@ -724,7 +724,7 @@ class Settings extends \WC_Settings_API {
 								<div class="merchant-codes-row">
 									<div class="country-column">
 										<select name="<?php echo esc_attr( self::MERCHANT_CODES_OPTION ); ?>_countries[]" class="country-select">
-											<option value=""><?php esc_html_e('Select Country', 'postnl-for-woocommerce'); ?></option>
+											<option value=""><?php esc_html_e( 'Select Country', 'postnl-for-woocommerce' ); ?></option>
 											<?php foreach ( $non_eu_countries as $code => $name ) : ?>
 												<option value="<?php echo esc_attr( $code ); ?>" <?php selected( $country_code, $code ); ?>>
 													<?php echo esc_html( $name ); ?> (<?php echo esc_html( $code ); ?>)
@@ -792,21 +792,25 @@ class Settings extends \WC_Settings_API {
 	}
 
 	/**
-	 * Save merchant codes from repeater
+	 * Save merchant codes from repeater.
 	 */
 	public function save_merchant_codes() {
 		$merchant_codes = array();
-		
-		// The actual POST field names are with _countries and _codes suffixes
-		$countries_key = self::MERCHANT_CODES_OPTION . '_countries';
-		$codes_key     = self::MERCHANT_CODES_OPTION . '_codes';
-		$error         = false;
+		$countries_key  = self::MERCHANT_CODES_OPTION . '_countries';
+		$codes_key      = self::MERCHANT_CODES_OPTION . '_codes';
+		$error          = false;
 
 		if ( isset( $_POST[ $countries_key ] ) && isset( $_POST[ $codes_key ] ) ) {
-			$countries = $_POST[ $countries_key ];
-			$codes     = $_POST[ $codes_key ];
+			$countries = $_POST[ $countries_key ]; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+			$codes     = $_POST[ $codes_key ];   // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 
-			// Combine countries and codes into key-value pairs.
+			// Check for duplicates in countries array.
+			if ( count( $countries ) !== count( array_unique( $countries ) ) ) {
+				WC_Admin_Settings::add_error(
+					esc_html__( 'Duplicate countries found and have been removed. Only the last entry for each country will be saved.', 'postnl-for-woocommerce' )
+				);
+			}
+
 			foreach ( $countries as $index => $country ) {
 				if ( ! empty( $country ) && ! empty( $codes[ $index ] ) ) {
 					$merchant_codes[ sanitize_text_field( $country ) ] = sanitize_text_field( $codes[ $index ] );
@@ -816,9 +820,12 @@ class Settings extends \WC_Settings_API {
 			}
 
 			update_option( self::MERCHANT_CODES_OPTION, $merchant_codes );
+
 			if ( $error ) {
 				WC_Admin_Settings::add_error( esc_html__( 'Some merchant codes were not saved because of missing country or code.', 'postnl-for-woocommerce' ) );
 			}
+		} else {
+			update_option( self::MERCHANT_CODES_OPTION, array() );
 		}
 	}
 

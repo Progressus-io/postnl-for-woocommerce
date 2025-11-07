@@ -41,6 +41,16 @@ const BlockWrapper = ( props ) => {
 	}, [] );
 
 	useEffect( () => {
+		const handleResize = () => {
+			setIsMobile( checkIsMobile() );
+			setShouldRender( checkShouldRender() );
+		};
+
+		window.addEventListener( 'resize', handleResize );
+		return () => window.removeEventListener( 'resize', handleResize );
+	}, [] );
+	
+	useEffect( () => {
 		setShouldRender( checkShouldRender() );
 	}, [ isMobile ] );
 

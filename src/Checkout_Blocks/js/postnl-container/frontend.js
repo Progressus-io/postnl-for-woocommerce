@@ -15,22 +15,49 @@ import metadata from './block.json';
  */
 const BlockWrapper = ( props ) => {
 	const [ shouldRender, setShouldRender ] = useState( true );
-	const blockRef = useRef( null );
-	const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768;
+	const [ isMobile, setIsMobile ] = useState( false );
+	const blockRef                  = useRef( null );
 
-	useEffect( () => {
+	const checkIsMobile = () => {
+		return typeof window !== 'undefined' && window.innerWidth <= 768;
+	};
+
+	const checkShouldRender = () => {
 		if ( ! blockRef.current ) {
-			return;
+			return true;
 		}
 
 		const isSidebar = blockRef.current.closest(
 			'.wc-block-components-sidebar'
 		);
+		const mobile     = checkIsMobile();
+		const shouldShow = ! ( mobile && isSidebar );
 
-		if ( isMobile && isSidebar ) {
-			setShouldRender( false );
-		}
+		return shouldShow;
+	};
+
+	useEffect( () => {
+		setIsMobile( checkIsMobile() );
+	}, [] );
+
+	useEffect( () => {
+		setShouldRender( checkShouldRender() );
 	}, [ isMobile ] );
+
+	// Watch for DOM changes that might affect sidebar status.
+	useEffect( () => {
+		if ( ! blockRef.current ) {
+			return;
+		}
+
+		const observer = new MutationObserver( () => {
+			setShouldRender( checkShouldRender() );
+		} );
+
+		return () => {
+			observer.disconnect();
+		};
+	}, [ blockRef.current ] );
 
 	if ( ! shouldRender ) {
 		return null;

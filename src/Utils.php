@@ -980,7 +980,7 @@ class Utils {
 	public static function get_non_eu_countries() {
 		$all_countries   = WC()->countries->get_countries();
 		$eu_countries    = WC()->countries->get_european_union_countries();
-		$european_non_eu = array( 'NO', 'CH', 'IS', 'LI', 'MC', 'SM', 'VA', 'AD', 'ME', 'RS', 'MK', 'AL', 'BA', 'XK', 'MD', 'UA', 'BY', 'RU', 'GE', 'AM', 'AZ', 'TR' );
+		$european_non_eu = array( 'MC', 'SM', 'VA', 'AD', 'ME', 'RS', 'MK', 'AL', 'BA', 'XK', 'MD', 'UA', 'BY', 'RU', 'GE', 'AM', 'AZ', 'TR' );
 
 		// Remove EU countries from the list.
 		$non_eu_countries = array_diff_key( $all_countries, array_flip( $eu_countries ) );

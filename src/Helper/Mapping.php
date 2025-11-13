@@ -66,9 +66,14 @@ class Mapping {
 				'NL'  => array(
 					'delivery_day'  => array(
 						array(
-							'combination' => array(),
+							'combination' => array( 'delivery_code_at_door' ),
 							'code'        => '3085',
-							'options'     => array(),
+							'options'     => array(
+								array(
+									'characteristic' => '004',
+									'option'         => '020',
+								),
+							),
 						),
 						array(
 							'combination' => array( 'only_home_address' ),

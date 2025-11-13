@@ -192,6 +192,7 @@ class Item_Info extends Base_Info {
 			'mailboxpacket'                => $saved_data['backend']['mailboxpacket'] ?? '',
 			'track_and_trace'              => $saved_data['backend']['track_and_trace'] ?? '',
 			'insured_plus'                 => $saved_data['backend']['insured_plus'] ?? '',
+			'delivery_code_at_door'        => $saved_data['backend']['delivery_code_at_door'] ?? '',
 		);
 
 		// Check mailbox weight limit
@@ -768,6 +769,12 @@ class Item_Info extends Base_Info {
 				},
 			),
 			'insured_plus'          => array(
+				'default'  => false,
+				'sanitize' => function ( $picked ) {
+					return ( 'yes' === $picked );
+				},
+			),
+			'delivery_code_at_door' => array(
 				'default'  => false,
 				'sanitize' => function ( $picked ) {
 					return ( 'yes' === $picked );

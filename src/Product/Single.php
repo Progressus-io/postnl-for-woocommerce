@@ -231,9 +231,9 @@ class Single {
 				continue;
 			}
 
-			if ( empty( $i ) && ! is_array( $_POST[ $field['id'] ] ) && 0 === $product->get_parent_id() ) {
+			if ( ( '' === $i ) && ! is_array( $_POST[ $field['id'] ] ) && 0 === $product->get_parent_id() ) {
 				$product->update_meta_data( $field['id'], sanitize_text_field( wp_unslash( $_POST[ $field['id'] ] ) ) );
-			} elseif ( ! empty( $i ) && 0 !== $product->get_parent_id() ) {
+			} elseif ( ! ( '' === $i ) && 0 !== $product->get_parent_id() ) {
 				$field_value = ! empty( $_POST[ $field['id'] ][ $i ] ) ? $_POST[ $field['id'] ][ $i ] : '';
 				$product->update_meta_data( $field['id'], sanitize_text_field( wp_unslash( $field_value ) ) );
 			}

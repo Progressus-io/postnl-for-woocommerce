@@ -227,16 +227,13 @@ class Single {
 
 		foreach ( $fields as $field ) {
 			if ( ! isset( $_POST[ $field['id'] ] ) ) {
-				error_log( 'PostNL: ' . $field['id'] . ' is not set in POST data.' );
 				$product->delete_meta_data( $field['id'] );
 				continue;
 			}
 
 			if ( empty( $i ) && ! is_array( $_POST[ $field['id'] ] ) && 0 === $product->get_parent_id() ) {
-				error_log( 'PostNL: Saving ' . $field['id'] . ' for parent product.' );
 				$product->update_meta_data( $field['id'], sanitize_text_field( wp_unslash( $_POST[ $field['id'] ] ) ) );
 			} elseif ( ! empty( $i ) && 0 !== $product->get_parent_id() ) {
-				error_log( 'PostNL: Saving ' . $field['id'] . ' for variation ' . $i . '.' );
 				$field_value = ! empty( $_POST[ $field['id'] ][ $i ] ) ? $_POST[ $field['id'] ][ $i ] : '';
 				$product->update_meta_data( $field['id'], sanitize_text_field( wp_unslash( $field_value ) ) );
 			}

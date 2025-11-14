@@ -66,7 +66,7 @@ class Mapping {
 				'NL'  => array(
 					'delivery_day'  => array(
 						array(
-							'combination' => array( 'delivery_code_at_door' ),
+							'combination' => array( 'delivery_code_at_door', 'insured_shipping' ),
 							'code'        => '3085',
 							'options'     => array(
 								array(

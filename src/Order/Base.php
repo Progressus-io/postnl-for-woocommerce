@@ -271,7 +271,7 @@ abstract class Base {
 			array(
 				'id'            => $this->prefix . 'delivery_code_at_door',
 				'type'          => 'checkbox',
-				'label'         => esc_html__( 'Delivery code at the door', 'postnl-for-woocommerce' ),
+				'label'         => esc_html__( 'Delivery code at the door: ', 'postnl-for-woocommerce' ),
 				'placeholder'   => '',
 				'description'   => '',
 				'value'         => '',

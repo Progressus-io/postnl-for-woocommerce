@@ -1,6 +1,40 @@
 ( function( $ ) {
-	/*
-      * Helper – refresh the “Delivery Days” tab title with base-fee
+    /*
+     * Helper – get tax rate from cart totals
+     */
+ 	function getTaxRateFromCart() {
+    	const cartTotals = window.postnl_data?.cart_totals || {};
+		
+		if ( cartTotals.total_tax && cartTotals.total ) {
+			const totalTax       = parseFloat( cartTotals.total_tax );
+			const totalPrice     = parseFloat( cartTotals.total );
+			const totalBeforeTax = totalPrice - totalTax;
+			
+			return totalBeforeTax > 0 ? totalTax / totalBeforeTax : 0;
+		}
+		
+		return 0;
+	}
+
+    /*
+     * Helper – apply tax to price if needed
+     */
+    function applyTaxToPrice( price ) {
+    	const taxSettings          = window.postnl_data?.tax_settings || {};
+        const shouldDisplayWithTax = taxSettings.enabled && 'incl' === taxSettings.tax_display_cart;
+        
+        if ( shouldDisplayWithTax ) {
+            const taxRate = getTaxRateFromCart();
+            if (taxRate > 0) {
+                return price * ( 1 + taxRate );
+            }
+        }
+        
+        return price;
+    }
+
+    /*
+      * Helper – refresh the "Delivery Days" tab title with base-fee
       *
       */
 	function parsePrice( text ) {
@@ -74,9 +108,12 @@
 			baseFee = 0;
 		}
 
+		// Apply tax only to base fees, not extra fees
+        const baseFeeWithTax = applyTaxToPrice( baseFee );
+
 		let text = 'Delivery Days';
-		if (baseFee > 0) {
-			text += ' €' + baseFee.toFixed(2);
+		if ( baseFeeWithTax > 0 ) {
+			text += ' €' + baseFeeWithTax.toFixed( 2 );
 		}
 		if (extraFee > 0) {
 			text += ' + €' + extraFee.toFixed(2);
@@ -107,9 +144,11 @@
 			total = 0;
 		}
 
+		// Apply tax to the base fee
+        const totalWithTax = applyTaxToPrice( total );
 		let text = 'Pickup';
-		if (total > 0) {
-			text += ' €' + total.toFixed(2);
+		if ( totalWithTax > 0 ) {
+			text += ' €' + totalWithTax.toFixed( 2 );
 		}
 
 		$label.children('span').first().text(text);
@@ -199,7 +238,10 @@
 
 				$checked.trigger('change');
 
-			});
+                // Update tab fees when switching tabs
+                updateDeliveryDayTabFee();
+                updatePickupTabFee();
+            });
 
 			radio_options.on('change', function () {
 				const ul_list = $(this).closest('.postnl_list');
@@ -217,7 +259,10 @@
 
 				$('body').trigger('update_checkout');
 
-			});
+                // Update tab fees when changing delivery options
+                updateDeliveryDayTabFee();
+                updatePickupTabFee();
+            });
 
 			checkout_option
 				.find('.postnl_checkout_tab_list .active .postnl_option')

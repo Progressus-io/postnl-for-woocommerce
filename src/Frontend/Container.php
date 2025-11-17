@@ -87,12 +87,14 @@ class Container {
 			POSTNL_WC_VERSION,
 			true
 		);
+
 		if ( is_checkout() && WC()->cart ) {
+
 			// Get tax settings.
 			$tax_settings = array(
-				'enabled' => get_option('woocommerce_calc_taxes') === 'yes',
-				'tax_display_cart' => get_option('woocommerce_tax_display_cart', 'excl'),
-				'prices_include_tax' => get_option('woocommerce_prices_include_tax') === 'yes',
+				'enabled'            => 'yes' === get_option('woocommerce_calc_taxes'),
+				'tax_display_cart'   => get_option('woocommerce_tax_display_cart', 'excl'),
+				'prices_include_tax' => 'yes' === get_option('woocommerce_prices_include_tax'),
 			);
 
 			$cart_totals = WC()->cart->get_totals();

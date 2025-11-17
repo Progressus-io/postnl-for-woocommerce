@@ -1,7 +1,7 @@
 /**
  * External dependencies
  */
-import {useEffect, useState, useRef, useMemo} from '@wordpress/element';
+import {useEffect, useState, useRef, useCallback} from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 import { getSetting } from '@woocommerce/settings';
 import { useDispatch, useSelect } from '@wordpress/data';
@@ -21,84 +21,72 @@ export const Block = ( { checkoutExtensionData } ) => {
 	const letterbox = postnlData.letterbox || false;
 	const { CART_STORE_KEY, CHECKOUT_STORE_KEY } = window.wc.wcBlocksData;
 
-	const { selectedShippingFee, totalTaxAmount, cartTotals, taxSettings } =
-		useSelect(
-			( select ) => {
-				const store = select( CART_STORE_KEY );
-				if ( ! store || ! store.getCartData ) {
-					return {
-						selectedShippingFee: 0,
-						totalTaxAmount: 0,
-						cartTotals: null,
-						taxSettings: { enabled: false, includeTax: false },
-					};
+	const { applyTaxToBase } = useSelect(
+		( select ) => {
+			const store = select( CART_STORE_KEY );
+			
+			// Get tax settings from PHP data
+			const taxSettings = postnlData.tax_settings || {};
+			const shouldIncludeTax = taxSettings.enabled && taxSettings.tax_display_cart === 'incl';
+			
+			if ( ! shouldIncludeTax ) {
+				return {
+					applyTaxToBase: ( price ) => price // No tax to apply
+				};
+			}
+			
+			// Get cart totals for tax calculation
+			const totals = store?.getCartTotals ? store.getCartTotals() : null;
+			let taxRate = 0;
+			
+			if ( totals && totals.total_tax && totals.total_price ) {
+				const totalTax = Number( totals.total_tax ) / Math.pow( 10, totals.currency_minor_unit || 0 );
+				const totalPrice = Number( totals.total_price ) / Math.pow( 10, totals.currency_minor_unit || 0 );
+				const totalBeforeTax = totalPrice - totalTax;
+				
+				if ( totalBeforeTax > 0 && totalTax > 0 ) {
+					taxRate = totalTax / totalBeforeTax;
 				}
+			}
+			
+			return {
+				applyTaxToBase: ( price ) => taxRate > 0 ? price * ( 1 + taxRate ) : price
+			};
+		},
+		[ CART_STORE_KEY, postnlData.tax_settings ]
+	);
+	const selectedShippingFee = useSelect(
+		( select ) => {
+			const store = select( CART_STORE_KEY );
+			if ( ! store || ! store.getCartData ) {
+				return 0;
+			}
 
-				const packages = store.getCartData().shippingRates || [];
-				let shippingFee = 0;
+			const packages = store.getCartData().shippingRates || [];
 
-				for ( const pkg of packages ) {
-					const rates = pkg.shipping_rates || [];
-					const chosen = rates.find(
-						( rate ) => rate && rate.selected
-					);
-					if ( chosen && chosen.price !== undefined ) {
-						const minor = Number( chosen.currency_minor_unit || 0 );
-						const price = parseFloat( chosen.price );
-						if ( ! Number.isNaN( price ) ) {
-							shippingFee = price / Math.pow( 10, minor );
-						}
-						break;
+			for ( const pkg of packages ) {
+				const rates = pkg.shipping_rates || [];
+				const chosen = rates.find( ( rate ) => rate && rate.selected );
+				if ( chosen && chosen.price !== undefined ) {
+					const minor = Number( chosen.currency_minor_unit || 0 );
+					const price = parseFloat( chosen.price );
+					if ( ! Number.isNaN( price ) ) {
+						return price / Math.pow( 10, minor );
 					}
 				}
+			}
 
-				// Get cart totals
-				const totals = store.getCartTotals
-					? store.getCartTotals()
-					: null;
-
-				// Fallback to cart totals for shipping fee.
-				if ( shippingFee === 0 && totals && totals.total_shipping ) {
-					shippingFee =
-						Number( totals.total_shipping ) /
-						Math.pow( 10, totals.currency_minor_unit || 0 );
+			if ( store.getCartTotals ) {
+				const totals = store.getCartTotals();
+				if ( totals && totals.shipping_total ) {
+					return Number( totals.shipping_total );
 				}
+			}
 
-				// Get TOTAL TAX from cart totals.
-				let totalTax = 0;
-				if ( totals && totals.total_tax ) {
-					totalTax =
-						Number( totals.total_tax ) /
-						Math.pow( 10, totals.currency_minor_unit || 0 );
-				}
-
-				const taxEnabled       = postnlData.tax_settings?.enabled || false;
-				const pricesIncludeTax = postnlData.tax_settings?.prices_include_tax || false;
-
-				return {
-					selectedShippingFee: shippingFee,
-					totalTaxAmount: totalTax,
-					cartTotals: totals,
-					taxSettings: {
-						enabled: taxEnabled,
-						includeTax: pricesIncludeTax,
-					},
-				};
-			},
-			[ CART_STORE_KEY ]
-		);
-
-	// Simplified version if you don't need the separate callback
-	const overallTaxRate = useMemo( () => {
-		if ( ! cartTotals || ! totalTaxAmount || totalTaxAmount === 0 || ! taxSettings.enabled ) {
 			return 0;
-		}
-
-		const totalPrice = Number( cartTotals.total_price ) / Math.pow( 10, cartTotals.currency_minor_unit || 0 );
-		const totalBeforeTax = totalPrice - totalTaxAmount;
-
-		return totalBeforeTax > 0 ? totalTaxAmount / totalBeforeTax : 0;
-	}, [ cartTotals, totalTaxAmount, taxSettings ] );
+		},
+		[ CART_STORE_KEY ]
+	);
 
 	// stores the Morning/Evening surcharge currently selected
 	const [extraDeliveryFee, setExtraDeliveryFee] = useState(() => {
@@ -149,29 +137,15 @@ export const Block = ( { checkoutExtensionData } ) => {
 		}
 
 		const extra = tab.id === 'delivery_day' ? extraDeliveryFee : 0;
-		const totalBeforeTax = base + extra;
+    	const baseWithTax = applyTaxToBase( base );
 
-		let displayPrice = totalBeforeTax;
-
-		// Check if we should display prices with tax based on WooCommerce settings.
-		const shouldDisplayWithTax =
-			taxSettings.enabled &&
-			postnlData.tax_settings?.tax_display_cart === 'incl';
-
-		if ( shouldDisplayWithTax && overallTaxRate > 0 ) {
-			// Display price including tax
-			displayPrice = totalBeforeTax * ( 1 + overallTaxRate );
+		if ( baseWithTax > 0 || extra > 0 ) {
+			title += ` €${ baseWithTax.toFixed( 2 ) }${
+				extra > 0 ? `+€${ extra.toFixed( 2 ) }` : ''
+			}`;
 		}
 
-		if ( displayPrice > 0 ) {
-			title += ` ${ displayPrice.toFixed( 2 ) }`;
-		}
-
-		return {
-			id: tab.id,
-			name: title,
-			base: tab.base,
-		};
+		return { id: tab.id, name: title, base: tab.base };
 	} );
 
 

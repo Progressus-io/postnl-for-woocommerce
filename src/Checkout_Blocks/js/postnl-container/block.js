@@ -137,11 +137,12 @@ export const Block = ( { checkoutExtensionData } ) => {
 		}
 
 		const extra = tab.id === 'delivery_day' ? extraDeliveryFee : 0;
-    	const baseWithTax = applyTaxToBase( base );
+    	const baseWithTax  = applyTaxToBase( base );
+		const extraWithTax = applyTaxToBase( extra );
 
-		if ( baseWithTax > 0 || extra > 0 ) {
+		if ( baseWithTax > 0 || extraWithTax > 0 ) {
 			title += ` €${ baseWithTax.toFixed( 2 ) }${
-				extra > 0 ? `+€${ extra.toFixed( 2 ) }` : ''
+				extraWithTax > 0 ? `+€${ extraWithTax.toFixed( 2 ) }` : ''
 			}`;
 		}
 

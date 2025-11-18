@@ -108,15 +108,16 @@
 			baseFee = 0;
 		}
 
-		// Apply tax only to base fees, not extra fees
-        const baseFeeWithTax = applyTaxToPrice( baseFee );
+		// Apply tax only to base and extra fees
+        const baseFeeWithTax  = applyTaxToPrice( baseFee );
+        const extraFeeWithTax = applyTaxToPrice( extraFee );
 
 		let text = 'Delivery Days';
 		if ( baseFeeWithTax > 0 ) {
 			text += ' €' + baseFeeWithTax.toFixed( 2 );
 		}
-		if (extraFee > 0) {
-			text += ' + €' + extraFee.toFixed(2);
+		if ( extraFeeWithTax > 0 ) {
+			text += ' + €' + extraFeeWithTax.toFixed(2);
 		}
 
 		$label.children('span').first().text(text);

@@ -178,7 +178,7 @@ class Delivery_Day extends Base {
 
 			$return_data['delivery_options'][] = array(
 				'day'     => $day_name,
-				'date'    => gmdate( 'Y-m-d', $timestamp ),
+				'date'    => gmdate( get_option( 'date_format' ), $timestamp ),
 				'options' => $options,
 			);
 

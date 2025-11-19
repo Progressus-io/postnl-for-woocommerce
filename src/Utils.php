@@ -706,8 +706,8 @@ class Utils {
 		foreach ( $products as $item_id => $item ) {
 			// Get the main product
 			$product_id = $item['product_id'] ?? $item->get_product_id();
-			$product = wc_get_product( $product_id );
-	
+			$product    = wc_get_product( $product_id );
+
 			if ( ! is_a( $product, 'WC_Product' ) ) {
 				// If the product is not found, consider the order not eligible.
 				return false;
@@ -718,7 +718,7 @@ class Utils {
 			}
 
 			// Check if it's a variation and get the variation product if needed.
-			$variation_id = $item['variation_id'] ?? ( method_exists( $item, 'get_variation_id' ) ? $item->get_variation_id() : 0 );
+			$variation_id     = $item['variation_id'] ?? ( method_exists( $item, 'get_variation_id' ) ? $item->get_variation_id() : 0 );
 			$product_to_check = $product;
 
 			if ( $variation_id > 0 ) {
@@ -740,7 +740,7 @@ class Utils {
 			}
 
 			$has_letterbox_product = true;
-			$quantity = $item['quantity'] ?? $item->get_quantity();
+			$quantity              = $item['quantity'] ?? $item->get_quantity();
 
 			// Get max quantity per letterbox from the variation first, then fallback to parent.
 			$qty_per_letterbox = intval( $product_to_check->get_meta( Product\Single::MAX_QTY_PER_LETTERBOX ) );

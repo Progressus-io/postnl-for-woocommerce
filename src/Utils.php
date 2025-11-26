@@ -597,6 +597,7 @@ class Utils {
 			'mailboxpacket'         => esc_html__( 'Boxable Packet', 'postnl-for-woocommerce' ),
 			'track_and_trace'       => esc_html__( 'Track & Trace', 'postnl-for-woocommerce' ),
 			'insured_shipping'      => esc_html__( 'Insured Shipping', 'postnl-for-woocommerce' ),
+			'delivery_code_at_door' => esc_html__( 'Delivery Code at Door', 'postnl-for-woocommerce' ),
 		);
 
 		// Modify options based on shipping destination.

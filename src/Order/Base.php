@@ -274,7 +274,7 @@ abstract class Base {
 				'label'         => esc_html__( 'Delivery code at the door: ', 'postnl-for-woocommerce' ),
 				'placeholder'   => '',
 				'description'   => '',
-				'value'         => '',
+				'value'         => $default_options['delivery_code_at_door'] ?? '',
 				'show_in_bulk'  => true,
 				'standard_feat' => false,
 				'const_field'   => false,

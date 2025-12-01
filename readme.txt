@@ -80,6 +80,8 @@ Follow these instructions (https://www.postnl.nl/Images/aanvragen-api-key-stappe
 5. PostNL information on the order details page
 
 == Changelog ==
+### 5.8.2
+* Fix: Delivery fees now properly include tax when taxes are enabled.
 
 ### 5.8.1 (2025-09-16) =
 * Add: New email settings field for shipping confirmation.

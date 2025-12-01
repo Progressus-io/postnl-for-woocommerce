@@ -80,6 +80,8 @@ Follow these instructions (https://www.postnl.nl/Images/aanvragen-api-key-stappe
 5. PostNL information on the order details page
 
 == Changelog ==
+### 5.8.2
+* Fix: delivery-day date format to follow the WordPress General Settings configuration
 
 ### 5.8.1 (2025-09-16) =
 * Add: New email settings field for shipping confirmation.

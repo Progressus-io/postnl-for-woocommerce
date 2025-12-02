@@ -34,6 +34,10 @@ PostNL’s official extension for WooCommerce on WordPress. Manage your national
 
 ## Changelog
 
+### 5.8.2
+* Add: validation and TrustedShipperID support for merchant customs codes in the non-EU shipping settings.
+
+
 ### 5.8.1
 * Add: New email settings field for shipping confirmation.
 * Fix: Allow admin to dismiss the survey/reward notice.

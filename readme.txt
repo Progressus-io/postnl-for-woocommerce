@@ -81,6 +81,9 @@ Follow these instructions (https://www.postnl.nl/Images/aanvragen-api-key-stappe
 
 == Changelog ==
 
+### 5.8.2
+* Add: validation and TrustedShipperID support for merchant customs codes in the outside-EU shipping settings.
+
 ### 5.8.1 (2025-09-16) =
 * Add: New email settings field for shipping confirmation.
 * Fix: Allow admin to dismiss the survey/reward notice.

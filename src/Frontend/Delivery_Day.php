@@ -179,7 +179,7 @@ class Delivery_Day extends Base {
 			$return_data['delivery_options'][] = array(
 				'day'          => $day_name,
 				'date'         => gmdate( 'Y-m-d', $timestamp ),
-				'display_date' => gmdate( get_option( 'date_format' ), $timestamp ),
+				'display_date' => wp_date( get_option( 'date_format' ), $timestamp ),
 				'options'      => $options,
 			);
 

@@ -27,7 +27,7 @@ if ( empty( $data['delivery_options'] ) ) {
 			if ( $data['is_delivery_days_enabled'] ) {
 				?>
 					<div class="list_title">
-						<span><?php echo esc_html( $delivery['date'] . ' ' . $delivery['day'] ); ?></span>
+						<span><?php echo esc_html( $delivery['display_date'] . ' ' . $delivery['day'] ); ?></span>
 					</div>
 				<?php
 			}

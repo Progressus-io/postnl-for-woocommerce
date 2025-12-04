@@ -298,7 +298,9 @@ class Fill_In_With_Postnl {
 
 			if ( ! $customer ) {
 				$button_class = 'postnl-hidden';
-			} elseif ( ! Utils::is_customer_country_allowed( $customer, $allowed_countries ) ) {
+			}
+			
+			if ( ! Utils::is_customer_country_allowed( $customer, $allowed_countries ) ) {
 				$button_class = 'postnl-hidden';
 			}
 		}

@@ -35,6 +35,10 @@ PostNL’s official extension for WooCommerce on WordPress. Manage your national
 ## Changelog
 
 ### 5.8.2
+* Add: Ability for marking products as 18+ and automatically apply ID Check to orders containing them.
+* Add: Validation and TrustedShipperID support for merchant customs codes in the non-EU shipping settings.
+* Fix: PostNL delivery options block duplicated in the mobile checkout order summary.
+* Fix: delivery-day date format to follow the WordPress General Settings configuration.
 * Fix: the HS Tariff Code field not saving for product variations.
 
 ### 5.8.1

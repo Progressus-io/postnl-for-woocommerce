@@ -136,4 +136,42 @@ class PostNL extends \WC_Shipping_Flat_Rate {
 			);
 		}
 	}
+
+	/**
+	 * Generate Settings HTML.
+	 *
+	 * @param array $form_fields Array of form fields.
+	 * @param bool  $echo Echo or return.
+	 * @return string
+	 */
+	public function generate_settings_html( $form_fields = array(), $echo = true ) {
+		if ( empty( $form_fields ) ) {
+			$form_fields = $this->get_form_fields();
+		}
+
+		$html = '';
+		$settings = Settings::get_instance();
+		
+		foreach ( $form_fields as $k => $v ) {
+			$type = $this->get_field_type( $v );
+
+			// Check if Settings class has a custom generator for this field type
+			if ( method_exists( $settings, 'generate_' . $type . '_html' ) ) {
+				$html .= $settings->{'generate_' . $type . '_html'}( $k, $v );
+			} elseif ( method_exists( $this, 'generate_' . $type . '_html' ) ) {
+				$html .= $this->{'generate_' . $type . '_html'}( $k, $v );
+			} elseif ( has_filter( 'woocommerce_generate_' . $type . '_html' ) ) {
+				$html .= apply_filters( 'woocommerce_generate_' . $type . '_html', '', $k, $v, $this );
+			} else {
+				$html .= $this->generate_text_html( $k, $v );
+			}
+		}
+
+		if ( $echo ) {
+			echo $html; // WPCS: XSS ok.
+		} else {
+			return $html;
+		}
+	}
+
 }

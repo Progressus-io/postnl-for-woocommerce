@@ -1,0 +1,46 @@
+#postnl-merchant-codes-repeater {
+    margin-top: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background: #fff;
+}
+.merchant-codes-header-row {
+    background: #f9f9f9;
+    border-bottom: 1px solid #ddd;
+    font-weight: bold;
+}
+.merchant-codes-row {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    border-bottom: 1px solid #eee;
+}
+.merchant-codes-row:last-child {
+    border-bottom: none;
+}
+.country-column {
+    flex: 2;
+    margin-right: 10px;
+}
+.code-column {
+    flex: 2;
+    margin-right: 10px;
+}
+.action-column {
+    flex: 1;
+    text-align: center;
+}
+.country-select {
+    width: 100%;
+}
+.merchant-codes-actions {
+    padding: 10px;
+    background: #f9f9f9;
+    border-top: 1px solid #ddd;
+}
+.remove-row {
+    color: #a00;
+}
+.remove-row:hover {
+    color: #dc3232;
+}

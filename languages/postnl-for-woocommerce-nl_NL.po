@@ -129,116 +129,116 @@ msgstr "De PostNL plugin vereist het installeren en activeren van WooCommerce!"
 msgid "PostNL plugin requires store country to be Netherlands (NL) or Belgium (BE)!"
 msgstr "De PostNL plugin vereist een winkellocatie in Nederland of België!"
 
-#: src/Order/Base.php:153
+#: src/Order/Base.php:154
 msgid "ID Check: "
 msgstr "Leeftijdscheck: "
 
-#: src/Order/Base.php:165
+#: src/Order/Base.php:166
 msgid "Insured Shipping: "
 msgstr "Verzekerd verzenden: "
 
-#: src/Order/Base.php:177
+#: src/Order/Base.php:178
 msgid "Insured Plus: "
 msgstr "Verzekerd Plus: "
 
-#: src/Order/Base.php:189
+#: src/Order/Base.php:190
 msgid "Return if no answer: "
 msgstr "Retour bij geen gehoor: "
 
-#: src/Order/Base.php:201
+#: src/Order/Base.php:202
 msgid "Signature on Delivery: "
 msgstr "Handtekening voor ontvangst: "
 
-#: src/Order/Base.php:213
+#: src/Order/Base.php:214
 msgid "Only Home Address: "
 msgstr "Alleen huisadres: "
 
-#: src/Order/Base.php:225
+#: src/Order/Base.php:226
 msgid "Letterbox: "
 msgstr "Brievenbuspakje: "
 
-#: src/Order/Base.php:237
+#: src/Order/Base.php:238
 msgid "Packets: "
 msgstr "Pakje: "
 
-#: src/Order/Base.php:249
+#: src/Order/Base.php:250
 msgid "Mailbox Packet (International): "
 msgstr "Brievenbuspakje (Internationaal): "
 
-#: src/Order/Base.php:261
+#: src/Order/Base.php:262
 msgid "Track & Trace: "
 msgstr "Track & Trace: "
 
-#: src/Order/Base.php:279
+#: src/Order/Base.php:280
 #: src/Order/Bulk.php:429
 msgid "Number of Labels: "
 msgstr "Aantal labels: "
 
-#: src/Order/Base.php:310
+#: src/Order/Base.php:311
 #: src/Order/Bulk.php:448
 msgid "Create Return Label: "
 msgstr "Creëer retourlabel: "
 
-#: src/Order/Base.php:325
+#: src/Order/Base.php:326
 #: src/Order/Bulk.php:460
 msgid "Start position printing label: "
 msgstr "Startpositie printen van labels "
 
-#: src/Order/Base.php:329
+#: src/Order/Base.php:330
 #: src/Order/Bulk.php:466
 msgid "Top Left"
 msgstr "Linksboven"
 
-#: src/Order/Base.php:330
+#: src/Order/Base.php:331
 #: src/Order/Bulk.php:467
 msgid "Top Right"
 msgstr "Rechtsboven"
 
-#: src/Order/Base.php:331
+#: src/Order/Base.php:332
 #: src/Order/Bulk.php:468
 msgid "Bottom Left"
 msgstr "Linksonder"
 
-#: src/Order/Base.php:332
+#: src/Order/Base.php:333
 #: src/Order/Bulk.php:469
 msgid "Bottom Right"
 msgstr "Rechtsonder"
 
-#: src/Order/Base.php:463
-#: src/Order/Base.php:644
+#: src/Order/Base.php:464
+#: src/Order/Base.php:645
 #: src/Order/Single.php:509
 #: src/Order/Single.php:614
 #: src/Order/Single.php:687
 msgid "Order does not exist!"
 msgstr "Deze order bestaat niet!"
 
-#: src/Order/Base.php:741
+#: src/Order/Base.php:742
 msgid "Cannot create the barcode."
 msgstr "Kan geen barcode genereren."
 
-#: src/Order/Base.php:865
+#: src/Order/Base.php:866
 msgid "Cannot create return barcode."
 msgstr "Kan geen retourbarcode genereren."
 
-#: src/Order/Base.php:1147
-#: src/Order/Base.php:1246
+#: src/Order/Base.php:1148
+#: src/Order/Base.php:1247
 msgid "Cannot create the label. Label content is missing"
 msgstr "Kan geen label creëren, label-inhoud ontbreekt"
 
-#: src/Order/Base.php:1178
+#: src/Order/Base.php:1179
 msgid "Cannot create the return label. Label content is missing"
 msgstr "Kan geen retourlabel creëren, label-inhoud ontbreekt"
 
-#: src/Order/Base.php:1209
+#: src/Order/Base.php:1210
 msgid "Cannot create the letterbox. Label content is missing"
 msgstr "Kan geen brievenbuspakje creëren, label-inhoud ontbreekt"
 
-#: src/Order/Base.php:1240
+#: src/Order/Base.php:1241
 msgid "Cannot create the label. Barcode data is missing"
 msgstr "Kan geen label creëren, barcode-informatie ontbreekt"
 
 #. translators: %s the current service.
-#: src/Order/Base.php:1375
+#: src/Order/Base.php:1376
 msgid "%s Tracking Number: {tracking-link}"
 msgstr "%s Barcode: {tracking-link}"
 
@@ -398,94 +398,94 @@ msgstr "Nonce is ongeldig!"
 msgid "Nonce is invalid"
 msgstr "Nonce is ongeldig"
 
-#: src/Product/Product_Editor.php:47
+#: src/Product/Product_Editor.php:64
 msgid "PostNL extra settings"
 msgstr "PostNL extra instellingen"
 
-#: src/Product/Product_Editor.php:63
+#: src/Product/Product_Editor.php:65
 msgid "Enable Letterbox Parcel"
 msgstr "Activeer automatische brievenbuspakjes"
 
-#: src/Product/Product_Editor.php:65
+#: src/Product/Product_Editor.php:67
 msgid "When enabled, PostNL plugin automatically determines whether a shipment fits through a letterbox."
 msgstr "Wanneer deze geactiveerd wordt zal de plug-in nagaan of een zending door de brievenbus past."
 
 #. translators: %s will be replaced by service name.
-#: src/Product/Single.php:101
+#: src/Product/Single.php:100
 msgid "Enable Letterbox Parcel (%s)"
 msgstr "Activeer automatische toewijzing Brievenbuspakje"
 
-#: src/Product/Single.php:102
+#: src/Product/Single.php:101
 msgid "When this setting is enabled the PostNL plug-in automatically determines whether a shipment fits through a letterbox. This choice can be overridden when creating a shipment manually via the Label & Tracking menu. This only works for orders with destination Netherlands."
 msgstr "Wanneer deze optie geactiveerd wordt zal de plug-in automatisch bepalen of een bestelling in een brievenbuspakje past en deze verzendoptie toewijzen. Deze toewijzing kan ongedaan gemaakt worden door handmatig de verzendopties aan te passen vanuit het bulkactie-menu of het Label & Tracking menu. Automatische toewijzing van brievenbuspakjes werkt alleen voor zendingen binnen Nederland."
 
-#: src/Product/Product_Editor.php:78
+#: src/Product/Product_Editor.php:80
 msgid "Maximum Quantity per Letterbox Parcel"
 msgstr "Maximum aantal per brievenbuspakje"
 
-#: src/Product/Product_Editor.php:82
+#: src/Product/Product_Editor.php:84
 msgid "Specify how many times this product fits in a letterbox parcel."
 msgstr "Geef aan hoe vaak het product in een brievenbuspakje past."
 
-#: src/Product/Product_Editor.php:93
+#: src/Product/Product_Editor.php:95
 msgid "Country of Origin"
 msgstr "Land van herkomst"
 
-#: src/Product/Product_Editor.php:113
+#: src/Product/Product_Editor.php:115
 msgid "Select the country of origin for this product."
 msgstr "Selecteer het land van herkomst voor dit product."
 
-#: src/Product/Product_Editor.php:124
+#: src/Product/Product_Editor.php:126
 msgid "HS Tariff Code"
 msgstr ""
 
-#: src/Product/Product_Editor.php:127
+#: src/Product/Product_Editor.php:129
 msgid "HS Tariff Code for international shipping."
 msgstr "HS Tariff Code voor internationale zendingen."
 
 #. translators: %s will be replaced by service name.
-#: src/Product/Single.php:109
+#: src/Product/Single.php:108
 msgid "Maximum amount per letterbox parcel (%s)"
 msgstr "Maximaal aantal per brievenbuspakje (%s)"
 
-#: src/Product/Single.php:110
+#: src/Product/Single.php:109
 msgid "Please fill in how many times this product fits in a letterbox parcel. A letterbox parcel may weigh a maximum of 2 kilograms and has the following maximum dimensions: 38x26.5x3.2 cm"
 msgstr "Vul hier in hoe vaak dit product in een brievenbuspakje past. Een brievenbuspakje mag maximaal 2 kilogram wegen en heeft de volgende maximale afmetingen: 38x26,5x3,2 cm"
 
-#: src/Product/Product_Editor.php:80
-#: src/Product/Single.php:112
+#: src/Product/Product_Editor.php:82
+#: src/Product/Single.php:111
 msgid "Enter max quantity"
 msgstr "Voer maximaal aantal in"
 
 #. translators: %s will be replaced by service name.
-#: src/Product/Single.php:121
+#: src/Product/Single.php:120
 msgid "Country of Origin (%s)"
 msgstr "Land van herkomst (%s)"
 
-#: src/Product/Single.php:122
+#: src/Product/Single.php:121
 msgid "Country of Origin."
 msgstr "Land van herkomst."
 
-#: src/Product/Product_Editor.php:99
-#: src/Product/Single.php:125
+#: src/Product/Product_Editor.php:101
+#: src/Product/Single.php:124
 msgid "- select country -"
 msgstr "- Selecteer land -"
 
 #. translators: %s will be replaced by service name.
-#: src/Product/Single.php:133
+#: src/Product/Single.php:132
 msgid "HS Tariff Code (%s)"
 msgstr "GS tarief code (%s)"
 
-#: src/Product/Single.php:134
+#: src/Product/Single.php:133
 msgid "HS Tariff Code is a number assigned to every possible commodity that can be imported or exported from any country."
 msgstr "De GS tarief code is een code die wordt toegewezen aan ieder mogelijk product wat geïmporteerd en geëxporteerd kan worden naar iedere bestemming."
 
-#: src/Product/Product_Editor.php:126
-#: src/Product/Single.php:136
+#: src/Product/Product_Editor.php:128
+#: src/Product/Single.php:135
 msgid "HS Code"
 msgstr "HS Code"
 
-#: src/Product/Single.php:223
+#: src/Product/Single.php:222
 msgid "Product ID does not exists!"
 msgstr "Product ID bestaat niet!"
 
@@ -1623,11 +1623,11 @@ msgstr ""
 msgid "Settings"
 msgstr ""
 
-#: src/Order/Base.php:1058
+#: src/Order/Base.php:1059
 msgid "There are no files to merge."
 msgstr ""
 
-#: src/Order/Base.php:1062
+#: src/Order/Base.php:1063
 msgid "\"Imagick\" must be installed on the server to merge png files."
 msgstr ""
 
@@ -1677,7 +1677,7 @@ msgstr ""
 msgid "18+ Adults Only"
 msgstr ""
 
-#: src/Product/Single.php:282
+#: src/Product/Single.php:281
 msgid "“18+” and “Letterbox Parcel” cannot be enabled together. Letterbox has been disabled automatically."
 msgstr ""
 
@@ -1851,17 +1851,3 @@ msgstr "Herinner me hier later aan"
 #: src/Admin/Survey.php:230
 msgid "Hide"
 msgstr "Verbergen"
-
-#: src/Product/Product_Editor.php:48
-msgid "Mark as 18+ (Adults Only)"
-msgstr ""
-
-#: src/Product/Product_Editor.php:50
-#: src/Product/Single.php:94
-msgid "Enable this for products intended only for adults (18+)."
-msgstr ""
-
-#. translators: %s will be replaced by service name.
-#: src/Product/Single.php:93
-msgid "Mark as 18+ (Adults Only) (%s)"
-msgstr ""

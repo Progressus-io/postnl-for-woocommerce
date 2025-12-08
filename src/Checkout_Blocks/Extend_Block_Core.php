@@ -100,7 +100,7 @@ class Extend_Block_Core {
 						'location'   => 'address',
 						'required'   => false,
 						'attributes' => array(
-							'autoComplete' => 'house_number',
+							'autocomplete' => 'house_number',
 						),
 					),
 				);

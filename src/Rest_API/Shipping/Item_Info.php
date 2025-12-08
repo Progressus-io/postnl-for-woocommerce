@@ -467,6 +467,14 @@ class Item_Info extends Base_Info {
 			'return_options'          => array(
 				'default' => array(),
 			),
+			'merchant_code'           => array(
+				'default'  => '',
+				'sanitize' => function ( $value ) use ( $self ) {
+					// Get merchant code for destination country if it's non-EU
+					$destination_country = $self->api_args['shipping_address']['country'];
+					return Utils::get_merchant_code_for_country( $destination_country );
+				},
+			),
 			'printer_type'            => array(
 				'default'  => $this->get_product_code() == '4909' ? 'GraphicFile|PDF' : $this->settings->get_printer_type(),
 				'sanitize' => function ( $value ) use ( $self ) {

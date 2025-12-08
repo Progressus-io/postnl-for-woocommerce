@@ -34,6 +34,9 @@ PostNL’s official extension for WooCommerce on WordPress. Manage your national
 
 ## Changelog
 
+### 5.8.2
+* Add: Ability for marking products as 18+ and automatically apply ID Check to orders containing them.
+
 ### 5.8.1
 * Add: New email settings field for shipping confirmation.
 * Fix: Allow admin to dismiss the survey/reward notice.

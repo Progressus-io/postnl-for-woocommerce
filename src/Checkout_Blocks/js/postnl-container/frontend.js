@@ -15,8 +15,7 @@ import metadata from './block.json';
  */
 const BlockWrapper = ( props ) => {
 	const [ shouldRender, setShouldRender ] = useState( true );
-	const [ isMobile, setIsMobile ] = useState( false );
-	const blockRef                  = useRef( null );
+	const blockRef = useRef( null );
 
 	const checkIsMobile = () => {
 		return typeof window !== 'undefined' && window.innerWidth <= 768;
@@ -30,52 +29,32 @@ const BlockWrapper = ( props ) => {
 		const isSidebar = blockRef.current.closest(
 			'.wc-block-components-sidebar'
 		);
-		const mobile     = checkIsMobile();
-		const shouldShow = ! ( mobile && isSidebar );
+		const mobile = checkIsMobile();
 
-		return shouldShow;
+		// Hide if mobile AND inside sidebar.
+		return ! ( mobile && isSidebar );
 	};
 
+	// Check on mount and when ref is attached.
 	useEffect( () => {
-		setIsMobile( checkIsMobile() );
+		setShouldRender( checkShouldRender() );
 	}, [] );
 
+	// Handle resize events (including orientation changes).
 	useEffect( () => {
 		const handleResize = () => {
-			setIsMobile( checkIsMobile() );
 			setShouldRender( checkShouldRender() );
 		};
 
 		window.addEventListener( 'resize', handleResize );
 		return () => window.removeEventListener( 'resize', handleResize );
 	}, [] );
-	
-	useEffect( () => {
-		setShouldRender( checkShouldRender() );
-	}, [ isMobile ] );
 
-	// Watch for DOM changes that might affect sidebar status.
-	useEffect( () => {
-		if ( ! blockRef.current ) {
-			return;
-		}
-
-		const observer = new MutationObserver( () => {
-			setShouldRender( checkShouldRender() );
-		} );
-
-		return () => {
-			observer.disconnect();
-		};
-	}, [ blockRef.current ] );
-
-	if ( ! shouldRender ) {
-		return null;
-	}
-
+	// Always render the wrapper div to keep the ref attached.
+	// Only conditionally render the Block inside.
 	return (
-		<div ref={ blockRef }>
-			<Block { ...props } />
+		<div ref={ blockRef } style={ shouldRender ? {} : { display: 'none' } }>
+			{ shouldRender && <Block { ...props } /> }
 		</div>
 	);
 };

@@ -81,8 +81,10 @@ Follow these instructions (https://www.postnl.nl/Images/aanvragen-api-key-stappe
 
 == Changelog ==
 
-### 5.8.2
-* Add: validation and TrustedShipperID support for merchant customs codes in the outside-EU shipping settings.
+### 5.8.2 (2025-xx-xx) =
+* Add: Ability for marking products as 18+ and automatically apply ID Check to orders containing them.
+* Add: Validation and TrustedShipperID support for merchant customs codes in the non-EU shipping settings.
+
 
 ### 5.8.1 (2025-09-16) =
 * Add: New email settings field for shipping confirmation.

@@ -644,10 +644,10 @@ class Utils {
 			return false;
 		}
 
-		/*
+		
 		if ( self::contains_adults_only_products( $cart->get_cart() ) ) {
 			return false;
-		}*/
+		}
 
 		return self::check_products_for_letterbox( $cart->get_cart() );
 	}

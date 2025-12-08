@@ -12,6 +12,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 use PostNLWooCommerce\Utils;
+use WC_Admin_Meta_Boxes;
+use WC_Product;
 
 /**
  * Class Single
@@ -84,7 +86,6 @@ class Single {
 	 */
 	public static function product_field_maps( $service ) {
 		return array(
-			/*
 			array(
 				'id'          => self::ADULTS_ONLY_FIELD,
 				'type'        => 'checkbox',
@@ -92,7 +93,7 @@ class Single {
 				'label'       => sprintf( esc_html__( 'Mark as 18+ (Adults Only) (%s)', 'postnl-for-woocommerce' ), $service ),
 				'description' => esc_html__( 'Enable this for products intended only for adults (18+).', 'postnl-for-woocommerce' ),
 				'desc_tip'    => 'true',
-			),*/
+			),
 			array(
 				'id'          => self::LETTERBOX_PARCEL,
 				'type'        => 'checkbox',
@@ -146,8 +147,8 @@ class Single {
 		add_action( 'woocommerce_process_product_meta', array( $this, 'save_additional_product_parent_options' ) );
 		add_action( 'woocommerce_variation_options_pricing', array( $this, 'additional_product_variation_shipping_options' ), 10, 3 );
 		add_action( 'woocommerce_save_product_variation', array( $this, 'save_additional_product_variation_options' ), 10, 2 );
-		// add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_admin_product_edit_script' ) );
-		// add_action( 'woocommerce_before_product_object_save', array( $this, 'validate_conflicting_options' ), 100, 1 );
+		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_admin_product_edit_script' ) );
+		add_action( 'woocommerce_before_product_object_save', array( $this, 'validate_conflicting_options' ), 100, 1 );
 	}
 
 	/**
@@ -266,7 +267,7 @@ class Single {
 	 *
 	 * @param \WC_Product $product Current product object.
 	 */
-	public static function validate_conflicting_options( \WC_Product $product ) {
+	public static function validate_conflicting_options( WC_Product $product ) {
 		// Read the current meta values.
 		$is_adult     = Utils::is_adults_only_product( $product );
 		$is_letterbox = Utils::is_letterbox_parcel_product( $product );
@@ -277,7 +278,7 @@ class Single {
 			$product->save_meta_data();
 
 			// Show a notice in the admin screen.
-			\WC_Admin_Meta_Boxes::add_error(
+			WC_Admin_Meta_Boxes::add_error(
 				__( '“18+” and “Letterbox Parcel” cannot be enabled together. Letterbox has been disabled automatically.', 'postnl-for-woocommerce' )
 			);
 		}

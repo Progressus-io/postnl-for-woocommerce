@@ -90,18 +90,26 @@
 		 * Initialize merchant codes repeater functionality.
 		 */
 		init_merchant_codes_repeater: function () {
+			var self = this;
+
 			// Add new row
 			jQuery( '#add-merchant-code-row' ).on( 'click', function ( e ) {
 				e.preventDefault();
 
 				var template = jQuery( '#merchant-code-row-template' ).html();
 				jQuery( '#merchant-codes-rows' ).append( template );
+
+				// Update disabled countries in all dropdowns after adding new row
+				self.updateCountrySelectOptions();
 			} );
 
 			// Remove row
 			jQuery( document ).on( 'click', '.remove-row', function ( e ) {
 				e.preventDefault();
 				jQuery( this ).closest( '.merchant-codes-row' ).remove();
+
+				// Update disabled countries after removing a row
+				self.updateCountrySelectOptions();
 			} );
 
 			// Add initial row if none exist
@@ -114,31 +122,43 @@
 
 			// Prevent selecting the same country twice
 			jQuery( document ).on( 'change', '.country-select', function () {
-				var selectedCountries = [];
-				jQuery( '.country-select' ).each( function () {
-					if ( jQuery( this ).val() ) {
-						selectedCountries.push( jQuery( this ).val() );
-					}
-				} );
+				self.updateCountrySelectOptions();
+			} );
 
-				jQuery( '.country-select' ).each( function () {
-					var currentValue = jQuery( this ).val();
-					jQuery( this )
-						.find( 'option' )
-						.each( function () {
-							if (
-								jQuery( this ).val() &&
-								selectedCountries.indexOf(
-									jQuery( this ).val()
-								) !== -1 &&
-								jQuery( this ).val() !== currentValue
-							) {
-								jQuery( this ).prop( 'disabled', true );
-							} else {
-								jQuery( this ).prop( 'disabled', false );
-							}
-						} );
-				} );
+			// Initialize disabled state on page load
+			this.updateCountrySelectOptions();
+		},
+
+		/**
+		 * Update country select options to disable already selected countries.
+		 */
+		updateCountrySelectOptions: function () {
+			var selectedCountries = [];
+
+			// Collect all selected countries
+			jQuery( '.country-select' ).each( function () {
+				if ( jQuery( this ).val() ) {
+					selectedCountries.push( jQuery( this ).val() );
+				}
+			} );
+
+			// Update each select's options
+			jQuery( '.country-select' ).each( function () {
+				var currentValue = jQuery( this ).val();
+				jQuery( this )
+					.find( 'option' )
+					.each( function () {
+						var optionValue = jQuery( this ).val();
+						if (
+							optionValue &&
+							selectedCountries.indexOf( optionValue ) !== -1 &&
+							optionValue !== currentValue
+						) {
+							jQuery( this ).prop( 'disabled', true );
+						} else {
+							jQuery( this ).prop( 'disabled', false );
+						}
+					} );
 			} );
 		},
 	};

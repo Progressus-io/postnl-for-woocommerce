@@ -130,7 +130,7 @@ msgid "Pick up at PostNL-point"
 msgstr ""
 
 #: src/Frontend/Base.php:171
-#: src/Order/Single.php:328
+#: src/Order/Single.php:322
 msgid "Date:"
 msgstr ""
 

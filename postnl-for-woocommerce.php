@@ -10,10 +10,10 @@
  * Version: 5.8.1
  * Requires Plugins: woocommerce
  * Requires PHP: 7.4
- * Requires at least: 6.6
- * Tested up to: 6.8
+ * Requires at least: 6.7
+ * Tested up to: 6.9
  * WC requires at least: 9.6
- * WC tested up to: 10.2
+ * WC tested up to: 10.4
  * Text Domain: postnl-for-woocommerce
  * Domain Path: /languages/
  *

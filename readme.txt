@@ -3,10 +3,10 @@ Contributors: PostNL, shadim, abdalsalaam
 Tags: woocommerce, PostNL, Labels, Shipping
 Requires Plugins: woocommerce
 Requires PHP: 7.4
-Requires at least: 6.6
-Tested up to: 6.8
+Requires at least: 6.7
+Tested up to: 6.9
 WC requires at least: 9.6
-WC tested up to: 10.2
+WC tested up to: 10.4
 Stable tag: 5.8.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -89,6 +89,7 @@ Follow these instructions (https://www.postnl.nl/Images/aanvragen-api-key-stappe
 * Fix: delivery-day date format to follow the WordPress General Settings configuration.
 * Fix: the HS Tariff Code field not saving for product variations.
 * Fix: letterbox logic for variable products.
+* Tweak: WordPress 6.9 and WooCommerce 10.4 compatibility.
 
 ### 5.8.1 (2025-09-16) =
 * Add: New email settings field for shipping confirmation.

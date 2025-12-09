@@ -119,10 +119,9 @@ abstract class Base {
 			return $default_options;
 		}
 
-		/*
 		if ( Utils::is_adults_only_order( $order ) ) {
 			return array( 'id_check' => 'yes' );
-		}*/
+		}
 
 		// Get from the plugin settings.
 		$shipping_zone = Utils::get_shipping_zone( $order->get_shipping_country(), $order->get_shipping_state() );
@@ -263,6 +262,18 @@ abstract class Base {
 				'placeholder'   => '',
 				'description'   => '',
 				'value'         => '',
+				'show_in_bulk'  => true,
+				'standard_feat' => false,
+				'const_field'   => false,
+				'container'     => true,
+			),
+			array(
+				'id'            => $this->prefix . 'delivery_code_at_door',
+				'type'          => 'checkbox',
+				'label'         => esc_html__( 'Delivery code at the door: ', 'postnl-for-woocommerce' ),
+				'placeholder'   => '',
+				'description'   => '',
+				'value'         => $default_options['delivery_code_at_door'] ?? '',
 				'show_in_bulk'  => true,
 				'standard_feat' => false,
 				'const_field'   => false,

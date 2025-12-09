@@ -192,6 +192,7 @@ class Item_Info extends Base_Info {
 			'mailboxpacket'                => $saved_data['backend']['mailboxpacket'] ?? '',
 			'track_and_trace'              => $saved_data['backend']['track_and_trace'] ?? '',
 			'insured_plus'                 => $saved_data['backend']['insured_plus'] ?? '',
+			'delivery_code_at_door'        => $saved_data['backend']['delivery_code_at_door'] ?? '',
 		);
 
 		// Check mailbox weight limit
@@ -466,6 +467,14 @@ class Item_Info extends Base_Info {
 			),
 			'return_options'          => array(
 				'default' => array(),
+			),
+			'merchant_code'           => array(
+				'default'  => '',
+				'sanitize' => function ( $value ) use ( $self ) {
+					// Get merchant code for destination country if it's non-EU
+					$destination_country = $self->api_args['shipping_address']['country'];
+					return Utils::get_merchant_code_for_country( $destination_country );
+				},
 			),
 			'printer_type'            => array(
 				'default'  => $this->get_product_code() == '4909' ? 'GraphicFile|PDF' : $this->settings->get_printer_type(),
@@ -768,6 +777,12 @@ class Item_Info extends Base_Info {
 				},
 			),
 			'insured_plus'          => array(
+				'default'  => false,
+				'sanitize' => function ( $picked ) {
+					return ( 'yes' === $picked );
+				},
+			),
+			'delivery_code_at_door' => array(
 				'default'  => false,
 				'sanitize' => function ( $picked ) {
 					return ( 'yes' === $picked );

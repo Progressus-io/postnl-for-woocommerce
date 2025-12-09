@@ -71,6 +71,16 @@ class Mapping {
 							'options'     => array(),
 						),
 						array(
+							'combination' => array( 'delivery_code_at_door', 'insured_shipping' ),
+							'code'        => '3085',
+							'options'     => array(
+								array(
+									'characteristic' => '004',
+									'option'         => '020',
+								),
+							),
+						),
+						array(
 							'combination' => array( 'only_home_address' ),
 							'code'        => '3385',
 							'options'     => array(),

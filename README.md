@@ -3,10 +3,10 @@
 * Contributors: PostNL
 * Tags: woocommerce, PostNL, Labels, Shipping
 * Requires PHP: 7.4
-* Requires at least: 6.6
-* Tested up to: 6.8
+* Requires at least: 6.7
+* Tested up to: 6.9
 * WC requires at least: 9.6
-* WC tested up to: 10.2
+* WC tested up to: 10.4
 * Stable tag: 5.8.1
 * License: GPLv2 or later
 * License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -33,6 +33,17 @@ PostNL’s official extension for WooCommerce on WordPress. Manage your national
 
 
 ## Changelog
+
+### 5.8.2
+* Add: Ability for marking products as 18+ and automatically apply ID Check to orders containing them.
+* Add: Validation and TrustedShipperID support for merchant customs codes in the non-EU shipping settings.
+* Add: “Delivery code at door” shipping option.
+* Fix: PostNL delivery options block duplicated in the mobile checkout order summary.
+* Fix: delivery-day date format to follow the WordPress General Settings configuration.
+* Fix: the HS Tariff Code field not saving for product variations.
+* Fix: letterbox logic for variable products.
+* Tweak: WordPress 6.9 and WooCommerce 10.4 compatibility.
+
 
 ### 5.8.1
 * Add: New email settings field for shipping confirmation.

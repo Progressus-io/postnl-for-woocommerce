@@ -52,7 +52,7 @@ class Single extends Base {
 		add_action( 'wp_ajax_postnl_send_smart_return_email', array( $this, 'postnl_send_smart_return_email' ) );
 		add_action( 'wp_ajax_nopriv_postnl_send_smart_return_email', array( $this, 'postnl_send_smart_return_email' ) );
 
-		// add_action( 'woocommerce_after_order_itemmeta', array( $this, 'add_adult_product_label_admin_order_page' ), 10, 2 );
+		add_action( 'woocommerce_after_order_itemmeta', array( $this, 'add_adult_product_label_admin_order_page' ), 10, 2 );
 	}
 
 	/**
@@ -72,6 +72,12 @@ class Single extends Base {
 				array( 'jquery' ),
 				POSTNL_WC_VERSION,
 				true
+			);
+			wp_enqueue_style(
+				'postnl-admin-settings-styles',
+				POSTNL_WC_PLUGIN_DIR_URL . '/assets/css/admin-settings.css',
+				array(),
+				POSTNL_WC_VERSION
 			);
 		}
 

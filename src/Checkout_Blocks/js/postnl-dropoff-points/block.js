@@ -611,7 +611,7 @@ export const Block = ( {
 				type="hidden"
 				name="dropoffPointsDistance"
 				id="dropoffPointsDistance"
-				value={ dropoffPointsDistance }
+				value={ dropoffPointsDistance ?? '' }
 			/>
 		</div>
 	);

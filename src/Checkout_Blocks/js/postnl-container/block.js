@@ -1,7 +1,7 @@
 /**
  * External dependencies
  */
-import {useEffect, useState, useRef, useCallback} from '@wordpress/element';
+import { useEffect, useState, useRef } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 import { getSetting } from '@woocommerce/settings';
 import { useDispatch, useSelect } from '@wordpress/data';

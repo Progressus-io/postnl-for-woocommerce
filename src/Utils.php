@@ -699,17 +699,18 @@ class Utils {
 	 *
 	 * @return bool
 	 */
-	public static function check_products_for_letterbox( $products ) {
-		$total_ratio_letterbox_item = 0;
-		$has_letterbox_product      = false;
+	public static function check_products_for_letterbox( array $products ): bool {
+		$total_fill_ratio = 0;
+		$is_eligible      = false;
 
-		foreach ( $products as $item_id => $item ) {
-			// Get the main product
-			$product_id = $item['product_id'] ?? $item->get_product_id();
-			$product    = wc_get_product( $product_id );
+		foreach ( $products as $item ) {
+			$variation_id = $item['variation_id'] ?? $item->get_variation_id();
+			$product_id   = $item['product_id'] ?? $item->get_product_id();
+			$target_id    = $variation_id > 0 ? $variation_id : $product_id;
+			$product      = wc_get_product( $target_id );
 
-			if ( ! is_a( $product, 'WC_Product' ) ) {
-				// If the product is not found, consider the order not eligible.
+			// If the product is not found, consider the order not eligible.
+			if ( ! $product instanceof WC_Product ) {
 				return false;
 			}
 
@@ -717,45 +718,28 @@ class Utils {
 				continue;
 			}
 
-			// Check if it's a variation and get the variation product if needed.
-			$variation_id     = $item['variation_id'] ?? ( method_exists( $item, 'get_variation_id' ) ? $item->get_variation_id() : 0 );
-			$product_to_check = $product;
+			$parent = ( $variation_id > 0 ) ? wc_get_product( $product->get_parent_id() ) : null;
 
-			if ( $variation_id > 0 ) {
-				$variation_product = wc_get_product( $variation_id );
-				if ( is_a( $variation_product, 'WC_Product_Variation' ) ) {
-					$product_to_check = $variation_product;
-				}
+			$is_eligible = self::is_letterbox_parcel_product( $product )
+			               || ( $parent && self::is_letterbox_parcel_product( $parent ) );
+
+			if ( ! $is_eligible ) {
+				return false;
 			}
 
-			// Check if the product (or variation) is letterbox eligible.
-			if ( ! self::is_letterbox_parcel_product( $product_to_check ) ) {
-				// If variation is not letterbox, check the parent product as fallback.
-				if ( $variation_id > 0 && ! self::is_letterbox_parcel_product( $product ) ) {
-					return false;
-				} elseif ( $variation_id === 0 ) {
-					// Simple product is not letterbox eligible.
-					return false;
-				}
+			$quantity = is_array( $item ) ? ( $item['quantity'] ?? 1 ) : $item->get_quantity();
+			$max_qty  = (int) $product->get_meta( Product\Single::MAX_QTY_PER_LETTERBOX );
+
+			if ( $max_qty <= 0 && $parent ) {
+				$max_qty = (int) $parent->get_meta( Product\Single::MAX_QTY_PER_LETTERBOX );
 			}
 
-			$has_letterbox_product = true;
-			$quantity              = $item['quantity'] ?? $item->get_quantity();
-
-			// Get max quantity per letterbox from the variation first, then fallback to parent.
-			$qty_per_letterbox = intval( $product_to_check->get_meta( Product\Single::MAX_QTY_PER_LETTERBOX ) );
-
-			// If variation doesn't have the meta, check parent product.
-			if ( 0 === $qty_per_letterbox && 0 < $variation_id ) {
-				$qty_per_letterbox = intval( $product->get_meta( Product\Single::MAX_QTY_PER_LETTERBOX ) );
+			if ( $max_qty > 0 ) {
+				$total_fill_ratio += ( $quantity / $max_qty );
 			}
-
-			$ratio_letterbox_item        = $qty_per_letterbox > 0 ? 1 / $qty_per_letterbox : 0;
-			$total_ratio_letterbox_item += ( $ratio_letterbox_item * $quantity );
 		}
 
-		// If the total ratio is more than 1, that means order items cannot be packed using letterbox.
-		return $has_letterbox_product && $total_ratio_letterbox_item <= 1;
+		return $is_eligible && $total_fill_ratio <= 1;
 	}
 
 	/**

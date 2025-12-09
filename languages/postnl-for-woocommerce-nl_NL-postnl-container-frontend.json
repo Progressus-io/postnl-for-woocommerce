@@ -11,10 +11,13 @@
         "plural-forms": "nplurals=2; plural=(n != 1);"
       },
       "Pickup": [
-        "PostNL punten"
+        "Ophalen"
       ],
       "Delivery": [
-        "Bezorgdagen"
+        "Bezorging"
+      ],
+      "Delivery Days": [
+        "Bezorging"
       ],
       "Evening": [
         "Avond"

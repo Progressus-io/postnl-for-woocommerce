@@ -208,7 +208,7 @@ class Settings extends \WC_Settings_API {
 				'title'       => esc_html__( 'Return to home address', 'postnl-for-woocommerce' ),
 				'type'        => 'checkbox',
 				'label'       => esc_html__( 'Activate', 'postnl-for-woocommerce' ),
-				'description' => esc_html__( '[instead of business replynumber]', 'postnl-for-woocommerce' ),
+				'description' => esc_html__( 'Activate this setting to use a home address for return shipments', 'postnl-for-woocommerce' ),
 				'desc_tip'    => true,
 			),
 			'return_replynumber'              => array(

@@ -87,6 +87,17 @@ class Container {
 			POSTNL_WC_VERSION,
 			true
 		);
+
+		wp_localize_script(
+			'postnl-fe-checkout',
+			'postnlParams',
+			array(
+				'i18n' => array(
+					'deliveryDays' => __('Delivery Days', 'postnl-for-woocommerce'),
+					'pickup'       => __('Pickup', 'postnl-for-woocommerce'),
+				)
+			)
+		);
 	}
 
 	/**

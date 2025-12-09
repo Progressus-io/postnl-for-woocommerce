@@ -7,7 +7,7 @@
 * Tested up to: 6.9
 * WC requires at least: 9.6
 * WC tested up to: 10.4
-* Stable tag: 5.8.1
+* Stable tag: 5.9.0
 * License: GPLv2 or later
 * License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -34,7 +34,7 @@ PostNL’s official extension for WooCommerce on WordPress. Manage your national
 
 ## Changelog
 
-### 5.8.2
+### 5.9.0
 * Add: Ability for marking products as 18+ and automatically apply ID Check to orders containing them.
 * Add: Validation and TrustedShipperID support for merchant customs codes in the non-EU shipping settings.
 * Add: “Delivery code at door” shipping option.

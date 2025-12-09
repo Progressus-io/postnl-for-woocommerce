@@ -87,7 +87,7 @@ Follow these instructions (https://www.postnl.nl/Images/aanvragen-api-key-stappe
 * Fix: PostNL delivery options block duplicated in the mobile checkout order summary.
 * Fix: delivery-day date format to follow the WordPress General Settings configuration.
 * Fix: the HS Tariff Code field not saving for product variations.
-* Fix: letterbox logic for variable products to correctly.
+* Fix: letterbox logic for variable products.
 * Fix: Delivery fees now properly include tax when taxes are enabled.
 
 ### 5.8.1 (2025-09-16) =

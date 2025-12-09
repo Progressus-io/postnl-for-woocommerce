@@ -254,8 +254,7 @@ class Blocks_Integration implements IntegrationInterface {
 			'pickup_fee'                   => $settings->get_pickup_delivery_fee(),
 			'tax_settings'                 => array(
 				'enabled'            => wc_tax_enabled(),
-				'prices_include_tax' => wc_prices_include_tax(),
-				'tax_display_cart'   => get_option( 'woocommerce_tax_display_cart' ),
+				'tax_display_cart'   => get_option( 'woocommerce_tax_display_cart', 'excl' ),
 			),
 		);
 	}

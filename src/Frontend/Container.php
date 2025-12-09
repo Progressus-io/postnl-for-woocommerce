@@ -92,9 +92,8 @@ class Container {
 
 			// Get tax settings.
 			$tax_settings = array(
-				'enabled'            => 'yes' === get_option('woocommerce_calc_taxes'),
-				'tax_display_cart'   => get_option('woocommerce_tax_display_cart', 'excl'),
-				'prices_include_tax' => 'yes' === get_option('woocommerce_prices_include_tax'),
+				'enabled'            => wc_tax_enabled(),
+				'tax_display_cart'   => get_option('woocommerce_tax_display_cart', 'excl' ),
 			);
 
 			$cart_totals = WC()->cart->get_totals();

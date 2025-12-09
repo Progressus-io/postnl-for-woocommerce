@@ -42,7 +42,6 @@ PostNL’s official extension for WooCommerce on WordPress. Manage your national
 * Fix: delivery-day date format to follow the WordPress General Settings configuration.
 * Fix: the HS Tariff Code field not saving for product variations.
 * Fix: letterbox logic for variable products.
-* Add: “Delivery code at door” shipping option.
 
 ### 5.8.1
 * Add: New email settings field for shipping confirmation.

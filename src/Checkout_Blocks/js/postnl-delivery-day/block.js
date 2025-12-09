@@ -239,7 +239,7 @@ export const Block = ({
 								<li key={ index }>
 									{ isDeliveryDaysEnabled && (
 										<div className="list_title">
-											<span>{ delivery.date } { delivery.day }</span>
+											<span>{ delivery.display_date } { delivery.day }</span>
 										</div>
 									) }
 									<ul className="postnl_sub_list">

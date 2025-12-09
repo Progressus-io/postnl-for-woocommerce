@@ -11,6 +11,7 @@ use Automattic\WooCommerce\Internal\DataStores\Orders\CustomOrdersTableControlle
 use PostNLWooCommerce\Helper\Mapping;
 use PostNLWooCommerce\Product\Single;
 use WC_Product;
+use PostNLWooCommerce\Shipping_Method\Settings;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -541,8 +542,7 @@ class Utils {
 			return __( 'As soon as possible', 'postnl-for-woocommerce' );
 		}
 
-		$day = date( 'l', strtotime( $delivery_info['delivery_day_date'] ) );
-
+		$day = wp_date( 'l', strtotime( $delivery_info['delivery_day_date'] ) );
 		// Convert to the Dutch date format
 		$date_obj   = date_create_from_format( 'Y-m-d', $delivery_info['delivery_day_date'] );
 		$dutch_date = date_format( $date_obj, 'd/m/Y' );
@@ -644,10 +644,10 @@ class Utils {
 			return false;
 		}
 
-		/*
+		
 		if ( self::contains_adults_only_products( $cart->get_cart() ) ) {
 			return false;
-		}*/
+		}
 
 		return self::check_products_for_letterbox( $cart->get_cart() );
 	}
@@ -700,14 +700,18 @@ class Utils {
 	 *
 	 * @return bool
 	 */
-	public static function check_products_for_letterbox( $products ) {
-		$total_ratio_letterbox_item = 0;
-		$has_letterbox_product      = false;
+	public static function check_products_for_letterbox( array $products ): bool {
+		$total_fill_ratio = 0;
+		$is_eligible      = false;
 
-		foreach ( $products as $item_id => $item ) {
-			$product = wc_get_product( $item['product_id'] ?? $item->get_product_id() );
-			if ( ! is_a( $product, 'WC_Product' ) ) {
-				// If the product is not found, consider the order not eligible.
+		foreach ( $products as $item ) {
+			$variation_id = $item['variation_id'] ?? $item->get_variation_id();
+			$product_id   = $item['product_id'] ?? $item->get_product_id();
+			$target_id    = $variation_id > 0 ? $variation_id : $product_id;
+			$product      = wc_get_product( $target_id );
+
+			// If the product is not found, consider the order not eligible.
+			if ( ! $product instanceof WC_Product ) {
 				return false;
 			}
 
@@ -715,21 +719,26 @@ class Utils {
 				continue;
 			}
 
-			// If one of the item is not letterbox product, then the order is not eligible automatic letterbox.
-			// Thus should return false immediately.
-			if ( ! self::is_letterbox_parcel_product( $product ) ) {
+			$is_eligible = self::is_letterbox_parcel_product( $product );
+
+			if ( ! $is_eligible ) {
 				return false;
 			}
 
-			$has_letterbox_product       = true;
-			$quantity                    = $item['quantity'] ?? $item->get_quantity();
-			$qty_per_letterbox           = intval( $product->get_meta( Product\Single::MAX_QTY_PER_LETTERBOX ) );
-			$ratio_letterbox_item        = 0 != $qty_per_letterbox ? 1 / $qty_per_letterbox : 0;
-			$total_ratio_letterbox_item += ( $ratio_letterbox_item * $quantity );
+			$quantity = is_array( $item ) ? ( $item['quantity'] ?? 1 ) : $item->get_quantity();
+			$max_qty  = (int) $product->get_meta( Product\Single::MAX_QTY_PER_LETTERBOX );
+			$parent   = ( $variation_id > 0 ) ? wc_get_product( $product->get_parent_id() ) : null;
+
+			if ( $max_qty <= 0 && $parent ) {
+				$max_qty = (int) $parent->get_meta( Product\Single::MAX_QTY_PER_LETTERBOX );
+			}
+
+			if ( $max_qty > 0 ) {
+				$total_fill_ratio += ( $quantity / $max_qty );
+			}
 		}
 
-		// If the total ratio is more than 1, that means order items cannot be packed using letterbox.
-		return $has_letterbox_product && $total_ratio_letterbox_item <= 1;
+		return $is_eligible && $total_fill_ratio <= 1;
 	}
 
 	/**
@@ -801,10 +810,21 @@ class Utils {
 	 * Check if the given product is marked as Letterbox Parcel.
 	 *
 	 * @param WC_Product $product Product object.
+	 *
 	 * @return bool
 	 */
 	public static function is_letterbox_parcel_product( WC_Product $product ): bool {
-		return 'yes' === $product->get_meta( Single::LETTERBOX_PARCEL );
+		if ( 'yes' === $product->get_meta( Single::LETTERBOX_PARCEL ) ) {
+			return true;
+		}
+
+		if ( $product instanceof \WC_Product_Variation ) {
+			$parent = wc_get_product( $product->get_parent_id() );
+
+			return $parent && 'yes' === $parent->get_meta( Single::LETTERBOX_PARCEL );
+		}
+
+		return false;
 	}
 
 	/**
@@ -970,5 +990,51 @@ class Utils {
 		} catch ( \Exception $e ) {
 			return 'shop_order';
 		}
+	}
+
+	/**
+	 * Get non-EU countries
+	 *
+	 * @return array
+	 */
+	public static function get_non_eu_countries() {
+		$all_countries   = WC()->countries->get_countries();
+		$eu_countries    = WC()->countries->get_european_union_countries();
+		$european_non_eu = array( 'MC', 'SM', 'VA', 'AD', 'ME', 'RS', 'MK', 'AL', 'BA', 'XK', 'MD', 'UA', 'BY', 'RU', 'GE', 'AM', 'AZ', 'TR' );
+
+		// Remove EU countries from the list.
+		$non_eu_countries = array_diff_key( $all_countries, array_flip( $eu_countries ) );
+
+		// Remove European non-EU countries from the list.
+		$non_eu_countries = array_diff_key( $non_eu_countries, array_flip( $european_non_eu ) );
+
+		// Also remove Netherlands specifically.
+		unset( $non_eu_countries['NL'] );
+
+		return $non_eu_countries;
+	}
+
+	/**
+	 * Check if a country is non-EU (and not European)
+	 *
+	 * @param string $country_code Country code to check
+	 * 
+	 * @return bool
+	 */
+	public static function is_non_eu_country( $country_code ) {
+		$non_eu_countries = self::get_non_eu_countries();
+		return array_key_exists( $country_code, $non_eu_countries );
+	}
+
+	/**
+	 * Get merchant code for a specific country
+	 *
+	 * @param string $country_code Country code
+	 * 
+	 * @return string|null Merchant code or null if not found
+	 */
+	public static function get_merchant_code_for_country( $country_code ) {
+		$merchant_codes = get_option( Settings::MERCHANT_CODES_OPTION, array() );
+		return isset( $merchant_codes[ $country_code ] ) ? $merchant_codes[ $country_code ] : null;
 	}
 }

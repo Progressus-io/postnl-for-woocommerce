@@ -81,8 +81,14 @@ Follow these instructions (https://www.postnl.nl/Images/aanvragen-api-key-stappe
 
 == Changelog ==
 
-### 5.8.2
+### 5.8.2 (2025-xx-xx) =
+* Add: Ability for marking products as 18+ and automatically apply ID Check to orders containing them.
+* Add: Validation and TrustedShipperID support for merchant customs codes in the non-EU shipping settings.
 * Add: “Delivery code at door” shipping option.
+* Fix: PostNL delivery options block duplicated in the mobile checkout order summary.
+* Fix: delivery-day date format to follow the WordPress General Settings configuration.
+* Fix: the HS Tariff Code field not saving for product variations.
+* Fix: letterbox logic for variable products.
 
 ### 5.8.1 (2025-09-16) =
 * Add: New email settings field for shipping confirmation.

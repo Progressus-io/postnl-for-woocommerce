@@ -40,6 +40,8 @@ PostNL’s official extension for WooCommerce on WordPress. Manage your national
 * Fix: PostNL delivery options block duplicated in the mobile checkout order summary.
 * Fix: delivery-day date format to follow the WordPress General Settings configuration.
 * Fix: the HS Tariff Code field not saving for product variations.
+* Fix: letterbox logic for variable products to correctly.
+
 
 ### 5.8.1
 * Add: New email settings field for shipping confirmation.

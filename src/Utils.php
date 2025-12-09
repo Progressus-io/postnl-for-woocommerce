@@ -11,6 +11,7 @@ use Automattic\WooCommerce\Internal\DataStores\Orders\CustomOrdersTableControlle
 use PostNLWooCommerce\Helper\Mapping;
 use PostNLWooCommerce\Product\Single;
 use WC_Product;
+use PostNLWooCommerce\Shipping_Method\Settings;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -541,8 +542,7 @@ class Utils {
 			return __( 'As soon as possible', 'postnl-for-woocommerce' );
 		}
 
-		$day = date( 'l', strtotime( $delivery_info['delivery_day_date'] ) );
-
+		$day = wp_date( 'l', strtotime( $delivery_info['delivery_day_date'] ) );
 		// Convert to the Dutch date format
 		$date_obj   = date_create_from_format( 'Y-m-d', $delivery_info['delivery_day_date'] );
 		$dutch_date = date_format( $date_obj, 'd/m/Y' );
@@ -643,10 +643,10 @@ class Utils {
 			return false;
 		}
 
-		/*
+		
 		if ( self::contains_adults_only_products( $cart->get_cart() ) ) {
 			return false;
-		}*/
+		}
 
 		return self::check_products_for_letterbox( $cart->get_cart() );
 	}
@@ -1007,5 +1007,51 @@ class Utils {
 		} catch ( \Exception $e ) {
 			return 'shop_order';
 		}
+	}
+
+	/**
+	 * Get non-EU countries
+	 *
+	 * @return array
+	 */
+	public static function get_non_eu_countries() {
+		$all_countries   = WC()->countries->get_countries();
+		$eu_countries    = WC()->countries->get_european_union_countries();
+		$european_non_eu = array( 'MC', 'SM', 'VA', 'AD', 'ME', 'RS', 'MK', 'AL', 'BA', 'XK', 'MD', 'UA', 'BY', 'RU', 'GE', 'AM', 'AZ', 'TR' );
+
+		// Remove EU countries from the list.
+		$non_eu_countries = array_diff_key( $all_countries, array_flip( $eu_countries ) );
+
+		// Remove European non-EU countries from the list.
+		$non_eu_countries = array_diff_key( $non_eu_countries, array_flip( $european_non_eu ) );
+
+		// Also remove Netherlands specifically.
+		unset( $non_eu_countries['NL'] );
+
+		return $non_eu_countries;
+	}
+
+	/**
+	 * Check if a country is non-EU (and not European)
+	 *
+	 * @param string $country_code Country code to check
+	 * 
+	 * @return bool
+	 */
+	public static function is_non_eu_country( $country_code ) {
+		$non_eu_countries = self::get_non_eu_countries();
+		return array_key_exists( $country_code, $non_eu_countries );
+	}
+
+	/**
+	 * Get merchant code for a specific country
+	 *
+	 * @param string $country_code Country code
+	 * 
+	 * @return string|null Merchant code or null if not found
+	 */
+	public static function get_merchant_code_for_country( $country_code ) {
+		$merchant_codes = get_option( Settings::MERCHANT_CODES_OPTION, array() );
+		return isset( $merchant_codes[ $country_code ] ) ? $merchant_codes[ $country_code ] : null;
 	}
 }

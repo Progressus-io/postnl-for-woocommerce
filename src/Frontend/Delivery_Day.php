@@ -177,9 +177,10 @@ class Delivery_Day extends Base {
 			$day_name     = $days_of_week[ $day ];
 
 			$return_data['delivery_options'][] = array(
-				'day'     => $day_name,
-				'date'    => gmdate( 'Y-m-d', $timestamp ),
-				'options' => $options,
+				'day'          => $day_name,
+				'date'         => gmdate( 'Y-m-d', $timestamp ),
+				'display_date' => wp_date( get_option( 'date_format' ), $timestamp ),
+				'options'      => $options,
 			);
 
 			if ( ! $this->is_customer_allowed_to_pick_delivery_day() ) {

@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2025-10-28T07:16:23+00:00\n"
+"POT-Creation-Date: 2025-09-16T11:48:45+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.11.0\n"
 "X-Domain: postnl-for-woocommerce\n"
@@ -80,7 +80,7 @@ msgid "Hide"
 msgstr ""
 
 #: src/Checkout_Blocks/Extend_Block_Core.php:84
-#: src/Frontend/Container.php:347
+#: src/Frontend/Container.php:336
 msgid "This is not a valid address!"
 msgstr ""
 
@@ -158,17 +158,6 @@ msgstr ""
 msgid "Street Name"
 msgstr ""
 
-#: src/Frontend/Container.php:96
-msgid "Delivery Days"
-msgstr ""
-
-#: src/Frontend/Container.php:97
-#: src/Frontend/Dropoff_Points.php:52
-#: build/postnl-container-frontend.js:1
-#: src/Checkout_Blocks/js/postnl-container/block.js:95
-msgid "Pickup"
-msgstr ""
-
 #: src/Frontend/Delivery_Day.php:45
 msgid "Please choose the delivery day!"
 msgstr ""
@@ -178,6 +167,12 @@ msgstr ""
 #: build/postnl-container-frontend.js:1
 #: src/Checkout_Blocks/js/postnl-container/block.js:94
 msgid "Delivery"
+msgstr ""
+
+#: src/Frontend/Dropoff_Points.php:52
+#: build/postnl-container-frontend.js:1
+#: src/Checkout_Blocks/js/postnl-container/block.js:95
+msgid "Pickup"
 msgstr ""
 
 #: src/Frontend/Fill_In_With_Postnl.php:220
@@ -1219,7 +1214,7 @@ msgid "Return to home address"
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:203
-msgid "Activate this setting to use a home address for return shipments"
+msgid "[instead of business replynumber]"
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:207

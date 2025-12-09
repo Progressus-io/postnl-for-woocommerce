@@ -1538,13 +1538,13 @@ msgstr ""
 #: build/postnl-container-frontend.js:1
 #: src/Checkout_Blocks/js/postnl-container/block.js:94
 msgid "Delivery"
-msgstr ""
+msgstr "Bezorgdagen"
 
 #: src/Frontend/Dropoff_Points.php:52
 #: build/postnl-container-frontend.js:1
 #: src/Checkout_Blocks/js/postnl-container/block.js:95
 msgid "Pickup"
-msgstr ""
+msgstr "Ophalen"
 
 #: src/Frontend/Fill_In_With_Postnl.php:220
 msgid "Invalid or expired nonce."
@@ -1589,7 +1589,7 @@ msgstr ""
 #: src/Shipping_Method/Settings.php:617
 #: src/Utils.php:596
 msgid "Standard Shipment Belgium"
-msgstr ""
+msgstr "Standaardzending België"
 
 #: src/Main.php:453
 msgid "Postnl Checkout Blocks"
@@ -1614,7 +1614,7 @@ msgstr ""
 #: src/Order/Bulk.php:519
 #: src/Shipping_Method/Settings.php:587
 msgid "Shipping options domestic"
-msgstr ""
+msgstr "Standaard verzendopties binnenland"
 
 #: src/Order/Bulk.php:546
 msgid "Shipping options non-EU"
@@ -1688,23 +1688,23 @@ msgstr ""
 
 #: src/Shipping_Method/Settings.php:254
 msgid "Enter return house number extension."
-msgstr ""
+msgstr "Vul hier een huisnummertoevoeging in voor het retouradres."
 
 #: src/Shipping_Method/Settings.php:304
 msgid "Extra fee pick-up delivery"
-msgstr ""
+msgstr "Toeslag ophalen bij PostNL"
 
 #: src/Shipping_Method/Settings.php:306
 msgid "Extra fee added when the customer selects a PostNL pick-up point."
-msgstr ""
+msgstr "Toeslag wanneer er voor ophalen bij PostNL is gekozen."
 
 #: src/Shipping_Method/Settings.php:340
 msgid "Extra fee home delivery"
-msgstr ""
+msgstr "Toeslag thuisbezorging"
 
 #: src/Shipping_Method/Settings.php:342
 msgid "Extra fee added when the customer selects home delivery."
-msgstr ""
+msgstr "Toeslag voor verzendingen naar een huisadres."
 
 #: src/Shipping_Method/Settings.php:522
 msgid "Printer Type"
@@ -1712,7 +1712,7 @@ msgstr ""
 
 #: src/Shipping_Method/Settings.php:524
 msgid "It is not recommended to send .pdf files/labels directly to a Zebra printer If you want to send it directly to your Zebra printer, please use .gif files or the native (generic) zpl printer type"
-msgstr ""
+msgstr "Het is af te raden om PDF-bestanden af te drukken met een Zebra-printer. Gebruik voor een Zebra-printer labels in GIF-formaat of in ZPL-formaat"
 
 #: src/Shipping_Method/Settings.php:535
 msgid "DPI"
@@ -1724,7 +1724,7 @@ msgstr ""
 
 #: src/Shipping_Method/Settings.php:611
 msgid "Shipping options Belgium"
-msgstr ""
+msgstr "Standaard verzendopties België"
 
 #: src/Shipping_Method/Settings.php:669
 msgid "Standard Shipping"
@@ -1832,42 +1832,42 @@ msgstr ""
 
 #: src/Shipping_Method/Settings.php:508
 msgid "Merchant Customs Code"
-msgstr ""
+msgstr "Handelsdouanecode"
 
 #: src/Shipping_Method/Settings.php:510
 msgid "Add merchant codes for specific non-EU countries."
-msgstr ""
+msgstr "Voeg handelscodes toe voor specifieke landen buiten de EU."
 
 #: src/Shipping_Method/Settings.php:711
 msgid "Country"
-msgstr ""
+msgstr "Land"
 
 #: src/Shipping_Method/Settings.php:714
 msgid "Merchant Code"
-msgstr ""
+msgstr "Verkoperscode"
 
 #: src/Shipping_Method/Settings.php:717
 msgid "Action"
-msgstr ""
+msgstr "Actie"
 
 #: src/Shipping_Method/Settings.php:728
 #: src/Shipping_Method/Settings.php:768
 msgid "Select Country"
-msgstr ""
+msgstr "Selecteer land"
 
 #: src/Shipping_Method/Settings.php:740
 #: src/Shipping_Method/Settings.php:780
 msgid "Enter merchant code"
-msgstr ""
+msgstr "Voer de verkoperscode in"
 
 #: src/Shipping_Method/Settings.php:745
 #: src/Shipping_Method/Settings.php:785
 msgid "Remove"
-msgstr ""
+msgstr "Verwijderen"
 
 #: src/Shipping_Method/Settings.php:754
 msgid "Add Merchant Code"
-msgstr ""
+msgstr "Verkoperscode toevoegen"
 
 #: src/Shipping_Method/Settings.php:811
 msgid "Duplicate countries found and have been removed. Only the last entry for each country will be saved."
@@ -1879,12 +1879,12 @@ msgstr ""
 
 #: src/Order/Base.php:273
 msgid "Delivery code at the door: "
-msgstr ""
+msgstr "Bezorgcode aan de deur:"
 
 #: src/Shipping_Method/Settings.php:607
 msgid "Delivery Code at Door + Insured Shipping"
-msgstr ""
+msgstr "Bezorgcode aan de deur + Verzekerd verzenden"
 
 #: src/Utils.php:600
 msgid "Delivery Code at Door"
-msgstr ""
+msgstr "Bezorgcode aan de deur"

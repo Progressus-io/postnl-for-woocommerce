@@ -268,6 +268,18 @@ abstract class Base {
 				'container'     => true,
 			),
 			array(
+				'id'            => $this->prefix . 'delivery_code_at_door',
+				'type'          => 'checkbox',
+				'label'         => esc_html__( 'Delivery code at the door: ', 'postnl-for-woocommerce' ),
+				'placeholder'   => '',
+				'description'   => '',
+				'value'         => $default_options['delivery_code_at_door'] ?? '',
+				'show_in_bulk'  => true,
+				'standard_feat' => false,
+				'const_field'   => false,
+				'container'     => true,
+			),
+			array(
 				'id'            => $this->prefix . 'break_2',
 				'standard_feat' => false,
 				'const_field'   => true,

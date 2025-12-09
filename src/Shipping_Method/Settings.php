@@ -604,6 +604,7 @@ class Settings extends \WC_Settings_API {
 					'only_home_address|return_no_answer' => __( 'Only Home Address + Return if no answer', 'postnl-for-woocommerce' ),
 					'only_home_address|return_no_answer|signature_on_delivery' => __( 'Only Home Address + Return if no answer + Signature on Delivery', 'postnl-for-woocommerce' ),
 					'only_home_address|signature_on_delivery' => __( 'Only Home Address + Signature on Delivery', 'postnl-for-woocommerce' ),
+					'delivery_code_at_door|insured_shipping'  => esc_html__( 'Delivery Code at Door + Insured Shipping', 'postnl-for-woocommerce' ),
 				),
 			),
 			'default_shipping_options_be'     => array(

@@ -718,10 +718,7 @@ class Utils {
 				continue;
 			}
 
-			$parent = ( $variation_id > 0 ) ? wc_get_product( $product->get_parent_id() ) : null;
-
-			$is_eligible = self::is_letterbox_parcel_product( $product )
-			               || ( $parent && self::is_letterbox_parcel_product( $parent ) );
+			$is_eligible = self::is_letterbox_parcel_product( $product );
 
 			if ( ! $is_eligible ) {
 				return false;
@@ -729,6 +726,7 @@ class Utils {
 
 			$quantity = is_array( $item ) ? ( $item['quantity'] ?? 1 ) : $item->get_quantity();
 			$max_qty  = (int) $product->get_meta( Product\Single::MAX_QTY_PER_LETTERBOX );
+			$parent   = ( $variation_id > 0 ) ? wc_get_product( $product->get_parent_id() ) : null;
 
 			if ( $max_qty <= 0 && $parent ) {
 				$max_qty = (int) $parent->get_meta( Product\Single::MAX_QTY_PER_LETTERBOX );
@@ -811,21 +809,21 @@ class Utils {
 	 * Check if the given product is marked as Letterbox Parcel.
 	 *
 	 * @param WC_Product $product Product object.
+	 *
 	 * @return bool
 	 */
 	public static function is_letterbox_parcel_product( WC_Product $product ): bool {
-		// Check the current product first.
-		$is_letterbox = 'yes' === $product->get_meta( Single::LETTERBOX_PARCEL );
-
-		// If it's a variation and doesn't have the meta, check the parent.
-		if ( ! $is_letterbox && $product instanceof \WC_Product_Variation ) {
-			$parent_product = wc_get_product( $product->get_parent_id() );
-			if ( $parent_product ) {
-				$is_letterbox = 'yes' === $parent_product->get_meta( Single::LETTERBOX_PARCEL );
-			}
+		if ( 'yes' === $product->get_meta( Single::LETTERBOX_PARCEL ) ) {
+			return true;
 		}
 
-		return $is_letterbox;
+		if ( $product instanceof \WC_Product_Variation ) {
+			$parent = wc_get_product( $product->get_parent_id() );
+
+			return $parent && 'yes' === $parent->get_meta( Single::LETTERBOX_PARCEL );
+		}
+
+		return false;
 	}
 
 	/**

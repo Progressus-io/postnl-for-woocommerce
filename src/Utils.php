@@ -1058,12 +1058,12 @@ class Utils {
 	 * @return float Fee amount adjusted for display per tax settings.
 	 */
 	public static function get_fee_total_price( float $fee_amount ): float {
-		if ( empty( $fee_amount ) || $fee_amount <= 0 ) {
+		if (  empty( $fee_amount ) || $fee_amount <= 0 ) {
 			return 0.0;
 		}
 
 		// If taxes disabled, return as-is.
-		if ( ! wc_tax_enabled() ) {
+		if ( ! is_checkout() || ! wc_tax_enabled() ) {
 			return $fee_amount;
 		}
 

@@ -88,14 +88,18 @@ class Container {
 			true
 		);
 
+		$settings = Settings::get_instance();
+
 		wp_localize_script(
 			'postnl-fe-checkout',
 			'postnlParams',
 			array(
-				'i18n' => array(
-					'deliveryDays' => __('Delivery Days', 'postnl-for-woocommerce'),
-					'pickup'       => __('Pickup', 'postnl-for-woocommerce'),
-				)
+				'i18n'                        => array(
+					'deliveryDays' => esc_html__( 'Delivery Days', 'postnl-for-woocommerce' ),
+					'pickup'       => esc_html__( 'Pickup', 'postnl-for-woocommerce' ),
+				),
+				'delivery_day_fee_formatted'  => Utils::get_formatted_fee_total_price( $settings->get_delivery_days_fee() ),
+				'pickup_fee_formatted'        => Utils::get_formatted_fee_total_price( $settings->get_pickup_delivery_fee() ),
 			)
 		);
 	}

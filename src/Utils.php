@@ -1043,4 +1043,64 @@ class Utils {
 		$merchant_codes = get_option( Settings::MERCHANT_CODES_OPTION, array() );
 		return isset( $merchant_codes[ $country_code ] ) ? $merchant_codes[ $country_code ] : null;
 	}
+
+	/**
+	 * Get fee total price for display, respecting WooCommerce tax settings.
+	 *
+	 * This method calculates whether to display fees including or excluding tax
+	 * based on WooCommerce tax settings and customer tax status.
+	 *
+	 * Note: Shipping and fee prices are always entered as base prices (excluding tax)
+	 * in WooCommerce, regardless of the woocommerce_prices_include_tax setting.
+	 *
+	 * @param float $fee_amount The base fee amount (always excluding tax).
+	 *
+	 * @return float Fee amount adjusted for display per tax settings.
+	 */
+	public static function get_fee_total_price( float $fee_amount ): float {
+		if ( empty( $fee_amount ) || $fee_amount <= 0 ) {
+			return 0.0;
+		}
+
+		// If taxes disabled, return as-is.
+		if ( ! wc_tax_enabled() ) {
+			return $fee_amount;
+		}
+
+		// Check if customer is tax-exempt.
+		if ( WC()->customer && WC()->customer->is_vat_exempt() ) {
+			return $fee_amount;
+		}
+
+		// Check how to display prices in cart (including or excluding tax).
+		$display_mode = get_option( 'woocommerce_tax_display_cart', 'excl' );
+
+		// If displaying prices excluding tax, return base amount.
+		if ( 'incl' !== $display_mode ) {
+			return $fee_amount;
+		}
+
+		// Display prices including tax - calculate tax and add to base amount.
+		$tax_rates = \WC_Tax::get_shipping_tax_rates();
+		if ( empty( $tax_rates ) ) {
+			return $fee_amount;
+		}
+
+		$taxes = \WC_Tax::calc_shipping_tax( $fee_amount, $tax_rates );
+
+		return $fee_amount + array_sum( $taxes );
+	}
+
+	/**
+	 * Get formatted fee total price for display.
+	 *
+	 * This is a wrapper function that returns the fee amount formatted with currency.
+	 *
+	 * @param float $fee_amount The base fee amount.
+	 *
+	 * @return string Formatted price string with currency.
+	 */
+	public static function get_formatted_fee_total_price( float $fee_amount ): string {
+		return wc_price( self::get_fee_total_price( $fee_amount ) );
+	}
 }

@@ -81,7 +81,10 @@ Follow these instructions (https://www.postnl.nl/Images/aanvragen-api-key-stappe
 
 == Changelog ==
 
-### 5.9.0 (2025-12-09) =
+= 5.9.1 (2025-xx-xx) =
+* Fix: Delivery options display prices including/excluding tax based on WooCommerce tax settings.
+
+= 5.9.0 (2025-12-09) =
 * Add: Ability for marking products as 18+ and automatically apply ID Check to orders containing them.
 * Add: Validation and TrustedShipperID support for merchant customs codes in the non-EU shipping settings.
 * Add: “Delivery code at door” shipping option.
@@ -91,12 +94,12 @@ Follow these instructions (https://www.postnl.nl/Images/aanvragen-api-key-stappe
 * Fix: letterbox logic for variable products.
 * Tweak: WordPress 6.9 and WooCommerce 10.4 compatibility.
 
-### 5.8.1 (2025-09-16) =
+= 5.8.1 (2025-09-16) =
 * Add: New email settings field for shipping confirmation.
 * Fix: Allow admin to dismiss the survey/reward notice.
 * Fix: Style conflict with other frameworks.
 
-### 5.8.0 (2025-09-08) =
+= 5.8.0 (2025-09-08) =
 * Add: Fill In With / Invullen met PostNL.
 * Add: ContactType 02 for digital proof of shipping.
 * Add: Allow different fees for home / pick-up delivery.

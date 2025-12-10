@@ -1062,8 +1062,8 @@ class Utils {
 			return 0.0;
 		}
 
-		// If taxes disabled, return as-is.
-		if ( ! is_checkout() || ! wc_tax_enabled() ) {
+		// if taxes disabled, return as-is.
+		if ( is_null( WC()->cart ) || ! wc_tax_enabled() ) {
 			return $fee_amount;
 		}
 

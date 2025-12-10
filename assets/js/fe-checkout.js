@@ -1,7 +1,4 @@
 ( function( $ ) {
-	/*
-	* Helper – refresh the "Delivery Day" tab title with base-fee
-	* */
 	function updateDeliveryDayTabFee() {
 		const $input = $('.postnl_checkout_tab_list .postnl_option[value="delivery_day"]');
 		const $label = $input.closest('label');

@@ -321,7 +321,7 @@ export const Block = ({
 																	)
 																}
 															/>
-															{ priceDisplayFormatted && (
+															{ priceDisplayFormatted && price > 0 && (
 																<i>
 																	+{ priceDisplayFormatted }
 																</i>

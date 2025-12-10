@@ -250,6 +250,7 @@ export const Block = ({
 												const optionType =
 													option.type || 'Unknown';
 												const price = option.price || 0;
+												const priceDisplay = option.price_display || price;
 												const value = `${ delivery.date }_${ from }-${ to }_${ price }`;
 
 												const isChecked =
@@ -311,10 +312,10 @@ export const Block = ({
 																	)
 																}
 															/>
-															{ price > 0 && (
+															{ priceDisplay > 0 && (
 																<i>
 																	+€
-																	{ price.toFixed(
+																	{ priceDisplay.toFixed(
 																		2
 																	) }
 																</i>

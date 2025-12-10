@@ -36,7 +36,7 @@ if ( empty( $data['delivery_options'] ) ) {
 					<?php foreach ( $delivery['options'] as $option_index => $option ) { ?>
 						<?php
 							$value         = sanitize_title( $delivery['date'] . '_' . $option['from'] . '-' . $option['to'] . '_' . $option['price'] );
-							$is_charged    = ( empty( $option['price'] ) ) ? '' : '+' . wc_price( $option['price'] );
+							$is_charged    = ( empty( $option['price'] ) ) ? '' : '+' . \PostNLWooCommerce\Utils::get_formatted_fee_total_price( $option['price'] );
 							$is_checked    = ( $value === $data['value'] || 0 === $index && 0 === $option_index ) ? 'checked="checked"' : '';
 							$is_active     = ( $value === $data['value'] ) ? 'active' : '';
 							$delivery_time = '';

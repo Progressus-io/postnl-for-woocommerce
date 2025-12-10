@@ -60,9 +60,9 @@ export const Block = ( { checkoutExtensionData } ) => {
 	});
 
 	const baseTabs = [
-		{ id: 'delivery_day', base: Number( postnlData.delivery_day_fee || 0 ) },
+		{ id: 'delivery_day', base: Number( postnlData.delivery_day_fee || 0 ), display: Number( postnlData.delivery_day_fee_display || 0 ) },
 		...( postnlData.is_pickup_points_enabled
-			? [ { id: 'dropoff_points', base: Number( postnlData.pickup_fee || 0 ) } ]
+			? [ { id: 'dropoff_points', base: Number( postnlData.pickup_fee || 0 ), display: Number( postnlData.pickup_fee_display || 0 ) } ]
 			: [] ),
 	];
 
@@ -94,20 +94,11 @@ export const Block = ( { checkoutExtensionData } ) => {
 				? __( 'Delivery', 'postnl-for-woocommerce' )
 				: __( 'Pickup', 'postnl-for-woocommerce' );
 
-		let base = carrierBaseCost + tab.base;
-		if ( Number.isNaN( base ) ) {
-			base = tab.base;
-		}
-		if ( base < 0 ) {
-			base = 0;
-		}
+		// Use display amount for showing to customer (includes tax if needed)
+		const displayAmount = tab.display || tab.base;
 
-		const extra = tab.id === 'delivery_day' ? extraDeliveryFee : 0;
-
-		if ( base > 0 || extra > 0 ) {
-			title += ` €${ base.toFixed( 2 ) }${
-				extra > 0 ? `+€${ extra.toFixed( 2 ) }` : ''
-			}`;
+		if ( displayAmount > 0 ) {
+			title += ` €${ displayAmount.toFixed( 2 ) }`;
 		}
 
 		return { id: tab.id, name: title, base: tab.base };

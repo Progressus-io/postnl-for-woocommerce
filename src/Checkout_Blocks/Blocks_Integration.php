@@ -251,7 +251,9 @@ class Blocks_Integration implements IntegrationInterface {
 				'postnl_logo_url'                => POSTNL_WC_PLUGIN_DIR_URL . '/assets/images/postnl-logo.svg',
 			),
 			'delivery_day_fee'             => $settings->get_delivery_days_fee(),
+			'delivery_day_fee_display'     => Utils::get_fee_total_price( $settings->get_delivery_days_fee() ),
 			'pickup_fee'                   => $settings->get_pickup_delivery_fee(),
+			'pickup_fee_display'           => Utils::get_fee_total_price( $settings->get_pickup_delivery_fee() ),
 		);
 	}
 }

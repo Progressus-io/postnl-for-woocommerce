@@ -1095,12 +1095,14 @@ class Utils {
 	 * Get formatted fee total price for display.
 	 *
 	 * This is a wrapper function that returns the fee amount formatted with currency.
+	 * Returns plain text without HTML markup for use in JavaScript/React components.
 	 *
 	 * @param float $fee_amount The base fee amount.
 	 *
-	 * @return string Formatted price string with currency.
+	 * @return string Formatted price string with currency (plain text, no HTML).
 	 */
 	public static function get_formatted_fee_total_price( float $fee_amount ): string {
-		return wc_price( self::get_fee_total_price( $fee_amount ) );
+		$formatted_html = wc_price( self::get_fee_total_price( $fee_amount ) );
+		return html_entity_decode( wp_strip_all_tags( $formatted_html ), ENT_QUOTES, 'UTF-8' );
 	}
 }

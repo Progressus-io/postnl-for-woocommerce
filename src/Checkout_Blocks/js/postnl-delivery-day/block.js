@@ -108,7 +108,7 @@ export const Block = ({
 		setExtensionData( 'postnl', 'deliveryDayTo', '' );
 		setExtensionData( 'postnl', 'deliveryDayPrice', '' );
 		setExtensionData( 'postnl', 'deliveryDayType', '' );
-		onPriceChange( 0 );
+		onPriceChange( { numeric: 0, formatted: '' } );
 	};
 
 	useEffect( () => {
@@ -136,9 +136,13 @@ export const Block = ({
 					firstOption.from,
 					firstOption.to,
 					firstOption.type || 'Unknown',
-					firstOption.price || 0
+					firstOption.price || 0,
+					firstOption.price_formatted || ''
 				);
-				onPriceChange( Number( firstOption.price || 0 ) );
+				onPriceChange( {
+					numeric: Number( firstOption.price || 0 ),
+					formatted: firstOption.price_formatted || '',
+				} );
 			}
 		}
 	}, [ isActive, deliveryOptions ] );
@@ -149,7 +153,8 @@ export const Block = ({
 		from,
 		to,
 		type,
-		price
+		price,
+		priceFormatted = ''
 	) => {
 		setSelectedOption( value );
 		sessionStorage.setItem( 'postnl_selected_option', value );
@@ -178,7 +183,10 @@ export const Block = ({
 		setExtensionData( 'postnl', 'deliveryDayFrom', from );
 		setExtensionData( 'postnl', 'deliveryDayTo', to );
 		setExtensionData( 'postnl', 'deliveryDayPrice', price.toString() );
-		onPriceChange( Number( price ) );
+		onPriceChange( {
+			numeric: Number( price ),
+			formatted: priceFormatted,
+		} );
 		setExtensionData( 'postnl', 'deliveryDayType', type );
 
 		// Clear dropoff point data
@@ -250,7 +258,7 @@ export const Block = ({
 												const optionType =
 													option.type || 'Unknown';
 												const price = option.price || 0;
-												const priceDisplay = option.price_display || price;
+												const priceDisplayFormatted = option.price_formatted || '';
 												const value = `${ delivery.date }_${ from }-${ to }_${ price }`;
 
 												const isChecked =
@@ -308,16 +316,14 @@ export const Block = ({
 																		from,
 																		to,
 																		optionType,
-																		price
+																		price,
+																		priceDisplayFormatted
 																	)
 																}
 															/>
-															{ priceDisplay > 0 && (
+															{ priceDisplayFormatted && (
 																<i>
-																	+€
-																	{ priceDisplay.toFixed(
-																		2
-																	) }
+																	+{ priceDisplayFormatted }
 																</i>
 															) }
 															<i>

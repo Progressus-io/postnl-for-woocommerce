@@ -400,7 +400,7 @@ class Container {
 	/**
 	 * Add cart fees.
 	 *
-	 * @param WC_Cart $cart Cart object.
+	 * @param \WC_Cart $cart Cart object.
 	 */
 	public function add_cart_fees( $cart ) {
 		$post_data = $this->get_checkout_post_data();
@@ -413,7 +413,7 @@ class Container {
 		$is_non_standard_delivery = ! empty( $post_data['postnl_delivery_day_type'] ) && isset( $non_standard_fees[ $post_data['postnl_delivery_day_type'] ] );
 
 		if ( ! empty( $post_data['postnl_delivery_day_price'] ) && 'delivery_day' === $post_data['postnl_option'] && $is_non_standard_delivery ) {
-			$cart->add_fee( $non_standard_fees[ $post_data['postnl_delivery_day_type'] ]['fee_name'], wc_format_decimal( $post_data['postnl_delivery_day_price'] ) );
+			$cart->add_fee( $non_standard_fees[ $post_data['postnl_delivery_day_type'] ]['fee_name'], wc_format_decimal( $post_data['postnl_delivery_day_price'] ), true );
 		}
 	}
 	/**

@@ -34,6 +34,10 @@ PostNL’s official extension for WooCommerce on WordPress. Manage your national
 
 ## Changelog
 
+### 5.9.1
+* Fix: Removed default empty merchant customs code fields to prevent validation errors when saving settings without adding codes.
+
+
 ### 5.9.0
 * Add: Ability for marking products as 18+ and automatically apply ID Check to orders containing them.
 * Add: Validation and TrustedShipperID support for merchant customs codes in the non-EU shipping settings.

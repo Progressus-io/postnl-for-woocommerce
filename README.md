@@ -34,6 +34,9 @@ PostNL’s official extension for WooCommerce on WordPress. Manage your national
 
 ## Changelog
 
+### 5.9.1
+* Fix: Delivery options display prices including/excluding tax based on WooCommerce tax settings.
+
 ### 5.9.0
 * Add: Ability for marking products as 18+ and automatically apply ID Check to orders containing them.
 * Add: Validation and TrustedShipperID support for merchant customs codes in the non-EU shipping settings.

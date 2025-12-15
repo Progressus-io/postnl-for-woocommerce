@@ -59,10 +59,23 @@ export const Block = ( { checkoutExtensionData } ) => {
 		return Number(sessionStorage.getItem('postnl_deliveryDayPrice') || 0);
 	});
 
+	// stores the formatted Morning/Evening surcharge for display.
+	const [extraDeliveryFeeFormatted, setExtraDeliveryFeeFormatted] = useState(() => {
+		return sessionStorage.getItem('postnl_deliveryDayPriceFormatted') || '';
+	});
+
 	const baseTabs = [
-		{ id: 'delivery_day', base: Number( postnlData.delivery_day_fee || 0 ) },
+		{
+			id: 'delivery_day',
+			base: Number( postnlData.delivery_day_fee || 0 ),
+			displayFormatted: postnlData.delivery_day_fee_formatted || '',
+		},
 		...( postnlData.is_pickup_points_enabled
-			? [ { id: 'dropoff_points', base: Number( postnlData.pickup_fee || 0 ) } ]
+			? [ {
+				id: 'dropoff_points',
+				base: Number( postnlData.pickup_fee || 0 ),
+				displayFormatted: postnlData.pickup_fee_formatted || '',
+			} ]
 			: [] ),
 	];
 
@@ -94,20 +107,17 @@ export const Block = ( { checkoutExtensionData } ) => {
 				? __( 'Delivery', 'postnl-for-woocommerce' )
 				: __( 'Pickup', 'postnl-for-woocommerce' );
 
-		let base = carrierBaseCost + tab.base;
-		if ( Number.isNaN( base ) ) {
-			base = tab.base;
-		}
-		if ( base < 0 ) {
-			base = 0;
+		const fees = [];
+		if ( tab.displayFormatted && tab.base > 0 ) {
+			fees.push( tab.displayFormatted );
 		}
 
-		const extra = tab.id === 'delivery_day' ? extraDeliveryFee : 0;
+		if ( tab.id === 'delivery_day' && extraDeliveryFeeFormatted && extraDeliveryFee > 0 ) {
+			fees.push( extraDeliveryFeeFormatted );
+		}
 
-		if ( base > 0 || extra > 0 ) {
-			title += ` €${ base.toFixed( 2 ) }${
-				extra > 0 ? `+€${ extra.toFixed( 2 ) }` : ''
-			}`;
+		if ( fees.length > 0 ) {
+			title += ` (+${ fees.join( ' +' ) })`;
 		}
 
 		return { id: tab.id, name: title, base: tab.base };
@@ -459,7 +469,11 @@ export const Block = ( { checkoutExtensionData } ) => {
 								isActive={ activeTab === 'delivery_day' }
 								deliveryOptions={ deliveryOptions }
 								isDeliveryDaysEnabled={ deliveryDaysEnabled }
-								onPriceChange={ setExtraDeliveryFee }
+								onPriceChange={ ( priceData ) => {
+									setExtraDeliveryFee( priceData.numeric || 0 );
+									setExtraDeliveryFeeFormatted( priceData.formatted || '' );
+									sessionStorage.setItem( 'postnl_deliveryDayPriceFormatted', priceData.formatted || '' );
+								} }
 							/>
 						</div>
 						{ postnlData.is_pickup_points_enabled && (

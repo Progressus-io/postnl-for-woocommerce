@@ -52,6 +52,7 @@ phpcs.xml
 .codegpt
 .vscode
 /vendor/
+/languages/*.json
 
 postnl-for-woocommerce.zip
 woo-postnl.zip

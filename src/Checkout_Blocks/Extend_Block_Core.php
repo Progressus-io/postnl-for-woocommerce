@@ -173,7 +173,7 @@ class Extend_Block_Core {
 		$cart->fees_api()->set_fees( $new_fees );
 
 		if ( $fee_amount > 0 ) {
-			$cart->add_fee( $fee_label, $fee_amount, true, '' );
+			$cart->add_fee( $fee_label, $fee_amount, true );
 		}
 	}
 

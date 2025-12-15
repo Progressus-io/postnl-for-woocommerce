@@ -88,14 +88,18 @@ class Container {
 			true
 		);
 
+		$settings = Settings::get_instance();
+
 		wp_localize_script(
 			'postnl-fe-checkout',
 			'postnlParams',
 			array(
-				'i18n' => array(
-					'deliveryDays' => __('Delivery Days', 'postnl-for-woocommerce'),
-					'pickup'       => __('Pickup', 'postnl-for-woocommerce'),
-				)
+				'i18n'                        => array(
+					'deliveryDays' => esc_html__( 'Delivery Days', 'postnl-for-woocommerce' ),
+					'pickup'       => esc_html__( 'Pickup', 'postnl-for-woocommerce' ),
+				),
+				'delivery_day_fee_formatted'  => Utils::get_formatted_fee_total_price( $settings->get_delivery_days_fee() ),
+				'pickup_fee_formatted'        => Utils::get_formatted_fee_total_price( $settings->get_pickup_delivery_fee() ),
 			)
 		);
 	}
@@ -400,7 +404,7 @@ class Container {
 	/**
 	 * Add cart fees.
 	 *
-	 * @param WC_Cart $cart Cart object.
+	 * @param \WC_Cart $cart Cart object.
 	 */
 	public function add_cart_fees( $cart ) {
 		$post_data = $this->get_checkout_post_data();
@@ -413,7 +417,7 @@ class Container {
 		$is_non_standard_delivery = ! empty( $post_data['postnl_delivery_day_type'] ) && isset( $non_standard_fees[ $post_data['postnl_delivery_day_type'] ] );
 
 		if ( ! empty( $post_data['postnl_delivery_day_price'] ) && 'delivery_day' === $post_data['postnl_option'] && $is_non_standard_delivery ) {
-			$cart->add_fee( $non_standard_fees[ $post_data['postnl_delivery_day_type'] ]['fee_name'], wc_format_decimal( $post_data['postnl_delivery_day_price'] ) );
+			$cart->add_fee( $non_standard_fees[ $post_data['postnl_delivery_day_type'] ]['fee_name'], wc_format_decimal( $post_data['postnl_delivery_day_price'] ), true );
 		}
 	}
 	/**

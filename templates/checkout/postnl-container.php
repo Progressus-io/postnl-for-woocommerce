@@ -5,6 +5,8 @@
  * @package PostNLWooCommerce\Template
  */
 
+use PostNLWooCommerce\Utils;
+
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
@@ -51,11 +53,11 @@ $field = array_shift( $fields );
 								<span>
 									<?php
 									echo esc_html( $field_tab['name'] );
-									if ( 'dropoff_points' === $field_tab['id'] && ! empty( $pickup_fee ) ) {
-										printf( ' (+%s)', wc_price( $pickup_fee ) );
+									if ( 'dropoff_points' === $field_tab['id'] && ! empty( $pickup_fee ) && $pickup_fee > 0 ) {
+										printf( ' (+%s)', Utils::get_formatted_fee_total_price( $pickup_fee ) );
 									}
-									if ( 'delivery_day' === $field_tab['id'] && ! empty( $delivery_day_fee ) ) {
-										printf( ' (+%s)', wc_price( $delivery_day_fee ) );
+									if ( 'delivery_day' === $field_tab['id'] && ! empty( $delivery_day_fee ) && $delivery_day_fee > 0 ) {
+										printf( ' (+%s)', Utils::get_formatted_fee_total_price( $delivery_day_fee ) );
 									}
 									?>
 								</span>

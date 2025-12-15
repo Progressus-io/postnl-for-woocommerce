@@ -5,6 +5,8 @@
  * @package PostNLWooCommerce\Template
  */
 
+use PostNLWooCommerce\Utils;
+
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
@@ -36,7 +38,7 @@ if ( empty( $data['delivery_options'] ) ) {
 					<?php foreach ( $delivery['options'] as $option_index => $option ) { ?>
 						<?php
 							$value         = sanitize_title( $delivery['date'] . '_' . $option['from'] . '-' . $option['to'] . '_' . $option['price'] );
-							$is_charged    = ( empty( $option['price'] ) ) ? '' : '+' . wc_price( $option['price'] );
+							$is_charged    = ( empty( $option['price'] ) || $option['price'] <= 0 ) ? '' : '+' . Utils::get_formatted_fee_total_price( $option['price'] );
 							$is_checked    = ( $value === $data['value'] || 0 === $index && 0 === $option_index ) ? 'checked="checked"' : '';
 							$is_active     = ( $value === $data['value'] ) ? 'active' : '';
 							$delivery_time = '';
@@ -46,12 +48,13 @@ if ( empty( $data['delivery_options'] ) ) {
 							$delivery_time = esc_html__( 'Morning', 'postnl-for-woocommerce' );
 						}
 						?>
-						<li 
+						<li
 							class="<?php echo esc_attr( $option['type'] . ' ' . $is_active ); ?>"
 							data-date="<?php echo esc_attr( $delivery['date'] ); ?>"
 							data-from="<?php echo esc_attr( $option['from'] ); ?>"
 							data-to="<?php echo esc_attr( $option['to'] ); ?>"
 							data-price="<?php echo esc_attr( $option['price'] ); ?>"
+							data-price-formatted="<?php echo esc_attr( Utils::get_formatted_fee_total_price( $option['price'] ) ); ?>"
 							data-type="<?php echo esc_attr( $option['type'] ); ?>"
 						>
 							<label class="postnl_sub_radio_label" for="<?php echo esc_attr( $data['field_name'] ); ?>_<?php echo esc_attr( $value ); ?>">

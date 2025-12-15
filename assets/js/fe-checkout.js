@@ -1,51 +1,4 @@
 ( function( $ ) {
-	/*
-      * Helper – refresh the “Delivery Days” tab title with base-fee
-      *
-      */
-	function parsePrice( text ) {
-		const match = text.replace( /[^0-9.,]/g, '' ).match( /[0-9]+(?:[.,][0-9]+)?/ );
-		return match ? parseFloat( match[0].replace( ',', '.' ) ) : NaN;
-	}
-
-	/*
-     * Helper – read the cost of the currently selected shipping method
-     */
-	function getSelectedShippingFee() {
-		const $method = $(
-			'input[name^="shipping_method"]:checked, input.wc-block-components-radio-control__input:checked'
-		);
-		if (!$method.length) {
-			return 0;
-		}
-
-		let fee = parseFloat($method.data('shipping-cost') || $method.data('rate-cost'));
-		if (isNaN(fee)) {
-			const $priceEl = $method.closest('li').find('.amount').first();
-			if ($priceEl.length) {
-				fee = parsePrice($priceEl.text());
-			}
-		}
-
-		if (isNaN(fee)) {
-			const label = $('label[for="' + $method.attr('id') + '"]');
-			if (label.length) {
-				fee = parsePrice(label.text());
-			}
-		}
-		console.log(fee);
-
-		return isNaN(fee) ? 0 : fee;
-	}
-
-	function getActiveBaseFee() {
-		const $active = $('.postnl_checkout_tab_list .postnl_option:checked').closest('label');
-		return parseFloat($active.data('base-fee') || 0);
-	}
-
-	/*
-	* Helper – refresh the “Delivery Day” tab title with base-fee
-	* */
 	function updateDeliveryDayTabFee() {
 		const $input = $('.postnl_checkout_tab_list .postnl_option[value="delivery_day"]');
 		const $label = $input.closest('label');
@@ -53,40 +6,43 @@
 			return;
 		}
 
-		const selectedFee = getSelectedShippingFee();
-		const activeBase = getActiveBaseFee();
 		const tabBase = parseFloat($label.data('base-fee') || 0);
-
-		let baseFee = selectedFee - activeBase + tabBase;
-		if (isNaN(baseFee)) {
-			baseFee = tabBase;
-		}
-
 		let extraFee = 0;
+		let extraFeeFormatted = '';
+
 		if ($input.is(':checked')) {
 			extraFee = parseFloat($('#postnl_delivery_day_price').val() || 0);
 			if (isNaN(extraFee)) {
 				extraFee = 0;
 			}
-		}
-
-		if (baseFee < 0) {
-			baseFee = 0;
+			// Get formatted price from selected delivery option
+			const $selected = $('.postnl_sub_radio:checked').closest('li');
+			if ($selected.length) {
+				extraFeeFormatted = $selected.data('price-formatted') || '';
+			}
 		}
 
 		let text = postnlParams.i18n.deliveryDays;
-		if ( baseFee > 0 ) {
-			text += ' €' + baseFee.toFixed( 2 );
+		const fees = [];
+
+		// Add base fee if > 0
+		if (tabBase > 0 && postnlParams.delivery_day_fee_formatted) {
+			fees.push(postnlParams.delivery_day_fee_formatted);
 		}
-		if (extraFee > 0) {
-			text += ' + €' + extraFee.toFixed(2);
+
+		if (extraFee > 0 && extraFeeFormatted) {
+			fees.push(extraFeeFormatted);
+		}
+
+		if (fees.length > 0) {
+			text += ' (+' + fees.join(' +') + ')';
 		}
 
 		$label.children('span').first().text(text);
 	}
 
 	/*
-	* Helper – refresh the “Pickup” tab title with base-fee
+	* Helper – refresh the "Pickup" tab title with base-fee.
 	*/
 	function updatePickupTabFee() {
 		const $input = $('.postnl_checkout_tab_list .postnl_option[value="dropoff_points"]');
@@ -95,21 +51,13 @@
 			return;
 		}
 
-		const selectedFee = getSelectedShippingFee();
-		const activeBase = getActiveBaseFee();
 		const tabBase = parseFloat($label.data('base-fee') || 0);
 
-		let total = selectedFee - activeBase + tabBase;
-		if (isNaN(total)) {
-			total = tabBase;
-		}
-		if (total < 0) {
-			total = 0;
-		}
-
 		let text = postnlParams.i18n.pickup;
-		if ( total > 0 ) {
-			text += ' €' + total.toFixed( 2 );
+
+		// Add base fee if > 0.
+		if (tabBase > 0 && postnlParams.pickup_fee_formatted) {
+			text += ' (+' + postnlParams.pickup_fee_formatted + ')';
 		}
 
 		$label.children('span').first().text(text);

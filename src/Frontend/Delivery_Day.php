@@ -147,10 +147,11 @@ class Delivery_Day extends Base {
 					$price = isset( $non_standard_fees[ $type ] ) ? $non_standard_fees[ $type ]['fee_price'] : 0;
 
 					return array(
-						'from'  => Utils::get_hour_min( $timeframe['From'] ),
-						'to'    => Utils::get_hour_min( $timeframe['To'] ),
-						'type'  => $type,
-						'price' => $price,
+						'from'            => Utils::get_hour_min( $timeframe['From'] ),
+						'to'              => Utils::get_hour_min( $timeframe['To'] ),
+						'type'            => $type,
+						'price'           => $price,
+						'price_formatted' => Utils::get_formatted_fee_total_price( $price ),
 					);
 				},
 				$delivery_option['Timeframe']

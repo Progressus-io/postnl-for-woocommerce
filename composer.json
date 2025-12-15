@@ -15,6 +15,7 @@
 			"!/assets",
 			"!/languages",
 			"/node_modules",
+            "/client",
 			"bin",
 			"tests",
 			"LICENSE",

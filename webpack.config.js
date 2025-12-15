@@ -11,36 +11,32 @@ const defaultRules = defaultConfig.module.rules.filter((rule) => {
 module.exports = {
 	...defaultConfig,
 	entry: {
-		index: path.resolve(process.cwd(), 'src', 'Checkout_Blocks', 'js', 'index.js'),
+		index: path.resolve(process.cwd(), 'client', 'checkout', 'index.js'),
 		'postnl-container': path.resolve(
 			process.cwd(),
-			'src',
-			'Checkout_Blocks',
-			'js',
+			'client',
+			'checkout',
 			'postnl-container',
 			'index.js'
 		),
 		'postnl-container-frontend': path.resolve(
 			process.cwd(),
-			'src',
-			'Checkout_Blocks',
-			'js',
+			'client',
+			'checkout',
 			'postnl-container',
 			'frontend.js'
 		),
 		'postnl-fill-in-with': path.resolve(
 			process.cwd(),
-			'src',
-			'Checkout_Blocks',
-			'js',
+			'client',
+			'checkout',
 			'postnl-fill-in-with',
 			'index.js'
 		),
 		'postnl-fill-in-with-frontend': path.resolve(
 			process.cwd(),
-			'src',
-			'Checkout_Blocks',
-			'js',
+			'client',
+			'checkout',
 			'postnl-fill-in-with',
 			'frontend.js'
 		)

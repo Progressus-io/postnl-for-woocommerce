@@ -112,14 +112,6 @@
 				self.updateCountrySelectOptions();
 			} );
 
-			// Add initial row if none exist
-			if (
-				jQuery( '#merchant-codes-rows .merchant-codes-row' ).length ===
-				0
-			) {
-				jQuery( '#add-merchant-code-row' ).trigger( 'click' );
-			}
-
 			// Prevent selecting the same country twice
 			jQuery( document ).on( 'change', '.country-select', function () {
 				self.updateCountrySelectOptions();

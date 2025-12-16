@@ -49,6 +49,10 @@ class PostNL extends \WC_Shipping_Flat_Rate {
 		$this->init_form_fields();
 		$this->init_settings();
 
+		if ( empty( $this->get_option( 'title' ) ) ) {
+			$this->update_option( 'title', $this->method_title );
+		}
+
 		add_filter( 'woocommerce_shipping_instance_form_fields_' . $this->id, array( $this, 'instance_form_fields' ), 10, 1 );
 		add_action( 'woocommerce_update_options_shipping_' . $this->id, array( $this, 'process_admin_options' ) );
 		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_shipping_method_assets' ) );

@@ -137,21 +137,4 @@ class PostNL extends \WC_Shipping_Flat_Rate {
 		}
 	}
 
-	/**
-	 * Generate Settings HTML.
-	 *
-	 * Delegate to parent for correct instance/global field rendering.
-	 *
-	 * @param array $form_fields Array of form fields.
-	 * @param bool  $echo Echo or return.
-	 * @return string|void
-	 */
-	public function generate_settings_html( $form_fields = array(), $echo = true ) {
-		if ( empty( $form_fields ) ) {
-			$form_fields = $this->get_form_fields();
-		}
-
-		return parent::generate_settings_html( $form_fields, $echo );
-	}
-
 }

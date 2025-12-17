@@ -47,11 +47,32 @@ class Settings extends \WC_Settings_API {
 	public static function get_instance() {
 		if ( null === self::$instance ) {
 			self::$instance = new self();
+			// Register filter so WC core can call our repeater generator when rendering.
+			add_filter(
+				'woocommerce_generate_repeater_html',
+				array( self::$instance, 'generate_repeater_html_filter' ),
+				10,
+				4
+			);
 			// Hook to save merchant codes.
 			add_action( 'woocommerce_update_options_shipping_' . POSTNL_SETTINGS_ID, array( self::$instance, 'save_merchant_codes' ) );
 		}
 
 		return self::$instance;
+	}
+
+	/**
+	 * Adapter for WC filter signature: woocommerce_generate_{type}_html
+	 *
+	 * @param string $html   Existing HTML (ignored).
+	 * @param string $key    Field key.
+	 * @param array  $value  Field definition array.
+	 * @param object $object The settings object invoking the filter (usually the shipping method object).
+	 * @return string
+	 */
+	public function generate_repeater_html_filter( $html, $key, $value, $object ) {
+		// Delegate to existing generator which expects ($key, $data).
+		return $this->generate_repeater_html( $key, $value );
 	}
 
 	/**

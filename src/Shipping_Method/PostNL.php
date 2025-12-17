@@ -20,6 +20,11 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class PostNL extends \WC_Shipping_Flat_Rate {
 	/**
+	 * Merchant codes option name.
+	 */
+	const MERCHANT_CODES_OPTION = 'postnl_merchant_codes';
+
+	/**
 	 * Init and hook in the integration.
 	 *
 	 * @param int $instance_id Instance ID.
@@ -52,6 +57,16 @@ class PostNL extends \WC_Shipping_Flat_Rate {
 		add_filter( 'woocommerce_shipping_instance_form_fields_' . $this->id, array( $this, 'instance_form_fields' ), 10, 1 );
 		add_action( 'woocommerce_update_options_shipping_' . $this->id, array( $this, 'process_admin_options' ) );
 		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_shipping_method_assets' ) );
+	}
+
+	/**
+	 * Process admin options.
+	 *
+	 * @return void
+	 */
+	public function process_admin_options() {
+		parent::process_admin_options();
+		$this->process_merchant_codes();
 	}
 
 	/**
@@ -147,7 +162,7 @@ class PostNL extends \WC_Shipping_Flat_Rate {
 	 */
 	public function generate_repeater_html( $key, $data ) {
 		ob_start();
-		$merchant_codes   = get_option( Settings::MERCHANT_CODES_OPTION, array() );
+		$merchant_codes   = get_option( self::MERCHANT_CODES_OPTION, array() );
 		$non_eu_countries = Utils::get_non_eu_countries();
 
 		?>
@@ -171,13 +186,13 @@ class PostNL extends \WC_Shipping_Flat_Rate {
 							</div>
 						</div>
 					</div>
-					
+
 					<div class="merchant-codes-rows" id="merchant-codes-rows">
 						<?php if ( ! empty( $merchant_codes ) ) : ?>
 							<?php foreach ( $merchant_codes as $country_code => $merchant_code ) : ?>
 								<div class="merchant-codes-row">
 									<div class="country-column">
-										<select name="<?php echo esc_attr( Settings::MERCHANT_CODES_OPTION ); ?>_countries[]" class="country-select">
+										<select name="<?php echo esc_attr( self::MERCHANT_CODES_OPTION ); ?>_countries[]" class="country-select">
 											<option value=""><?php esc_html_e( 'Select Country', 'postnl-for-woocommerce' ); ?></option>
 											<?php foreach ( $non_eu_countries as $code => $name ) : ?>
 												<option value="<?php echo esc_attr( $code ); ?>" <?php selected( $country_code, $code ); ?>>
@@ -187,8 +202,8 @@ class PostNL extends \WC_Shipping_Flat_Rate {
 										</select>
 									</div>
 									<div class="code-column">
-										<input type="text" 
-											name="<?php echo esc_attr( Settings::MERCHANT_CODES_OPTION ); ?>_codes[]" 
+										<input type="text"
+											name="<?php echo esc_attr( self::MERCHANT_CODES_OPTION ); ?>_codes[]"
 											value="<?php echo esc_attr( $merchant_code ); ?>"
 											placeholder="<?php esc_attr_e( 'Enter merchant code', 'postnl-for-woocommerce' ); ?>"
 											class="regular-text"
@@ -201,7 +216,7 @@ class PostNL extends \WC_Shipping_Flat_Rate {
 							<?php endforeach; ?>
 						<?php endif; ?>
 					</div>
-					
+
 					<div class="merchant-codes-actions">
 						<button type="button" class="button button-secondary" id="add-merchant-code-row">
 							<?php esc_html_e( 'Add Merchant Code', 'postnl-for-woocommerce' ); ?>
@@ -212,12 +227,12 @@ class PostNL extends \WC_Shipping_Flat_Rate {
 				<?php if ( isset( $data['description'] ) && ! empty( $data['description'] ) ) : ?>
 					<p class="description"><?php echo wp_kses_post( $data['description'] ); ?></p>
 				<?php endif; ?>
-				
+
 				<!-- Row template for JavaScript -->
 				<script type="text/template" id="merchant-code-row-template">
 					<div class="merchant-codes-row">
 						<div class="country-column">
-							<select name="<?php echo esc_attr( Settings::MERCHANT_CODES_OPTION ); ?>_countries[]" class="country-select">
+							<select name="<?php echo esc_attr( self::MERCHANT_CODES_OPTION ); ?>_countries[]" class="country-select">
 								<option value=""><?php esc_html_e( 'Select Country', 'postnl-for-woocommerce' ); ?></option>
 								<?php foreach ( $non_eu_countries as $code => $name ) : ?>
 									<option value="<?php echo esc_attr( $code ); ?>">
@@ -227,8 +242,8 @@ class PostNL extends \WC_Shipping_Flat_Rate {
 							</select>
 						</div>
 						<div class="code-column">
-							<input type="text" 
-								name="<?php echo esc_attr( Settings::MERCHANT_CODES_OPTION ); ?>_codes[]" 
+							<input type="text"
+								name="<?php echo esc_attr( self::MERCHANT_CODES_OPTION ); ?>_codes[]"
 								value=""
 								placeholder="<?php esc_attr_e( 'Enter merchant code', 'postnl-for-woocommerce' ); ?>"
 								class="regular-text"
@@ -243,5 +258,49 @@ class PostNL extends \WC_Shipping_Flat_Rate {
 		</tr>
 		<?php
 		return ob_get_clean();
+	}
+
+	/**
+	 * Save merchant codes from repeater.
+	 */
+	public function process_merchant_codes() {
+		$merchant_codes = array();
+		$countries_key  = self::MERCHANT_CODES_OPTION . '_countries';
+		$codes_key      = self::MERCHANT_CODES_OPTION . '_codes';
+		$error          = false;
+
+		if ( ! isset( $_POST[ $countries_key ] ) && ! isset( $_POST[ $codes_key ] ) ) {
+			update_option( self::MERCHANT_CODES_OPTION, array() );
+
+			return;
+		}
+
+		$countries = $_POST[ $countries_key ]; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		$codes     = $_POST[ $codes_key ];   // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+
+		// Check for duplicates in countries array.
+		if ( count( $countries ) !== count( array_unique( $countries ) ) ) {
+			self::add_error(
+				esc_html__( 'Duplicate countries found and have been removed. Only the last entry for each country will be saved.', 'postnl-for-woocommerce' )
+			);
+		}
+
+		foreach ( $countries as $index => $country ) {
+			$code = $codes[ $index ] ?? null;
+
+			// Skip empty values or missing codes.
+			if ( empty( $country ) || empty( $code ) ) {
+				$error = true;
+				continue;
+			}
+
+			$merchant_codes[ sanitize_text_field( $country ) ] = sanitize_text_field( $code );
+		}
+
+		update_option( self::MERCHANT_CODES_OPTION, $merchant_codes );
+
+		if ( $error ) {
+			self::add_error( esc_html__( 'Some merchant codes were not saved because of missing country or code.', 'postnl-for-woocommerce' ) );
+		}
 	}
 }

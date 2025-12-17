@@ -8,7 +8,6 @@
 namespace PostNLWooCommerce\Shipping_Method;
 
 use PostNLWooCommerce\Utils;
-use WC_Admin_Settings;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -47,8 +46,6 @@ class Settings extends \WC_Settings_API {
 	public static function get_instance() {
 		if ( null === self::$instance ) {
 			self::$instance = new self();
-			// Hook to save merchant codes.
-			add_action( 'woocommerce_update_options_shipping_' . POSTNL_SETTINGS_ID, array( self::$instance, 'save_merchant_codes' ) );
 		}
 
 		return self::$instance;
@@ -682,44 +679,6 @@ class Settings extends \WC_Settings_API {
 			),
 
 		);
-	}
-
-	/**
-	 * Save merchant codes from repeater.
-	 */
-	public function save_merchant_codes() {
-		$merchant_codes = array();
-		$countries_key  = self::MERCHANT_CODES_OPTION . '_countries';
-		$codes_key      = self::MERCHANT_CODES_OPTION . '_codes';
-		$error          = false;
-
-		if ( isset( $_POST[ $countries_key ] ) && isset( $_POST[ $codes_key ] ) ) {
-			$countries = $_POST[ $countries_key ]; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-			$codes     = $_POST[ $codes_key ];   // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-
-			// Check for duplicates in countries array.
-			if ( count( $countries ) !== count( array_unique( $countries ) ) ) {
-				WC_Admin_Settings::add_error(
-					esc_html__( 'Duplicate countries found and have been removed. Only the last entry for each country will be saved.', 'postnl-for-woocommerce' )
-				);
-			}
-
-			foreach ( $countries as $index => $country ) {
-				if ( ! empty( $country ) && ! empty( $codes[ $index ] ) ) {
-					$merchant_codes[ sanitize_text_field( $country ) ] = sanitize_text_field( $codes[ $index ] );
-				} else {
-					$error = true;
-				}
-			}
-
-			update_option( self::MERCHANT_CODES_OPTION, $merchant_codes );
-
-			if ( $error ) {
-				WC_Admin_Settings::add_error( esc_html__( 'Some merchant codes were not saved because of missing country or code.', 'postnl-for-woocommerce' ) );
-			}
-		} else {
-			update_option( self::MERCHANT_CODES_OPTION, array() );
-		}
 	}
 
 	/**

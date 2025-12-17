@@ -137,4 +137,111 @@ class PostNL extends \WC_Shipping_Flat_Rate {
 		}
 	}
 
+	/**
+	 * Generate repeater HTML.
+	 *
+	 * @param string $key Field key.
+	 * @param array  $data Field data.
+	 *
+	 * @return string
+	 */
+	public function generate_repeater_html( $key, $data ) {
+		ob_start();
+		$merchant_codes   = get_option( Settings::MERCHANT_CODES_OPTION, array() );
+		$non_eu_countries = Utils::get_non_eu_countries();
+
+		?>
+		<tr valign="top">
+			<th scope="row" class="titledesc">
+				<label for="<?php echo esc_attr( $data['id'] ?? $key ); ?>"><?php echo wp_kses_post( $data['title'] ?? '' ); ?></label>
+				<?php echo $this->get_tooltip_html( $data ); ?>
+			</th>
+			<td class="forminp">
+				<div id="postnl-merchant-codes-repeater">
+					<div class="merchant-codes-header">
+						<div class="merchant-codes-row merchant-codes-header-row">
+							<div class="country-column">
+								<strong><?php esc_html_e( 'Country', 'postnl-for-woocommerce' ); ?></strong>
+							</div>
+							<div class="code-column">
+								<strong><?php esc_html_e( 'Merchant Code', 'postnl-for-woocommerce' ); ?></strong>
+							</div>
+							<div class="action-column">
+								<strong><?php esc_html_e( 'Action', 'postnl-for-woocommerce' ); ?></strong>
+							</div>
+						</div>
+					</div>
+					
+					<div class="merchant-codes-rows" id="merchant-codes-rows">
+						<?php if ( ! empty( $merchant_codes ) ) : ?>
+							<?php foreach ( $merchant_codes as $country_code => $merchant_code ) : ?>
+								<div class="merchant-codes-row">
+									<div class="country-column">
+										<select name="<?php echo esc_attr( Settings::MERCHANT_CODES_OPTION ); ?>_countries[]" class="country-select">
+											<option value=""><?php esc_html_e( 'Select Country', 'postnl-for-woocommerce' ); ?></option>
+											<?php foreach ( $non_eu_countries as $code => $name ) : ?>
+												<option value="<?php echo esc_attr( $code ); ?>" <?php selected( $country_code, $code ); ?>>
+													<?php echo esc_html( $name ); ?> (<?php echo esc_html( $code ); ?>)
+												</option>
+											<?php endforeach; ?>
+										</select>
+									</div>
+									<div class="code-column">
+										<input type="text" 
+											name="<?php echo esc_attr( Settings::MERCHANT_CODES_OPTION ); ?>_codes[]" 
+											value="<?php echo esc_attr( $merchant_code ); ?>"
+											placeholder="<?php esc_attr_e( 'Enter merchant code', 'postnl-for-woocommerce' ); ?>"
+											class="regular-text"
+										/>
+									</div>
+									<div class="action-column">
+										<button type="button" class="button remove-row"><?php esc_html_e( 'Remove', 'postnl-for-woocommerce' ); ?></button>
+									</div>
+								</div>
+							<?php endforeach; ?>
+						<?php endif; ?>
+					</div>
+					
+					<div class="merchant-codes-actions">
+						<button type="button" class="button button-secondary" id="add-merchant-code-row">
+							<?php esc_html_e( 'Add Merchant Code', 'postnl-for-woocommerce' ); ?>
+						</button>
+					</div>
+				</div>
+
+				<?php if ( isset( $data['description'] ) && ! empty( $data['description'] ) ) : ?>
+					<p class="description"><?php echo wp_kses_post( $data['description'] ); ?></p>
+				<?php endif; ?>
+				
+				<!-- Row template for JavaScript -->
+				<script type="text/template" id="merchant-code-row-template">
+					<div class="merchant-codes-row">
+						<div class="country-column">
+							<select name="<?php echo esc_attr( Settings::MERCHANT_CODES_OPTION ); ?>_countries[]" class="country-select">
+								<option value=""><?php esc_html_e( 'Select Country', 'postnl-for-woocommerce' ); ?></option>
+								<?php foreach ( $non_eu_countries as $code => $name ) : ?>
+									<option value="<?php echo esc_attr( $code ); ?>">
+										<?php echo esc_html( $name ); ?> (<?php echo esc_html( $code ); ?>)
+									</option>
+								<?php endforeach; ?>
+							</select>
+						</div>
+						<div class="code-column">
+							<input type="text" 
+								name="<?php echo esc_attr( Settings::MERCHANT_CODES_OPTION ); ?>_codes[]" 
+								value=""
+								placeholder="<?php esc_attr_e( 'Enter merchant code', 'postnl-for-woocommerce' ); ?>"
+								class="regular-text"
+							/>
+						</div>
+						<div class="action-column">
+							<button type="button" class="button remove-row"><?php esc_html_e( 'Remove', 'postnl-for-woocommerce' ); ?></button>
+						</div>
+					</div>
+				</script>
+			</td>
+		</tr>
+		<?php
+		return ob_get_clean();
+	}
 }

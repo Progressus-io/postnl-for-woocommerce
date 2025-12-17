@@ -8,6 +8,7 @@
 namespace PostNLWooCommerce\Shipping_Method;
 
 use PostNLWooCommerce\Utils;
+use WC_Admin_Settings;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -280,7 +281,7 @@ class PostNL extends \WC_Shipping_Flat_Rate {
 
 		// Check for duplicates in countries array.
 		if ( count( $countries ) !== count( array_unique( $countries ) ) ) {
-			self::add_error(
+			WC_Admin_Settings::add_error(
 				esc_html__( 'Duplicate countries found and have been removed. Only the last entry for each country will be saved.', 'postnl-for-woocommerce' )
 			);
 		}
@@ -300,7 +301,7 @@ class PostNL extends \WC_Shipping_Flat_Rate {
 		update_option( self::MERCHANT_CODES_OPTION, $merchant_codes );
 
 		if ( $error ) {
-			self::add_error( esc_html__( 'Some merchant codes were not saved because of missing country or code.', 'postnl-for-woocommerce' ) );
+			WC_Admin_Settings::add_error( esc_html__( 'Some merchant codes were not saved because of missing country or code.', 'postnl-for-woocommerce' ) );
 		}
 	}
 }

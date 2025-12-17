@@ -8,7 +8,6 @@
 namespace PostNLWooCommerce\Shipping_Method;
 
 use PostNLWooCommerce\Utils;
-use WC_Admin_Settings;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -47,8 +46,6 @@ class Settings extends \WC_Settings_API {
 	public static function get_instance() {
 		if ( null === self::$instance ) {
 			self::$instance = new self();
-			// Hook to save merchant codes.
-			add_action( 'woocommerce_update_options_shipping_' . POSTNL_SETTINGS_ID, array( self::$instance, 'save_merchant_codes' ) );
 		}
 
 		return self::$instance;
@@ -682,152 +679,6 @@ class Settings extends \WC_Settings_API {
 			),
 
 		);
-	}
-
-	/**
-	 * Generate repeater HTML.
-	 *
-	 * @param string $key Field key.
-	 * @param array  $data Field data.
-	 *
-	 * @return string
-	 */
-	public function generate_repeater_html( $key, $data ) {
-		ob_start();
-		$merchant_codes   = get_option( self::MERCHANT_CODES_OPTION, array() );
-		$non_eu_countries = Utils::get_non_eu_countries();
-
-		?>
-		<tr valign="top">
-			<th scope="row" class="titledesc">
-				<label for="<?php echo esc_attr( $data['id'] ?? $key ); ?>"><?php echo wp_kses_post( $data['title'] ?? '' ); ?></label>
-				<?php echo $this->get_tooltip_html( $data ); ?>
-			</th>
-			<td class="forminp">
-				<div id="postnl-merchant-codes-repeater">
-					<div class="merchant-codes-header">
-						<div class="merchant-codes-row merchant-codes-header-row">
-							<div class="country-column">
-								<strong><?php esc_html_e( 'Country', 'postnl-for-woocommerce' ); ?></strong>
-							</div>
-							<div class="code-column">
-								<strong><?php esc_html_e( 'Merchant Code', 'postnl-for-woocommerce' ); ?></strong>
-							</div>
-							<div class="action-column">
-								<strong><?php esc_html_e( 'Action', 'postnl-for-woocommerce' ); ?></strong>
-							</div>
-						</div>
-					</div>
-					
-					<div class="merchant-codes-rows" id="merchant-codes-rows">
-						<?php if ( ! empty( $merchant_codes ) ) : ?>
-							<?php foreach ( $merchant_codes as $country_code => $merchant_code ) : ?>
-								<div class="merchant-codes-row">
-									<div class="country-column">
-										<select name="<?php echo esc_attr( self::MERCHANT_CODES_OPTION ); ?>_countries[]" class="country-select">
-											<option value=""><?php esc_html_e( 'Select Country', 'postnl-for-woocommerce' ); ?></option>
-											<?php foreach ( $non_eu_countries as $code => $name ) : ?>
-												<option value="<?php echo esc_attr( $code ); ?>" <?php selected( $country_code, $code ); ?>>
-													<?php echo esc_html( $name ); ?> (<?php echo esc_html( $code ); ?>)
-												</option>
-											<?php endforeach; ?>
-										</select>
-									</div>
-									<div class="code-column">
-										<input type="text" 
-											name="<?php echo esc_attr( self::MERCHANT_CODES_OPTION ); ?>_codes[]" 
-											value="<?php echo esc_attr( $merchant_code ); ?>"
-											placeholder="<?php esc_attr_e( 'Enter merchant code', 'postnl-for-woocommerce' ); ?>"
-											class="regular-text"
-										/>
-									</div>
-									<div class="action-column">
-										<button type="button" class="button remove-row"><?php esc_html_e( 'Remove', 'postnl-for-woocommerce' ); ?></button>
-									</div>
-								</div>
-							<?php endforeach; ?>
-						<?php endif; ?>
-					</div>
-					
-					<div class="merchant-codes-actions">
-						<button type="button" class="button button-secondary" id="add-merchant-code-row">
-							<?php esc_html_e( 'Add Merchant Code', 'postnl-for-woocommerce' ); ?>
-						</button>
-					</div>
-				</div>
-
-				<?php if ( isset( $data['description'] ) && ! empty( $data['description'] ) ) : ?>
-					<p class="description"><?php echo wp_kses_post( $data['description'] ); ?></p>
-				<?php endif; ?>
-				
-				<!-- Row template for JavaScript -->
-				<script type="text/template" id="merchant-code-row-template">
-					<div class="merchant-codes-row">
-						<div class="country-column">
-							<select name="<?php echo esc_attr( self::MERCHANT_CODES_OPTION ); ?>_countries[]" class="country-select">
-								<option value=""><?php esc_html_e( 'Select Country', 'postnl-for-woocommerce' ); ?></option>
-								<?php foreach ( $non_eu_countries as $code => $name ) : ?>
-									<option value="<?php echo esc_attr( $code ); ?>">
-										<?php echo esc_html( $name ); ?> (<?php echo esc_html( $code ); ?>)
-									</option>
-								<?php endforeach; ?>
-							</select>
-						</div>
-						<div class="code-column">
-							<input type="text" 
-								name="<?php echo esc_attr( self::MERCHANT_CODES_OPTION ); ?>_codes[]" 
-								value=""
-								placeholder="<?php esc_attr_e( 'Enter merchant code', 'postnl-for-woocommerce' ); ?>"
-								class="regular-text"
-							/>
-						</div>
-						<div class="action-column">
-							<button type="button" class="button remove-row"><?php esc_html_e( 'Remove', 'postnl-for-woocommerce' ); ?></button>
-						</div>
-					</div>
-				</script>
-			</td>
-		</tr>
-		<?php
-		return ob_get_clean();
-	}
-
-	/**
-	 * Save merchant codes from repeater.
-	 */
-	public function save_merchant_codes() {
-		$merchant_codes = array();
-		$countries_key  = self::MERCHANT_CODES_OPTION . '_countries';
-		$codes_key      = self::MERCHANT_CODES_OPTION . '_codes';
-		$error          = false;
-
-		if ( isset( $_POST[ $countries_key ] ) && isset( $_POST[ $codes_key ] ) ) {
-			$countries = $_POST[ $countries_key ]; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-			$codes     = $_POST[ $codes_key ];   // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-
-			// Check for duplicates in countries array.
-			if ( count( $countries ) !== count( array_unique( $countries ) ) ) {
-				WC_Admin_Settings::add_error(
-					esc_html__( 'Duplicate countries found and have been removed. Only the last entry for each country will be saved.', 'postnl-for-woocommerce' )
-				);
-			}
-
-			foreach ( $countries as $index => $country ) {
-				if ( ! empty( $country ) && ! empty( $codes[ $index ] ) ) {
-					$merchant_codes[ sanitize_text_field( $country ) ] = sanitize_text_field( $codes[ $index ] );
-				} else {
-					$error = true;
-				}
-			}
-
-			update_option( self::MERCHANT_CODES_OPTION, $merchant_codes );
-
-			if ( $error ) {
-				WC_Admin_Settings::add_error( esc_html__( 'Some merchant codes were not saved because of missing country or code.', 'postnl-for-woocommerce' ) );
-			}
-		} else {
-			update_option( self::MERCHANT_CODES_OPTION, array() );
-		}
 	}
 
 	/**

@@ -37,6 +37,7 @@ PostNL’s official extension for WooCommerce on WordPress. Manage your national
 ### 5.9.1
 * Fix: Delivery options display prices including/excluding tax based on WooCommerce tax settings.
 * Fix: Removed default empty merchant customs code fields to prevent validation errors when saving settings without adding codes.
+* Fix: Load the PostNl shipping method fields data correctly.
 
 ### 5.9.0
 * Add: Ability for marking products as 18+ and automatically apply ID Check to orders containing them.
@@ -47,7 +48,6 @@ PostNL’s official extension for WooCommerce on WordPress. Manage your national
 * Fix: the HS Tariff Code field not saving for product variations.
 * Fix: letterbox logic for variable products.
 * Tweak: WordPress 6.9 and WooCommerce 10.4 compatibility.
-
 
 ### 5.8.1
 * Add: New email settings field for shipping confirmation.

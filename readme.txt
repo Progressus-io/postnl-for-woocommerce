@@ -84,6 +84,7 @@ Follow these instructions (https://www.postnl.nl/Images/aanvragen-api-key-stappe
 = 5.9.1 (2025-xx-xx) =
 * Fix: Delivery options display prices including/excluding tax based on WooCommerce tax settings.
 * Fix: Removed default empty merchant customs code fields to prevent validation errors when saving settings without adding codes.
+* Fix: Load the PostNl shipping method fields data correctly.
 
 = 5.9.0 (2025-12-09) =
 * Add: Ability for marking products as 18+ and automatically apply ID Check to orders containing them.

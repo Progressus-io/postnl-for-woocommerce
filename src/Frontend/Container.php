@@ -221,7 +221,9 @@ class Container {
 			}
 
 			$timestamp            = strtotime( $delivery_option['DeliveryDate'] );
-			$default_val['day']   = gmdate( 'l', $timestamp );
+			$day_abbr             = strtolower( gmdate( 'D', $timestamp ) );
+			$days_of_week         = Utils::days_of_week();
+			$default_val['day']   = isset( $days_of_week[ $day_abbr ] ) ? $days_of_week[ $day_abbr ] : gmdate( 'l', $timestamp );
 			$default_val['date']  = gmdate( 'Y-m-d', $timestamp );
 			$default_val['from']  = $options[0]['from'];
 			$default_val['to']    = $options[0]['to'];

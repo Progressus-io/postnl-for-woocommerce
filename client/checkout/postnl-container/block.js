@@ -150,6 +150,9 @@ export const Block = ( { checkoutExtensionData } ) => {
 	// Ref to store the previous shipping address
 	const previousShippingAddress = useRef( null );
 
+	// Ref to track previous visibility of the container
+	const previousShowContainer = useRef( showContainer );
+
 	const empty = ( value ) =>
 		value === undefined || value === null || value === '';
 
@@ -344,6 +347,79 @@ export const Block = ( { checkoutExtensionData } ) => {
 			sessionStorage.removeItem( 'postnl_dropoffPointsDistance' );
 		}
 	}, [ isComplete, letterbox, showContainer ] );
+
+	// When the container becomes hidden (was visible -> hidden), clear extension data
+	// and notify blocks checkout to remove any extra delivery fee that was applied.
+	useEffect( () => {
+		// only act when visibility transitions from true -> false
+		if ( previousShowContainer.current && ! showContainer ) {
+			// clear extension data if available
+			const clearKeys = [
+				'deliveryDay',
+				'deliveryDayDate',
+				'deliveryDayFrom',
+				'deliveryDayTo',
+				'deliveryDayPrice',
+				'deliveryDayType',
+				'dropoffPoints',
+				'dropoffPointsAddressCompany',
+				'dropoffPointsAddress1',
+				'dropoffPointsAddress2',
+				'dropoffPointsCity',
+				'dropoffPointsPostcode',
+				'dropoffPointsCountry',
+				'dropoffPointsPartnerID',
+				'dropoffPointsDate',
+				'dropoffPointsTime',
+				'dropoffPointsType',
+				'dropoffPointsDistance',
+			];
+
+			if ( typeof setExtensionData === 'function' ) {
+				try {
+					clearKeys.forEach( ( key ) =>
+						setExtensionData( 'postnl', key, '' )
+					);
+				} catch ( e ) {
+					// ignore
+				}
+			}
+
+			// Reset local extra fee state
+			setExtraDeliveryFee( 0 );
+			setExtraDeliveryFeeFormatted( '' );
+
+			// Recalculate carrier base cost without extra fee
+			const currentTabBase =
+				baseTabs.find( ( tab ) => tab.id === activeTab )?.base || 0;
+			const raw = selectedShippingFee - currentTabBase - 0;
+			setCarrierBaseCost( raw < 0 ? 0 : raw );
+
+			// Ask Blocks checkout to update cart totals and remove extra fee
+			( async () => {
+				const { extensionCartUpdate } =
+					window.wc?.blocksCheckout || {};
+				if ( typeof extensionCartUpdate === 'function' ) {
+					await extensionCartUpdate( {
+						namespace: 'postnl',
+						data: {
+							action: 'update_delivery_fee',
+							price: 0,
+							type: '',
+						},
+					} );
+				}
+			} )();
+		}
+
+		previousShowContainer.current = showContainer;
+	}, [
+		showContainer,
+		baseTabs,
+		activeTab,
+		selectedShippingFee,
+		setExtensionData,
+	] );
 
 	useEffect( () => {
 		if ( ! letterbox || ! showContainer || deliveryOptions.length === 0 ) {

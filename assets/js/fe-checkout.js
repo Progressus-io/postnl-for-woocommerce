@@ -175,4 +175,82 @@
 
 	postnl_fe_checkout.init();
 
+	// Observe container visibility changes and run cleanup once when it hides/removes.
+	var prevVisible = !! document.getElementById(
+		'postnl_checkout_option'
+	);
+	var cleanupTimer = null;
+
+	function doCleanupOnce() {
+		if ( cleanupTimer ) return;
+		cleanupTimer = setTimeout( function () {
+			// remove any hidden inputs related to PostNL and clear sessionStorage keys.
+			try {
+				var inputs = document.querySelectorAll(
+					'input[id^="postnl_"]'
+				);
+				for ( var i = 0; i < inputs.length; i++ )
+					inputs[ i ].parentNode &&
+						inputs[ i ].parentNode.removeChild( inputs[ i ] );
+			} catch ( e ) {}
+			var keys = [
+				'postnl_selected_option',
+				'postnl_deliveryDay',
+				'postnl_deliveryDayDate',
+				'postnl_deliveryDayFrom',
+				'postnl_deliveryDayTo',
+				'postnl_deliveryDayPrice',
+				'postnl_deliveryDayType',
+				'postnl_dropoffPoints',
+				'postnl_dropoffPointsAddressCompany',
+				'postnl_dropoffPointsAddress1',
+				'postnl_dropoffPointsAddress2',
+				'postnl_dropoffPointsCity',
+				'postnl_dropoffPointsPostcode',
+				'postnl_dropoffPointsCountry',
+				'postnl_dropoffPointsPartnerID',
+				'postnl_dropoffPointsDate',
+				'postnl_dropoffPointsTime',
+				'postnl_dropoffPointsType',
+				'postnl_dropoffPointsDistance',
+			];
+			try {
+				keys.forEach( function ( k ) {
+					sessionStorage.removeItem( k );
+				} );
+			} catch ( e ) {}
+			// single debounced update.
+			try {
+				triggerUpdateCheckoutDebounced( 300 );
+			} catch ( e ) {
+				jQuery( 'body' ).trigger( 'update_checkout' );
+			}
+			cleanupTimer = null;
+		}, 60 );
+	}
+
+	var observer = new MutationObserver( function () {
+		var el = document.getElementById( 'postnl_checkout_option' );
+		var visible = false;
+		if ( el ) {
+			var style = window.getComputedStyle( el );
+			visible =
+				style &&
+				style.display !== 'none' &&
+				style.visibility !== 'hidden' &&
+				el.offsetParent !== null;
+		}
+		if ( prevVisible && ! visible ) {
+			doCleanupOnce();
+		}
+		prevVisible = visible;
+	} );
+
+	observer.observe( document.documentElement || document.body, {
+		childList: true,
+		subtree: true,
+		attributes: true,
+		attributeFilter: [ 'style', 'class' ],
+	} );
+
 } )( jQuery );

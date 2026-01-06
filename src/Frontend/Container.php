@@ -280,6 +280,7 @@ class Container {
 			$post_data = $this->get_checkout_post_data();
 
 			if ( empty( $post_data ) ) {
+				$this->clear_delivery_session();
 				return;
 			}
 
@@ -287,6 +288,7 @@ class Container {
 
 			foreach ( $post_data as $post_key => $post_value ) {
 				if ( 'shipping_method' === $post_key && ! in_array( Utils::get_cart_shipping_method_id( $post_value[0] ), $sipping_methods ) ) {
+					$this->clear_delivery_session();
 					return;
 				}
 			}
@@ -302,12 +304,14 @@ class Container {
 			}
 
 			if ( ! isset( $available_country[ $store_country ][ $receiver_country ] ) ) {
+				$this->clear_delivery_session();
 				return;
 			}
 
 			$post_data = Address_Utils::set_post_data_address( $post_data );
 
 			if ( empty( $post_data['shipping_postcode'] ) ) {
+				$this->clear_delivery_session();
 				return;
 			}
 
@@ -329,6 +333,18 @@ class Container {
 
 		} catch ( \Exception $e ) {
 			wc_add_notice( $e->getMessage(), 'error' );
+		}
+	}
+
+	/**
+	 * Clear PostNL-related session keys.
+	 */
+	protected function clear_delivery_session() {
+		if ( function_exists( 'WC' ) && WC()->session ) {
+			WC()->session->__unset( 'postnl_delivery_fee' );
+			WC()->session->__unset( 'postnl_delivery_type' );
+			WC()->session->__unset( 'postnl_checkout_post_data' );
+			WC()->session->__unset( 'postnl_option' );
 		}
 	}
 

@@ -198,7 +198,11 @@ export const Block = ( { checkoutExtensionData } ) => {
 
 		// Check if the shipping address has changed
 		if (
-			isAddressEqual( previousShippingAddress.current, shippingAddress )
+			isAddressEqual(
+				previousShippingAddress.current,
+				shippingAddress
+			) &&
+			showContainer
 		) {
 			return;
 		}

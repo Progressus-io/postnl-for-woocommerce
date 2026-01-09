@@ -229,7 +229,7 @@
 		}, 60 );
 	}
 
-	var observer = new MutationObserver( function () {
+	jQuery( 'body' ).on( 'updated_checkout', function () {
 		var el = document.getElementById( 'postnl_checkout_option' );
 		var visible = false;
 		if ( el ) {
@@ -240,17 +240,11 @@
 				style.visibility !== 'hidden' &&
 				el.offsetParent !== null;
 		}
+
 		if ( prevVisible && ! visible ) {
 			doCleanupOnce();
 		}
+
 		prevVisible = visible;
 	} );
-
-	observer.observe( document.documentElement || document.body, {
-		childList: true,
-		subtree: true,
-		attributes: true,
-		attributeFilter: [ 'style', 'class' ],
-	} );
-
 } )( jQuery );

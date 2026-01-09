@@ -14,6 +14,10 @@ import { Spinner } from '@wordpress/components';
 import { Block as DeliveryDayBlock } from '../postnl-delivery-day/block';
 import { Block as DropoffPointsBlock } from '../postnl-dropoff-points/block';
 import { getDeliveryDay, clearSessionData } from '../../utils/session-manager';
+import {
+	batchSetExtensionData,
+	clearDropoffPointExtensionData,
+} from '../../utils/extension-data-helper';
 
 export const Block = ( { checkoutExtensionData } ) => {
 	const { setExtensionData } = checkoutExtensionData;
@@ -355,36 +359,18 @@ export const Block = ( { checkoutExtensionData } ) => {
 		// Build the combined value (like in DeliveryDayBlock):
 		const deliveryDay = `${ firstDelivery.date }_${ firstOption.from }-${ firstOption.to }_${ firstOption.price }`;
 
-		setExtensionData( 'postnl', 'deliveryDay', deliveryDay );
-		setExtensionData(
-			'postnl',
-			'deliveryDayDate',
-			firstDelivery.date || ''
-		);
-		setExtensionData( 'postnl', 'deliveryDayFrom', firstOption.from || '' );
-		setExtensionData( 'postnl', 'deliveryDayTo', firstOption.to || '' );
-		setExtensionData(
-			'postnl',
-			'deliveryDayPrice',
-			String( firstOption.price || '0' )
-		);
-		setExtensionData(
-			'postnl',
-			'deliveryDayType',
-			firstOption.type || 'Letterbox'
-		);
-		setExtensionData( 'postnl', 'dropoffPoints', '' );
-		setExtensionData( 'postnl', 'dropoffPointsAddressCompany', '' );
-		setExtensionData( 'postnl', 'dropoffPointsAddress1', '' );
-		setExtensionData( 'postnl', 'dropoffPointsAddress2', '' );
-		setExtensionData( 'postnl', 'dropoffPointsCity', '' );
-		setExtensionData( 'postnl', 'dropoffPointsPostcode', '' );
-		setExtensionData( 'postnl', 'dropoffPointsCountry', '' );
-		setExtensionData( 'postnl', 'dropoffPointsPartnerID', '' );
-		setExtensionData( 'postnl', 'dropoffPointsDate', '' );
-		setExtensionData( 'postnl', 'dropoffPointsTime', '' );
-		setExtensionData( 'postnl', 'dropoffPointsType', '' );
-		setExtensionData( 'postnl', 'dropoffPointsDistance', '' );
+		// Set letterbox delivery data using batch helper
+		batchSetExtensionData( setExtensionData, {
+			deliveryDay,
+			deliveryDayDate: firstDelivery.date || '',
+			deliveryDayFrom: firstOption.from || '',
+			deliveryDayTo: firstOption.to || '',
+			deliveryDayPrice: String( firstOption.price || '0' ),
+			deliveryDayType: firstOption.type || 'Letterbox',
+		} );
+
+		// Clear dropoff point data using helper
+		clearDropoffPointExtensionData( setExtensionData );
 	}, [ letterbox, showContainer, deliveryOptions, setExtensionData ] );
 
 	return (

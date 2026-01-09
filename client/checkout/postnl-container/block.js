@@ -13,6 +13,7 @@ import { Spinner } from '@wordpress/components';
  */
 import { Block as DeliveryDayBlock } from '../postnl-delivery-day/block';
 import { Block as DropoffPointsBlock } from '../postnl-dropoff-points/block';
+import { getDeliveryDay, clearSessionData } from '../../utils/session-manager';
 
 export const Block = ( { checkoutExtensionData } ) => {
 	const { setExtensionData } = checkoutExtensionData;
@@ -54,15 +55,18 @@ export const Block = ( { checkoutExtensionData } ) => {
 		[ CART_STORE_KEY ]
 	);
 
-	// stores the Morning/Evening surcharge currently selected
-	const [extraDeliveryFee, setExtraDeliveryFee] = useState(() => {
-		return Number(sessionStorage.getItem('postnl_deliveryDayPrice') || 0);
-	});
+	// Stores the Morning/Evening surcharge currently selected
+	const [ extraDeliveryFee, setExtraDeliveryFee ] = useState( () => {
+		const saved = getDeliveryDay();
+		return Number( saved.price || 0 );
+	} );
 
-	// stores the formatted Morning/Evening surcharge for display.
-	const [extraDeliveryFeeFormatted, setExtraDeliveryFeeFormatted] = useState(() => {
-		return sessionStorage.getItem('postnl_deliveryDayPriceFormatted') || '';
-	});
+	// Stores the formatted Morning/Evening surcharge for display.
+	const [ extraDeliveryFeeFormatted, setExtraDeliveryFeeFormatted ] =
+		useState( () => {
+			const saved = getDeliveryDay();
+			return saved.priceFormatted || '';
+		} );
 
 	const baseTabs = [
 		{
@@ -71,35 +75,39 @@ export const Block = ( { checkoutExtensionData } ) => {
 			displayFormatted: postnlData.delivery_day_fee_formatted || '',
 		},
 		...( postnlData.is_pickup_points_enabled
-			? [ {
-				id: 'dropoff_points',
-				base: Number( postnlData.pickup_fee || 0 ),
-				displayFormatted: postnlData.pickup_fee_formatted || '',
-			} ]
+			? [
+					{
+						id: 'dropoff_points',
+						base: Number( postnlData.pickup_fee || 0 ),
+						displayFormatted: postnlData.pickup_fee_formatted || '',
+					},
+			  ]
 			: [] ),
 	];
 
-	const [activeTab, setActiveTab] = useState(baseTabs[0].id);
+	const [ activeTab, setActiveTab ] = useState( baseTabs[ 0 ].id );
 
-	const [carrierBaseCost, setCarrierBaseCost] = useState(() => {
-		const savedExtra = Number(sessionStorage.getItem('postnl_deliveryDayPrice') || 0);
-		return selectedShippingFee - baseTabs[0].base - savedExtra;
-	});
+	const [ carrierBaseCost, setCarrierBaseCost ] = useState( () => {
+		const saved = getDeliveryDay();
+		const savedExtra = Number( saved.price || 0 );
+		return selectedShippingFee - baseTabs[ 0 ].base - savedExtra;
+	} );
 
-	const prevShipping = useRef(selectedShippingFee);
+	const prevShipping = useRef( selectedShippingFee );
 
-	useEffect(() => {
-		if (prevShipping.current === selectedShippingFee) {
+	useEffect( () => {
+		if ( prevShipping.current === selectedShippingFee ) {
 			return;
 		}
 		prevShipping.current = selectedShippingFee;
 
-		const currentTabBase = baseTabs.find((tab) => tab.id === activeTab)?.base || 0;
+		const currentTabBase =
+			baseTabs.find( ( tab ) => tab.id === activeTab )?.base || 0;
 		const extra = activeTab === 'delivery_day' ? extraDeliveryFee : 0;
 
 		const raw = selectedShippingFee - currentTabBase - extra;
-		setCarrierBaseCost(raw < 0 ? 0 : raw);
-	}, [selectedShippingFee]);
+		setCarrierBaseCost( raw < 0 ? 0 : raw );
+	}, [ selectedShippingFee ] );
 
 	const tabs = baseTabs.map( ( tab ) => {
 		let title =
@@ -112,7 +120,11 @@ export const Block = ( { checkoutExtensionData } ) => {
 			fees.push( tab.displayFormatted );
 		}
 
-		if ( tab.id === 'delivery_day' && extraDeliveryFeeFormatted && extraDeliveryFee > 0 ) {
+		if (
+			tab.id === 'delivery_day' &&
+			extraDeliveryFeeFormatted &&
+			extraDeliveryFee > 0
+		) {
 			fees.push( extraDeliveryFeeFormatted );
 		}
 
@@ -122,7 +134,6 @@ export const Block = ( { checkoutExtensionData } ) => {
 
 		return { id: tab.id, name: title, base: tab.base };
 	} );
-
 
 	// Retrieve customer data from WooCommerce cart store
 	const customerData = useSelect(
@@ -160,7 +171,7 @@ export const Block = ( { checkoutExtensionData } ) => {
 	const currentHouseNumber = shippingAddress?.[ 'postnl/house_number' ] || '';
 
 	useEffect( () => {
-		if ( currentHouseNumber && postnlData.is_nl_address_enabled) {
+		if ( currentHouseNumber && postnlData.is_nl_address_enabled ) {
 			setExtensionData( 'postnl', 'houseNumber', currentHouseNumber );
 		}
 	}, [ shippingAddress, setExtensionData ] );
@@ -184,7 +195,8 @@ export const Block = ( { checkoutExtensionData } ) => {
 			! shippingAddress ||
 			empty( shippingAddress.postcode ) ||
 			( shippingAddress.country === 'NL' &&
-				(postnlData.is_nl_address_enabled && empty( shippingAddress[ 'postnl/house_number' ] )) )
+				postnlData.is_nl_address_enabled &&
+				empty( shippingAddress[ 'postnl/house_number' ] ) )
 		) {
 			// If we have no valid postcode/house number, hide container
 			setShowContainer( false );
@@ -203,7 +215,7 @@ export const Block = ( { checkoutExtensionData } ) => {
 			return;
 		}
 
-		const debounceDelay = 1500; //
+		const debounceDelay = 1500;
 		const handler = setTimeout( () => {
 			// Update the previous shipping address
 			previousShippingAddress.current = { ...shippingAddress };
@@ -213,9 +225,9 @@ export const Block = ( { checkoutExtensionData } ) => {
 				shipping_postcode: shippingAddress.postcode || '',
 				...( postnlData.is_nl_address_enabled
 					? {
-						shipping_house_number:
-							shippingAddress[ 'postnl/house_number' ] || '',
-					}
+							shipping_house_number:
+								shippingAddress[ 'postnl/house_number' ] || '',
+					  }
 					: {} ),
 				shipping_address_2: shippingAddress.address_2 || '',
 				shipping_address_1: shippingAddress.address_1 || '',
@@ -263,16 +275,16 @@ export const Block = ( { checkoutExtensionData } ) => {
 							};
 
 							if ( ! postnlData.is_nl_address_enabled ) {
-								newShippingAddress.address_1 = `${street} ${house_number}`;
+								newShippingAddress.address_1 = `${ street } ${ house_number }`;
 							} else {
 								newShippingAddress.address_1 = street;
 							}
 
 							if (
-								(shippingAddress.address_1 !== street ||
-									shippingAddress.city !== city ||
-									shippingAddress[ 'postnl/house_number' ] !==
-									house_number)
+								shippingAddress.address_1 !== street ||
+								shippingAddress.city !== city ||
+								shippingAddress[ 'postnl/house_number' ] !==
+									house_number
 							) {
 								isUpdatingAddress.current = true;
 								setShippingAddress( newShippingAddress );
@@ -323,25 +335,7 @@ export const Block = ( { checkoutExtensionData } ) => {
 	// Clear session storage if checkout is complete, letterbox, or container hidden
 	useEffect( () => {
 		if ( isComplete || letterbox || ! showContainer ) {
-			sessionStorage.removeItem( 'postnl_selected_option' );
-			sessionStorage.removeItem( 'postnl_deliveryDay' );
-			sessionStorage.removeItem( 'postnl_deliveryDayDate' );
-			sessionStorage.removeItem( 'postnl_deliveryDayFrom' );
-			sessionStorage.removeItem( 'postnl_deliveryDayTo' );
-			sessionStorage.removeItem( 'postnl_deliveryDayPrice' );
-			sessionStorage.removeItem( 'postnl_deliveryDayType' );
-			sessionStorage.removeItem( 'postnl_dropoffPoints' );
-			sessionStorage.removeItem( 'postnl_dropoffPointsAddressCompany' );
-			sessionStorage.removeItem( 'postnl_dropoffPointsAddress1' );
-			sessionStorage.removeItem( 'postnl_dropoffPointsAddress2' );
-			sessionStorage.removeItem( 'postnl_dropoffPointsCity' );
-			sessionStorage.removeItem( 'postnl_dropoffPointsPostcode' );
-			sessionStorage.removeItem( 'postnl_dropoffPointsCountry' );
-			sessionStorage.removeItem( 'postnl_dropoffPointsPartnerID' );
-			sessionStorage.removeItem( 'postnl_dropoffPointsDate' );
-			sessionStorage.removeItem( 'postnl_dropoffPointsTime' );
-			sessionStorage.removeItem( 'postnl_dropoffPointsType' );
-			sessionStorage.removeItem( 'postnl_dropoffPointsDistance' );
+			clearSessionData();
 		}
 	}, [ isComplete, letterbox, showContainer ] );
 
@@ -391,7 +385,6 @@ export const Block = ( { checkoutExtensionData } ) => {
 		setExtensionData( 'postnl', 'dropoffPointsTime', '' );
 		setExtensionData( 'postnl', 'dropoffPointsType', '' );
 		setExtensionData( 'postnl', 'dropoffPointsDistance', '' );
-
 	}, [ letterbox, showContainer, deliveryOptions, setExtensionData ] );
 
 	return (
@@ -399,7 +392,7 @@ export const Block = ( { checkoutExtensionData } ) => {
 			id="postnl_checkout_option"
 			className={ `postnl_checkout_container ${
 				loading ? 'loading' : ''
-			}` } // Conditionally add 'loading' class
+			}` }
 			style={ { position: 'relative' } }
 			aria-busy={ loading }
 		>
@@ -470,21 +463,28 @@ export const Block = ( { checkoutExtensionData } ) => {
 								deliveryOptions={ deliveryOptions }
 								isDeliveryDaysEnabled={ deliveryDaysEnabled }
 								onPriceChange={ ( priceData ) => {
-									setExtraDeliveryFee( priceData.numeric || 0 );
-									setExtraDeliveryFeeFormatted( priceData.formatted || '' );
-									sessionStorage.setItem( 'postnl_deliveryDayPriceFormatted', priceData.formatted || '' );
+									setExtraDeliveryFee(
+										priceData.numeric || 0
+									);
+									setExtraDeliveryFeeFormatted(
+										priceData.formatted || ''
+									);
 								} }
 							/>
 						</div>
 						{ postnlData.is_pickup_points_enabled && (
 							<div
 								className={ `postnl_content ${
-									activeTab === 'dropoff_points' ? 'active' : ''
+									activeTab === 'dropoff_points'
+										? 'active'
+										: ''
 								}` }
 								id="postnl_dropoff_points_content"
 							>
 								<DropoffPointsBlock
-									checkoutExtensionData={ checkoutExtensionData }
+									checkoutExtensionData={
+										checkoutExtensionData
+									}
 									isActive={ activeTab === 'dropoff_points' }
 									dropoffOptions={ dropoffOptions }
 								/>

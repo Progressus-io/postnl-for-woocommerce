@@ -5,14 +5,23 @@ import { useEffect, useState, useCallback } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 import { debounce } from 'lodash';
 
-export const Block = ({
-						  checkoutExtensionData,
-						  isActive,
-						  deliveryOptions,
-						  isDeliveryDaysEnabled,
-						  onPriceChange = () => {
-						  },
-					  }) => {
+/**
+ * Internal dependencies
+ */
+import {
+	getDeliveryDay,
+	setDeliveryDay as saveDeliveryDay,
+	clearDeliveryDay,
+	clearDropoffPoint,
+} from '../../utils/session-manager';
+
+export const Block = ( {
+	checkoutExtensionData,
+	isActive,
+	deliveryOptions,
+	isDeliveryDaysEnabled,
+	onPriceChange = () => {},
+} ) => {
 	const { setExtensionData } = checkoutExtensionData;
 
 	// Debounce setting extension data to optimize performance
@@ -23,107 +32,96 @@ export const Block = ({
 		[ setExtensionData ]
 	);
 
-	// Initialize state from sessionStorage if available
-	const [ selectedOption, setSelectedOption ] = useState( () => {
-		return sessionStorage.getItem( 'postnl_selected_option' ) || '';
-	} );
-	const [ deliveryDay, setDeliveryDay ] = useState( () => {
-		return sessionStorage.getItem( 'postnl_deliveryDay' ) || '';
-	} );
-	const [ deliveryDayDate, setDeliveryDayDate ] = useState( () => {
-		return sessionStorage.getItem( 'postnl_deliveryDayDate' ) || '';
-	} );
-	const [ deliveryDayFrom, setDeliveryDayFrom ] = useState( () => {
-		return sessionStorage.getItem( 'postnl_deliveryDayFrom' ) || '';
-	} );
-	const [ deliveryDayTo, setDeliveryDayTo ] = useState( () => {
-		return sessionStorage.getItem( 'postnl_deliveryDayTo' ) || '';
-	} );
-	const [ deliveryDayPrice, setDeliveryDayPrice ] = useState( () => {
-		return sessionStorage.getItem( 'postnl_deliveryDayPrice' ) || '';
-	} );
-	const [ deliveryDayType, setDeliveryDayType ] = useState( () => {
-		return sessionStorage.getItem( 'postnl_deliveryDayType' ) || '';
+	// Initialize state from centralized session manager
+	const [ selection, setSelection ] = useState( () => {
+		const saved = getDeliveryDay();
+		return {
+			selectedOption: saved.value || '',
+			deliveryDay: saved.value || '',
+			deliveryDayDate: saved.date || '',
+			deliveryDayFrom: saved.from || '',
+			deliveryDayTo: saved.to || '',
+			deliveryDayPrice: saved.price || '',
+			deliveryDayType: saved.type || '',
+		};
 	} );
 
-	// Sync states with extension data
+	// Sync with extension data when selection changes
 	useEffect( () => {
-		debouncedSetExtensionData( 'postnl', 'deliveryDay', deliveryDay );
-	}, [ deliveryDay, debouncedSetExtensionData ] );
-	useEffect( () => {
+		debouncedSetExtensionData(
+			'postnl',
+			'deliveryDay',
+			selection.deliveryDay
+		);
 		debouncedSetExtensionData(
 			'postnl',
 			'deliveryDayDate',
-			deliveryDayDate
+			selection.deliveryDayDate
 		);
-	}, [ deliveryDayDate, debouncedSetExtensionData ] );
-	useEffect( () => {
 		debouncedSetExtensionData(
 			'postnl',
 			'deliveryDayFrom',
-			deliveryDayFrom
+			selection.deliveryDayFrom
 		);
-	}, [ deliveryDayFrom, debouncedSetExtensionData ] );
-	useEffect( () => {
-		debouncedSetExtensionData( 'postnl', 'deliveryDayTo', deliveryDayTo );
-	}, [ deliveryDayTo, debouncedSetExtensionData ] );
-	useEffect( () => {
+		debouncedSetExtensionData(
+			'postnl',
+			'deliveryDayTo',
+			selection.deliveryDayTo
+		);
 		debouncedSetExtensionData(
 			'postnl',
 			'deliveryDayPrice',
-			deliveryDayPrice
+			selection.deliveryDayPrice.toString()
 		);
-	}, [ deliveryDayPrice, debouncedSetExtensionData ] );
-	useEffect( () => {
 		debouncedSetExtensionData(
 			'postnl',
 			'deliveryDayType',
-			deliveryDayType
+			selection.deliveryDayType
 		);
-	}, [ deliveryDayType, debouncedSetExtensionData ] );
+	}, [ selection, debouncedSetExtensionData ] );
 
 	// Clear all delivery day selections
-	const clearSelections = ( clearSession = false ) => {
-		setSelectedOption( '' );
-		if ( clearSession ) {
-			sessionStorage.removeItem( 'postnl_selected_option' );
-		}
-		setDeliveryDay( '' );
-		setDeliveryDayDate( '' );
-		setDeliveryDayFrom( '' );
-		setDeliveryDayTo( '' );
-		setDeliveryDayPrice( '' );
-		setDeliveryDayType( '' );
-		if ( clearSession ) {
-			sessionStorage.removeItem( 'postnl_deliveryDay' );
-			sessionStorage.removeItem( 'postnl_deliveryDayDate' );
-			sessionStorage.removeItem( 'postnl_deliveryDayFrom' );
-			sessionStorage.removeItem( 'postnl_deliveryDayTo' );
-			sessionStorage.removeItem( 'postnl_deliveryDayPrice' );
-			sessionStorage.removeItem( 'postnl_deliveryDayType' );
-		}
-		setExtensionData( 'postnl', 'deliveryDay', '' );
-		setExtensionData( 'postnl', 'deliveryDayDate', '' );
-		setExtensionData( 'postnl', 'deliveryDayFrom', '' );
-		setExtensionData( 'postnl', 'deliveryDayTo', '' );
-		setExtensionData( 'postnl', 'deliveryDayPrice', '' );
-		setExtensionData( 'postnl', 'deliveryDayType', '' );
-		onPriceChange( { numeric: 0, formatted: '' } );
-	};
+	const clearSelections = useCallback(
+		( clearSession = false ) => {
+			setSelection( {
+				selectedOption: '',
+				deliveryDay: '',
+				deliveryDayDate: '',
+				deliveryDayFrom: '',
+				deliveryDayTo: '',
+				deliveryDayPrice: '',
+				deliveryDayType: '',
+			} );
 
+			if ( clearSession ) {
+				clearDeliveryDay();
+			}
+
+			// Clear extension data
+			setExtensionData( 'postnl', 'deliveryDay', '' );
+			setExtensionData( 'postnl', 'deliveryDayDate', '' );
+			setExtensionData( 'postnl', 'deliveryDayFrom', '' );
+			setExtensionData( 'postnl', 'deliveryDayTo', '' );
+			setExtensionData( 'postnl', 'deliveryDayPrice', '' );
+			setExtensionData( 'postnl', 'deliveryDayType', '' );
+			onPriceChange( { numeric: 0, formatted: '' } );
+		},
+		[ setExtensionData, onPriceChange ]
+	);
+
+	// Handle tab activation and auto-select first option
 	useEffect( () => {
 		if (
 			! isActive ||
 			! Array.isArray( deliveryOptions ) ||
 			deliveryOptions.length === 0
 		) {
-			// If tab is not active or no options, clear selections
 			clearSelections( true );
 			return;
 		}
 
-		// If active and no option selected, select the default (first) option if available
-		if ( isActive && ! selectedOption ) {
+		// If active and no option selected, select the default (first) option
+		if ( isActive && ! selection.selectedOption ) {
 			const firstDelivery = deliveryOptions[ 0 ];
 			if (
 				Array.isArray( firstDelivery.options ) &&
@@ -156,53 +154,48 @@ export const Block = ({
 		price,
 		priceFormatted = ''
 	) => {
-		setSelectedOption( value );
-		sessionStorage.setItem( 'postnl_selected_option', value );
-
-		setDeliveryDayDate( deliveryDate );
-		sessionStorage.setItem( 'postnl_deliveryDayDate', deliveryDate );
-
-		setDeliveryDayFrom( from );
-		sessionStorage.setItem( 'postnl_deliveryDayFrom', from );
-
-		setDeliveryDayTo( to );
-		sessionStorage.setItem( 'postnl_deliveryDayTo', to );
-
-		setDeliveryDayPrice( price );
-		sessionStorage.setItem( 'postnl_deliveryDayPrice', price.toString() );
-
-		setDeliveryDayType( type );
-		sessionStorage.setItem( 'postnl_deliveryDayType', type );
-
 		const deliveryDayValue = `${ deliveryDate }_${ from }-${ to }_${ price }`;
-		setDeliveryDay( deliveryDayValue );
-		sessionStorage.setItem( 'postnl_deliveryDay', deliveryDayValue );
 
+		// Update local state
+		setSelection( {
+			selectedOption: value,
+			deliveryDay: deliveryDayValue,
+			deliveryDayDate: deliveryDate,
+			deliveryDayFrom: from,
+			deliveryDayTo: to,
+			deliveryDayPrice: price,
+			deliveryDayType: type,
+		} );
+
+		// Save to centralized session manager
+		saveDeliveryDay( {
+			value: deliveryDayValue,
+			date: deliveryDate,
+			from,
+			to,
+			price: Number( price ),
+			priceFormatted,
+			type,
+		} );
+
+		// Update extension data immediately (not debounced for user action)
 		setExtensionData( 'postnl', 'deliveryDay', deliveryDayValue );
 		setExtensionData( 'postnl', 'deliveryDayDate', deliveryDate );
 		setExtensionData( 'postnl', 'deliveryDayFrom', from );
 		setExtensionData( 'postnl', 'deliveryDayTo', to );
 		setExtensionData( 'postnl', 'deliveryDayPrice', price.toString() );
+		setExtensionData( 'postnl', 'deliveryDayType', type );
+
+		// Notify parent of price change
 		onPriceChange( {
 			numeric: Number( price ),
 			formatted: priceFormatted,
 		} );
-		setExtensionData( 'postnl', 'deliveryDayType', type );
 
-		// Clear dropoff point data
-		sessionStorage.removeItem( 'postnl_dropoffPoints' );
-		sessionStorage.removeItem( 'postnl_dropoffPointsAddressCompany' );
-		sessionStorage.removeItem( 'postnl_dropoffPointsAddress1' );
-		sessionStorage.removeItem( 'postnl_dropoffPointsAddress2' );
-		sessionStorage.removeItem( 'postnl_dropoffPointsCity' );
-		sessionStorage.removeItem( 'postnl_dropoffPointsPostcode' );
-		sessionStorage.removeItem( 'postnl_dropoffPointsCountry' );
-		sessionStorage.removeItem( 'postnl_dropoffPointsPartnerID' );
-		sessionStorage.removeItem( 'postnl_dropoffPointsDate' );
-		sessionStorage.removeItem( 'postnl_dropoffPointsTime' );
-		sessionStorage.removeItem( 'postnl_dropoffPointsType' );
-		sessionStorage.removeItem( 'postnl_dropoffPointsDistance' );
+		// Clear dropoff point data (using centralized session manager)
+		clearDropoffPoint();
 
+		// Clear dropoff extension data
 		setExtensionData( 'postnl', 'dropoffPoints', '' );
 		setExtensionData( 'postnl', 'dropoffPointsAddressCompany', '' );
 		setExtensionData( 'postnl', 'dropoffPointsAddress1', '' );
@@ -216,8 +209,9 @@ export const Block = ({
 		setExtensionData( 'postnl', 'dropoffPointsType', '' );
 		setExtensionData( 'postnl', 'dropoffPointsDistance', null );
 
+		// Update cart fees on backend
 		try {
-			const { extensionCartUpdate } = window.wc.blocksCheckout || {};
+			const { extensionCartUpdate } = window.wc?.blocksCheckout || {};
 			if ( typeof extensionCartUpdate === 'function' ) {
 				await extensionCartUpdate( {
 					namespace: 'postnl',
@@ -229,7 +223,7 @@ export const Block = ({
 				} );
 			}
 		} catch ( error ) {
-			// Handle error if needed
+			// Handle error silently
 		}
 	};
 
@@ -247,7 +241,10 @@ export const Block = ({
 								<li key={ index }>
 									{ isDeliveryDaysEnabled && (
 										<div className="list_title">
-											<span>{ delivery.display_date } { delivery.day }</span>
+											<span>
+												{ delivery.display_date }{ ' ' }
+												{ delivery.day }
+											</span>
 										</div>
 									) }
 									<ul className="postnl_sub_list">
@@ -258,20 +255,23 @@ export const Block = ({
 												const optionType =
 													option.type || 'Unknown';
 												const price = option.price || 0;
-												const priceDisplayFormatted = option.price_formatted || '';
+												const priceDisplayFormatted =
+													option.price_formatted ||
+													'';
 												const value = `${ delivery.date }_${ from }-${ to }_${ price }`;
 
 												const isChecked =
-													selectedOption === value;
-												const isActive = isChecked
+													selection.selectedOption ===
+													value;
+												const activeClass = isChecked
 													? 'active'
 													: '';
 
-												let delivery_time = '';
+												let deliveryTime = '';
 												if (
 													optionType === 'Evening'
 												) {
-													delivery_time = __(
+													deliveryTime = __(
 														'Evening',
 														'postnl-for-woocommerce'
 													);
@@ -279,7 +279,7 @@ export const Block = ({
 													optionType === 'Morning' ||
 													optionType === '08:00-12:00'
 												) {
-													delivery_time = __(
+													deliveryTime = __(
 														'Morning',
 														'postnl-for-woocommerce'
 													);
@@ -288,7 +288,7 @@ export const Block = ({
 												return (
 													<li
 														key={ optionIndex }
-														className={ `${ optionType } ${ isActive }` }
+														className={ `${ optionType } ${ activeClass }` }
 														data-date={
 															delivery.date
 														}
@@ -321,15 +321,17 @@ export const Block = ({
 																	)
 																}
 															/>
-															{ priceDisplayFormatted && price > 0 && (
-																<i>
-																	+{ priceDisplayFormatted }
-																</i>
-															) }
+															{ priceDisplayFormatted &&
+																price > 0 && (
+																	<i>
+																		+
+																		{
+																			priceDisplayFormatted
+																		}
+																	</i>
+																) }
 															<i>
-																{
-																	delivery_time
-																}
+																{ deliveryTime }
 															</i>
 															<span>
 																{ ! isDeliveryDaysEnabled
@@ -353,37 +355,37 @@ export const Block = ({
 						type="hidden"
 						name="deliveryDay"
 						id="deliveryDay"
-						value={ deliveryDay }
+						value={ selection.deliveryDay }
 					/>
 					<input
 						type="hidden"
 						name="deliveryDayDate"
 						id="deliveryDayDate"
-						value={ deliveryDayDate }
+						value={ selection.deliveryDayDate }
 					/>
 					<input
 						type="hidden"
 						name="deliveryDayFrom"
 						id="deliveryDayFrom"
-						value={ deliveryDayFrom }
+						value={ selection.deliveryDayFrom }
 					/>
 					<input
 						type="hidden"
 						name="deliveryDayTo"
 						id="deliveryDayTo"
-						value={ deliveryDayTo }
+						value={ selection.deliveryDayTo }
 					/>
 					<input
 						type="hidden"
 						name="deliveryDayPrice"
 						id="deliveryDayPrice"
-						value={ deliveryDayPrice }
+						value={ selection.deliveryDayPrice }
 					/>
 					<input
 						type="hidden"
 						name="deliveryDayType"
 						id="deliveryDayType"
-						value={ deliveryDayType }
+						value={ selection.deliveryDayType }
 					/>
 				</div>
 			) }

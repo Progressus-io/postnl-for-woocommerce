@@ -7,6 +7,16 @@ import { getSetting } from '@woocommerce/settings';
 import { debounce } from 'lodash';
 
 /**
+ * Internal dependencies
+ */
+import {
+	getDropoffPoint,
+	setDropoffPoint as saveDropoffPoint,
+	clearDropoffPoint,
+	clearDeliveryDay,
+} from '../../utils/session-manager';
+
+/**
  * Utility Functions
  */
 const Utils = {
@@ -33,243 +43,156 @@ export const Block = ( {
 	const { setExtensionData } = checkoutExtensionData;
 	const postnlData = getSetting( 'postnl-for-woocommerce-blocks_data', {} );
 
-	// Initialize state from sessionStorage if available
-	const [ dropoffPoints, setDropoffPoints ] = useState( () => {
-		return sessionStorage.getItem( 'postnl_dropoffPoints' ) || '';
-	} );
-	const [ dropoffPointsAddressCompany, setDropoffPointsAddressCompany ] =
-		useState( () => {
-			return (
-				sessionStorage.getItem(
-					'postnl_dropoffPointsAddressCompany'
-				) || ''
-			);
-		} );
-	const [ dropoffPointsAddress1, setDropoffPointsAddress1 ] = useState(
-		() => {
-			return (
-				sessionStorage.getItem( 'postnl_dropoffPointsAddress1' ) || ''
-			);
-		}
-	);
-	const [ dropoffPointsAddress2, setDropoffPointsAddress2 ] = useState(
-		() => {
-			return (
-				sessionStorage.getItem( 'postnl_dropoffPointsAddress2' ) || ''
-			);
-		}
-	);
-	const [ dropoffPointsCity, setDropoffPointsCity ] = useState( () => {
-		return sessionStorage.getItem( 'postnl_dropoffPointsCity' ) || '';
-	} );
-	const [ dropoffPointsPostcode, setDropoffPointsPostcode ] = useState(
-		() => {
-			return (
-				sessionStorage.getItem( 'postnl_dropoffPointsPostcode' ) || ''
-			);
-		}
-	);
-	const [ dropoffPointsCountry, setDropoffPointsCountry ] = useState( () => {
-		return sessionStorage.getItem( 'postnl_dropoffPointsCountry' ) || '';
-	} );
-	const [ dropoffPointsPartnerID, setDropoffPointsPartnerID ] = useState(
-		() => {
-			return (
-				sessionStorage.getItem( 'postnl_dropoffPointsPartnerID' ) || ''
-			);
-		}
-	);
-	const [ dropoffPointsDate, setDropoffPointsDate ] = useState( () => {
-		return sessionStorage.getItem( 'postnl_dropoffPointsDate' ) || '';
-	} );
-	const [ dropoffPointsTime, setDropoffPointsTime ] = useState( () => {
-		return sessionStorage.getItem( 'postnl_dropoffPointsTime' ) || '';
-	} );
-	const [ dropoffPointsDistance, setDropoffPointsDistance ] = useState(
-		() => {
-			const value = sessionStorage.getItem(
-				'postnl_dropoffPointsDistance'
-			);
-			return value !== null ? Number( value ) : null;
-		}
-	);
-
-	const [ dropoffPointsType, setDropoffPointsType ] = useState(
-		() => {
-			return (
-				sessionStorage.getItem( 'postnl_dropoffPointsType' ) || ''
-			);
-		}
-	);
-
 	// Debounce setting extension data to optimize performance
 	const debouncedSetExtensionData = useCallback(
 		debounce( ( namespace, key, value ) => {
 			setExtensionData( namespace, key, value );
-		}, 1000 ),
+		}, 250 ),
 		[ setExtensionData ]
 	);
 
-	// Sync states with extension data
-	useEffect( () => {
-		debouncedSetExtensionData( 'postnl', 'dropoffPoints', dropoffPoints );
-	}, [ dropoffPoints, debouncedSetExtensionData ] );
+	// Initialize state from centralized session manager
+	const [ selection, setSelection ] = useState( () => {
+		const saved = getDropoffPoint();
+		return {
+			dropoffPoints: saved.value || '',
+			dropoffPointsAddressCompany: saved.company || '',
+			dropoffPointsAddress1: saved.address1 || '',
+			dropoffPointsAddress2: saved.address2 || '',
+			dropoffPointsCity: saved.city || '',
+			dropoffPointsPostcode: saved.postcode || '',
+			dropoffPointsCountry: saved.country || '',
+			dropoffPointsPartnerID: saved.partnerID || '',
+			dropoffPointsDate: saved.date || '',
+			dropoffPointsTime: saved.time || '',
+			dropoffPointsType: saved.type || '',
+			dropoffPointsDistance: saved.distance
+				? Number( saved.distance )
+				: null,
+		};
+	} );
 
+	// Sync with extension data when selection changes
 	useEffect( () => {
+		debouncedSetExtensionData(
+			'postnl',
+			'dropoffPoints',
+			selection.dropoffPoints
+		);
 		debouncedSetExtensionData(
 			'postnl',
 			'dropoffPointsAddressCompany',
-			dropoffPointsAddressCompany
+			selection.dropoffPointsAddressCompany
 		);
-	}, [ dropoffPointsAddressCompany, debouncedSetExtensionData ] );
-
-	useEffect( () => {
 		debouncedSetExtensionData(
 			'postnl',
 			'dropoffPointsAddress1',
-			dropoffPointsAddress1
+			selection.dropoffPointsAddress1
 		);
-	}, [ dropoffPointsAddress1, debouncedSetExtensionData ] );
-
-	useEffect( () => {
 		debouncedSetExtensionData(
 			'postnl',
 			'dropoffPointsAddress2',
-			dropoffPointsAddress2
+			selection.dropoffPointsAddress2
 		);
-	}, [ dropoffPointsAddress2, debouncedSetExtensionData ] );
-
-	useEffect( () => {
 		debouncedSetExtensionData(
 			'postnl',
 			'dropoffPointsCity',
-			dropoffPointsCity
+			selection.dropoffPointsCity
 		);
-	}, [ dropoffPointsCity, debouncedSetExtensionData ] );
-
-	useEffect( () => {
 		debouncedSetExtensionData(
 			'postnl',
 			'dropoffPointsPostcode',
-			dropoffPointsPostcode
+			selection.dropoffPointsPostcode
 		);
-	}, [ dropoffPointsPostcode, debouncedSetExtensionData ] );
-
-	useEffect( () => {
 		debouncedSetExtensionData(
 			'postnl',
 			'dropoffPointsCountry',
-			dropoffPointsCountry
+			selection.dropoffPointsCountry
 		);
-	}, [ dropoffPointsCountry, debouncedSetExtensionData ] );
-
-	useEffect( () => {
 		debouncedSetExtensionData(
 			'postnl',
 			'dropoffPointsPartnerID',
-			dropoffPointsPartnerID
+			selection.dropoffPointsPartnerID
 		);
-	}, [ dropoffPointsPartnerID, debouncedSetExtensionData ] );
-
-	useEffect( () => {
 		debouncedSetExtensionData(
 			'postnl',
 			'dropoffPointsDate',
-			dropoffPointsDate
+			selection.dropoffPointsDate
 		);
-	}, [ dropoffPointsDate, debouncedSetExtensionData ] );
-
-	useEffect( () => {
 		debouncedSetExtensionData(
 			'postnl',
 			'dropoffPointsTime',
-			dropoffPointsTime
+			selection.dropoffPointsTime
 		);
-	}, [ dropoffPointsTime, debouncedSetExtensionData ] );
-
-	useEffect( () => {
-		debouncedSetExtensionData(
-			'postnl',
-			'dropoffPointsDistance',
-			dropoffPointsDistance
-		);
-	}, [ dropoffPointsDistance, debouncedSetExtensionData ] );
-
-	useEffect( () => {
 		debouncedSetExtensionData(
 			'postnl',
 			'dropoffPointsType',
-			dropoffPointsType
+			selection.dropoffPointsType
 		);
-	}, [ dropoffPointsType, debouncedSetExtensionData ] );
+		debouncedSetExtensionData(
+			'postnl',
+			'dropoffPointsDistance',
+			selection.dropoffPointsDistance
+		);
+	}, [ selection, debouncedSetExtensionData ] );
 
-	/**
-	 * Effect to handle tab activation
-	 */
+	// Clear all dropoff point selections
+	const clearSelections = useCallback(
+		( clearSession = false ) => {
+			setSelection( {
+				dropoffPoints: '',
+				dropoffPointsAddressCompany: '',
+				dropoffPointsAddress1: '',
+				dropoffPointsAddress2: '',
+				dropoffPointsCity: '',
+				dropoffPointsPostcode: '',
+				dropoffPointsCountry: '',
+				dropoffPointsPartnerID: '',
+				dropoffPointsDate: '',
+				dropoffPointsTime: '',
+				dropoffPointsType: '',
+				dropoffPointsDistance: null,
+			} );
+
+			if ( clearSession ) {
+				clearDropoffPoint();
+			}
+
+			// Clear extension data
+			setExtensionData( 'postnl', 'dropoffPoints', '' );
+			setExtensionData( 'postnl', 'dropoffPointsAddressCompany', '' );
+			setExtensionData( 'postnl', 'dropoffPointsAddress1', '' );
+			setExtensionData( 'postnl', 'dropoffPointsAddress2', '' );
+			setExtensionData( 'postnl', 'dropoffPointsCity', '' );
+			setExtensionData( 'postnl', 'dropoffPointsPostcode', '' );
+			setExtensionData( 'postnl', 'dropoffPointsCountry', '' );
+			setExtensionData( 'postnl', 'dropoffPointsPartnerID', '' );
+			setExtensionData( 'postnl', 'dropoffPointsDate', '' );
+			setExtensionData( 'postnl', 'dropoffPointsTime', '' );
+			setExtensionData( 'postnl', 'dropoffPointsType', '' );
+			setExtensionData( 'postnl', 'dropoffPointsDistance', null );
+		},
+		[ setExtensionData ]
+	);
+
+	// Handle tab activation and auto-select first option
 	useEffect( () => {
 		if ( ! isActive ) {
-			clearSelections();
+			clearSelections( true );
+			return;
 		}
-	}, [ isActive ] );
 
-	useEffect( () => {
+		// If active and no option selected, select the default (first) option
 		if (
 			isActive &&
 			dropoffOptions.length > 0 &&
-			! dropoffPoints
+			! selection.dropoffPoints
 		) {
 			const first = dropoffOptions[ 0 ];
 			const value = `${ first.partner_id }-${ first.loc_code }`;
 			handleOptionChange( value );
 		}
-	}, [ isActive, dropoffOptions, dropoffPoints ] );
-
-	/**
-	 * Helper function to clear selections
-	 * @param clearSession
-	 */
-	const clearSelections = ( clearSession = false ) => {
-		setDropoffPoints( '' );
-		if ( clearSession ) {
-			sessionStorage.removeItem( 'postnl_dropoffPoints' );
-		}
-		setDropoffPointsAddressCompany( '' );
-		setDropoffPointsAddress1( '' );
-		setDropoffPointsAddress2( '' );
-		setDropoffPointsCity( '' );
-		setDropoffPointsPostcode( '' );
-		setDropoffPointsCountry( '' );
-		setDropoffPointsPartnerID( '' );
-		setDropoffPointsDate( '' );
-		setDropoffPointsTime( '' );
-		setDropoffPointsType( '' );
-		setDropoffPointsDistance( null );
-		if ( clearSession ) {
-			sessionStorage.removeItem( 'postnl_dropoffPointsAddressCompany' );
-			sessionStorage.removeItem( 'postnl_dropoffPointsAddress1' );
-			sessionStorage.removeItem( 'postnl_dropoffPointsAddress2' );
-			sessionStorage.removeItem( 'postnl_dropoffPointsCity' );
-			sessionStorage.removeItem( 'postnl_dropoffPointsPostcode' );
-			sessionStorage.removeItem( 'postnl_dropoffPointsCountry' );
-			sessionStorage.removeItem( 'postnl_dropoffPointsPartnerID' );
-			sessionStorage.removeItem( 'postnl_dropoffPointsDate' );
-			sessionStorage.removeItem( 'postnl_dropoffPointsTime' );
-			sessionStorage.removeItem( 'postnl_dropoffPointsType' );
-			sessionStorage.removeItem( 'postnl_dropoffPointsDistance' );
-		}
-		setExtensionData( 'postnl', 'dropoffPoints', '' );
-		setExtensionData( 'postnl', 'dropoffPointsAddressCompany', '' );
-		setExtensionData( 'postnl', 'dropoffPointsAddress1', '' );
-		setExtensionData( 'postnl', 'dropoffPointsAddress2', '' );
-		setExtensionData( 'postnl', 'dropoffPointsCity', '' );
-		setExtensionData( 'postnl', 'dropoffPointsPostcode', '' );
-		setExtensionData( 'postnl', 'dropoffPointsCountry', '' );
-		setExtensionData( 'postnl', 'dropoffPointsPartnerID', '' );
-		setExtensionData( 'postnl', 'dropoffPointsDate', '' );
-		setExtensionData( 'postnl', 'dropoffPointsTime', '' );
-		setExtensionData( 'postnl', 'dropoffPointsType', '' );
-		setExtensionData( 'postnl', 'dropoffPointsDistance', null );
-	};
+	}, [ isActive, dropoffOptions ] );
 
 	/**
 	 * Handle the change of a dropoff option
@@ -277,130 +200,55 @@ export const Block = ( {
 	 * @param {string} value - The value of the selected option
 	 */
 	const handleOptionChange = async ( value ) => {
-		setDropoffPoints( value );
-		sessionStorage.setItem( 'postnl_dropoffPoints', value );
-		setExtensionData( 'postnl', 'dropoffPoints', value );
-
 		// Find the selected dropoff point.
 		const selectedDropoffPoint = dropoffOptions.find( ( point ) => {
 			const pointValue = `${ point.partner_id }-${ point.loc_code }`;
 			return pointValue === value;
 		} );
 
-		// Update hidden fields and extension data
-		if ( selectedDropoffPoint ) {
-			updateHiddenFields( selectedDropoffPoint );
+		if ( ! selectedDropoffPoint ) {
+			return;
 		}
 
-		// Clear delivery day data
-		sessionStorage.removeItem( 'postnl_selected_option' );
-		sessionStorage.removeItem( 'postnl_deliveryDay' );
-		sessionStorage.removeItem( 'postnl_deliveryDayDate' );
-		sessionStorage.removeItem( 'postnl_deliveryDayFrom' );
-		sessionStorage.removeItem( 'postnl_deliveryDayTo' );
-		sessionStorage.removeItem( 'postnl_deliveryDayPrice' );
-		sessionStorage.removeItem( 'postnl_deliveryDayType' );
+		const address = selectedDropoffPoint.address || {};
 
-		setExtensionData( 'postnl', 'deliveryDay', '' );
-		setExtensionData( 'postnl', 'deliveryDayDate', '' );
-		setExtensionData( 'postnl', 'deliveryDayFrom', '' );
-		setExtensionData( 'postnl', 'deliveryDayTo', '' );
-		setExtensionData( 'postnl', 'deliveryDayPrice', '' );
-		setExtensionData( 'postnl', 'deliveryDayType', '' );
+		// Update local state
+		const newSelection = {
+			dropoffPoints: value,
+			dropoffPointsAddressCompany: address.company || '',
+			dropoffPointsAddress1: address.address_1 || '',
+			dropoffPointsAddress2: address.address_2 || '',
+			dropoffPointsCity: address.city || '',
+			dropoffPointsPostcode: address.postcode || '',
+			dropoffPointsCountry: address.country || '',
+			dropoffPointsPartnerID: selectedDropoffPoint.partner_id || '',
+			dropoffPointsDate: selectedDropoffPoint.date || '',
+			dropoffPointsTime: selectedDropoffPoint.time || '',
+			dropoffPointsType: selectedDropoffPoint.type || '',
+			dropoffPointsDistance:
+				Number( selectedDropoffPoint.distance ) || null,
+		};
 
-		// Call extensionCartUpdate to update the cart total
-		try {
-			const { extensionCartUpdate } = window.wc.blocksCheckout || {};
-			if ( typeof extensionCartUpdate === 'function' ) {
-				await extensionCartUpdate( {
-					namespace: 'postnl',
-					data: {
-						action: 'update_delivery_fee',
-						price: postnlData.pickup_fee ?? 0,
-						type: 'Pickup',
-					},
-				} );
-			}
-		} catch ( error ) {
-			// Handle error
-		} finally {
-		}
-	};
+		setSelection( newSelection );
 
-	/**
-	 * Update hidden fields and extension data based on selected dropoff point
-	 * @param dropoffPoint
-	 */
-	const updateHiddenFields = ( dropoffPoint ) => {
-		const address = dropoffPoint.address || {};
+		// Save to centralized session manager
+		saveDropoffPoint( {
+			value,
+			company: address.company || '',
+			address1: address.address_1 || '',
+			address2: address.address_2 || '',
+			city: address.city || '',
+			postcode: address.postcode || '',
+			country: address.country || '',
+			partnerID: selectedDropoffPoint.partner_id || '',
+			date: selectedDropoffPoint.date || '',
+			time: selectedDropoffPoint.time || '',
+			type: selectedDropoffPoint.type || '',
+			distance: selectedDropoffPoint.distance || '',
+		} );
 
-		setDropoffPointsAddressCompany( address.company || '' );
-		sessionStorage.setItem(
-			'postnl_dropoffPointsAddressCompany',
-			address.company || ''
-		);
-
-		setDropoffPointsAddress1( address.address_1 || '' );
-		sessionStorage.setItem(
-			'postnl_dropoffPointsAddress1',
-			address.address_1 || ''
-		);
-
-		setDropoffPointsAddress2( address.address_2 || '' );
-		sessionStorage.setItem(
-			'postnl_dropoffPointsAddress2',
-			address.address_2 || ''
-		);
-
-		setDropoffPointsCity( address.city || '' );
-		sessionStorage.setItem(
-			'postnl_dropoffPointsCity',
-			address.city || ''
-		);
-
-		setDropoffPointsPostcode( address.postcode || '' );
-		sessionStorage.setItem(
-			'postnl_dropoffPointsPostcode',
-			address.postcode || ''
-		);
-
-		setDropoffPointsCountry( address.country || '' );
-		sessionStorage.setItem(
-			'postnl_dropoffPointsCountry',
-			address.country || ''
-		);
-
-		setDropoffPointsPartnerID( dropoffPoint.partner_id || '' );
-		sessionStorage.setItem(
-			'postnl_dropoffPointsPartnerID',
-			dropoffPoint.partner_id || ''
-		);
-
-		setDropoffPointsDate( dropoffPoint.date || '' );
-		sessionStorage.setItem(
-			'postnl_dropoffPointsDate',
-			dropoffPoint.date || ''
-		);
-
-		setDropoffPointsTime( dropoffPoint.time || '' );
-		sessionStorage.setItem(
-			'postnl_dropoffPointsTime',
-			dropoffPoint.time || ''
-		);
-
-		setDropoffPointsType( dropoffPoint.type || '' );
-		sessionStorage.setItem(
-			'postnl_dropoffPointsType',
-			dropoffPoint.type || ''
-		);
-
-		setDropoffPointsDistance( Number( dropoffPoint.distance ) || null );
-		sessionStorage.setItem(
-			'postnl_dropoffPointsDistance',
-			Number( dropoffPoint.distance ) || ''
-		);
-
-		// Also update extension data
+		// Update extension data immediately (not debounced for user action)
+		setExtensionData( 'postnl', 'dropoffPoints', value );
 		setExtensionData(
 			'postnl',
 			'dropoffPointsAddressCompany',
@@ -430,28 +278,56 @@ export const Block = ( {
 		setExtensionData(
 			'postnl',
 			'dropoffPointsPartnerID',
-			dropoffPoint.partner_id || ''
+			selectedDropoffPoint.partner_id || ''
 		);
 		setExtensionData(
 			'postnl',
 			'dropoffPointsDate',
-			dropoffPoint.date || ''
+			selectedDropoffPoint.date || ''
 		);
 		setExtensionData(
 			'postnl',
 			'dropoffPointsTime',
-			dropoffPoint.time || ''
+			selectedDropoffPoint.time || ''
 		);
 		setExtensionData(
 			'postnl',
 			'dropoffPointsType',
-			dropoffPoint.type || ''
+			selectedDropoffPoint.type || ''
 		);
 		setExtensionData(
 			'postnl',
 			'dropoffPointsDistance',
-			Number( dropoffPoint.distance ) || null
+			Number( selectedDropoffPoint.distance ) || null
 		);
+
+		// Clear delivery day data (using centralized session manager)
+		clearDeliveryDay();
+
+		// Clear delivery day extension data
+		setExtensionData( 'postnl', 'deliveryDay', '' );
+		setExtensionData( 'postnl', 'deliveryDayDate', '' );
+		setExtensionData( 'postnl', 'deliveryDayFrom', '' );
+		setExtensionData( 'postnl', 'deliveryDayTo', '' );
+		setExtensionData( 'postnl', 'deliveryDayPrice', '' );
+		setExtensionData( 'postnl', 'deliveryDayType', '' );
+
+		// Call extensionCartUpdate to update the cart total
+		try {
+			const { extensionCartUpdate } = window.wc?.blocksCheckout || {};
+			if ( typeof extensionCartUpdate === 'function' ) {
+				await extensionCartUpdate( {
+					namespace: 'postnl',
+					data: {
+						action: 'update_delivery_fee',
+						price: postnlData.pickup_fee ?? 0,
+						type: 'Pickup',
+					},
+				} );
+			}
+		} catch ( error ) {
+			// Handle error silently
+		}
 	};
 
 	/**
@@ -471,8 +347,8 @@ export const Block = ( {
 				{ dropoffOptions.map( ( point, index ) => {
 					const value = `${ point.partner_id }-${ point.loc_code }`;
 					const address = `${ point.address.address_1 } ${ point.address.address_2 }, ${ point.address.city }, ${ point.address.postcode }`;
-					const isChecked = dropoffPoints === value;
-					const isActive = isChecked ? 'active' : '';
+					const isChecked = selection.dropoffPoints === value;
+					const activeClass = isChecked ? 'active' : '';
 
 					return (
 						<li key={ index }>
@@ -486,7 +362,7 @@ export const Block = ( {
 							</div>
 							<ul className="postnl_sub_list">
 								<li
-									className={ `${ point.type } ${ isActive }` }
+									className={ `${ point.type } ${ activeClass }` }
 									data-partner_id={ point.partner_id }
 									data-loc_code={ point.loc_code }
 									data-date={ point.date }
@@ -545,73 +421,73 @@ export const Block = ( {
 				type="hidden"
 				name="dropoffPoints"
 				id="dropoffPoints"
-				value={ dropoffPoints }
+				value={ selection.dropoffPoints }
 			/>
 			<input
 				type="hidden"
 				name="dropoffPointsAddressCompany"
 				id="dropoffPointsAddressCompany"
-				value={ dropoffPointsAddressCompany }
+				value={ selection.dropoffPointsAddressCompany }
 			/>
 			<input
 				type="hidden"
 				name="dropoffPointsAddress1"
 				id="dropoffPointsAddress1"
-				value={ dropoffPointsAddress1 }
+				value={ selection.dropoffPointsAddress1 }
 			/>
 			<input
 				type="hidden"
 				name="dropoffPointsAddress2"
 				id="dropoffPointsAddress2"
-				value={ dropoffPointsAddress2 }
+				value={ selection.dropoffPointsAddress2 }
 			/>
 			<input
 				type="hidden"
 				name="dropoffPointsCity"
 				id="dropoffPointsCity"
-				value={ dropoffPointsCity }
+				value={ selection.dropoffPointsCity }
 			/>
 			<input
 				type="hidden"
 				name="dropoffPointsPostcode"
 				id="dropoffPointsPostcode"
-				value={ dropoffPointsPostcode }
+				value={ selection.dropoffPointsPostcode }
 			/>
 			<input
 				type="hidden"
 				name="dropoffPointsCountry"
 				id="dropoffPointsCountry"
-				value={ dropoffPointsCountry }
+				value={ selection.dropoffPointsCountry }
 			/>
 			<input
 				type="hidden"
 				name="dropoffPointsPartnerID"
 				id="dropoffPointsPartnerID"
-				value={ dropoffPointsPartnerID }
+				value={ selection.dropoffPointsPartnerID }
 			/>
 			<input
 				type="hidden"
 				name="dropoffPointsDate"
 				id="dropoffPointsDate"
-				value={ dropoffPointsDate }
+				value={ selection.dropoffPointsDate }
 			/>
 			<input
 				type="hidden"
 				name="dropoffPointsTime"
 				id="dropoffPointsTime"
-				value={ dropoffPointsTime }
+				value={ selection.dropoffPointsTime }
 			/>
 			<input
 				type="hidden"
 				name="dropoffPointsType"
 				id="dropoffPointsType"
-				value={ dropoffPointsType }
+				value={ selection.dropoffPointsType }
 			/>
 			<input
 				type="hidden"
 				name="dropoffPointsDistance"
 				id="dropoffPointsDistance"
-				value={ dropoffPointsDistance ?? '' }
+				value={ selection.dropoffPointsDistance ?? '' }
 			/>
 		</div>
 	);

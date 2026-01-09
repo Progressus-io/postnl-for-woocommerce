@@ -4,6 +4,9 @@
  * This file runs before each test file.
  */
 
+// Import jest-dom matchers
+import '@testing-library/jest-dom';
+
 // Mock sessionStorage
 const sessionStorageMock = ( () => {
 	let store = {};
@@ -121,10 +124,38 @@ global.testUtils = {
 				postcode: `1000A${ i }`,
 				country: 'NL',
 			},
-			distance: `${ ( i + 1 ) * 100 }m`,
+			distance: ( i + 1 ) * 100,
 			date: `2024-01-${ 10 + i }`,
 			time: '09:00-18:00',
 			type: 'PNL',
 		} ) );
 	},
+
+	/**
+	 * Helper to create mock checkoutExtensionData
+	 */
+	createMockCheckoutExtensionData: () => ( {
+		setExtensionData: jest.fn(),
+	} ),
+
+	/**
+	 * Helper to create mock postnl settings data
+	 */
+	createMockPostnlData: ( overrides = {} ) => ( {
+		letterbox: false,
+		delivery_day_fee: 0,
+		delivery_day_fee_formatted: '',
+		pickup_fee: 0,
+		pickup_fee_formatted: '',
+		is_pickup_points_enabled: true,
+		is_nl_address_enabled: true,
+		ajax_url: '/wp-admin/admin-ajax.php',
+		nonce: 'test-nonce',
+		...overrides,
+	} ),
+
+	/**
+	 * Helper to flush promises in tests
+	 */
+	flushPromises: () => new Promise( ( resolve ) => setTimeout( resolve, 0 ) ),
 };

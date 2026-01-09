@@ -9,7 +9,7 @@
  * This reduces the number of React state updates.
  *
  * @param {Function} setExtensionData - The setExtensionData function from checkoutExtensionData
- * @param {Object} data - Object with key-value pairs to set
+ * @param {Object}   data             - Object with key-value pairs to set
  */
 export function batchSetExtensionData( setExtensionData, data ) {
 	Object.entries( data ).forEach( ( [ key, value ] ) => {

@@ -27,12 +27,15 @@ import {
 
 /**
  * Helper function to check if a value is empty.
+ * @param value
  */
 const isEmpty = ( value ) =>
 	value === undefined || value === null || value === '';
 
 /**
  * Helper function to compare two addresses.
+ * @param addr1
+ * @param addr2
  */
 const isAddressEqual = ( addr1, addr2 ) => {
 	if ( ! addr1 || ! addr2 ) {

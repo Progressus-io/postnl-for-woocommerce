@@ -60,10 +60,10 @@ const Utils = {
 /**
  * Pickup Block Component
  *
- * @param {Object} props Component props
- * @param {Object} props.checkoutExtensionData Extension data methods
- * @param {boolean} props.isActive Whether the pickup tab is active
- * @param {Array} props.dropoffOptions Available dropoff points
+ * @param {Object}  props                       Component props
+ * @param {Object}  props.checkoutExtensionData Extension data methods
+ * @param {boolean} props.isActive              Whether the pickup tab is active
+ * @param {Array}   props.dropoffOptions        Available dropoff points
  */
 export const Block = ( {
 	checkoutExtensionData,

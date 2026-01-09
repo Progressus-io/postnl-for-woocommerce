@@ -26,7 +26,7 @@ export const FillBlock = ( { checkoutExtensionData } ) => {
 	const { setShippingAddress } = useDispatch( CART_STORE_KEY );
 
 	useEffect( () => {
-		let countryToCheck = shippingAddress?.country || 'NL';
+		const countryToCheck = shippingAddress?.country || 'NL';
 		if (
 			allowedCountries.includes( countryToCheck ) &&
 			postnlData?.fill_in_with_postnl_settings

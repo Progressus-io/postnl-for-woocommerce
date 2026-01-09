@@ -1,7 +1,13 @@
 /**
  * External dependencies
  */
-import { useEffect, useState, useRef } from '@wordpress/element';
+import {
+	useEffect,
+	useState,
+	useRef,
+	useMemo,
+	useCallback,
+} from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 import { getSetting } from '@woocommerce/settings';
 import { useDispatch, useSelect } from '@wordpress/data';
@@ -18,6 +24,27 @@ import {
 	batchSetExtensionData,
 	clearDropoffPointExtensionData,
 } from '../../utils/extension-data-helper';
+
+/**
+ * Helper function to check if a value is empty.
+ */
+const isEmpty = ( value ) =>
+	value === undefined || value === null || value === '';
+
+/**
+ * Helper function to compare two addresses.
+ */
+const isAddressEqual = ( addr1, addr2 ) => {
+	if ( ! addr1 || ! addr2 ) {
+		return false;
+	}
+	return (
+		addr1.country === addr2.country &&
+		addr1.postcode === addr2.postcode &&
+		addr1.address_1 === addr2.address_1 &&
+		addr1[ 'postnl/house_number' ] === addr2[ 'postnl/house_number' ]
+	);
+};
 
 export const Block = ( { checkoutExtensionData } ) => {
 	const { setExtensionData } = checkoutExtensionData;
@@ -59,43 +86,47 @@ export const Block = ( { checkoutExtensionData } ) => {
 		[ CART_STORE_KEY ]
 	);
 
-	// Stores the Morning/Evening surcharge currently selected
-	const [ extraDeliveryFee, setExtraDeliveryFee ] = useState( () => {
-		const saved = getDeliveryDay();
-		return Number( saved.price || 0 );
-	} );
-
-	// Stores the formatted Morning/Evening surcharge for display.
-	const [ extraDeliveryFeeFormatted, setExtraDeliveryFeeFormatted ] =
+	const [ { extraDeliveryFee, extraDeliveryFeeFormatted }, setFeeState ] =
 		useState( () => {
 			const saved = getDeliveryDay();
-			return saved.priceFormatted || '';
+			return {
+				extraDeliveryFee: Number( saved.price || 0 ),
+				extraDeliveryFeeFormatted: saved.priceFormatted || '',
+			};
 		} );
 
-	const baseTabs = [
-		{
-			id: 'delivery_day',
-			base: Number( postnlData.delivery_day_fee || 0 ),
-			displayFormatted: postnlData.delivery_day_fee_formatted || '',
-		},
-		...( postnlData.is_pickup_points_enabled
-			? [
-					{
-						id: 'dropoff_points',
-						base: Number( postnlData.pickup_fee || 0 ),
-						displayFormatted: postnlData.pickup_fee_formatted || '',
-					},
-			  ]
-			: [] ),
-	];
+	const baseTabs = useMemo(
+		() => [
+			{
+				id: 'delivery_day',
+				base: Number( postnlData.delivery_day_fee || 0 ),
+				displayFormatted: postnlData.delivery_day_fee_formatted || '',
+			},
+			...( postnlData.is_pickup_points_enabled
+				? [
+						{
+							id: 'dropoff_points',
+							base: Number( postnlData.pickup_fee || 0 ),
+							displayFormatted:
+								postnlData.pickup_fee_formatted || '',
+						},
+				  ]
+				: [] ),
+		],
+		[
+			postnlData.delivery_day_fee,
+			postnlData.delivery_day_fee_formatted,
+			postnlData.is_pickup_points_enabled,
+			postnlData.pickup_fee,
+			postnlData.pickup_fee_formatted,
+		]
+	);
 
 	const [ activeTab, setActiveTab ] = useState( baseTabs[ 0 ].id );
 
-	const [ carrierBaseCost, setCarrierBaseCost ] = useState( () => {
-		const saved = getDeliveryDay();
-		const savedExtra = Number( saved.price || 0 );
-		return selectedShippingFee - baseTabs[ 0 ].base - savedExtra;
-	} );
+	const [ carrierBaseCost, setCarrierBaseCost ] = useState(
+		() => selectedShippingFee - baseTabs[ 0 ].base - extraDeliveryFee
+	);
 
 	const prevShipping = useRef( selectedShippingFee );
 
@@ -113,31 +144,35 @@ export const Block = ( { checkoutExtensionData } ) => {
 		setCarrierBaseCost( raw < 0 ? 0 : raw );
 	}, [ selectedShippingFee ] );
 
-	const tabs = baseTabs.map( ( tab ) => {
-		let title =
-			tab.id === 'delivery_day'
-				? __( 'Delivery', 'postnl-for-woocommerce' )
-				: __( 'Pickup', 'postnl-for-woocommerce' );
+	const tabs = useMemo(
+		() =>
+			baseTabs.map( ( tab ) => {
+				let title =
+					tab.id === 'delivery_day'
+						? __( 'Delivery', 'postnl-for-woocommerce' )
+						: __( 'Pickup', 'postnl-for-woocommerce' );
 
-		const fees = [];
-		if ( tab.displayFormatted && tab.base > 0 ) {
-			fees.push( tab.displayFormatted );
-		}
+				const fees = [];
+				if ( tab.displayFormatted && tab.base > 0 ) {
+					fees.push( tab.displayFormatted );
+				}
 
-		if (
-			tab.id === 'delivery_day' &&
-			extraDeliveryFeeFormatted &&
-			extraDeliveryFee > 0
-		) {
-			fees.push( extraDeliveryFeeFormatted );
-		}
+				if (
+					tab.id === 'delivery_day' &&
+					extraDeliveryFeeFormatted &&
+					extraDeliveryFee > 0
+				) {
+					fees.push( extraDeliveryFeeFormatted );
+				}
 
-		if ( fees.length > 0 ) {
-			title += ` (+${ fees.join( ' +' ) })`;
-		}
+				if ( fees.length > 0 ) {
+					title += ` (+${ fees.join( ' +' ) })`;
+				}
 
-		return { id: tab.id, name: title, base: tab.base };
-	} );
+				return { id: tab.id, name: title, base: tab.base };
+			} ),
+		[ baseTabs, extraDeliveryFee, extraDeliveryFeeFormatted ]
+	);
 
 	// Retrieve customer data from WooCommerce cart store
 	const customerData = useSelect(
@@ -159,14 +194,18 @@ export const Block = ( { checkoutExtensionData } ) => {
 	const [ dropoffOptions, setDropoffOptions ] = useState( [] );
 	const [ deliveryDaysEnabled, setDeliveryDaysEnabled ] = useState( true );
 
+	const handlePriceChange = useCallback( ( priceData ) => {
+		setFeeState( {
+			extraDeliveryFee: priceData.numeric || 0,
+			extraDeliveryFeeFormatted: priceData.formatted || '',
+		} );
+	}, [] );
+
 	// To prevent infinite loops if we update the address programmatically
 	const isUpdatingAddress = useRef( false );
 
 	// Ref to store the previous shipping address
 	const previousShippingAddress = useRef( null );
-
-	const empty = ( value ) =>
-		value === undefined || value === null || value === '';
 
 	const isComplete = useSelect(
 		( select ) => select( CHECKOUT_STORE_KEY ).isComplete(),
@@ -180,27 +219,14 @@ export const Block = ( { checkoutExtensionData } ) => {
 		}
 	}, [ shippingAddress, setExtensionData ] );
 
-	// Helper function to compare two addresses
-	const isAddressEqual = ( addr1, addr2 ) => {
-		if ( ! addr1 || ! addr2 ) {
-			return false;
-		}
-		return (
-			addr1.country === addr2.country &&
-			addr1.postcode === addr2.postcode &&
-			addr1.address_1 === addr2.address_1 &&
-			addr1[ 'postnl/house_number' ] === addr2[ 'postnl/house_number' ]
-		);
-	};
-
 	// Fetch data shipping address
 	useEffect( () => {
 		if (
 			! shippingAddress ||
-			empty( shippingAddress.postcode ) ||
+			isEmpty( shippingAddress.postcode ) ||
 			( shippingAddress.country === 'NL' &&
 				postnlData.is_nl_address_enabled &&
-				empty( shippingAddress[ 'postnl/house_number' ] ) )
+				isEmpty( shippingAddress[ 'postnl/house_number' ] ) )
 		) {
 			// If we have no valid postcode/house number, hide container
 			setShowContainer( false );
@@ -379,26 +405,10 @@ export const Block = ( { checkoutExtensionData } ) => {
 			className={ `postnl_checkout_container ${
 				loading ? 'loading' : ''
 			}` }
-			style={ { position: 'relative' } }
 			aria-busy={ loading }
 		>
-			{ /* Spinner Overlay */ }
 			{ loading && (
-				<div
-					className="postnl-spinner-overlay"
-					style={ {
-						position: 'absolute',
-						top: 0,
-						right: 0,
-						bottom: 0,
-						left: 0,
-						display: 'flex',
-						alignItems: 'center',
-						justifyContent: 'center',
-						backgroundColor: 'rgba(255,255,255,0.7)',
-						zIndex: 9999,
-					} }
-				>
+				<div className="postnl-spinner-overlay">
 					<Spinner />
 				</div>
 			) }
@@ -448,14 +458,7 @@ export const Block = ( { checkoutExtensionData } ) => {
 								isActive={ activeTab === 'delivery_day' }
 								deliveryOptions={ deliveryOptions }
 								isDeliveryDaysEnabled={ deliveryDaysEnabled }
-								onPriceChange={ ( priceData ) => {
-									setExtraDeliveryFee(
-										priceData.numeric || 0
-									);
-									setExtraDeliveryFeeFormatted(
-										priceData.formatted || ''
-									);
-								} }
+								onPriceChange={ handlePriceChange }
 							/>
 						</div>
 						{ postnlData.is_pickup_points_enabled && (

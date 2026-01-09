@@ -1,7 +1,13 @@
 /**
  * External dependencies
  */
-import { useEffect, useState, useCallback } from '@wordpress/element';
+import {
+	useEffect,
+	useState,
+	useCallback,
+	useRef,
+	useMemo,
+} from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 import { debounce } from 'lodash';
 
@@ -14,6 +20,24 @@ import {
 	clearDeliveryDay,
 	clearDropoffPoint,
 } from '../../utils/session-manager';
+import {
+	batchSetExtensionData,
+	clearDropoffPointExtensionData,
+	clearDeliveryDayExtensionData,
+} from '../../utils/extension-data-helper';
+
+/**
+ * Empty delivery day state - used for clearing selections.
+ */
+const EMPTY_DELIVERY_STATE = {
+	selectedOption: '',
+	deliveryDay: '',
+	deliveryDayDate: '',
+	deliveryDayFrom: '',
+	deliveryDayTo: '',
+	deliveryDayPrice: '',
+	deliveryDayType: '',
+};
 
 export const Block = ( {
 	checkoutExtensionData,
@@ -24,13 +48,25 @@ export const Block = ( {
 } ) => {
 	const { setExtensionData } = checkoutExtensionData;
 
-	// Debounce setting extension data to optimize performance
-	const debouncedSetExtensionData = useCallback(
-		debounce( ( namespace, key, value ) => {
-			setExtensionData( namespace, key, value );
-		}, 250 ),
-		[ setExtensionData ]
+	// Store setExtensionData in a ref to avoid recreating debounced function
+	const setExtensionDataRef = useRef( setExtensionData );
+	setExtensionDataRef.current = setExtensionData;
+
+	// Create a stable debounced batch update function
+	const debouncedBatchUpdate = useMemo(
+		() =>
+			debounce( ( data ) => {
+				batchSetExtensionData( setExtensionDataRef.current, data );
+			}, 250 ),
+		[]
 	);
+
+	// Cleanup debounce on unmount
+	useEffect( () => {
+		return () => {
+			debouncedBatchUpdate.cancel();
+		};
+	}, [ debouncedBatchUpdate ] );
 
 	// Initialize state from centralized session manager
 	const [ selection, setSelection ] = useState( () => {
@@ -46,64 +82,29 @@ export const Block = ( {
 		};
 	} );
 
-	// Sync with extension data when selection changes
+	// Sync with extension data when selection changes (debounced)
 	useEffect( () => {
-		debouncedSetExtensionData(
-			'postnl',
-			'deliveryDay',
-			selection.deliveryDay
-		);
-		debouncedSetExtensionData(
-			'postnl',
-			'deliveryDayDate',
-			selection.deliveryDayDate
-		);
-		debouncedSetExtensionData(
-			'postnl',
-			'deliveryDayFrom',
-			selection.deliveryDayFrom
-		);
-		debouncedSetExtensionData(
-			'postnl',
-			'deliveryDayTo',
-			selection.deliveryDayTo
-		);
-		debouncedSetExtensionData(
-			'postnl',
-			'deliveryDayPrice',
-			selection.deliveryDayPrice.toString()
-		);
-		debouncedSetExtensionData(
-			'postnl',
-			'deliveryDayType',
-			selection.deliveryDayType
-		);
-	}, [ selection, debouncedSetExtensionData ] );
+		debouncedBatchUpdate( {
+			deliveryDay: selection.deliveryDay,
+			deliveryDayDate: selection.deliveryDayDate,
+			deliveryDayFrom: selection.deliveryDayFrom,
+			deliveryDayTo: selection.deliveryDayTo,
+			deliveryDayPrice: selection.deliveryDayPrice.toString(),
+			deliveryDayType: selection.deliveryDayType,
+		} );
+	}, [ selection, debouncedBatchUpdate ] );
 
 	// Clear all delivery day selections
 	const clearSelections = useCallback(
 		( clearSession = false ) => {
-			setSelection( {
-				selectedOption: '',
-				deliveryDay: '',
-				deliveryDayDate: '',
-				deliveryDayFrom: '',
-				deliveryDayTo: '',
-				deliveryDayPrice: '',
-				deliveryDayType: '',
-			} );
+			setSelection( EMPTY_DELIVERY_STATE );
 
 			if ( clearSession ) {
 				clearDeliveryDay();
 			}
 
-			// Clear extension data
-			setExtensionData( 'postnl', 'deliveryDay', '' );
-			setExtensionData( 'postnl', 'deliveryDayDate', '' );
-			setExtensionData( 'postnl', 'deliveryDayFrom', '' );
-			setExtensionData( 'postnl', 'deliveryDayTo', '' );
-			setExtensionData( 'postnl', 'deliveryDayPrice', '' );
-			setExtensionData( 'postnl', 'deliveryDayType', '' );
+			// Clear extension data using helper
+			clearDeliveryDayExtensionData( setExtensionData );
 			onPriceChange( { numeric: 0, formatted: '' } );
 		},
 		[ setExtensionData, onPriceChange ]
@@ -155,9 +156,10 @@ export const Block = ( {
 		priceFormatted = ''
 	) => {
 		const deliveryDayValue = `${ deliveryDate }_${ from }-${ to }_${ price }`;
+		const numericPrice = Number( price );
 
-		// Update local state
-		setSelection( {
+		// Build selection data once
+		const selectionData = {
 			selectedOption: value,
 			deliveryDay: deliveryDayValue,
 			deliveryDayDate: deliveryDate,
@@ -165,49 +167,38 @@ export const Block = ( {
 			deliveryDayTo: to,
 			deliveryDayPrice: price,
 			deliveryDayType: type,
+		};
+
+		// Update local state
+		setSelection( selectionData );
+
+		// Update extension data (reusing selection data, converting price to string)
+		batchSetExtensionData( setExtensionData, {
+			deliveryDay: selectionData.deliveryDay,
+			deliveryDayDate: selectionData.deliveryDayDate,
+			deliveryDayFrom: selectionData.deliveryDayFrom,
+			deliveryDayTo: selectionData.deliveryDayTo,
+			deliveryDayPrice: price.toString(),
+			deliveryDayType: selectionData.deliveryDayType,
 		} );
 
-		// Save to centralized session manager
+		// Save to session manager (different key format)
 		saveDeliveryDay( {
 			value: deliveryDayValue,
 			date: deliveryDate,
 			from,
 			to,
-			price: Number( price ),
+			price: numericPrice,
 			priceFormatted,
 			type,
 		} );
 
-		// Update extension data immediately (not debounced for user action)
-		setExtensionData( 'postnl', 'deliveryDay', deliveryDayValue );
-		setExtensionData( 'postnl', 'deliveryDayDate', deliveryDate );
-		setExtensionData( 'postnl', 'deliveryDayFrom', from );
-		setExtensionData( 'postnl', 'deliveryDayTo', to );
-		setExtensionData( 'postnl', 'deliveryDayPrice', price.toString() );
-		setExtensionData( 'postnl', 'deliveryDayType', type );
-
 		// Notify parent of price change
-		onPriceChange( {
-			numeric: Number( price ),
-			formatted: priceFormatted,
-		} );
+		onPriceChange( { numeric: numericPrice, formatted: priceFormatted } );
 
-		// Clear dropoff point data (using centralized session manager)
+		// Clear dropoff point data
 		clearDropoffPoint();
-
-		// Clear dropoff extension data
-		setExtensionData( 'postnl', 'dropoffPoints', '' );
-		setExtensionData( 'postnl', 'dropoffPointsAddressCompany', '' );
-		setExtensionData( 'postnl', 'dropoffPointsAddress1', '' );
-		setExtensionData( 'postnl', 'dropoffPointsAddress2', '' );
-		setExtensionData( 'postnl', 'dropoffPointsCity', '' );
-		setExtensionData( 'postnl', 'dropoffPointsPostcode', '' );
-		setExtensionData( 'postnl', 'dropoffPointsCountry', '' );
-		setExtensionData( 'postnl', 'dropoffPointsPartnerID', '' );
-		setExtensionData( 'postnl', 'dropoffPointsDate', '' );
-		setExtensionData( 'postnl', 'dropoffPointsTime', '' );
-		setExtensionData( 'postnl', 'dropoffPointsType', '' );
-		setExtensionData( 'postnl', 'dropoffPointsDistance', null );
+		clearDropoffPointExtensionData( setExtensionData );
 
 		// Update cart fees on backend
 		try {
@@ -234,160 +225,115 @@ export const Block = ( {
 	return (
 		<div className="postnl-block-container">
 			{ deliveryOptions.length > 0 && (
-				<div>
-					<ul className="postnl_delivery_day_list postnl_list">
-						{ deliveryOptions.map( ( delivery, index ) => {
-							return (
-								<li key={ index }>
-									{ isDeliveryDaysEnabled && (
-										<div className="list_title">
-											<span>
-												{ delivery.display_date }{ ' ' }
-												{ delivery.day }
-											</span>
-										</div>
-									) }
-									<ul className="postnl_sub_list">
-										{ delivery.options.map(
-											( option, optionIndex ) => {
-												const from = option.from || '';
-												const to = option.to || '';
-												const optionType =
-													option.type || 'Unknown';
-												const price = option.price || 0;
-												const priceDisplayFormatted =
-													option.price_formatted ||
-													'';
-												const value = `${ delivery.date }_${ from }-${ to }_${ price }`;
+				<ul className="postnl_delivery_day_list postnl_list">
+					{ deliveryOptions.map( ( delivery, index ) => {
+						return (
+							<li key={ index }>
+								{ isDeliveryDaysEnabled && (
+									<div className="list_title">
+										<span>
+											{ delivery.display_date }{ ' ' }
+											{ delivery.day }
+										</span>
+									</div>
+								) }
+								<ul className="postnl_sub_list">
+									{ delivery.options.map(
+										( option, optionIndex ) => {
+											const from = option.from || '';
+											const to = option.to || '';
+											const optionType =
+												option.type || 'Unknown';
+											const price = option.price || 0;
+											const priceDisplayFormatted =
+												option.price_formatted || '';
+											const value = `${ delivery.date }_${ from }-${ to }_${ price }`;
 
-												const isChecked =
-													selection.selectedOption ===
-													value;
-												const activeClass = isChecked
-													? 'active'
-													: '';
+											const isChecked =
+												selection.selectedOption ===
+												value;
+											const activeClass = isChecked
+												? 'active'
+												: '';
 
-												let deliveryTime = '';
-												if (
-													optionType === 'Evening'
-												) {
-													deliveryTime = __(
-														'Evening',
-														'postnl-for-woocommerce'
-													);
-												} else if (
-													optionType === 'Morning' ||
-													optionType === '08:00-12:00'
-												) {
-													deliveryTime = __(
-														'Morning',
-														'postnl-for-woocommerce'
-													);
-												}
-
-												return (
-													<li
-														key={ optionIndex }
-														className={ `${ optionType } ${ activeClass }` }
-														data-date={
-															delivery.date
-														}
-														data-from={ from }
-														data-to={ to }
-														data-type={ optionType }
-													>
-														<label
-															className="postnl_sub_radio_label"
-															htmlFor={ `delivery_day_${ value }` }
-														>
-															<input
-																type="radio"
-																id={ `delivery_day_${ value }` }
-																name="delivery_day"
-																className="postnl_sub_radio"
-																value={ value }
-																checked={
-																	isChecked
-																}
-																onChange={ () =>
-																	handleOptionChange(
-																		value,
-																		delivery.date,
-																		from,
-																		to,
-																		optionType,
-																		price,
-																		priceDisplayFormatted
-																	)
-																}
-															/>
-															{ priceDisplayFormatted &&
-																price > 0 && (
-																	<i>
-																		+
-																		{
-																			priceDisplayFormatted
-																		}
-																	</i>
-																) }
-															<i>
-																{ deliveryTime }
-															</i>
-															<span>
-																{ ! isDeliveryDaysEnabled
-																	? __(
-																			'As soon as possible',
-																			'postnl-for-woocommerce'
-																	  )
-																	: `${ from } - ${ to }` }
-															</span>
-														</label>
-													</li>
+											let deliveryTime = '';
+											if ( optionType === 'Evening' ) {
+												deliveryTime = __(
+													'Evening',
+													'postnl-for-woocommerce'
+												);
+											} else if (
+												optionType === 'Morning' ||
+												optionType === '08:00-12:00'
+											) {
+												deliveryTime = __(
+													'Morning',
+													'postnl-for-woocommerce'
 												);
 											}
-										) }
-									</ul>
-								</li>
-							);
-						} ) }
-					</ul>
-					<input
-						type="hidden"
-						name="deliveryDay"
-						id="deliveryDay"
-						value={ selection.deliveryDay }
-					/>
-					<input
-						type="hidden"
-						name="deliveryDayDate"
-						id="deliveryDayDate"
-						value={ selection.deliveryDayDate }
-					/>
-					<input
-						type="hidden"
-						name="deliveryDayFrom"
-						id="deliveryDayFrom"
-						value={ selection.deliveryDayFrom }
-					/>
-					<input
-						type="hidden"
-						name="deliveryDayTo"
-						id="deliveryDayTo"
-						value={ selection.deliveryDayTo }
-					/>
-					<input
-						type="hidden"
-						name="deliveryDayPrice"
-						id="deliveryDayPrice"
-						value={ selection.deliveryDayPrice }
-					/>
-					<input
-						type="hidden"
-						name="deliveryDayType"
-						id="deliveryDayType"
-						value={ selection.deliveryDayType }
-					/>
-				</div>
+
+											return (
+												<li
+													key={ optionIndex }
+													className={ `${ optionType } ${ activeClass }` }
+													data-date={ delivery.date }
+													data-from={ from }
+													data-to={ to }
+													data-type={ optionType }
+												>
+													<label
+														className="postnl_sub_radio_label"
+														htmlFor={ `delivery_day_${ value }` }
+													>
+														<input
+															type="radio"
+															id={ `delivery_day_${ value }` }
+															name="delivery_day"
+															className="postnl_sub_radio"
+															value={ value }
+															checked={
+																isChecked
+															}
+															onChange={ () =>
+																handleOptionChange(
+																	value,
+																	delivery.date,
+																	from,
+																	to,
+																	optionType,
+																	price,
+																	priceDisplayFormatted
+																)
+															}
+														/>
+														{ priceDisplayFormatted &&
+															price > 0 && (
+																<i>
+																	+
+																	{
+																		priceDisplayFormatted
+																	}
+																</i>
+															) }
+														<i>{ deliveryTime }</i>
+														<span>
+															{ ! isDeliveryDaysEnabled
+																? __(
+																		'As soon as possible',
+																		'postnl-for-woocommerce'
+																  )
+																: `${ from } - ${ to }` }
+														</span>
+													</label>
+												</li>
+											);
+										}
+									) }
+								</ul>
+							</li>
+						);
+					} ) }
+				</ul>
 			) }
 		</div>
 	);

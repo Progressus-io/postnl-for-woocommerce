@@ -10,7 +10,6 @@
 		try {
 			sessionStorage.removeItem( 'postnl_checkout_data' );
 		} catch ( e ) {
-			// sessionStorage may be unavailable in private browsing
 		}
 	}
 

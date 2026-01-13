@@ -593,7 +593,7 @@ class Utils {
 		// Base shipping options (common to all destinations).
 		$base_options = array(
 			'standard_shipment'     => esc_html__( 'Standard shipment', 'postnl-for-woocommerce' ),
-			'id_check'              => esc_html__( 'ID Check', 'postnl-for-woocommerce' ),
+			'id_check'              => esc_html__( 'ID Check (18+)', 'postnl-for-woocommerce' ),
 			'return_no_answer'      => esc_html__( 'Return if no answer', 'postnl-for-woocommerce' ),
 			'signature_on_delivery' => esc_html__( 'Signature on Delivery', 'postnl-for-woocommerce' ),
 			'only_home_address'     => esc_html__( 'Only Home Address', 'postnl-for-woocommerce' ),

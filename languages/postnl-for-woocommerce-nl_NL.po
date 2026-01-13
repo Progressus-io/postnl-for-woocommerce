@@ -1639,7 +1639,7 @@ msgid "DPI"
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:592
-msgid "ID Check + Insured Shipping"
+msgid "ID Check (18+) + Insured Shipping"
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:608

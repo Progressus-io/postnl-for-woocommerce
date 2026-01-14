@@ -663,9 +663,10 @@ class Settings extends \WC_Settings_API {
 				'default'     => 'id_check',
 				'for_country' => array( 'NL' ),
 				'options'     => array(
-					''                 => esc_html__( 'Standard Shipping', 'postnl-for-woocommerce' ),
-					'id_check'         => __( 'ID Check', 'postnl-for-woocommerce' ),
-					'insured_shipping' => __( 'Insured Shipping', 'postnl-for-woocommerce' ),
+					''                          => esc_html__( 'Standard Shipping', 'postnl-for-woocommerce' ),
+					'id_check'                  => esc_html__( 'ID Check', 'postnl-for-woocommerce' ),
+					'insured_shipping'          => esc_html__( 'Insured Shipping', 'postnl-for-woocommerce' ),
+					'id_check|insured_shipping' => esc_html__( 'ID Check (18+) + Insured Shipping', 'postnl-for-woocommerce' ),
 				),
 			),
 			'auto_complete_order'             => array(

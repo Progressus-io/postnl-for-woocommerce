@@ -1271,12 +1271,12 @@ msgid "This is your track and track link {tracking-link}"
 msgstr "Dit is je track & trace link {tracking-link}"
 
 #: src/Shipping_Method/Settings.php:578
-#: src/Shipping_Method/Settings.php:697
+#: src/Shipping_Method/Settings.php:698
 msgid "Default shipping Options Settings"
 msgstr "Standaard verzendopties instellingen"
 
 #: src/Shipping_Method/Settings.php:580
-#: src/Shipping_Method/Settings.php:699
+#: src/Shipping_Method/Settings.php:700
 msgid "Please select Default shipping Options."
 msgstr "Selecteer hier standaard verzendopties."
 
@@ -1403,7 +1403,7 @@ msgid "EU Parcel + Track & Trace + Insured Plus"
 msgstr "EU Pakket + Track & Trace + Verzekerd Verzenden Plus"
 
 #: src/Shipping_Method/Settings.php:643
-#: src/Shipping_Method/Settings.php:705
+#: src/Shipping_Method/Settings.php:706
 msgid "Default Shipping International"
 msgstr "Standaard verzendopties non-EU"
 
@@ -1416,7 +1416,7 @@ msgid "Parcel non-EU + Track & Trace + Insured"
 msgstr "Non-EU Pakket + Track & Trace + Verzekerd Verzenden"
 
 #: src/Shipping_Method/Settings.php:651
-#: src/Shipping_Method/Settings.php:711
+#: src/Shipping_Method/Settings.php:712
 msgid "Parcel non-EU + Track & Trace + Insured Plus"
 msgstr "Non-EU Pakket + Track & Trace + Verzekerd Verzenden Plus"
 
@@ -1428,12 +1428,12 @@ msgstr "Standaard verzendmethode afhalen"
 msgid "Shipping options Pickup."
 msgstr "Selecteer een standaard verzendoptie voor afhalen bij PostNL."
 
-#: src/Shipping_Method/Settings.php:672
+#: src/Shipping_Method/Settings.php:673
 msgid "Automatically change order status to Completed"
 msgstr "Automatische statuswijziging naar Voltooid"
 
-#: src/Shipping_Method/Settings.php:674
 #: src/Shipping_Method/Settings.php:675
+#: src/Shipping_Method/Settings.php:676
 msgid "Automatically change order status to Completed once an order has been pre-alerted and printed"
 msgstr "Wijzig de status automatisch naar Afgerond nadat een order is aangemaakt en geprint"
 
@@ -1727,7 +1727,7 @@ msgstr "Standaard verzendopties België"
 msgid "Standard Shipping"
 msgstr ""
 
-#: src/Shipping_Method/Settings.php:707
+#: src/Shipping_Method/Settings.php:708
 msgid "Select a default shipping option for the orders shipped internationally (outside the EU borders)."
 msgstr ""
 
@@ -1890,3 +1890,7 @@ msgstr ""
 #: src/Shipping_Method/Settings.php:208
 msgid "Activate this setting to use a home address for return shipments"
 msgstr ""
+
+#: src/Shipping_Method/Settings.php:669
+msgid "ID Check (18+) + Insured Shipping"
+msgstr "Leeftijdscheck (18+) + Verzekerd verzenden"

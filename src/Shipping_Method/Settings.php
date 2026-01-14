@@ -464,10 +464,10 @@ class Settings extends \WC_Settings_API {
 			'shipping_outside_eu_title'       => array(
 				'title'       => esc_html__( 'Shipping Outside Europe Settings', 'postnl-for-woocommerce' ),
 				'type'        => 'title',
-				'description' => esc_html__( 'Please insert your Globalpack credentials.', 'postnl-for-woocommerce' ),
+				'description' => esc_html__( 'Please insert your Parcels non-EU credentials.', 'postnl-for-woocommerce' ),
 			),
 			'globalpack_barcode_type'         => array(
-				'title'             => esc_html__( 'GlobalPack Barcode Type', 'postnl-for-woocommerce' ),
+				'title'             => esc_html__( 'Parcels non-EU Barcode Type', 'postnl-for-woocommerce' ),
 				'type'              => 'text',
 				'description'       => '',
 				'desc_tip'          => true,
@@ -476,7 +476,7 @@ class Settings extends \WC_Settings_API {
 				'custom_attributes' => array( 'maxlength' => '10' ),
 			),
 			'globalpack_customer_code'        => array(
-				'title'             => esc_html__( 'GlobalPack Customer Code', 'postnl-for-woocommerce' ),
+				'title'             => esc_html__( 'Parcels non-EU Customer Code', 'postnl-for-woocommerce' ),
 				'type'              => 'text',
 				'description'       => '',
 				'desc_tip'          => true,

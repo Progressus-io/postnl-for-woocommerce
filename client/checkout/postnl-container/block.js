@@ -22,6 +22,7 @@ import { Block as DropoffPointsBlock } from '../postnl-dropoff-points/block';
 import { getDeliveryDay, clearSessionData } from '../../utils/session-manager';
 import {
 	batchSetExtensionData,
+	clearDeliveryDayExtensionData,
 	clearDropoffPointExtensionData,
 } from '../../utils/extension-data-helper';
 
@@ -365,13 +366,15 @@ export const Block = ( { checkoutExtensionData } ) => {
 		updateCustomerData,
 	] );
 
-	// Clear session storage if checkout is complete, letterbox, or container hidden
+	// Clear session storage and extension data if checkout is complete, letterbox, or container hidden.
 	useEffect( () => {
 		if ( isComplete || letterbox || ! showContainer ) {
 			clearSessionData();
 			previousShippingAddress.current = null;
+			clearDeliveryDayExtensionData( setExtensionData );
+			clearDropoffPointExtensionData( setExtensionData );
 		}
-	}, [ isComplete, letterbox, showContainer ] );
+	}, [ isComplete, letterbox, showContainer, setExtensionData ] );
 
 	useEffect( () => {
 		if ( ! letterbox || ! showContainer || deliveryOptions.length === 0 ) {

@@ -8,6 +8,9 @@ import {
 	batchSetExtensionData,
 	clearDeliveryDayExtensionData,
 	clearDropoffPointExtensionData,
+	clearAllExtensionData,
+	clearBackendDeliveryFee,
+	isCountrySupported,
 } from '../../client/utils/extension-data-helper';
 
 describe( 'Extension Data Helper', () => {
@@ -319,6 +322,231 @@ describe( 'Extension Data Helper', () => {
 			}
 
 			expect( mockSetExtensionData ).toHaveBeenCalledTimes( 5 );
+		} );
+	} );
+
+	describe( 'clearAllExtensionData', () => {
+		it( 'should clear all 18 fields (6 delivery + 12 dropoff)', () => {
+			clearAllExtensionData( mockSetExtensionData );
+
+			// 6 delivery day fields + 12 dropoff point fields = 18
+			expect( mockSetExtensionData ).toHaveBeenCalledTimes( 18 );
+		} );
+
+		it( 'should clear all delivery day fields', () => {
+			clearAllExtensionData( mockSetExtensionData );
+
+			expect( mockSetExtensionData ).toHaveBeenCalledWith(
+				'postnl',
+				'deliveryDay',
+				''
+			);
+			expect( mockSetExtensionData ).toHaveBeenCalledWith(
+				'postnl',
+				'deliveryDayDate',
+				''
+			);
+			expect( mockSetExtensionData ).toHaveBeenCalledWith(
+				'postnl',
+				'deliveryDayType',
+				''
+			);
+		} );
+
+		it( 'should clear all dropoff point fields', () => {
+			clearAllExtensionData( mockSetExtensionData );
+
+			expect( mockSetExtensionData ).toHaveBeenCalledWith(
+				'postnl',
+				'dropoffPoints',
+				''
+			);
+			expect( mockSetExtensionData ).toHaveBeenCalledWith(
+				'postnl',
+				'dropoffPointsAddressCompany',
+				''
+			);
+			expect( mockSetExtensionData ).toHaveBeenCalledWith(
+				'postnl',
+				'dropoffPointsDistance',
+				null
+			);
+		} );
+
+		it( 'should work after setting data', () => {
+			// First set some data
+			batchSetExtensionData( mockSetExtensionData, {
+				deliveryDay: 'test-value',
+				dropoffPoints: 'PARTNER1-LOC1',
+			} );
+
+			mockSetExtensionData.mockClear();
+
+			// Then clear all
+			clearAllExtensionData( mockSetExtensionData );
+
+			expect( mockSetExtensionData ).toHaveBeenCalledTimes( 18 );
+		} );
+	} );
+
+	describe( 'clearBackendDeliveryFee', () => {
+		let originalWc;
+
+		beforeEach( () => {
+			originalWc = window.wc;
+		} );
+
+		afterEach( () => {
+			window.wc = originalWc;
+		} );
+
+		it( 'should call extensionCartUpdate with clear_delivery_fee action', () => {
+			const mockExtensionCartUpdate = jest.fn();
+			window.wc = {
+				blocksCheckout: {
+					extensionCartUpdate: mockExtensionCartUpdate,
+				},
+			};
+
+			clearBackendDeliveryFee();
+
+			expect( mockExtensionCartUpdate ).toHaveBeenCalledWith( {
+				namespace: 'postnl',
+				data: { action: 'clear_delivery_fee' },
+			} );
+		} );
+
+		it( 'should call extensionCartUpdate exactly once', () => {
+			const mockExtensionCartUpdate = jest.fn();
+			window.wc = {
+				blocksCheckout: {
+					extensionCartUpdate: mockExtensionCartUpdate,
+				},
+			};
+
+			clearBackendDeliveryFee();
+
+			expect( mockExtensionCartUpdate ).toHaveBeenCalledTimes( 1 );
+		} );
+
+		it( 'should not throw when window.wc is undefined', () => {
+			window.wc = undefined;
+
+			expect( () => clearBackendDeliveryFee() ).not.toThrow();
+		} );
+
+		it( 'should not throw when blocksCheckout is undefined', () => {
+			window.wc = {};
+
+			expect( () => clearBackendDeliveryFee() ).not.toThrow();
+		} );
+
+		it( 'should not throw when extensionCartUpdate is not a function', () => {
+			window.wc = {
+				blocksCheckout: {
+					extensionCartUpdate: 'not-a-function',
+				},
+			};
+
+			expect( () => clearBackendDeliveryFee() ).not.toThrow();
+		} );
+
+		it( 'should not call anything when extensionCartUpdate is missing', () => {
+			window.wc = {
+				blocksCheckout: {},
+			};
+
+			// Should not throw and should not call anything
+			expect( () => clearBackendDeliveryFee() ).not.toThrow();
+		} );
+	} );
+
+	describe( 'isCountrySupported', () => {
+		it( 'should return true for supported country', () => {
+			const supportedCountries = [ 'NL', 'BE' ];
+
+			expect( isCountrySupported( 'NL', supportedCountries ) ).toBe(
+				true
+			);
+			expect( isCountrySupported( 'BE', supportedCountries ) ).toBe(
+				true
+			);
+		} );
+
+		it( 'should return false for unsupported country', () => {
+			const supportedCountries = [ 'NL', 'BE' ];
+
+			expect( isCountrySupported( 'DE', supportedCountries ) ).toBe(
+				false
+			);
+			expect( isCountrySupported( 'FR', supportedCountries ) ).toBe(
+				false
+			);
+			expect( isCountrySupported( 'US', supportedCountries ) ).toBe(
+				false
+			);
+		} );
+
+		it( 'should return false for empty string country', () => {
+			const supportedCountries = [ 'NL', 'BE' ];
+
+			expect( isCountrySupported( '', supportedCountries ) ).toBe( false );
+		} );
+
+		it( 'should return false when supportedCountries is empty', () => {
+			expect( isCountrySupported( 'NL', [] ) ).toBe( false );
+		} );
+
+		it( 'should return false when supportedCountries is not provided', () => {
+			expect( isCountrySupported( 'NL' ) ).toBe( false );
+		} );
+
+		it( 'should be case-sensitive', () => {
+			const supportedCountries = [ 'NL', 'BE' ];
+
+			expect( isCountrySupported( 'nl', supportedCountries ) ).toBe(
+				false
+			);
+			expect( isCountrySupported( 'Nl', supportedCountries ) ).toBe(
+				false
+			);
+		} );
+
+		it( 'should handle null country gracefully', () => {
+			const supportedCountries = [ 'NL', 'BE' ];
+
+			expect( isCountrySupported( null, supportedCountries ) ).toBe(
+				false
+			);
+		} );
+
+		it( 'should handle undefined country gracefully', () => {
+			const supportedCountries = [ 'NL', 'BE' ];
+
+			expect( isCountrySupported( undefined, supportedCountries ) ).toBe(
+				false
+			);
+		} );
+
+		it( 'should work with single country in array', () => {
+			expect( isCountrySupported( 'NL', [ 'NL' ] ) ).toBe( true );
+			expect( isCountrySupported( 'BE', [ 'NL' ] ) ).toBe( false );
+		} );
+
+		it( 'should work with many supported countries', () => {
+			const manyCountries = [
+				'NL',
+				'BE',
+				'DE',
+				'FR',
+				'ES',
+				'IT',
+				'AT',
+				'PL',
+			];
+
+			expect( isCountrySupported( 'PL', manyCountries ) ).toBe( true );
+			expect( isCountrySupported( 'UK', manyCountries ) ).toBe( false );
 		} );
 	} );
 } );

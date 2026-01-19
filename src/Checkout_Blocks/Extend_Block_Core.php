@@ -301,14 +301,15 @@ class Extend_Block_Core {
 
 
 	/**
-	 * Clear PostNL delivery fee from WooCommerce session.
-	 * Called when container is hidden to ensure fees are removed from cart.
+	 * Clear all PostNL data from WooCommerce session.
+	 * Called when container is hidden to ensure fees, validation data, and errors are removed.
 	 */
 	private function clear_postnl_session() {
 		WC()->session->__unset( 'postnl_delivery_fee' );
 		WC()->session->__unset( 'postnl_delivery_type' );
 		WC()->session->__unset( 'postnl_checkout_post_data' );
 		WC()->session->__unset( POSTNL_SETTINGS_ID . '_invalid_address_marker' );
+		WC()->session->__unset( POSTNL_SETTINGS_ID . '_validated_address' );
 	}
 
 	/**

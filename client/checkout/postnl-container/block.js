@@ -369,6 +369,7 @@ export const Block = ( { checkoutExtensionData } ) => {
 	useEffect( () => {
 		if ( isComplete || letterbox || ! showContainer ) {
 			clearSessionData();
+			previousShippingAddress.current = null;
 		}
 	}, [ isComplete, letterbox, showContainer ] );
 

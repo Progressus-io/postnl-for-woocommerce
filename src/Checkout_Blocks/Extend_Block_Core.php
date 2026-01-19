@@ -74,8 +74,17 @@ class Extend_Block_Core {
 
 	/**
 	 * Validate address in cart.
+	 * Only shows validation error for NL addresses.
 	 */
 	public function postnl_validate_address_in_cart( $errors, $cart ) {
+		// Only validate NL addresses
+		$shipping_country = WC()->customer ? WC()->customer->get_shipping_country() : '';
+		if ( 'NL' !== $shipping_country ) {
+			// Clear any stale invalid marker for non-NL countries
+			WC()->session->__unset( POSTNL_SETTINGS_ID . '_invalid_address_marker' );
+			return;
+		}
+
 		$invalid_marker = WC()->session->get( POSTNL_SETTINGS_ID . '_invalid_address_marker', false );
 
 		if ( $invalid_marker ) {
@@ -295,9 +304,11 @@ class Extend_Block_Core {
 	 * Clear PostNL delivery fee from WooCommerce session.
 	 * Called when container is hidden to ensure fees are removed from cart.
 	 */
-	private function clear_delivery_fee_session() {
+	private function clear_postnl_session() {
 		WC()->session->__unset( 'postnl_delivery_fee' );
 		WC()->session->__unset( 'postnl_delivery_type' );
+		WC()->session->__unset( 'postnl_checkout_post_data' );
+		WC()->session->__unset( POSTNL_SETTINGS_ID . '_invalid_address_marker' );
 	}
 
 	/**
@@ -338,9 +349,7 @@ class Extend_Block_Core {
 
 		// If not NL, clear session and return
 		if ( ! in_array( $shipping_country, array( 'NL', 'BE' ), true ) ) {
-			WC()->session->__unset( 'postnl_checkout_post_data' );
-			WC()->session->__unset( POSTNL_SETTINGS_ID . '_invalid_address_marker' );
-			$this->clear_delivery_fee_session();
+			$this->clear_postnl_session();
 			wp_send_json_success(
 				array(
 					'message'          => 'No delivery options available outside NL.',
@@ -362,8 +371,7 @@ class Extend_Block_Core {
 				&& empty( $sanitized_data['shipping_house_number'] )
 				&& 'NL' == $shipping_country
 			) ) {
-			WC()->session->__unset( 'postnl_checkout_post_data' );
-			$this->clear_delivery_fee_session();
+			$this->clear_postnl_session();
 			wp_send_json_success(
 				array(
 					'message'          => esc_html__( 'Postcode or house number is missing.', 'postnl-for-woocommerce' ),
@@ -463,8 +471,7 @@ class Extend_Block_Core {
 
 			// Determine whether to show the container
 			if ( empty( $delivery_options_array ) && empty( $dropoff_options_array ) ) {
-				WC()->session->__unset( 'postnl_checkout_post_data' );
-				$this->clear_delivery_fee_session();
+				$this->clear_postnl_session();
 				wp_send_json_success(
 					array(
 						'message'           => 'No delivery or dropoff options available.',
@@ -493,9 +500,8 @@ class Extend_Block_Core {
 			wp_die();
 
 		} catch ( \Exception $e ) {
-			// If fetching delivery options fails
-			WC()->session->__unset( 'postnl_checkout_post_data' );
-			$this->clear_delivery_fee_session();
+			// If fetching delivery options fails.
+			$this->clear_postnl_session();
 			wp_send_json_success(
 				array(
 					'message'           => 'Failed to fetch delivery options.',

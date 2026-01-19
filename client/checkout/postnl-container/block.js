@@ -22,8 +22,10 @@ import { Block as DropoffPointsBlock } from '../postnl-dropoff-points/block';
 import { getDeliveryDay, clearSessionData } from '../../utils/session-manager';
 import {
 	batchSetExtensionData,
-	clearDeliveryDayExtensionData,
+	clearAllExtensionData,
+	clearBackendDeliveryFee,
 	clearDropoffPointExtensionData,
+	isCountrySupported,
 } from '../../utils/extension-data-helper';
 
 /**
@@ -217,17 +219,8 @@ export const Block = ( { checkoutExtensionData } ) => {
 	const clearAllPostNLData = useCallback( () => {
 		clearSessionData();
 		previousShippingAddress.current = null;
-		clearDeliveryDayExtensionData( setExtensionData );
-		clearDropoffPointExtensionData( setExtensionData );
-
-		// Trigger cart update to clear backend fee
-		const { extensionCartUpdate } = window.wc?.blocksCheckout || {};
-		if ( typeof extensionCartUpdate === 'function' ) {
-			extensionCartUpdate( {
-				namespace: 'postnl',
-				data: { action: 'clear_delivery_fee' },
-			} );
-		}
+		clearAllExtensionData( setExtensionData );
+		clearBackendDeliveryFee();
 	}, [ setExtensionData ] );
 
 	const isComplete = useSelect(
@@ -242,8 +235,33 @@ export const Block = ( { checkoutExtensionData } ) => {
 		}
 	}, [ shippingAddress, setExtensionData ] );
 
+	// Track previous country to detect transitions to unsupported countries
+	const previousCountry = useRef( shippingAddress?.country || '' );
+	const supportedCountries = postnlData.supported_countries || [];
+
 	// Fetch data shipping address
 	useEffect( () => {
+		const country = shippingAddress?.country || '';
+		const isSupported = isCountrySupported( country, supportedCountries );
+		const wasSupported = isCountrySupported(
+			previousCountry.current,
+			supportedCountries
+		);
+
+		// Update previous country
+		previousCountry.current = country;
+
+		// If country is not supported, clear data once and stop all processing
+		if ( ! isSupported ) {
+			if ( wasSupported ) {
+				setShowContainer( false );
+				setDeliveryOptions( [] );
+				setDropoffOptions( [] );
+				clearAllPostNLData();
+			}
+			return;
+		}
+
 		if (
 			! shippingAddress ||
 			isEmpty( shippingAddress.postcode ) ||
@@ -388,18 +406,20 @@ export const Block = ( { checkoutExtensionData } ) => {
 		shippingAddress,
 		postnlData.ajax_url,
 		postnlData.nonce,
+		postnlData.is_nl_address_enabled,
 		setShippingAddress,
 		updateCustomerData,
+		clearAllPostNLData,
+		supportedCountries,
 	] );
 
-	// Clear local data if checkout is complete, letterbox, or container hidden.
+	// Clear local data if checkout is complete or letterbox.
 	// Note: Backend fee clearing is handled by AJAX response handlers via clearAllPostNLData().
 	useEffect( () => {
 		if ( isComplete || letterbox ) {
 			clearSessionData();
 			previousShippingAddress.current = null;
-			clearDeliveryDayExtensionData( setExtensionData );
-			clearDropoffPointExtensionData( setExtensionData );
+			clearAllExtensionData( setExtensionData );
 		}
 	}, [ isComplete, letterbox, setExtensionData ] );
 

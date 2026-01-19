@@ -55,8 +55,46 @@ export function clearDropoffPointExtensionData( setExtensionData ) {
 	} );
 }
 
+/**
+ * Clear all PostNL extension data (both delivery day and dropoff points).
+ *
+ * @param {Function} setExtensionData - The setExtensionData function
+ */
+export function clearAllExtensionData( setExtensionData ) {
+	clearDeliveryDayExtensionData( setExtensionData );
+	clearDropoffPointExtensionData( setExtensionData );
+}
+
+/**
+ * Trigger cart update to clear backend delivery fee.
+ * Uses WooCommerce Blocks' extensionCartUpdate API.
+ */
+export function clearBackendDeliveryFee() {
+	const { extensionCartUpdate } = window.wc?.blocksCheckout || {};
+	if ( typeof extensionCartUpdate === 'function' ) {
+		extensionCartUpdate( {
+			namespace: 'postnl',
+			data: { action: 'clear_delivery_fee' },
+		} );
+	}
+}
+
+/**
+ * Check if a country is supported by PostNL.
+ *
+ * @param {string} country          - The country code to check
+ * @param {Array}  supportedCountries - Array of supported country codes
+ * @return {boolean} True if the country is supported
+ */
+export function isCountrySupported( country, supportedCountries = [] ) {
+	return supportedCountries.includes( country );
+}
+
 export default {
 	batchSetExtensionData,
 	clearDeliveryDayExtensionData,
 	clearDropoffPointExtensionData,
+	clearAllExtensionData,
+	clearBackendDeliveryFee,
+	isCountrySupported,
 };

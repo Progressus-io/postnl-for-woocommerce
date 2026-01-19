@@ -292,6 +292,15 @@ class Extend_Block_Core {
 
 
 	/**
+	 * Clear PostNL delivery fee from WooCommerce session.
+	 * Called when container is hidden to ensure fees are removed from cart.
+	 */
+	private function clear_delivery_fee_session() {
+		WC()->session->__unset( 'postnl_delivery_fee' );
+		WC()->session->__unset( 'postnl_delivery_type' );
+	}
+
+	/**
 	 * Handle AJAX request to set checkout post data and return updated delivery options.
 	 */
 	public function handle_set_checkout_post_data() {
@@ -331,6 +340,7 @@ class Extend_Block_Core {
 		if ( ! in_array( $shipping_country, array( 'NL', 'BE' ), true ) ) {
 			WC()->session->__unset( 'postnl_checkout_post_data' );
 			WC()->session->__unset( POSTNL_SETTINGS_ID . '_invalid_address_marker' );
+			$this->clear_delivery_fee_session();
 			wp_send_json_success(
 				array(
 					'message'          => 'No delivery options available outside NL.',
@@ -353,6 +363,7 @@ class Extend_Block_Core {
 				&& 'NL' == $shipping_country
 			) ) {
 			WC()->session->__unset( 'postnl_checkout_post_data' );
+			$this->clear_delivery_fee_session();
 			wp_send_json_success(
 				array(
 					'message'          => esc_html__( 'Postcode or house number is missing.', 'postnl-for-woocommerce' ),
@@ -453,6 +464,7 @@ class Extend_Block_Core {
 			// Determine whether to show the container
 			if ( empty( $delivery_options_array ) && empty( $dropoff_options_array ) ) {
 				WC()->session->__unset( 'postnl_checkout_post_data' );
+				$this->clear_delivery_fee_session();
 				wp_send_json_success(
 					array(
 						'message'           => 'No delivery or dropoff options available.',
@@ -483,6 +495,7 @@ class Extend_Block_Core {
 		} catch ( \Exception $e ) {
 			// If fetching delivery options fails
 			WC()->session->__unset( 'postnl_checkout_post_data' );
+			$this->clear_delivery_fee_session();
 			wp_send_json_success(
 				array(
 					'message'           => 'Failed to fetch delivery options.',

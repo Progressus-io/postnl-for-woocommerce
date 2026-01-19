@@ -211,6 +211,25 @@ export const Block = ( { checkoutExtensionData } ) => {
 	// Ref to store the previous shipping address
 	const previousShippingAddress = useRef( null );
 
+	/**
+	 * Clear all PostNL data: session, extension data, and backend cart fee.
+	 */
+	const clearAllPostNLData = useCallback( () => {
+		clearSessionData();
+		previousShippingAddress.current = null;
+		clearDeliveryDayExtensionData( setExtensionData );
+		clearDropoffPointExtensionData( setExtensionData );
+
+		// Trigger cart update to clear backend fee
+		const { extensionCartUpdate } = window.wc?.blocksCheckout || {};
+		if ( typeof extensionCartUpdate === 'function' ) {
+			extensionCartUpdate( {
+				namespace: 'postnl',
+				data: { action: 'clear_delivery_fee' },
+			} );
+		}
+	}, [ setExtensionData ] );
+
 	const isComplete = useSelect(
 		( select ) => select( CHECKOUT_STORE_KEY ).isComplete(),
 		[]
@@ -332,11 +351,17 @@ export const Block = ( { checkoutExtensionData } ) => {
 						setShowContainer( respData.show_container || false );
 						setDeliveryOptions( respData.delivery_options || [] );
 						setDropoffOptions( respData.dropoff_options || [] );
+
+						// Clear all PostNL data when container is hidden
+						if ( ! respData.show_container ) {
+							clearAllPostNLData();
+						}
 					} else {
 						// Response not success or no data: hide container
 						setShowContainer( false );
 						setDeliveryOptions( [] );
 						setDropoffOptions( [] );
+						clearAllPostNLData();
 					}
 
 					const event = new Event( 'postnl_address_updated' );
@@ -347,6 +372,7 @@ export const Block = ( { checkoutExtensionData } ) => {
 					setShowContainer( false );
 					setDeliveryOptions( [] );
 					setDropoffOptions( [] );
+					clearAllPostNLData();
 
 					const event = new Event( 'postnl_address_updated' );
 					window.dispatchEvent( event );
@@ -366,15 +392,16 @@ export const Block = ( { checkoutExtensionData } ) => {
 		updateCustomerData,
 	] );
 
-	// Clear session storage and extension data if checkout is complete, letterbox, or container hidden.
+	// Clear local data if checkout is complete, letterbox, or container hidden.
+	// Note: Backend fee clearing is handled by AJAX response handlers via clearAllPostNLData().
 	useEffect( () => {
-		if ( isComplete || letterbox || ! showContainer ) {
+		if ( isComplete || letterbox ) {
 			clearSessionData();
 			previousShippingAddress.current = null;
 			clearDeliveryDayExtensionData( setExtensionData );
 			clearDropoffPointExtensionData( setExtensionData );
 		}
-	}, [ isComplete, letterbox, showContainer, setExtensionData ] );
+	}, [ isComplete, letterbox, setExtensionData ] );
 
 	useEffect( () => {
 		if ( ! letterbox || ! showContainer || deliveryOptions.length === 0 ) {

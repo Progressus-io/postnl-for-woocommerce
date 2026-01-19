@@ -300,17 +300,6 @@ class Extend_Block_Core {
 	}
 
 
-	/**
-	 * Clear all PostNL data from WooCommerce session.
-	 * Called when container is hidden to ensure fees, validation data, and errors are removed.
-	 */
-	private function clear_postnl_session() {
-		WC()->session->__unset( 'postnl_delivery_fee' );
-		WC()->session->__unset( 'postnl_delivery_type' );
-		WC()->session->__unset( 'postnl_checkout_post_data' );
-		WC()->session->__unset( POSTNL_SETTINGS_ID . '_invalid_address_marker' );
-		WC()->session->__unset( POSTNL_SETTINGS_ID . '_validated_address' );
-	}
 
 	/**
 	 * Handle AJAX request to set checkout post data and return updated delivery options.
@@ -350,7 +339,7 @@ class Extend_Block_Core {
 
 		// If not NL, clear session and return
 		if ( ! in_array( $shipping_country, array( 'NL', 'BE' ), true ) ) {
-			$this->clear_postnl_session();
+			Utils::clear_postnl_checkout_session();
 			wp_send_json_success(
 				array(
 					'message'          => 'No delivery options available outside NL.',
@@ -372,7 +361,7 @@ class Extend_Block_Core {
 				&& empty( $sanitized_data['shipping_house_number'] )
 				&& 'NL' == $shipping_country
 			) ) {
-			$this->clear_postnl_session();
+			Utils::clear_postnl_checkout_session();
 			wp_send_json_success(
 				array(
 					'message'          => esc_html__( 'Postcode or house number is missing.', 'postnl-for-woocommerce' ),
@@ -472,7 +461,7 @@ class Extend_Block_Core {
 
 			// Determine whether to show the container
 			if ( empty( $delivery_options_array ) && empty( $dropoff_options_array ) ) {
-				$this->clear_postnl_session();
+				Utils::clear_postnl_checkout_session();
 				wp_send_json_success(
 					array(
 						'message'           => 'No delivery or dropoff options available.',
@@ -502,7 +491,7 @@ class Extend_Block_Core {
 
 		} catch ( \Exception $e ) {
 			// If fetching delivery options fails.
-			$this->clear_postnl_session();
+			Utils::clear_postnl_checkout_session();
 			wp_send_json_success(
 				array(
 					'message'           => 'Failed to fetch delivery options.',

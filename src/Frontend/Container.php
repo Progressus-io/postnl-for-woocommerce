@@ -287,6 +287,8 @@ class Container {
 
 			foreach ( $post_data as $post_key => $post_value ) {
 				if ( 'shipping_method' === $post_key && ! in_array( Utils::get_cart_shipping_method_id( $post_value[0] ), $sipping_methods ) ) {
+					// Clear PostNL session data when shipping method is not supported.
+					Utils::clear_postnl_checkout_session();
 					return;
 				}
 			}
@@ -302,12 +304,16 @@ class Container {
 			}
 
 			if ( ! isset( $available_country[ $store_country ][ $receiver_country ] ) ) {
+				// Clear PostNL session data when country is not supported.
+				Utils::clear_postnl_checkout_session();
 				return;
 			}
 
 			$post_data = Address_Utils::set_post_data_address( $post_data );
 
 			if ( empty( $post_data['shipping_postcode'] ) ) {
+				// Clear PostNL session data when postcode is missing.
+				Utils::clear_postnl_checkout_session();
 				return;
 			}
 
@@ -316,6 +322,8 @@ class Container {
 				$is_reorder_nl_address_enabled = $this->settings->is_reorder_nl_address_enabled();
 
 				if ( empty( $post_data['shipping_house_number'] ) && $is_reorder_nl_address_enabled ) {
+					// Clear PostNL session data when house number is missing.
+					Utils::clear_postnl_checkout_session();
 					return;
 				} elseif ( empty( $post_data['shipping_house_number'] ) && ! $is_reorder_nl_address_enabled ) {
 					throw new \Exception( 'Address does not contain house number!' );

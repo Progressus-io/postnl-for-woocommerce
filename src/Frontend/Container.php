@@ -83,7 +83,11 @@ class Container {
 			POSTNL_WC_VERSION
 		);
 
-		// Enqueue scripts.
+		// Only enqueue JS for classic checkout.
+		if ( Utils::is_blocks_checkout() ) {
+			return;
+		}
+
 		wp_enqueue_script(
 			'postnl-fe-checkout',
 			POSTNL_WC_PLUGIN_DIR_URL . '/assets/js/fe-checkout.js',

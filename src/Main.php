@@ -426,6 +426,9 @@ class Main {
 		return $template;
 	}
 	public function checkout_blocks() {
+        if ( ! Utils::is_blocks_checkout() ) {
+            return;
+        }
 
 		// Initialize classes that depend on WooCommerce
 		new Extend_Block_Core();

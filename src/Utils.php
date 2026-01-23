@@ -1105,4 +1105,15 @@ class Utils {
 		$formatted_html = wc_price( self::get_fee_total_price( $fee_amount ) );
 		return html_entity_decode( wp_strip_all_tags( $formatted_html ), ENT_QUOTES, 'UTF-8' );
 	}
+
+	/**
+	 * Is using blocks checkout.
+	 *
+	 * @return boolean
+	 */
+	public static function is_blocks_checkout(): bool {
+		$checkout_page_id = wc_get_page_id( 'checkout' );
+
+		return has_block( 'woocommerce/checkout', $checkout_page_id );
+	}
 }

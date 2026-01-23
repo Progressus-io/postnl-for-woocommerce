@@ -273,9 +273,20 @@ class Fill_In_With_Postnl {
 			$postnl_checkout_params
 		);
 
-		// Load button CSS and JS for mini cart on non-cart/checkout pages.
-		$is_minicart_enabled = 'yes' === get_option( 'postnl_minicart_auto_render_button', 'no' );
-		if ( $is_minicart_enabled && ! is_cart() && ! is_checkout() ) {
+		// Determine if we should load button assets.
+		$should_load_assets = false;
+
+		// Load on cart page if cart Fill with PostNL is enabled.
+		if ( is_cart() && 'yes' === get_option( 'postnl_cart_auto_render_button', 'no' ) ) {
+			$should_load_assets = true;
+		}
+
+		// Load on non-cart/checkout pages if mini cart Fill with PostNL is enabled.
+		if ( ! is_cart() && ! is_checkout() && 'yes' === get_option( 'postnl_minicart_auto_render_button', 'no' ) ) {
+			$should_load_assets = true;
+		}
+
+		if ( $should_load_assets ) {
 			wp_enqueue_style(
 				'postnl-fill-in-button',
 				POSTNL_WC_PLUGIN_DIR_URL . '/assets/css/postnl-fill-in-button.css',

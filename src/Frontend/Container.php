@@ -71,6 +71,10 @@ class Container {
 	 * Enqueue scripts and style.
 	 */
 	public function enqueue_scripts_styles() {
+		if ( ! is_cart() && ! is_checkout() ) {
+			return;
+		}
+
 		// Enqueue styles.
 		wp_enqueue_style(
 			'postnl-fe-checkout',

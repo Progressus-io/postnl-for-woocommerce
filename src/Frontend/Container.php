@@ -71,21 +71,7 @@ class Container {
 	 * Enqueue scripts and style.
 	 */
 	public function enqueue_scripts_styles() {
-		$is_cart_or_checkout    = is_cart() || is_checkout();
-		$is_minicart_fill_in_on = 'yes' === get_option( 'postnl_minicart_auto_render_button', 'no' );
-
-		// Load button CSS if Fill with PostNL is enabled.
-		if ( $is_minicart_fill_in_on && ! $is_cart_or_checkout ) {
-			wp_enqueue_style(
-				'postnl-fill-in-button',
-				POSTNL_WC_PLUGIN_DIR_URL . '/assets/css/postnl-fill-in-button.css',
-				array(),
-				POSTNL_WC_VERSION
-			);
-		}
-
-		// Only load full CSS and JS on cart/checkout pages.
-		if ( ! $is_cart_or_checkout ) {
+		if ( ! is_cart() && ! is_checkout() ) {
 			return;
 		}
 

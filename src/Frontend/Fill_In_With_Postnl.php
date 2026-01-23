@@ -57,10 +57,6 @@ class Fill_In_With_Postnl {
 	 * @return string Rendered button HTML or empty string if not enabled.
 	 */
 	public function print_fill_in_button(): string {
-		if ( ! $this->is_enabled() ) {
-			return '';
-		}
-
 		ob_start();
 		$this->render_button();
 		return ob_get_clean();
@@ -276,6 +272,19 @@ class Fill_In_With_Postnl {
 			'postnlCheckoutParams',
 			$postnl_checkout_params
 		);
+
+		// Load button CSS and JS for mini cart on non-cart/checkout pages.
+		$is_minicart_enabled = 'yes' === get_option( 'postnl_minicart_auto_render_button', 'no' );
+		if ( $is_minicart_enabled && ! is_cart() && ! is_checkout() ) {
+			wp_enqueue_style(
+				'postnl-fill-in-button',
+				POSTNL_WC_PLUGIN_DIR_URL . '/assets/css/postnl-fill-in-button.css',
+				array(),
+				POSTNL_WC_VERSION
+			);
+
+			wp_enqueue_script( 'fill-in-with-postnl' );
+		}
 	}
 
 	/**

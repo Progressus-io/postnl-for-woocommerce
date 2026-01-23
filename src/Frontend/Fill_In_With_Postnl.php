@@ -249,16 +249,18 @@ class Fill_In_With_Postnl {
 	}
 
 	/**
-	 * Enqueue scripts.
+	 * Register and enqueue scripts.
 	 */
 	public function enqueue_scripts(): void {
-		$postnl_checkout_params = array(
-			'rest_url'   => rest_url( 'postnl/v1/get-redirect-uri' ),
-			'ajax_url'   => admin_url( 'admin-ajax.php' ),
-			'nonce'      => wp_create_nonce( 'wp_rest' ),
-			'ajax_nonce' => wp_create_nonce( 'postnl_user_info' ),
+		// Register button CSS.
+		wp_register_style(
+			'postnl-fill-in-button',
+			POSTNL_WC_PLUGIN_DIR_URL . '/assets/css/postnl-fill-in-button.css',
+			array(),
+			POSTNL_WC_VERSION
 		);
 
+		// Register button JS.
 		wp_register_script(
 			'fill-in-with-postnl',
 			POSTNL_WC_PLUGIN_DIR_URL . '/assets/js/fill_in_with_postnl.js',
@@ -270,30 +272,29 @@ class Fill_In_With_Postnl {
 		wp_localize_script(
 			'fill-in-with-postnl',
 			'postnlCheckoutParams',
-			$postnl_checkout_params
+			array(
+				'rest_url'   => rest_url( 'postnl/v1/get-redirect-uri' ),
+				'ajax_url'   => admin_url( 'admin-ajax.php' ),
+				'nonce'      => wp_create_nonce( 'wp_rest' ),
+				'ajax_nonce' => wp_create_nonce( 'postnl_user_info' ),
+			)
 		);
 
-		// Determine if we should load button assets.
-		$should_load_assets = false;
+		// Determine if we should enqueue button assets.
+		$should_enqueue = false;
 
-		// Load on cart page if cart Fill with PostNL is enabled.
+		// Enqueue on cart page if cart Fill with PostNL is enabled.
 		if ( is_cart() && 'yes' === get_option( 'postnl_cart_auto_render_button', 'no' ) ) {
-			$should_load_assets = true;
+			$should_enqueue = true;
 		}
 
-		// Load on non-cart/checkout pages if mini cart Fill with PostNL is enabled.
+		// Enqueue on non-cart/checkout pages if mini cart Fill with PostNL is enabled.
 		if ( ! is_cart() && ! is_checkout() && 'yes' === get_option( 'postnl_minicart_auto_render_button', 'no' ) ) {
-			$should_load_assets = true;
+			$should_enqueue = true;
 		}
 
-		if ( $should_load_assets ) {
-			wp_enqueue_style(
-				'postnl-fill-in-button',
-				POSTNL_WC_PLUGIN_DIR_URL . '/assets/css/postnl-fill-in-button.css',
-				array(),
-				POSTNL_WC_VERSION
-			);
-
+		if ( $should_enqueue ) {
+			wp_enqueue_style( 'postnl-fill-in-button' );
 			wp_enqueue_script( 'fill-in-with-postnl' );
 		}
 	}
@@ -308,6 +309,7 @@ class Fill_In_With_Postnl {
 			return;
 		}
 
+		wp_enqueue_style( 'postnl-fill-in-button' );
 		wp_enqueue_script( 'fill-in-with-postnl' );
 
 		$allowed_countries = array( 'NL', 'BE' );

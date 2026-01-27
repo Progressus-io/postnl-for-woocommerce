@@ -1117,7 +1117,7 @@ class Utils {
 		return has_block( 'woocommerce/checkout', $checkout_page_id );
 	}
 
-  /**
+	/**
 	 * Clear all PostNL checkout session data.
 	 *
 	 * This is the centralized method for clearing PostNL session data.

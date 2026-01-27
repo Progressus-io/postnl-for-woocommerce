@@ -1117,4 +1117,35 @@ class Utils {
 		return has_block( 'woocommerce/checkout', $checkout_page_id );
 	}
 
+  /**
+	 * Clear all PostNL checkout session data.
+	 *
+	 * This is the centralized method for clearing PostNL session data.
+	 * Used by both classic and blocks checkout when:
+	 * - Country changes to unsupported.
+	 * - Container is hidden.
+	 * - No delivery options available.
+	 * - Checkout is complete.
+	 *
+	 * @return void
+	 */
+	public static function clear_postnl_checkout_session(): void {
+		if ( ! WC()->session ) {
+			return;
+		}
+
+		// Clear delivery fee data (used by blocks checkout).
+		WC()->session->__unset( 'postnl_delivery_fee' );
+		WC()->session->__unset( 'postnl_delivery_type' );
+
+		// Clear checkout post data.
+		WC()->session->__unset( 'postnl_checkout_post_data' );
+
+		// Clear selected option (used by classic checkout for fee injection).
+		WC()->session->__unset( 'postnl_option' );
+
+		// Clear address validation data.
+		WC()->session->__unset( POSTNL_SETTINGS_ID . '_invalid_address_marker' );
+		WC()->session->__unset( POSTNL_SETTINGS_ID . '_validated_address' );
+	}
 }

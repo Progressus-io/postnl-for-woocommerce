@@ -1116,4 +1116,5 @@ class Utils {
 
 		return has_block( 'woocommerce/checkout', $checkout_page_id );
 	}
+
 }

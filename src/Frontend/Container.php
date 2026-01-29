@@ -79,7 +79,7 @@ class Container {
 		wp_enqueue_style(
 			'postnl-fe-checkout',
 			POSTNL_WC_PLUGIN_DIR_URL . '/assets/css/fe-checkout.css',
-			array(),
+			array( 'postnl-fill-in-button' ),
 			POSTNL_WC_VERSION
 		);
 

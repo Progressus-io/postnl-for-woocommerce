@@ -185,6 +185,36 @@ class Mapping {
 								),
 							),
 						),
+						array(
+							'combination' => array( 'id_check', 'insured_shipping', 'signature_on_delivery' ),
+							'code'        => '3443',
+							'options'     => array(
+								array(
+									'characteristic' => '002',
+									'option'         => '014',
+								),
+							),
+						),
+						array(
+							'combination' => array( 'id_check', 'insured_shipping', 'only_home_address' ),
+							'code'        => '3443',
+							'options'     => array(
+								array(
+									'characteristic' => '002',
+									'option'         => '014',
+								),
+							),
+						),
+						array(
+							'combination' => array( 'id_check', 'insured_shipping', 'only_home_address', 'signature_on_delivery' ),
+							'code'        => '3443',
+							'options'     => array(
+								array(
+									'characteristic' => '002',
+									'option'         => '014',
+								),
+							),
+						),
 					),
 					'pickup_points' => array(
 						array(

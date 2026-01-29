@@ -93,12 +93,12 @@ msgstr "Avondbezorging"
 
 #: src/Helper/Mapping.php:35
 msgid "Pickup at PostNL Point"
-msgstr "Ophalen PostNL Punt"
+msgstr "Ophalen bij PostNL Punt"
 
 #: src/Order/Bulk.php:510
 #: src/Order/Bulk.php:528
 msgid "Belgium"
-msgstr "Standaardzending België"
+msgstr "Verzendopties België"
 
 #: src/Helper/Mapping.php:43
 msgid "Pickup at PostNL Point Belgium"
@@ -130,8 +130,8 @@ msgid "PostNL plugin requires store country to be Netherlands (NL) or Belgium (B
 msgstr "De PostNL plugin vereist een winkellocatie in Nederland of België!"
 
 #: src/Order/Base.php:153
-msgid "ID Check: "
-msgstr "Leeftijdscheck: "
+msgid "ID Check (18+): "
+msgstr "Leeftijdscheck (18+): "
 
 #: src/Order/Base.php:165
 msgid "Insured Shipping: "
@@ -1292,8 +1292,8 @@ msgstr "Standaardzending"
 #: src/Shipping_Method/Settings.php:591
 #: src/Shipping_Method/Settings.php:667
 #: src/Utils.php:596
-msgid "ID Check"
-msgstr "ID Check"
+msgid "ID Check (18+)"
+msgstr "ID Check (18+)"
 
 #: src/Shipping_Method/Settings.php:594
 #: src/Utils.php:597
@@ -1345,15 +1345,15 @@ msgstr "Selecteer een standaard verzendoptie voor alle zendingen die naar Belgi�
 
 #: src/Shipping_Method/Settings.php:615
 msgid "Standard Shipment Belgium + Only Home Address"
-msgstr "Standaardzending België + Alleen Huisadres"
+msgstr "Verzendopties België + Alleen Huisadres"
 
 #: src/Shipping_Method/Settings.php:616
 msgid "Standard Shipment Belgium + Signature on Delivery"
-msgstr "Standaardzending België + Handtekening voor ontvangst"
+msgstr "Verzendopties België + Handtekening voor ontvangst"
 
 #: src/Shipping_Method/Settings.php:617
 msgid "Standard Shipment Belgium + Insured Shipping"
-msgstr "Standaardzending België + Verzekerd Verzenden"
+msgstr "Verzendopties België + Verzekerd Verzenden"
 
 #: src/Shipping_Method/Settings.php:618
 #: src/Shipping_Method/Settings.php:635
@@ -1590,7 +1590,7 @@ msgstr ""
 #: src/Shipping_Method/Settings.php:614
 #: src/Utils.php:602
 msgid "Standard Shipment Belgium"
-msgstr "Standaardzending België"
+msgstr "Verzendopties België"
 
 #: src/Main.php:453
 msgid "Postnl Checkout Blocks"
@@ -1619,11 +1619,11 @@ msgstr "Standaard verzendopties binnenland"
 
 #: src/Order/Bulk.php:546
 msgid "Shipping options non-EU"
-msgstr ""
+msgstr "Verzendopties Pakketten non-EU"
 
 #: src/Order/Bulk.php:555
 msgid "Shipping options for Pick-up at PostNL"
-msgstr ""
+msgstr "Verzendopties voor Ophalen bij PostNL"
 
 #: src/Order/Bulk.php:703
 msgid "#%1$s : PostNL label has been created - %2$sdownload file%3$s"
@@ -1716,8 +1716,8 @@ msgid "DPI"
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:592
-msgid "ID Check + Insured Shipping"
-msgstr ""
+msgid "ID Check (18+) + Insured Shipping"
+msgstr "ID Check (18+) + Verzekerd verzenden"
 
 #: src/Shipping_Method/Settings.php:608
 msgid "Shipping options Belgium"
@@ -1873,7 +1873,7 @@ msgstr ""
 
 #: src/Order/Base.php:273
 msgid "Delivery code at the door: "
-msgstr "Bezorgcode aan de deur:"
+msgstr "Bezorgcode aan de deur: "
 
 #: src/Shipping_Method/Settings.php:604
 msgid "Delivery Code at Door + Insured Shipping"

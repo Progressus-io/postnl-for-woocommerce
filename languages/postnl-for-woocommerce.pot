@@ -1,15 +1,15 @@
-# Copyright (C) 2026 PostNL
+# Copyright (C) 2025 PostNL
 # This file is distributed under the GPLv2 or later.
 msgid ""
 msgstr ""
 "Project-Id-Version: PostNL for WooCommerce 5.9.1\n"
-"Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/woo-postnl\n"
+"Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/postnl-for-woocommerce\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-01-13T10:22:19+00:00\n"
+"POT-Creation-Date: 2025-12-18T08:19:19+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.11.0\n"
 "X-Domain: postnl-for-woocommerce\n"
@@ -245,7 +245,7 @@ msgid "Settings"
 msgstr ""
 
 #: src/Order/Base.php:153
-msgid "ID Check (18+): "
+msgid "ID Check: "
 msgstr ""
 
 #: src/Order/Base.php:165
@@ -1590,7 +1590,7 @@ msgstr ""
 #: src/Shipping_Method/Settings.php:591
 #: src/Shipping_Method/Settings.php:667
 #: src/Utils.php:596
-msgid "ID Check (18+)"
+msgid "ID Check"
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:592

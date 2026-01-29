@@ -1197,20 +1197,20 @@ msgid "Shipping Outside Europe Settings"
 msgstr "Versturen buiten Europa"
 
 #: src/Shipping_Method/Settings.php:467
-msgid "Please insert your Globalpack credentials."
-msgstr "Vul hier jouw Globalpack gegevens in."
+msgid "Please insert your Parcels non-EU credentials."
+msgstr "Vul hier je Pakketten non-EU klantcodegegevens in."
 
 #: src/Shipping_Method/Settings.php:470
-msgid "GlobalPack Barcode Type"
-msgstr "GlobalPack Barcode Type"
+msgid "Parcels non-EU Barcode Type"
+msgstr "Pakketten non-EU Barcode Type"
 
 #: src/Shipping_Method/Settings.php:475
 msgid "CD"
 msgstr "CD"
 
 #: src/Shipping_Method/Settings.php:479
-msgid "GlobalPack Customer Code"
-msgstr "Globalpack Klantcode"
+msgid "Parcels non-EU Customer Code"
+msgstr "Pakketten non-EU Klantcode"
 
 #: src/Shipping_Method/Settings.php:484
 msgid "1234"
@@ -1741,11 +1741,11 @@ msgstr ""
 
 #: src/Utils.php:621
 msgid "Parcels EU"
-msgstr ""
+msgstr "Pakketten EU"
 
 #: src/Utils.php:628
 msgid "Parcels Non-EU"
-msgstr ""
+msgstr "Pakketten non-EU"
 
 #: templates/checkout/postnl-fill-in-with-button.php:23
 #: build/postnl-fill-in-with-frontend.js:1

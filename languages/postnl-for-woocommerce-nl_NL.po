@@ -98,7 +98,7 @@ msgstr "Ophalen bij PostNL Punt"
 #: src/Order/Bulk.php:510
 #: src/Order/Bulk.php:528
 msgid "Belgium"
-msgstr "Verzendopties België"
+msgstr "Standaardzending België"
 
 #: src/Helper/Mapping.php:43
 msgid "Pickup at PostNL Point Belgium"
@@ -285,7 +285,7 @@ msgstr "Nederland"
 #: src/Order/Bulk.php:537
 #: src/Shipping_Method/Settings.php:626
 msgid "Shipping options EU"
-msgstr "Standaard verzendopties EU"
+msgstr "Verzendopties EU"
 
 #: src/Shipping_Method/Settings.php:645
 msgid "Shipping options non-EU (outside the EU borders)."
@@ -1345,15 +1345,15 @@ msgstr "Selecteer een standaard verzendoptie voor alle zendingen die naar Belgi�
 
 #: src/Shipping_Method/Settings.php:615
 msgid "Standard Shipment Belgium + Only Home Address"
-msgstr "Verzendopties België + Alleen Huisadres"
+msgstr "Standaardzending België + Alleen Huisadres"
 
 #: src/Shipping_Method/Settings.php:616
 msgid "Standard Shipment Belgium + Signature on Delivery"
-msgstr "Verzendopties België + Handtekening voor ontvangst"
+msgstr "Standaardzending België + Handtekening voor ontvangst"
 
 #: src/Shipping_Method/Settings.php:617
 msgid "Standard Shipment Belgium + Insured Shipping"
-msgstr "Verzendopties België + Verzekerd Verzenden"
+msgstr "Standaardzending België + Verzekerd Verzenden"
 
 #: src/Shipping_Method/Settings.php:618
 #: src/Shipping_Method/Settings.php:635
@@ -1590,7 +1590,7 @@ msgstr ""
 #: src/Shipping_Method/Settings.php:614
 #: src/Utils.php:602
 msgid "Standard Shipment Belgium"
-msgstr "Verzendopties België"
+msgstr "Standaardzending België"
 
 #: src/Main.php:453
 msgid "Postnl Checkout Blocks"
@@ -1610,12 +1610,12 @@ msgstr ""
 
 #: src/Order/Bulk.php:513
 msgid "Pick-up at PostNL"
-msgstr ""
+msgstr "Ophalen bij PostNL"
 
 #: src/Order/Bulk.php:519
 #: src/Shipping_Method/Settings.php:584
 msgid "Shipping options domestic"
-msgstr "Standaard verzendopties binnenland"
+msgstr "Verzendopties binnenland"
 
 #: src/Order/Bulk.php:546
 msgid "Shipping options non-EU"
@@ -1725,7 +1725,7 @@ msgstr "Standaard verzendopties België"
 
 #: src/Shipping_Method/Settings.php:666
 msgid "Standard Shipping"
-msgstr ""
+msgstr "Standaardzending"
 
 #: src/Shipping_Method/Settings.php:707
 msgid "Select a default shipping option for the orders shipped internationally (outside the EU borders)."

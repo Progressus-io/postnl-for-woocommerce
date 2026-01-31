@@ -414,11 +414,12 @@ class Extend_Block_Core {
 				// Separate house number field is enabled, use street only
 				WC()->customer->set_shipping_address_1( $validated_address['street'] );
 			} else {
-				// House number is part of address_1, combine street and house number
+				// House number is part of address_1, combine street and house number.
 				$house_number = $validated_address['house_number'] ?? '';
-				$address_1    = trim( $validated_address['street'] . ' ' . $house_number );
+				$address_1    = $validated_address['street'] . ' ' . $house_number;
 				WC()->customer->set_shipping_address_1( $address_1 );
 			}
+
 			WC()->customer->set_shipping_city( $validated_address['city'] );
 		} else {
 			WC()->customer->set_shipping_address_1( $sanitized_data['shipping_address_1'] ?? '' );

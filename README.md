@@ -34,6 +34,10 @@ PostNL’s official extension for WooCommerce on WordPress. Manage your national
 
 ## Changelog
 
+### 5.9.2
+* Fix: Delivery options menu not loading after switching between countries with different delivery support.
+* Fix: Delivery Days/Pickup Point fees persisting when changing to a destination that does not support them.
+
 ### 5.9.1
 * Fix: Delivery options display prices including/excluding tax based on WooCommerce tax settings.
 * Fix: Removed default empty merchant customs code fields to prevent validation errors when saving settings without adding codes.

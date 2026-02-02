@@ -81,6 +81,10 @@ Follow these instructions (https://www.postnl.nl/Images/aanvragen-api-key-stappe
 
 == Changelog ==
 
+= 5.9.2 (2026-xx-xx) =
+* Fix: Delivery options menu not loading after switching between countries with different delivery support.
+* Fix: Delivery Days/Pickup Point fees persisting when changing to a destination that does not support them.
+
 = 5.9.1 (2025-12-18) =
 * Fix: Delivery options display prices including/excluding tax based on WooCommerce tax settings.
 * Fix: Removed default empty merchant customs code fields to prevent validation errors when saving settings without adding codes.

@@ -98,7 +98,7 @@ msgstr "Ophalen bij PostNL Punt"
 #: src/Order/Bulk.php:510
 #: src/Order/Bulk.php:528
 msgid "Belgium"
-msgstr "Standaardzending België"
+msgstr "België"
 
 #: src/Helper/Mapping.php:43
 msgid "Pickup at PostNL Point Belgium"

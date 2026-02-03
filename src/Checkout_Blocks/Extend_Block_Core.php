@@ -50,12 +50,8 @@ class Extend_Block_Core {
 
 		// Register the update callback when WooCommerce Blocks is loaded
 		add_action( 'init', array( $this, 'register_store_api_callback' ) );
-		$checkout_fields = new Checkout_Fields();
-
-		if ( $checkout_fields->is_blocks_checkout() ) {
-			add_action( 'woocommerce_cart_calculate_fees', array( $this, 'postnl_add_custom_fee' ) );
-			add_filter( 'woocommerce_package_rates', array( $this, 'add_postnl_fees_to_rates' ), 20, 2 );
-		}
+		add_action( 'woocommerce_cart_calculate_fees', array( $this, 'postnl_add_custom_fee' ) );
+		add_filter( 'woocommerce_package_rates', array( $this, 'add_postnl_fees_to_rates' ), 20, 2 );
 
 		if ( $this->settings->is_reorder_nl_address_enabled() ) {
 			$this->register_additional_checkout_fields();
@@ -74,8 +70,17 @@ class Extend_Block_Core {
 
 	/**
 	 * Validate address in cart.
+	 * Only shows validation error for NL addresses.
 	 */
 	public function postnl_validate_address_in_cart( $errors, $cart ) {
+		// Only validate NL addresses
+		$shipping_country = WC()->customer ? WC()->customer->get_shipping_country() : '';
+		if ( 'NL' !== $shipping_country ) {
+			// Clear any stale invalid marker for non-NL countries
+			WC()->session->__unset( POSTNL_SETTINGS_ID . '_invalid_address_marker' );
+			return;
+		}
+
 		$invalid_marker = WC()->session->get( POSTNL_SETTINGS_ID . '_invalid_address_marker', false );
 
 		if ( $invalid_marker ) {
@@ -291,6 +296,7 @@ class Extend_Block_Core {
 	}
 
 
+
 	/**
 	 * Handle AJAX request to set checkout post data and return updated delivery options.
 	 */
@@ -329,8 +335,7 @@ class Extend_Block_Core {
 
 		// If not NL, clear session and return
 		if ( ! in_array( $shipping_country, array( 'NL', 'BE' ), true ) ) {
-			WC()->session->__unset( 'postnl_checkout_post_data' );
-			WC()->session->__unset( POSTNL_SETTINGS_ID . '_invalid_address_marker' );
+			Utils::clear_postnl_checkout_session();
 			wp_send_json_success(
 				array(
 					'message'          => 'No delivery options available outside NL.',
@@ -352,7 +357,7 @@ class Extend_Block_Core {
 				&& empty( $sanitized_data['shipping_house_number'] )
 				&& 'NL' == $shipping_country
 			) ) {
-			WC()->session->__unset( 'postnl_checkout_post_data' );
+			Utils::clear_postnl_checkout_session();
 			wp_send_json_success(
 				array(
 					'message'          => esc_html__( 'Postcode or house number is missing.', 'postnl-for-woocommerce' ),
@@ -401,7 +406,15 @@ class Extend_Block_Core {
 			&& $validated_address['city'] !== ''
 		) {
 			// Use validated data
-			WC()->customer->set_shipping_address_1( $validated_address['street'] );
+			if ( $this->settings->is_reorder_nl_address_enabled() ) {
+				// Separate house number field is enabled, use street only
+				WC()->customer->set_shipping_address_1( $validated_address['street'] );
+			} else {
+				// House number is part of address_1, combine street and house number
+				$house_number = $validated_address['house_number'] ?? '';
+				$address_1    = trim( $validated_address['street'] . ' ' . $house_number );
+				WC()->customer->set_shipping_address_1( $address_1 );
+			}
 			WC()->customer->set_shipping_city( $validated_address['city'] );
 		} else {
 			WC()->customer->set_shipping_address_1( $sanitized_data['shipping_address_1'] ?? '' );
@@ -444,7 +457,7 @@ class Extend_Block_Core {
 
 			// Determine whether to show the container
 			if ( empty( $delivery_options_array ) && empty( $dropoff_options_array ) ) {
-				WC()->session->__unset( 'postnl_checkout_post_data' );
+				Utils::clear_postnl_checkout_session();
 				wp_send_json_success(
 					array(
 						'message'           => 'No delivery or dropoff options available.',
@@ -473,8 +486,8 @@ class Extend_Block_Core {
 			wp_die();
 
 		} catch ( \Exception $e ) {
-			// If fetching delivery options fails
-			WC()->session->__unset( 'postnl_checkout_post_data' );
+			// If fetching delivery options fails.
+			Utils::clear_postnl_checkout_session();
 			wp_send_json_success(
 				array(
 					'message'           => 'Failed to fetch delivery options.',

@@ -8,6 +8,7 @@
 namespace PostNLWooCommerce\Frontend;
 
 use PostNLWooCommerce\Shipping_Method\Settings;
+use PostNLWooCommerce\Utils;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -43,7 +44,7 @@ class Checkout_Fields {
 			return;
 		}
 
-		if ( ! $this->is_blocks_checkout() ) {
+		if ( ! Utils::is_blocks_checkout() ) {
 			add_filter( 'woocommerce_default_address_fields', array( $this, 'add_house_number' ) );
 		}
 
@@ -78,7 +79,7 @@ class Checkout_Fields {
 	 * @return array
 	 */
 	public function get_country_locale( array $checkout_fields ): array {
-		$is_blocks_checkout = $this->is_blocks_checkout();
+		$is_blocks_checkout = Utils::is_blocks_checkout();
 
 		if ( $is_blocks_checkout ) {
 			$house_number_key = 'postnl/house_number';

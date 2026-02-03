@@ -150,7 +150,7 @@ class Blocks_Integration implements IntegrationInterface {
 			'version'      => $this->get_file_version( $script_path ),
 		);
 
-		wp_enqueue_script(
+		wp_register_script(
 			$handle,
 			$script_url,
 			$asset['dependencies'],
@@ -242,6 +242,7 @@ class Blocks_Integration implements IntegrationInterface {
 			'ajax_url'                     => admin_url( 'admin-ajax.php' ),
 			'nonce'                        => wp_create_nonce( 'postnl_delivery_day_nonce' ),
 			'letterbox'                    => $letterbox,
+			'supported_countries'          => Utils::get_available_country(),
 			'is_nl_address_enabled'        => $settings->is_reorder_nl_address_enabled(),
 			'is_pickup_points_enabled'     => $settings->is_pickup_points_enabled(),
 			'fill_in_with_postnl_settings' => array(

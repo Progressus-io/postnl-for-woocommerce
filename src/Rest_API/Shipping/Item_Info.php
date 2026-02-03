@@ -383,7 +383,7 @@ class Item_Info extends Base_Info {
 				'default'  => '',
 				'sanitize' => function ( $value ) use ( $self ) {
 					if ( 'NL' === $self->api_args['store_address']['country'] ) {
-						return ( $self->api_args['settings']['is_return_to_home_enabled'] || $this->get_product_code() == '2928' ) ? $self->api_args['settings']['return_address_street'] : 'Antwoordnummer';
+						return ( $self->api_args['settings']['is_return_to_home_enabled'] || $this->get_product_code() == '2928' || $this->get_product_code() == '2948' ) ? $self->api_args['settings']['return_address_street'] : 'Antwoordnummer';
 					}
 
 					return $self->string_length_sanitization( $value, 95 );
@@ -393,7 +393,7 @@ class Item_Info extends Base_Info {
 				'default'  => '',
 				'sanitize' => function ( $value ) use ( $self ) {
 					if ( 'NL' === $self->api_args['store_address']['country'] ) {
-						$value = ( $self->api_args['settings']['is_return_to_home_enabled'] || $this->get_product_code() == '2928' ) ? $self->api_args['settings']['return_address_house_no'] : $self->api_args['settings']['return_replynumber'];
+						$value = ( $self->api_args['settings']['is_return_to_home_enabled'] || $this->get_product_code() == '2928' || $this->get_product_code() == '2948' ) ? $self->api_args['settings']['return_address_house_no'] : $self->api_args['settings']['return_replynumber'];
 					}
 
 					return $self->string_length_sanitization( $value, 35 );
@@ -479,7 +479,7 @@ class Item_Info extends Base_Info {
 			'printer_type'            => array(
 				'default'  => $this->get_product_code() == '4909' ? 'GraphicFile|PDF' : $this->settings->get_printer_type(),
 				'sanitize' => function ( $value ) use ( $self ) {
-					if ( in_array( $this->get_product_code(), array( '4909', '2928' ) ) ) {
+					if ( in_array( $this->get_product_code(), array( '4909', '2928', '2948' ) ) ) {
 						return 'GraphicFile|PDF';
 					}
 

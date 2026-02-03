@@ -35,7 +35,8 @@
 			"phpunit.xml",
 			"jest-puppeteer.config.js",
 			".*",
-			"*.zip"
+			"*.zip",
+			"jest.config.js"
 		]
 	},
 	"require-dev": {

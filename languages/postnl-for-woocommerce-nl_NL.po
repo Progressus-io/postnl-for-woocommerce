@@ -37,39 +37,39 @@ msgstr ""
 msgid "Pick up at PostNL-point"
 msgstr "Ophalen bij PostNL-punt"
 
-#: src/Checkout_Blocks/Extend_Block_Core.php:162
+#: src/Checkout_Blocks/Extend_Block_Core.php:167
 #: src/Frontend/Base.php:510
 msgid "PostNL Evening Fee"
 msgstr "Toeslag avondbezorging"
 
-#: src/Checkout_Blocks/Extend_Block_Core.php:160
+#: src/Checkout_Blocks/Extend_Block_Core.php:165
 #: src/Frontend/Base.php:529
 msgid "PostNL Morning Fee"
 msgstr "Toeslag ochtendbezorging"
 
-#: src/Checkout_Blocks/Extend_Block_Core.php:99
-#: src/Frontend/Checkout_Fields.php:64
+#: src/Checkout_Blocks/Extend_Block_Core.php:104
 #: src/Frontend/Checkout_Fields.php:65
+#: src/Frontend/Checkout_Fields.php:66
 #: src/Order/Single.php:539
 msgid "House number"
 msgstr "Huisnummer"
 
-#: src/Frontend/Checkout_Fields.php:101
 #: src/Frontend/Checkout_Fields.php:102
+#: src/Frontend/Checkout_Fields.php:103
 #: src/Shipping_Method/Settings.php:249
 msgid "House Number Extension"
 msgstr "Huisnummer toevoeging"
 
-#: src/Frontend/Checkout_Fields.php:106
+#: src/Frontend/Checkout_Fields.php:107
 msgid "Street"
 msgstr "Straat"
 
-#: src/Frontend/Checkout_Fields.php:107
+#: src/Frontend/Checkout_Fields.php:108
 msgid "Street Name"
 msgstr "Straat"
 
-#: src/Checkout_Blocks/Extend_Block_Core.php:84
-#: src/Frontend/Container.php:351
+#: src/Checkout_Blocks/Extend_Block_Core.php:89
+#: src/Frontend/Container.php:367
 msgid "This is not a valid address!"
 msgstr "Dit is geen geldig adres!"
 
@@ -307,7 +307,7 @@ msgstr "Bezorgdatum"
 #: src/Utils.php:542
 #: templates/checkout/postnl-delivery-day.php:78
 #: build/postnl-container-frontend.js:1
-#: client/checkout/postnl-delivery-day/block.js:336
+#: client/checkout/postnl-delivery-day/block.js:321
 msgid "As soon as possible"
 msgstr "Zo snel mogelijk"
 
@@ -672,7 +672,7 @@ msgstr "Het maximale gewicht van een brievenbuspakje is 2kg!"
 #: templates/checkout/postnl-fill-in-with-button.php:22
 #: templates/checkout/postnl-fill-in-with-button.php:25
 #: build/postnl-fill-in-with-frontend.js:1
-#: client/checkout/postnl-fill-in-with/block.js:144
+#: client/checkout/postnl-fill-in-with/block.js:161
 msgid "Fill in with PostNL"
 msgstr "Invullen Met PostNL"
 
@@ -1462,26 +1462,26 @@ msgstr "Verzekerd Verzenden Plus"
 
 #: templates/checkout/postnl-container.php:23
 #: build/postnl-container-frontend.js:1
-#: client/checkout/postnl-container/block.js:500
+#: client/checkout/postnl-container/block.js:543
 msgid "These items are eligible for letterbox delivery."
 msgstr "Deze bestelling past door de brievenbus."
 
 #: templates/checkout/postnl-delivery-day.php:46
 #: build/postnl-container-frontend.js:1
-#: client/checkout/postnl-delivery-day/block.js:274
+#: client/checkout/postnl-delivery-day/block.js:261
 msgid "Evening"
 msgstr "Avond"
 
 #: templates/checkout/postnl-delivery-day.php:48
 #: build/postnl-container-frontend.js:1
-#: client/checkout/postnl-delivery-day/block.js:282
+#: client/checkout/postnl-delivery-day/block.js:269
 msgid "Morning"
 msgstr "Ochtend"
 
 #. translators: %1$s is <strong> opener and %2$s is <strong> closer.
 #: templates/checkout/postnl-dropoff-points.php:103
 #: build/postnl-container-frontend.js:1
-#: client/checkout/postnl-dropoff-points/block.js:464
+#: client/checkout/postnl-dropoff-points/block.js:252
 msgid "Receive shipment at home? Make a selection from the Delivery Days."
 msgstr "Zending thuis ontvangen? Maak een selectie uit de bezorgdagen."
 
@@ -1491,7 +1491,7 @@ msgstr ""
 
 #: templates/checkout/postnl-fill-in-with-button.php:29
 #: build/postnl-fill-in-with-frontend.js:1
-#: client/checkout/postnl-fill-in-with/block.js:145
+#: client/checkout/postnl-fill-in-with/block.js:162
 msgid "Your name and address are automatically filled in via your PostNL account. That saves you from having to fill in the form!"
 msgstr "Je naam en adres worden automatisch ingevuld via je PostNL-account. Zo hoef je het formulier niet zelf in te vullen!"
 
@@ -1500,15 +1500,15 @@ msgstr "Je naam en adres worden automatisch ingevuld via je PostNL-account. Zo h
 msgid "The official PostNL plugin allows you to automate your e-commerce order process. Covering shipping services from PostNL Netherlands and Belgium."
 msgstr ""
 
-#: src/Main.php:472
+#: src/Main.php:476
 msgid "Leave a review"
 msgstr "Laat een beoordeling achter"
 
-#: src/Checkout_Blocks/Extend_Block_Core.php:158
+#: src/Checkout_Blocks/Extend_Block_Core.php:163
 msgid "PostNL Delivery Fee"
 msgstr ""
 
-#: src/Checkout_Blocks/Extend_Block_Core.php:358
+#: src/Checkout_Blocks/Extend_Block_Core.php:363
 msgid "Postcode or house number is missing."
 msgstr ""
 
@@ -1536,22 +1536,22 @@ msgstr ""
 #: src/Frontend/Delivery_Day.php:115
 #: src/Shipping_Method/Settings.php:327
 #: build/postnl-container-frontend.js:1
-#: client/checkout/postnl-container/block.js:107
+#: client/checkout/postnl-container/block.js:158
 msgid "Delivery"
 msgstr "Bezorgdagen"
 
-#: src/Frontend/Container.php:99
+#: src/Frontend/Container.php:107
 #: src/Frontend/Dropoff_Points.php:52
 #: build/postnl-container-frontend.js:1
-#: client/checkout/postnl-container/block.js:108
+#: client/checkout/postnl-container/block.js:159
 msgid "Pickup"
 msgstr "Ophalen"
 
-#: src/Frontend/Fill_In_With_Postnl.php:220
+#: src/Frontend/Fill_In_With_Postnl.php:216
 msgid "Invalid or expired nonce."
 msgstr ""
 
-#: src/Frontend/Fill_In_With_Postnl.php:230
+#: src/Frontend/Fill_In_With_Postnl.php:226
 #: src/Frontend/Fill_In_With_Postnl_Handler.php:71
 msgid "Fill in with PostNL is not enabled or Client ID is missing."
 msgstr ""
@@ -1592,11 +1592,11 @@ msgstr ""
 msgid "Standard Shipment Belgium"
 msgstr "Standaardzending België"
 
-#: src/Main.php:453
+#: src/Main.php:457
 msgid "Postnl Checkout Blocks"
 msgstr ""
 
-#: src/Main.php:492
+#: src/Main.php:496
 msgid "Settings"
 msgstr ""
 
@@ -1749,7 +1749,7 @@ msgstr ""
 
 #: templates/checkout/postnl-fill-in-with-button.php:23
 #: build/postnl-fill-in-with-frontend.js:1
-#: client/checkout/postnl-fill-in-with/block.js:160
+#: client/checkout/postnl-fill-in-with/block.js:180
 msgid "PostNL Logo"
 msgstr ""
 
@@ -1760,22 +1760,22 @@ msgid "In this email you will find the barcode you need to return your order. Sc
 msgstr ""
 
 #: build/postnl-fill-in-with-frontend.js:1
-#: client/checkout/postnl-fill-in-with/block.js:75
+#: client/checkout/postnl-fill-in-with/block.js:74
 msgid "Failed to retrieve PostNL user data."
 msgstr ""
 
 #: build/postnl-fill-in-with-frontend.js:1
-#: client/checkout/postnl-fill-in-with/block.js:83
+#: client/checkout/postnl-fill-in-with/block.js:88
 msgid "Failed to retrieve PostNL address. Please try again."
 msgstr ""
 
 #: build/postnl-fill-in-with-frontend.js:1
-#: client/checkout/postnl-fill-in-with/block.js:109
+#: client/checkout/postnl-fill-in-with/block.js:123
 msgid "Failed to initiate PostNL login."
 msgstr ""
 
 #: build/postnl-fill-in-with-frontend.js:1
-#: client/checkout/postnl-fill-in-with/block.js:121
+#: client/checkout/postnl-fill-in-with/block.js:138
 msgid "An unknown error occurred."
 msgstr ""
 
@@ -1883,7 +1883,7 @@ msgstr "Bezorgcode aan de deur + Verzekerd verzenden"
 msgid "Delivery Code at Door"
 msgstr "Bezorgcode aan de deur"
 
-#: src/Frontend/Container.php:98
+#: src/Frontend/Container.php:106
 msgid "Delivery Days"
 msgstr ""
 

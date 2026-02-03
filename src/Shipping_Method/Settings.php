@@ -287,6 +287,14 @@ class Settings extends \WC_Settings_API {
 				'options'     => $this->get_shipping_methods(),
 				'class'       => 'wc-enhanced-select',
 			),
+			'letterbox_24_fee'                => array(
+				'title'       => esc_html__( 'Extra fee for the letterboxparcel (24 hours)', 'postnl-for-woocommerce' ),
+				'type'        => 'price',
+				'description' => esc_html__( 'Extra fee added when Letterboxparcel Standard (24 hours) has been selected.', 'postnl-for-woocommerce' ),
+				'desc_tip'    => true,
+				'for_country' => array( 'NL' ),
+				'class'       => 'wc_input_price country-nl',
+			),
 			'enable_pickup_points'            => array(
 				'title'       => __( 'PostNL Pick-up Points', 'postnl-for-woocommerce' ),
 				'type'        => 'checkbox',
@@ -1040,6 +1048,15 @@ class Settings extends \WC_Settings_API {
 	}
 
 	/**
+	 * Get pick-up delivery fee from the settings.
+	 *
+	 * @return float
+	 */
+	public function get_letterbox_24_fee() {
+		return (float) $this->get_country_option( 'letterbox_24_fee' );
+	}
+
+	/**
 	 * Get enable delivery from the settings.
 	 *
 	 * @return String
@@ -1551,6 +1568,15 @@ class Settings extends \WC_Settings_API {
 		$shipping_options = $this->get_country_option( 'default_shipping_options_' . strtolower( $zone ), '' );
 
 		return Utils::prepare_shipping_options( $shipping_options );
+	}
+
+	/**
+	 * Get default automatic letterboxparcel product from the settings.
+	 *
+	 * @return String
+	 */
+	public function get_default_automatic_letterboxparcel_product() {
+		return $this->get_country_option( 'default_automatic_letterboxparcel_product', 'letterbox' );
 	}
 
 	/**

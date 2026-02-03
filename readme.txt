@@ -83,9 +83,9 @@ Follow these instructions (https://www.postnl.nl/Images/aanvragen-api-key-stappe
 
 = 5.9.3 (2026-xx-xx) =
 * Fix: House number stripped from address when "Use PostNL address-field" is disabled in blocks checkout.
+* Fix: Changed barcode type for international registered packets from RI to LA.
 
-= 5.9.2 (2026-02-03) =
-* Fix: Load plugin assets only on cart and checkout pages where they're needed to improve performance.
+= 5.9.2 (2026-02-03) =* Fix: Load plugin assets only on cart and checkout pages where they're needed to improve performance.
 * Fix: Delivery options menu not loading after switching between countries with different delivery support.
 * Fix: Delivery Days/Pickup Point fees persisting when changing to a destination that does not support them.
 

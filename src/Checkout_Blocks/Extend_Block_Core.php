@@ -50,12 +50,8 @@ class Extend_Block_Core {
 
 		// Register the update callback when WooCommerce Blocks is loaded
 		add_action( 'init', array( $this, 'register_store_api_callback' ) );
-		$checkout_fields = new Checkout_Fields();
-
-		if ( $checkout_fields->is_blocks_checkout() ) {
-			add_action( 'woocommerce_cart_calculate_fees', array( $this, 'postnl_add_custom_fee' ) );
-			add_filter( 'woocommerce_package_rates', array( $this, 'add_postnl_fees_to_rates' ), 20, 2 );
-		}
+		add_action( 'woocommerce_cart_calculate_fees', array( $this, 'postnl_add_custom_fee' ) );
+		add_filter( 'woocommerce_package_rates', array( $this, 'add_postnl_fees_to_rates' ), 20, 2 );
 
 		if ( $this->settings->is_reorder_nl_address_enabled() ) {
 			$this->register_additional_checkout_fields();

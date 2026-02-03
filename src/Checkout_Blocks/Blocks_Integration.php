@@ -150,7 +150,7 @@ class Blocks_Integration implements IntegrationInterface {
 			'version'      => $this->get_file_version( $script_path ),
 		);
 
-		wp_enqueue_script(
+		wp_register_script(
 			$handle,
 			$script_url,
 			$asset['dependencies'],

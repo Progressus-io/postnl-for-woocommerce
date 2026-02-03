@@ -1107,6 +1107,17 @@ class Utils {
 	}
 
 	/**
+	 * Is using blocks checkout.
+	 *
+	 * @return boolean
+	 */
+	public static function is_blocks_checkout(): bool {
+		$checkout_page_id = wc_get_page_id( 'checkout' );
+
+		return has_block( 'woocommerce/checkout', $checkout_page_id );
+	}
+
+	/**
 	 * Clear all PostNL checkout session data.
 	 *
 	 * This is the centralized method for clearing PostNL session data.

@@ -668,6 +668,18 @@ class Settings extends \WC_Settings_API {
 					'insured_shipping' => __( 'Insured Shipping', 'postnl-for-woocommerce' ),
 				),
 			),
+			'default_automatic_letterboxparcel_product' => array(
+				'title'       => esc_html__( 'Default automatic letterboxparcel product', 'postnl-for-woocommerce' ),
+				'type'        => 'select',
+				'description' => esc_html__( '', 'postnl-for-woocommerce' ),
+				'default'     => 'letterbox',
+				'for_country' => array( 'NL' ),
+				'options'     => array(
+					'letterbox'       => esc_html__( 'Letterboxparcel Standard (24 hours)', 'postnl-for-woocommerce' ),
+					'letterbox_48'    => esc_html__( 'Letterboxparcel 48 hours', 'postnl-for-woocommerce' ),
+					'customer_decide' => esc_html__( 'Let customer decide', 'postnl-for-woocommerce' ),
+				),
+			),
 			'auto_complete_order'             => array(
 				'title'       => esc_html__( 'Automatically change order status to Completed', 'postnl-for-woocommerce' ),
 				'type'        => 'checkbox',

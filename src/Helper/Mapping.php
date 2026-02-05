@@ -237,6 +237,16 @@ class Mapping {
 								),
 							),
 						),
+						array(
+							'combination' => array( 'id_check', 'insured_shipping' ),
+							'code'        => '3581',
+							'options'     => array(
+								array(
+									'characteristic' => '002',
+									'option'         => '014',
+								),
+							),
+						),
 					),
 				),
 				'BE'  => array(

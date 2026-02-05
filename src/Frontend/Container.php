@@ -60,10 +60,10 @@ class Container {
 		add_filter( 'woocommerce_update_order_review_fragments', array( $this, 'fill_validated_address' ) );
 		add_filter( 'woocommerce_cart_shipping_method_full_label', array( $this, 'add_shipping_method_icon' ), 10, 2 );
 
-		$checkout_fields = new Checkout_Fields();
-		if ( ! $checkout_fields->is_blocks_checkout() ) {
+		if ( ! Utils::is_blocks_checkout() ) {
 			add_filter( 'woocommerce_package_rates', array( $this, 'inject_postnl_base_fees' ), 20, 2 );
 		}
+
 		add_filter( 'woocommerce_cart_shipping_packages', array( $this, 'add_postnl_option_to_package' ) );
 	}
 
@@ -71,15 +71,23 @@ class Container {
 	 * Enqueue scripts and style.
 	 */
 	public function enqueue_scripts_styles() {
+		if ( ! is_checkout() ) {
+			return;
+		}
+
 		// Enqueue styles.
 		wp_enqueue_style(
 			'postnl-fe-checkout',
 			POSTNL_WC_PLUGIN_DIR_URL . '/assets/css/fe-checkout.css',
-			array(),
+			array( 'postnl-fill-in-button' ),
 			POSTNL_WC_VERSION
 		);
 
-		// Enqueue scripts.
+		// Only enqueue JS for classic checkout.
+		if ( Utils::is_blocks_checkout() ) {
+			return;
+		}
+
 		wp_enqueue_script(
 			'postnl-fe-checkout',
 			POSTNL_WC_PLUGIN_DIR_URL . '/assets/js/fe-checkout.js',
@@ -287,6 +295,8 @@ class Container {
 
 			foreach ( $post_data as $post_key => $post_value ) {
 				if ( 'shipping_method' === $post_key && ! in_array( Utils::get_cart_shipping_method_id( $post_value[0] ), $sipping_methods ) ) {
+					// Clear PostNL session data when shipping method is not supported.
+					Utils::clear_postnl_checkout_session();
 					return;
 				}
 			}
@@ -302,12 +312,16 @@ class Container {
 			}
 
 			if ( ! isset( $available_country[ $store_country ][ $receiver_country ] ) ) {
+				// Clear PostNL session data when country is not supported.
+				Utils::clear_postnl_checkout_session();
 				return;
 			}
 
 			$post_data = Address_Utils::set_post_data_address( $post_data );
 
 			if ( empty( $post_data['shipping_postcode'] ) ) {
+				// Clear PostNL session data when postcode is missing.
+				Utils::clear_postnl_checkout_session();
 				return;
 			}
 
@@ -316,6 +330,8 @@ class Container {
 				$is_reorder_nl_address_enabled = $this->settings->is_reorder_nl_address_enabled();
 
 				if ( empty( $post_data['shipping_house_number'] ) && $is_reorder_nl_address_enabled ) {
+					// Clear PostNL session data when house number is missing.
+					Utils::clear_postnl_checkout_session();
 					return;
 				} elseif ( empty( $post_data['shipping_house_number'] ) && ! $is_reorder_nl_address_enabled ) {
 					throw new \Exception( 'Address does not contain house number!' );

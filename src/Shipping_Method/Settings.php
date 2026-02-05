@@ -588,8 +588,8 @@ class Settings extends \WC_Settings_API {
 				'for_country' => array( 'NL' ),
 				'options'     => array(
 					'standard_shipment'                  => __( 'Standard shipment', 'postnl-for-woocommerce' ),
-					'id_check'                           => __( 'ID Check', 'postnl-for-woocommerce' ),
-					'id_check|insured_shipping'          => __( 'ID Check + Insured Shipping', 'postnl-for-woocommerce' ),
+					'id_check'                           => __( 'ID Check (18+)', 'postnl-for-woocommerce' ),
+					'id_check|insured_shipping'          => __( 'ID Check (18+) + Insured Shipping', 'postnl-for-woocommerce' ),
 					// 'insured_shipping'                                         => __( 'Insured Shipping', 'postnl-for-woocommerce' ),
 					'return_no_answer'                   => __( 'Return if no answer', 'postnl-for-woocommerce' ),
 					'signature_on_delivery'              => __( 'Signature on Delivery', 'postnl-for-woocommerce' ),
@@ -664,7 +664,7 @@ class Settings extends \WC_Settings_API {
 				'for_country' => array( 'NL' ),
 				'options'     => array(
 					''                          => esc_html__( 'Standard Shipping', 'postnl-for-woocommerce' ),
-					'id_check'                  => esc_html__( 'ID Check', 'postnl-for-woocommerce' ),
+					'id_check'                  => esc_html__( 'ID Check (18+)', 'postnl-for-woocommerce' ),
 					'insured_shipping'          => esc_html__( 'Insured Shipping', 'postnl-for-woocommerce' ),
 					'id_check|insured_shipping' => esc_html__( 'ID Check (18+) + Insured Shipping', 'postnl-for-woocommerce' ),
 				),

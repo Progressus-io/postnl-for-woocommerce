@@ -4,13 +4,12 @@ import { getSetting } from '@woocommerce/settings';
 import { useDispatch, useSelect } from '@wordpress/data';
 import { store as noticesStore } from '@wordpress/notices';
 
-
 export const FillBlock = ( { checkoutExtensionData } ) => {
-	const postnlData                    = getSetting( 'postnl-for-woocommerce-blocks_data', {} );
+	const postnlData = getSetting( 'postnl-for-woocommerce-blocks_data', {} );
 	const [ showButton, setShowButton ] = useState( false );
-	const [ isLoading, setIsLoading ]   = useState( false );
-	const { setBillingAddress }         = useDispatch( 'wc/store/cart' );
-	const { createErrorNotice }         = useDispatch( noticesStore );
+	const [ isLoading, setIsLoading ] = useState( false );
+	const { setBillingAddress } = useDispatch( 'wc/store/cart' );
+	const { createErrorNotice } = useDispatch( noticesStore );
 
 	const { CART_STORE_KEY } = window.wc.wcBlocksData;
 
@@ -23,16 +22,16 @@ export const FillBlock = ( { checkoutExtensionData } ) => {
 		[ CART_STORE_KEY ]
 	);
 	const allowedCountries = [ 'NL', 'BE' ];
-	const shippingAddress  = customerData ? customerData.shippingAddress : null;
+	const shippingAddress = customerData ? customerData.shippingAddress : null;
 	const { setShippingAddress } = useDispatch( CART_STORE_KEY );
 
 	useEffect( () => {
-		let countryToCheck = shippingAddress?.country || 'NL';
+		const countryToCheck = shippingAddress?.country || 'NL';
 		if (
 			allowedCountries.includes( countryToCheck ) &&
-			postnlData?.fill_in_with_postnl_settings?.is_fill_in_with_postnl_enabled
+			postnlData?.fill_in_with_postnl_settings
+				?.is_fill_in_with_postnl_enabled
 		) {
-
 			setShowButton( true );
 		} else {
 			setShowButton( false );
@@ -70,22 +69,33 @@ export const FillBlock = ( { checkoutExtensionData } ) => {
 
 				setShippingAddress( addressFields );
 				setBillingAddress( addressFields );
-
 			} else {
-				createErrorNotice( __( 'Failed to retrieve PostNL user data.', 'postnl-for-woocommerce' ), {
-                    id: 'postnl-fetch-error',
+				createErrorNotice(
+					__(
+						'Failed to retrieve PostNL user data.',
+						'postnl-for-woocommerce'
+					),
+					{
+						id: 'postnl-fetch-error',
+						context: 'wc/checkout',
+						type: 'default',
+						isDismissible: true,
+					}
+				);
+			}
+		} catch ( err ) {
+			createErrorNotice(
+				__(
+					'Failed to retrieve PostNL address. Please try again.',
+					'postnl-for-woocommerce'
+				),
+				{
+					id: 'postnl-fetch-error',
 					context: 'wc/checkout',
 					type: 'default',
 					isDismissible: true,
-                } );	
-			}
-		} catch ( err ) {
-			createErrorNotice( __( 'Failed to retrieve PostNL address. Please try again.', 'postnl-for-woocommerce'), {
-				id: 'postnl-fetch-error',
-				context: 'wc/checkout',
-				type: 'default',
-				isDismissible: true,
-			} );
+				}
+			);
 		}
 	};
 
@@ -94,19 +104,26 @@ export const FillBlock = ( { checkoutExtensionData } ) => {
 		setIsLoading( true );
 
 		try {
-			const response = await fetch( postnlData?.fill_in_with_postnl_settings?.rest_url, {
-				method: 'POST',
-				headers: {
-					'X-WP-Nonce': postnlData?.fill_in_with_postnl_settings?.nonce,
-					'Content-Type': 'application/json',
-				},
-			} );
+			const response = await fetch(
+				postnlData?.fill_in_with_postnl_settings?.rest_url,
+				{
+					method: 'POST',
+					headers: {
+						'X-WP-Nonce':
+							postnlData?.fill_in_with_postnl_settings?.nonce,
+						'Content-Type': 'application/json',
+					},
+				}
+			);
 			const result = await response.json();
 			if ( result.success && result.data?.redirect_uri ) {
 				window.location.href = result.data.redirect_uri;
 			} else {
 				createErrorNotice(
-					__( 'Failed to initiate PostNL login.', 'postnl-for-woocommerce' ),
+					__(
+						'Failed to initiate PostNL login.',
+						'postnl-for-woocommerce'
+					),
 					{
 						id: 'postnl-login-error',
 						context: 'wc/checkout',
@@ -130,22 +147,25 @@ export const FillBlock = ( { checkoutExtensionData } ) => {
 	};
 
 	useEffect( () => {
-        const urlParams   = new URLSearchParams( window.location.search );
-        const postnlToken = urlParams.get( 'callback' );
-        if ( postnlToken ) {
-            prefillCheckoutFields();
-        }
-    }, [] );
+		const urlParams = new URLSearchParams( window.location.search );
+		const postnlToken = urlParams.get( 'callback' );
+		if ( postnlToken ) {
+			prefillCheckoutFields();
+		}
+	}, [] );
 
-    if ( ! showButton ) {
-        return null;
-    }
+	if ( ! showButton ) {
+		return null;
+	}
 
-	const title       = __( 'Fill in with PostNL', 'postnl-for-woocommerce' );
-	const description = __( 'Your name and address are automatically filled in via your PostNL account. That saves you from having to fill in the form!', 'postnl-for-woocommerce' );
-	const postnl_logo = postnlData?.fill_in_with_postnl_settings.postnl_logo_url || '';
+	const title = __( 'Fill in with PostNL', 'postnl-for-woocommerce' );
+	const description = __(
+		'Your name and address are automatically filled in via your PostNL account. That saves you from having to fill in the form!',
+		'postnl-for-woocommerce'
+	);
+	const postnl_logo =
+		postnlData?.fill_in_with_postnl_settings.postnl_logo_url || '';
 	return (
-
 		<div className="postnl-login-button__container postnl-button-in-checkout">
 			<a
 				type="button"
@@ -160,13 +180,9 @@ export const FillBlock = ( { checkoutExtensionData } ) => {
 					alt={ __( 'PostNL Logo', 'postnl-for-woocommerce' ) }
 					id="postnl-logo"
 				/>
-				<span id="postnl-login-button__text">
-					{ title }
-				</span>
+				<span id="postnl-login-button__text">{ title }</span>
 			</a>
-			<p className="postnl-login-button__description">
-				{ description }
-			</p>
+			<p className="postnl-login-button__description">{ description }</p>
 		</div>
 	);
 };

@@ -674,8 +674,6 @@ class Mapping {
 			'LA' => array(
 				array( 'track_and_trace', 'mailboxpacket' ),
 				array( 'track_and_trace', 'packets' ),
-			),
-			'RI' => array(
 				array( 'track_and_trace', 'packets', 'insured_shipping' ),
 			),
 		);

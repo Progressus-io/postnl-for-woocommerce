@@ -34,6 +34,10 @@ PostNL’s official extension for WooCommerce on WordPress. Manage your national
 
 ## Changelog
 
+### 5.9.2
+
+* Fix: Ensure ID Check products always trigger correctly when Signature on Delivery is selected.
+
 ### 5.9.1
 * Fix: Delivery options display prices including/excluding tax based on WooCommerce tax settings.
 * Fix: Removed default empty merchant customs code fields to prevent validation errors when saving settings without adding codes.

@@ -83,6 +83,7 @@ Follow these instructions (https://www.postnl.nl/Images/aanvragen-api-key-stappe
 
 = 5.9.3 (2026-xx-xx) =
 * Fix: Changed barcode type for international registered packets from RI to LA.
+* Fix: Ensure ID Check products always trigger correctly when Signature on Delivery is selected.
 * Add: Ability to select Id check with insured shipping for pickup options.
 * Update: "Global Pack" name to "Parcels non-EU".
 

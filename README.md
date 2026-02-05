@@ -36,6 +36,7 @@ PostNL’s official extension for WooCommerce on WordPress. Manage your national
 
 ### 5.9.3
 * Fix: Changed barcode type for international registered packets from RI to LA.
+* Fix: Ensure ID Check products always trigger correctly when Signature on Delivery is selected.
 * Add: Ability to select Id check with insured shipping for pickup options.
 * Update: "Global Pack" name to "Parcels non-EU".
 

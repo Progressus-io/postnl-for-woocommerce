@@ -7,7 +7,7 @@ Requires at least: 6.7
 Tested up to: 6.9
 WC requires at least: 10.2
 WC tested up to: 10.4
-Stable tag: 5.9.2
+Stable tag: 5.9.3
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -81,7 +81,7 @@ Follow these instructions (https://www.postnl.nl/Images/aanvragen-api-key-stappe
 
 == Changelog ==
 
-= 5.9.3 (2026-xx-xx) =
+= 5.9.3 (2026-02-05) =
 * Fix: House number stripped from address when "Use PostNL address-field" is disabled in blocks checkout.
 * Fix: Changed barcode type for international registered packets from RI to LA.
 * Fix: Ensure ID Check products always trigger correctly when Signature on Delivery is selected.

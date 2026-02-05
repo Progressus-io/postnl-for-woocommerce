@@ -28,7 +28,7 @@ class Main {
 	 *
 	 * @var _version
 	 */
-	private $version = '5.9.1';
+	private $version = '5.9.2';
 
 	/**
 	 * The ID of this plugin settings.
@@ -425,7 +425,11 @@ class Main {
 		// Return what we found.
 		return $template;
 	}
+
 	public function checkout_blocks() {
+		if ( ! Utils::is_blocks_checkout() ) {
+			return;
+		}
 
 		// Initialize classes that depend on WooCommerce
 		new Extend_Block_Core();

@@ -1,7 +1,13 @@
 /**
  * External dependencies
  */
-import { useEffect, useState, useRef } from '@wordpress/element';
+import {
+	useEffect,
+	useState,
+	useRef,
+	useMemo,
+	useCallback,
+} from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 import { getSetting } from '@woocommerce/settings';
 import { useDispatch, useSelect } from '@wordpress/data';
@@ -13,6 +19,38 @@ import { Spinner } from '@wordpress/components';
  */
 import { Block as DeliveryDayBlock } from '../postnl-delivery-day/block';
 import { Block as DropoffPointsBlock } from '../postnl-dropoff-points/block';
+import { getDeliveryDay, clearSessionData } from '../../utils/session-manager';
+import {
+	batchSetExtensionData,
+	clearAllExtensionData,
+	clearBackendDeliveryFee,
+	clearDropoffPointExtensionData,
+	isCountrySupported,
+} from '../../utils/extension-data-helper';
+
+/**
+ * Helper function to check if a value is empty.
+ * @param value
+ */
+const isEmpty = ( value ) =>
+	value === undefined || value === null || value === '';
+
+/**
+ * Helper function to compare two addresses.
+ * @param addr1
+ * @param addr2
+ */
+const isAddressEqual = ( addr1, addr2 ) => {
+	if ( ! addr1 || ! addr2 ) {
+		return false;
+	}
+	return (
+		addr1.country === addr2.country &&
+		addr1.postcode === addr2.postcode &&
+		addr1.address_1 === addr2.address_1 &&
+		addr1[ 'postnl/house_number' ] === addr2[ 'postnl/house_number' ]
+	);
+};
 
 export const Block = ( { checkoutExtensionData } ) => {
 	const { setExtensionData } = checkoutExtensionData;
@@ -54,75 +92,93 @@ export const Block = ( { checkoutExtensionData } ) => {
 		[ CART_STORE_KEY ]
 	);
 
-	// stores the Morning/Evening surcharge currently selected
-	const [extraDeliveryFee, setExtraDeliveryFee] = useState(() => {
-		return Number(sessionStorage.getItem('postnl_deliveryDayPrice') || 0);
-	});
+	const [ { extraDeliveryFee, extraDeliveryFeeFormatted }, setFeeState ] =
+		useState( () => {
+			const saved = getDeliveryDay();
+			return {
+				extraDeliveryFee: Number( saved.price || 0 ),
+				extraDeliveryFeeFormatted: saved.priceFormatted || '',
+			};
+		} );
 
-	// stores the formatted Morning/Evening surcharge for display.
-	const [extraDeliveryFeeFormatted, setExtraDeliveryFeeFormatted] = useState(() => {
-		return sessionStorage.getItem('postnl_deliveryDayPriceFormatted') || '';
-	});
+	const baseTabs = useMemo(
+		() => [
+			{
+				id: 'delivery_day',
+				base: Number( postnlData.delivery_day_fee || 0 ),
+				displayFormatted: postnlData.delivery_day_fee_formatted || '',
+			},
+			...( postnlData.is_pickup_points_enabled
+				? [
+						{
+							id: 'dropoff_points',
+							base: Number( postnlData.pickup_fee || 0 ),
+							displayFormatted:
+								postnlData.pickup_fee_formatted || '',
+						},
+				  ]
+				: [] ),
+		],
+		[
+			postnlData.delivery_day_fee,
+			postnlData.delivery_day_fee_formatted,
+			postnlData.is_pickup_points_enabled,
+			postnlData.pickup_fee,
+			postnlData.pickup_fee_formatted,
+		]
+	);
 
-	const baseTabs = [
-		{
-			id: 'delivery_day',
-			base: Number( postnlData.delivery_day_fee || 0 ),
-			displayFormatted: postnlData.delivery_day_fee_formatted || '',
-		},
-		...( postnlData.is_pickup_points_enabled
-			? [ {
-				id: 'dropoff_points',
-				base: Number( postnlData.pickup_fee || 0 ),
-				displayFormatted: postnlData.pickup_fee_formatted || '',
-			} ]
-			: [] ),
-	];
+	const [ activeTab, setActiveTab ] = useState( baseTabs[ 0 ].id );
 
-	const [activeTab, setActiveTab] = useState(baseTabs[0].id);
+	const [ carrierBaseCost, setCarrierBaseCost ] = useState(
+		() => selectedShippingFee - baseTabs[ 0 ].base - extraDeliveryFee
+	);
 
-	const [carrierBaseCost, setCarrierBaseCost] = useState(() => {
-		const savedExtra = Number(sessionStorage.getItem('postnl_deliveryDayPrice') || 0);
-		return selectedShippingFee - baseTabs[0].base - savedExtra;
-	});
+	const prevShipping = useRef( selectedShippingFee );
 
-	const prevShipping = useRef(selectedShippingFee);
-
-	useEffect(() => {
-		if (prevShipping.current === selectedShippingFee) {
+	useEffect( () => {
+		if ( prevShipping.current === selectedShippingFee ) {
 			return;
 		}
 		prevShipping.current = selectedShippingFee;
 
-		const currentTabBase = baseTabs.find((tab) => tab.id === activeTab)?.base || 0;
+		const currentTabBase =
+			baseTabs.find( ( tab ) => tab.id === activeTab )?.base || 0;
 		const extra = activeTab === 'delivery_day' ? extraDeliveryFee : 0;
 
 		const raw = selectedShippingFee - currentTabBase - extra;
-		setCarrierBaseCost(raw < 0 ? 0 : raw);
-	}, [selectedShippingFee]);
+		setCarrierBaseCost( raw < 0 ? 0 : raw );
+	}, [ selectedShippingFee ] );
 
-	const tabs = baseTabs.map( ( tab ) => {
-		let title =
-			tab.id === 'delivery_day'
-				? __( 'Delivery', 'postnl-for-woocommerce' )
-				: __( 'Pickup', 'postnl-for-woocommerce' );
+	const tabs = useMemo(
+		() =>
+			baseTabs.map( ( tab ) => {
+				let title =
+					tab.id === 'delivery_day'
+						? __( 'Delivery', 'postnl-for-woocommerce' )
+						: __( 'Pickup', 'postnl-for-woocommerce' );
 
-		const fees = [];
-		if ( tab.displayFormatted && tab.base > 0 ) {
-			fees.push( tab.displayFormatted );
-		}
+				const fees = [];
+				if ( tab.displayFormatted && tab.base > 0 ) {
+					fees.push( tab.displayFormatted );
+				}
 
-		if ( tab.id === 'delivery_day' && extraDeliveryFeeFormatted && extraDeliveryFee > 0 ) {
-			fees.push( extraDeliveryFeeFormatted );
-		}
+				if (
+					tab.id === 'delivery_day' &&
+					extraDeliveryFeeFormatted &&
+					extraDeliveryFee > 0
+				) {
+					fees.push( extraDeliveryFeeFormatted );
+				}
 
-		if ( fees.length > 0 ) {
-			title += ` (+${ fees.join( ' +' ) })`;
-		}
+				if ( fees.length > 0 ) {
+					title += ` (+${ fees.join( ' +' ) })`;
+				}
 
-		return { id: tab.id, name: title, base: tab.base };
-	} );
-
+				return { id: tab.id, name: title, base: tab.base };
+			} ),
+		[ baseTabs, extraDeliveryFee, extraDeliveryFeeFormatted ]
+	);
 
 	// Retrieve customer data from WooCommerce cart store
 	const customerData = useSelect(
@@ -144,14 +200,28 @@ export const Block = ( { checkoutExtensionData } ) => {
 	const [ dropoffOptions, setDropoffOptions ] = useState( [] );
 	const [ deliveryDaysEnabled, setDeliveryDaysEnabled ] = useState( true );
 
+	const handlePriceChange = useCallback( ( priceData ) => {
+		setFeeState( {
+			extraDeliveryFee: priceData.numeric || 0,
+			extraDeliveryFeeFormatted: priceData.formatted || '',
+		} );
+	}, [] );
+
 	// To prevent infinite loops if we update the address programmatically
 	const isUpdatingAddress = useRef( false );
 
 	// Ref to store the previous shipping address
 	const previousShippingAddress = useRef( null );
 
-	const empty = ( value ) =>
-		value === undefined || value === null || value === '';
+	/**
+	 * Clear all PostNL data: session, extension data, and backend cart fee.
+	 */
+	const clearAllPostNLData = useCallback( () => {
+		clearSessionData();
+		previousShippingAddress.current = null;
+		clearAllExtensionData( setExtensionData );
+		clearBackendDeliveryFee();
+	}, [ setExtensionData ] );
 
 	const isComplete = useSelect(
 		( select ) => select( CHECKOUT_STORE_KEY ).isComplete(),
@@ -160,31 +230,44 @@ export const Block = ( { checkoutExtensionData } ) => {
 	const currentHouseNumber = shippingAddress?.[ 'postnl/house_number' ] || '';
 
 	useEffect( () => {
-		if ( currentHouseNumber && postnlData.is_nl_address_enabled) {
+		if ( currentHouseNumber && postnlData.is_nl_address_enabled ) {
 			setExtensionData( 'postnl', 'houseNumber', currentHouseNumber );
 		}
 	}, [ shippingAddress, setExtensionData ] );
 
-	// Helper function to compare two addresses
-	const isAddressEqual = ( addr1, addr2 ) => {
-		if ( ! addr1 || ! addr2 ) {
-			return false;
-		}
-		return (
-			addr1.country === addr2.country &&
-			addr1.postcode === addr2.postcode &&
-			addr1.address_1 === addr2.address_1 &&
-			addr1[ 'postnl/house_number' ] === addr2[ 'postnl/house_number' ]
-		);
-	};
+	// Track previous country to detect transitions to unsupported countries
+	const previousCountry = useRef( shippingAddress?.country || '' );
+	const supportedCountries = postnlData.supported_countries || [];
 
 	// Fetch data shipping address
 	useEffect( () => {
+		const country = shippingAddress?.country || '';
+		const isSupported = isCountrySupported( country, supportedCountries );
+		const wasSupported = isCountrySupported(
+			previousCountry.current,
+			supportedCountries
+		);
+
+		// Update previous country
+		previousCountry.current = country;
+
+		// If country is not supported, clear data once and stop all processing
+		if ( ! isSupported ) {
+			if ( wasSupported ) {
+				setShowContainer( false );
+				setDeliveryOptions( [] );
+				setDropoffOptions( [] );
+				clearAllPostNLData();
+			}
+			return;
+		}
+
 		if (
 			! shippingAddress ||
-			empty( shippingAddress.postcode ) ||
+			isEmpty( shippingAddress.postcode ) ||
 			( shippingAddress.country === 'NL' &&
-				(postnlData.is_nl_address_enabled && empty( shippingAddress[ 'postnl/house_number' ] )) )
+				postnlData.is_nl_address_enabled &&
+				isEmpty( shippingAddress[ 'postnl/house_number' ] ) )
 		) {
 			// If we have no valid postcode/house number, hide container
 			setShowContainer( false );
@@ -203,7 +286,7 @@ export const Block = ( { checkoutExtensionData } ) => {
 			return;
 		}
 
-		const debounceDelay = 1500; //
+		const debounceDelay = 1500;
 		const handler = setTimeout( () => {
 			// Update the previous shipping address
 			previousShippingAddress.current = { ...shippingAddress };
@@ -213,9 +296,9 @@ export const Block = ( { checkoutExtensionData } ) => {
 				shipping_postcode: shippingAddress.postcode || '',
 				...( postnlData.is_nl_address_enabled
 					? {
-						shipping_house_number:
-							shippingAddress[ 'postnl/house_number' ] || '',
-					}
+							shipping_house_number:
+								shippingAddress[ 'postnl/house_number' ] || '',
+					  }
 					: {} ),
 				shipping_address_2: shippingAddress.address_2 || '',
 				shipping_address_1: shippingAddress.address_1 || '',
@@ -263,16 +346,16 @@ export const Block = ( { checkoutExtensionData } ) => {
 							};
 
 							if ( ! postnlData.is_nl_address_enabled ) {
-								newShippingAddress.address_1 = `${street} ${house_number}`;
+								newShippingAddress.address_1 = `${ street } ${ house_number }`;
 							} else {
 								newShippingAddress.address_1 = street;
 							}
 
 							if (
-								(shippingAddress.address_1 !== street ||
-									shippingAddress.city !== city ||
-									shippingAddress[ 'postnl/house_number' ] !==
-									house_number)
+								shippingAddress.address_1 !== street ||
+								shippingAddress.city !== city ||
+								shippingAddress[ 'postnl/house_number' ] !==
+									house_number
 							) {
 								isUpdatingAddress.current = true;
 								setShippingAddress( newShippingAddress );
@@ -286,11 +369,17 @@ export const Block = ( { checkoutExtensionData } ) => {
 						setShowContainer( respData.show_container || false );
 						setDeliveryOptions( respData.delivery_options || [] );
 						setDropoffOptions( respData.dropoff_options || [] );
+
+						// Clear all PostNL data when container is hidden
+						if ( ! respData.show_container ) {
+							clearAllPostNLData();
+						}
 					} else {
 						// Response not success or no data: hide container
 						setShowContainer( false );
 						setDeliveryOptions( [] );
 						setDropoffOptions( [] );
+						clearAllPostNLData();
 					}
 
 					const event = new Event( 'postnl_address_updated' );
@@ -301,6 +390,7 @@ export const Block = ( { checkoutExtensionData } ) => {
 					setShowContainer( false );
 					setDeliveryOptions( [] );
 					setDropoffOptions( [] );
+					clearAllPostNLData();
 
 					const event = new Event( 'postnl_address_updated' );
 					window.dispatchEvent( event );
@@ -316,34 +406,22 @@ export const Block = ( { checkoutExtensionData } ) => {
 		shippingAddress,
 		postnlData.ajax_url,
 		postnlData.nonce,
+		postnlData.is_nl_address_enabled,
 		setShippingAddress,
 		updateCustomerData,
+		clearAllPostNLData,
+		supportedCountries,
 	] );
 
-	// Clear session storage if checkout is complete, letterbox, or container hidden
+	// Clear local data if checkout is complete or letterbox.
+	// Note: Backend fee clearing is handled by AJAX response handlers via clearAllPostNLData().
 	useEffect( () => {
-		if ( isComplete || letterbox || ! showContainer ) {
-			sessionStorage.removeItem( 'postnl_selected_option' );
-			sessionStorage.removeItem( 'postnl_deliveryDay' );
-			sessionStorage.removeItem( 'postnl_deliveryDayDate' );
-			sessionStorage.removeItem( 'postnl_deliveryDayFrom' );
-			sessionStorage.removeItem( 'postnl_deliveryDayTo' );
-			sessionStorage.removeItem( 'postnl_deliveryDayPrice' );
-			sessionStorage.removeItem( 'postnl_deliveryDayType' );
-			sessionStorage.removeItem( 'postnl_dropoffPoints' );
-			sessionStorage.removeItem( 'postnl_dropoffPointsAddressCompany' );
-			sessionStorage.removeItem( 'postnl_dropoffPointsAddress1' );
-			sessionStorage.removeItem( 'postnl_dropoffPointsAddress2' );
-			sessionStorage.removeItem( 'postnl_dropoffPointsCity' );
-			sessionStorage.removeItem( 'postnl_dropoffPointsPostcode' );
-			sessionStorage.removeItem( 'postnl_dropoffPointsCountry' );
-			sessionStorage.removeItem( 'postnl_dropoffPointsPartnerID' );
-			sessionStorage.removeItem( 'postnl_dropoffPointsDate' );
-			sessionStorage.removeItem( 'postnl_dropoffPointsTime' );
-			sessionStorage.removeItem( 'postnl_dropoffPointsType' );
-			sessionStorage.removeItem( 'postnl_dropoffPointsDistance' );
+		if ( isComplete || letterbox ) {
+			clearSessionData();
+			previousShippingAddress.current = null;
+			clearAllExtensionData( setExtensionData );
 		}
-	}, [ isComplete, letterbox, showContainer ] );
+	}, [ isComplete, letterbox, setExtensionData ] );
 
 	useEffect( () => {
 		if ( ! letterbox || ! showContainer || deliveryOptions.length === 0 ) {
@@ -361,37 +439,18 @@ export const Block = ( { checkoutExtensionData } ) => {
 		// Build the combined value (like in DeliveryDayBlock):
 		const deliveryDay = `${ firstDelivery.date }_${ firstOption.from }-${ firstOption.to }_${ firstOption.price }`;
 
-		setExtensionData( 'postnl', 'deliveryDay', deliveryDay );
-		setExtensionData(
-			'postnl',
-			'deliveryDayDate',
-			firstDelivery.date || ''
-		);
-		setExtensionData( 'postnl', 'deliveryDayFrom', firstOption.from || '' );
-		setExtensionData( 'postnl', 'deliveryDayTo', firstOption.to || '' );
-		setExtensionData(
-			'postnl',
-			'deliveryDayPrice',
-			String( firstOption.price || '0' )
-		);
-		setExtensionData(
-			'postnl',
-			'deliveryDayType',
-			firstOption.type || 'Letterbox'
-		);
-		setExtensionData( 'postnl', 'dropoffPoints', '' );
-		setExtensionData( 'postnl', 'dropoffPointsAddressCompany', '' );
-		setExtensionData( 'postnl', 'dropoffPointsAddress1', '' );
-		setExtensionData( 'postnl', 'dropoffPointsAddress2', '' );
-		setExtensionData( 'postnl', 'dropoffPointsCity', '' );
-		setExtensionData( 'postnl', 'dropoffPointsPostcode', '' );
-		setExtensionData( 'postnl', 'dropoffPointsCountry', '' );
-		setExtensionData( 'postnl', 'dropoffPointsPartnerID', '' );
-		setExtensionData( 'postnl', 'dropoffPointsDate', '' );
-		setExtensionData( 'postnl', 'dropoffPointsTime', '' );
-		setExtensionData( 'postnl', 'dropoffPointsType', '' );
-		setExtensionData( 'postnl', 'dropoffPointsDistance', '' );
+		// Set letterbox delivery data using batch helper
+		batchSetExtensionData( setExtensionData, {
+			deliveryDay,
+			deliveryDayDate: firstDelivery.date || '',
+			deliveryDayFrom: firstOption.from || '',
+			deliveryDayTo: firstOption.to || '',
+			deliveryDayPrice: String( firstOption.price || '0' ),
+			deliveryDayType: firstOption.type || 'Letterbox',
+		} );
 
+		// Clear dropoff point data using helper
+		clearDropoffPointExtensionData( setExtensionData );
 	}, [ letterbox, showContainer, deliveryOptions, setExtensionData ] );
 
 	return (
@@ -399,27 +458,11 @@ export const Block = ( { checkoutExtensionData } ) => {
 			id="postnl_checkout_option"
 			className={ `postnl_checkout_container ${
 				loading ? 'loading' : ''
-			}` } // Conditionally add 'loading' class
-			style={ { position: 'relative' } }
+			}` }
 			aria-busy={ loading }
 		>
-			{ /* Spinner Overlay */ }
 			{ loading && (
-				<div
-					className="postnl-spinner-overlay"
-					style={ {
-						position: 'absolute',
-						top: 0,
-						right: 0,
-						bottom: 0,
-						left: 0,
-						display: 'flex',
-						alignItems: 'center',
-						justifyContent: 'center',
-						backgroundColor: 'rgba(255,255,255,0.7)',
-						zIndex: 9999,
-					} }
-				>
+				<div className="postnl-spinner-overlay">
 					<Spinner />
 				</div>
 			) }
@@ -469,22 +512,22 @@ export const Block = ( { checkoutExtensionData } ) => {
 								isActive={ activeTab === 'delivery_day' }
 								deliveryOptions={ deliveryOptions }
 								isDeliveryDaysEnabled={ deliveryDaysEnabled }
-								onPriceChange={ ( priceData ) => {
-									setExtraDeliveryFee( priceData.numeric || 0 );
-									setExtraDeliveryFeeFormatted( priceData.formatted || '' );
-									sessionStorage.setItem( 'postnl_deliveryDayPriceFormatted', priceData.formatted || '' );
-								} }
+								onPriceChange={ handlePriceChange }
 							/>
 						</div>
 						{ postnlData.is_pickup_points_enabled && (
 							<div
 								className={ `postnl_content ${
-									activeTab === 'dropoff_points' ? 'active' : ''
+									activeTab === 'dropoff_points'
+										? 'active'
+										: ''
 								}` }
 								id="postnl_dropoff_points_content"
 							>
 								<DropoffPointsBlock
-									checkoutExtensionData={ checkoutExtensionData }
+									checkoutExtensionData={
+										checkoutExtensionData
+									}
 									isActive={ activeTab === 'dropoff_points' }
 									dropoffOptions={ dropoffOptions }
 								/>

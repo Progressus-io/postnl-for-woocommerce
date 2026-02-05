@@ -7,7 +7,7 @@
 * Tested up to: 6.9
 * WC requires at least: 10.2
 * WC tested up to: 10.4
-* Stable tag: 5.9.1
+* Stable tag: 5.9.2
 * License: GPLv2 or later
 * License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -34,8 +34,14 @@ PostNL’s official extension for WooCommerce on WordPress. Manage your national
 
 ## Changelog
 
-### 5.9.2
+### 5.9.3
+* Fix: Changed barcode type for international registered packets from RI to LA.
 * Update: "Global Pack" name to "Parcels non-EU".
+
+### 5.9.2
+* Fix: Load plugin assets only on cart and checkout pages where they're needed to improve performance.
+* Fix: Delivery options menu not loading after switching between countries with different delivery support.
+* Fix: Delivery Days/Pickup Point fees persisting when changing to a destination that does not support them.
 
 ### 5.9.1
 * Fix: Delivery options display prices including/excluding tax based on WooCommerce tax settings.

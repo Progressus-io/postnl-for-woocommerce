@@ -157,7 +157,7 @@ class Item_Info extends Base_Info {
 				'sanitize' => function ( $serie ) use ( $self ) {
 
 					$barcode_type = $self->check_product_barcode_type( $self->api_args['settings'] );
-					if ( in_array( $barcode_type, array( 'RI', 'UE', 'LA' ) ) ) {
+					if ( in_array( $barcode_type, array( 'UE', 'LA' ) ) ) {
 						return '00000000-99999999';
 					}
 

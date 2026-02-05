@@ -82,10 +82,11 @@ Follow these instructions (https://www.postnl.nl/Images/aanvragen-api-key-stappe
 == Changelog ==
 
 = 5.9.3 (2026-xx-xx) =
+* Fix: House number stripped from address when "Use PostNL address-field" is disabled in blocks checkout.
 * Fix: Changed barcode type for international registered packets from RI to LA.
 * Fix: Ensure ID Check products always trigger correctly when Signature on Delivery is selected.
 * Add: Ability to select Id check with insured shipping for pickup options.
-* Update: "Global Pack" name to "Parcels non-EU".
+* Tweak: Change "Global Pack" name to "Parcels non-EU".
 
 = 5.9.2 (2026-02-03) =
 * Fix: Load plugin assets only on cart and checkout pages where they're needed to improve performance.

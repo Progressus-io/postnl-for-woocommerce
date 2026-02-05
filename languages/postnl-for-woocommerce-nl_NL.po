@@ -93,12 +93,12 @@ msgstr "Avondbezorging"
 
 #: src/Helper/Mapping.php:35
 msgid "Pickup at PostNL Point"
-msgstr "Ophalen PostNL Punt"
+msgstr "Ophalen bij PostNL Punt"
 
 #: src/Order/Bulk.php:510
 #: src/Order/Bulk.php:528
 msgid "Belgium"
-msgstr "Standaardzending België"
+msgstr "België"
 
 #: src/Helper/Mapping.php:43
 msgid "Pickup at PostNL Point Belgium"
@@ -130,8 +130,8 @@ msgid "PostNL plugin requires store country to be Netherlands (NL) or Belgium (B
 msgstr "De PostNL plugin vereist een winkellocatie in Nederland of België!"
 
 #: src/Order/Base.php:153
-msgid "ID Check: "
-msgstr "Leeftijdscheck: "
+msgid "ID Check (18+): "
+msgstr "Leeftijdscheck (18+): "
 
 #: src/Order/Base.php:165
 msgid "Insured Shipping: "
@@ -285,7 +285,7 @@ msgstr "Nederland"
 #: src/Order/Bulk.php:537
 #: src/Shipping_Method/Settings.php:626
 msgid "Shipping options EU"
-msgstr "Standaard verzendopties EU"
+msgstr "Verzendopties EU"
 
 #: src/Shipping_Method/Settings.php:645
 msgid "Shipping options non-EU (outside the EU borders)."
@@ -1197,20 +1197,20 @@ msgid "Shipping Outside Europe Settings"
 msgstr "Versturen buiten Europa"
 
 #: src/Shipping_Method/Settings.php:467
-msgid "Please insert your Globalpack credentials."
-msgstr "Vul hier jouw Globalpack gegevens in."
+msgid "Please insert your Parcels non-EU credentials."
+msgstr "Vul hier je Pakketten non-EU klantcodegegevens in."
 
 #: src/Shipping_Method/Settings.php:470
-msgid "GlobalPack Barcode Type"
-msgstr "GlobalPack Barcode Type"
+msgid "Parcels non-EU Barcode Type"
+msgstr "Pakketten non-EU Barcode Type"
 
 #: src/Shipping_Method/Settings.php:475
 msgid "CD"
 msgstr "CD"
 
 #: src/Shipping_Method/Settings.php:479
-msgid "GlobalPack Customer Code"
-msgstr "Globalpack Klantcode"
+msgid "Parcels non-EU Customer Code"
+msgstr "Pakketten non-EU Klantcode"
 
 #: src/Shipping_Method/Settings.php:484
 msgid "1234"
@@ -1292,8 +1292,8 @@ msgstr "Standaardzending"
 #: src/Shipping_Method/Settings.php:591
 #: src/Shipping_Method/Settings.php:667
 #: src/Utils.php:596
-msgid "ID Check"
-msgstr "ID Check"
+msgid "ID Check (18+)"
+msgstr "ID Check (18+)"
 
 #: src/Shipping_Method/Settings.php:594
 #: src/Utils.php:597
@@ -1610,20 +1610,20 @@ msgstr ""
 
 #: src/Order/Bulk.php:513
 msgid "Pick-up at PostNL"
-msgstr ""
+msgstr "Ophalen bij PostNL"
 
 #: src/Order/Bulk.php:519
 #: src/Shipping_Method/Settings.php:584
 msgid "Shipping options domestic"
-msgstr "Standaard verzendopties binnenland"
+msgstr "Verzendopties binnenland"
 
 #: src/Order/Bulk.php:546
 msgid "Shipping options non-EU"
-msgstr ""
+msgstr "Verzendopties Pakketten non-EU"
 
 #: src/Order/Bulk.php:555
 msgid "Shipping options for Pick-up at PostNL"
-msgstr ""
+msgstr "Verzendopties voor Ophalen bij PostNL"
 
 #: src/Order/Bulk.php:703
 msgid "#%1$s : PostNL label has been created - %2$sdownload file%3$s"
@@ -1716,8 +1716,8 @@ msgid "DPI"
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:592
-msgid "ID Check + Insured Shipping"
-msgstr ""
+msgid "ID Check (18+) + Insured Shipping"
+msgstr "ID Check (18+) + Verzekerd verzenden"
 
 #: src/Shipping_Method/Settings.php:608
 msgid "Shipping options Belgium"
@@ -1725,7 +1725,7 @@ msgstr "Standaard verzendopties België"
 
 #: src/Shipping_Method/Settings.php:666
 msgid "Standard Shipping"
-msgstr ""
+msgstr "Standaardzending"
 
 #: src/Shipping_Method/Settings.php:707
 msgid "Select a default shipping option for the orders shipped internationally (outside the EU borders)."
@@ -1741,11 +1741,11 @@ msgstr ""
 
 #: src/Utils.php:621
 msgid "Parcels EU"
-msgstr ""
+msgstr "Pakketten EU"
 
 #: src/Utils.php:628
 msgid "Parcels Non-EU"
-msgstr ""
+msgstr "Pakketten non-EU"
 
 #: templates/checkout/postnl-fill-in-with-button.php:23
 #: build/postnl-fill-in-with-frontend.js:1
@@ -1873,7 +1873,7 @@ msgstr ""
 
 #: src/Order/Base.php:273
 msgid "Delivery code at the door: "
-msgstr "Bezorgcode aan de deur:"
+msgstr "Bezorgcode aan de deur: "
 
 #: src/Shipping_Method/Settings.php:604
 msgid "Delivery Code at Door + Insured Shipping"

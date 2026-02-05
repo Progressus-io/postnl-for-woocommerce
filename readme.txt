@@ -81,6 +81,9 @@ Follow these instructions (https://www.postnl.nl/Images/aanvragen-api-key-stappe
 
 == Changelog ==
 
+= 5.9.2
+* Add: Ability to select Id check with insured shipping for pickup options.
+
 = 5.9.1 (2025-12-18) =
 * Fix: Delivery options display prices including/excluding tax based on WooCommerce tax settings.
 * Fix: Removed default empty merchant customs code fields to prevent validation errors when saving settings without adding codes.

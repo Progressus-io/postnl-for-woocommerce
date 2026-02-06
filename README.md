@@ -6,8 +6,8 @@
 * Requires at least: 6.7
 * Tested up to: 6.9
 * WC requires at least: 10.2
-* WC tested up to: 10.4
-* Stable tag: 5.9.3
+* WC tested up to: 10.5
+* Stable tag: 5.9.4
 * License: GPLv2 or later
 * License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -36,6 +36,7 @@ PostNL’s official extension for WooCommerce on WordPress. Manage your national
 
 ### 5.9.4
 * Fix: Missing styles from the cart page.
+* Tweak: WooCommerce 10.5 compatibility.
 
 ### 5.9.3
 * Fix: House number stripped from address when "Use PostNL address-field" is disabled in blocks checkout.

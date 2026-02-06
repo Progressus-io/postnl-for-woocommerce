@@ -2,14 +2,14 @@
 # This file is distributed under the GPLv2 or later.
 msgid ""
 msgstr ""
-"Project-Id-Version: PostNL for WooCommerce 5.9.2\n"
+"Project-Id-Version: PostNL for WooCommerce 5.9.4\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/postnl-for-woocommerce\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-02-03T15:39:24+00:00\n"
+"POT-Creation-Date: 2026-02-06T18:40:41+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.11.0\n"
 "X-Domain: postnl-for-woocommerce\n"
@@ -40,7 +40,9 @@ msgid "https://postnl.post/"
 msgstr ""
 
 #: src/Checkout_Blocks/Extend_Block_Core.php:89
-#: src/Frontend/Container.php:367
+#: src/Frontend/Container.php:371
+#: woo-postnl/src/Checkout_Blocks/Extend_Block_Core.php:89
+#: woo-postnl/src/Frontend/Container.php:367
 msgid "This is not a valid address!"
 msgstr ""
 
@@ -48,162 +50,215 @@ msgstr ""
 #: src/Frontend/Checkout_Fields.php:65
 #: src/Frontend/Checkout_Fields.php:66
 #: src/Order/Single.php:539
+#: woo-postnl/src/Checkout_Blocks/Extend_Block_Core.php:104
+#: woo-postnl/src/Frontend/Checkout_Fields.php:65
+#: woo-postnl/src/Frontend/Checkout_Fields.php:66
+#: woo-postnl/src/Order/Single.php:539
 msgid "House number"
 msgstr ""
 
 #: src/Checkout_Blocks/Extend_Block_Core.php:163
+#: woo-postnl/src/Checkout_Blocks/Extend_Block_Core.php:163
 msgid "PostNL Delivery Fee"
 msgstr ""
 
 #: src/Checkout_Blocks/Extend_Block_Core.php:165
 #: src/Frontend/Base.php:529
+#: woo-postnl/src/Checkout_Blocks/Extend_Block_Core.php:165
+#: woo-postnl/src/Frontend/Base.php:529
 msgid "PostNL Morning Fee"
 msgstr ""
 
 #: src/Checkout_Blocks/Extend_Block_Core.php:167
 #: src/Frontend/Base.php:510
+#: woo-postnl/src/Checkout_Blocks/Extend_Block_Core.php:167
+#: woo-postnl/src/Frontend/Base.php:510
 msgid "PostNL Evening Fee"
 msgstr ""
 
 #: src/Checkout_Blocks/Extend_Block_Core.php:363
+#: woo-postnl/src/Checkout_Blocks/Extend_Block_Core.php:363
 msgid "Postcode or house number is missing."
 msgstr ""
 
 #: src/Emails/WC_Email_Smart_Return.php:43
+#: woo-postnl/src/Emails/WC_Email_Smart_Return.php:43
 msgid "Smart Return Email"
 msgstr ""
 
 #: src/Emails/WC_Email_Smart_Return.php:44
+#: woo-postnl/src/Emails/WC_Email_Smart_Return.php:44
 msgid "This is a smart return email sent for return purposes."
 msgstr ""
 
 #: src/Emails/WC_Email_Smart_Return.php:62
+#: woo-postnl/src/Emails/WC_Email_Smart_Return.php:62
 msgid "[{site_title}]: PostNL Smart Returns"
 msgstr ""
 
 #: src/Emails/WC_Email_Smart_Return.php:72
+#: woo-postnl/src/Emails/WC_Email_Smart_Return.php:72
 msgid "PostNL Smart Returns"
 msgstr ""
 
 #: src/Frontend/Base.php:146
+#: woo-postnl/src/Frontend/Base.php:146
 msgid "Pick up at PostNL-point"
 msgstr ""
 
 #: src/Frontend/Base.php:171
 #: src/Order/Single.php:328
+#: woo-postnl/src/Frontend/Base.php:171
+#: woo-postnl/src/Order/Single.php:328
 msgid "Date:"
 msgstr ""
 
 #: src/Frontend/Base.php:175
 #: src/Order/Single.php:332
+#: woo-postnl/src/Frontend/Base.php:175
+#: woo-postnl/src/Order/Single.php:332
 msgid "Time:"
 msgstr ""
 
 #. translators: %s: shop cart url
 #: src/Frontend/Base.php:240
+#: woo-postnl/src/Frontend/Base.php:240
 msgid "Sorry, your session has expired. <a href=\"%s\" class=\"wc-backward\">Return to shop</a>"
 msgstr ""
 
 #: src/Frontend/Checkout_Fields.php:102
 #: src/Frontend/Checkout_Fields.php:103
 #: src/Shipping_Method/Settings.php:249
+#: woo-postnl/src/Frontend/Checkout_Fields.php:102
+#: woo-postnl/src/Frontend/Checkout_Fields.php:103
+#: woo-postnl/src/Shipping_Method/Settings.php:249
 msgid "House Number Extension"
 msgstr ""
 
 #: src/Frontend/Checkout_Fields.php:107
+#: woo-postnl/src/Frontend/Checkout_Fields.php:107
 msgid "Street"
 msgstr ""
 
 #: src/Frontend/Checkout_Fields.php:108
+#: woo-postnl/src/Frontend/Checkout_Fields.php:108
 msgid "Street Name"
 msgstr ""
 
-#: src/Frontend/Container.php:106
+#: src/Frontend/Container.php:110
+#: woo-postnl/src/Frontend/Container.php:106
 msgid "Delivery Days"
 msgstr ""
 
-#: src/Frontend/Container.php:107
+#: src/Frontend/Container.php:111
 #: src/Frontend/Dropoff_Points.php:52
+#: woo-postnl/src/Frontend/Container.php:107
+#: woo-postnl/src/Frontend/Dropoff_Points.php:52
 #: build/postnl-container-frontend.js:1
 #: client/checkout/postnl-container/block.js:159
+#: woo-postnl/build/postnl-container-frontend.js:1
 msgid "Pickup"
 msgstr ""
 
 #: src/Frontend/Delivery_Day.php:45
+#: woo-postnl/src/Frontend/Delivery_Day.php:45
 msgid "Please choose the delivery day!"
 msgstr ""
 
 #: src/Frontend/Delivery_Day.php:115
 #: src/Shipping_Method/Settings.php:327
+#: woo-postnl/src/Frontend/Delivery_Day.php:115
+#: woo-postnl/src/Shipping_Method/Settings.php:327
 #: build/postnl-container-frontend.js:1
 #: client/checkout/postnl-container/block.js:158
+#: woo-postnl/build/postnl-container-frontend.js:1
 msgid "Delivery"
 msgstr ""
 
 #: src/Frontend/Fill_In_With_Postnl.php:216
+#: woo-postnl/src/Frontend/Fill_In_With_Postnl.php:216
 msgid "Invalid or expired nonce."
 msgstr ""
 
 #: src/Frontend/Fill_In_With_Postnl.php:226
 #: src/Frontend/Fill_In_With_Postnl_Handler.php:71
+#: woo-postnl/src/Frontend/Fill_In_With_Postnl.php:226
+#: woo-postnl/src/Frontend/Fill_In_With_Postnl_Handler.php:71
 msgid "Fill in with PostNL is not enabled or Client ID is missing."
 msgstr ""
 
 #: src/Frontend/Fill_In_With_Postnl_Handler.php:68
+#: woo-postnl/src/Frontend/Fill_In_With_Postnl_Handler.php:68
 msgid "Invalid nonce."
 msgstr ""
 
 #: src/Frontend/Fill_In_With_Postnl_Handler.php:76
+#: woo-postnl/src/Frontend/Fill_In_With_Postnl_Handler.php:76
 msgid "No user data"
 msgstr ""
 
 #: src/Frontend/Fill_In_With_Postnl_Handler.php:109
+#: woo-postnl/src/Frontend/Fill_In_With_Postnl_Handler.php:109
 msgid "Login session expired. Please try again."
 msgstr ""
 
 #. translators: %s is the error message from PostNL
 #: src/Frontend/Fill_In_With_Postnl_Handler.php:133
+#: woo-postnl/src/Frontend/Fill_In_With_Postnl_Handler.php:133
 msgid "PostNL Token Request Error: %s"
 msgstr ""
 
 #: src/Frontend/Fill_In_With_Postnl_Handler.php:146
+#: woo-postnl/src/Frontend/Fill_In_With_Postnl_Handler.php:146
 msgid "PostNL: Access token not found"
 msgstr ""
 
 #. translators: %s is the error message from PostNL
 #: src/Frontend/Fill_In_With_Postnl_Handler.php:165
+#: woo-postnl/src/Frontend/Fill_In_With_Postnl_Handler.php:165
 msgid "PostNL User Info Error: %s"
 msgstr ""
 
 #: src/Frontend/Fill_In_With_Postnl_Handler.php:181
+#: woo-postnl/src/Frontend/Fill_In_With_Postnl_Handler.php:181
 msgid "Incomplete user data."
 msgstr ""
 
 #: src/Helper/Mapping.php:30
 #: src/Shipping_Method/Settings.php:358
+#: woo-postnl/src/Helper/Mapping.php:30
+#: woo-postnl/src/Shipping_Method/Settings.php:358
 msgid "Morning Delivery"
 msgstr ""
 
 #: src/Helper/Mapping.php:31
+#: woo-postnl/src/Helper/Mapping.php:31
 msgid "Standard Shipment"
 msgstr ""
 
 #: src/Helper/Mapping.php:32
 #: src/Shipping_Method/Settings.php:376
+#: woo-postnl/src/Helper/Mapping.php:32
+#: woo-postnl/src/Shipping_Method/Settings.php:376
 msgid "Evening Delivery"
 msgstr ""
 
 #: src/Helper/Mapping.php:35
+#: woo-postnl/src/Helper/Mapping.php:35
 msgid "Pickup at PostNL Point"
 msgstr ""
 
 #: src/Helper/Mapping.php:40
 #: src/Shipping_Method/Settings.php:614
 #: src/Utils.php:602
+#: woo-postnl/src/Helper/Mapping.php:40
+#: woo-postnl/src/Shipping_Method/Settings.php:614
+#: woo-postnl/src/Utils.php:602
 msgid "Standard Shipment Belgium"
 msgstr ""
 
 #: src/Helper/Mapping.php:43
+#: woo-postnl/src/Helper/Mapping.php:43
 msgid "Pickup at PostNL Point Belgium"
 msgstr ""
 
@@ -211,115 +266,153 @@ msgstr ""
 #: src/Helper/Mapping.php:51
 #: src/Helper/Mapping.php:52
 #: src/Order/Bulk.php:511
+#: woo-postnl/src/Helper/Mapping.php:46
+#: woo-postnl/src/Helper/Mapping.php:51
+#: woo-postnl/src/Helper/Mapping.php:52
+#: woo-postnl/src/Order/Bulk.php:511
 msgid "EU Parcel"
 msgstr ""
 
 #: src/Helper/Mapping.php:47
 #: src/Helper/Mapping.php:53
 #: src/Order/Bulk.php:512
+#: woo-postnl/src/Helper/Mapping.php:47
+#: woo-postnl/src/Helper/Mapping.php:53
+#: woo-postnl/src/Order/Bulk.php:512
 msgid "Non-EU Shipment"
 msgstr ""
 
 #: src/Helper/Mapping.php:50
+#: woo-postnl/src/Helper/Mapping.php:50
 msgid "Belgium Domestic"
 msgstr ""
 
 #: src/Main.php:366
+#: woo-postnl/src/Main.php:366
 msgid "PostNL plugin requires WooCommerce to be installed and activated!"
 msgstr ""
 
 #: src/Main.php:379
+#: woo-postnl/src/Main.php:379
 msgid "PostNL plugin requires store country to be Netherlands (NL) or Belgium (BE)!"
 msgstr ""
 
 #: src/Main.php:457
+#: woo-postnl/src/Main.php:457
 msgid "Postnl Checkout Blocks"
 msgstr ""
 
 #: src/Main.php:476
+#: woo-postnl/src/Main.php:476
 msgid "Leave a review"
 msgstr ""
 
 #: src/Main.php:496
+#: woo-postnl/src/Main.php:496
 msgid "Settings"
 msgstr ""
 
 #: src/Order/Base.php:153
-msgid "ID Check: "
+#: woo-postnl/src/Order/Base.php:153
+msgid "ID Check (18+): "
 msgstr ""
 
 #: src/Order/Base.php:165
+#: woo-postnl/src/Order/Base.php:165
 msgid "Insured Shipping: "
 msgstr ""
 
 #: src/Order/Base.php:177
+#: woo-postnl/src/Order/Base.php:177
 msgid "Insured Plus: "
 msgstr ""
 
 #: src/Order/Base.php:189
+#: woo-postnl/src/Order/Base.php:189
 msgid "Return if no answer: "
 msgstr ""
 
 #: src/Order/Base.php:201
+#: woo-postnl/src/Order/Base.php:201
 msgid "Signature on Delivery: "
 msgstr ""
 
 #: src/Order/Base.php:213
+#: woo-postnl/src/Order/Base.php:213
 msgid "Only Home Address: "
 msgstr ""
 
 #: src/Order/Base.php:225
+#: woo-postnl/src/Order/Base.php:225
 msgid "Letterbox: "
 msgstr ""
 
 #: src/Order/Base.php:237
+#: woo-postnl/src/Order/Base.php:237
 msgid "Packets: "
 msgstr ""
 
 #: src/Order/Base.php:249
+#: woo-postnl/src/Order/Base.php:249
 msgid "Mailbox Packet (International): "
 msgstr ""
 
 #: src/Order/Base.php:261
+#: woo-postnl/src/Order/Base.php:261
 msgid "Track & Trace: "
 msgstr ""
 
 #: src/Order/Base.php:273
+#: woo-postnl/src/Order/Base.php:273
 msgid "Delivery code at the door: "
 msgstr ""
 
 #: src/Order/Base.php:291
 #: src/Order/Bulk.php:429
+#: woo-postnl/src/Order/Base.php:291
+#: woo-postnl/src/Order/Bulk.php:429
 msgid "Number of Labels: "
 msgstr ""
 
 #: src/Order/Base.php:322
 #: src/Order/Bulk.php:448
+#: woo-postnl/src/Order/Base.php:322
+#: woo-postnl/src/Order/Bulk.php:448
 msgid "Create Return Label: "
 msgstr ""
 
 #: src/Order/Base.php:337
 #: src/Order/Bulk.php:460
+#: woo-postnl/src/Order/Base.php:337
+#: woo-postnl/src/Order/Bulk.php:460
 msgid "Start position printing label: "
 msgstr ""
 
 #: src/Order/Base.php:341
 #: src/Order/Bulk.php:466
+#: woo-postnl/src/Order/Base.php:341
+#: woo-postnl/src/Order/Bulk.php:466
 msgid "Top Left"
 msgstr ""
 
 #: src/Order/Base.php:342
 #: src/Order/Bulk.php:467
+#: woo-postnl/src/Order/Base.php:342
+#: woo-postnl/src/Order/Bulk.php:467
 msgid "Top Right"
 msgstr ""
 
 #: src/Order/Base.php:343
 #: src/Order/Bulk.php:468
+#: woo-postnl/src/Order/Base.php:343
+#: woo-postnl/src/Order/Bulk.php:468
 msgid "Bottom Left"
 msgstr ""
 
 #: src/Order/Base.php:344
 #: src/Order/Bulk.php:469
+#: woo-postnl/src/Order/Base.php:344
+#: woo-postnl/src/Order/Bulk.php:469
 msgid "Bottom Right"
 msgstr ""
 
@@ -328,195 +421,252 @@ msgstr ""
 #: src/Order/Single.php:515
 #: src/Order/Single.php:620
 #: src/Order/Single.php:693
+#: woo-postnl/src/Order/Base.php:475
+#: woo-postnl/src/Order/Base.php:656
+#: woo-postnl/src/Order/Single.php:515
+#: woo-postnl/src/Order/Single.php:620
+#: woo-postnl/src/Order/Single.php:693
 msgid "Order does not exist!"
 msgstr ""
 
 #: src/Order/Base.php:753
+#: woo-postnl/src/Order/Base.php:753
 msgid "Cannot create the barcode."
 msgstr ""
 
 #: src/Order/Base.php:877
+#: woo-postnl/src/Order/Base.php:877
 msgid "Cannot create return barcode."
 msgstr ""
 
 #: src/Order/Base.php:1070
+#: woo-postnl/src/Order/Base.php:1070
 msgid "There are no files to merge."
 msgstr ""
 
 #: src/Order/Base.php:1074
+#: woo-postnl/src/Order/Base.php:1074
 msgid "\"Imagick\" must be installed on the server to merge png files."
 msgstr ""
 
 #: src/Order/Base.php:1159
 #: src/Order/Base.php:1258
+#: woo-postnl/src/Order/Base.php:1159
+#: woo-postnl/src/Order/Base.php:1258
 msgid "Cannot create the label. Label content is missing"
 msgstr ""
 
 #: src/Order/Base.php:1190
+#: woo-postnl/src/Order/Base.php:1190
 msgid "Cannot create the return label. Label content is missing"
 msgstr ""
 
 #: src/Order/Base.php:1221
+#: woo-postnl/src/Order/Base.php:1221
 msgid "Cannot create the letterbox. Label content is missing"
 msgstr ""
 
 #: src/Order/Base.php:1252
+#: woo-postnl/src/Order/Base.php:1252
 msgid "Cannot create the label. Barcode data is missing"
 msgstr ""
 
 #. translators: %s the current service.
 #: src/Order/Base.php:1387
+#: woo-postnl/src/Order/Base.php:1387
 msgid "%s Tracking Number: {tracking-link}"
 msgstr ""
 
 #: src/Order/Bulk.php:89
 #: src/Order/Bulk.php:641
+#: woo-postnl/src/Order/Bulk.php:89
+#: woo-postnl/src/Order/Bulk.php:641
 msgid "PostNL Create Label"
 msgstr ""
 
 #: src/Order/Bulk.php:91
+#: woo-postnl/src/Order/Bulk.php:91
 msgid "PostNL Change Shipping Options"
 msgstr ""
 
 #. Translators: %1$d is the order ID.
 #: src/Order/Bulk.php:169
+#: woo-postnl/src/Order/Bulk.php:169
 msgid "Order #%1$d already has a label."
 msgstr ""
 
 #. Translators: %1$d is the order ID.
 #: src/Order/Bulk.php:179
+#: woo-postnl/src/Order/Bulk.php:179
 msgid "Order #%1$d is from another shipping zone."
 msgstr ""
 
 #. translators: %1$s is anchor tag opener. %2$s is anchor tag closer.
 #: src/Order/Bulk.php:267
+#: woo-postnl/src/Order/Bulk.php:267
 msgid "Bulk PostNL labels file created - %1$sdownload file%2$s"
 msgstr ""
 
 #: src/Order/Bulk.php:273
+#: woo-postnl/src/Order/Bulk.php:273
 msgid "Could not create bulk PostNL label file, download individually."
 msgstr ""
 
 #: src/Order/Bulk.php:412
+#: woo-postnl/src/Order/Bulk.php:412
 msgid "Submit"
 msgstr ""
 
 #: src/Order/Bulk.php:505
+#: woo-postnl/src/Order/Bulk.php:505
 msgid "Shipping zone"
 msgstr ""
 
 #: src/Order/Bulk.php:509
+#: woo-postnl/src/Order/Bulk.php:509
 msgid "Domestic"
 msgstr ""
 
 #: src/Order/Bulk.php:510
 #: src/Order/Bulk.php:528
+#: woo-postnl/src/Order/Bulk.php:510
+#: woo-postnl/src/Order/Bulk.php:528
 msgid "Belgium"
 msgstr ""
 
 #: src/Order/Bulk.php:513
+#: woo-postnl/src/Order/Bulk.php:513
 msgid "Pick-up at PostNL"
 msgstr ""
 
 #: src/Order/Bulk.php:519
 #: src/Shipping_Method/Settings.php:584
+#: woo-postnl/src/Order/Bulk.php:519
+#: woo-postnl/src/Shipping_Method/Settings.php:584
 msgid "Shipping options domestic"
 msgstr ""
 
 #: src/Order/Bulk.php:537
 #: src/Shipping_Method/Settings.php:626
+#: woo-postnl/src/Order/Bulk.php:537
+#: woo-postnl/src/Shipping_Method/Settings.php:626
 msgid "Shipping options EU"
 msgstr ""
 
 #: src/Order/Bulk.php:546
+#: woo-postnl/src/Order/Bulk.php:546
 msgid "Shipping options non-EU"
 msgstr ""
 
 #: src/Order/Bulk.php:555
+#: woo-postnl/src/Order/Bulk.php:555
 msgid "Shipping options for Pick-up at PostNL"
 msgstr ""
 
 #: src/Order/Bulk.php:635
+#: woo-postnl/src/Order/Bulk.php:635
 msgid "PostNL Print Label"
 msgstr ""
 
 #: src/Order/Bulk.php:703
+#: woo-postnl/src/Order/Bulk.php:703
 msgid "#%1$s : PostNL label has been created - %2$sdownload file%3$s"
 msgstr ""
 
 #: src/Order/OrdersList.php:78
+#: woo-postnl/src/Order/OrdersList.php:78
 msgid "PostNL Tracking"
 msgstr ""
 
 #: src/Order/OrdersList.php:117
+#: woo-postnl/src/Order/OrdersList.php:117
 msgid "Delivery Date"
 msgstr ""
 
 #: src/Order/OrdersList.php:147
 #: src/Utils.php:542
 #: templates/checkout/postnl-delivery-day.php:78
+#: woo-postnl/src/Order/OrdersList.php:147
+#: woo-postnl/src/Utils.php:542
+#: woo-postnl/templates/checkout/postnl-delivery-day.php:78
 #: build/postnl-container-frontend.js:1
 #: client/checkout/postnl-delivery-day/block.js:321
+#: woo-postnl/build/postnl-container-frontend.js:1
 msgid "As soon as possible"
 msgstr ""
 
 #: src/Order/OrdersList.php:168
+#: woo-postnl/src/Order/OrdersList.php:168
 msgid "Shipping options"
 msgstr ""
 
 #: src/Order/OrdersList.php:261
+#: woo-postnl/src/Order/OrdersList.php:261
 msgid "Fits through letterbox"
 msgstr ""
 
 #: src/Order/Single.php:135
+#: woo-postnl/src/Order/Single.php:135
 msgid "Label & Tracking"
 msgstr ""
 
 #: src/Order/Single.php:262
+#: woo-postnl/src/Order/Single.php:262
 msgid "Delivery Type:"
 msgstr ""
 
 #: src/Order/Single.php:293
+#: woo-postnl/src/Order/Single.php:293
 msgid "Delivery Date:"
 msgstr ""
 
 #: src/Order/Single.php:323
+#: woo-postnl/src/Order/Single.php:323
 msgid "Pickup Address:"
 msgstr ""
 
 #: src/Order/Single.php:360
+#: woo-postnl/src/Order/Single.php:360
 msgid "Activate return function"
 msgstr ""
 
 #: src/Order/Single.php:363
+#: woo-postnl/src/Order/Single.php:363
 msgid "Return function is activated for this label"
 msgstr ""
 
 #: src/Order/Single.php:366
+#: woo-postnl/src/Order/Single.php:366
 msgid "Click here to activate the return function of this label"
 msgstr ""
 
 #: src/Order/Single.php:384
+#: woo-postnl/src/Order/Single.php:384
 msgid "Send email with Smart Return"
 msgstr ""
 
 #: src/Order/Single.php:422
+#: woo-postnl/src/Order/Single.php:422
 msgid "Create Shipment"
 msgstr ""
 
 #: src/Order/Single.php:424
+#: woo-postnl/src/Order/Single.php:424
 msgid "Print Label"
 msgstr ""
 
 #: src/Order/Single.php:426
+#: woo-postnl/src/Order/Single.php:426
 msgid "Delete Label"
 msgstr ""
 
 #: src/Order/Single.php:432
+#: woo-postnl/src/Order/Single.php:432
 msgid "Print Return Label"
 msgstr ""
 
 #: src/Order/Single.php:437
+#: woo-postnl/src/Order/Single.php:437
 msgid "Print Letterbox"
 msgstr ""
 
@@ -524,349 +674,449 @@ msgstr ""
 #: src/Order/Single.php:501
 #: src/Order/Single.php:607
 #: src/Order/Single.php:680
+#: woo-postnl/src/Order/Single.php:456
+#: woo-postnl/src/Order/Single.php:501
+#: woo-postnl/src/Order/Single.php:607
+#: woo-postnl/src/Order/Single.php:680
 msgid "Cannot find nonce field!"
 msgstr ""
 
 #: src/Order/Single.php:462
 #: src/Order/Single.php:507
+#: woo-postnl/src/Order/Single.php:462
+#: woo-postnl/src/Order/Single.php:507
 msgid "Nonce is invalid!"
 msgstr ""
 
 #: src/Order/Single.php:612
 #: src/Order/Single.php:685
+#: woo-postnl/src/Order/Single.php:612
+#: woo-postnl/src/Order/Single.php:685
 msgid "Nonce is invalid"
 msgstr ""
 
 #: src/Order/Single.php:624
+#: woo-postnl/src/Order/Single.php:624
 msgid "Already activated!"
 msgstr ""
 
 #: src/Order/Single.php:640
+#: woo-postnl/src/Order/Single.php:640
 msgid "Unknown error."
 msgstr ""
 
 #. Translators: %s is the error message.
 #: src/Order/Single.php:664
+#: woo-postnl/src/Order/Single.php:664
 msgid "Error: %s"
 msgstr ""
 
 #: src/Order/Single.php:720
+#: woo-postnl/src/Order/Single.php:720
 msgid "PrintcodeLabel could not found"
 msgstr ""
 
 #: src/Order/Single.php:751
+#: woo-postnl/src/Order/Single.php:751
 msgid "Email could not be send"
 msgstr ""
 
 #: src/Order/Single.php:782
+#: woo-postnl/src/Order/Single.php:782
 msgid "18+ Adults Only"
 msgstr ""
 
 #: src/Product/Product_Editor.php:47
+#: woo-postnl/src/Product/Product_Editor.php:47
 msgid "PostNL extra settings"
 msgstr ""
 
 #: src/Product/Product_Editor.php:48
+#: woo-postnl/src/Product/Product_Editor.php:48
 msgid "Mark as 18+ (Adults Only)"
 msgstr ""
 
 #: src/Product/Product_Editor.php:50
 #: src/Product/Single.php:94
+#: woo-postnl/src/Product/Product_Editor.php:50
+#: woo-postnl/src/Product/Single.php:94
 msgid "Enable this for products intended only for adults (18+)."
 msgstr ""
 
 #: src/Product/Product_Editor.php:63
+#: woo-postnl/src/Product/Product_Editor.php:63
 msgid "Enable Letterbox Parcel"
 msgstr ""
 
 #: src/Product/Product_Editor.php:65
+#: woo-postnl/src/Product/Product_Editor.php:65
 msgid "When enabled, PostNL plugin automatically determines whether a shipment fits through a letterbox."
 msgstr ""
 
 #: src/Product/Product_Editor.php:78
+#: woo-postnl/src/Product/Product_Editor.php:78
 msgid "Maximum Quantity per Letterbox Parcel"
 msgstr ""
 
 #: src/Product/Product_Editor.php:80
 #: src/Product/Single.php:112
+#: woo-postnl/src/Product/Product_Editor.php:80
+#: woo-postnl/src/Product/Single.php:112
 msgid "Enter max quantity"
 msgstr ""
 
 #: src/Product/Product_Editor.php:82
+#: woo-postnl/src/Product/Product_Editor.php:82
 msgid "Specify how many times this product fits in a letterbox parcel."
 msgstr ""
 
 #: src/Product/Product_Editor.php:93
+#: woo-postnl/src/Product/Product_Editor.php:93
 msgid "Country of Origin"
 msgstr ""
 
 #: src/Product/Product_Editor.php:99
 #: src/Product/Single.php:125
+#: woo-postnl/src/Product/Product_Editor.php:99
+#: woo-postnl/src/Product/Single.php:125
 msgid "- select country -"
 msgstr ""
 
 #: src/Product/Product_Editor.php:113
+#: woo-postnl/src/Product/Product_Editor.php:113
 msgid "Select the country of origin for this product."
 msgstr ""
 
 #: src/Product/Product_Editor.php:124
+#: woo-postnl/src/Product/Product_Editor.php:124
 msgid "HS Tariff Code"
 msgstr ""
 
 #: src/Product/Product_Editor.php:126
 #: src/Product/Single.php:136
+#: woo-postnl/src/Product/Product_Editor.php:126
+#: woo-postnl/src/Product/Single.php:136
 msgid "HS Code"
 msgstr ""
 
 #: src/Product/Product_Editor.php:127
+#: woo-postnl/src/Product/Product_Editor.php:127
 msgid "HS Tariff Code for international shipping."
 msgstr ""
 
 #. translators: %s will be replaced by service name.
 #: src/Product/Single.php:93
+#: woo-postnl/src/Product/Single.php:93
 msgid "Mark as 18+ (Adults Only) (%s)"
 msgstr ""
 
 #. translators: %s will be replaced by service name.
 #: src/Product/Single.php:101
+#: woo-postnl/src/Product/Single.php:101
 msgid "Enable Letterbox Parcel (%s)"
 msgstr ""
 
 #: src/Product/Single.php:102
+#: woo-postnl/src/Product/Single.php:102
 msgid "When this setting is enabled the PostNL plug-in automatically determines whether a shipment fits through a letterbox. This choice can be overridden when creating a shipment manually via the Label & Tracking menu. This only works for orders with destination Netherlands."
 msgstr ""
 
 #. translators: %s will be replaced by service name.
 #: src/Product/Single.php:109
+#: woo-postnl/src/Product/Single.php:109
 msgid "Maximum amount per letterbox parcel (%s)"
 msgstr ""
 
 #: src/Product/Single.php:110
+#: woo-postnl/src/Product/Single.php:110
 msgid "Please fill in how many times this product fits in a letterbox parcel. A letterbox parcel may weigh a maximum of 2 kilograms and has the following maximum dimensions: 38x26.5x3.2 cm"
 msgstr ""
 
 #. translators: %s will be replaced by service name.
 #: src/Product/Single.php:121
+#: woo-postnl/src/Product/Single.php:121
 msgid "Country of Origin (%s)"
 msgstr ""
 
 #: src/Product/Single.php:122
+#: woo-postnl/src/Product/Single.php:122
 msgid "Country of Origin."
 msgstr ""
 
 #. translators: %s will be replaced by service name.
 #: src/Product/Single.php:133
+#: woo-postnl/src/Product/Single.php:133
 msgid "HS Tariff Code (%s)"
 msgstr ""
 
 #: src/Product/Single.php:134
+#: woo-postnl/src/Product/Single.php:134
 msgid "HS Tariff Code is a number assigned to every possible commodity that can be imported or exported from any country."
 msgstr ""
 
 #: src/Product/Single.php:223
+#: woo-postnl/src/Product/Single.php:223
 msgid "Product ID does not exists!"
 msgstr ""
 
 #: src/Product/Single.php:282
+#: woo-postnl/src/Product/Single.php:282
 msgid "“18+” and “Letterbox Parcel” cannot be enabled together. Letterbox has been disabled automatically."
 msgstr ""
 
 #: src/Rest_API/Barcode/Item_Info.php:66
 #: src/Rest_API/Shipping/Item_Info.php:140
+#: woo-postnl/src/Rest_API/Barcode/Item_Info.php:66
+#: woo-postnl/src/Rest_API/Shipping/Item_Info.php:140
 msgid "Order ID does not exist!"
 msgstr ""
 
 #: src/Rest_API/Barcode/Item_Info.php:136
 #: src/Rest_API/Shipping/Item_Info.php:356
+#: woo-postnl/src/Rest_API/Barcode/Item_Info.php:136
+#: woo-postnl/src/Rest_API/Shipping/Item_Info.php:356
 msgid "Customer Code is empty!"
 msgstr ""
 
 #: src/Rest_API/Barcode/Item_Info.php:139
 #: src/Rest_API/Shipping/Item_Info.php:359
+#: woo-postnl/src/Rest_API/Barcode/Item_Info.php:139
+#: woo-postnl/src/Rest_API/Shipping/Item_Info.php:359
 msgid "Customer Number is empty!"
 msgstr ""
 
 #: src/Rest_API/Base.php:273
 #: src/Rest_API/Base.php:282
 #: src/Rest_API/Base.php:290
+#: woo-postnl/src/Rest_API/Base.php:273
+#: woo-postnl/src/Rest_API/Base.php:282
+#: woo-postnl/src/Rest_API/Base.php:290
 msgid "Unknown error!"
 msgstr ""
 
 #: src/Rest_API/Base_Info.php:141
 #: src/Rest_API/Base_Info.php:145
+#: woo-postnl/src/Rest_API/Base_Info.php:141
+#: woo-postnl/src/Rest_API/Base_Info.php:145
 msgid "Shipping \"First Name\" is empty!"
 msgstr ""
 
 #: src/Rest_API/Base_Info.php:163
 #: src/Rest_API/Base_Info.php:167
+#: woo-postnl/src/Rest_API/Base_Info.php:163
+#: woo-postnl/src/Rest_API/Base_Info.php:167
 msgid "Shipping \"Address 1\" is empty!"
 msgstr ""
 
 #: src/Rest_API/Base_Info.php:179
+#: woo-postnl/src/Rest_API/Base_Info.php:179
 msgid "Shipping \"City\" is empty!"
 msgstr ""
 
 #: src/Rest_API/Base_Info.php:182
 #: src/Rest_API/Checkout/Item_Info.php:260
 #: src/Rest_API/Postcode_Check/Item_Info.php:88
+#: woo-postnl/src/Rest_API/Base_Info.php:182
+#: woo-postnl/src/Rest_API/Checkout/Item_Info.php:260
+#: woo-postnl/src/Rest_API/Postcode_Check/Item_Info.php:88
 msgid "Shipping \"Postcode\" is empty!"
 msgstr ""
 
 #: src/Rest_API/Base_Info.php:191
+#: woo-postnl/src/Rest_API/Base_Info.php:191
 msgid "Shipping \"Country\" is empty!"
 msgstr ""
 
 #: src/Rest_API/Base_Info.php:220
 #: src/Rest_API/Base_Info.php:224
+#: woo-postnl/src/Rest_API/Base_Info.php:220
+#: woo-postnl/src/Rest_API/Base_Info.php:224
 msgid "Store address 1 is not configured!"
 msgstr ""
 
 #: src/Rest_API/Base_Info.php:236
+#: woo-postnl/src/Rest_API/Base_Info.php:236
 msgid "Store city is not configured!"
 msgstr ""
 
 #: src/Rest_API/Base_Info.php:239
+#: woo-postnl/src/Rest_API/Base_Info.php:239
 msgid "Store postcode is not configured!"
 msgstr ""
 
 #: src/Rest_API/Base_Info.php:250
+#: woo-postnl/src/Rest_API/Base_Info.php:250
 msgid "Store country is not configured!"
 msgstr ""
 
 #: src/Rest_API/Checkout/Item_Info.php:119
+#: woo-postnl/src/Rest_API/Checkout/Item_Info.php:119
 msgid "Order date is empty!"
 msgstr ""
 
 #: src/Rest_API/Checkout/Item_Info.php:123
+#: woo-postnl/src/Rest_API/Checkout/Item_Info.php:123
 msgid "Shipping duration is empty!"
 msgstr ""
 
 #: src/Rest_API/Checkout/Item_Info.php:131
+#: woo-postnl/src/Rest_API/Checkout/Item_Info.php:131
 msgid "Wrong format for cut off time!"
 msgstr ""
 
 #: src/Rest_API/Checkout/Item_Info.php:215
+#: woo-postnl/src/Rest_API/Checkout/Item_Info.php:215
 msgid "Locations value is not a number!"
 msgstr ""
 
 #: src/Rest_API/Postcode_Check/Item_Info.php:85
+#: woo-postnl/src/Rest_API/Postcode_Check/Item_Info.php:85
 msgid "Shipping \"House number\" is empty!"
 msgstr ""
 
 #: src/Rest_API/Shipment_and_Return/Item_Info.php:82
+#: woo-postnl/src/Rest_API/Shipment_and_Return/Item_Info.php:82
 msgid "Given id is not an Order"
 msgstr ""
 
 #: src/Rest_API/Shipment_and_Return/Item_Info.php:86
+#: woo-postnl/src/Rest_API/Shipment_and_Return/Item_Info.php:86
 msgid "Missing barcode"
 msgstr ""
 
 #: src/Rest_API/Shipping/Item_Info.php:353
+#: woo-postnl/src/Rest_API/Shipping/Item_Info.php:353
 msgid "Location Code is empty!"
 msgstr ""
 
 #: src/Rest_API/Shipping/Item_Info.php:368
+#: woo-postnl/src/Rest_API/Shipping/Item_Info.php:368
 msgid "Store email is empty!"
 msgstr ""
 
 #: src/Rest_API/Shipping/Item_Info.php:374
+#: woo-postnl/src/Rest_API/Shipping/Item_Info.php:374
 msgid "Wrong format for store email!"
 msgstr ""
 
 #: src/Rest_API/Shipping/Item_Info.php:429
+#: woo-postnl/src/Rest_API/Shipping/Item_Info.php:429
 msgid "Order ID is empty!"
 msgstr ""
 
 #: src/Rest_API/Shipping/Item_Info.php:432
+#: woo-postnl/src/Rest_API/Shipping/Item_Info.php:432
 msgid "Order number is empty!"
 msgstr ""
 
 #: src/Rest_API/Shipping/Item_Info.php:435
+#: woo-postnl/src/Rest_API/Shipping/Item_Info.php:435
 msgid "Barcode is empty!"
 msgstr ""
 
 #: src/Rest_API/Shipping/Item_Info.php:447
+#: woo-postnl/src/Rest_API/Shipping/Item_Info.php:447
 msgid "Product code is empty!"
 msgstr ""
 
 #: src/Rest_API/Shipping/Item_Info.php:451
+#: woo-postnl/src/Rest_API/Shipping/Item_Info.php:451
 msgid "Wrong format for product code!"
 msgstr ""
 
 #: src/Rest_API/Shipping/Item_Info.php:496
+#: woo-postnl/src/Rest_API/Shipping/Item_Info.php:496
 msgid "Total weight is empty!"
 msgstr ""
 
 #: src/Rest_API/Shipping/Item_Info.php:511
+#: woo-postnl/src/Rest_API/Shipping/Item_Info.php:511
 msgid "Customer email is not valid!"
 msgstr ""
 
 #: src/Rest_API/Shipping/Item_Info.php:541
+#: woo-postnl/src/Rest_API/Shipping/Item_Info.php:541
 msgid "Delivery day \"Date\" is empty!"
 msgstr ""
 
 #: src/Rest_API/Shipping/Item_Info.php:557
+#: woo-postnl/src/Rest_API/Shipping/Item_Info.php:557
 msgid "Delivery day \"From\" is empty!"
 msgstr ""
 
 #: src/Rest_API/Shipping/Item_Info.php:570
+#: woo-postnl/src/Rest_API/Shipping/Item_Info.php:570
 msgid "Delivery day \"To\" is empty!"
 msgstr ""
 
 #: src/Rest_API/Shipping/Item_Info.php:586
+#: woo-postnl/src/Rest_API/Shipping/Item_Info.php:586
 msgid "Delivery day \"Type\" is empty!"
 msgstr ""
 
 #: src/Rest_API/Shipping/Item_Info.php:610
+#: woo-postnl/src/Rest_API/Shipping/Item_Info.php:610
 msgid "Pickup \"Date\" is empty!"
 msgstr ""
 
 #: src/Rest_API/Shipping/Item_Info.php:626
+#: woo-postnl/src/Rest_API/Shipping/Item_Info.php:626
 msgid "Pickup \"Time\" is empty!"
 msgstr ""
 
 #: src/Rest_API/Shipping/Item_Info.php:638
+#: woo-postnl/src/Rest_API/Shipping/Item_Info.php:638
 msgid "Pickup \"Company name\" is empty!"
 msgstr ""
 
 #: src/Rest_API/Shipping/Item_Info.php:647
+#: woo-postnl/src/Rest_API/Shipping/Item_Info.php:647
 msgid "Pickup \"Address 1\" is empty!"
 msgstr ""
 
 #: src/Rest_API/Shipping/Item_Info.php:662
+#: woo-postnl/src/Rest_API/Shipping/Item_Info.php:662
 msgid "Pickup Point \"City\" is empty!"
 msgstr ""
 
 #: src/Rest_API/Shipping/Item_Info.php:671
+#: woo-postnl/src/Rest_API/Shipping/Item_Info.php:671
 msgid "Pickup Point \"Postcode\" is empty!"
 msgstr ""
 
 #: src/Rest_API/Shipping/Item_Info.php:683
+#: woo-postnl/src/Rest_API/Shipping/Item_Info.php:683
 msgid "Pickup Point \"Country\" is empty!"
 msgstr ""
 
 #: src/Rest_API/Shipping/Item_Info.php:817
+#: woo-postnl/src/Rest_API/Shipping/Item_Info.php:817
 msgid "Item HS Code must be between 6 and 20 characters long"
 msgstr ""
 
 #: src/Rest_API/Shipping/Item_Info.php:830
+#: woo-postnl/src/Rest_API/Shipping/Item_Info.php:830
 msgid "Item \"Product ID\" is empty!"
 msgstr ""
 
 #: src/Rest_API/Shipping/Item_Info.php:833
+#: woo-postnl/src/Rest_API/Shipping/Item_Info.php:833
 msgid "Item \"Product SKU\" is empty!"
 msgstr ""
 
 #: src/Rest_API/Shipping/Item_Info.php:850
+#: woo-postnl/src/Rest_API/Shipping/Item_Info.php:850
 msgid "Item quantity must be more than 1"
 msgstr ""
 
 #: src/Rest_API/Shipping/Item_Info.php:1030
+#: woo-postnl/src/Rest_API/Shipping/Item_Info.php:1030
 msgid "Max weight for Mailbox Packet is 2kg!"
 msgstr ""
 
 #. Translators: %s is the order total.
 #: src/Rest_API/Shipping/Item_Info.php:1053
+#: woo-postnl/src/Rest_API/Shipping/Item_Info.php:1053
 msgid "Insurance amount for EU shipments cannot exceed €5000. Your total is: %d"
 msgstr ""
 
@@ -874,12 +1124,18 @@ msgstr ""
 #: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:61
 #: templates/checkout/postnl-fill-in-with-button.php:22
 #: templates/checkout/postnl-fill-in-with-button.php:25
+#: woo-postnl/src/Shipping_Method/Fill_In_With_PostNL_Settings.php:38
+#: woo-postnl/src/Shipping_Method/Fill_In_With_PostNL_Settings.php:61
+#: woo-postnl/templates/checkout/postnl-fill-in-with-button.php:22
+#: woo-postnl/templates/checkout/postnl-fill-in-with-button.php:25
 #: build/postnl-fill-in-with-frontend.js:1
 #: client/checkout/postnl-fill-in-with/block.js:161
+#: woo-postnl/build/postnl-fill-in-with-frontend.js:1
 msgid "Fill in with PostNL"
 msgstr ""
 
 #: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:55
+#: woo-postnl/src/Shipping_Method/Fill_In_With_PostNL_Settings.php:55
 msgid "With this functionality your customers can easily and automatically fill in their shipping address via their PostNL account. This functionality is only available for consumers with a Dutch shipping address. Click the following link to activate the functionality:"
 msgstr ""
 
@@ -892,776 +1148,995 @@ msgstr ""
 #: src/Shipping_Method/Settings.php:378
 #: src/Shipping_Method/Settings.php:449
 #: src/Shipping_Method/Settings.php:457
+#: woo-postnl/src/Shipping_Method/Fill_In_With_PostNL_Settings.php:67
+#: woo-postnl/src/Shipping_Method/Settings.php:115
+#: woo-postnl/src/Shipping_Method/Settings.php:189
+#: woo-postnl/src/Shipping_Method/Settings.php:293
+#: woo-postnl/src/Shipping_Method/Settings.php:329
+#: woo-postnl/src/Shipping_Method/Settings.php:360
+#: woo-postnl/src/Shipping_Method/Settings.php:378
+#: woo-postnl/src/Shipping_Method/Settings.php:449
+#: woo-postnl/src/Shipping_Method/Settings.php:457
 msgid "Enable"
 msgstr ""
 
 #: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:68
+#: woo-postnl/src/Shipping_Method/Fill_In_With_PostNL_Settings.php:68
 msgid "Enable Fill in with PostNL functionality."
 msgstr ""
 
 #: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:74
+#: woo-postnl/src/Shipping_Method/Fill_In_With_PostNL_Settings.php:74
 msgid "Client ID"
 msgstr ""
 
 #: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:75
+#: woo-postnl/src/Shipping_Method/Fill_In_With_PostNL_Settings.php:75
 msgid "Enter your PostNL Client ID from the Digital Business Portal."
 msgstr ""
 
 #: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:86
+#: woo-postnl/src/Shipping_Method/Fill_In_With_PostNL_Settings.php:86
 msgid "Cart Button"
 msgstr ""
 
 #: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:91
+#: woo-postnl/src/Shipping_Method/Fill_In_With_PostNL_Settings.php:91
 msgid "Automatically render button in cart page"
 msgstr ""
 
 #: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:92
+#: woo-postnl/src/Shipping_Method/Fill_In_With_PostNL_Settings.php:92
 msgid "If enabled, the button will be automatically rendered in the cart page."
 msgstr ""
 
 #: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:98
+#: woo-postnl/src/Shipping_Method/Fill_In_With_PostNL_Settings.php:98
 msgid "Cart page button placement"
 msgstr ""
 
 #: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:103
+#: woo-postnl/src/Shipping_Method/Fill_In_With_PostNL_Settings.php:103
 msgid "Before Checkout"
 msgstr ""
 
 #: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:104
+#: woo-postnl/src/Shipping_Method/Fill_In_With_PostNL_Settings.php:104
 msgid "After Checkout"
 msgstr ""
 
 #: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:114
+#: woo-postnl/src/Shipping_Method/Fill_In_With_PostNL_Settings.php:114
 msgid "Checkout Page"
 msgstr ""
 
 #: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:119
+#: woo-postnl/src/Shipping_Method/Fill_In_With_PostNL_Settings.php:119
 msgid "Automatically render button in checkout page"
 msgstr ""
 
 #: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:120
+#: woo-postnl/src/Shipping_Method/Fill_In_With_PostNL_Settings.php:120
 msgid "If enabled, the button will be automatically rendered in the checkout page."
 msgstr ""
 
 #: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:126
+#: woo-postnl/src/Shipping_Method/Fill_In_With_PostNL_Settings.php:126
 msgid "Checkout page button placement"
 msgstr ""
 
 #: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:131
+#: woo-postnl/src/Shipping_Method/Fill_In_With_PostNL_Settings.php:131
 msgid "Before Customer Details"
 msgstr ""
 
 #: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:132
+#: woo-postnl/src/Shipping_Method/Fill_In_With_PostNL_Settings.php:132
 msgid "After Customer Details"
 msgstr ""
 
 #: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:142
+#: woo-postnl/src/Shipping_Method/Fill_In_With_PostNL_Settings.php:142
 msgid "Minicart"
 msgstr ""
 
 #: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:147
+#: woo-postnl/src/Shipping_Method/Fill_In_With_PostNL_Settings.php:147
 msgid "Automatically render button in Minicart"
 msgstr ""
 
 #: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:148
+#: woo-postnl/src/Shipping_Method/Fill_In_With_PostNL_Settings.php:148
 msgid "If enabled, the button will be automatically rendered in the minicart."
 msgstr ""
 
 #: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:154
+#: woo-postnl/src/Shipping_Method/Fill_In_With_PostNL_Settings.php:154
 msgid "Minicart button placement"
 msgstr ""
 
 #: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:159
+#: woo-postnl/src/Shipping_Method/Fill_In_With_PostNL_Settings.php:159
 msgid "Before Buttons"
 msgstr ""
 
 #: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:160
+#: woo-postnl/src/Shipping_Method/Fill_In_With_PostNL_Settings.php:160
 msgid "After Buttons"
 msgstr ""
 
 #: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:170
+#: woo-postnl/src/Shipping_Method/Fill_In_With_PostNL_Settings.php:170
 msgid "Button Styling"
 msgstr ""
 
 #: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:175
+#: woo-postnl/src/Shipping_Method/Fill_In_With_PostNL_Settings.php:175
 msgid "Button Background Color"
 msgstr ""
 
 #: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:176
+#: woo-postnl/src/Shipping_Method/Fill_In_With_PostNL_Settings.php:176
 msgid "Select the background color for the PostNL button."
 msgstr ""
 
 #: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:184
+#: woo-postnl/src/Shipping_Method/Fill_In_With_PostNL_Settings.php:184
 msgid "Button Border"
 msgstr ""
 
 #: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:185
+#: woo-postnl/src/Shipping_Method/Fill_In_With_PostNL_Settings.php:185
 msgid "Define the border style for the PostNL button (e.g., 1px solid #000000)."
 msgstr ""
 
 #: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:193
+#: woo-postnl/src/Shipping_Method/Fill_In_With_PostNL_Settings.php:193
 msgid "Button Alignment"
 msgstr ""
 
 #: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:194
+#: woo-postnl/src/Shipping_Method/Fill_In_With_PostNL_Settings.php:194
 msgid "Select the alignment for the PostNL button."
 msgstr ""
 
 #: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:200
+#: woo-postnl/src/Shipping_Method/Fill_In_With_PostNL_Settings.php:200
 msgid "Left"
 msgstr ""
 
 #: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:201
+#: woo-postnl/src/Shipping_Method/Fill_In_With_PostNL_Settings.php:201
 msgid "Center"
 msgstr ""
 
 #: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:202
+#: woo-postnl/src/Shipping_Method/Fill_In_With_PostNL_Settings.php:202
 msgid "Right"
 msgstr ""
 
 #: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:206
+#: woo-postnl/src/Shipping_Method/Fill_In_With_PostNL_Settings.php:206
 msgid "Button Hover Background Color"
 msgstr ""
 
 #: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:207
+#: woo-postnl/src/Shipping_Method/Fill_In_With_PostNL_Settings.php:207
 msgid "Select the background color for the PostNL button on hover."
 msgstr ""
 
 #: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:221
 #: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:226
+#: woo-postnl/src/Shipping_Method/Fill_In_With_PostNL_Settings.php:221
+#: woo-postnl/src/Shipping_Method/Fill_In_With_PostNL_Settings.php:226
 msgid "Custom CSS"
 msgstr ""
 
 #: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:227
+#: woo-postnl/src/Shipping_Method/Fill_In_With_PostNL_Settings.php:227
 msgid "Add your custom styles for the PostNL button. This will be printed in the site header."
 msgstr ""
 
 #: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:239
+#: woo-postnl/src/Shipping_Method/Fill_In_With_PostNL_Settings.php:239
 msgid "I understand that the PostNL address fields are activated (= separate field for zipcode, housnumber, housenumber extension and street) to let consumers fill in their shipping address with the PostNL app."
 msgstr ""
 
 #: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:314
+#: woo-postnl/src/Shipping_Method/Fill_In_With_PostNL_Settings.php:314
 msgid "You must enable at least one \"Automatically render button\" option in Cart, Checkout, or Minicart."
 msgstr ""
 
 #. translators: %1$s & %2$s is replaced with <a> tag.
 #: src/Shipping_Method/PostNL.php:39
+#: woo-postnl/src/Shipping_Method/PostNL.php:39
 msgid "Below you will find all functions for controlling, preparing and processing your shipment with PostNL. Prerequisite is a valid PostNL business customer contract. If you are not yet a PostNL business customer, you can request a quote %1$shere%2$s."
 msgstr ""
 
 #. Translators: %s is the currency symbol.
 #: src/Shipping_Method/PostNL.php:111
+#: woo-postnl/src/Shipping_Method/PostNL.php:111
 msgid "Free shipping from %s"
 msgstr ""
 
 #: src/Shipping_Method/PostNL.php:113
+#: woo-postnl/src/Shipping_Method/PostNL.php:113
 msgid "Keep empty if you don’t want to use Free shipping"
 msgstr ""
 
 #: src/Shipping_Method/PostNL.php:180
+#: woo-postnl/src/Shipping_Method/PostNL.php:180
 msgid "Country"
 msgstr ""
 
 #: src/Shipping_Method/PostNL.php:183
+#: woo-postnl/src/Shipping_Method/PostNL.php:183
 msgid "Merchant Code"
 msgstr ""
 
 #: src/Shipping_Method/PostNL.php:186
+#: woo-postnl/src/Shipping_Method/PostNL.php:186
 msgid "Action"
 msgstr ""
 
 #: src/Shipping_Method/PostNL.php:197
 #: src/Shipping_Method/PostNL.php:237
+#: woo-postnl/src/Shipping_Method/PostNL.php:197
+#: woo-postnl/src/Shipping_Method/PostNL.php:237
 msgid "Select Country"
 msgstr ""
 
 #: src/Shipping_Method/PostNL.php:209
 #: src/Shipping_Method/PostNL.php:249
+#: woo-postnl/src/Shipping_Method/PostNL.php:209
+#: woo-postnl/src/Shipping_Method/PostNL.php:249
 msgid "Enter merchant code"
 msgstr ""
 
 #: src/Shipping_Method/PostNL.php:214
 #: src/Shipping_Method/PostNL.php:254
+#: woo-postnl/src/Shipping_Method/PostNL.php:214
+#: woo-postnl/src/Shipping_Method/PostNL.php:254
 msgid "Remove"
 msgstr ""
 
 #: src/Shipping_Method/PostNL.php:223
+#: woo-postnl/src/Shipping_Method/PostNL.php:223
 msgid "Add Merchant Code"
 msgstr ""
 
 #: src/Shipping_Method/PostNL.php:285
+#: woo-postnl/src/Shipping_Method/PostNL.php:285
 msgid "Duplicate countries found and have been removed. Only the last entry for each country will be saved."
 msgstr ""
 
 #: src/Shipping_Method/PostNL.php:304
+#: woo-postnl/src/Shipping_Method/PostNL.php:304
 msgid "Some merchant codes were not saved because of missing country or code."
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:63
+#: woo-postnl/src/Shipping_Method/Settings.php:63
 msgid "Manual"
 msgstr ""
 
 #. translators: %1$s & %2$s is replaced with <a> tag.
 #: src/Shipping_Method/Settings.php:66
+#: woo-postnl/src/Shipping_Method/Settings.php:66
 msgid "Consult the %1$smanual%2$s for help installing the plug-in."
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:70
+#: woo-postnl/src/Shipping_Method/Settings.php:70
 msgid "Account Settings"
 msgstr ""
 
 #. translators: %1$s & %2$s is replaced with <a> tag.
 #: src/Shipping_Method/Settings.php:73
+#: woo-postnl/src/Shipping_Method/Settings.php:73
 msgid "Please configure your shipping parameters and your access towards the PostNL APIs by means of authentication. You can find the details of your PostNL account in Mijn %1$sPostNL%2$s under \"My Account > API beheren\"."
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:76
+#: woo-postnl/src/Shipping_Method/Settings.php:76
 msgid "Environment Mode"
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:78
+#: woo-postnl/src/Shipping_Method/Settings.php:78
 msgid "Choose the environment mode."
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:81
+#: woo-postnl/src/Shipping_Method/Settings.php:81
 msgid "Production"
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:82
+#: woo-postnl/src/Shipping_Method/Settings.php:82
 msgid "Sandbox"
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:89
+#: woo-postnl/src/Shipping_Method/Settings.php:89
 msgid "Production API Key"
 msgstr ""
 
 #. translators: %1$s & %2$s is replaced with <a> tag.
 #: src/Shipping_Method/Settings.php:92
+#: woo-postnl/src/Shipping_Method/Settings.php:92
 msgid "Insert your PostNL production API-key. You can find your API-key on Mijn %1$sPostNL%2$s under \"My Account\"."
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:98
+#: woo-postnl/src/Shipping_Method/Settings.php:98
 msgid "Sandbox API Key"
 msgstr ""
 
 #. translators: %1$s & %2$s is replaced with <a> tag.
 #: src/Shipping_Method/Settings.php:101
+#: woo-postnl/src/Shipping_Method/Settings.php:101
 msgid "Insert your PostNL staging API-key. You can find your API-key on Mijn %1$sPostNL%2$s under \"My Account\"."
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:107
+#: woo-postnl/src/Shipping_Method/Settings.php:107
 msgid "Logging"
 msgstr ""
 
 #. translators: %1$s is anchor opener tag and %2$s is anchor closer tag.
 #: src/Shipping_Method/Settings.php:111
+#: woo-postnl/src/Shipping_Method/Settings.php:111
 msgid "A log file containing the communication to the PostNL server will be maintained if this option is checked. This can be used in case of technical issues and can be found %1$shere%2$s."
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:121
+#: woo-postnl/src/Shipping_Method/Settings.php:121
 msgid "Customer Number"
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:123
+#: woo-postnl/src/Shipping_Method/Settings.php:123
 msgid "e.g. \"11223344\""
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:129
+#: woo-postnl/src/Shipping_Method/Settings.php:129
 msgid "Customer Code"
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:131
+#: woo-postnl/src/Shipping_Method/Settings.php:131
 msgid "e.g. \"DEVC\""
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:138
+#: woo-postnl/src/Shipping_Method/Settings.php:138
 msgid "Company Name"
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:140
+#: woo-postnl/src/Shipping_Method/Settings.php:140
 msgid "Enter company name - this name will be noted as the sender on the label"
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:159
+#: woo-postnl/src/Shipping_Method/Settings.php:159
 msgid "Return Settings"
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:164
+#: woo-postnl/src/Shipping_Method/Settings.php:164
 msgid "Standard return option"
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:166
+#: woo-postnl/src/Shipping_Method/Settings.php:166
 msgid "- None: return labels are not automatically created"
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:167
+#: woo-postnl/src/Shipping_Method/Settings.php:167
 msgid "- Shipment & Return: the label of the outward shipment can also be used for the return shipment."
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:168
+#: woo-postnl/src/Shipping_Method/Settings.php:168
 msgid "- Label in the box: a separate return label is created at the same time as the label for the outward shipment and can be included in the box."
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:171
+#: woo-postnl/src/Shipping_Method/Settings.php:171
 msgid "None"
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:172
+#: woo-postnl/src/Shipping_Method/Settings.php:172
 msgid "Shipping & Return Label"
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:173
+#: woo-postnl/src/Shipping_Method/Settings.php:173
 msgid "Label in the box"
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:187
+#: woo-postnl/src/Shipping_Method/Settings.php:187
 msgid "Directly activate return function for all labels"
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:192
+#: woo-postnl/src/Shipping_Method/Settings.php:192
 msgid "Yes, activate return function directly for all orders"
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:193
+#: woo-postnl/src/Shipping_Method/Settings.php:193
 msgid "No, activate return function per individual order"
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:198
+#: woo-postnl/src/Shipping_Method/Settings.php:198
 msgid "Activate Smart Return"
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:201
 #: src/Shipping_Method/Settings.php:207
+#: woo-postnl/src/Shipping_Method/Settings.php:201
+#: woo-postnl/src/Shipping_Method/Settings.php:207
 msgid "Activate"
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:205
+#: woo-postnl/src/Shipping_Method/Settings.php:205
 msgid "Return to home address"
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:208
+#: woo-postnl/src/Shipping_Method/Settings.php:208
 msgid "Activate this setting to use a home address for return shipments"
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:212
+#: woo-postnl/src/Shipping_Method/Settings.php:212
 msgid "Replynumber"
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:214
+#: woo-postnl/src/Shipping_Method/Settings.php:214
 msgid "Enter replynumber."
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:221
+#: woo-postnl/src/Shipping_Method/Settings.php:221
 msgid "Freepost Zipcode"
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:223
+#: woo-postnl/src/Shipping_Method/Settings.php:223
 msgid "Enter Freepost Zipcode."
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:228
+#: woo-postnl/src/Shipping_Method/Settings.php:228
 msgid "Freepost City"
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:230
+#: woo-postnl/src/Shipping_Method/Settings.php:230
 msgid "Enter Freepost City."
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:235
+#: woo-postnl/src/Shipping_Method/Settings.php:235
 msgid "Street Address"
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:237
+#: woo-postnl/src/Shipping_Method/Settings.php:237
 msgid "Enter Return Street Address."
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:242
+#: woo-postnl/src/Shipping_Method/Settings.php:242
 msgid "House Number"
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:244
+#: woo-postnl/src/Shipping_Method/Settings.php:244
 msgid "Enter return house number."
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:251
+#: woo-postnl/src/Shipping_Method/Settings.php:251
 msgid "Enter return house number extension."
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:256
+#: woo-postnl/src/Shipping_Method/Settings.php:256
 msgid "Zipcode"
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:258
+#: woo-postnl/src/Shipping_Method/Settings.php:258
 msgid "Enter Return Zipcode."
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:263
+#: woo-postnl/src/Shipping_Method/Settings.php:263
 msgid "City"
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:265
+#: woo-postnl/src/Shipping_Method/Settings.php:265
 msgid "Enter Return City."
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:270
+#: woo-postnl/src/Shipping_Method/Settings.php:270
 msgid "Return Customer Code"
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:272
+#: woo-postnl/src/Shipping_Method/Settings.php:272
 msgid "Be aware that the Return Customer Code differs from the regular Customer Code. You can find your Return customer code in Mijn PostNL."
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:278
+#: woo-postnl/src/Shipping_Method/Settings.php:278
 msgid "Checkout Settings"
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:280
+#: woo-postnl/src/Shipping_Method/Settings.php:280
 msgid "Please configure your checkout preferences."
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:283
+#: woo-postnl/src/Shipping_Method/Settings.php:283
 msgid "Shipping Methods"
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:285
+#: woo-postnl/src/Shipping_Method/Settings.php:285
 msgid "Select Shipping Methods can be associated with PostNL."
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:291
+#: woo-postnl/src/Shipping_Method/Settings.php:291
 msgid "PostNL Pick-up Points"
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:294
+#: woo-postnl/src/Shipping_Method/Settings.php:294
 msgid "Show PostNL pick-up points in the checkout so that your customers can choose to get their orders delivered at a PostNL pick-up point."
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:301
+#: woo-postnl/src/Shipping_Method/Settings.php:301
 msgid "Extra fee pick-up delivery"
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:303
+#: woo-postnl/src/Shipping_Method/Settings.php:303
 msgid "Extra fee added when the customer selects a PostNL pick-up point."
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:330
+#: woo-postnl/src/Shipping_Method/Settings.php:330
 msgid "Show delivery days in the checkout so that your customers can choose which day to receive their order."
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:337
+#: woo-postnl/src/Shipping_Method/Settings.php:337
 msgid "Extra fee home delivery"
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:339
+#: woo-postnl/src/Shipping_Method/Settings.php:339
 msgid "Extra fee added when the customer selects home delivery."
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:345
+#: woo-postnl/src/Shipping_Method/Settings.php:345
 msgid "Number of Delivery Days"
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:347
+#: woo-postnl/src/Shipping_Method/Settings.php:347
 msgid "Number of delivery days displayed in the frontend. Maximum will be 12."
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:361
+#: woo-postnl/src/Shipping_Method/Settings.php:361
 msgid "Enable morning delivery in the checkout so your customers can choose to receive their orders in the morning."
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:368
+#: woo-postnl/src/Shipping_Method/Settings.php:368
 msgid "Morning Delivery Fee"
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:370
+#: woo-postnl/src/Shipping_Method/Settings.php:370
 msgid "Fee for receiving orders in the morning."
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:379
+#: woo-postnl/src/Shipping_Method/Settings.php:379
 msgid "Enable evening delivery in the checkout so your customers can choose to receive their orders in the evening."
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:386
+#: woo-postnl/src/Shipping_Method/Settings.php:386
 msgid "Evening Delivery Fee"
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:388
+#: woo-postnl/src/Shipping_Method/Settings.php:388
 msgid "Fee for receiving orders in the evening."
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:394
+#: woo-postnl/src/Shipping_Method/Settings.php:394
 msgid "Transit Time"
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:396
+#: woo-postnl/src/Shipping_Method/Settings.php:396
 msgid "The number of days it takes for the order to be delivered after the order has been placed."
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:402
+#: woo-postnl/src/Shipping_Method/Settings.php:402
 msgid "Cut Off Time"
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:404
+#: woo-postnl/src/Shipping_Method/Settings.php:404
 msgid "If an order is ordered after this time, one day will be added to the transit time."
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:410
+#: woo-postnl/src/Shipping_Method/Settings.php:410
 msgid "Drop off Days"
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:412
 #: src/Utils.php:33
+#: woo-postnl/src/Shipping_Method/Settings.php:412
+#: woo-postnl/src/Utils.php:33
 msgid "Monday"
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:413
+#: woo-postnl/src/Shipping_Method/Settings.php:413
 msgid "Select which days orders will be shipped."
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:419
 #: src/Utils.php:34
+#: woo-postnl/src/Shipping_Method/Settings.php:419
+#: woo-postnl/src/Utils.php:34
 msgid "Tuesday"
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:424
 #: src/Utils.php:35
+#: woo-postnl/src/Shipping_Method/Settings.php:424
+#: woo-postnl/src/Utils.php:35
 msgid "Wednesday"
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:429
 #: src/Utils.php:36
+#: woo-postnl/src/Shipping_Method/Settings.php:429
+#: woo-postnl/src/Utils.php:36
 msgid "Thursday"
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:434
 #: src/Utils.php:37
+#: woo-postnl/src/Shipping_Method/Settings.php:434
+#: woo-postnl/src/Utils.php:37
 msgid "Friday"
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:439
 #: src/Utils.php:38
+#: woo-postnl/src/Shipping_Method/Settings.php:439
+#: woo-postnl/src/Utils.php:38
 msgid "Saturday"
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:444
 #: src/Utils.php:39
+#: woo-postnl/src/Shipping_Method/Settings.php:444
+#: woo-postnl/src/Utils.php:39
 msgid "Sunday"
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:447
+#: woo-postnl/src/Shipping_Method/Settings.php:447
 msgid "Validate Dutch addresses"
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:450
+#: woo-postnl/src/Shipping_Method/Settings.php:450
 msgid "Based on zipcode and housenumber combination the address is checked."
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:455
+#: woo-postnl/src/Shipping_Method/Settings.php:455
 msgid "Use PostNL address-field"
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:458
+#: woo-postnl/src/Shipping_Method/Settings.php:458
 msgid "For zipcode, housenumber, housenumber extension and street separate address fields are displayed when this settings is enabled. This only applies for Dutch addresses."
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:465
+#: woo-postnl/src/Shipping_Method/Settings.php:465
 msgid "Shipping Outside Europe Settings"
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:467
-msgid "Please insert your Globalpack credentials."
+#: woo-postnl/src/Shipping_Method/Settings.php:467
+msgid "Please insert your Parcels non-EU credentials."
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:470
-msgid "GlobalPack Barcode Type"
+#: woo-postnl/src/Shipping_Method/Settings.php:470
+msgid "Parcels non-EU Barcode Type"
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:475
+#: woo-postnl/src/Shipping_Method/Settings.php:475
 msgid "CD"
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:479
-msgid "GlobalPack Customer Code"
+#: woo-postnl/src/Shipping_Method/Settings.php:479
+msgid "Parcels non-EU Customer Code"
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:484
+#: woo-postnl/src/Shipping_Method/Settings.php:484
 msgid "1234"
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:488
+#: woo-postnl/src/Shipping_Method/Settings.php:488
 msgid "Default HS Tariff Code"
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:490
+#: woo-postnl/src/Shipping_Method/Settings.php:490
 msgid "The HS tariff code is used by customs to classify goods. The HS tariff code can be found on the website of the Dutch Chamber of Commerce."
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:496
+#: woo-postnl/src/Shipping_Method/Settings.php:496
 msgid "Default Country of Origin"
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:498
+#: woo-postnl/src/Shipping_Method/Settings.php:498
 msgid "Default country of origin is used by customs."
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:505
+#: woo-postnl/src/Shipping_Method/Settings.php:505
 msgid "Merchant Customs Code"
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:507
+#: woo-postnl/src/Shipping_Method/Settings.php:507
 msgid "Add merchant codes for specific non-EU countries."
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:514
+#: woo-postnl/src/Shipping_Method/Settings.php:514
 msgid "Printer &amp; Email Settings"
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:516
+#: woo-postnl/src/Shipping_Method/Settings.php:516
 msgid "Please configure your printer and email preferences."
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:519
+#: woo-postnl/src/Shipping_Method/Settings.php:519
 msgid "Printer Type"
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:521
+#: woo-postnl/src/Shipping_Method/Settings.php:521
 msgid "It is not recommended to send .pdf files/labels directly to a Zebra printer If you want to send it directly to your Zebra printer, please use .gif files or the native (generic) zpl printer type"
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:532
+#: woo-postnl/src/Shipping_Method/Settings.php:532
 msgid "DPI"
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:542
+#: woo-postnl/src/Shipping_Method/Settings.php:542
 msgid "Label Format"
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:544
+#: woo-postnl/src/Shipping_Method/Settings.php:544
 msgid "Use A6 format in case you use a labelprinter. Use A4 format for other regular printers."
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:554
+#: woo-postnl/src/Shipping_Method/Settings.php:554
 msgid "Shipping confirmation e-mail address"
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:556
+#: woo-postnl/src/Shipping_Method/Settings.php:556
 msgid "This e-mail address will be used by PostNL for shipping confirmations. If left empty, no sender e-mail will be included."
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:560
+#: woo-postnl/src/Shipping_Method/Settings.php:560
 msgid "WooCommerce Email"
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:562
 #: src/Shipping_Method/Settings.php:563
+#: woo-postnl/src/Shipping_Method/Settings.php:562
+#: woo-postnl/src/Shipping_Method/Settings.php:563
 msgid "When PostNL label is created send email to customer."
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:569
+#: woo-postnl/src/Shipping_Method/Settings.php:569
 msgid "WooCommerce Email Text"
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:571
+#: woo-postnl/src/Shipping_Method/Settings.php:571
 msgid "Text added for tracking note email."
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:573
 #: src/Shipping_Method/Settings.php:574
+#: woo-postnl/src/Shipping_Method/Settings.php:573
+#: woo-postnl/src/Shipping_Method/Settings.php:574
 msgid "This is your track and track link {tracking-link}"
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:578
-#: src/Shipping_Method/Settings.php:697
+#: src/Shipping_Method/Settings.php:698
+#: woo-postnl/src/Shipping_Method/Settings.php:578
+#: woo-postnl/src/Shipping_Method/Settings.php:698
 msgid "Default shipping Options Settings"
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:580
-#: src/Shipping_Method/Settings.php:699
+#: src/Shipping_Method/Settings.php:700
+#: woo-postnl/src/Shipping_Method/Settings.php:580
+#: woo-postnl/src/Shipping_Method/Settings.php:700
 msgid "Please select Default shipping Options."
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:586
+#: woo-postnl/src/Shipping_Method/Settings.php:586
 msgid "Select a default shipping option for domestic orders that are shipped with PostNL."
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:590
 #: src/Utils.php:595
+#: woo-postnl/src/Shipping_Method/Settings.php:590
+#: woo-postnl/src/Utils.php:595
 msgid "Standard shipment"
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:591
 #: src/Shipping_Method/Settings.php:667
 #: src/Utils.php:596
-msgid "ID Check"
+#: woo-postnl/src/Shipping_Method/Settings.php:591
+#: woo-postnl/src/Shipping_Method/Settings.php:667
+#: woo-postnl/src/Utils.php:596
+msgid "ID Check (18+)"
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:592
-msgid "ID Check + Insured Shipping"
+#: src/Shipping_Method/Settings.php:669
+#: woo-postnl/src/Shipping_Method/Settings.php:592
+#: woo-postnl/src/Shipping_Method/Settings.php:669
+msgid "ID Check (18+) + Insured Shipping"
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:594
 #: src/Utils.php:597
+#: woo-postnl/src/Shipping_Method/Settings.php:594
+#: woo-postnl/src/Utils.php:597
 msgid "Return if no answer"
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:595
 #: src/Utils.php:598
+#: woo-postnl/src/Shipping_Method/Settings.php:595
+#: woo-postnl/src/Utils.php:598
 msgid "Signature on Delivery"
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:596
 #: src/Utils.php:599
+#: woo-postnl/src/Shipping_Method/Settings.php:596
+#: woo-postnl/src/Utils.php:599
 msgid "Only Home Address"
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:597
 #: src/Utils.php:600
+#: woo-postnl/src/Shipping_Method/Settings.php:597
+#: woo-postnl/src/Utils.php:600
 msgid "Letterbox"
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:598
+#: woo-postnl/src/Shipping_Method/Settings.php:598
 msgid "Signature on Delivery + Insured Shipping"
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:599
+#: woo-postnl/src/Shipping_Method/Settings.php:599
 msgid "Signature on Delivery + Return if no answer"
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:600
+#: woo-postnl/src/Shipping_Method/Settings.php:600
 msgid "Insured Shipping + Return if no answer + Signature on Delivery"
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:601
+#: woo-postnl/src/Shipping_Method/Settings.php:601
 msgid "Only Home Address + Return if no answer"
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:602
+#: woo-postnl/src/Shipping_Method/Settings.php:602
 msgid "Only Home Address + Return if no answer + Signature on Delivery"
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:603
+#: woo-postnl/src/Shipping_Method/Settings.php:603
 msgid "Only Home Address + Signature on Delivery"
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:604
+#: woo-postnl/src/Shipping_Method/Settings.php:604
 msgid "Delivery Code at Door + Insured Shipping"
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:608
+#: woo-postnl/src/Shipping_Method/Settings.php:608
 msgid "Shipping options Belgium"
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:610
+#: woo-postnl/src/Shipping_Method/Settings.php:610
 msgid "Select a default shipping option for the orders shipped to Belgium with PostNL."
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:615
+#: woo-postnl/src/Shipping_Method/Settings.php:615
 msgid "Standard Shipment Belgium + Only Home Address"
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:616
+#: woo-postnl/src/Shipping_Method/Settings.php:616
 msgid "Standard Shipment Belgium + Signature on Delivery"
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:617
+#: woo-postnl/src/Shipping_Method/Settings.php:617
 msgid "Standard Shipment Belgium + Insured Shipping"
 msgstr ""
 
@@ -1669,203 +2144,268 @@ msgstr ""
 #: src/Shipping_Method/Settings.php:635
 #: src/Shipping_Method/Settings.php:652
 #: src/Utils.php:603
+#: woo-postnl/src/Shipping_Method/Settings.php:618
+#: woo-postnl/src/Shipping_Method/Settings.php:635
+#: woo-postnl/src/Shipping_Method/Settings.php:652
+#: woo-postnl/src/Utils.php:603
 msgid "Boxable Packet"
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:619
 #: src/Shipping_Method/Settings.php:636
 #: src/Shipping_Method/Settings.php:653
+#: woo-postnl/src/Shipping_Method/Settings.php:619
+#: woo-postnl/src/Shipping_Method/Settings.php:636
+#: woo-postnl/src/Shipping_Method/Settings.php:653
 msgid "Boxable Packet + Track & Trace"
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:620
 #: src/Shipping_Method/Settings.php:637
 #: src/Shipping_Method/Settings.php:654
+#: woo-postnl/src/Shipping_Method/Settings.php:620
+#: woo-postnl/src/Shipping_Method/Settings.php:637
+#: woo-postnl/src/Shipping_Method/Settings.php:654
 msgid "Packets"
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:621
 #: src/Shipping_Method/Settings.php:638
 #: src/Shipping_Method/Settings.php:655
+#: woo-postnl/src/Shipping_Method/Settings.php:621
+#: woo-postnl/src/Shipping_Method/Settings.php:638
+#: woo-postnl/src/Shipping_Method/Settings.php:655
 msgid "Packets + Track & Trace"
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:622
 #: src/Shipping_Method/Settings.php:639
 #: src/Shipping_Method/Settings.php:656
+#: woo-postnl/src/Shipping_Method/Settings.php:622
+#: woo-postnl/src/Shipping_Method/Settings.php:639
+#: woo-postnl/src/Shipping_Method/Settings.php:656
 msgid "Packets + Track & Trace + Insured"
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:628
+#: woo-postnl/src/Shipping_Method/Settings.php:628
 msgid "Select a default shipping option for the orders shipped within European Union zone."
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:632
+#: woo-postnl/src/Shipping_Method/Settings.php:632
 msgid "EU Parcel + Track & Trace"
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:633
+#: woo-postnl/src/Shipping_Method/Settings.php:633
 msgid "EU Parcel + Track & Trace + Insured"
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:634
+#: woo-postnl/src/Shipping_Method/Settings.php:634
 msgid "EU Parcel + Track & Trace + Insured Plus"
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:643
-#: src/Shipping_Method/Settings.php:705
+#: src/Shipping_Method/Settings.php:706
+#: woo-postnl/src/Shipping_Method/Settings.php:643
+#: woo-postnl/src/Shipping_Method/Settings.php:706
 msgid "Default Shipping International"
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:645
+#: woo-postnl/src/Shipping_Method/Settings.php:645
 msgid "Shipping options non-EU (outside the EU borders)."
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:649
+#: woo-postnl/src/Shipping_Method/Settings.php:649
 msgid "Parcel non-EU + Track & Trace"
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:650
+#: woo-postnl/src/Shipping_Method/Settings.php:650
 msgid "Parcel non-EU + Track & Trace + Insured"
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:651
-#: src/Shipping_Method/Settings.php:711
+#: src/Shipping_Method/Settings.php:712
+#: woo-postnl/src/Shipping_Method/Settings.php:651
+#: woo-postnl/src/Shipping_Method/Settings.php:712
 msgid "Parcel non-EU + Track & Trace + Insured Plus"
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:660
+#: woo-postnl/src/Shipping_Method/Settings.php:660
 msgid "Default Shipping Pickup"
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:662
+#: woo-postnl/src/Shipping_Method/Settings.php:662
 msgid "Shipping options Pickup."
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:666
+#: woo-postnl/src/Shipping_Method/Settings.php:666
 msgid "Standard Shipping"
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:668
 #: src/Utils.php:605
+#: woo-postnl/src/Shipping_Method/Settings.php:668
+#: woo-postnl/src/Utils.php:605
 msgid "Insured Shipping"
 msgstr ""
 
-#: src/Shipping_Method/Settings.php:672
+#: src/Shipping_Method/Settings.php:673
+#: woo-postnl/src/Shipping_Method/Settings.php:673
 msgid "Automatically change order status to Completed"
 msgstr ""
 
-#: src/Shipping_Method/Settings.php:674
 #: src/Shipping_Method/Settings.php:675
+#: src/Shipping_Method/Settings.php:676
+#: woo-postnl/src/Shipping_Method/Settings.php:675
+#: woo-postnl/src/Shipping_Method/Settings.php:676
 msgid "Automatically change order status to Completed once an order has been pre-alerted and printed"
 msgstr ""
 
-#: src/Shipping_Method/Settings.php:707
+#: src/Shipping_Method/Settings.php:708
+#: woo-postnl/src/Shipping_Method/Settings.php:708
 msgid "Select a default shipping option for the orders shipped internationally (outside the EU borders)."
 msgstr ""
 
 #. translators: %s is a field argument.
 #: src/Utils.php:296
+#: woo-postnl/src/Utils.php:296
 msgid "Please specify a \"%s\" argument"
 msgstr ""
 
 #: src/Utils.php:601
+#: woo-postnl/src/Utils.php:601
 msgid "Packet"
 msgstr ""
 
 #: src/Utils.php:604
+#: woo-postnl/src/Utils.php:604
 msgid "Track & Trace"
 msgstr ""
 
 #: src/Utils.php:606
+#: woo-postnl/src/Utils.php:606
 msgid "Delivery Code at Door"
 msgstr ""
 
 #: src/Utils.php:614
+#: woo-postnl/src/Utils.php:614
 msgid "Parcels Non-EU Insured"
 msgstr ""
 
 #: src/Utils.php:615
+#: woo-postnl/src/Utils.php:615
 msgid "Parcels non-EU Insured Plus"
 msgstr ""
 
 #: src/Utils.php:621
+#: woo-postnl/src/Utils.php:621
 msgid "Parcels EU"
 msgstr ""
 
 #: src/Utils.php:622
 #: src/Utils.php:629
+#: woo-postnl/src/Utils.php:622
+#: woo-postnl/src/Utils.php:629
 msgid "Insured Plus"
 msgstr ""
 
 #: src/Utils.php:628
+#: woo-postnl/src/Utils.php:628
 msgid "Parcels Non-EU"
 msgstr ""
 
 #: templates/checkout/postnl-container.php:23
+#: woo-postnl/templates/checkout/postnl-container.php:23
 #: build/postnl-container-frontend.js:1
 #: client/checkout/postnl-container/block.js:543
+#: woo-postnl/build/postnl-container-frontend.js:1
 msgid "These items are eligible for letterbox delivery."
 msgstr ""
 
 #: templates/checkout/postnl-delivery-day.php:46
+#: woo-postnl/templates/checkout/postnl-delivery-day.php:46
 #: build/postnl-container-frontend.js:1
 #: client/checkout/postnl-delivery-day/block.js:261
+#: woo-postnl/build/postnl-container-frontend.js:1
 msgid "Evening"
 msgstr ""
 
 #: templates/checkout/postnl-delivery-day.php:48
+#: woo-postnl/templates/checkout/postnl-delivery-day.php:48
 #: build/postnl-container-frontend.js:1
 #: client/checkout/postnl-delivery-day/block.js:269
+#: woo-postnl/build/postnl-container-frontend.js:1
 msgid "Morning"
 msgstr ""
 
 #. translators: %1$s is <strong> opener and %2$s is <strong> closer.
 #: templates/checkout/postnl-dropoff-points.php:103
+#: woo-postnl/templates/checkout/postnl-dropoff-points.php:103
 #: build/postnl-container-frontend.js:1
 #: client/checkout/postnl-dropoff-points/block.js:252
+#: woo-postnl/build/postnl-container-frontend.js:1
 msgid "Receive shipment at home? Make a selection from the Delivery Days."
 msgstr ""
 
 #: templates/checkout/postnl-dropoff-points.php:137
+#: woo-postnl/templates/checkout/postnl-dropoff-points.php:137
 msgid "Vanaf"
 msgstr ""
 
 #: templates/checkout/postnl-fill-in-with-button.php:23
+#: woo-postnl/templates/checkout/postnl-fill-in-with-button.php:23
 #: build/postnl-fill-in-with-frontend.js:1
 #: client/checkout/postnl-fill-in-with/block.js:180
+#: woo-postnl/build/postnl-fill-in-with-frontend.js:1
 msgid "PostNL Logo"
 msgstr ""
 
 #: templates/checkout/postnl-fill-in-with-button.php:29
+#: woo-postnl/templates/checkout/postnl-fill-in-with-button.php:29
 #: build/postnl-fill-in-with-frontend.js:1
 #: client/checkout/postnl-fill-in-with/block.js:162
+#: woo-postnl/build/postnl-fill-in-with-frontend.js:1
 msgid "Your name and address are automatically filled in via your PostNL account. That saves you from having to fill in the form!"
 msgstr ""
 
 #. translators: %s: Order number
 #: templates/emails/plain/smart-return-email.php:27
 #: templates/emails/smart-return-email.php:30
+#: woo-postnl/templates/emails/plain/smart-return-email.php:27
+#: woo-postnl/templates/emails/smart-return-email.php:30
 msgid "In this email you will find the barcode you need to return your order. Scan this barcode at a PostNL point to print your return label. Please note, wait at least 10 minutes before scanning the barcode after receipt of this mail."
 msgstr ""
 
 #: build/postnl-fill-in-with-frontend.js:1
 #: client/checkout/postnl-fill-in-with/block.js:74
+#: woo-postnl/build/postnl-fill-in-with-frontend.js:1
 msgid "Failed to retrieve PostNL user data."
 msgstr ""
 
 #: build/postnl-fill-in-with-frontend.js:1
 #: client/checkout/postnl-fill-in-with/block.js:88
+#: woo-postnl/build/postnl-fill-in-with-frontend.js:1
 msgid "Failed to retrieve PostNL address. Please try again."
 msgstr ""
 
 #: build/postnl-fill-in-with-frontend.js:1
 #: client/checkout/postnl-fill-in-with/block.js:123
+#: woo-postnl/build/postnl-fill-in-with-frontend.js:1
 msgid "Failed to initiate PostNL login."
 msgstr ""
 
 #: build/postnl-fill-in-with-frontend.js:1
 #: client/checkout/postnl-fill-in-with/block.js:138
+#: woo-postnl/build/postnl-fill-in-with-frontend.js:1
 msgid "An unknown error occurred."
 msgstr ""
 

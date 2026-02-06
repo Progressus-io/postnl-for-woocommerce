@@ -34,6 +34,9 @@ PostNL’s official extension for WooCommerce on WordPress. Manage your national
 
 ## Changelog
 
+### 5.9.4
+* Fix: Missing styles from the cart page.
+
 ### 5.9.3
 * Fix: House number stripped from address when "Use PostNL address-field" is disabled in blocks checkout.
 * Fix: Changed barcode type for international registered packets from RI to LA.

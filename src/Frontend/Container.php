@@ -71,7 +71,7 @@ class Container {
 	 * Enqueue scripts and style.
 	 */
 	public function enqueue_scripts_styles() {
-		if ( ! is_checkout() ) {
+		if ( ! is_checkout() && ! is_cart() ) {
 			return;
 		}
 

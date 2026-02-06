@@ -88,6 +88,10 @@ class Container {
 			return;
 		}
 
+		if ( is_cart() ) {
+			return;
+		}
+
 		wp_enqueue_script(
 			'postnl-fe-checkout',
 			POSTNL_WC_PLUGIN_DIR_URL . '/assets/js/fe-checkout.js',

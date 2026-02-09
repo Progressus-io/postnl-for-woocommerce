@@ -50,12 +50,8 @@ class Extend_Block_Core {
 
 		// Register the update callback when WooCommerce Blocks is loaded
 		add_action( 'init', array( $this, 'register_store_api_callback' ) );
-		$checkout_fields = new Checkout_Fields();
-
-		if ( $checkout_fields->is_blocks_checkout() ) {
-			add_action( 'woocommerce_cart_calculate_fees', array( $this, 'postnl_add_custom_fee' ) );
-			add_filter( 'woocommerce_package_rates', array( $this, 'add_postnl_fees_to_rates' ), 20, 2 );
-		}
+		add_action( 'woocommerce_cart_calculate_fees', array( $this, 'postnl_add_custom_fee' ) );
+		add_filter( 'woocommerce_package_rates', array( $this, 'add_postnl_fees_to_rates' ), 20, 2 );
 
 		if ( $this->settings->is_reorder_nl_address_enabled() ) {
 			$this->register_additional_checkout_fields();
@@ -414,11 +410,12 @@ class Extend_Block_Core {
 				// Separate house number field is enabled, use street only
 				WC()->customer->set_shipping_address_1( $validated_address['street'] );
 			} else {
-				// House number is part of address_1, combine street and house number
+				// House number is part of address_1, combine street and house number.
 				$house_number = $validated_address['house_number'] ?? '';
-				$address_1    = trim( $validated_address['street'] . ' ' . $house_number );
+				$address_1    = $validated_address['street'] . ' ' . $house_number;
 				WC()->customer->set_shipping_address_1( $address_1 );
 			}
+
 			WC()->customer->set_shipping_city( $validated_address['city'] );
 		} else {
 			WC()->customer->set_shipping_address_1( $sanitized_data['shipping_address_1'] ?? '' );

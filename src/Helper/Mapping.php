@@ -151,7 +151,67 @@ class Mapping {
 							),
 						),
 						array(
+							'combination' => array( 'id_check', 'signature_on_delivery' ),
+							'code'        => '3438',
+							'options'     => array(
+								array(
+									'characteristic' => '002',
+									'option'         => '014',
+								),
+							),
+						),
+						array(
+							'combination' => array( 'id_check', 'only_home_address' ),
+							'code'        => '3438',
+							'options'     => array(
+								array(
+									'characteristic' => '002',
+									'option'         => '014',
+								),
+							),
+						),
+						array(
+							'combination' => array( 'id_check', 'only_home_address', 'signature_on_delivery' ),
+							'code'        => '3438',
+							'options'     => array(
+								array(
+									'characteristic' => '002',
+									'option'         => '014',
+								),
+							),
+						),
+						array(
 							'combination' => array( 'id_check', 'insured_shipping' ),
+							'code'        => '3443',
+							'options'     => array(
+								array(
+									'characteristic' => '002',
+									'option'         => '014',
+								),
+							),
+						),
+						array(
+							'combination' => array( 'id_check', 'insured_shipping', 'signature_on_delivery' ),
+							'code'        => '3443',
+							'options'     => array(
+								array(
+									'characteristic' => '002',
+									'option'         => '014',
+								),
+							),
+						),
+						array(
+							'combination' => array( 'id_check', 'insured_shipping', 'only_home_address' ),
+							'code'        => '3443',
+							'options'     => array(
+								array(
+									'characteristic' => '002',
+									'option'         => '014',
+								),
+							),
+						),
+						array(
+							'combination' => array( 'id_check', 'insured_shipping', 'only_home_address', 'signature_on_delivery' ),
 							'code'        => '3443',
 							'options'     => array(
 								array(
@@ -175,6 +235,16 @@ class Mapping {
 						array(
 							'combination' => array( 'id_check' ),
 							'code'        => '3571',
+							'options'     => array(
+								array(
+									'characteristic' => '002',
+									'option'         => '014',
+								),
+							),
+						),
+						array(
+							'combination' => array( 'id_check', 'insured_shipping' ),
+							'code'        => '3581',
 							'options'     => array(
 								array(
 									'characteristic' => '002',
@@ -669,8 +739,6 @@ class Mapping {
 			'LA' => array(
 				array( 'track_and_trace', 'mailboxpacket' ),
 				array( 'track_and_trace', 'packets' ),
-			),
-			'RI' => array(
 				array( 'track_and_trace', 'packets', 'insured_shipping' ),
 			),
 		);

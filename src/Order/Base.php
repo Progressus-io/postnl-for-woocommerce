@@ -150,7 +150,7 @@ abstract class Base {
 			array(
 				'id'            => $this->prefix . 'id_check',
 				'type'          => 'checkbox',
-				'label'         => __( 'ID Check: ', 'postnl-for-woocommerce' ),
+				'label'         => __( 'ID Check (18+): ', 'postnl-for-woocommerce' ),
 				'placeholder'   => '',
 				'description'   => '',
 				'value'         => $default_options['id_check'] ?? '',

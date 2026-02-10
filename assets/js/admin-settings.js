@@ -10,7 +10,11 @@
             jQuery( '#woocommerce_postnl_return_shipment_and_labels' ).on( 'change', this.display_return_shipment_and_labels_all );
             this.display_return_shipment_and_labels_all();
 			this.display_printer_type_resolution_field();
-            this.init_merchant_codes_repeater();
+			this.init_merchant_codes_repeater();
+			jQuery(
+				'#woocommerce_postnl_default_automatic_letterboxparcel_product'
+			).on( 'change', this.toggle_letterbox_24_fee_field );
+			this.toggle_letterbox_24_fee_field();
 		},
 
 

@@ -2424,7 +2424,7 @@ msgstr "Bezorgcode aan de deur"
 #: src/Frontend/Container.php:110
 #: woo-postnl/src/Frontend/Container.php:106
 msgid "Delivery Days"
-msgstr ""
+msgstr "Bezorgdagen"
 
 #: src/Shipping_Method/Settings.php:208
 #: woo-postnl/src/Shipping_Method/Settings.php:208

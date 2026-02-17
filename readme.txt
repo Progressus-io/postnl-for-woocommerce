@@ -284,11 +284,11 @@ Follow these instructions (https://www.postnl.nl/Images/aanvragen-api-key-stappe
 * MAJOR RELEASE
 * Reconfigure the plug-in.
 
+[See changelog for all versions](https://raw.githubusercontent.com/Progressus-io/postnl-for-woocommerce/main/changelog.txt).
+
 == Upgrade Notice ==
 = 2.1 =
 **Important!** Version 2.0 was a big update for this plugin, we recommend testing in a test environment first, before updating on a live site!
 
 = 4.0.0 =
 **Important!** Version 4.0.0 was a big update for this plugin, we recommend testing in a test environment first, before updating on a live site!
-
-[See changelog for all versions](https://raw.githubusercontent.com/Progressus-io/postnl-for-woocommerce/main/changelog.txt).

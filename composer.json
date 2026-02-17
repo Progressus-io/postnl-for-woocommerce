@@ -20,6 +20,7 @@
 			"tests",
 			"LICENSE",
 			"README.md",
+			"changelog.txt",
 			"DEVELOPER.md",
 			"package.json",
 			"composer.lock",

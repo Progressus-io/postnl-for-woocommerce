@@ -1148,4 +1148,22 @@ class Utils {
 		WC()->session->__unset( POSTNL_SETTINGS_ID . '_invalid_address_marker' );
 		WC()->session->__unset( POSTNL_SETTINGS_ID . '_validated_address' );
 	}
+
+	/**
+	 * Get the letterbox label for 24h.
+	 *
+	 * @return string
+	 */
+	public static function get_letterbox_label_24h() {
+		return esc_html__( 'Letterboxparcel (24h)', 'postnl-for-woocommerce' );
+	}
+
+	/**
+	 * Get the letterbox label for 48h.
+	 *
+	 * @return string
+	 */
+	public static function get_letterbox_label_48h() {
+		return esc_html__( 'Letterboxparcel (48h)', 'postnl-for-woocommerce' );
+	}
 }

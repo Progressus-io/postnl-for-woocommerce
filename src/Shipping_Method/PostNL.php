@@ -88,8 +88,105 @@ class PostNL extends \WC_Shipping_Flat_Rate {
 
 			$this->add_rate( $rate );
 		} else {
-			parent::calculate_shipping( $package );
+			// Check if cart is eligible for letterbox and if customer can decide.
+			$settings               = Settings::get_instance();
+			$letterbox_product_type = $settings->get_default_automatic_letterboxparcel_product();
+			$is_letterbox_eligible  = Utils::is_cart_eligible_auto_letterbox( WC()->cart );
+			$base_country           = Utils::get_base_country();
+
+			// Only apply letterbox logic for NL base country and eligible cart.
+			if ( 'NL' === $base_country && $is_letterbox_eligible && 'customer_decide' === $letterbox_product_type ) {
+				// Display two options: Letterbox 24h and Letterbox 48h.
+				$this->add_letterbox_shipping_rates( $package );
+			} elseif ( 'NL' === $base_country && $is_letterbox_eligible && in_array( $letterbox_product_type, array( 'letterbox', 'letterbox_48' ), true ) ) {
+				// Display only the selected default option.
+				$this->add_default_letterbox_rate( $package, $letterbox_product_type );
+			} else {
+				// Standard shipping calculation.
+				parent::calculate_shipping( $package );
+			}
 		}
+	}
+
+	/**
+	 * Add letterbox shipping rates when customer can decide.
+	 *
+	 * @param array $package Package of items from cart.
+	 */
+	private function add_letterbox_shipping_rates( $package ) {
+		$settings = Settings::get_instance();
+		$fee_24h  = $settings->get_letterbox_24_fee();
+
+		// Get base cost from parent calculation.
+		$base_cost = $this->get_option( 'cost' );
+		if ( '' === $base_cost ) {
+			$base_cost = 0;
+		}
+
+		// Letterbox 24 hours (2928) with extra fee.
+		$letterbox_rate_24 = array(
+			'id'        => $this->get_rate_id() . ':letterbox',
+			'label'     => $this->title . ' ' . Utils::get_letterbox_label_24h(),
+			'cost'      => $base_cost + $fee_24h,
+			'package'   => $package,
+			'meta_data' => array(
+				'letterbox_type' => 'letterbox',
+			),
+		);
+
+		// Letterbox 48 hours (2948).
+		$letterbox_rate_48 = array(
+			'id'        => $this->get_rate_id() . ':letterbox_48',
+			'label'     => $this->title . ' ' . Utils::get_letterbox_label_48h(),
+			'cost'      => $base_cost,
+			'package'   => $package,
+			'meta_data' => array(
+				'letterbox_type' => 'letterbox_48',
+			),
+		);
+
+		$this->add_rate( $letterbox_rate_24 );
+		$this->add_rate( $letterbox_rate_48 );
+	}
+
+	/**
+	 * Add default letterbox rate when merchant has selected a default.
+	 *
+	 * @param array  $package Package of items from cart.
+	 * @param string $letterbox_type Type of letterbox (letterbox or letterbox_48).
+	 */
+	private function add_default_letterbox_rate( $package, $letterbox_type ) {
+		$settings = Settings::get_instance();
+
+		// Get base cost from parent calculation.
+		$base_cost = $this->get_option( 'cost' );
+		if ( '' === $base_cost ) {
+			$base_cost = 0;
+		}
+
+		// Determine cost and label based on type
+		if ( 'letterbox' === $letterbox_type ) {
+			// 24 hours with extra fee
+			$fee_24h = $settings->get_letterbox_24_fee();
+			$cost    = $base_cost + $fee_24h;
+			$label   = $this->title . ' ' . Utils::get_letterbox_label_24h();
+		} else {
+			// 48 hours without extra fee.
+			$cost  = $base_cost;
+			$label = $this->title . ' ' . Utils::get_letterbox_label_48h();
+		}
+
+		$rate = array(
+			'id'        => $this->get_rate_id(),
+			'label'     => $label,
+			'cost'      => $cost,
+			'package'   => $package,
+			'meta_data' => array(
+				'letterbox_type' => $letterbox_type,
+			),
+		);
+
+		$this->add_rate( $rate );
 	}
 
 	/**

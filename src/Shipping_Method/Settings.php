@@ -170,7 +170,7 @@ class Settings extends \WC_Settings_API {
 
 				'options'     => array(
 					'none'            => esc_html__( 'None', 'postnl-for-woocommerce' ),
-					'shipping_return' => esc_html__( 'Shipping & Return Label ( Note: Shipment & Return Label will be discontinued on July 1. )', 'postnl-for-woocommerce' ),
+					'shipping_return' => esc_html__( 'Shipment & Return Label ( Note: Shipment & Return Label will be discontinued on July 1. )', 'postnl-for-woocommerce' ),
 					'in_box'          => esc_html__( 'Label in the box', 'postnl-for-woocommerce' ),
 				),
 				'for_country' => array( 'NL' ),

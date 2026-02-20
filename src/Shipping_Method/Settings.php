@@ -164,12 +164,13 @@ class Settings extends \WC_Settings_API {
 				'title'       => esc_html__( 'Standard return option', 'postnl-for-woocommerce' ),
 				'type'        => 'select',
 				'description' => esc_html__( '- None: return labels are not automatically created', 'postnl-for-woocommerce' ) . '<br>' .
-								esc_html__( '- Shipment & Return: the label of the outward shipment can also be used for the return shipment.', 'postnl-for-woocommerce' ) . '<br>' .
+								esc_html__( '- Shipment & Return: the label of the outward shipment can also be used for the return shipment.', 'postnl-for-woocommerce' ) .
+								esc_html__( ' ( Note: Shipment & Return Label will be discontinued on July 1. )', 'postnl-for-woocommerce' ) . '<br>' .
 								esc_html__( '- Label in the box: a separate return label is created at the same time as the label for the outward shipment and can be included in the box.', 'postnl-for-woocommerce' ),
 
 				'options'     => array(
 					'none'            => esc_html__( 'None', 'postnl-for-woocommerce' ),
-					'shipping_return' => esc_html__( 'Shipping & Return Label', 'postnl-for-woocommerce' ),
+					'shipping_return' => esc_html__( 'Shipping & Return Label ( Note: Shipment & Return Label will be discontinued on July 1. )', 'postnl-for-woocommerce' ),
 					'in_box'          => esc_html__( 'Label in the box', 'postnl-for-woocommerce' ),
 				),
 				'for_country' => array( 'NL' ),

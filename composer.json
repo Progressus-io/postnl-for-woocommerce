@@ -13,13 +13,15 @@
 	"archive": {
 		"exclude": [
 			"!/assets",
+			"!/build",
+			"!/vendor",
 			"!/languages",
 			"/node_modules",
             "/client",
 			"bin",
 			"tests",
-			"LICENSE",
 			"README.md",
+			"changelog.txt",
 			"DEVELOPER.md",
 			"package.json",
 			"composer.lock",

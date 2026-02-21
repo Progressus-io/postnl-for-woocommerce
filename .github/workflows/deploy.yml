@@ -1,0 +1,362 @@
+name: Deploy to WordPress.org
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release (e.g. 5.9.5) — must match postnl-for-woocommerce.php and readme.txt'
+        required: true
+        type: string
+      release_type:
+        description: 'Release type — production: full release; dry: build+preview only (no tags/commits); dev: pre-release without trunk'
+        required: true
+        default: 'dry'
+        type: choice
+        options:
+          - dry
+          - production
+          - dev
+      update_wp_assets:
+        description: 'Update WordPress.org store assets (banners, icons, screenshots from .wordpress-org/)'
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: write
+
+concurrency:
+  group: deploy-to-wporg
+  cancel-in-progress: false
+
+jobs:
+  # ── Job 1: Validate that inputs.version, plugin.php, and readme.txt all have the same version ──
+  validate:
+    name: Validate Versions
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.extract.outputs.version }}
+      tag: ${{ steps.extract.outputs.tag }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Extract and validate versions
+        id: extract
+        run: |
+          PHP_VERSION=$(grep -oP '(?<=\* Version: )\d+\.\d+(\.\d+)?' postnl-for-woocommerce.php | head -1)
+          README_VERSION=$(grep -oP '(?<=Stable tag: )\d+\.\d+(\.\d+)?' readme.txt | head -1)
+          INPUT_VERSION="${{ inputs.version }}"
+
+          echo "PHP header version   : $PHP_VERSION"
+          echo "readme.txt Stable tag: $README_VERSION"
+          echo "Input version        : $INPUT_VERSION"
+
+          FAIL=0
+          if [ "$PHP_VERSION" != "$README_VERSION" ]; then
+            echo "::error::Version mismatch — postnl-for-woocommerce.php ($PHP_VERSION) != readme.txt Stable tag ($README_VERSION)"
+            FAIL=1
+          fi
+          if [ "$PHP_VERSION" != "$INPUT_VERSION" ]; then
+            echo "::error::Version mismatch — plugin ($PHP_VERSION) != requested version ($INPUT_VERSION)"
+            FAIL=1
+          fi
+          [ "$FAIL" = "1" ] && exit 1
+
+          if [ "${{ inputs.release_type }}" = "dev" ]; then
+            TAG="${PHP_VERSION}-dev"
+          else
+            TAG="$PHP_VERSION"
+          fi
+
+          echo "All versions match: $PHP_VERSION  →  tag: $TAG"
+          echo "version=$PHP_VERSION" >> "$GITHUB_OUTPUT"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+
+  # ── Job 2: Build assets and deploy to WP.org SVN ──
+  build-and-deploy:
+    name: Build & Deploy
+    runs-on: ubuntu-latest
+    needs: validate
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # PHP setup — needs to match minimum plugin requirement
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          tools: composer:v2
+          coverage: none
+
+      # Node setup — reads exact version from .nvmrc (20.18.0)
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'npm'
+
+      # Step 1: Install Composer WITH dev deps — needed for vendor/bin/wp (i18n tools)
+      - name: Install Composer dependencies (with dev)
+        run: composer install --prefer-dist --no-progress --no-interaction
+
+      # Step 2: Install npm dependencies
+      - name: Install npm dependencies
+        run: npm ci --prefer-offline
+
+      # Step 3: Webpack build → build/ directory
+      - name: Build JavaScript/CSS assets
+        run: ./node_modules/.bin/wp-scripts build
+
+      # Step 4: Regenerate i18n files (uses vendor/bin/wp from dev deps)
+      - name: Generate translation files
+        run: |
+          npm run updatepo
+          npm run makejson
+
+      # Step 5: Reinstall Composer production-only → clean vendor/ for deploy
+      - name: Reinstall Composer dependencies (production only)
+        run: composer install --no-dev --prefer-dist --no-progress --no-interaction --optimize-autoloader
+
+      # Sanity check — fail loudly if expected artifacts are missing
+      - name: Verify build artifacts
+        run: |
+          echo "=== build/ ==="
+          ls -la build/
+          [ -f "build/postnl-container-frontend.js" ] || { echo "::error::build/postnl-container-frontend.js missing!"; exit 1; }
+          echo "=== vendor/ (top level) ==="
+          ls vendor/ | head -20
+          [ -d "vendor/clegginabox" ] || { echo "::error::vendor/clegginabox missing!"; exit 1; }
+          echo "=== languages/ ==="
+          ls languages/
+
+      # Create and push the git tag (skipped in dry mode)
+      - name: Create git tag
+        if: ${{ inputs.release_type != 'dry' }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          TAG="${{ needs.validate.outputs.tag }}"
+          if git rev-parse "$TAG" >/dev/null 2>&1; then
+            echo "Tag $TAG already exists, skipping creation."
+          else
+            git tag "$TAG"
+            git push origin "$TAG"
+          fi
+
+      # All paths: generate ZIP from built workspace
+      - name: Generate plugin ZIP
+        id: build_zip
+        run: |
+          TAG="${{ needs.validate.outputs.tag }}"
+          PLUGIN_DIR="$RUNNER_TEMP/zip_staging/woo-postnl"
+          mkdir -p "$PLUGIN_DIR"
+          rsync -rc --exclude-from="$GITHUB_WORKSPACE/.distignore" \
+            --delete "$GITHUB_WORKSPACE/" "$PLUGIN_DIR/"
+          ZIP_PATH="$RUNNER_TEMP/woo-postnl-${TAG}.zip"
+          cd "$RUNNER_TEMP/zip_staging"
+          zip -r "$ZIP_PATH" woo-postnl/
+          echo "zip-path=$ZIP_PATH" >> "$GITHUB_OUTPUT"
+
+      # Dry run only: verify ZIP contents then clean up
+      - name: Verify and clean up dry-run ZIP
+        if: ${{ inputs.release_type == 'dry' }}
+        run: |
+          ZIP_PATH="${{ steps.build_zip.outputs.zip-path }}"
+          UNZIP_DIR="$RUNNER_TEMP/zip_verify"
+          mkdir -p "$UNZIP_DIR"
+          unzip -q "$ZIP_PATH" -d "$UNZIP_DIR"
+
+          echo "=== ZIP contents ==="
+          find "$UNZIP_DIR" -type f | sort
+
+          # Assert critical files are present inside the ZIP
+          [ -f "$UNZIP_DIR/woo-postnl/postnl-for-woocommerce.php" ] \
+            || { echo "::error::postnl-for-woocommerce.php missing from ZIP!"; exit 1; }
+          [ -f "$UNZIP_DIR/woo-postnl/build/postnl-container-frontend.js" ] \
+            || { echo "::error::build/postnl-container-frontend.js missing from ZIP!"; exit 1; }
+          [ -d "$UNZIP_DIR/woo-postnl/vendor/clegginabox" ] \
+            || { echo "::error::vendor/clegginabox missing from ZIP!"; exit 1; }
+
+          echo "ZIP verified OK. Cleaning up."
+          rm -rf "$ZIP_PATH" "$UNZIP_DIR"
+
+      # Dry run only: show changelog preview
+      - name: Show changelog preview (dry run)
+        if: ${{ inputs.release_type == 'dry' }}
+        run: |
+          VERSION="${{ needs.validate.outputs.version }}"
+          NOTES=$(awk -v ver="$VERSION" '
+            /^= / { if (found) exit; if (index($0, "= " ver " ")) found=1; next }
+            found { print }
+          ' readme.txt)
+          echo "--- Changelog for $VERSION ---"
+          echo "$NOTES"
+
+      # Production + dev paths: create GitHub release and attach ZIP
+      - name: Create GitHub Release and upload ZIP
+        if: ${{ inputs.release_type != 'dry' }}
+        run: |
+          TAG="${{ needs.validate.outputs.tag }}"
+          VERSION="${{ needs.validate.outputs.version }}"
+          ZIP_PATH="${{ steps.build_zip.outputs.zip-path }}"
+
+          # Extract the changelog for this version from readme.txt
+          NOTES=$(awk -v ver="$VERSION" '
+            /^= / { if (found) exit; if (index($0, "= " ver " ")) found=1; next }
+            found { print }
+          ' readme.txt)
+
+          EXTRA_FLAGS=""
+          if [ "${{ inputs.release_type }}" = "dev" ]; then
+            EXTRA_FLAGS="--prerelease"
+          fi
+          gh release create "$TAG" "$ZIP_PATH" \
+            --title "$TAG" \
+            --notes "$NOTES" \
+            $EXTRA_FLAGS
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # Production + dev paths: install SVN (not pre-installed on ubuntu-latest)
+      - name: Install SVN
+        if: ${{ inputs.release_type != 'dry' }}
+        run: sudo apt-get install -y subversion
+
+      # Dry run only: preview which files would be synced to trunk
+      - name: SVN dry run preview
+        if: ${{ inputs.release_type == 'dry' }}
+        run: |
+          echo "--- SVN dry run: files that would be deployed to trunk ---"
+          rsync -rc --exclude-from="$GITHUB_WORKSPACE/.distignore" \
+            --delete --dry-run --itemize-changes \
+            "$GITHUB_WORKSPACE/" /tmp/svn-preview/
+
+      # Dry run only: preview which WordPress.org assets would be synced
+      - name: WordPress assets dry run preview
+        if: ${{ inputs.release_type == 'dry' && inputs.update_wp_assets }}
+        run: |
+          echo "--- WordPress assets dry run: files that would be synced to SVN assets/ ---"
+          rsync -rc --delete --dry-run --itemize-changes \
+            "$GITHUB_WORKSPACE/.wordpress-org/" /tmp/assets-preview/
+
+      # Production path: deploy built files to SVN trunk and create SVN tag
+      - name: Deploy to SVN trunk and create tag
+        if: ${{ inputs.release_type == 'production' }}
+        env:
+          SVN_USERNAME: ${{ secrets.SVN_USERNAME }}
+          SVN_PASSWORD: ${{ secrets.SVN_PASSWORD }}
+        run: |
+          TAG="${{ needs.validate.outputs.tag }}"
+          SVN_URL="https://plugins.svn.wordpress.org/woo-postnl"
+          SVN_DIR="$RUNNER_TEMP/svn-deploy"
+
+          # Abort if SVN tag already exists
+          if svn ls "$SVN_URL/tags/$TAG" \
+              --username "$SVN_USERNAME" --password "$SVN_PASSWORD" \
+              --no-auth-cache --non-interactive 2>/dev/null; then
+            echo "::error::SVN tag $TAG already exists. Aborting."
+            exit 1
+          fi
+
+          # Shallow checkout — structure only
+          svn checkout "$SVN_URL" "$SVN_DIR" --depth immediates \
+            --username "$SVN_USERNAME" --password "$SVN_PASSWORD" \
+            --no-auth-cache --non-interactive
+
+          # Pull full trunk content
+          svn update "$SVN_DIR/trunk" --set-depth infinity \
+            --username "$SVN_USERNAME" --password "$SVN_PASSWORD" \
+            --no-auth-cache --non-interactive
+
+          # Sync built files into trunk
+          rsync -rc --exclude-from="$GITHUB_WORKSPACE/.distignore" \
+            --delete "$GITHUB_WORKSPACE/" "$SVN_DIR/trunk/"
+
+          # Stage new files; remove deleted files
+          svn add "$SVN_DIR/trunk" --force --no-auth-cache --non-interactive
+          svn status "$SVN_DIR/trunk" | grep '^!' | awk '{print $2}' | \
+            xargs -r svn rm --force
+
+          # Commit trunk
+          svn commit "$SVN_DIR/trunk" \
+            --message "Updating trunk for $TAG" \
+            --username "$SVN_USERNAME" --password "$SVN_PASSWORD" \
+            --no-auth-cache --non-interactive
+
+          # Create SVN tag from trunk (server-side copy — fast, no extra checkout)
+          svn copy "$SVN_URL/trunk" "$SVN_URL/tags/$TAG" \
+            --message "Tagging $TAG" \
+            --username "$SVN_USERNAME" --password "$SVN_PASSWORD" \
+            --no-auth-cache --non-interactive
+
+      # Dev path: create SVN tag without touching trunk
+      - name: Deploy dev tag to SVN
+        if: ${{ inputs.release_type == 'dev' }}
+        env:
+          SVN_USERNAME: ${{ secrets.SVN_USERNAME }}
+          SVN_PASSWORD: ${{ secrets.SVN_PASSWORD }}
+        run: |
+          TAG="${{ needs.validate.outputs.tag }}"
+          SVN_URL="https://plugins.svn.wordpress.org/woo-postnl"
+          SVN_DIR="$RUNNER_TEMP/svn-deploy"
+
+          # Abort if tag already exists
+          if svn ls "$SVN_URL/tags/$TAG" \
+              --username "$SVN_USERNAME" --password "$SVN_PASSWORD" \
+              --no-auth-cache --non-interactive 2>/dev/null; then
+            echo "::error::SVN tag $TAG already exists. Aborting."
+            exit 1
+          fi
+
+          # Shallow checkout — fetches directory structure, no file content
+          svn checkout "$SVN_URL" "$SVN_DIR" --depth immediates \
+            --username "$SVN_USERNAME" --password "$SVN_PASSWORD" \
+            --no-auth-cache --non-interactive
+
+          # Create and populate the new tag directory
+          mkdir -p "$SVN_DIR/tags/$TAG"
+          rsync -rc --exclude-from="$GITHUB_WORKSPACE/.distignore" \
+            --delete "$GITHUB_WORKSPACE/" "$SVN_DIR/tags/$TAG/"
+
+          # Stage new files; remove deleted files
+          svn add "$SVN_DIR/tags/$TAG" --force --no-auth-cache --non-interactive
+          svn status "$SVN_DIR/tags/$TAG" | grep '^!' | awk '{print $2}' | \
+            xargs -r svn rm --force
+
+          # Commit only the tag subtree (trunk is never touched)
+          svn commit "$SVN_DIR/tags/$TAG" \
+            --message "Tagging $TAG" \
+            --username "$SVN_USERNAME" --password "$SVN_PASSWORD" \
+            --no-auth-cache --non-interactive
+
+      # Production + dev paths: sync .wordpress-org/ to SVN assets/
+      - name: Update WordPress.org assets
+        if: ${{ inputs.release_type != 'dry' && inputs.update_wp_assets }}
+        env:
+          SVN_USERNAME: ${{ secrets.SVN_USERNAME }}
+          SVN_PASSWORD: ${{ secrets.SVN_PASSWORD }}
+        run: |
+          SVN_URL="https://plugins.svn.wordpress.org/woo-postnl"
+          SVN_DIR="$RUNNER_TEMP/svn-deploy"
+
+          # Deep-fetch the assets/ directory from SVN
+          svn update "$SVN_DIR/assets" --set-depth infinity \
+            --username "$SVN_USERNAME" --password "$SVN_PASSWORD" \
+            --no-auth-cache --non-interactive
+
+          # Sync local .wordpress-org/ → SVN assets/
+          rsync -rc --delete \
+            "$GITHUB_WORKSPACE/.wordpress-org/" "$SVN_DIR/assets/"
+
+          # Stage new files; remove deleted files
+          svn add "$SVN_DIR/assets" --force --no-auth-cache --non-interactive
+          svn status "$SVN_DIR/assets" | grep '^!' | awk '{print $2}' | \
+            xargs -r svn rm --force
+
+          # Commit assets
+          svn commit "$SVN_DIR/assets" \
+            --message "Updating assets" \
+            --username "$SVN_USERNAME" --password "$SVN_PASSWORD" \
+            --no-auth-cache --non-interactive

@@ -25,13 +25,6 @@ PostNL’s official extension for WooCommerce on WordPress. Manage your national
 2. Activate the plugin through the 'Plugins' screen in WordPress.
 3. Go to WooCommerce–>Settings->Shipping and Click the "PostNL" to configure the plugin.
 
-## Support
-
-## Additional Information
-
-## Screenshots
-
-
 ## Changelog
 
 ### 5.9.4
@@ -235,4 +228,3 @@ PostNL’s official extension for WooCommerce on WordPress. Manage your national
 
 ### 5.0.0
 * First public release
-

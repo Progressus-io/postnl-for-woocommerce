@@ -27,6 +27,9 @@ PostNL’s official extension for WooCommerce on WordPress. Manage your national
 
 ## Changelog
 
+### 5.9.5
+* Fix: Update translations.
+
 ### 5.9.4
 * Fix: Missing styles from the cart page.
 * Tweak: WooCommerce 10.5 compatibility.

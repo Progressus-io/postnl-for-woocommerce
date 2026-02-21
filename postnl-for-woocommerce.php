@@ -7,7 +7,7 @@
  * Author URI: https://postnl.post/
  * License: GPLv2 or later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
- * Version: 5.9.4
+ * Version: 5.9.5
  * Requires Plugins: woocommerce
  * Requires PHP: 7.4
  * Requires at least: 6.7

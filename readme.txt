@@ -7,7 +7,7 @@ Requires at least: 6.7
 Tested up to: 6.9
 WC requires at least: 10.2
 WC tested up to: 10.5
-Stable tag: 5.9.4
+Stable tag: 5.9.5
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -81,7 +81,7 @@ Follow these instructions (https://www.postnl.nl/Images/aanvragen-api-key-stappe
 
 == Changelog ==
 
-= 5.9.5 (2026-xx-xx) =
+= 5.9.5 (2026-02-21) =
 * Fix: Update translations.
 
 = 5.9.4 (2026-02-06) =

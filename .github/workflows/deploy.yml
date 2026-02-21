@@ -127,14 +127,18 @@ jobs:
           echo "=== languages/ ==="
           ls languages/
 
-      # Create and push the git tag so all subsequent steps work from a real tag
+      # Create and push the git tag (always, even on dry run). Idempotent: skips silently if the tag already exists.
       - name: Create git tag
-        if: ${{ !inputs.dry_run }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git tag "${{ needs.validate.outputs.tag }}"
-          git push origin "${{ needs.validate.outputs.tag }}"
+          TAG="${{ needs.validate.outputs.tag }}"
+          if git rev-parse "$TAG" >/dev/null 2>&1; then
+            echo "Tag $TAG already exists, skipping creation."
+          else
+            git tag "$TAG"
+            git push origin "$TAG"
+          fi
 
       # Both paths: generate ZIP from built workspace
       - name: Generate plugin ZIP
@@ -188,23 +192,69 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # Production path: 10up deploys to SVN trunk + creates SVN tag
-      - name: Deploy to WordPress.org
-        uses: 10up/action-wordpress-plugin-deploy@stable
-        if: ${{ !inputs.dev_release }}
-        with:
-          generate-zip: false
-          dry-run: ${{ inputs.dry_run }}
+      # Both paths (production + dev): install SVN (not pre-installed on ubuntu-latest)
+      - name: Install SVN
+        if: ${{ !inputs.dry_run }}
+        run: sudo apt-get install -y subversion
+
+      # Production dry run: preview which files would be synced to trunk
+      - name: SVN dry run preview
+        if: ${{ !inputs.dev_release && inputs.dry_run }}
+        run: |
+          echo "--- SVN dry run: files that would be deployed to trunk ---"
+          rsync -rc --exclude-from="$GITHUB_WORKSPACE/.distignore" \
+            --delete --dry-run --itemize-changes \
+            "$GITHUB_WORKSPACE/" /tmp/svn-preview/
+
+      # Production path: deploy built files to SVN trunk and create SVN tag
+      - name: Deploy to SVN trunk and create tag
+        if: ${{ !inputs.dev_release && !inputs.dry_run }}
         env:
-          SLUG: woo-postnl
-          VERSION: ${{ needs.validate.outputs.tag }}
           SVN_USERNAME: ${{ secrets.SVN_USERNAME }}
           SVN_PASSWORD: ${{ secrets.SVN_PASSWORD }}
+        run: |
+          TAG="${{ needs.validate.outputs.tag }}"
+          SVN_URL="https://plugins.svn.wordpress.org/woo-postnl"
+          SVN_DIR="$RUNNER_TEMP/svn-deploy"
 
-      # Dev path: install SVN (not pre-installed on ubuntu-latest)
-      - name: Install SVN
-        if: ${{ inputs.dev_release && !inputs.dry_run }}
-        run: sudo apt-get install -y subversion
+          # Abort if SVN tag already exists
+          if svn ls "$SVN_URL/tags/$TAG" \
+              --username "$SVN_USERNAME" --password "$SVN_PASSWORD" \
+              --no-auth-cache --non-interactive 2>/dev/null; then
+            echo "::error::SVN tag $TAG already exists. Aborting."
+            exit 1
+          fi
+
+          # Shallow checkout — structure only
+          svn checkout "$SVN_URL" "$SVN_DIR" --depth immediates \
+            --username "$SVN_USERNAME" --password "$SVN_PASSWORD" \
+            --no-auth-cache --non-interactive
+
+          # Pull full trunk content
+          svn update "$SVN_DIR/trunk" --set-depth infinity \
+            --username "$SVN_USERNAME" --password "$SVN_PASSWORD" \
+            --no-auth-cache --non-interactive
+
+          # Sync built files into trunk
+          rsync -rc --exclude-from="$GITHUB_WORKSPACE/.distignore" \
+            --delete "$GITHUB_WORKSPACE/" "$SVN_DIR/trunk/"
+
+          # Stage new files; remove deleted files
+          svn add "$SVN_DIR/trunk" --force --no-auth-cache --non-interactive
+          svn status "$SVN_DIR/trunk" | grep '^!' | awk '{print $2}' | \
+            xargs -r svn rm --force
+
+          # Commit trunk
+          svn commit "$SVN_DIR/trunk" \
+            --message "Updating trunk for $TAG" \
+            --username "$SVN_USERNAME" --password "$SVN_PASSWORD" \
+            --no-auth-cache --non-interactive
+
+          # Create SVN tag from trunk (server-side copy — fast, no extra checkout)
+          svn copy "$SVN_URL/trunk" "$SVN_URL/tags/$TAG" \
+            --message "Tagging $TAG" \
+            --username "$SVN_USERNAME" --password "$SVN_PASSWORD" \
+            --no-auth-cache --non-interactive
 
       # Dev path: create SVN tag without touching trunk
       - name: Deploy dev tag to SVN

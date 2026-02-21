@@ -1,0 +1,102 @@
+name: Create Release PR
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  create-release-pr:
+    name: Create Release PR
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Detect unreleased version
+        id: detect
+        run: |
+          VERSION=$(grep -oP '(?<=\= )\d+\.\d+(\.\d+)?(?= \(\d{4}-xx-xx\) =)' readme.txt | head -1)
+          if [ -z "$VERSION" ]; then
+            echo "::error::No unreleased changelog entry found (expected '= X.Y.Z (YYYY-xx-xx) =')"
+            exit 1
+          fi
+          TODAY=$(date -u '+%Y-%m-%d')
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "today=$TODAY"     >> "$GITHUB_OUTPUT"
+
+      - name: Update all version files
+        env:
+          VERSION: ${{ steps.detect.outputs.version }}
+          TODAY: ${{ steps.detect.outputs.today }}
+        run: |
+          # postnl-for-woocommerce.php
+          sed -i "s/\* Version: .*/* Version: ${VERSION}/" postnl-for-woocommerce.php
+
+          # src/Main.php
+          sed -i "s/private \\\$version = '.*';/private \$version = '${VERSION}';/" src/Main.php
+
+          # package.json  (jq preserves formatting better than sed for JSON)
+          jq --arg v "$VERSION" '.version = $v' package.json > /tmp/pkg.json \
+            && mv /tmp/pkg.json package.json
+
+          # package-lock.json  (two occurrences: root + packages[""])
+          jq --arg v "$VERSION" '.version = $v | .packages[""].version = $v' \
+            package-lock.json > /tmp/pkglock.json && mv /tmp/pkglock.json package-lock.json
+
+          # readme.txt — Stable tag
+          sed -i "s/^Stable tag: .*/Stable tag: ${VERSION}/" readme.txt
+
+          # readme.txt — fill date in the unreleased entry
+          sed -i "s|= ${VERSION} ([0-9]\{4\}-xx-xx) =|= ${VERSION} (${TODAY}) =|g" readme.txt
+
+          # README.md — mirrors Stable tag
+          sed -i "s/^\* Stable tag: .*/\* Stable tag: ${VERSION}/" README.md
+
+          # changelog.txt — prepend new entry (extracted from readme.txt) after the *** header
+          ENTRY=$(awk -v ver="$VERSION" '
+            BEGIN { found=0 }
+            found && /^= [0-9]/ { exit }
+            /^= / && index($0, "= " ver " ") { found=1 }
+            found { print }
+          ' readme.txt)
+
+          { head -1 changelog.txt; printf '\n'; printf '%s\n' "$ENTRY"; tail -n +2 changelog.txt; } \
+            > /tmp/changelog.txt && mv /tmp/changelog.txt changelog.txt
+
+          # languages — update Project-Id-Version in all .pot and .po files
+          find languages/ -name "*.pot" -o -name "*.po" | while read -r f; do
+            sed -i \
+              "s/Project-Id-Version: PostNL for WooCommerce [0-9.]*/Project-Id-Version: PostNL for WooCommerce ${VERSION}/" \
+              "$f"
+          done
+
+      - name: Create branch, commit, push, and open PR
+        env:
+          VERSION: ${{ steps.detect.outputs.version }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          BRANCH="release/${VERSION}"
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout -b "$BRANCH"
+          git add postnl-for-woocommerce.php src/Main.php package.json package-lock.json \
+                  readme.txt README.md changelog.txt languages/
+          git commit -m "Release ${VERSION}"
+          git push origin "$BRANCH"
+
+          # Extract changelog notes for PR body
+          NOTES=$(awk -v ver="$VERSION" '
+            BEGIN { found=0 }
+            found && /^= [0-9]/ { exit }
+            /^= / && index($0, "= " ver " ") { found=1 }
+            found { print }
+          ' readme.txt)
+
+          gh pr create \
+            --base main \
+            --head "$BRANCH" \
+            --title "Release ${VERSION}" \
+            --body "$NOTES"

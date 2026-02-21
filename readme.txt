@@ -81,6 +81,9 @@ Follow these instructions (https://www.postnl.nl/Images/aanvragen-api-key-stappe
 
 == Changelog ==
 
+= 5.9.5 (2026-xx-xx) =
+* Fix: Update translations.
+
 = 5.9.4 (2026-02-06) =
 * Fix: Missing styles from the cart page.
 * Tweak: WooCommerce 10.5 compatibility.

@@ -12,6 +12,11 @@ on:
         required: true
         default: 'true'
         type: boolean
+      dev_release:
+        description: 'Dev release — creates SVN tag (X.Y.Z-dev) and GitHub pre-release without updating trunk'
+        required: true
+        default: 'false'
+        type: boolean
 
 permissions:
   contents: write
@@ -27,6 +32,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.extract.outputs.version }}
+      tag: ${{ steps.extract.outputs.tag }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -53,8 +59,15 @@ jobs:
           fi
           [ "$FAIL" = "1" ] && exit 1
 
-          echo "All versions match: $PHP_VERSION"
+          if [ "${{ inputs.dev_release }}" = "true" ]; then
+            TAG="${PHP_VERSION}-dev"
+          else
+            TAG="$PHP_VERSION"
+          fi
+
+          echo "All versions match: $PHP_VERSION  →  tag: $TAG"
           echo "version=$PHP_VERSION" >> "$GITHUB_OUTPUT"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
 
   # ── Job 2: Build assets and deploy to WP.org SVN ──
   build-and-deploy:
@@ -114,10 +127,11 @@ jobs:
           echo "=== languages/ ==="
           ls languages/
 
-      # Deploy to WordPress.org SVN
+      # Production path: 10up handles trunk update + tag creation + zip generation
       - name: Deploy to WordPress.org
         uses: 10up/action-wordpress-plugin-deploy@stable
         id: deploy
+        if: ${{ !inputs.dev_release }}
         with:
           generate-zip: true
           dry-run: ${{ inputs.dry_run }}
@@ -126,14 +140,75 @@ jobs:
           SVN_USERNAME: ${{ secrets.SVN_USERNAME }}
           SVN_PASSWORD: ${{ secrets.SVN_PASSWORD }}
 
-      # Create GitHub Release + tag and attach the ZIP
-      - name: Create GitHub Release and upload ZIP
-        if: ${{ !inputs.dry_run && steps.deploy.outputs.zip-path != '' }}
+      # Dev path: generate ZIP manually (10up is skipped)
+      - name: Generate dev ZIP
+        id: dev_zip
+        if: ${{ inputs.dev_release && !inputs.dry_run }}
         run: |
-          gh release create "${{ needs.validate.outputs.version }}" \
-            "${{ steps.deploy.outputs.zip-path }}" \
-            --title "${{ needs.validate.outputs.version }}" \
+          TAG="${{ needs.validate.outputs.tag }}"
+          PLUGIN_DIR="$RUNNER_TEMP/zip_staging/woo-postnl"
+          mkdir -p "$PLUGIN_DIR"
+          rsync -rc --exclude-from="$GITHUB_WORKSPACE/.distignore" \
+            --delete "$GITHUB_WORKSPACE/" "$PLUGIN_DIR/"
+          ZIP_PATH="$RUNNER_TEMP/woo-postnl-${TAG}.zip"
+          cd "$RUNNER_TEMP/zip_staging"
+          zip -r "$ZIP_PATH" woo-postnl/
+          echo "zip-path=$ZIP_PATH" >> "$GITHUB_OUTPUT"
+
+      # Dev path: create SVN tag without touching trunk
+      - name: Deploy dev tag to SVN
+        if: ${{ inputs.dev_release && !inputs.dry_run }}
+        env:
+          SVN_USERNAME: ${{ secrets.SVN_USERNAME }}
+          SVN_PASSWORD: ${{ secrets.SVN_PASSWORD }}
+        run: |
+          TAG="${{ needs.validate.outputs.tag }}"
+          SVN_URL="https://plugins.svn.wordpress.org/woo-postnl"
+          SVN_DIR="$RUNNER_TEMP/svn-deploy"
+
+          # Abort if tag already exists
+          if svn ls "$SVN_URL/tags/$TAG" \
+              --username "$SVN_USERNAME" --password "$SVN_PASSWORD" \
+              --no-auth-cache --non-interactive 2>/dev/null; then
+            echo "::error::SVN tag $TAG already exists. Aborting."
+            exit 1
+          fi
+
+          # Shallow checkout — fetches directory structure, no file content
+          svn checkout "$SVN_URL" "$SVN_DIR" --depth immediates \
+            --username "$SVN_USERNAME" --password "$SVN_PASSWORD" \
+            --no-auth-cache --non-interactive
+
+          # Create and populate the new tag directory
+          mkdir -p "$SVN_DIR/tags/$TAG"
+          rsync -rc --exclude-from="$GITHUB_WORKSPACE/.distignore" \
+            --delete "$GITHUB_WORKSPACE/" "$SVN_DIR/tags/$TAG/"
+
+          # Stage new files; remove deleted files
+          svn add "$SVN_DIR/tags/$TAG" --force --no-auth-cache --non-interactive
+          svn status "$SVN_DIR/tags/$TAG" | grep '^!' | awk '{print $2}' | \
+            xargs -r svn rm --force
+
+          # Commit only the tag subtree (trunk is never touched)
+          svn commit "$SVN_DIR/tags/$TAG" \
+            --message "Tagging $TAG" \
+            --username "$SVN_USERNAME" --password "$SVN_PASSWORD" \
+            --no-auth-cache --non-interactive
+
+      # Both paths: create GitHub release (regular or pre-release)
+      - name: Create GitHub Release and upload ZIP
+        if: ${{ !inputs.dry_run && (steps.deploy.outputs.zip-path != '' || inputs.dev_release) }}
+        run: |
+          TAG="${{ needs.validate.outputs.tag }}"
+          ZIP_PATH="${{ steps.dev_zip.outputs.zip-path || steps.deploy.outputs.zip-path }}"
+          EXTRA_FLAGS=""
+          if [ "${{ inputs.dev_release }}" = "true" ]; then
+            EXTRA_FLAGS="--prerelease"
+          fi
+          gh release create "$TAG" "$ZIP_PATH" \
+            --title "$TAG" \
             --generate-notes \
-            --target "${{ github.sha }}"
+            --target "${{ github.sha }}" \
+            $EXTRA_FLAGS
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

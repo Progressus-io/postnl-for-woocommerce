@@ -200,19 +200,39 @@ jobs:
             --username "$SVN_USERNAME" --password "$SVN_PASSWORD" \
             --no-auth-cache --non-interactive
 
+      # Both paths: show changelog preview on dry run
+      - name: Show changelog preview (dry run)
+        if: ${{ inputs.dry_run }}
+        run: |
+          VERSION="${{ needs.validate.outputs.version }}"
+          NOTES=$(awk -v ver="$VERSION" '
+            /^= / { if (found) exit; if (index($0, "= " ver " ")) found=1; next }
+            found { print }
+          ' readme.txt)
+          echo "--- Changelog for $VERSION ---"
+          echo "$NOTES"
+
       # Both paths: create GitHub release (regular or pre-release)
       - name: Create GitHub Release and upload ZIP
         if: ${{ !inputs.dry_run && (steps.deploy.outputs.zip-path != '' || inputs.dev_release) }}
         run: |
           TAG="${{ needs.validate.outputs.tag }}"
+          VERSION="${{ needs.validate.outputs.version }}"
           ZIP_PATH="${{ steps.dev_zip.outputs.zip-path || steps.deploy.outputs.zip-path }}"
+
+          # Extract the changelog for this version from readme.txt
+          NOTES=$(awk -v ver="$VERSION" '
+            /^= / { if (found) exit; if (index($0, "= " ver " ")) found=1; next }
+            found { print }
+          ' readme.txt)
+
           EXTRA_FLAGS=""
           if [ "${{ inputs.dev_release }}" = "true" ]; then
             EXTRA_FLAGS="--prerelease"
           fi
           gh release create "$TAG" "$ZIP_PATH" \
             --title "$TAG" \
-            --generate-notes \
+            --notes "$NOTES" \
             --target "${{ github.sha }}" \
             $EXTRA_FLAGS
         env:

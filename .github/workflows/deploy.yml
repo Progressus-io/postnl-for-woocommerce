@@ -1,0 +1,139 @@
+name: Deploy to WordPress.org
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release (e.g. 5.9.5) — must match postnl-for-woocommerce.php and readme.txt'
+        required: true
+        type: string
+      dry_run:
+        description: 'Dry run — validates and builds but skips SVN commit and release creation'
+        required: true
+        default: 'true'
+        type: boolean
+
+permissions:
+  contents: write
+
+concurrency:
+  group: deploy-to-wporg
+  cancel-in-progress: false
+
+jobs:
+  # ── Job 1: Validate that inputs.version, plugin.php, and readme.txt all have the same version ──
+  validate:
+    name: Validate Versions
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.extract.outputs.version }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Extract and validate versions
+        id: extract
+        run: |
+          PHP_VERSION=$(grep -oP '(?<=\* Version: )\d+\.\d+(\.\d+)?' postnl-for-woocommerce.php | head -1)
+          README_VERSION=$(grep -oP '(?<=Stable tag: )\d+\.\d+(\.\d+)?' readme.txt | head -1)
+          INPUT_VERSION="${{ inputs.version }}"
+
+          echo "PHP header version   : $PHP_VERSION"
+          echo "readme.txt Stable tag: $README_VERSION"
+          echo "Input version        : $INPUT_VERSION"
+
+          FAIL=0
+          if [ "$PHP_VERSION" != "$README_VERSION" ]; then
+            echo "::error::Version mismatch — postnl-for-woocommerce.php ($PHP_VERSION) != readme.txt Stable tag ($README_VERSION)"
+            FAIL=1
+          fi
+          if [ "$PHP_VERSION" != "$INPUT_VERSION" ]; then
+            echo "::error::Version mismatch — plugin ($PHP_VERSION) != requested version ($INPUT_VERSION)"
+            FAIL=1
+          fi
+          [ "$FAIL" = "1" ] && exit 1
+
+          echo "All versions match: $PHP_VERSION"
+          echo "version=$PHP_VERSION" >> "$GITHUB_OUTPUT"
+
+  # ── Job 2: Build assets and deploy to WP.org SVN ──
+  build-and-deploy:
+    name: Build & Deploy
+    runs-on: ubuntu-latest
+    needs: validate
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # PHP setup — needs to match minimum plugin requirement
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          tools: composer:v2
+          coverage: none
+
+      # Node setup — reads exact version from .nvmrc (20.18.0)
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'npm'
+
+      # Step 1: Install Composer WITH dev deps — needed for vendor/bin/wp (i18n tools)
+      - name: Install Composer dependencies (with dev)
+        run: composer install --prefer-dist --no-progress --no-interaction
+
+      # Step 2: Install npm dependencies
+      - name: Install npm dependencies
+        run: npm ci --prefer-offline
+
+      # Step 3: Webpack build → build/ directory
+      - name: Build JavaScript/CSS assets
+        run: ./node_modules/.bin/wp-scripts build
+
+      # Step 4: Regenerate i18n files (uses vendor/bin/wp from dev deps)
+      - name: Generate translation files
+        run: |
+          npm run updatepo
+          npm run makejson
+
+      # Step 5: Reinstall Composer production-only → clean vendor/ for deploy
+      - name: Reinstall Composer dependencies (production only)
+        run: composer install --no-dev --prefer-dist --no-progress --no-interaction --optimize-autoloader
+
+      # Sanity check — fail loudly if expected artifacts are missing
+      - name: Verify build artifacts
+        run: |
+          echo "=== build/ ==="
+          ls -la build/
+          [ -f "build/postnl-container-frontend.js" ] || { echo "::error::build/postnl-container-frontend.js missing!"; exit 1; }
+          echo "=== vendor/ (top level) ==="
+          ls vendor/ | head -20
+          [ -d "vendor/clegginabox" ] || { echo "::error::vendor/clegginabox missing!"; exit 1; }
+          echo "=== languages/ ==="
+          ls languages/
+
+      # Deploy to WordPress.org SVN
+      - name: Deploy to WordPress.org
+        uses: 10up/action-wordpress-plugin-deploy@stable
+        id: deploy
+        with:
+          generate-zip: true
+          dry-run: ${{ inputs.dry_run }}
+        env:
+          SLUG: woo-postnl
+          SVN_USERNAME: ${{ secrets.SVN_USERNAME }}
+          SVN_PASSWORD: ${{ secrets.SVN_PASSWORD }}
+
+      # Create GitHub Release + tag and attach the ZIP
+      - name: Create GitHub Release and upload ZIP
+        if: ${{ !inputs.dry_run && steps.deploy.outputs.zip-path != '' }}
+        run: |
+          gh release create "${{ needs.validate.outputs.version }}" \
+            "${{ steps.deploy.outputs.zip-path }}" \
+            --title "${{ needs.validate.outputs.version }}" \
+            --generate-notes \
+            --target "${{ github.sha }}"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

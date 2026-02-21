@@ -127,24 +127,19 @@ jobs:
           echo "=== languages/ ==="
           ls languages/
 
-      # Production path: 10up handles trunk update + tag creation + zip generation
-      - name: Deploy to WordPress.org
-        uses: 10up/action-wordpress-plugin-deploy@stable
-        id: deploy
-        if: ${{ !inputs.dev_release }}
-        with:
-          generate-zip: true
-          dry-run: ${{ inputs.dry_run }}
-        env:
-          SLUG: woo-postnl
-          BUILD_TAG: ${{ needs.validate.outputs.tag }}
-          SVN_USERNAME: ${{ secrets.SVN_USERNAME }}
-          SVN_PASSWORD: ${{ secrets.SVN_PASSWORD }}
+      # Create and push the git tag so all subsequent steps work from a real tag
+      - name: Create git tag
+        if: ${{ !inputs.dry_run }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag "${{ needs.validate.outputs.tag }}"
+          git push origin "${{ needs.validate.outputs.tag }}"
 
-      # Dev path: generate ZIP manually (10up is skipped)
-      - name: Generate dev ZIP
-        id: dev_zip
-        if: ${{ inputs.dev_release && !inputs.dry_run }}
+      # Both paths: generate ZIP from built workspace
+      - name: Generate plugin ZIP
+        id: build_zip
+        if: ${{ !inputs.dry_run }}
         run: |
           TAG="${{ needs.validate.outputs.tag }}"
           PLUGIN_DIR="$RUNNER_TEMP/zip_staging/woo-postnl"
@@ -155,6 +150,56 @@ jobs:
           cd "$RUNNER_TEMP/zip_staging"
           zip -r "$ZIP_PATH" woo-postnl/
           echo "zip-path=$ZIP_PATH" >> "$GITHUB_OUTPUT"
+
+      # Both paths: show changelog preview on dry run
+      - name: Show changelog preview (dry run)
+        if: ${{ inputs.dry_run }}
+        run: |
+          VERSION="${{ needs.validate.outputs.version }}"
+          NOTES=$(awk -v ver="$VERSION" '
+            /^= / { if (found) exit; if (index($0, "= " ver " ")) found=1; next }
+            found { print }
+          ' readme.txt)
+          echo "--- Changelog for $VERSION ---"
+          echo "$NOTES"
+
+      # Both paths: create GitHub release and attach ZIP
+      - name: Create GitHub Release and upload ZIP
+        if: ${{ !inputs.dry_run }}
+        run: |
+          TAG="${{ needs.validate.outputs.tag }}"
+          VERSION="${{ needs.validate.outputs.version }}"
+          ZIP_PATH="${{ steps.build_zip.outputs.zip-path }}"
+
+          # Extract the changelog for this version from readme.txt
+          NOTES=$(awk -v ver="$VERSION" '
+            /^= / { if (found) exit; if (index($0, "= " ver " ")) found=1; next }
+            found { print }
+          ' readme.txt)
+
+          EXTRA_FLAGS=""
+          if [ "${{ inputs.dev_release }}" = "true" ]; then
+            EXTRA_FLAGS="--prerelease"
+          fi
+          gh release create "$TAG" "$ZIP_PATH" \
+            --title "$TAG" \
+            --notes "$NOTES" \
+            $EXTRA_FLAGS
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # Production path: 10up deploys to SVN trunk + creates SVN tag
+      - name: Deploy to WordPress.org
+        uses: 10up/action-wordpress-plugin-deploy@stable
+        if: ${{ !inputs.dev_release }}
+        with:
+          generate-zip: false
+          dry-run: ${{ inputs.dry_run }}
+        env:
+          SLUG: woo-postnl
+          VERSION: ${{ needs.validate.outputs.tag }}
+          SVN_USERNAME: ${{ secrets.SVN_USERNAME }}
+          SVN_PASSWORD: ${{ secrets.SVN_PASSWORD }}
 
       # Dev path: install SVN (not pre-installed on ubuntu-latest)
       - name: Install SVN
@@ -200,41 +245,3 @@ jobs:
             --message "Tagging $TAG" \
             --username "$SVN_USERNAME" --password "$SVN_PASSWORD" \
             --no-auth-cache --non-interactive
-
-      # Both paths: show changelog preview on dry run
-      - name: Show changelog preview (dry run)
-        if: ${{ inputs.dry_run }}
-        run: |
-          VERSION="${{ needs.validate.outputs.version }}"
-          NOTES=$(awk -v ver="$VERSION" '
-            /^= / { if (found) exit; if (index($0, "= " ver " ")) found=1; next }
-            found { print }
-          ' readme.txt)
-          echo "--- Changelog for $VERSION ---"
-          echo "$NOTES"
-
-      # Both paths: create GitHub release (regular or pre-release)
-      - name: Create GitHub Release and upload ZIP
-        if: ${{ !inputs.dry_run && (steps.deploy.outputs.zip-path != '' || inputs.dev_release) }}
-        run: |
-          TAG="${{ needs.validate.outputs.tag }}"
-          VERSION="${{ needs.validate.outputs.version }}"
-          ZIP_PATH="${{ steps.dev_zip.outputs.zip-path || steps.deploy.outputs.zip-path }}"
-
-          # Extract the changelog for this version from readme.txt
-          NOTES=$(awk -v ver="$VERSION" '
-            /^= / { if (found) exit; if (index($0, "= " ver " ")) found=1; next }
-            found { print }
-          ' readme.txt)
-
-          EXTRA_FLAGS=""
-          if [ "${{ inputs.dev_release }}" = "true" ]; then
-            EXTRA_FLAGS="--prerelease"
-          fi
-          gh release create "$TAG" "$ZIP_PATH" \
-            --title "$TAG" \
-            --notes "$NOTES" \
-            --target "${{ github.sha }}" \
-            $EXTRA_FLAGS
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

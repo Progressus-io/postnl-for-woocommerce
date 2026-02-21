@@ -155,6 +155,11 @@ jobs:
           zip -r "$ZIP_PATH" woo-postnl/
           echo "zip-path=$ZIP_PATH" >> "$GITHUB_OUTPUT"
 
+      # Dev path: install SVN (not pre-installed on ubuntu-latest)
+      - name: Install SVN
+        if: ${{ inputs.dev_release && !inputs.dry_run }}
+        run: sudo apt-get install -y subversion
+
       # Dev path: create SVN tag without touching trunk
       - name: Deploy dev tag to SVN
         if: ${{ inputs.dev_release && !inputs.dry_run }}

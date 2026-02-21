@@ -1,0 +1,214 @@
+name: Deploy to WordPress.org
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release (e.g. 5.9.5) — must match postnl-for-woocommerce.php and readme.txt'
+        required: true
+        type: string
+      dry_run:
+        description: 'Dry run — validates and builds but skips SVN commit and release creation'
+        required: true
+        default: 'true'
+        type: boolean
+      dev_release:
+        description: 'Dev release — creates SVN tag (X.Y.Z-dev) and GitHub pre-release without updating trunk'
+        required: true
+        default: 'false'
+        type: boolean
+
+permissions:
+  contents: write
+
+concurrency:
+  group: deploy-to-wporg
+  cancel-in-progress: false
+
+jobs:
+  # ── Job 1: Validate that inputs.version, plugin.php, and readme.txt all have the same version ──
+  validate:
+    name: Validate Versions
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.extract.outputs.version }}
+      tag: ${{ steps.extract.outputs.tag }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Extract and validate versions
+        id: extract
+        run: |
+          PHP_VERSION=$(grep -oP '(?<=\* Version: )\d+\.\d+(\.\d+)?' postnl-for-woocommerce.php | head -1)
+          README_VERSION=$(grep -oP '(?<=Stable tag: )\d+\.\d+(\.\d+)?' readme.txt | head -1)
+          INPUT_VERSION="${{ inputs.version }}"
+
+          echo "PHP header version   : $PHP_VERSION"
+          echo "readme.txt Stable tag: $README_VERSION"
+          echo "Input version        : $INPUT_VERSION"
+
+          FAIL=0
+          if [ "$PHP_VERSION" != "$README_VERSION" ]; then
+            echo "::error::Version mismatch — postnl-for-woocommerce.php ($PHP_VERSION) != readme.txt Stable tag ($README_VERSION)"
+            FAIL=1
+          fi
+          if [ "$PHP_VERSION" != "$INPUT_VERSION" ]; then
+            echo "::error::Version mismatch — plugin ($PHP_VERSION) != requested version ($INPUT_VERSION)"
+            FAIL=1
+          fi
+          [ "$FAIL" = "1" ] && exit 1
+
+          if [ "${{ inputs.dev_release }}" = "true" ]; then
+            TAG="${PHP_VERSION}-dev"
+          else
+            TAG="$PHP_VERSION"
+          fi
+
+          echo "All versions match: $PHP_VERSION  →  tag: $TAG"
+          echo "version=$PHP_VERSION" >> "$GITHUB_OUTPUT"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+
+  # ── Job 2: Build assets and deploy to WP.org SVN ──
+  build-and-deploy:
+    name: Build & Deploy
+    runs-on: ubuntu-latest
+    needs: validate
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # PHP setup — needs to match minimum plugin requirement
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          tools: composer:v2
+          coverage: none
+
+      # Node setup — reads exact version from .nvmrc (20.18.0)
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'npm'
+
+      # Step 1: Install Composer WITH dev deps — needed for vendor/bin/wp (i18n tools)
+      - name: Install Composer dependencies (with dev)
+        run: composer install --prefer-dist --no-progress --no-interaction
+
+      # Step 2: Install npm dependencies
+      - name: Install npm dependencies
+        run: npm ci --prefer-offline
+
+      # Step 3: Webpack build → build/ directory
+      - name: Build JavaScript/CSS assets
+        run: ./node_modules/.bin/wp-scripts build
+
+      # Step 4: Regenerate i18n files (uses vendor/bin/wp from dev deps)
+      - name: Generate translation files
+        run: |
+          npm run updatepo
+          npm run makejson
+
+      # Step 5: Reinstall Composer production-only → clean vendor/ for deploy
+      - name: Reinstall Composer dependencies (production only)
+        run: composer install --no-dev --prefer-dist --no-progress --no-interaction --optimize-autoloader
+
+      # Sanity check — fail loudly if expected artifacts are missing
+      - name: Verify build artifacts
+        run: |
+          echo "=== build/ ==="
+          ls -la build/
+          [ -f "build/postnl-container-frontend.js" ] || { echo "::error::build/postnl-container-frontend.js missing!"; exit 1; }
+          echo "=== vendor/ (top level) ==="
+          ls vendor/ | head -20
+          [ -d "vendor/clegginabox" ] || { echo "::error::vendor/clegginabox missing!"; exit 1; }
+          echo "=== languages/ ==="
+          ls languages/
+
+      # Production path: 10up handles trunk update + tag creation + zip generation
+      - name: Deploy to WordPress.org
+        uses: 10up/action-wordpress-plugin-deploy@stable
+        id: deploy
+        if: ${{ !inputs.dev_release }}
+        with:
+          generate-zip: true
+          dry-run: ${{ inputs.dry_run }}
+        env:
+          SLUG: woo-postnl
+          SVN_USERNAME: ${{ secrets.SVN_USERNAME }}
+          SVN_PASSWORD: ${{ secrets.SVN_PASSWORD }}
+
+      # Dev path: generate ZIP manually (10up is skipped)
+      - name: Generate dev ZIP
+        id: dev_zip
+        if: ${{ inputs.dev_release && !inputs.dry_run }}
+        run: |
+          TAG="${{ needs.validate.outputs.tag }}"
+          PLUGIN_DIR="$RUNNER_TEMP/zip_staging/woo-postnl"
+          mkdir -p "$PLUGIN_DIR"
+          rsync -rc --exclude-from="$GITHUB_WORKSPACE/.distignore" \
+            --delete "$GITHUB_WORKSPACE/" "$PLUGIN_DIR/"
+          ZIP_PATH="$RUNNER_TEMP/woo-postnl-${TAG}.zip"
+          cd "$RUNNER_TEMP/zip_staging"
+          zip -r "$ZIP_PATH" woo-postnl/
+          echo "zip-path=$ZIP_PATH" >> "$GITHUB_OUTPUT"
+
+      # Dev path: create SVN tag without touching trunk
+      - name: Deploy dev tag to SVN
+        if: ${{ inputs.dev_release && !inputs.dry_run }}
+        env:
+          SVN_USERNAME: ${{ secrets.SVN_USERNAME }}
+          SVN_PASSWORD: ${{ secrets.SVN_PASSWORD }}
+        run: |
+          TAG="${{ needs.validate.outputs.tag }}"
+          SVN_URL="https://plugins.svn.wordpress.org/woo-postnl"
+          SVN_DIR="$RUNNER_TEMP/svn-deploy"
+
+          # Abort if tag already exists
+          if svn ls "$SVN_URL/tags/$TAG" \
+              --username "$SVN_USERNAME" --password "$SVN_PASSWORD" \
+              --no-auth-cache --non-interactive 2>/dev/null; then
+            echo "::error::SVN tag $TAG already exists. Aborting."
+            exit 1
+          fi
+
+          # Shallow checkout — fetches directory structure, no file content
+          svn checkout "$SVN_URL" "$SVN_DIR" --depth immediates \
+            --username "$SVN_USERNAME" --password "$SVN_PASSWORD" \
+            --no-auth-cache --non-interactive
+
+          # Create and populate the new tag directory
+          mkdir -p "$SVN_DIR/tags/$TAG"
+          rsync -rc --exclude-from="$GITHUB_WORKSPACE/.distignore" \
+            --delete "$GITHUB_WORKSPACE/" "$SVN_DIR/tags/$TAG/"
+
+          # Stage new files; remove deleted files
+          svn add "$SVN_DIR/tags/$TAG" --force --no-auth-cache --non-interactive
+          svn status "$SVN_DIR/tags/$TAG" | grep '^!' | awk '{print $2}' | \
+            xargs -r svn rm --force
+
+          # Commit only the tag subtree (trunk is never touched)
+          svn commit "$SVN_DIR/tags/$TAG" \
+            --message "Tagging $TAG" \
+            --username "$SVN_USERNAME" --password "$SVN_PASSWORD" \
+            --no-auth-cache --non-interactive
+
+      # Both paths: create GitHub release (regular or pre-release)
+      - name: Create GitHub Release and upload ZIP
+        if: ${{ !inputs.dry_run && (steps.deploy.outputs.zip-path != '' || inputs.dev_release) }}
+        run: |
+          TAG="${{ needs.validate.outputs.tag }}"
+          ZIP_PATH="${{ steps.dev_zip.outputs.zip-path || steps.deploy.outputs.zip-path }}"
+          EXTRA_FLAGS=""
+          if [ "${{ inputs.dev_release }}" = "true" ]; then
+            EXTRA_FLAGS="--prerelease"
+          fi
+          gh release create "$TAG" "$ZIP_PATH" \
+            --title "$TAG" \
+            --generate-notes \
+            --target "${{ github.sha }}" \
+            $EXTRA_FLAGS
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

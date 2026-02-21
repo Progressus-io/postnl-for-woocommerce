@@ -1,6 +1,6 @@
 *** PostNL for WooCommerce ***
 
-= 5.9.5 (2026-xx-xx) =
+= 5.9.5 (2026-02-21) =
 * Fix: Update translations.
 
 = 5.9.4 (2026-02-06) =

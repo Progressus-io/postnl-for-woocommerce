@@ -7,15 +7,19 @@ on:
         description: 'Version to release (e.g. 5.9.5) — must match postnl-for-woocommerce.php and readme.txt'
         required: true
         type: string
-      dry_run:
-        description: 'Dry run — validates and builds but skips SVN commit and release creation'
+      release_type:
+        description: 'Release type — production: full release; dry: build+preview only (no tags/commits); dev: pre-release without trunk'
         required: true
-        default: 'true'
-        type: boolean
-      dev_release:
-        description: 'Dev release — creates SVN tag (X.Y.Z-dev) and GitHub pre-release without updating trunk'
-        required: true
-        default: 'false'
+        default: 'dry'
+        type: choice
+        options:
+          - dry
+          - production
+          - dev
+      update_wp_assets:
+        description: 'Update WordPress.org store assets (banners, icons, screenshots from .wordpress-org/)'
+        required: false
+        default: false
         type: boolean
 
 permissions:
@@ -59,7 +63,7 @@ jobs:
           fi
           [ "$FAIL" = "1" ] && exit 1
 
-          if [ "${{ inputs.dev_release }}" = "true" ]; then
+          if [ "${{ inputs.release_type }}" = "dev" ]; then
             TAG="${PHP_VERSION}-dev"
           else
             TAG="$PHP_VERSION"
@@ -127,8 +131,9 @@ jobs:
           echo "=== languages/ ==="
           ls languages/
 
-      # Create and push the git tag (always, even on dry run). Idempotent: skips silently if the tag already exists.
+      # Create and push the git tag (skipped in dry mode)
       - name: Create git tag
+        if: ${{ inputs.release_type != 'dry' }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
@@ -140,10 +145,9 @@ jobs:
             git push origin "$TAG"
           fi
 
-      # Both paths: generate ZIP from built workspace
+      # All paths: generate ZIP from built workspace
       - name: Generate plugin ZIP
         id: build_zip
-        if: ${{ !inputs.dry_run }}
         run: |
           TAG="${{ needs.validate.outputs.tag }}"
           PLUGIN_DIR="$RUNNER_TEMP/zip_staging/woo-postnl"
@@ -155,9 +159,32 @@ jobs:
           zip -r "$ZIP_PATH" woo-postnl/
           echo "zip-path=$ZIP_PATH" >> "$GITHUB_OUTPUT"
 
-      # Both paths: show changelog preview on dry run
+      # Dry run only: verify ZIP contents then clean up
+      - name: Verify and clean up dry-run ZIP
+        if: ${{ inputs.release_type == 'dry' }}
+        run: |
+          ZIP_PATH="${{ steps.build_zip.outputs.zip-path }}"
+          UNZIP_DIR="$RUNNER_TEMP/zip_verify"
+          mkdir -p "$UNZIP_DIR"
+          unzip -q "$ZIP_PATH" -d "$UNZIP_DIR"
+
+          echo "=== ZIP contents ==="
+          find "$UNZIP_DIR" -type f | sort
+
+          # Assert critical files are present inside the ZIP
+          [ -f "$UNZIP_DIR/woo-postnl/postnl-for-woocommerce.php" ] \
+            || { echo "::error::postnl-for-woocommerce.php missing from ZIP!"; exit 1; }
+          [ -f "$UNZIP_DIR/woo-postnl/build/postnl-container-frontend.js" ] \
+            || { echo "::error::build/postnl-container-frontend.js missing from ZIP!"; exit 1; }
+          [ -d "$UNZIP_DIR/woo-postnl/vendor/clegginabox" ] \
+            || { echo "::error::vendor/clegginabox missing from ZIP!"; exit 1; }
+
+          echo "ZIP verified OK. Cleaning up."
+          rm -rf "$ZIP_PATH" "$UNZIP_DIR"
+
+      # Dry run only: show changelog preview
       - name: Show changelog preview (dry run)
-        if: ${{ inputs.dry_run }}
+        if: ${{ inputs.release_type == 'dry' }}
         run: |
           VERSION="${{ needs.validate.outputs.version }}"
           NOTES=$(awk -v ver="$VERSION" '
@@ -167,9 +194,9 @@ jobs:
           echo "--- Changelog for $VERSION ---"
           echo "$NOTES"
 
-      # Both paths: create GitHub release and attach ZIP
+      # Production + dev paths: create GitHub release and attach ZIP
       - name: Create GitHub Release and upload ZIP
-        if: ${{ !inputs.dry_run }}
+        if: ${{ inputs.release_type != 'dry' }}
         run: |
           TAG="${{ needs.validate.outputs.tag }}"
           VERSION="${{ needs.validate.outputs.version }}"
@@ -182,7 +209,7 @@ jobs:
           ' readme.txt)
 
           EXTRA_FLAGS=""
-          if [ "${{ inputs.dev_release }}" = "true" ]; then
+          if [ "${{ inputs.release_type }}" = "dev" ]; then
             EXTRA_FLAGS="--prerelease"
           fi
           gh release create "$TAG" "$ZIP_PATH" \
@@ -192,23 +219,31 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # Both paths (production + dev): install SVN (not pre-installed on ubuntu-latest)
+      # Production + dev paths: install SVN (not pre-installed on ubuntu-latest)
       - name: Install SVN
-        if: ${{ !inputs.dry_run }}
+        if: ${{ inputs.release_type != 'dry' }}
         run: sudo apt-get install -y subversion
 
-      # Production dry run: preview which files would be synced to trunk
+      # Dry run only: preview which files would be synced to trunk
       - name: SVN dry run preview
-        if: ${{ !inputs.dev_release && inputs.dry_run }}
+        if: ${{ inputs.release_type == 'dry' }}
         run: |
           echo "--- SVN dry run: files that would be deployed to trunk ---"
           rsync -rc --exclude-from="$GITHUB_WORKSPACE/.distignore" \
             --delete --dry-run --itemize-changes \
             "$GITHUB_WORKSPACE/" /tmp/svn-preview/
 
+      # Dry run only: preview which WordPress.org assets would be synced
+      - name: WordPress assets dry run preview
+        if: ${{ inputs.release_type == 'dry' && inputs.update_wp_assets }}
+        run: |
+          echo "--- WordPress assets dry run: files that would be synced to SVN assets/ ---"
+          rsync -rc --delete --dry-run --itemize-changes \
+            "$GITHUB_WORKSPACE/.wordpress-org/" /tmp/assets-preview/
+
       # Production path: deploy built files to SVN trunk and create SVN tag
       - name: Deploy to SVN trunk and create tag
-        if: ${{ !inputs.dev_release && !inputs.dry_run }}
+        if: ${{ inputs.release_type == 'production' }}
         env:
           SVN_USERNAME: ${{ secrets.SVN_USERNAME }}
           SVN_PASSWORD: ${{ secrets.SVN_PASSWORD }}
@@ -258,7 +293,7 @@ jobs:
 
       # Dev path: create SVN tag without touching trunk
       - name: Deploy dev tag to SVN
-        if: ${{ inputs.dev_release && !inputs.dry_run }}
+        if: ${{ inputs.release_type == 'dev' }}
         env:
           SVN_USERNAME: ${{ secrets.SVN_USERNAME }}
           SVN_PASSWORD: ${{ secrets.SVN_PASSWORD }}
@@ -293,5 +328,35 @@ jobs:
           # Commit only the tag subtree (trunk is never touched)
           svn commit "$SVN_DIR/tags/$TAG" \
             --message "Tagging $TAG" \
+            --username "$SVN_USERNAME" --password "$SVN_PASSWORD" \
+            --no-auth-cache --non-interactive
+
+      # Production + dev paths: sync .wordpress-org/ to SVN assets/
+      - name: Update WordPress.org assets
+        if: ${{ inputs.release_type != 'dry' && inputs.update_wp_assets }}
+        env:
+          SVN_USERNAME: ${{ secrets.SVN_USERNAME }}
+          SVN_PASSWORD: ${{ secrets.SVN_PASSWORD }}
+        run: |
+          SVN_URL="https://plugins.svn.wordpress.org/woo-postnl"
+          SVN_DIR="$RUNNER_TEMP/svn-deploy"
+
+          # Deep-fetch the assets/ directory from SVN
+          svn update "$SVN_DIR/assets" --set-depth infinity \
+            --username "$SVN_USERNAME" --password "$SVN_PASSWORD" \
+            --no-auth-cache --non-interactive
+
+          # Sync local .wordpress-org/ → SVN assets/
+          rsync -rc --delete \
+            "$GITHUB_WORKSPACE/.wordpress-org/" "$SVN_DIR/assets/"
+
+          # Stage new files; remove deleted files
+          svn add "$SVN_DIR/assets" --force --no-auth-cache --non-interactive
+          svn status "$SVN_DIR/assets" | grep '^!' | awk '{print $2}' | \
+            xargs -r svn rm --force
+
+          # Commit assets
+          svn commit "$SVN_DIR/assets" \
+            --message "Updating assets" \
             --username "$SVN_USERNAME" --password "$SVN_PASSWORD" \
             --no-auth-cache --non-interactive

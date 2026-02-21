@@ -55,7 +55,7 @@ jobs:
           # README.md — mirrors Stable tag
           sed -i "s/^\* Stable tag: .*/\* Stable tag: ${VERSION}/" README.md
 
-          # changelog.txt — prepend new entry (extracted from readme.txt) after the *** header
+          # changelog.txt — extract the entry (with date already filled in) from readme.txt
           ENTRY=$(awk -v ver="$VERSION" '
             BEGIN { found=0 }
             found && /^= [0-9]/ { exit }
@@ -63,8 +63,14 @@ jobs:
             found { print }
           ' readme.txt)
 
-          { head -1 changelog.txt; printf '\n'; printf '%s\n' "$ENTRY"; tail -n +2 changelog.txt; } \
-            > /tmp/changelog.txt && mv /tmp/changelog.txt changelog.txt
+          if grep -qF "= ${VERSION} " changelog.txt; then
+            # Entry already exists — just update the placeholder date
+            sed -i "s|= ${VERSION} ([0-9]\{4\}-xx-xx) =|= ${VERSION} (${TODAY}) =|g" changelog.txt
+          else
+            # Entry not present — prepend it after the *** header line
+            { head -1 changelog.txt; printf '\n'; printf '%s\n' "$ENTRY"; tail -n +2 changelog.txt; } \
+              > /tmp/changelog.txt && mv /tmp/changelog.txt changelog.txt
+          fi
 
           # languages — update Project-Id-Version in all .pot and .po files
           find languages/ -name "*.pot" -o -name "*.po" | while read -r f; do

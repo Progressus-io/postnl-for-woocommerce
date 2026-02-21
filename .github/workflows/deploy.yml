@@ -137,7 +137,7 @@ jobs:
           dry-run: ${{ inputs.dry_run }}
         env:
           SLUG: woo-postnl
-          BUILD_TAG: ${{ needs.validate.outputs.tag }}
+          GITHUB_REF: refs/tags/${{ needs.validate.outputs.tag }}
           SVN_USERNAME: ${{ secrets.SVN_USERNAME }}
           SVN_PASSWORD: ${{ secrets.SVN_PASSWORD }}
 

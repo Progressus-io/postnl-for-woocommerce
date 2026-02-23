@@ -10,6 +10,10 @@ import {
 } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 import { getSetting } from '@woocommerce/settings';
+import {
+	formatPrice,
+	getCurrencyFromPriceResponse,
+} from '@woocommerce/price-format';
 import { useDispatch, useSelect } from '@wordpress/data';
 import axios from 'axios';
 import { Spinner } from '@wordpress/components';
@@ -101,6 +105,11 @@ export const Block = ( { checkoutExtensionData } ) => {
 			};
 		} );
 
+	const currency = useMemo(
+		() => getCurrencyFromPriceResponse( getSetting( 'currency_data', {} ) ),
+		[]
+	);
+
 	const baseTabs = useMemo(
 		() => [
 			{
@@ -158,26 +167,48 @@ export const Block = ( { checkoutExtensionData } ) => {
 						? __( 'Delivery', 'postnl-for-woocommerce' )
 						: __( 'Pickup', 'postnl-for-woocommerce' );
 
-				const fees = [];
-				if ( tab.displayFormatted && tab.base > 0 ) {
-					fees.push( tab.displayFormatted );
-				}
+				if ( tab.base > 0 ) {
+					const tabTotal = carrierBaseCost + tab.base;
 
-				if (
-					tab.id === 'delivery_day' &&
-					extraDeliveryFeeFormatted &&
-					extraDeliveryFee > 0
-				) {
-					fees.push( extraDeliveryFeeFormatted );
-				}
-
-				if ( fees.length > 0 ) {
-					title += ` (+${ fees.join( ' +' ) })`;
+					if ( tabTotal > tab.base ) {
+						// carrierBaseCost is known: show the full shipping total
+						const minorUnit = currency.minorUnit ?? 2;
+						const totalFormatted = formatPrice(
+							Math.round( tabTotal * Math.pow( 10, minorUnit ) ),
+							currency
+						);
+						title += ` (${ totalFormatted }`;
+						if (
+							tab.id === 'delivery_day' &&
+							extraDeliveryFeeFormatted &&
+							extraDeliveryFee > 0
+						) {
+							title += ` +${ extraDeliveryFeeFormatted }`;
+						}
+						title += ')';
+					} else {
+						// carrierBaseCost not yet known: fall back to (+fee)
+						const fees = [ tab.displayFormatted ];
+						if (
+							tab.id === 'delivery_day' &&
+							extraDeliveryFeeFormatted &&
+							extraDeliveryFee > 0
+						) {
+							fees.push( extraDeliveryFeeFormatted );
+						}
+						title += ` (+${ fees.join( ' +' ) })`;
+					}
 				}
 
 				return { id: tab.id, name: title, base: tab.base };
 			} ),
-		[ baseTabs, extraDeliveryFee, extraDeliveryFeeFormatted ]
+		[
+			baseTabs,
+			extraDeliveryFee,
+			extraDeliveryFeeFormatted,
+			carrierBaseCost,
+			currency,
+		]
 	);
 
 	// Retrieve customer data from WooCommerce cart store

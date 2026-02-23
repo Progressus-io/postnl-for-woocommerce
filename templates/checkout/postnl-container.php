@@ -48,6 +48,18 @@ $field = array_shift( $fields );
 									);
 									?>
 									"
+									data-total-formatted="
+									<?php
+									echo esc_attr(
+										'delivery_day' === $field_tab['id']
+											? ( isset( $delivery_day_total_formatted ) ? $delivery_day_total_formatted : '' )
+											: ( 'dropoff_points' === $field_tab['id']
+											? ( isset( $pickup_total_formatted ) ? $pickup_total_formatted : '' )
+											: ''
+										)
+									);
+									?>
+									"
 							>
 
 								<span>

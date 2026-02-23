@@ -43,9 +43,10 @@
 		let text = postnlParams.i18n.deliveryDays;
 		const fees = [];
 
-		// Add base fee if > 0
-		if ( tabBase > 0 && postnlParams.delivery_day_fee_formatted ) {
-			fees.push( postnlParams.delivery_day_fee_formatted );
+		// Add base+additional total if > 0
+		const deliveryTotalFormatted = $label.data( 'total-formatted' ) || '';
+		if ( tabBase > 0 && deliveryTotalFormatted ) {
+			fees.push( deliveryTotalFormatted );
 		}
 
 		if ( extraFee > 0 && extraFeeFormatted ) {
@@ -75,9 +76,10 @@
 
 		let text = postnlParams.i18n.pickup;
 
-		// Add base fee if > 0.
-		if ( tabBase > 0 && postnlParams.pickup_fee_formatted ) {
-			text += ' (+' + postnlParams.pickup_fee_formatted + ')';
+		// Add base+additional total if > 0.
+		const pickupTotalFormatted = $label.data( 'total-formatted' ) || '';
+		if ( tabBase > 0 && pickupTotalFormatted ) {
+			text += ' (+' + pickupTotalFormatted + ')';
 		}
 
 		$label.children( 'span' ).first().text( text );

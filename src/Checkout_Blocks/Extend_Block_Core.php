@@ -206,6 +206,11 @@ class Extend_Block_Core {
 				continue;
 			}
 
+			// Do not add PostNL fees when the shipping rate is already free.
+			if ( 0 >= (float) $rate->cost ) {
+				continue;
+			}
+
 			$extra = 0;
 
 			if ( 'Pickup' === $session_type && $pickup_fee > 0 ) {

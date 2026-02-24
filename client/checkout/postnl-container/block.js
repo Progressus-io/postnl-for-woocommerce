@@ -167,7 +167,7 @@ export const Block = ( { checkoutExtensionData } ) => {
 						? __( 'Delivery', 'postnl-for-woocommerce' )
 						: __( 'Pickup', 'postnl-for-woocommerce' );
 
-				if ( tab.base > 0 ) {
+				if ( tab.base > 0 && selectedShippingFee > 0 && carrierBaseCost > 0 ) {
 					const tabTotal = carrierBaseCost + tab.base;
 
 					if ( tabTotal > tab.base ) {
@@ -208,6 +208,7 @@ export const Block = ( { checkoutExtensionData } ) => {
 			extraDeliveryFeeFormatted,
 			carrierBaseCost,
 			currency,
+			selectedShippingFee,
 		]
 	);
 
@@ -237,6 +238,14 @@ export const Block = ( { checkoutExtensionData } ) => {
 			extraDeliveryFeeFormatted: priceData.formatted || '',
 		} );
 	}, [] );
+
+	// When free shipping is active, clear any previously applied backend delivery fee.
+	useEffect( () => {
+		if ( selectedShippingFee === 0 ) {
+			setFeeState( { extraDeliveryFee: 0, extraDeliveryFeeFormatted: '' } );
+			clearBackendDeliveryFee();
+		}
+	}, [ selectedShippingFee ] );
 
 	// To prevent infinite loops if we update the address programmatically
 	const isUpdatingAddress = useRef( false );

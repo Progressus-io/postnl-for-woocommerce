@@ -263,20 +263,26 @@ class Container {
 			return;
 		}
 
+		$delivery_day_fee = (float) $this->settings->get_delivery_days_fee();
+		$pickup_fee       = (float) $this->settings->get_pickup_delivery_fee();
+		$base_rate        = Utils::get_chosen_postnl_base_rate_cost();
+
 		$template_args = array(
-			'tabs'             => $this->get_available_tabs( $checkout_data['response'] ),
-			'response'         => $checkout_data['response'],
-			'post_data'        => $checkout_data['post_data'],
-			'default_val'      => $this->get_default_value( $checkout_data['response'], $checkout_data['post_data'] ),
-			'letterbox'        => $checkout_data['letterbox'],
-			'fields'           => array(
+			'tabs'                          => $this->get_available_tabs( $checkout_data['response'] ),
+			'response'                      => $checkout_data['response'],
+			'post_data'                     => $checkout_data['post_data'],
+			'default_val'                   => $this->get_default_value( $checkout_data['response'], $checkout_data['post_data'] ),
+			'letterbox'                     => $checkout_data['letterbox'],
+			'fields'                        => array(
 				array(
 					'name'  => $this->tab_field,
 					'value' => $this->get_tab_field_value( $checkout_data['post_data'] ),
 				),
 			),
-			'pickup_fee'       => (float) $this->settings->get_pickup_delivery_fee(),
-			'delivery_day_fee' => (float) $this->settings->get_delivery_days_fee(),
+			'pickup_fee'                    => $pickup_fee,
+			'delivery_day_fee'              => $delivery_day_fee,
+			'delivery_day_total_formatted'  => Utils::get_formatted_fee_total_price( $base_rate + $delivery_day_fee ),
+			'pickup_total_formatted'        => Utils::get_formatted_fee_total_price( $base_rate + $pickup_fee ),
 		);
 
 		wc_get_template( 'checkout/postnl-container.php', $template_args, '', POSTNL_WC_PLUGIN_DIR_PATH . '/templates/' );

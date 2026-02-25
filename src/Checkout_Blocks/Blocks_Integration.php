@@ -235,8 +235,11 @@ class Blocks_Integration implements IntegrationInterface {
 	 * @return array
 	 */
 	public function get_script_data() {
-		$letterbox = Utils::is_cart_eligible_auto_letterbox( WC()->cart );
-		$settings  = postnl()->get_shipping_settings();
+		$letterbox        = Utils::is_cart_eligible_auto_letterbox( WC()->cart );
+		$settings         = postnl()->get_shipping_settings();
+		$delivery_day_fee = (float) $settings->get_delivery_days_fee();
+		$pickup_fee       = (float) $settings->get_pickup_delivery_fee();
+		$base_rate        = Utils::get_chosen_postnl_base_rate_cost();
 
 		return array(
 			'ajax_url'                     => admin_url( 'admin-ajax.php' ),
@@ -251,10 +254,12 @@ class Blocks_Integration implements IntegrationInterface {
 				'is_fill_in_with_postnl_enabled' => $this->fill_in_with_settings->is_fill_in_with_postnl_enabled(),
 				'postnl_logo_url'                => POSTNL_WC_PLUGIN_DIR_URL . '/assets/images/postnl-logo.svg',
 			),
-			'delivery_day_fee'           => $settings->get_delivery_days_fee(),
-			'delivery_day_fee_formatted' => Utils::get_formatted_fee_total_price( $settings->get_delivery_days_fee() ),
-			'pickup_fee'                 => $settings->get_pickup_delivery_fee(),
-			'pickup_fee_formatted'       => Utils::get_formatted_fee_total_price( $settings->get_pickup_delivery_fee() ),
+			'delivery_day_fee'             => $delivery_day_fee,
+			'delivery_day_fee_formatted'   => Utils::get_formatted_fee_total_price( $delivery_day_fee ),
+			'delivery_day_total_formatted' => Utils::get_formatted_fee_total_price( $base_rate + $delivery_day_fee ),
+			'pickup_fee'                   => $pickup_fee,
+			'pickup_fee_formatted'         => Utils::get_formatted_fee_total_price( $pickup_fee ),
+			'pickup_total_formatted'       => Utils::get_formatted_fee_total_price( $base_rate + $pickup_fee ),
 		);
 	}
 }

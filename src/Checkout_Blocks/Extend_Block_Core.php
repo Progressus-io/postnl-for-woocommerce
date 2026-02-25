@@ -191,8 +191,12 @@ class Extend_Block_Core {
 	 */
 	public function add_postnl_fees_to_rates( $rates, $package ) {
 
-		$session_type = WC()->session->get( 'postnl_delivery_type', '' );
-		if ( '' === $session_type ) {
+		$letterbox     = Utils::is_cart_eligible_auto_letterbox( WC()->cart );
+		$letterbox_fee = $this->settings->get_letterbox_fee();
+		$session_type  = WC()->session->get( 'postnl_delivery_type', '' );
+
+		// Nothing to do when letterbox is not active and no delivery type has been chosen.
+		if ( ! $letterbox && '' === $session_type ) {
 			return $rates;
 		}
 
@@ -206,19 +210,32 @@ class Extend_Block_Core {
 				continue;
 			}
 
-			$extra = 0;
-
-			if ( 'Pickup' === $session_type && $pickup_fee > 0 ) {
-				$extra = $pickup_fee;
-			} elseif ( 'Pickup' !== $session_type && $base_day_fee > 0 ) {
-				$extra = $base_day_fee;
-			}
-
-			if ( 0 === $extra ) {
+			// Do not modify rates that already have a cost of zero (free shipping).
+			if ( 0 >= (float) $rate->cost ) {
 				continue;
 			}
 
-			$rate->cost += $extra;
+			if ( $letterbox && null !== $letterbox_fee ) {
+				// Replace the entire shipping cost with the configured letterbox fee.
+				$rate->cost = $letterbox_fee;
+			} elseif ( '' !== $session_type ) {
+				$extra = 0;
+
+				if ( 'Pickup' === $session_type && $pickup_fee > 0 ) {
+					$extra = $pickup_fee;
+				} elseif ( 'Pickup' !== $session_type && $base_day_fee > 0 ) {
+					$extra = $base_day_fee;
+				}
+
+				if ( 0 === $extra ) {
+					continue;
+				}
+
+				$rate->cost += $extra;
+			} else {
+				// Letterbox active but no fee configured — leave rate unchanged.
+				continue;
+			}
 
 			if ( wc_tax_enabled() && 'taxable' === $rate->get_tax_status() ) {
 				$tax_rates   = \WC_Tax::get_shipping_tax_rates();

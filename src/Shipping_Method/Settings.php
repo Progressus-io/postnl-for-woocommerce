@@ -341,6 +341,14 @@ class Settings extends \WC_Settings_API {
 				'for_country' => array( 'NL', 'BE' ),
 				'class'       => 'wc_input_price country-nl country-be',
 			),
+			'letterbox_fee'                   => array(
+				'title'       => __( 'Letterbox fee', 'postnl-for-woocommerce' ),
+				'type'        => 'price',
+				'description' => __( 'Overrides the shipping cost when all items are eligible for letterbox delivery. Leave empty to use the standard shipping cost. The fee is set to €0 when free shipping applies.', 'postnl-for-woocommerce' ),
+				'desc_tip'    => true,
+				'for_country' => array( 'NL' ),
+				'class'       => 'wc_input_price country-nl',
+			),
 			'number_delivery_days'            => array(
 				'title'             => __( 'Number of Delivery Days', 'postnl-for-woocommerce' ),
 				'type'              => 'number',
@@ -1112,6 +1120,17 @@ class Settings extends \WC_Settings_API {
 	 */
 	public function get_delivery_days_fee() {
 		return (float) $this->get_country_option( 'delivery_days_fee' );
+	}
+
+	/**
+	 * Get letterbox fee from the settings.
+	 * Returns null when the field is empty (meaning: do not override).
+	 *
+	 * @return float|null
+	 */
+	public function get_letterbox_fee() {
+		$value = $this->get_country_option( 'letterbox_fee' );
+		return ( '' !== $value ) ? (float) $value : null;
 	}
 
 	/**

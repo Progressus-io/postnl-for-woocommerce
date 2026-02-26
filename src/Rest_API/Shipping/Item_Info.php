@@ -383,7 +383,7 @@ class Item_Info extends Base_Info {
 				'default'  => '',
 				'sanitize' => function ( $value ) use ( $self ) {
 					if ( 'NL' === $self->api_args['store_address']['country'] ) {
-						return ( $self->api_args['settings']['is_return_to_home_enabled'] || $this->get_product_code() == '2928' ) ? $self->api_args['settings']['return_address_street'] : 'Antwoordnummer';
+						return ( $self->api_args['settings']['is_return_to_home_enabled'] || $this->get_product_code() == '2928' || $this->get_product_code() == '2948' ) ? $self->api_args['settings']['return_address_street'] : 'Antwoordnummer';
 					}
 
 					return $self->string_length_sanitization( $value, 95 );
@@ -393,7 +393,7 @@ class Item_Info extends Base_Info {
 				'default'  => '',
 				'sanitize' => function ( $value ) use ( $self ) {
 					if ( 'NL' === $self->api_args['store_address']['country'] ) {
-						$value = ( $self->api_args['settings']['is_return_to_home_enabled'] || $this->get_product_code() == '2928' ) ? $self->api_args['settings']['return_address_house_no'] : $self->api_args['settings']['return_replynumber'];
+						$value = ( $self->api_args['settings']['is_return_to_home_enabled'] || $this->get_product_code() == '2928' || $this->get_product_code() == '2948' ) ? $self->api_args['settings']['return_address_house_no'] : $self->api_args['settings']['return_replynumber'];
 					}
 
 					return $self->string_length_sanitization( $value, 35 );
@@ -479,7 +479,7 @@ class Item_Info extends Base_Info {
 			'printer_type'            => array(
 				'default'  => $this->get_product_code() == '4909' ? 'GraphicFile|PDF' : $this->settings->get_printer_type(),
 				'sanitize' => function ( $value ) use ( $self ) {
-					if ( in_array( $this->get_product_code(), array( '4909', '2928' ) ) ) {
+					if ( in_array( $this->get_product_code(), array( '4909', '2928', '2948' ) ) ) {
 						return 'GraphicFile|PDF';
 					}
 
@@ -935,6 +935,21 @@ class Item_Info extends Base_Info {
 		$to_country       = $this->api_args['shipping_address']['country'];
 		$to_state         = $this->api_args['shipping_address']['state'];
 
+		// Check if letterbox is selected and determine which letterbox type to use.
+		if ( isset( $checked_features['letterbox'] ) && 'yes' === $checked_features['letterbox'] ) {
+			$letterbox_type = $this->get_letterbox_type();
+			error_log( "Selected letterbox type: $letterbox_type" );
+			// Remove generic 'letterbox' and add specific type.
+			unset( $checked_features['letterbox'] );
+			
+			if ( 'letterbox_48' === $letterbox_type ) {
+				$checked_features['letterbox_48'] = 'yes';
+			} else {
+				// Default to letterbox (24 hours).
+				$checked_features['letterbox'] = 'yes';
+			}
+		}
+
 		$features = array_keys( $checked_features );
 		$code_map = Mapping::products_data();
 
@@ -966,6 +981,39 @@ class Item_Info extends Base_Info {
 		}
 
 		return $selected_product;
+	}
+
+	/**
+	 * Get the letterbox type from order meta or settings.
+	 *
+	 * @return string 'letterbox' (24h) or 'letterbox_48' (48h).
+	 */
+	protected function get_letterbox_type() {
+		// Check if order has a specific letterbox type selected from checkout.
+		if ( ! empty( $this->api_args['order_details']['order_id'] ) ) {
+			$order = wc_get_order( $this->api_args['order_details']['order_id'] );
+			
+			if ( is_a( $order, 'WC_Order' ) ) {
+				$letterbox_type = $order->get_meta( '_postnl_letterbox_type' );
+				
+				// If customer selected a letterbox type from checkout, use it.
+				if ( $letterbox_type ) {
+					return $letterbox_type;
+				}
+
+			}
+		}
+
+		// Fallback to settings default.
+		$default_letterbox = $this->settings->get_default_automatic_letterboxparcel_product();
+		
+		// If default is 48h, return letterbox_48.
+		if ( 'letterbox_48' === $default_letterbox ) {
+			return 'letterbox_48';
+		}
+		
+		// Default to 24h.
+		return 'letterbox';
 	}
 
 	/**

@@ -104,6 +104,7 @@ abstract class Base {
 		add_filter( 'woocommerce_checkout_posted_data', array( $this, 'validate_posted_data' ) );
 		add_action( 'woocommerce_checkout_update_order_meta', array( $this, 'save_data' ), 10, 2 );
 		add_action( 'woocommerce_checkout_update_order_meta', array( $this, 'save_letterbox_data' ), 13, 2 );
+		add_action( 'woocommerce_checkout_update_order_meta', array( $this, 'save_letterbox_type' ), 14, 2 );
 		add_action( 'woocommerce_checkout_update_order_meta', array( $this, 'save_default_data' ), 15, 2 );
 		add_action( 'woocommerce_checkout_update_order_meta', array( $this, 'calculate_non_standard_fee' ), 20, 2 );
 		add_filter( 'postnl_frontend_checkout_tab', array( $this, 'add_checkout_tab' ), 10, 2 );
@@ -494,6 +495,45 @@ abstract class Base {
 		if ( $eligible_for_letterbox ) {
 			$order->update_meta_data( $this->letterbox_meta_name, 1 );
 			$order->save();
+		}
+	}
+
+	/**
+	 * Save the letterbox type from the selected shipping method.
+	 *
+	 * @param int   $order_id ID of the order.
+	 * @param array $posted_data Posted values.
+	 */
+	public function save_letterbox_type( $order_id, $posted_data ) {
+		$order = wc_get_order( $order_id );
+
+		if ( ! is_a( $order, 'WC_Order' ) ) {
+			return;
+		}
+
+		// Get the shipping methods from the order
+		$shipping_methods = $order->get_shipping_methods();
+		
+		if ( empty( $shipping_methods ) ) {
+			return;
+		}
+
+		foreach ( $shipping_methods as $shipping_item ) {
+			// Check if this is a PostNL shipping method.
+			if ( ! in_array( $shipping_item->get_method_id(), $this->settings->get_supported_shipping_methods() ) ) {
+				continue;
+			}
+
+			// Check if the rate has letterbox type in meta data.
+			$meta_data = $shipping_item->get_meta_data();
+			foreach ( $meta_data as $meta ) {
+				if ( 'letterbox_type' === $meta->key ) {
+					$order->update_meta_data( '_postnl_letterbox_type', $meta->value );
+					$order->save();
+					return;
+				}
+			}
+
 		}
 	}
 

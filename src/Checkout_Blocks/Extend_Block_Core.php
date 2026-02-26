@@ -306,18 +306,24 @@ class Extend_Block_Core {
 	private function save_letterbox_type_from_shipping( $order ) {
 		// Get the shipping methods from the order.
 		$shipping_methods = $order->get_shipping_methods();
-		
+
 		if ( empty( $shipping_methods ) ) {
 			return;
 		}
 
 		foreach ( $shipping_methods as $shipping_item ) {
-			// Check if this is a PostNL shipping method.
+			// This covers both PostNL and all other shipping methods.
+			$letterbox_type = $shipping_item->get_meta( 'letterbox_type' );
+			if ( ! empty( $letterbox_type ) ) {
+				$order->update_meta_data( '_postnl_letterbox_type', $letterbox_type );
+				return;
+			}
+
+			// Fall back to name-based detection for PostNL and supported shipping methods.
 			if ( ! in_array( $shipping_item->get_method_id(), $this->settings->get_supported_shipping_methods() ) ) {
 				continue;
 			}
 
-			// Try to find letterbox type in shipping item name or meta.
 			$item_name = $shipping_item->get_name();
 			if ( strpos( $item_name, '24 hours' ) !== false || strpos( $item_name, '24h' ) !== false ) {
 				$order->update_meta_data( '_postnl_letterbox_type', 'letterbox' );

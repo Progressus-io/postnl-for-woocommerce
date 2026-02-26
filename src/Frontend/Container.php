@@ -63,7 +63,7 @@ class Container {
 		if ( ! Utils::is_blocks_checkout() ) {
 			add_filter( 'woocommerce_package_rates', array( $this, 'inject_postnl_base_fees' ), 20, 2 );
 		}
-
+		add_filter( 'woocommerce_package_rates', array( $this, 'inject_letterbox_rates_for_all_methods' ), 15, 2 );
 		add_filter( 'woocommerce_cart_shipping_packages', array( $this, 'add_postnl_option_to_package' ) );
 	}
 
@@ -440,8 +440,120 @@ class Container {
 			$cart->add_fee( $non_standard_fees[ $post_data['postnl_delivery_day_type'] ]['fee_name'], wc_format_decimal( $post_data['postnl_delivery_day_price'] ), true );
 		}
 	}
+
 	/**
-	 * ِAdd the shipping option fees to the shipping methods
+	 * Inject letterbox 24h and 48h shipping rates for all non-PostNL shipping methods
+	 * when the cart is eligible for automatic letterbox delivery.
+	 *
+	 * @param array $rates   Shipping rates keyed by rate ID.
+	 * @param array $package Shipping package.
+	 * @return array
+	 */
+	public function inject_letterbox_rates_for_all_methods( $rates, $package ) {
+		// Only apply for NL base country.
+		$base_country = Utils::get_base_country();
+		if ( 'NL' !== $base_country ) {
+			return $rates;
+		}
+
+		// Check cart eligibility for letterbox.
+		$is_letterbox_eligible = Utils::is_cart_eligible_auto_letterbox( \WC()->cart );
+		if ( ! $is_letterbox_eligible ) {
+			return $rates;
+		}
+
+		$letterbox_product_type = $this->settings->get_default_automatic_letterboxparcel_product();
+
+		// Only inject when customer can decide or a specific letterbox type is configured.
+		if ( ! in_array( $letterbox_product_type, array( 'customer_decide', 'letterbox', 'letterbox_48' ), true ) ) {
+			return $rates;
+		}
+
+		$fee_24h   = $this->settings->get_letterbox_24_fee();
+		$new_rates = array();
+
+		foreach ( $rates as $rate_id => $rate ) {
+			// Skip PostNL shipping method – it handles letterbox in its own calculate_shipping().
+			if ( POSTNL_SETTINGS_ID === $rate->get_method_id() ) {
+				$new_rates[ $rate_id ] = $rate;
+				continue;
+			}
+
+			$base_cost  = (float) $rate->get_cost();
+			$base_label = $rate->get_label();
+
+			if ( 'customer_decide' === $letterbox_product_type ) {
+				// Replace rate with two letterbox variants: 24h and 48h.
+				$cost_24h  = $base_cost + $fee_24h;
+				$taxes_24h = array();
+				if ( wc_tax_enabled() && 'taxable' === $rate->get_tax_status() ) {
+					$tax_rates = \WC_Tax::get_shipping_tax_rates();
+					$taxes_24h = \WC_Tax::calc_shipping_tax( $cost_24h, $tax_rates );
+				}
+
+				$rate_24h = new \WC_Shipping_Rate(
+					$rate_id . ':letterbox',
+					$base_label . ' ' . Utils::get_letterbox_label_24h(),
+					$cost_24h,
+					$taxes_24h,
+					$rate->get_method_id(),
+					$rate->get_instance_id()
+				);
+				$rate_24h->add_meta_data( 'letterbox_type', 'letterbox' );
+
+				$rate_48h = new \WC_Shipping_Rate(
+					$rate_id . ':letterbox_48',
+					$base_label . ' ' . Utils::get_letterbox_label_48h(),
+					$base_cost,
+					$rate->get_taxes(),
+					$rate->get_method_id(),
+					$rate->get_instance_id()
+				);
+				$rate_48h->add_meta_data( 'letterbox_type', 'letterbox_48' );
+
+				$new_rates[ $rate_id . ':letterbox' ]    = $rate_24h;
+				$new_rates[ $rate_id . ':letterbox_48' ] = $rate_48h;
+
+			} elseif ( 'letterbox' === $letterbox_product_type ) {
+				// Replace rate with 24h letterbox variant only.
+				$cost_24h  = $base_cost + $fee_24h;
+				$taxes_24h = array();
+				if ( wc_tax_enabled() && 'taxable' === $rate->get_tax_status() ) {
+					$tax_rates = \WC_Tax::get_shipping_tax_rates();
+					$taxes_24h = \WC_Tax::calc_shipping_tax( $cost_24h, $tax_rates );
+				}
+
+				$modified_rate = new \WC_Shipping_Rate(
+					$rate_id . ':letterbox',
+					$base_label . ' ' . Utils::get_letterbox_label_24h(),
+					$cost_24h,
+					$taxes_24h,
+					$rate->get_method_id(),
+					$rate->get_instance_id()
+				);
+				$modified_rate->add_meta_data( 'letterbox_type', 'letterbox' );
+				$new_rates[ $rate_id . ':letterbox' ] = $modified_rate;
+
+			} elseif ( 'letterbox_48' === $letterbox_product_type ) {
+				// Replace rate with 48h letterbox variant only.
+				$modified_rate = new \WC_Shipping_Rate(
+					$rate_id . ':letterbox_48',
+					$base_label . ' ' . Utils::get_letterbox_label_48h(),
+					$base_cost,
+					$rate->get_taxes(),
+					$rate->get_method_id(),
+					$rate->get_instance_id()
+				);
+				$modified_rate->add_meta_data( 'letterbox_type', 'letterbox_48' );
+				$new_rates[ $rate_id . ':letterbox_48' ] = $modified_rate;
+			}
+		}
+
+		return $new_rates;
+	}
+
+	/**
+	 * Add the shipping option fees to the shipping methods
 	 *
 	 * @param array $rates.
 	 * @return array

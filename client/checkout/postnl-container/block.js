@@ -153,6 +153,8 @@ export const Block = ( { checkoutExtensionData } ) => {
 			? baseTabs.find( ( t ) => t.id === activeTab )?.base || 0
 			: 0;
 		const carrierBase = Math.max( 0, selectedShippingFee - activeTabBase );
+		const minorUnit = currency.minorUnit ?? 2;
+		const multiplier = Math.pow( 10, minorUnit );
 
 		return baseTabs.map( ( tab ) => {
 			let title =
@@ -164,9 +166,8 @@ export const Block = ( { checkoutExtensionData } ) => {
 				const tabTotal = carrierBase + tab.base;
 
 				if ( tabTotal > tab.base ) {
-					const minorUnit = currency.minorUnit ?? 2;
 					const totalFormatted = formatPrice(
-						Math.round( tabTotal * Math.pow( 10, minorUnit ) ),
+						Math.round( tabTotal * multiplier ),
 						currency
 					);
 					title += ` (${ totalFormatted })`;

@@ -265,7 +265,9 @@ class Container {
 
 		$delivery_day_fee = (float) $this->settings->get_delivery_days_fee();
 		$pickup_fee       = (float) $this->settings->get_pickup_delivery_fee();
-		$base_rate        = Utils::get_chosen_postnl_base_rate_cost();
+		$active_option = WC()->session ? WC()->session->get( 'postnl_option', 'delivery_day' ) : 'delivery_day';
+		$injected_fee  = ( 'dropoff_points' === $active_option ) ? $pickup_fee : $delivery_day_fee;
+		$carrier_base  = max( 0.0, Utils::get_chosen_shipping_rate_cost() - $injected_fee );
 
 		$template_args = array(
 			'tabs'                          => $this->get_available_tabs( $checkout_data['response'] ),
@@ -281,8 +283,8 @@ class Container {
 			),
 			'pickup_fee'                    => $pickup_fee,
 			'delivery_day_fee'              => $delivery_day_fee,
-			'delivery_day_total_formatted'  => Utils::get_formatted_fee_total_price( $base_rate + $delivery_day_fee ),
-			'pickup_total_formatted'        => Utils::get_formatted_fee_total_price( $base_rate + $pickup_fee ),
+			'delivery_day_total_formatted'  => Utils::get_formatted_fee_total_price( $carrier_base + $delivery_day_fee ),
+			'pickup_total_formatted'        => Utils::get_formatted_fee_total_price( $carrier_base + $pickup_fee ),
 		);
 
 		wc_get_template( 'checkout/postnl-container.php', $template_args, '', POSTNL_WC_PLUGIN_DIR_PATH . '/templates/' );
@@ -436,6 +438,11 @@ class Container {
 		$post_data = $this->get_checkout_post_data();
 
 		if ( empty( $post_data ) ) {
+			return;
+		}
+
+		// If the chosen shipping rate is free, morning/evening fees are also free.
+		if ( 0 >= Utils::get_chosen_shipping_rate_cost() ) {
 			return;
 		}
 

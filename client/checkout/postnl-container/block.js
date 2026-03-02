@@ -23,7 +23,7 @@ import { Spinner } from '@wordpress/components';
  */
 import { Block as DeliveryDayBlock } from '../postnl-delivery-day/block';
 import { Block as DropoffPointsBlock } from '../postnl-dropoff-points/block';
-import { getDeliveryDay, clearSessionData } from '../../utils/session-manager';
+import { clearSessionData } from '../../utils/session-manager';
 import {
 	batchSetExtensionData,
 	clearAllExtensionData,
@@ -71,6 +71,7 @@ export const Block = ( { checkoutExtensionData } ) => {
 			}
 
 			const packages = store.getCartData().shippingRates || [];
+			const taxDisplayIncl = postnlData.tax_display_incl || false;
 
 			for ( const pkg of packages ) {
 				const rates = pkg.shipping_rates || [];
@@ -78,9 +79,14 @@ export const Block = ( { checkoutExtensionData } ) => {
 				if ( chosen && chosen.price !== undefined ) {
 					const minor = Number( chosen.currency_minor_unit || 0 );
 					const price = parseFloat( chosen.price );
+					const taxes = parseFloat( chosen.taxes || 0 );
 					if ( ! Number.isNaN( price ) ) {
+						const displayPrice = taxDisplayIncl
+							? price + taxes
+							: price;
 						return {
-							selectedShippingFee: price / Math.pow( 10, minor ),
+							selectedShippingFee:
+								displayPrice / Math.pow( 10, minor ),
 							selectedMethodId: chosen.method_id || '',
 						};
 					}
@@ -105,15 +111,6 @@ export const Block = ( { checkoutExtensionData } ) => {
 	// True when the selected method is one that has PostNL tab fees baked in.
 	const supportedMethods = postnlData.supported_shipping_methods || [ 'postnl' ];
 	const isSupportedMethod = supportedMethods.includes( selectedMethodId );
-
-	const [ { extraDeliveryFee, extraDeliveryFeeFormatted }, setFeeState ] =
-		useState( () => {
-			const saved = getDeliveryDay();
-			return {
-				extraDeliveryFee: Number( saved.price || 0 ),
-				extraDeliveryFeeFormatted: saved.priceFormatted || '',
-			};
-		} );
 
 	const currency = useMemo(
 		() => getCurrencyFromPriceResponse( getSetting( 'currency_data', {} ) ),
@@ -208,13 +205,6 @@ export const Block = ( { checkoutExtensionData } ) => {
 	const [ deliveryOptions, setDeliveryOptions ] = useState( [] );
 	const [ dropoffOptions, setDropoffOptions ] = useState( [] );
 	const [ deliveryDaysEnabled, setDeliveryDaysEnabled ] = useState( true );
-
-	const handlePriceChange = useCallback( ( priceData ) => {
-		setFeeState( {
-			extraDeliveryFee: priceData.numeric || 0,
-			extraDeliveryFeeFormatted: priceData.formatted || '',
-		} );
-	}, [] );
 
 	// To prevent infinite loops if we update the address programmatically.
 	const isUpdatingAddress = useRef( false );
@@ -521,7 +511,6 @@ export const Block = ( { checkoutExtensionData } ) => {
 								isActive={ activeTab === 'delivery_day' }
 								deliveryOptions={ deliveryOptions }
 								isDeliveryDaysEnabled={ deliveryDaysEnabled }
-								onPriceChange={ handlePriceChange }
 								isFreeShipping={ isFreeShipping }
 							/>
 						</div>

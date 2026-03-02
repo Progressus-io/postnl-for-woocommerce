@@ -1045,15 +1045,13 @@ class Utils {
 	}
 
 	/**
-	 * Get the base cost (excl. tax) of the chosen PostNL shipping rate,
-	 * with any previously-injected PostNL option fee removed.
+	 * Get the cost of the currently chosen shipping rate (any method).
+	 * Returns the rate cost as stored in the package rates (after woocommerce_package_rates
+	 * filters have run, i.e. including any injected PostNL tab fees).
 	 *
-	 * @param float $delivery_day_fee The delivery-day additional fee configured in settings.
-	 * @param float $pickup_fee       The pickup additional fee configured in settings.
-	 *
-	 * @return float Base shipping cost excluding tax, or 0.0 if unavailable.
+	 * @return float
 	 */
-	public static function get_chosen_postnl_base_rate_cost(): float {
+	public static function get_chosen_shipping_rate_cost(): float {
 		if ( is_null( WC()->cart ) || is_null( WC()->session ) ) {
 			return 0.0;
 		}
@@ -1072,15 +1070,7 @@ class Utils {
 				continue;
 			}
 
-			/** @var \WC_Shipping_Rate $rate */
-			$rate = $package['rates'][ $chosen_key ];
-
-			if ( POSTNL_SETTINGS_ID !== $rate->get_method_id() ) {
-				continue;
-			}
-
-			// Return the shipping rate cost directly — no extra has been injected.
-			return max( 0.0, (float) $rate->get_cost() );
+			return max( 0.0, (float) $package['rates'][ $chosen_key ]->cost );
 		}
 
 		return 0.0;

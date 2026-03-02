@@ -177,9 +177,40 @@ class Extend_Block_Core {
 		}
 		$cart->fees_api()->set_fees( $new_fees );
 
+		// If the chosen shipping rate is free, morning/evening fees are also free.
+		if ( $this->is_chosen_shipping_free() ) {
+			return;
+		}
+
 		if ( $fee_amount > 0 ) {
 			$cart->add_fee( $fee_label, $fee_amount, true );
 		}
+	}
+
+	/**
+	 * Checks whether the currently chosen shipping rate has zero cost.
+	 *
+	 * @return bool
+	 */
+	private function is_chosen_shipping_free(): bool {
+		$chosen_methods = WC()->session->get( 'chosen_shipping_methods', array() );
+		if ( empty( $chosen_methods ) ) {
+			return false;
+		}
+
+		$packages = WC()->shipping()->get_packages();
+
+		foreach ( $packages as $i => $package ) {
+			$chosen_key = $chosen_methods[ $i ] ?? '';
+			if ( empty( $chosen_key ) || ! isset( $package['rates'][ $chosen_key ] ) ) {
+				continue;
+			}
+			if ( 0 >= (float) $package['rates'][ $chosen_key ]->cost ) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	/**

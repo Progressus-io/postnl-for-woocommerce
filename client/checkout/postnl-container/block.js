@@ -63,11 +63,11 @@ export const Block = ( { checkoutExtensionData } ) => {
 	const letterbox = postnlData.letterbox || false;
 	const { CART_STORE_KEY, CHECKOUT_STORE_KEY } = window.wc.wcBlocksData;
 
-	const selectedShippingFee = useSelect(
+	const { selectedShippingFee, selectedMethodId } = useSelect(
 		( select ) => {
 			const store = select( CART_STORE_KEY );
 			if ( ! store || ! store.getCartData ) {
-				return 0;
+				return { selectedShippingFee: 0, selectedMethodId: '' };
 			}
 
 			const packages = store.getCartData().shippingRates || [];
@@ -79,7 +79,10 @@ export const Block = ( { checkoutExtensionData } ) => {
 					const minor = Number( chosen.currency_minor_unit || 0 );
 					const price = parseFloat( chosen.price );
 					if ( ! Number.isNaN( price ) ) {
-						return price / Math.pow( 10, minor );
+						return {
+							selectedShippingFee: price / Math.pow( 10, minor ),
+							selectedMethodId: chosen.method_id || '',
+						};
 					}
 				}
 			}
@@ -87,14 +90,21 @@ export const Block = ( { checkoutExtensionData } ) => {
 			if ( store.getCartTotals ) {
 				const totals = store.getCartTotals();
 				if ( totals && totals.shipping_total ) {
-					return Number( totals.shipping_total );
+					return {
+						selectedShippingFee: Number( totals.shipping_total ),
+						selectedMethodId: '',
+					};
 				}
 			}
 
-			return 0;
+			return { selectedShippingFee: 0, selectedMethodId: '' };
 		},
 		[ CART_STORE_KEY ]
 	);
+
+	// True when the selected method is one that has PostNL tab fees baked in.
+	const supportedMethods = postnlData.supported_shipping_methods || [ 'postnl' ];
+	const isSupportedMethod = supportedMethods.includes( selectedMethodId );
 
 	const [ { extraDeliveryFee, extraDeliveryFeeFormatted }, setFeeState ] =
 		useState( () => {
@@ -139,81 +149,47 @@ export const Block = ( { checkoutExtensionData } ) => {
 
 	const [ activeTab, setActiveTab ] = useState( baseTabs[ 0 ].id );
 
-	const [ carrierBaseCost, setCarrierBaseCost ] = useState(
-		() => selectedShippingFee - baseTabs[ 0 ].base - extraDeliveryFee
-	);
+	const isFreeShipping = selectedShippingFee === 0;
 
-	const prevShipping = useRef( selectedShippingFee );
+	const tabs = useMemo( () => {
+		const activeTabBase = isSupportedMethod
+			? baseTabs.find( ( t ) => t.id === activeTab )?.base || 0
+			: 0;
+		const carrierBase = Math.max( 0, selectedShippingFee - activeTabBase );
 
-	useEffect( () => {
-		if ( prevShipping.current === selectedShippingFee ) {
-			return;
-		}
-		prevShipping.current = selectedShippingFee;
+		return baseTabs.map( ( tab ) => {
+			let title =
+				tab.id === 'delivery_day'
+					? __( 'Delivery', 'postnl-for-woocommerce' )
+					: __( 'Pickup', 'postnl-for-woocommerce' );
 
-		const currentTabBase =
-			baseTabs.find( ( tab ) => tab.id === activeTab )?.base || 0;
-		const extra = activeTab === 'delivery_day' ? extraDeliveryFee : 0;
+			if ( tab.base > 0 && selectedShippingFee > 0 ) {
+				const tabTotal = carrierBase + tab.base;
 
-		const raw = selectedShippingFee - currentTabBase - extra;
-		setCarrierBaseCost( raw < 0 ? 0 : raw );
-	}, [ selectedShippingFee ] );
-
-	const tabs = useMemo(
-		() =>
-			baseTabs.map( ( tab ) => {
-				let title =
-					tab.id === 'delivery_day'
-						? __( 'Delivery', 'postnl-for-woocommerce' )
-						: __( 'Pickup', 'postnl-for-woocommerce' );
-
-				if ( tab.base > 0 && selectedShippingFee > 0 ) {
-					const tabTotal = carrierBaseCost + tab.base;
-
-					if ( tabTotal > tab.base ) {
-						// carrierBaseCost is known: show the full shipping total
-						const minorUnit = currency.minorUnit ?? 2;
-						const totalFormatted = formatPrice(
-							Math.round( tabTotal * Math.pow( 10, minorUnit ) ),
-							currency
-						);
-						title += ` (${ totalFormatted }`;
-						if (
-							tab.id === 'delivery_day' &&
-							extraDeliveryFeeFormatted &&
-							extraDeliveryFee > 0
-						) {
-							title += ` +${ extraDeliveryFeeFormatted }`;
-						}
-						title += ')';
-					} else {
-						// carrierBaseCost not yet known: fall back to (+fee)
-						const fees = [ tab.displayFormatted ];
-						if (
-							tab.id === 'delivery_day' &&
-							extraDeliveryFeeFormatted &&
-							extraDeliveryFee > 0
-						) {
-							fees.push( extraDeliveryFeeFormatted );
-						}
-						title += ` (+${ fees.join( ' +' ) })`;
-					}
+				if ( tabTotal > tab.base ) {
+					const minorUnit = currency.minorUnit ?? 2;
+					const totalFormatted = formatPrice(
+						Math.round( tabTotal * Math.pow( 10, minorUnit ) ),
+						currency
+					);
+					title += ` (${ totalFormatted })`;
+				} else {
+					// carrierBase not yet available: fall back to (+fee).
+					title += ` (+${ tab.displayFormatted })`;
 				}
+			}
 
-				return { id: tab.id, name: title, base: tab.base };
-			} ),
-		[
-			baseTabs,
-			activeTab,
-			extraDeliveryFee,
-			extraDeliveryFeeFormatted,
-			carrierBaseCost,
-			currency,
-			selectedShippingFee,
-		]
-	);
+			return { id: tab.id, name: title, base: tab.base };
+		} );
+	}, [
+		baseTabs,
+		activeTab,
+		selectedShippingFee,
+		isSupportedMethod,
+		currency,
+	] );
 
-	// Retrieve customer data from WooCommerce cart store
+	// Retrieve customer data from WooCommerce cart store.
 	const customerData = useSelect(
 		( select ) => {
 			const store = select( CART_STORE_KEY );
@@ -240,15 +216,7 @@ export const Block = ( { checkoutExtensionData } ) => {
 		} );
 	}, [] );
 
-	// When free shipping is active, clear any previously applied backend delivery fee.
-	// useEffect( () => {
-	// 	if ( selectedShippingFee === 0 ) {
-	// 		setFeeState( { extraDeliveryFee: 0, extraDeliveryFeeFormatted: '' } );
-	// 		clearBackendDeliveryFee();
-	// 	}
-	// }, [ selectedShippingFee ] );
-
-	// To prevent infinite loops if we update the address programmatically
+	// To prevent infinite loops if we update the address programmatically.
 	const isUpdatingAddress = useRef( false );
 
 	// Ref to store the previous shipping address
@@ -310,7 +278,7 @@ export const Block = ( { checkoutExtensionData } ) => {
 				postnlData.is_nl_address_enabled &&
 				isEmpty( shippingAddress[ 'postnl/house_number' ] ) )
 		) {
-			// If we have no valid postcode/house number, hide container
+			// If we have no valid postcode/house number, hide container.
 			setShowContainer( false );
 			return;
 		}
@@ -320,7 +288,7 @@ export const Block = ( { checkoutExtensionData } ) => {
 			return;
 		}
 
-		// Check if the shipping address has changed
+		// Check if the shipping address has changed.
 		if (
 			isAddressEqual( previousShippingAddress.current, shippingAddress )
 		) {
@@ -554,6 +522,7 @@ export const Block = ( { checkoutExtensionData } ) => {
 								deliveryOptions={ deliveryOptions }
 								isDeliveryDaysEnabled={ deliveryDaysEnabled }
 								onPriceChange={ handlePriceChange }
+								isFreeShipping={ isFreeShipping }
 							/>
 						</div>
 						{ postnlData.is_pickup_points_enabled && (

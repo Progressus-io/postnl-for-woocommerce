@@ -260,6 +260,7 @@ class Blocks_Integration implements IntegrationInterface {
 			'pickup_fee'                   => $pickup_fee,
 			'pickup_fee_formatted'         => Utils::get_formatted_fee_total_price( $pickup_fee ),
 			'pickup_total_formatted'       => Utils::get_formatted_fee_total_price( $base_rate + $pickup_fee ),
+			'supported_shipping_methods'   => $settings->get_supported_shipping_methods(),
 		);
 	}
 }

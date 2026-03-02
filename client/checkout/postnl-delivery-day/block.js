@@ -45,6 +45,7 @@ export const Block = ( {
 	deliveryOptions,
 	isDeliveryDaysEnabled,
 	onPriceChange = () => {},
+	isFreeShipping = false,
 } ) => {
 	const { setExtensionData } = checkoutExtensionData;
 
@@ -129,18 +130,23 @@ export const Block = ( {
 				firstDelivery.options.length > 0
 			) {
 				const firstOption = firstDelivery.options[ 0 ];
+				const effectivePrice = isFreeShipping
+					? 0
+					: firstOption.price || 0;
 				handleOptionChange(
 					`${ firstDelivery.date }_${ firstOption.from }-${ firstOption.to }_${ firstOption.price }`,
 					firstDelivery.date,
 					firstOption.from,
 					firstOption.to,
 					firstOption.type || 'Unknown',
-					firstOption.price || 0,
-					firstOption.price_formatted || ''
+					effectivePrice,
+					isFreeShipping ? '' : firstOption.price_formatted || ''
 				);
 				onPriceChange( {
-					numeric: Number( firstOption.price || 0 ),
-					formatted: firstOption.price_formatted || '',
+					numeric: effectivePrice,
+					formatted: isFreeShipping
+						? ''
+						: firstOption.price_formatted || '',
 				} );
 			}
 		}
@@ -301,13 +307,18 @@ export const Block = ( {
 																	from,
 																	to,
 																	optionType,
-																	price,
-																	priceDisplayFormatted
+																	isFreeShipping
+																		? 0
+																		: price,
+																	isFreeShipping
+																		? ''
+																		: priceDisplayFormatted
 																)
 															}
 														/>
 														{ priceDisplayFormatted &&
-															price > 0 && (
+															price > 0 &&
+															! isFreeShipping && (
 																<i>
 																	+
 																	{

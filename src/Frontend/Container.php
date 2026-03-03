@@ -200,6 +200,8 @@ class Container {
 		}
 
 		$non_standard_fees = Base::non_standard_fees_data();
+		$chosen_rate_cost = Utils::get_chosen_shipping_rate_cost();
+		$is_free_shipping = $chosen_rate_cost <= 0;
 
 		foreach ( $response['DeliveryOptions'] as $delivery_option ) {
 			if ( empty( $delivery_option['DeliveryDate'] ) || empty( $delivery_option['Timeframe'] ) ) {
@@ -209,7 +211,7 @@ class Container {
 			$options = array_map(
 				function ( $timeframe ) use ( $non_standard_fees ) {
 					$type  = array_shift( $timeframe['Options'] );
-					$price = isset( $non_standard_fees[ $type ] ) ? $non_standard_fees[ $type ]['fee_price'] : 0;
+					$price = isset( $non_standard_fees[ $type ] ) && ! $is_free_shipping ? $non_standard_fees[ $type ]['fee_price'] : 0;
 
 					return array(
 						'from'  => Utils::get_hour_min( $timeframe['From'] ),
@@ -263,11 +265,14 @@ class Container {
 			return;
 		}
 
-		$delivery_day_fee = (float) $this->settings->get_delivery_days_fee();
-		$pickup_fee       = (float) $this->settings->get_pickup_delivery_fee();
+		$chosen_rate_cost = Utils::get_chosen_shipping_rate_cost();
+		$is_free_shipping = $chosen_rate_cost <= 0;
+
+		$delivery_day_fee = $is_free_shipping ? 0.0 : (float) $this->settings->get_delivery_days_fee();
+		$pickup_fee       = $is_free_shipping ? 0.0 : (float) $this->settings->get_pickup_delivery_fee();
 		$active_option = WC()->session ? WC()->session->get( 'postnl_option', 'delivery_day' ) : 'delivery_day';
 		$injected_fee  = ( 'dropoff_points' === $active_option ) ? $pickup_fee : $delivery_day_fee;
-		$carrier_base  = max( 0.0, Utils::get_chosen_shipping_rate_cost() - $injected_fee );
+		$carrier_base  = $is_free_shipping ? 0.0 : max( 0.0, $chosen_rate_cost - $injected_fee );
 
 		$template_args = array(
 			'tabs'                          => $this->get_available_tabs( $checkout_data['response'] ),
@@ -473,6 +478,11 @@ class Container {
 
 		foreach ( $rates as $rate_id => $rate ) {
 			if ( ! in_array( $rate->get_method_id(), $supported, true ) ) {
+				continue;
+			}
+
+			// Do not add PostNL tab fees on top of free shipping.
+			if ( (float) $rate->cost <= 0 ) {
 				continue;
 			}
 

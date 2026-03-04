@@ -209,7 +209,7 @@ class Container {
 			}
 
 			$options = array_map(
-				function ( $timeframe ) use ( $non_standard_fees ) {
+				function ( $timeframe ) use ( $non_standard_fees, $is_free_shipping ) {
 					$type  = array_shift( $timeframe['Options'] );
 					$price = isset( $non_standard_fees[ $type ] ) && ! $is_free_shipping ? $non_standard_fees[ $type ]['fee_price'] : 0;
 

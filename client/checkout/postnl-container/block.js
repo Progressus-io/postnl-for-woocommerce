@@ -63,12 +63,21 @@ export const Block = ( { checkoutExtensionData } ) => {
 	const letterbox = postnlData.letterbox || false;
 	const { CART_STORE_KEY, CHECKOUT_STORE_KEY } = window.wc.wcBlocksData;
 
-	const { selectedShippingFee, selectedMethodId } = useSelect(
+	const { selectedShippingFee, selectedMethodId, cartDataLoaded } = useSelect(
 		( select ) => {
 			const store = select( CART_STORE_KEY );
 			if ( ! store || ! store.getCartData ) {
-				return { selectedShippingFee: 0, selectedMethodId: '' };
+				return {
+					selectedShippingFee: 0,
+					selectedMethodId: '',
+					cartDataLoaded: false,
+				};
 			}
+
+			const hasLoaded =
+				typeof store.hasFinishedResolution === 'function'
+					? store.hasFinishedResolution( 'getCartData', [] )
+					: true;
 
 			const packages = store.getCartData().shippingRates || [];
 			const taxDisplayIncl = postnlData.tax_display_incl || false;
@@ -88,6 +97,7 @@ export const Block = ( { checkoutExtensionData } ) => {
 							selectedShippingFee:
 								displayPrice / Math.pow( 10, minor ),
 							selectedMethodId: chosen.method_id || '',
+							cartDataLoaded: hasLoaded,
 						};
 					}
 				}
@@ -99,11 +109,16 @@ export const Block = ( { checkoutExtensionData } ) => {
 					return {
 						selectedShippingFee: Number( totals.shipping_total ),
 						selectedMethodId: '',
+						cartDataLoaded: hasLoaded,
 					};
 				}
 			}
 
-			return { selectedShippingFee: 0, selectedMethodId: '' };
+			return {
+				selectedShippingFee: 0,
+				selectedMethodId: '',
+				cartDataLoaded: hasLoaded,
+			};
 		},
 		[ CART_STORE_KEY ]
 	);
@@ -146,7 +161,7 @@ export const Block = ( { checkoutExtensionData } ) => {
 
 	const [ activeTab, setActiveTab ] = useState( baseTabs[ 0 ].id );
 
-	const isFreeShipping = selectedShippingFee === 0;
+	const isFreeShipping = cartDataLoaded && selectedShippingFee === 0;
 
 	const tabs = useMemo( () => {
 		const activeTabBase = isSupportedMethod

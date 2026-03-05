@@ -132,6 +132,8 @@ class Delivery_Day extends Base {
 		}
 
 		$non_standard_fees                       = Base::non_standard_fees_data();
+		$chosen_rate_cost                        = Utils::get_chosen_shipping_rate_cost();
+		$is_free_shipping                        = $chosen_rate_cost <= 0;
 		$return_data                             = $this->get_init_content_data( $post_data );
 		$show_delivery_days                      = $this->is_customer_allowed_to_pick_delivery_day();
 		$return_data['is_delivery_days_enabled'] = $show_delivery_days;
@@ -144,7 +146,7 @@ class Delivery_Day extends Base {
 			$options = array_map(
 				function ( $timeframe ) use ( $non_standard_fees, $is_free_shipping ) {
 					$type  = array_shift( $timeframe['Options'] );
-					$price = isset( $non_standard_fees[ $type ] ) ? $non_standard_fees[ $type ]['fee_price'] : 0;
+					$price = isset( $non_standard_fees[ $type ] ) && ! $is_free_shipping ? $non_standard_fees[ $type ]['fee_price'] : 0;
 
 					return array(
 						'from'            => Utils::get_hour_min( $timeframe['From'] ),

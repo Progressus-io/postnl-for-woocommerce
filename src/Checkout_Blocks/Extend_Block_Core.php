@@ -177,9 +177,23 @@ class Extend_Block_Core {
 		}
 		$cart->fees_api()->set_fees( $new_fees );
 
+		// If the chosen shipping rate is free, morning/evening fees are also free.
+		if ( $this->is_chosen_shipping_free() ) {
+			return;
+		}
+
 		if ( $fee_amount > 0 ) {
 			$cart->add_fee( $fee_label, $fee_amount, true );
 		}
+	}
+
+	/**
+	 * Checks whether the currently chosen shipping rate has zero cost.
+	 *
+	 * @return bool
+	 */
+	private function is_chosen_shipping_free(): bool {
+		return Utils::get_chosen_shipping_rate_cost() <= 0.0;
 	}
 
 	/**
@@ -203,6 +217,11 @@ class Extend_Block_Core {
 		foreach ( $rates as $rate_id => $rate ) {
 
 			if ( ! in_array( $rate->get_method_id(), $supported, true ) ) {
+				continue;
+			}
+
+			// Do not add PostNL fees when the shipping rate is already free.
+			if ( 0 >= (float) $rate->cost ) {
 				continue;
 			}
 

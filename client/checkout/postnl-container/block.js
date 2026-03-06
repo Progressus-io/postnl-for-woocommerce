@@ -10,6 +10,10 @@ import {
 } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 import { getSetting } from '@woocommerce/settings';
+import {
+	formatPrice,
+	getCurrencyFromPriceResponse,
+} from '@woocommerce/price-format';
 import { useDispatch, useSelect } from '@wordpress/data';
 import axios from 'axios';
 import { Spinner } from '@wordpress/components';
@@ -19,7 +23,7 @@ import { Spinner } from '@wordpress/components';
  */
 import { Block as DeliveryDayBlock } from '../postnl-delivery-day/block';
 import { Block as DropoffPointsBlock } from '../postnl-dropoff-points/block';
-import { getDeliveryDay, clearSessionData } from '../../utils/session-manager';
+import { clearSessionData } from '../../utils/session-manager';
 import {
 	batchSetExtensionData,
 	clearAllExtensionData,
@@ -59,14 +63,24 @@ export const Block = ( { checkoutExtensionData } ) => {
 	const letterbox = postnlData.letterbox || false;
 	const { CART_STORE_KEY, CHECKOUT_STORE_KEY } = window.wc.wcBlocksData;
 
-	const selectedShippingFee = useSelect(
+	const { selectedShippingFee, selectedMethodId, cartDataLoaded } = useSelect(
 		( select ) => {
 			const store = select( CART_STORE_KEY );
 			if ( ! store || ! store.getCartData ) {
-				return 0;
+				return {
+					selectedShippingFee: 0,
+					selectedMethodId: '',
+					cartDataLoaded: false,
+				};
 			}
 
+			const hasLoaded =
+				typeof store.hasFinishedResolution === 'function'
+					? store.hasFinishedResolution( 'getCartData', [] )
+					: true;
+
 			const packages = store.getCartData().shippingRates || [];
+			const taxDisplayIncl = postnlData.tax_display_incl || false;
 
 			for ( const pkg of packages ) {
 				const rates = pkg.shipping_rates || [];
@@ -74,8 +88,17 @@ export const Block = ( { checkoutExtensionData } ) => {
 				if ( chosen && chosen.price !== undefined ) {
 					const minor = Number( chosen.currency_minor_unit || 0 );
 					const price = parseFloat( chosen.price );
+					const taxes = parseFloat( chosen.taxes || 0 );
 					if ( ! Number.isNaN( price ) ) {
-						return price / Math.pow( 10, minor );
+						const displayPrice = taxDisplayIncl
+							? price + taxes
+							: price;
+						return {
+							selectedShippingFee:
+								displayPrice / Math.pow( 10, minor ),
+							selectedMethodId: chosen.method_id || '',
+							cartDataLoaded: hasLoaded,
+						};
 					}
 				}
 			}
@@ -83,23 +106,31 @@ export const Block = ( { checkoutExtensionData } ) => {
 			if ( store.getCartTotals ) {
 				const totals = store.getCartTotals();
 				if ( totals && totals.shipping_total ) {
-					return Number( totals.shipping_total );
+					return {
+						selectedShippingFee: Number( totals.shipping_total ),
+						selectedMethodId: '',
+						cartDataLoaded: hasLoaded,
+					};
 				}
 			}
 
-			return 0;
+			return {
+				selectedShippingFee: 0,
+				selectedMethodId: '',
+				cartDataLoaded: hasLoaded,
+			};
 		},
 		[ CART_STORE_KEY ]
 	);
 
-	const [ { extraDeliveryFee, extraDeliveryFeeFormatted }, setFeeState ] =
-		useState( () => {
-			const saved = getDeliveryDay();
-			return {
-				extraDeliveryFee: Number( saved.price || 0 ),
-				extraDeliveryFeeFormatted: saved.priceFormatted || '',
-			};
-		} );
+	// True when the selected method is one that has PostNL tab fees baked in.
+	const supportedMethods = postnlData.supported_shipping_methods || [ 'postnl' ];
+	const isSupportedMethod = supportedMethods.includes( selectedMethodId );
+
+	const currency = useMemo(
+		() => getCurrencyFromPriceResponse( getSetting( 'currency_data', {} ) ),
+		[]
+	);
 
 	const baseTabs = useMemo(
 		() => [
@@ -130,57 +161,48 @@ export const Block = ( { checkoutExtensionData } ) => {
 
 	const [ activeTab, setActiveTab ] = useState( baseTabs[ 0 ].id );
 
-	const [ carrierBaseCost, setCarrierBaseCost ] = useState(
-		() => selectedShippingFee - baseTabs[ 0 ].base - extraDeliveryFee
-	);
+	const isFreeShipping = cartDataLoaded && selectedShippingFee === 0;
 
-	const prevShipping = useRef( selectedShippingFee );
+	const tabs = useMemo( () => {
+		const activeTabBase = isSupportedMethod
+			? baseTabs.find( ( t ) => t.id === activeTab )?.base || 0
+			: 0;
+		const carrierBase = Math.max( 0, selectedShippingFee - activeTabBase );
+		const minorUnit = currency.minorUnit ?? 2;
+		const multiplier = Math.pow( 10, minorUnit );
 
-	useEffect( () => {
-		if ( prevShipping.current === selectedShippingFee ) {
-			return;
-		}
-		prevShipping.current = selectedShippingFee;
+		return baseTabs.map( ( tab ) => {
+			let title =
+				tab.id === 'delivery_day'
+					? __( 'Delivery', 'postnl-for-woocommerce' )
+					: __( 'Pickup', 'postnl-for-woocommerce' );
 
-		const currentTabBase =
-			baseTabs.find( ( tab ) => tab.id === activeTab )?.base || 0;
-		const extra = activeTab === 'delivery_day' ? extraDeliveryFee : 0;
+			if ( tab.base > 0 && selectedShippingFee > 0 ) {
+				const tabTotal = carrierBase + tab.base;
 
-		const raw = selectedShippingFee - currentTabBase - extra;
-		setCarrierBaseCost( raw < 0 ? 0 : raw );
-	}, [ selectedShippingFee ] );
-
-	const tabs = useMemo(
-		() =>
-			baseTabs.map( ( tab ) => {
-				let title =
-					tab.id === 'delivery_day'
-						? __( 'Delivery', 'postnl-for-woocommerce' )
-						: __( 'Pickup', 'postnl-for-woocommerce' );
-
-				const fees = [];
-				if ( tab.displayFormatted && tab.base > 0 ) {
-					fees.push( tab.displayFormatted );
+				if ( tabTotal > tab.base ) {
+					const totalFormatted = formatPrice(
+						Math.round( tabTotal * multiplier ),
+						currency
+					);
+					title += ` (${ totalFormatted })`;
+				} else {
+					// carrierBase not yet available: fall back to (+fee).
+					title += ` (+${ tab.displayFormatted })`;
 				}
+			}
 
-				if (
-					tab.id === 'delivery_day' &&
-					extraDeliveryFeeFormatted &&
-					extraDeliveryFee > 0
-				) {
-					fees.push( extraDeliveryFeeFormatted );
-				}
+			return { id: tab.id, name: title, base: tab.base };
+		} );
+	}, [
+		baseTabs,
+		activeTab,
+		selectedShippingFee,
+		isSupportedMethod,
+		currency,
+	] );
 
-				if ( fees.length > 0 ) {
-					title += ` (+${ fees.join( ' +' ) })`;
-				}
-
-				return { id: tab.id, name: title, base: tab.base };
-			} ),
-		[ baseTabs, extraDeliveryFee, extraDeliveryFeeFormatted ]
-	);
-
-	// Retrieve customer data from WooCommerce cart store
+	// Retrieve customer data from WooCommerce cart store.
 	const customerData = useSelect(
 		( select ) => {
 			const store = select( CART_STORE_KEY );
@@ -200,14 +222,7 @@ export const Block = ( { checkoutExtensionData } ) => {
 	const [ dropoffOptions, setDropoffOptions ] = useState( [] );
 	const [ deliveryDaysEnabled, setDeliveryDaysEnabled ] = useState( true );
 
-	const handlePriceChange = useCallback( ( priceData ) => {
-		setFeeState( {
-			extraDeliveryFee: priceData.numeric || 0,
-			extraDeliveryFeeFormatted: priceData.formatted || '',
-		} );
-	}, [] );
-
-	// To prevent infinite loops if we update the address programmatically
+	// To prevent infinite loops if we update the address programmatically.
 	const isUpdatingAddress = useRef( false );
 
 	// Ref to store the previous shipping address
@@ -269,7 +284,7 @@ export const Block = ( { checkoutExtensionData } ) => {
 				postnlData.is_nl_address_enabled &&
 				isEmpty( shippingAddress[ 'postnl/house_number' ] ) )
 		) {
-			// If we have no valid postcode/house number, hide container
+			// If we have no valid postcode/house number, hide container.
 			setShowContainer( false );
 			return;
 		}
@@ -279,7 +294,7 @@ export const Block = ( { checkoutExtensionData } ) => {
 			return;
 		}
 
-		// Check if the shipping address has changed
+		// Check if the shipping address has changed.
 		if (
 			isAddressEqual( previousShippingAddress.current, shippingAddress )
 		) {
@@ -512,7 +527,7 @@ export const Block = ( { checkoutExtensionData } ) => {
 								isActive={ activeTab === 'delivery_day' }
 								deliveryOptions={ deliveryOptions }
 								isDeliveryDaysEnabled={ deliveryDaysEnabled }
-								onPriceChange={ handlePriceChange }
+								isFreeShipping={ isFreeShipping }
 							/>
 						</div>
 						{ postnlData.is_pickup_points_enabled && (

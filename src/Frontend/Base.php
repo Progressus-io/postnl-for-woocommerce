@@ -406,6 +406,11 @@ abstract class Base {
 			return;
 		}
 
+		$chosen_rate_cost = Utils::get_chosen_shipping_rate_cost();
+		if ( $chosen_rate_cost <= 0 ) {
+			return;
+		}
+
 		$data = $this->get_data( $order->get_id() );
 
 		$add_optional_fee  = true;

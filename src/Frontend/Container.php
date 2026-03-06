@@ -200,6 +200,8 @@ class Container {
 		}
 
 		$non_standard_fees = Base::non_standard_fees_data();
+		$chosen_rate_cost = Utils::get_chosen_shipping_rate_cost();
+		$is_free_shipping = $chosen_rate_cost <= 0;
 
 		foreach ( $response['DeliveryOptions'] as $delivery_option ) {
 			if ( empty( $delivery_option['DeliveryDate'] ) || empty( $delivery_option['Timeframe'] ) ) {
@@ -207,9 +209,9 @@ class Container {
 			}
 
 			$options = array_map(
-				function ( $timeframe ) use ( $non_standard_fees ) {
+				function ( $timeframe ) use ( $non_standard_fees, $is_free_shipping ) {
 					$type  = array_shift( $timeframe['Options'] );
-					$price = isset( $non_standard_fees[ $type ] ) ? $non_standard_fees[ $type ]['fee_price'] : 0;
+					$price = isset( $non_standard_fees[ $type ] ) && ! $is_free_shipping ? $non_standard_fees[ $type ]['fee_price'] : 0;
 
 					return array(
 						'from'  => Utils::get_hour_min( $timeframe['From'] ),
@@ -263,20 +265,31 @@ class Container {
 			return;
 		}
 
+		$chosen_rate_cost = Utils::get_chosen_shipping_rate_cost();
+		$is_free_shipping = $chosen_rate_cost <= 0;
+
+		$delivery_day_fee = $is_free_shipping ? 0.0 : (float) $this->settings->get_delivery_days_fee();
+		$pickup_fee       = $is_free_shipping ? 0.0 : (float) $this->settings->get_pickup_delivery_fee();
+		$active_option    = WC()->session ? WC()->session->get( 'postnl_option', 'delivery_day' ) : 'delivery_day';
+		$injected_fee     = ( 'dropoff_points' === $active_option ) ? $pickup_fee : $delivery_day_fee;
+		$carrier_base     = $is_free_shipping ? 0.0 : max( 0.0, $chosen_rate_cost - $injected_fee );
+
 		$template_args = array(
-			'tabs'             => $this->get_available_tabs( $checkout_data['response'] ),
-			'response'         => $checkout_data['response'],
-			'post_data'        => $checkout_data['post_data'],
-			'default_val'      => $this->get_default_value( $checkout_data['response'], $checkout_data['post_data'] ),
-			'letterbox'        => $checkout_data['letterbox'],
-			'fields'           => array(
+			'tabs'                          => $this->get_available_tabs( $checkout_data['response'] ),
+			'response'                      => $checkout_data['response'],
+			'post_data'                     => $checkout_data['post_data'],
+			'default_val'                   => $this->get_default_value( $checkout_data['response'], $checkout_data['post_data'] ),
+			'letterbox'                     => $checkout_data['letterbox'],
+			'fields'                        => array(
 				array(
 					'name'  => $this->tab_field,
 					'value' => $this->get_tab_field_value( $checkout_data['post_data'] ),
 				),
 			),
-			'pickup_fee'       => (float) $this->settings->get_pickup_delivery_fee(),
-			'delivery_day_fee' => (float) $this->settings->get_delivery_days_fee(),
+			'pickup_fee'                    => $pickup_fee,
+			'delivery_day_fee'              => $delivery_day_fee,
+			'delivery_day_total_formatted'  => Utils::get_formatted_fee_total_price( $carrier_base + $delivery_day_fee ),
+			'pickup_total_formatted'        => Utils::get_formatted_fee_total_price( $carrier_base + $pickup_fee ),
 		);
 
 		wc_get_template( 'checkout/postnl-container.php', $template_args, '', POSTNL_WC_PLUGIN_DIR_PATH . '/templates/' );
@@ -433,6 +446,11 @@ class Container {
 			return;
 		}
 
+		// If the chosen shipping rate is free, morning/evening fees are also free.
+		if ( 0 >= Utils::get_chosen_shipping_rate_cost() ) {
+			return;
+		}
+
 		$non_standard_fees        = Base::non_standard_fees_data();
 		$is_non_standard_delivery = ! empty( $post_data['postnl_delivery_day_type'] ) && isset( $non_standard_fees[ $post_data['postnl_delivery_day_type'] ] );
 
@@ -460,6 +478,11 @@ class Container {
 
 		foreach ( $rates as $rate_id => $rate ) {
 			if ( ! in_array( $rate->get_method_id(), $supported, true ) ) {
+				continue;
+			}
+
+			// Do not add PostNL tab fees on top of free shipping.
+			if ( (float) $rate->cost <= 0 ) {
 				continue;
 			}
 

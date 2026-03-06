@@ -48,16 +48,30 @@ $field = array_shift( $fields );
 									);
 									?>
 									"
+									data-total-formatted="
+									<?php
+									echo esc_attr(
+										'delivery_day' === $field_tab['id']
+											? ( isset( $delivery_day_total_formatted ) ? $delivery_day_total_formatted : '' )
+											: ( 'dropoff_points' === $field_tab['id']
+											? ( isset( $pickup_total_formatted ) ? $pickup_total_formatted : '' )
+											: ''
+										)
+									);
+									?>
+									"
 							>
 
 								<span>
 									<?php
 									echo esc_html( $field_tab['name'] );
-									if ( 'dropoff_points' === $field_tab['id'] && ! empty( $pickup_fee ) && $pickup_fee > 0 ) {
-										printf( ' (+%s)', Utils::get_formatted_fee_total_price( $pickup_fee ) );
-									}
 									if ( 'delivery_day' === $field_tab['id'] && ! empty( $delivery_day_fee ) && $delivery_day_fee > 0 ) {
-										printf( ' (+%s)', Utils::get_formatted_fee_total_price( $delivery_day_fee ) );
+										$total = ! empty( $delivery_day_total_formatted ) ? $delivery_day_total_formatted : Utils::get_formatted_fee_total_price( $delivery_day_fee );
+										printf( ' (%s)', esc_html( $total ) );
+									}
+									if ( 'dropoff_points' === $field_tab['id'] && ! empty( $pickup_fee ) && $pickup_fee > 0 ) {
+										$total = ! empty( $pickup_total_formatted ) ? $pickup_total_formatted : Utils::get_formatted_fee_total_price( $pickup_fee );
+										printf( ' (%s)', esc_html( $total ) );
 									}
 									?>
 								</span>

@@ -1063,6 +1063,14 @@ class Utils {
 
 		$packages = WC()->shipping()->get_packages();
 
+		// In block checkout, the Store API calculates shipping via a different
+		// code path that doesn't populate WC_Shipping::$packages. Fall back to
+		// calculating from the cart's raw packages when the result is empty.
+		if ( empty( $packages ) && ! WC()->cart->is_empty() ) {
+			$raw_packages = WC()->cart->get_shipping_packages();
+			$packages     = WC()->shipping()->calculate_shipping( $raw_packages );
+		}
+
 		foreach ( $packages as $i => $package ) {
 			$chosen_key = $chosen_methods[ $i ] ?? '';
 

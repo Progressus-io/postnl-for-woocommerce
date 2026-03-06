@@ -270,9 +270,9 @@ class Container {
 
 		$delivery_day_fee = $is_free_shipping ? 0.0 : (float) $this->settings->get_delivery_days_fee();
 		$pickup_fee       = $is_free_shipping ? 0.0 : (float) $this->settings->get_pickup_delivery_fee();
-		$active_option = WC()->session ? WC()->session->get( 'postnl_option', 'delivery_day' ) : 'delivery_day';
-		$injected_fee  = ( 'dropoff_points' === $active_option ) ? $pickup_fee : $delivery_day_fee;
-		$carrier_base  = $is_free_shipping ? 0.0 : max( 0.0, $chosen_rate_cost - $injected_fee );
+		$active_option    = WC()->session ? WC()->session->get( 'postnl_option', 'delivery_day' ) : 'delivery_day';
+		$injected_fee     = ( 'dropoff_points' === $active_option ) ? $pickup_fee : $delivery_day_fee;
+		$carrier_base     = $is_free_shipping ? 0.0 : max( 0.0, $chosen_rate_cost - $injected_fee );
 
 		$template_args = array(
 			'tabs'                          => $this->get_available_tabs( $checkout_data['response'] ),

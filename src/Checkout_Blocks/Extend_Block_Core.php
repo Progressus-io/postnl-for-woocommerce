@@ -193,24 +193,7 @@ class Extend_Block_Core {
 	 * @return bool
 	 */
 	private function is_chosen_shipping_free(): bool {
-		$chosen_methods = WC()->session->get( 'chosen_shipping_methods', array() );
-		if ( empty( $chosen_methods ) ) {
-			return false;
-		}
-
-		$packages = WC()->shipping()->get_packages();
-
-		foreach ( $packages as $i => $package ) {
-			$chosen_key = $chosen_methods[ $i ] ?? '';
-			if ( empty( $chosen_key ) || ! isset( $package['rates'][ $chosen_key ] ) ) {
-				continue;
-			}
-			if ( 0 >= (float) $package['rates'][ $chosen_key ]->cost ) {
-				return true;
-			}
-		}
-
-		return false;
+		return Utils::get_chosen_shipping_rate_cost() <= 0.0;
 	}
 
 	/**

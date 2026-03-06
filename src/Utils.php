@@ -1052,6 +1052,11 @@ class Utils {
 	 * @return float
 	 */
 	public static function get_chosen_shipping_rate_cost(): float {
+		static $cached = null;
+		if ( null !== $cached ) {
+			return $cached;
+		}
+
 		if ( is_null( WC()->cart ) || is_null( WC()->session ) ) {
 			return 0.0;
 		}
@@ -1078,7 +1083,8 @@ class Utils {
 				continue;
 			}
 
-			return max( 0.0, (float) $package['rates'][ $chosen_key ]->cost );
+			$cached = max( 0.0, (float) $package['rates'][ $chosen_key ]->cost );
+			return $cached;
 		}
 
 		return 0.0;

@@ -470,6 +470,14 @@ class Container {
 		}
 
 		$fee_24h   = $this->settings->get_letterbox_24_fee();
+
+		// Waive the letterbox fee when the cart subtotal exceeds any active PostNL free-shipping threshold.
+		$cart_subtotal = $package['cart_subtotal'] ?? 0;
+		$chosen_rate_cost = Utils::get_chosen_shipping_rate_cost();
+		if ( 0 >= $chosen_rate_cost ) {
+			$fee_24h = 0;
+		}
+
 		$new_rates = array();
 
 		foreach ( $rates as $rate_id => $rate ) {

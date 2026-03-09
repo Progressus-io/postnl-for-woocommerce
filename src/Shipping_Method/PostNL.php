@@ -76,35 +76,35 @@ class PostNL extends \WC_Shipping_Flat_Rate {
 	 * @param array $package Package of items from cart.
 	 */
 	public function calculate_shipping( $package = array() ) {
-		// Set free shipping rate if cart subtotal exceed minimum_for_free_shipping
+		// Determine whether the cart subtotal exceeds the free-shipping threshold.
 		$minimum_for_free_shipping = $this->get_option( 'minimum_for_free_shipping' );
-		if ( '' !== $minimum_for_free_shipping && $package['cart_subtotal'] > $minimum_for_free_shipping ) {
+		$is_free                   = '' !== $minimum_for_free_shipping && $package['cart_subtotal'] > $minimum_for_free_shipping;
+
+		// Check letterbox eligibility.
+		$settings               = Settings::get_instance();
+		$letterbox_product_type = $settings->get_default_automatic_letterboxparcel_product();
+		$is_letterbox_eligible  = Utils::is_cart_eligible_auto_letterbox( WC()->cart );
+		$base_country           = Utils::get_base_country();
+
+		// Only apply letterbox logic for NL base country and eligible cart.
+		if ( 'NL' === $base_country && $is_letterbox_eligible && 'customer_decide' === $letterbox_product_type ) {
+			// Display two letterbox options; costs are waived when free shipping threshold is met.
+			$this->add_letterbox_shipping_rates( $package, $is_free );
+		} elseif ( 'NL' === $base_country && $is_letterbox_eligible && in_array( $letterbox_product_type, array( 'letterbox', 'letterbox_48' ), true ) ) {
+			// Display only the selected default letterbox option; cost is waived when threshold is met.
+			$this->add_default_letterbox_rate( $package, $letterbox_product_type, $is_free );
+		} elseif ( $is_free ) {
+			// Non-letterbox free shipping.
 			$rate = array(
 				'id'      => $this->get_rate_id(),
 				'label'   => $this->title,
 				'cost'    => 0,
 				'package' => $package,
 			);
-
 			$this->add_rate( $rate );
 		} else {
-			// Check if cart is eligible for letterbox and if customer can decide.
-			$settings               = Settings::get_instance();
-			$letterbox_product_type = $settings->get_default_automatic_letterboxparcel_product();
-			$is_letterbox_eligible  = Utils::is_cart_eligible_auto_letterbox( WC()->cart );
-			$base_country           = Utils::get_base_country();
-
-			// Only apply letterbox logic for NL base country and eligible cart.
-			if ( 'NL' === $base_country && $is_letterbox_eligible && 'customer_decide' === $letterbox_product_type ) {
-				// Display two options: Letterbox 24h and Letterbox 48h.
-				$this->add_letterbox_shipping_rates( $package );
-			} elseif ( 'NL' === $base_country && $is_letterbox_eligible && in_array( $letterbox_product_type, array( 'letterbox', 'letterbox_48' ), true ) ) {
-				// Display only the selected default option.
-				$this->add_default_letterbox_rate( $package, $letterbox_product_type );
-			} else {
-				// Standard shipping calculation.
-				parent::calculate_shipping( $package );
-			}
+			// Standard shipping calculation.
+			parent::calculate_shipping( $package );
 		}
 	}
 
@@ -113,12 +113,12 @@ class PostNL extends \WC_Shipping_Flat_Rate {
 	 *
 	 * @param array $package Package of items from cart.
 	 */
-	private function add_letterbox_shipping_rates( $package ) {
+	private function add_letterbox_shipping_rates( $package, $is_free = false ) {
 		$settings = Settings::get_instance();
-		$fee_24h  = $settings->get_letterbox_24_fee();
+		$fee_24h  = $is_free ? 0 : $settings->get_letterbox_24_fee();
 
-		// Get base cost from parent calculation.
-		$base_cost = $this->get_option( 'cost' );
+		// Get base cost from parent calculation; waive entirely when free shipping threshold is met.
+		$base_cost = $is_free ? 0 : $this->get_option( 'cost' );
 		if ( '' === $base_cost ) {
 			$base_cost = 0;
 		}
@@ -155,19 +155,19 @@ class PostNL extends \WC_Shipping_Flat_Rate {
 	 * @param array  $package Package of items from cart.
 	 * @param string $letterbox_type Type of letterbox (letterbox or letterbox_48).
 	 */
-	private function add_default_letterbox_rate( $package, $letterbox_type ) {
+	private function add_default_letterbox_rate( $package, $letterbox_type, $is_free = false ) {
 		$settings = Settings::get_instance();
 
-		// Get base cost from parent calculation.
-		$base_cost = $this->get_option( 'cost' );
+		// Get base cost from parent calculation; waive entirely when free shipping threshold is met.
+		$base_cost = $is_free ? 0 : $this->get_option( 'cost' );
 		if ( '' === $base_cost ) {
 			$base_cost = 0;
 		}
 
 		// Determine cost and label based on type
 		if ( 'letterbox' === $letterbox_type ) {
-			// 24 hours with extra fee
-			$fee_24h = $settings->get_letterbox_24_fee();
+			// 24 hours with extra fee (waived when free shipping threshold is met)
+			$fee_24h = $is_free ? 0 : $settings->get_letterbox_24_fee();
 			$cost    = $base_cost + $fee_24h;
 			$label   = $this->title . ' ' . Utils::get_letterbox_label_24h();
 		} else {

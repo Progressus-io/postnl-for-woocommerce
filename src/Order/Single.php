@@ -100,6 +100,30 @@ class Single extends Base {
 				true
 			);
 
+			wp_enqueue_script(
+				'postnl-pdfjs',
+				'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js',
+				array(),
+				null,
+				true
+			);
+
+			wp_enqueue_script(
+				'postnl-admin-print-label',
+				POSTNL_WC_PLUGIN_DIR_URL . '/assets/js/admin-print-label.js',
+				array( 'postnl-pdfjs' ),
+				POSTNL_WC_VERSION,
+				true
+			);
+
+			wp_localize_script(
+				'postnl-admin-print-label',
+				'postnlPrintLabelData',
+				array(
+					'workerSrc' => 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js',
+				)
+			);
+
 			wp_localize_script(
 				'postnl-admin-order-single',
 				'postnl_admin_order_obj',
@@ -420,23 +444,19 @@ class Single extends Base {
 			<?php Utils::fields_generator( $available_fields ); ?>
 			<div class="button-container">
 				<button class="button button-primary button-save-form"><?php esc_html_e( 'Create Shipment', 'postnl-for-woocommerce' ); ?></button>
+				<button type="button"
+						class="button button-primary button-download-label button-print-label"
+						data-label-url="<?php echo esc_url( $this->get_download_label_url( $order->get_id() ) ); ?>">
+					<?php esc_html_e( 'Print Label', 'postnl-for-woocommerce' ); ?>
+				</button>
+
 				<a href="<?php echo esc_url( $this->get_download_label_url( $order->get_id() ) ); ?>"
-					class="button button-primary button-download-label"><?php esc_html_e( 'Print Label', 'postnl-for-woocommerce' ); ?></a>
-				<a class="button button-secondary delete-label"
+					class="button button-secondary button-download-label"><?php esc_html_e( 'Download Label', 'postnl-for-woocommerce' ); ?></a>
+				<a class="button button-link-delete delete-label"
 					href="#"><?php esc_html_e( 'Delete Label', 'postnl-for-woocommerce' ); ?></a>
 			</div>
 			<?php $this->activate_return_function_html( $order ); ?>
 			<?php $this->send_smart_return_email_html( $order ); ?>
-			<!--
-			<div class="button-container return-container">
-				<a href="<?php echo esc_url( $this->get_download_label_url( $order->get_id(), 'return-label' ) ); ?>" class="button button-primary button-download-label"><?php esc_html_e( 'Print Return Label', 'postnl-for-woocommerce' ); ?></a>
-			</div>
-			-->
-			<!--
-			<div class="button-container letterbox-container">
-				<a href="<?php echo esc_url( $this->get_download_label_url( $order->get_id(), 'buspakjeextra' ) ); ?>" class="button button-primary button-download-label"><?php esc_html_e( 'Print Letterbox', 'postnl-for-woocommerce' ); ?></a>
-			</div>
-			-->
 			<div id="shipment-postnl-error-text"></div>
 		</div>
 		<?php

@@ -218,6 +218,11 @@ class Extend_Block_Core {
 				continue;
 			}
 
+			// Skip adding fees when cart is eligible for letterbox delivery.
+			if ( Utils::is_cart_eligible_auto_letterbox( \WC()->cart ) ) {
+				continue;
+			}
+
 			$rate->cost += $extra;
 
 			if ( wc_tax_enabled() && 'taxable' === $rate->get_tax_status() ) {

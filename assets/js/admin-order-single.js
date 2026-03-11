@@ -258,6 +258,41 @@
 	
 	postnl_order_single.init();
 
+	function postnl_toggle_shipping_products() {
+		if ( $( '#postnl_letterbox' ).is( ':checked' ) ) {
+			$( '#postnl_only_home_address' )
+				.prop( 'checked', false )
+				.prop( 'disabled', true );
+			$( '#postnl_id_check' )
+				.prop( 'checked', false )
+				.prop( 'disabled', true );
+			$( '#postnl_insured_shipping' )
+				.prop( 'checked', false )
+				.prop( 'disabled', true );
+			$( '#postnl_return_no_answer' )
+				.prop( 'checked', false )
+				.prop( 'disabled', true );
+			$( '#postnl_signature_on_delivery' )
+				.prop( 'checked', false )
+				.prop( 'disabled', true );
+			$( '#postnl_delivery_code_at_door' )
+				.prop( 'checked', false )
+				.prop( 'disabled', true );
+		} else {
+			$( '#postnl_only_home_address' ).prop( 'disabled', false );
+			$( '#postnl_id_check' ).prop( 'disabled', false );
+			$( '#postnl_insured_shipping' ).prop( 'disabled', false );
+			$( '#postnl_return_no_answer' ).prop( 'disabled', false );
+			$( '#postnl_signature_on_delivery' ).prop( 'disabled', false );
+			$( '#postnl_delivery_code_at_door' ).prop( 'disabled', false );
+		}
+	}
+
+	// Run on page load
+	postnl_toggle_shipping_products();
+
+	// Run on change
+	$( '#postnl_letterbox' ).on( 'change', postnl_toggle_shipping_products );
 
 	window.postnl_order_single_refresh = postnl_order_single.refresh_items;
 } )( jQuery );

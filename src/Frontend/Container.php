@@ -469,14 +469,17 @@ class Container {
 			return $rates;
 		}
 
-		$fee_24h   = $this->settings->get_letterbox_24_fee();
-
-		// Waive the letterbox fee when the cart subtotal exceeds any active PostNL free-shipping threshold.
-		$cart_subtotal = $package['cart_subtotal'] ?? 0;
-		$chosen_rate_cost = Utils::get_chosen_shipping_rate_cost();
-		if ( 0 >= $chosen_rate_cost ) {
-			$fee_24h = 0;
+		// If any free_shipping rate exists, the free threshold has been met — waive the 24h fee.
+		$has_free_shipping = false;
+		foreach ( $rates as $rate ) {
+			if ( 'free_shipping' === $rate->get_method_id() ) {
+				$has_free_shipping = true;
+				break;
+			}
 		}
+
+		$fee_24h   = $this->settings->get_letterbox_24_fee();
+		$supported = $this->settings->get_supported_shipping_methods();
 
 		$new_rates = array();
 
@@ -487,12 +490,23 @@ class Container {
 				continue;
 			}
 
+			// Only inject letterbox variants for the configured supported shipping methods.
+			if ( ! in_array( $rate->get_method_id(), $supported, true ) ) {
+				$new_rates[ $rate_id ] = $rate;
+				continue;
+			}
+
 			$base_cost  = (float) $rate->get_cost();
 			$base_label = $rate->get_label();
 
+			// Waive 24h fee if: free_shipping method exists in rates, base cost is 0, or it's a free_shipping method itself.
+			$is_free           = $has_free_shipping || 0 >= $base_cost || 'free_shipping' === $rate->get_method_id();
+			$effective_fee_24h = $is_free ? 0 : $fee_24h;
+			$base_cost         = $is_free ? 0 : $base_cost;
+
 			if ( 'customer_decide' === $letterbox_product_type ) {
 				// Replace rate with two letterbox variants: 24h and 48h.
-				$cost_24h  = $base_cost + $fee_24h;
+				$cost_24h  = $base_cost + $effective_fee_24h;
 				$taxes_24h = array();
 				if ( wc_tax_enabled() && 'taxable' === $rate->get_tax_status() ) {
 					$tax_rates = \WC_Tax::get_shipping_tax_rates();
@@ -524,7 +538,7 @@ class Container {
 
 			} elseif ( 'letterbox' === $letterbox_product_type ) {
 				// Replace rate with 24h letterbox variant only.
-				$cost_24h  = $base_cost + $fee_24h;
+				$cost_24h  = $base_cost + $effective_fee_24h;
 				$taxes_24h = array();
 				if ( wc_tax_enabled() && 'taxable' === $rate->get_tax_status() ) {
 					$tax_rates = \WC_Tax::get_shipping_tax_rates();
@@ -591,6 +605,10 @@ class Container {
 			}
 
 			if ( $extra <= 0 ) {
+				continue;
+			}
+
+			if ( Utils::is_cart_eligible_auto_letterbox( \WC()->cart ) ) {
 				continue;
 			}
 

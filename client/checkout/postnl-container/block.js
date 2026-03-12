@@ -56,7 +56,9 @@ export const Block = ( { checkoutExtensionData } ) => {
 	const { setExtensionData } = checkoutExtensionData;
 	const postnlData = getSetting( 'postnl-for-woocommerce-blocks_data', {} );
 
-	const letterbox = postnlData.letterbox || false;
+	const [ isLetterbox, setIsLetterbox ] = useState(
+		postnlData.letterbox || false
+	);
 	const { CART_STORE_KEY, CHECKOUT_STORE_KEY } = window.wc.wcBlocksData;
 
 	const selectedShippingFee = useSelect(
@@ -329,7 +331,8 @@ export const Block = ( { checkoutExtensionData } ) => {
 				.then( ( response ) => {
 					if ( response.data.success && response.data.data ) {
 						const respData = response.data.data;
-
+							// Update letterbox state from AJAX response
+							setIsLetterbox( respData.is_letterbox || false );
 						// If validated_address returned, update shipping address if needed
 						if (
 							respData.validated_address &&
@@ -387,6 +390,7 @@ export const Block = ( { checkoutExtensionData } ) => {
 				} )
 				.catch( () => {
 					// On error, hide container and clear options
+					setIsLetterbox( false );
 					setShowContainer( false );
 					setDeliveryOptions( [] );
 					setDropoffOptions( [] );
@@ -416,15 +420,15 @@ export const Block = ( { checkoutExtensionData } ) => {
 	// Clear local data if checkout is complete or letterbox.
 	// Note: Backend fee clearing is handled by AJAX response handlers via clearAllPostNLData().
 	useEffect( () => {
-		if ( isComplete || letterbox ) {
+		if ( isComplete || isLetterbox ) {
 			clearSessionData();
 			previousShippingAddress.current = null;
 			clearAllExtensionData( setExtensionData );
 		}
-	}, [ isComplete, letterbox, setExtensionData ] );
+	}, [ isComplete, isLetterbox, setExtensionData ] );
 
 	useEffect( () => {
-		if ( ! letterbox || ! showContainer || deliveryOptions.length === 0 ) {
+		if ( ! isLetterbox || ! showContainer || deliveryOptions.length === 0 ) {
 			return;
 		}
 		const firstDelivery = deliveryOptions[ 0 ];
@@ -451,7 +455,7 @@ export const Block = ( { checkoutExtensionData } ) => {
 
 		// Clear dropoff point data using helper
 		clearDropoffPointExtensionData( setExtensionData );
-	}, [ letterbox, showContainer, deliveryOptions, setExtensionData ] );
+	}, [ isLetterbox, showContainer, deliveryOptions, setExtensionData ] );
 
 	return (
 		<div
@@ -468,7 +472,7 @@ export const Block = ( { checkoutExtensionData } ) => {
 			) }
 
 			{ /* Content when not letterbox and showContainer */ }
-			{ ! letterbox && showContainer && (
+		{ ! isLetterbox && showContainer && (
 				<>
 					<div className="postnl_checkout_tab_container">
 						<ul className="postnl_checkout_tab_list">
@@ -538,7 +542,7 @@ export const Block = ( { checkoutExtensionData } ) => {
 			) }
 
 			{ /* Content when letterbox is true */ }
-			{ letterbox && showContainer && (
+		{ isLetterbox && showContainer && (
 				<div className="postnl-letterbox-message">
 					{ __(
 						'These items are eligible for letterbox delivery.',

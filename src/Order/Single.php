@@ -452,7 +452,7 @@ class Single extends Base {
 
 				<a href="<?php echo esc_url( $this->get_download_label_url( $order->get_id() ) ); ?>"
 					class="button button-secondary button-download-label"><?php esc_html_e( 'Download Label', 'postnl-for-woocommerce' ); ?></a>
-				<a class="button button-link-delete delete-label" style="margin-top: 5px;"
+				<a class="button button-link-delete delete-label"
 					href="#"><?php esc_html_e( 'Delete Label', 'postnl-for-woocommerce' ); ?></a>
 			</div>
 			<?php $this->activate_return_function_html( $order ); ?>

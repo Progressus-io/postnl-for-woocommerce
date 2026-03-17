@@ -105,7 +105,6 @@ abstract class Base {
 		add_action( 'woocommerce_checkout_update_order_meta', array( $this, 'save_data' ), 10, 2 );
 		add_action( 'woocommerce_checkout_update_order_meta', array( $this, 'save_letterbox_data' ), 13, 2 );
 		add_action( 'woocommerce_checkout_update_order_meta', array( $this, 'save_default_data' ), 15, 2 );
-		add_action( 'woocommerce_checkout_update_order_meta', array( $this, 'calculate_non_standard_fee' ), 20, 2 );
 		add_filter( 'postnl_frontend_checkout_tab', array( $this, 'add_checkout_tab' ), 10, 2 );
 		add_action( 'postnl_checkout_content', array( $this, 'display_content' ), 10, 2 );
 		add_filter( 'woocommerce_email_order_meta_fields', array( $this, 'add_pickup_points_fields_to_email' ), 10, 3 );
@@ -388,70 +387,6 @@ abstract class Base {
 		}
 
 		$order->update_meta_data( $this->meta_name, $data );
-		$order->save();
-	}
-
-	/**
-	 * Calculate non standard delivery day fee.
-	 *
-	 * @param array $order_id ID of order post.
-	 * @param array $posted_data Array of global _POST data.
-	 *
-	 * @return void
-	 */
-	public function calculate_non_standard_fee( $order_id, $posted_data ) {
-		$order = wc_get_order( $order_id );
-
-		if ( ! is_a( $order, 'WC_Order' ) ) {
-			return;
-		}
-
-		$chosen_rate_cost = Utils::get_chosen_shipping_rate_cost();
-		if ( $chosen_rate_cost <= 0 ) {
-			return;
-		}
-
-		$data = $this->get_data( $order->get_id() );
-
-		$add_optional_fee  = true;
-		$non_standard_fees = self::non_standard_fees_data();
-
-		foreach ( $non_standard_fees as $type => $fee ) {
-			if ( ! isset( $data['frontend'][ $fee['condition']['key'] ] ) ) {
-				continue;
-			}
-
-			if ( $type === $data['frontend'][ $fee['condition']['key'] ] ) {
-				$fee_name  = $fee['fee_name'];
-				$fee_price = $fee['fee_price'];
-				break;
-			}
-		}
-
-		if ( ! isset( $fee_name ) ) {
-			return;
-		}
-
-		foreach ( $order->get_fees() as $item_fee ) {
-			if ( $item_fee->get_name() === $fee_name ) {
-				$add_optional_fee = false;
-			}
-		}
-
-		if ( true === $add_optional_fee ) {
-			$item_fee = new \WC_Order_Item_Fee();
-
-			$item_fee->set_name( $fee_name );
-			$item_fee->set_amount( $fee_price );
-			$item_fee->set_tax_class( '' );
-			$item_fee->set_tax_status( 'taxable' );
-			$item_fee->set_total( $fee_price );
-
-			$order->add_item( $item_fee );
-
-			$order->calculate_totals();
-		}
-
 		$order->save();
 	}
 

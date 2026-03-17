@@ -55,7 +55,6 @@ class Container {
 		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_scripts_styles' ) );
 
 		add_action( 'woocommerce_review_order_after_shipping', array( $this, 'postnl_fields' ), 10 );
-		add_action( 'woocommerce_cart_calculate_fees', array( $this, 'add_cart_fees' ), 10, 1 );
 
 		add_filter( 'woocommerce_update_order_review_fragments', array( $this, 'fill_validated_address' ) );
 		add_filter( 'woocommerce_cart_shipping_method_full_label', array( $this, 'add_shipping_method_icon' ), 10, 2 );
@@ -258,7 +257,6 @@ class Container {
 	 * @throws \Exception.
 	 */
 	public function display_fields( $post_data ) {
-
 		$checkout_data = $this->get_checkout_data( $post_data );
 
 		if ( empty( $checkout_data['response'] ) ) {
@@ -271,25 +269,39 @@ class Container {
 		$delivery_day_fee = $is_free_shipping ? 0.0 : (float) $this->settings->get_delivery_days_fee();
 		$pickup_fee       = $is_free_shipping ? 0.0 : (float) $this->settings->get_pickup_delivery_fee();
 		$active_option    = WC()->session ? WC()->session->get( 'postnl_option', 'delivery_day' ) : 'delivery_day';
-		$injected_fee     = ( 'dropoff_points' === $active_option ) ? $pickup_fee : $delivery_day_fee;
-		$carrier_base     = $is_free_shipping ? 0.0 : max( 0.0, $chosen_rate_cost - $injected_fee );
+
+		// Get morning/evening fee — only relevant when delivery_day tab is active.
+		$non_standard_fees   = Base::non_standard_fees_data();
+		$is_non_standard     = ! $is_free_shipping
+			&& 'delivery_day' === $active_option
+			&& ! empty( $post_data['postnl_delivery_day_type'] )
+			&& isset( $non_standard_fees[ $post_data['postnl_delivery_day_type'] ] );
+		$morning_evening_fee = $is_non_standard ? (float) ( $post_data['postnl_delivery_day_price'] ?? 0 ) : 0.0;
+
+		// Subtract the full injected fee (including morning/evening) from the rate cost
+		$injected_fee = ( 'dropoff_points' === $active_option )
+			? $pickup_fee
+			: $delivery_day_fee + $morning_evening_fee;
+
+		$carrier_base = $is_free_shipping ? 0.0 : max( 0.0, $chosen_rate_cost - $injected_fee );
 
 		$template_args = array(
-			'tabs'                          => $this->get_available_tabs( $checkout_data['response'] ),
-			'response'                      => $checkout_data['response'],
-			'post_data'                     => $checkout_data['post_data'],
-			'default_val'                   => $this->get_default_value( $checkout_data['response'], $checkout_data['post_data'] ),
-			'letterbox'                     => $checkout_data['letterbox'],
-			'fields'                        => array(
+			'tabs'                         => $this->get_available_tabs( $checkout_data['response'] ),
+			'response'                     => $checkout_data['response'],
+			'post_data'                    => $checkout_data['post_data'],
+			'default_val'                  => $this->get_default_value( $checkout_data['response'], $checkout_data['post_data'] ),
+			'letterbox'                    => $checkout_data['letterbox'],
+			'fields'                       => array(
 				array(
 					'name'  => $this->tab_field,
 					'value' => $this->get_tab_field_value( $checkout_data['post_data'] ),
 				),
 			),
-			'pickup_fee'                    => $pickup_fee,
-			'delivery_day_fee'              => $delivery_day_fee,
-			'delivery_day_total_formatted'  => Utils::get_formatted_fee_total_price( $carrier_base + $delivery_day_fee ),
-			'pickup_total_formatted'        => Utils::get_formatted_fee_total_price( $carrier_base + $pickup_fee ),
+			'pickup_fee'                   => $pickup_fee,
+			'delivery_day_fee'             => $delivery_day_fee,
+			'carrier_base'                 => $carrier_base,
+			'delivery_day_total_formatted' => Utils::get_formatted_fee_total_price( $carrier_base + $delivery_day_fee + $morning_evening_fee ),
+			'pickup_total_formatted'       => Utils::get_formatted_fee_total_price( $carrier_base + $pickup_fee ),
 		);
 
 		wc_get_template( 'checkout/postnl-container.php', $template_args, '', POSTNL_WC_PLUGIN_DIR_PATH . '/templates/' );
@@ -435,30 +447,6 @@ class Container {
 	}
 
 	/**
-	 * Add cart fees.
-	 *
-	 * @param \WC_Cart $cart Cart object.
-	 */
-	public function add_cart_fees( $cart ) {
-		$post_data = $this->get_checkout_post_data();
-
-		if ( empty( $post_data ) ) {
-			return;
-		}
-
-		// If the chosen shipping rate is free, morning/evening fees are also free.
-		if ( 0 >= Utils::get_chosen_shipping_rate_cost() ) {
-			return;
-		}
-
-		$non_standard_fees        = Base::non_standard_fees_data();
-		$is_non_standard_delivery = ! empty( $post_data['postnl_delivery_day_type'] ) && isset( $non_standard_fees[ $post_data['postnl_delivery_day_type'] ] );
-
-		if ( ! empty( $post_data['postnl_delivery_day_price'] ) && 'delivery_day' === $post_data['postnl_option'] && $is_non_standard_delivery ) {
-			$cart->add_fee( $non_standard_fees[ $post_data['postnl_delivery_day_type'] ]['fee_name'], wc_format_decimal( $post_data['postnl_delivery_day_price'] ), true );
-		}
-	}
-	/**
 	 * ِAdd the shipping option fees to the shipping methods
 	 *
 	 * @param array $rates.
@@ -472,9 +460,43 @@ class Container {
 			return $rates;
 		}
 
+		$supported = $this->settings->get_supported_shipping_methods();
+
+		// If free shipping is available for this package, zero out the cost of all
+		// supported methods and skip adding PostNL fees.
+		$has_free_shipping = false;
+		foreach ( $rates as $rate ) {
+			if ( 'free_shipping' === $rate->get_method_id() ) {
+				$has_free_shipping = true;
+				break;
+			}
+		}
+
+		if ( $has_free_shipping ) {
+			foreach ( $rates as $rate_id => $rate ) {
+				if ( ! in_array( $rate->get_method_id(), $supported, true ) ) {
+					continue;
+				}
+				$rate->cost  = 0;
+				$rate->taxes = array();
+			}
+			return $rates;
+		}
+
 		$pickup_fee   = (float) $this->settings->get_pickup_delivery_fee();
 		$base_day_fee = (float) $this->settings->get_delivery_days_fee();
-		$supported    = $this->settings->get_supported_shipping_methods();
+
+		// Get morning/evening surcharge from package destination.
+		$morning_evening_fee = 0.0;
+		if ( 'delivery_day' === $option ) {
+			$non_standard_fees  = Base::non_standard_fees_data();
+			$delivery_day_type  = $package['destination']['postnl_delivery_day_type'] ?? '';
+			$delivery_day_price = $package['destination']['postnl_delivery_day_price'] ?? 0;
+
+			if ( ! empty( $delivery_day_type ) && isset( $non_standard_fees[ $delivery_day_type ] ) && $delivery_day_price > 0 ) {
+				$morning_evening_fee = (float) $delivery_day_price;
+			}
+		}
 
 		foreach ( $rates as $rate_id => $rate ) {
 			if ( ! in_array( $rate->get_method_id(), $supported, true ) ) {
@@ -489,8 +511,8 @@ class Container {
 			$extra = 0;
 			if ( 'dropoff_points' === $option && $pickup_fee > 0 ) {
 				$extra = $pickup_fee;
-			} elseif ( 'delivery_day' === $option && $base_day_fee > 0 ) {
-				$extra = $base_day_fee;
+			} elseif ( 'delivery_day' === $option ) {
+				$extra = $base_day_fee + $morning_evening_fee;
 			}
 
 			if ( $extra <= 0 ) {
@@ -508,7 +530,6 @@ class Container {
 		return $rates;
 	}
 
-
 	/**
 	 * Include the selected PostNL option in the shipping package
 	 *
@@ -525,8 +546,13 @@ class Container {
 
 		WC()->session->set( 'postnl_option', $option );
 
+		$delivery_day_type  = $post_data['postnl_delivery_day_type'] ?? '';
+		$delivery_day_price = $post_data['postnl_delivery_day_price'] ?? '';
+
 		foreach ( $packages as $key => $package ) {
-			$packages[ $key ]['destination']['postnl_option'] = $option;
+			$packages[ $key ]['destination']['postnl_option']             = $option;
+			$packages[ $key ]['destination']['postnl_delivery_day_type']  = $delivery_day_type;
+			$packages[ $key ]['destination']['postnl_delivery_day_price'] = $delivery_day_price;
 		}
 
 		return $packages;

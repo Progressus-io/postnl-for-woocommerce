@@ -23,7 +23,7 @@ import { Spinner } from '@wordpress/components';
  */
 import { Block as DeliveryDayBlock } from '../postnl-delivery-day/block';
 import { Block as DropoffPointsBlock } from '../postnl-dropoff-points/block';
-import { clearSessionData } from '../../utils/session-manager';
+import { clearSessionData, getDeliveryDay } from '../../utils/session-manager';
 import {
 	batchSetExtensionData,
 	clearAllExtensionData,
@@ -163,11 +163,36 @@ export const Block = ( { checkoutExtensionData } ) => {
 
 	const isFreeShipping = cartDataLoaded && selectedShippingFee === 0;
 
+	const [ extraDeliveryFee, setExtraDeliveryFee ] = useState( () => {
+		const saved = getDeliveryDay();
+		return Number( saved.price || 0 );
+	} );
+
+	const handlePriceChange = useCallback( ( priceData ) => {
+		setExtraDeliveryFee( priceData.numeric || 0 );
+	}, [] );
+
 	const tabs = useMemo( () => {
+		// Don't calculate until cart data is fully loaded to avoid flicker.
+		if ( ! cartDataLoaded ) {
+			return baseTabs.map( ( tab ) => ( {
+				id: tab.id,
+				name:
+					tab.id === 'delivery_day'
+						? __( 'Delivery', 'postnl-for-woocommerce' )
+						: __( 'Pickup', 'postnl-for-woocommerce' ),
+				base: tab.base,
+			} ) );
+		}
+
 		const activeTabBase = isSupportedMethod
 			? baseTabs.find( ( t ) => t.id === activeTab )?.base || 0
 			: 0;
-		const carrierBase = Math.max( 0, selectedShippingFee - activeTabBase );
+		const activeExtra = isSupportedMethod
+			? activeTabBase +
+			( activeTab === 'delivery_day' ? extraDeliveryFee : 0 )
+			: 0;
+		const carrierBase = Math.max( 0, selectedShippingFee - activeExtra );
 		const minorUnit = currency.minorUnit ?? 2;
 		const multiplier = Math.pow( 10, minorUnit );
 
@@ -177,17 +202,17 @@ export const Block = ( { checkoutExtensionData } ) => {
 					? __( 'Delivery', 'postnl-for-woocommerce' )
 					: __( 'Pickup', 'postnl-for-woocommerce' );
 
-			if ( tab.base > 0 && selectedShippingFee > 0 ) {
-				const tabTotal = carrierBase + tab.base;
+			if ( selectedShippingFee > 0 ) {
+				const extra = tab.id === 'delivery_day' ? extraDeliveryFee : 0;
+				const tabTotal = carrierBase + tab.base + extra;
 
-				if ( tabTotal > tab.base ) {
+				if ( tabTotal > 0 ) {
 					const totalFormatted = formatPrice(
 						Math.round( tabTotal * multiplier ),
 						currency
 					);
 					title += ` (${ totalFormatted })`;
-				} else {
-					// carrierBase not yet available: fall back to (+fee).
+				} else if ( tab.base > 0 ) {
 					title += ` (+${ tab.displayFormatted })`;
 				}
 			}
@@ -200,6 +225,8 @@ export const Block = ( { checkoutExtensionData } ) => {
 		selectedShippingFee,
 		isSupportedMethod,
 		currency,
+		extraDeliveryFee,
+		cartDataLoaded,
 	] );
 
 	// Retrieve customer data from WooCommerce cart store.
@@ -527,8 +554,7 @@ export const Block = ( { checkoutExtensionData } ) => {
 								isActive={ activeTab === 'delivery_day' }
 								deliveryOptions={ deliveryOptions }
 								isDeliveryDaysEnabled={ deliveryDaysEnabled }
-								isFreeShipping={ isFreeShipping }
-							/>
+								isFreeShipping={ isFreeShipping }							onPriceChange={ handlePriceChange }							/>
 						</div>
 						{ postnlData.is_pickup_points_enabled && (
 							<div

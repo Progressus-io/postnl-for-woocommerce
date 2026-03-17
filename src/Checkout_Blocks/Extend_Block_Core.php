@@ -144,6 +144,12 @@ class Extend_Block_Core {
 			WC()->session->__unset( 'postnl_delivery_fee' );
 			WC()->session->__unset( 'postnl_delivery_type' );
 		}
+
+		// Clear the WooCommerce shipping rate cache so that add_postnl_fees_to_rates
+		// is re-applied with the updated morning/evening fee on the next cart response.
+		foreach ( WC()->cart->get_shipping_packages() as $package_key => $package ) {
+			WC()->session->__unset( 'shipping_for_package_' . $package_key );
+		}
 	}
 
 	/**
@@ -156,19 +162,9 @@ class Extend_Block_Core {
 			return;
 		}
 
-		// Get the fee amount and type from session
-		$fee_amount = WC()->session->get( 'postnl_delivery_fee', 0 );
-		$fee_type   = WC()->session->get( 'postnl_delivery_type', '' );
-
-		$fee_label = __( 'PostNL Delivery Fee', 'postnl-for-woocommerce' );
-		if ( '08:00-12:00' === $fee_type || 'Morning' === $fee_type ) {
-			$fee_label = __( 'PostNL Morning Fee', 'postnl-for-woocommerce' );
-		} elseif ( 'Evening' === $fee_type ) {
-			$fee_label = __( 'PostNL Evening Fee', 'postnl-for-woocommerce' );
-		} else {
-			return;
-		}
-
+		// Morning/Evening fees are now baked into the shipping rate cost via
+		// add_postnl_fees_to_rates(), so we only need to clear any previously
+		// added PostNL cart fee lines to avoid stale entries.
 		$new_fees = array();
 		foreach ( $cart->get_fees() as $fee ) {
 			if ( strpos( $fee->name, 'PostNL' ) === false ) {
@@ -176,15 +172,6 @@ class Extend_Block_Core {
 			}
 		}
 		$cart->fees_api()->set_fees( $new_fees );
-
-		// If the chosen shipping rate is free, morning/evening fees are also free.
-		if ( $this->is_chosen_shipping_free() ) {
-			return;
-		}
-
-		if ( $fee_amount > 0 ) {
-			$cart->add_fee( $fee_label, $fee_amount, true );
-		}
 	}
 
 	/**
@@ -210,9 +197,33 @@ class Extend_Block_Core {
 			return $rates;
 		}
 
-		$pickup_fee   = $this->settings->get_pickup_delivery_fee();
-		$base_day_fee = $this->settings->get_delivery_days_fee();
-		$supported    = $this->settings->get_supported_shipping_methods();
+		$supported = $this->settings->get_supported_shipping_methods();
+
+		// If free shipping is available for this package (threshold met or coupon
+		// applied), zero out the cost of all supported methods and skip adding fees.
+		$has_free_shipping = false;
+		foreach ( $rates as $rate ) {
+			if ( 'free_shipping' === $rate->get_method_id() ) {
+				$has_free_shipping = true;
+				break;
+			}
+		}
+
+		if ( $has_free_shipping ) {
+			foreach ( $rates as $rate_id => $rate ) {
+				if ( ! in_array( $rate->get_method_id(), $supported, true ) ) {
+					continue;
+				}
+				$rate->cost  = 0;
+				$rate->taxes = array();
+			}
+			return $rates;
+		}
+
+		$pickup_fee            = $this->settings->get_pickup_delivery_fee();
+		$base_day_fee          = $this->settings->get_delivery_days_fee();
+		$morning_evening_fee   = (float) WC()->session->get( 'postnl_delivery_fee', 0 );
+		$is_morning_or_evening = in_array( $session_type, array( 'Morning', '08:00-12:00', 'Evening' ), true );
 
 		foreach ( $rates as $rate_id => $rate ) {
 
@@ -233,7 +244,13 @@ class Extend_Block_Core {
 				$extra = $base_day_fee;
 			}
 
-			if ( 0 === $extra ) {
+			// Add morning/evening fee directly to the rate so it doesn't
+			// appear as a separate cart fee line.
+			if ( $is_morning_or_evening && $morning_evening_fee > 0 ) {
+				$extra += $morning_evening_fee;
+			}
+
+			if ( 0 == $extra ) {
 				continue;
 			}
 

@@ -23,11 +23,12 @@
 		}
 
 		const tabBase = parseFloat( $label.data( 'base-fee' ) || 0 );
+		const totalNumeric = parseFloat( $label.data( 'total-numeric' ) || tabBase );
 		let text = postnlParams.i18n.deliveryDays;
 
 		// Show full total (carrier + tab fee).
 		const deliveryTotalFormatted = $label.data( 'total-formatted' ) || '';
-		if ( tabBase > 0 && deliveryTotalFormatted ) {
+		if ( totalNumeric > 0 && deliveryTotalFormatted ) {
 			text += ' (' + deliveryTotalFormatted + ')';
 		}
 
@@ -47,12 +48,13 @@
 		}
 
 		const tabBase = parseFloat( $label.data( 'base-fee' ) || 0 );
+		const totalNumeric = parseFloat( $label.data( 'total-numeric' ) || tabBase );
 
 		let text = postnlParams.i18n.pickup;
 
 		// Show full total (carrier + tab fee).
 		const pickupTotalFormatted = $label.data( 'total-formatted' ) || '';
-		if ( tabBase > 0 && pickupTotalFormatted ) {
+		if ( totalNumeric > 0 && pickupTotalFormatted ) {
 			text += ' (' + pickupTotalFormatted + ')';
 		}
 

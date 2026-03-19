@@ -168,8 +168,37 @@ export const Block = ( { checkoutExtensionData } ) => {
 		return Number( saved.price || 0 );
 	} );
 
+	// Tracks the extra fee AND active tab the server has confirmed (both baked
+	// into selectedShippingFee). Only sync when selectedShippingFee changes so
+	// carrierBase stays stable while any cart update is in-flight.
+	const pendingExtraFeeRef = useRef( Number( getDeliveryDay().price || 0 ) );
+	const pendingActiveTabRef = useRef( baseTabs[ 0 ].id );
+	const [ confirmedExtraFee, setConfirmedExtraFee ] = useState(
+		() => Number( getDeliveryDay().price || 0 )
+	);
+	const [ confirmedActiveTab, setConfirmedActiveTab ] = useState(
+		() => baseTabs[ 0 ].id
+	);
+
+	// When the cart store updates (server round-trip complete), lock in both
+	// the pending extra fee and the pending active tab so all tab titles
+	// recalculate together with the newly confirmed selectedShippingFee.
+	useEffect( () => {
+		if ( cartDataLoaded ) {
+			setConfirmedExtraFee( pendingExtraFeeRef.current );
+			setConfirmedActiveTab( pendingActiveTabRef.current );
+		}
+	}, [ selectedShippingFee, cartDataLoaded ] );
+
+	const handleTabChange = useCallback( ( tabId ) => {
+		pendingActiveTabRef.current = tabId;
+		setActiveTab( tabId );
+	}, [] );
+
 	const handlePriceChange = useCallback( ( priceData ) => {
-		setExtraDeliveryFee( priceData.numeric || 0 );
+		const newFee = priceData.numeric || 0;
+		pendingExtraFeeRef.current = newFee;
+		setExtraDeliveryFee( newFee );
 	}, [] );
 
 	const tabs = useMemo( () => {
@@ -185,14 +214,16 @@ export const Block = ( { checkoutExtensionData } ) => {
 			} ) );
 		}
 
-		const activeTabBase = isSupportedMethod
-			? baseTabs.find( ( t ) => t.id === activeTab )?.base || 0
+		// Use confirmedActiveTab + confirmedExtraFee (both server-confirmed) so
+		// carrierBase stays stable while any cart update is in-flight.
+		const confirmedTabBase = isSupportedMethod
+			? baseTabs.find( ( t ) => t.id === confirmedActiveTab )?.base || 0
 			: 0;
-		const activeExtra = isSupportedMethod
-			? activeTabBase +
-			( activeTab === 'delivery_day' ? extraDeliveryFee : 0 )
+		const confirmedActiveExtra = isSupportedMethod
+			? confirmedTabBase +
+			( confirmedActiveTab === 'delivery_day' ? confirmedExtraFee : 0 )
 			: 0;
-		const carrierBase = Math.max( 0, selectedShippingFee - activeExtra );
+		const carrierBase = Math.max( 0, selectedShippingFee - confirmedActiveExtra );
 		const minorUnit = currency.minorUnit ?? 2;
 		const multiplier = Math.pow( 10, minorUnit );
 
@@ -221,11 +252,12 @@ export const Block = ( { checkoutExtensionData } ) => {
 		} );
 	}, [
 		baseTabs,
-		activeTab,
+		confirmedActiveTab,
 		selectedShippingFee,
 		isSupportedMethod,
 		currency,
 		extraDeliveryFee,
+		confirmedExtraFee,
 		cartDataLoaded,
 	] );
 
@@ -534,7 +566,7 @@ export const Block = ( { checkoutExtensionData } ) => {
 											value={ tab.id }
 											checked={ activeTab === tab.id }
 											onChange={ () =>
-												setActiveTab( tab.id )
+												handleTabChange( tab.id )
 											}
 										/>
 									</label>

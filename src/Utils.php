@@ -1045,6 +1045,52 @@ class Utils {
 	}
 
 	/**
+	 * Get the cost of the currently chosen shipping rate (any method).
+	 * Returns the rate cost as stored in the package rates (after woocommerce_package_rates
+	 * filters have run, i.e. including any injected PostNL tab fees).
+	 *
+	 * @return float
+	 */
+	public static function get_chosen_shipping_rate_cost(): float {
+		static $cached = null;
+		if ( null !== $cached ) {
+			return $cached;
+		}
+
+		if ( is_null( WC()->cart ) || is_null( WC()->session ) ) {
+			return 0.0;
+		}
+
+		$chosen_methods = WC()->session->get( 'chosen_shipping_methods', array() );
+		if ( empty( $chosen_methods ) ) {
+			return 0.0;
+		}
+
+		$packages = WC()->shipping()->get_packages();
+
+		// In block checkout, the Store API calculates shipping via a different
+		// code path that doesn't populate WC_Shipping::$packages. Fall back to
+		// calculating from the cart's raw packages when the result is empty.
+		if ( empty( $packages ) && ! WC()->cart->is_empty() ) {
+			$raw_packages = WC()->cart->get_shipping_packages();
+			$packages     = WC()->shipping()->calculate_shipping( $raw_packages );
+		}
+
+		foreach ( $packages as $i => $package ) {
+			$chosen_key = $chosen_methods[ $i ] ?? '';
+
+			if ( empty( $chosen_key ) || empty( $package['rates'][ $chosen_key ] ) ) {
+				continue;
+			}
+
+			$cached = max( 0.0, (float) $package['rates'][ $chosen_key ]->cost );
+			return $cached;
+		}
+
+		return 0.0;
+	}
+
+	/**
 	 * Get fee total price for display, respecting WooCommerce tax settings.
 	 *
 	 * This method calculates whether to display fees including or excluding tax

@@ -76,9 +76,9 @@ class PostNL extends \WC_Shipping_Flat_Rate {
 	 * @param array $package Package of items from cart.
 	 */
 	public function calculate_shipping( $package = array() ) {
-		// Set free shipping rate if cart subtotal exceed minimum_for_free_shipping
+		// Set free shipping rate if cart subtotal meets or exceeds minimum_for_free_shipping.
 		$minimum_for_free_shipping = $this->get_option( 'minimum_for_free_shipping' );
-		if ( '' !== $minimum_for_free_shipping && $package['cart_subtotal'] > $minimum_for_free_shipping ) {
+		if ( '' !== $minimum_for_free_shipping && $package['cart_subtotal'] >= $minimum_for_free_shipping ) {
 			$rate = array(
 				'id'      => $this->get_rate_id(),
 				'label'   => $this->title,

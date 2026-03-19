@@ -23,37 +23,13 @@
 		}
 
 		const tabBase = parseFloat( $label.data( 'base-fee' ) || 0 );
-		let extraFee = 0;
-		let extraFeeFormatted = '';
-
-		if ( $input.is( ':checked' ) ) {
-			extraFee = parseFloat(
-				$( '#postnl_delivery_day_price' ).val() || 0
-			);
-			if ( isNaN( extraFee ) ) {
-				extraFee = 0;
-			}
-			// Get formatted price from selected delivery option
-			const $selected = $( '.postnl_sub_radio:checked' ).closest( 'li' );
-			if ( $selected.length ) {
-				extraFeeFormatted = $selected.data( 'price-formatted' ) || '';
-			}
-		}
-
+		const totalNumeric = parseFloat( $label.data( 'total-numeric' ) || tabBase );
 		let text = postnlParams.i18n.deliveryDays;
-		const fees = [];
 
-		// Add base fee if > 0
-		if ( tabBase > 0 && postnlParams.delivery_day_fee_formatted ) {
-			fees.push( postnlParams.delivery_day_fee_formatted );
-		}
-
-		if ( extraFee > 0 && extraFeeFormatted ) {
-			fees.push( extraFeeFormatted );
-		}
-
-		if ( fees.length > 0 ) {
-			text += ' (+' + fees.join( ' +' ) + ')';
+		// Show full total (carrier + tab fee).
+		const deliveryTotalFormatted = $label.data( 'total-formatted' ) || '';
+		if ( totalNumeric > 0 && deliveryTotalFormatted ) {
+			text += ' (' + deliveryTotalFormatted + ')';
 		}
 
 		$label.children( 'span' ).first().text( text );
@@ -72,12 +48,14 @@
 		}
 
 		const tabBase = parseFloat( $label.data( 'base-fee' ) || 0 );
+		const totalNumeric = parseFloat( $label.data( 'total-numeric' ) || tabBase );
 
 		let text = postnlParams.i18n.pickup;
 
-		// Add base fee if > 0.
-		if ( tabBase > 0 && postnlParams.pickup_fee_formatted ) {
-			text += ' (+' + postnlParams.pickup_fee_formatted + ')';
+		// Show full total (carrier + tab fee).
+		const pickupTotalFormatted = $label.data( 'total-formatted' ) || '';
+		if ( totalNumeric > 0 && pickupTotalFormatted ) {
+			text += ' (' + pickupTotalFormatted + ')';
 		}
 
 		$label.children( 'span' ).first().text( text );

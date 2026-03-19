@@ -10,6 +10,10 @@ import {
 } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 import { getSetting } from '@woocommerce/settings';
+import {
+	formatPrice,
+	getCurrencyFromPriceResponse,
+} from '@woocommerce/price-format';
 import { useDispatch, useSelect } from '@wordpress/data';
 import axios from 'axios';
 import { Spinner } from '@wordpress/components';
@@ -19,7 +23,7 @@ import { Spinner } from '@wordpress/components';
  */
 import { Block as DeliveryDayBlock } from '../postnl-delivery-day/block';
 import { Block as DropoffPointsBlock } from '../postnl-dropoff-points/block';
-import { getDeliveryDay, clearSessionData } from '../../utils/session-manager';
+import { clearSessionData, getDeliveryDay } from '../../utils/session-manager';
 import {
 	batchSetExtensionData,
 	clearAllExtensionData,
@@ -59,14 +63,24 @@ export const Block = ( { checkoutExtensionData } ) => {
 	const letterbox = postnlData.letterbox || false;
 	const { CART_STORE_KEY, CHECKOUT_STORE_KEY } = window.wc.wcBlocksData;
 
-	const selectedShippingFee = useSelect(
+	const { selectedShippingFee, selectedMethodId, cartDataLoaded } = useSelect(
 		( select ) => {
 			const store = select( CART_STORE_KEY );
 			if ( ! store || ! store.getCartData ) {
-				return 0;
+				return {
+					selectedShippingFee: 0,
+					selectedMethodId: '',
+					cartDataLoaded: false,
+				};
 			}
 
+			const hasLoaded =
+				typeof store.hasFinishedResolution === 'function'
+					? store.hasFinishedResolution( 'getCartData', [] )
+					: true;
+
 			const packages = store.getCartData().shippingRates || [];
+			const taxDisplayIncl = postnlData.tax_display_incl || false;
 
 			for ( const pkg of packages ) {
 				const rates = pkg.shipping_rates || [];
@@ -74,8 +88,17 @@ export const Block = ( { checkoutExtensionData } ) => {
 				if ( chosen && chosen.price !== undefined ) {
 					const minor = Number( chosen.currency_minor_unit || 0 );
 					const price = parseFloat( chosen.price );
+					const taxes = parseFloat( chosen.taxes || 0 );
 					if ( ! Number.isNaN( price ) ) {
-						return price / Math.pow( 10, minor );
+						const displayPrice = taxDisplayIncl
+							? price + taxes
+							: price;
+						return {
+							selectedShippingFee:
+								displayPrice / Math.pow( 10, minor ),
+							selectedMethodId: chosen.method_id || '',
+							cartDataLoaded: hasLoaded,
+						};
 					}
 				}
 			}
@@ -83,23 +106,31 @@ export const Block = ( { checkoutExtensionData } ) => {
 			if ( store.getCartTotals ) {
 				const totals = store.getCartTotals();
 				if ( totals && totals.shipping_total ) {
-					return Number( totals.shipping_total );
+					return {
+						selectedShippingFee: Number( totals.shipping_total ),
+						selectedMethodId: '',
+						cartDataLoaded: hasLoaded,
+					};
 				}
 			}
 
-			return 0;
+			return {
+				selectedShippingFee: 0,
+				selectedMethodId: '',
+				cartDataLoaded: hasLoaded,
+			};
 		},
 		[ CART_STORE_KEY ]
 	);
 
-	const [ { extraDeliveryFee, extraDeliveryFeeFormatted }, setFeeState ] =
-		useState( () => {
-			const saved = getDeliveryDay();
-			return {
-				extraDeliveryFee: Number( saved.price || 0 ),
-				extraDeliveryFeeFormatted: saved.priceFormatted || '',
-			};
-		} );
+	// True when the selected method is one that has PostNL tab fees baked in.
+	const supportedMethods = postnlData.supported_shipping_methods || [ 'postnl' ];
+	const isSupportedMethod = supportedMethods.includes( selectedMethodId );
+
+	const currency = useMemo(
+		() => getCurrencyFromPriceResponse( getSetting( 'currency_data', {} ) ),
+		[]
+	);
 
 	const baseTabs = useMemo(
 		() => [
@@ -130,57 +161,107 @@ export const Block = ( { checkoutExtensionData } ) => {
 
 	const [ activeTab, setActiveTab ] = useState( baseTabs[ 0 ].id );
 
-	const [ carrierBaseCost, setCarrierBaseCost ] = useState(
-		() => selectedShippingFee - baseTabs[ 0 ].base - extraDeliveryFee
+	const isFreeShipping = cartDataLoaded && selectedShippingFee === 0;
+
+	const [ extraDeliveryFee, setExtraDeliveryFee ] = useState( () => {
+		const saved = getDeliveryDay();
+		return Number( saved.price || 0 );
+	} );
+
+	// Tracks the extra fee AND active tab the server has confirmed (both baked
+	// into selectedShippingFee). Only sync when selectedShippingFee changes so
+	// carrierBase stays stable while any cart update is in-flight.
+	const pendingExtraFeeRef = useRef( Number( getDeliveryDay().price || 0 ) );
+	const pendingActiveTabRef = useRef( baseTabs[ 0 ].id );
+	const [ confirmedExtraFee, setConfirmedExtraFee ] = useState(
+		() => Number( getDeliveryDay().price || 0 )
+	);
+	const [ confirmedActiveTab, setConfirmedActiveTab ] = useState(
+		() => baseTabs[ 0 ].id
 	);
 
-	const prevShipping = useRef( selectedShippingFee );
-
+	// When the cart store updates (server round-trip complete), lock in both
+	// the pending extra fee and the pending active tab so all tab titles
+	// recalculate together with the newly confirmed selectedShippingFee.
 	useEffect( () => {
-		if ( prevShipping.current === selectedShippingFee ) {
-			return;
+		if ( cartDataLoaded ) {
+			setConfirmedExtraFee( pendingExtraFeeRef.current );
+			setConfirmedActiveTab( pendingActiveTabRef.current );
 		}
-		prevShipping.current = selectedShippingFee;
+	}, [ selectedShippingFee, cartDataLoaded ] );
 
-		const currentTabBase =
-			baseTabs.find( ( tab ) => tab.id === activeTab )?.base || 0;
-		const extra = activeTab === 'delivery_day' ? extraDeliveryFee : 0;
+	const handleTabChange = useCallback( ( tabId ) => {
+		pendingActiveTabRef.current = tabId;
+		setActiveTab( tabId );
+	}, [] );
 
-		const raw = selectedShippingFee - currentTabBase - extra;
-		setCarrierBaseCost( raw < 0 ? 0 : raw );
-	}, [ selectedShippingFee ] );
+	const handlePriceChange = useCallback( ( priceData ) => {
+		const newFee = priceData.numeric || 0;
+		pendingExtraFeeRef.current = newFee;
+		setExtraDeliveryFee( newFee );
+	}, [] );
 
-	const tabs = useMemo(
-		() =>
-			baseTabs.map( ( tab ) => {
-				let title =
+	const tabs = useMemo( () => {
+		// Don't calculate until cart data is fully loaded to avoid flicker.
+		if ( ! cartDataLoaded ) {
+			return baseTabs.map( ( tab ) => ( {
+				id: tab.id,
+				name:
 					tab.id === 'delivery_day'
 						? __( 'Delivery', 'postnl-for-woocommerce' )
-						: __( 'Pickup', 'postnl-for-woocommerce' );
+						: __( 'Pickup', 'postnl-for-woocommerce' ),
+				base: tab.base,
+			} ) );
+		}
 
-				const fees = [];
-				if ( tab.displayFormatted && tab.base > 0 ) {
-					fees.push( tab.displayFormatted );
+		// Use confirmedActiveTab + confirmedExtraFee (both server-confirmed) so
+		// carrierBase stays stable while any cart update is in-flight.
+		const confirmedTabBase = isSupportedMethod
+			? baseTabs.find( ( t ) => t.id === confirmedActiveTab )?.base || 0
+			: 0;
+		const confirmedActiveExtra = isSupportedMethod
+			? confirmedTabBase +
+			( confirmedActiveTab === 'delivery_day' ? confirmedExtraFee : 0 )
+			: 0;
+		const carrierBase = Math.max( 0, selectedShippingFee - confirmedActiveExtra );
+		const minorUnit = currency.minorUnit ?? 2;
+		const multiplier = Math.pow( 10, minorUnit );
+
+		return baseTabs.map( ( tab ) => {
+			let title =
+				tab.id === 'delivery_day'
+					? __( 'Delivery', 'postnl-for-woocommerce' )
+					: __( 'Pickup', 'postnl-for-woocommerce' );
+
+			if ( selectedShippingFee > 0 ) {
+				const extra = tab.id === 'delivery_day' ? extraDeliveryFee : 0;
+				const tabTotal = carrierBase + tab.base + extra;
+
+				if ( tabTotal > 0 ) {
+					const totalFormatted = formatPrice(
+						Math.round( tabTotal * multiplier ),
+						currency
+					);
+					title += ` (${ totalFormatted })`;
+				} else if ( tab.base > 0 ) {
+					title += ` (+${ tab.displayFormatted })`;
 				}
+			}
 
-				if (
-					tab.id === 'delivery_day' &&
-					extraDeliveryFeeFormatted &&
-					extraDeliveryFee > 0
-				) {
-					fees.push( extraDeliveryFeeFormatted );
-				}
+			return { id: tab.id, name: title, base: tab.base };
+		} );
+	}, [
+		baseTabs,
+		confirmedActiveTab,
+		selectedShippingFee,
+		isSupportedMethod,
+		currency,
+		extraDeliveryFee,
+		confirmedExtraFee,
+		cartDataLoaded,
+	] );
 
-				if ( fees.length > 0 ) {
-					title += ` (+${ fees.join( ' +' ) })`;
-				}
-
-				return { id: tab.id, name: title, base: tab.base };
-			} ),
-		[ baseTabs, extraDeliveryFee, extraDeliveryFeeFormatted ]
-	);
-
-	// Retrieve customer data from WooCommerce cart store
+	// Retrieve customer data from WooCommerce cart store.
 	const customerData = useSelect(
 		( select ) => {
 			const store = select( CART_STORE_KEY );
@@ -200,14 +281,7 @@ export const Block = ( { checkoutExtensionData } ) => {
 	const [ dropoffOptions, setDropoffOptions ] = useState( [] );
 	const [ deliveryDaysEnabled, setDeliveryDaysEnabled ] = useState( true );
 
-	const handlePriceChange = useCallback( ( priceData ) => {
-		setFeeState( {
-			extraDeliveryFee: priceData.numeric || 0,
-			extraDeliveryFeeFormatted: priceData.formatted || '',
-		} );
-	}, [] );
-
-	// To prevent infinite loops if we update the address programmatically
+	// To prevent infinite loops if we update the address programmatically.
 	const isUpdatingAddress = useRef( false );
 
 	// Ref to store the previous shipping address
@@ -269,7 +343,7 @@ export const Block = ( { checkoutExtensionData } ) => {
 				postnlData.is_nl_address_enabled &&
 				isEmpty( shippingAddress[ 'postnl/house_number' ] ) )
 		) {
-			// If we have no valid postcode/house number, hide container
+			// If we have no valid postcode/house number, hide container.
 			setShowContainer( false );
 			return;
 		}
@@ -279,7 +353,7 @@ export const Block = ( { checkoutExtensionData } ) => {
 			return;
 		}
 
-		// Check if the shipping address has changed
+		// Check if the shipping address has changed.
 		if (
 			isAddressEqual( previousShippingAddress.current, shippingAddress )
 		) {
@@ -492,7 +566,7 @@ export const Block = ( { checkoutExtensionData } ) => {
 											value={ tab.id }
 											checked={ activeTab === tab.id }
 											onChange={ () =>
-												setActiveTab( tab.id )
+												handleTabChange( tab.id )
 											}
 										/>
 									</label>
@@ -512,8 +586,7 @@ export const Block = ( { checkoutExtensionData } ) => {
 								isActive={ activeTab === 'delivery_day' }
 								deliveryOptions={ deliveryOptions }
 								isDeliveryDaysEnabled={ deliveryDaysEnabled }
-								onPriceChange={ handlePriceChange }
-							/>
+								isFreeShipping={ isFreeShipping }							onPriceChange={ handlePriceChange }							/>
 						</div>
 						{ postnlData.is_pickup_points_enabled && (
 							<div

@@ -45,6 +45,7 @@ export const Block = ( {
 	deliveryOptions,
 	isDeliveryDaysEnabled,
 	onPriceChange = () => {},
+	isFreeShipping = false,
 } ) => {
 	const { setExtensionData } = checkoutExtensionData;
 
@@ -129,18 +130,27 @@ export const Block = ( {
 				firstDelivery.options.length > 0
 			) {
 				const firstOption = firstDelivery.options[ 0 ];
+				const effectivePrice = isFreeShipping
+					? 0
+					: firstOption.price || 0;
+				const effectivePriceDisplay = isFreeShipping
+					? 0
+					: ( firstOption.price_display ?? effectivePrice );
 				handleOptionChange(
 					`${ firstDelivery.date }_${ firstOption.from }-${ firstOption.to }_${ firstOption.price }`,
 					firstDelivery.date,
 					firstOption.from,
 					firstOption.to,
 					firstOption.type || 'Unknown',
-					firstOption.price || 0,
-					firstOption.price_formatted || ''
+					effectivePrice,
+					isFreeShipping ? '' : firstOption.price_formatted || '',
+					effectivePriceDisplay
 				);
 				onPriceChange( {
-					numeric: Number( firstOption.price || 0 ),
-					formatted: firstOption.price_formatted || '',
+					numeric: effectivePriceDisplay,
+					formatted: isFreeShipping
+						? ''
+						: firstOption.price_formatted || '',
 				} );
 			}
 		}
@@ -153,10 +163,13 @@ export const Block = ( {
 		to,
 		type,
 		price,
-		priceFormatted = ''
+		priceFormatted = '',
+		priceDisplay = null
 	) => {
 		const deliveryDayValue = `${ deliveryDate }_${ from }-${ to }_${ price }`;
 		const numericPrice = Number( price );
+		// Use tax-inclusive display price for tab fee calculations; fall back to raw price.
+		const displayNumericPrice = priceDisplay !== null ? Number( priceDisplay ) : numericPrice;
 
 		// Build selection data once
 		const selectionData = {
@@ -193,8 +206,9 @@ export const Block = ( {
 			type,
 		} );
 
-		// Notify parent of price change
-		onPriceChange( { numeric: numericPrice, formatted: priceFormatted } );
+		// Notify parent of price change (use tax-inclusive display price so it
+		// matches the tax-inclusive baseTabs.base values used in the container).
+		onPriceChange( { numeric: displayNumericPrice, formatted: priceFormatted } );
 
 		// Clear dropoff point data
 		clearDropoffPoint();
@@ -245,6 +259,9 @@ export const Block = ( {
 											const optionType =
 												option.type || 'Unknown';
 											const price = option.price || 0;
+											const priceDisplayNumeric = isFreeShipping
+												? 0
+												: ( option.price_display ?? price );
 											const priceDisplayFormatted =
 												option.price_formatted || '';
 											const value = `${ delivery.date }_${ from }-${ to }_${ price }`;
@@ -301,13 +318,19 @@ export const Block = ( {
 																	from,
 																	to,
 																	optionType,
-																	price,
-																	priceDisplayFormatted
+																	isFreeShipping
+																		? 0
+																		: price,
+																	isFreeShipping
+																		? ''
+																		: priceDisplayFormatted,
+																	priceDisplayNumeric
 																)
 															}
 														/>
 														{ priceDisplayFormatted &&
-															price > 0 && (
+															price > 0 &&
+															! isFreeShipping && (
 																<i>
 																	+
 																	{

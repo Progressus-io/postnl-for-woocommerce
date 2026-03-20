@@ -46,6 +46,7 @@ export const Block = ( {
 	isDeliveryDaysEnabled,
 	onPriceChange = () => {},
 	isFreeShipping = false,
+	isDataLoaded = true,
 } ) => {
 	const { setExtensionData } = checkoutExtensionData;
 
@@ -68,6 +69,33 @@ export const Block = ( {
 			debouncedBatchUpdate.cancel();
 		};
 	}, [ debouncedBatchUpdate ] );
+
+	// Create a stable debounced extensionCartUpdate to avoid the WooCommerce
+	// loading overlay that appears when awaiting extensionCartUpdate directly.
+	const debouncedExtensionCartUpdate = useMemo(
+		() =>
+			debounce( ( price, type ) => {
+				const { extensionCartUpdate } = window.wc?.blocksCheckout || {};
+				if ( typeof extensionCartUpdate === 'function' ) {
+					extensionCartUpdate( {
+						namespace: 'postnl',
+						data: {
+							action: 'update_delivery_fee',
+							price,
+							type,
+						},
+					} );
+				}
+			}, 400 ),
+		[]
+	);
+
+	// Cleanup debouncedExtensionCartUpdate on unmount
+	useEffect( () => {
+		return () => {
+			debouncedExtensionCartUpdate.cancel();
+		};
+	}, [ debouncedExtensionCartUpdate ] );
 
 	// Initialize state from centralized session manager
 	const [ selection, setSelection ] = useState( () => {
@@ -111,52 +139,72 @@ export const Block = ( {
 		[ setExtensionData, onPriceChange ]
 	);
 
-	// Handle tab activation and auto-select first option
+	// Handle tab activation, selection validation, and auto-select first option.
 	useEffect( () => {
-		if (
-			! isActive ||
-			! Array.isArray( deliveryOptions ) ||
-			deliveryOptions.length === 0
-		) {
+		// Clear when tab is inactive.
+		if ( ! isActive ) {
 			clearSelections( true );
 			return;
 		}
 
-		// If active and no option selected, select the default (first) option
-		if ( isActive && ! selection.selectedOption ) {
-			const firstDelivery = deliveryOptions[ 0 ];
-			if (
-				Array.isArray( firstDelivery.options ) &&
-				firstDelivery.options.length > 0
-			) {
-				const firstOption = firstDelivery.options[ 0 ];
-				const effectivePrice = isFreeShipping
-					? 0
-					: firstOption.price || 0;
-				const effectivePriceDisplay = isFreeShipping
-					? 0
-					: ( firstOption.price_display ?? effectivePrice );
-				handleOptionChange(
-					`${ firstDelivery.date }_${ firstOption.from }-${ firstOption.to }_${ firstOption.price }`,
-					firstDelivery.date,
-					firstOption.from,
-					firstOption.to,
-					firstOption.type || 'Unknown',
-					effectivePrice,
-					isFreeShipping ? '' : firstOption.price_formatted || '',
-					effectivePriceDisplay
-				);
-				onPriceChange( {
-					numeric: effectivePriceDisplay,
-					formatted: isFreeShipping
-						? ''
-						: firstOption.price_formatted || '',
+		// Don't act during transitional loading states — avoids clearing a valid
+		// selection when the cart store briefly returns empty data mid-update.
+		if ( ! isDataLoaded ) {
+			return;
+		}
+
+		if ( ! Array.isArray( deliveryOptions ) || deliveryOptions.length === 0 ) {
+			clearSelections( true );
+			return;
+		}
+
+		// Build the set of valid option values from the current delivery options.
+		const validValues = deliveryOptions.reduce( ( acc, delivery ) => {
+			if ( Array.isArray( delivery.options ) ) {
+				delivery.options.forEach( ( opt ) => {
+					acc.push(
+						`${ delivery.date }_${ opt.from }-${ opt.to }_${ opt.price }`
+					);
 				} );
 			}
-		}
-	}, [ isActive, deliveryOptions ] );
+			return acc;
+		}, [] );
 
-	const handleOptionChange = async (
+		// Keep the current selection if it is still valid (e.g. after an address
+		// change that returns the same delivery dates/times).
+		if ( selection.selectedOption && validValues.includes( selection.selectedOption ) ) {
+			return;
+		}
+
+		// No valid selection — auto-select the first available option.
+		const firstDelivery = deliveryOptions[ 0 ];
+		if (
+			Array.isArray( firstDelivery.options ) &&
+			firstDelivery.options.length > 0
+		) {
+			const firstOption = firstDelivery.options[ 0 ];
+			const effectivePrice = isFreeShipping ? 0 : firstOption.price || 0;
+			const effectivePriceDisplay = isFreeShipping
+				? 0
+				: ( firstOption.price_display ?? effectivePrice );
+			handleOptionChange(
+				`${ firstDelivery.date }_${ firstOption.from }-${ firstOption.to }_${ firstOption.price }`,
+				firstDelivery.date,
+				firstOption.from,
+				firstOption.to,
+				firstOption.type || 'Unknown',
+				effectivePrice,
+				isFreeShipping ? '' : firstOption.price_formatted || '',
+				effectivePriceDisplay
+			);
+			onPriceChange( {
+				numeric: effectivePriceDisplay,
+				formatted: isFreeShipping ? '' : firstOption.price_formatted || '',
+			} );
+		}
+	}, [ isActive, deliveryOptions, isDataLoaded ] ); // eslint-disable-line react-hooks/exhaustive-deps
+
+	const handleOptionChange = (
 		value,
 		deliveryDate,
 		from,
@@ -185,16 +233,6 @@ export const Block = ( {
 		// Update local state
 		setSelection( selectionData );
 
-		// Update extension data (reusing selection data, converting price to string)
-		batchSetExtensionData( setExtensionData, {
-			deliveryDay: selectionData.deliveryDay,
-			deliveryDayDate: selectionData.deliveryDayDate,
-			deliveryDayFrom: selectionData.deliveryDayFrom,
-			deliveryDayTo: selectionData.deliveryDayTo,
-			deliveryDayPrice: price.toString(),
-			deliveryDayType: selectionData.deliveryDayType,
-		} );
-
 		// Save to session manager (different key format)
 		saveDeliveryDay( {
 			value: deliveryDayValue,
@@ -214,22 +252,8 @@ export const Block = ( {
 		clearDropoffPoint();
 		clearDropoffPointExtensionData( setExtensionData );
 
-		// Update cart fees on backend
-		try {
-			const { extensionCartUpdate } = window.wc?.blocksCheckout || {};
-			if ( typeof extensionCartUpdate === 'function' ) {
-				await extensionCartUpdate( {
-					namespace: 'postnl',
-					data: {
-						action: 'update_delivery_fee',
-						price,
-						type,
-					},
-				} );
-			}
-		} catch ( error ) {
-			// Handle error silently
-		}
+		// Update cart fees on backend (debounced to avoid WC loading overlay).
+		debouncedExtensionCartUpdate( price, type );
 	};
 
 	if ( ! Array.isArray( deliveryOptions ) || deliveryOptions.length === 0 ) {

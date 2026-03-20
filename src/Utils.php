@@ -1193,5 +1193,13 @@ class Utils {
 		// Clear address validation data.
 		WC()->session->__unset( POSTNL_SETTINGS_ID . '_invalid_address_marker' );
 		WC()->session->__unset( POSTNL_SETTINGS_ID . '_validated_address' );
+
+		// Clear classic checkout API response cache.
+		WC()->session->__unset( 'postnl_checkout_address_key' );
+		WC()->session->__unset( 'postnl_checkout_api_cache' );
+
+		// Clear block checkout delivery options cache.
+		WC()->session->__unset( 'postnl_delivery_options_cache' );
+		WC()->session->__unset( 'postnl_delivery_options_cache_key' );
 	}
 }

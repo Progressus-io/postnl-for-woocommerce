@@ -7,6 +7,9 @@ use PostNLWooCommerce\Frontend\Delivery_Day;
 use PostNLWooCommerce\Frontend\Dropoff_Points;
 use PostNLWooCommerce\Frontend\Container;
 use PostNLWooCommerce\Frontend\Checkout_Fields;
+use PostNLWooCommerce\Rest_API\Checkout;
+use PostNLWooCommerce\Rest_API\Postcode_Check;
+use PostNLWooCommerce\Helper\Mapping;
 use PostNLWooCommerce\Utils;
 use PostNLWooCommerce\Address_Utils;
 
@@ -48,6 +51,17 @@ class Extend_Block_Core {
 			2
 		);
 
+		// Fetch PostNL delivery options when the customer's shipping address changes.
+		add_action(
+			'woocommerce_store_api_cart_update_customer_from_request',
+			array( $this, 'handle_address_update' ),
+			10,
+			2
+		);
+
+		// Pre-populate delivery options cache on REST cart load when cache is missing.
+		add_action( 'woocommerce_cart_loaded_from_session', array( $this, 'maybe_populate_delivery_cache_on_load' ) );
+
 		// Register the update callback when WooCommerce Blocks is loaded
 		add_action( 'init', array( $this, 'register_store_api_callback' ) );
 		add_action( 'woocommerce_cart_calculate_fees', array( $this, 'postnl_add_custom_fee' ) );
@@ -69,25 +83,79 @@ class Extend_Block_Core {
 
 
 	/**
-	 * Validate address in cart.
-	 * Only shows validation error for NL addresses.
+	 * Validate address at checkout submission.
+	 * Only blocks order placement for invalid NL addresses — does not fire on
+	 * cart page loads or address update requests.
+	 *
+	 * Runs a fresh Postcode_Check API call at submission time so the result
+	 * reflects the final address rather than a stale session marker that may
+	 * have been set during partial address entry.
+	 *
+	 * @param \WP_Error $errors Cart errors object.
+	 * @param \WC_Cart  $cart   Cart object.
 	 */
 	public function postnl_validate_address_in_cart( $errors, $cart ) {
-		// Only validate NL addresses
-		$shipping_country = WC()->customer ? WC()->customer->get_shipping_country() : '';
-		if ( 'NL' !== $shipping_country ) {
-			// Clear any stale invalid marker for non-NL countries
-			WC()->session->__unset( POSTNL_SETTINGS_ID . '_invalid_address_marker' );
+		// woocommerce_store_api_cart_errors fires on all cart-related Store API
+		// requests (GET cart, PATCH update-customer, POST checkout). We only want
+		// to block order submission, so restrict to POST requests to the checkout
+		// endpoint.
+		$request_uri = isset( $_SERVER['REQUEST_URI'] ) ? $_SERVER['REQUEST_URI'] : '';
+		$is_post     = 'POST' === strtoupper( isset( $_SERVER['REQUEST_METHOD'] ) ? $_SERVER['REQUEST_METHOD'] : '' );
+
+		if ( ! $is_post || false === strpos( $request_uri, '/checkout' ) ) {
 			return;
 		}
 
-		$invalid_marker = WC()->session->get( POSTNL_SETTINGS_ID . '_invalid_address_marker', false );
+		// Only validate NL addresses when the setting is enabled.
+		$shipping_country = WC()->customer ? WC()->customer->get_shipping_country() : '';
+		if ( ! $this->is_address_validation_required_for_country( $shipping_country ) ) {
+			return;
+		}
 
-		if ( $invalid_marker ) {
-			$errors->add(
-				'invalid_address',
-				esc_html__( 'This is not a valid address!', 'postnl-for-woocommerce' )
-			);
+		$shipping_postcode = WC()->customer->get_shipping_postcode();
+		$house_number      = '';
+
+		if ( $this->settings->is_reorder_nl_address_enabled() ) {
+			$house_number = (string) WC()->customer->get_meta( '_wc_shipping/postnl/house_number' );
+		}
+
+		// Postcode_Check requires a house number — without it the API always returns empty.
+		// When the separate house number field is disabled, or the user has not filled it in,
+		// we cannot run a meaningful validation and should not block checkout.
+		if ( empty( $house_number ) ) {
+			return;
+		}
+
+		// Build post_data for Postcode_Check.
+		$post_data = array(
+			'shipping_country'          => $shipping_country,
+			'shipping_postcode'         => $shipping_postcode,
+			'shipping_house_number'     => $house_number,
+			'shipping_address_1'        => WC()->customer->get_shipping_address(),
+			'shipping_address_2'        => WC()->customer->get_shipping_address_2(),
+			'shipping_city'             => WC()->customer->get_shipping_city(),
+			'shipping_state'            => WC()->customer->get_shipping_state(),
+			'ship_to_different_address' => '1',
+		);
+
+		$post_data = Address_Utils::set_post_data_address( $post_data );
+
+		try {
+			$item_info = new Postcode_Check\Item_Info( $post_data );
+			$api_call  = new Postcode_Check\Client( $item_info );
+			$response  = $api_call->send_request();
+
+			// Only block submission when the API definitively returns no match.
+			// API exceptions (network issues, timeouts) are treated as pass-through
+			// so a transient API failure never prevents a legitimate order.
+			if ( empty( $response[0] ) ) {
+				$errors->add(
+					'invalid_address',
+					esc_html__( 'This is not a valid address!', 'postnl-for-woocommerce' )
+				);
+			}
+		} catch ( \Exception $e ) {
+			// API call failed — do not block the order.
 		}
 	}
 
@@ -111,6 +179,276 @@ class Extend_Block_Core {
 				);
 			}
 		);
+	}
+
+	/**
+	 * Fetches PostNL delivery options when the customer's address is updated via the Store API.
+	 *
+	 * NOTE: Do NOT instantiate Container here — its woocommerce_package_rates and
+	 * woocommerce_cart_shipping_packages hooks would fire during calculate_totals()
+	 * which runs immediately after this hook, doubling the fee injection.
+	 *
+	 * @param \WC_Customer    $customer The updated customer object.
+	 * @param \WP_REST_Request $request  The REST request.
+	 */
+	public function handle_address_update( \WC_Customer $customer, \WP_REST_Request $request ) {
+		$shipping_country  = $customer->get_shipping_country();
+		$shipping_postcode = $customer->get_shipping_postcode();
+		$house_number      = '';
+
+		if ( $this->settings->is_reorder_nl_address_enabled() ) {
+			$house_number = (string) $customer->get_meta( '_wc_shipping/postnl/house_number' );
+		}
+
+		// Check if the destination country is supported.
+		$available_countries = Mapping::available_country_for_checkout_feature();
+		$store_country       = Utils::get_base_country();
+
+		if ( ! isset( $available_countries[ $store_country ][ $shipping_country ] ) ) {
+			WC()->session->__unset( 'postnl_delivery_options_cache' );
+			WC()->session->__unset( 'postnl_delivery_options_cache_key' );
+			return;
+		}
+
+		if ( empty( $shipping_postcode ) ) {
+			WC()->session->__unset( 'postnl_delivery_options_cache' );
+			WC()->session->__unset( 'postnl_delivery_options_cache_key' );
+			return;
+		}
+
+		if ( 'NL' === $shipping_country && $this->settings->is_reorder_nl_address_enabled() && empty( $house_number ) ) {
+			WC()->session->__unset( 'postnl_delivery_options_cache' );
+			WC()->session->__unset( 'postnl_delivery_options_cache_key' );
+			return;
+		}
+
+		$this->populate_delivery_options_cache(
+			$shipping_country,
+			$shipping_postcode,
+			$house_number,
+			$customer->get_shipping_address(),
+			$customer->get_shipping_address_2(),
+			$customer->get_shipping_city(),
+			$customer->get_shipping_state()
+		);
+	}
+
+	/**
+	 * Pre-populate the delivery options cache on initial REST API cart load.
+	 * Fires when the cart is loaded from session (before the response is built),
+	 * so the data_callback in Extend_Store_Endpoint can read it immediately.
+	 */
+	public function maybe_populate_delivery_cache_on_load() {
+		// Only pre-populate on REST API requests (block checkout page load).
+		if ( ! defined( 'REST_REQUEST' ) || ! REST_REQUEST ) {
+			return;
+		}
+
+		// Skip if cache is already populated.
+		if ( WC()->session && null !== WC()->session->get( 'postnl_delivery_options_cache', null ) ) {
+			return;
+		}
+
+		if ( ! WC()->customer ) {
+			return;
+		}
+
+		$shipping_country  = WC()->customer->get_shipping_country();
+		$shipping_postcode = WC()->customer->get_shipping_postcode();
+		$house_number      = '';
+
+		if ( $this->settings->is_reorder_nl_address_enabled() ) {
+			$house_number = (string) WC()->customer->get_meta( '_wc_shipping/postnl/house_number' );
+		}
+
+		// Validate country support.
+		$available_countries = Mapping::available_country_for_checkout_feature();
+		$store_country       = Utils::get_base_country();
+
+		if ( ! isset( $available_countries[ $store_country ][ $shipping_country ] ) ) {
+			return;
+		}
+
+		if ( empty( $shipping_postcode ) ) {
+			return;
+		}
+
+		if ( 'NL' === $shipping_country && $this->settings->is_reorder_nl_address_enabled() && empty( $house_number ) ) {
+			return;
+		}
+
+		$this->populate_delivery_options_cache(
+			$shipping_country,
+			$shipping_postcode,
+			$house_number,
+			WC()->customer->get_shipping_address(),
+			WC()->customer->get_shipping_address_2(),
+			WC()->customer->get_shipping_city(),
+			WC()->customer->get_shipping_state(),
+			false // Never run address validation on page-load pre-population.
+		);
+	}
+
+	/**
+	 * Builds and caches PostNL delivery options for the given address.
+	 * Shared by handle_address_update() and maybe_populate_delivery_cache_on_load().
+	 *
+	 * NOTE: Do NOT instantiate Container here — its woocommerce_package_rates and
+	 * woocommerce_cart_shipping_packages hooks would fire during calculate_totals()
+	 * which runs immediately after this hook, doubling the fee injection.
+	 *
+	 * @param string $shipping_country   Country code.
+	 * @param string $shipping_postcode  Postcode.
+	 * @param string $house_number       House number (empty string when not applicable).
+	 * @param string $shipping_address   Address line 1.
+	 * @param string $shipping_address_2 Address line 2.
+	 * @param string $shipping_city      City.
+	 * @param string $shipping_state     State/region.
+	 * @param bool   $validate_address   Whether to run NL address validation and update the
+	 *                                   invalid-address marker. Pass false when pre-populating
+	 *                                   on page load so stale session data never touches the
+	 *                                   marker set by a real address-change request.
+	 */
+	private function populate_delivery_options_cache(
+		string $shipping_country,
+		string $shipping_postcode,
+		string $house_number,
+		string $shipping_address,
+		string $shipping_address_2,
+		string $shipping_city,
+		string $shipping_state,
+		bool $validate_address = true
+	): void {
+		$cache_key  = md5( $shipping_country . '|' . $shipping_postcode . '|' . $house_number );
+		$stored_key = WC()->session->get( 'postnl_delivery_options_cache_key', '' );
+		$cache_hit  = $cache_key === $stored_key && null !== WC()->session->get( 'postnl_delivery_options_cache', null );
+
+		// Page-load pre-population: no validation to run, so skip everything if cache is current.
+		if ( ! $validate_address && $cache_hit ) {
+			return;
+		}
+
+		// Build a post_data array compatible with Item_Info constructors.
+		$post_data = array(
+			'shipping_country'          => $shipping_country,
+			'shipping_postcode'         => $shipping_postcode,
+			'shipping_house_number'     => $house_number,
+			'shipping_address_1'        => $shipping_address,
+			'shipping_address_2'        => $shipping_address_2,
+			'shipping_city'             => $shipping_city,
+			'shipping_state'            => $shipping_state,
+			'ship_to_different_address' => '1',
+		);
+
+		$post_data = Address_Utils::set_post_data_address( $post_data );
+
+		$validated_address = null;
+
+		if ( $validate_address && $this->is_address_validation_required_for_country( $shipping_country ) ) {
+			// Run Postcode_Check only to get the canonical street/city for auto-filling the
+			// checkout form. This does NOT set/clear any invalid-address marker — that is
+			// done with a fresh API call at submission time in postnl_validate_address_in_cart().
+			try {
+				$item_info = new Postcode_Check\Item_Info( $post_data );
+				$api_call  = new Postcode_Check\Client( $item_info );
+				$response  = $api_call->send_request();
+
+				if ( ! empty( $response[0] ) ) {
+					$validated_address = array(
+						'city'         => $response[0]['city'],
+						'street'       => $response[0]['streetName'],
+						'house_number' => $response[0]['houseNumber'],
+					);
+					WC()->session->set(
+						POSTNL_SETTINGS_ID . '_validated_address',
+						array(
+							'city'                      => $response[0]['city'],
+							'street'                    => $response[0]['streetName'],
+							'house_number'              => $response[0]['houseNumber'],
+							'ship_to_different_address' => true,
+						)
+					);
+				} else {
+					WC()->session->set( POSTNL_SETTINGS_ID . '_validated_address', array() );
+				}
+			} catch ( \Exception $e ) {
+				// Postcode_Check call failed — proceed without validated address.
+			}
+		} elseif ( ! $validate_address ) {
+			// Page-load pre-population: read validated address from session if available.
+			$session_validated = WC()->session->get( POSTNL_SETTINGS_ID . '_validated_address', array() );
+			if ( ! empty( $session_validated['street'] ) ) {
+				$validated_address = array(
+					'city'         => $session_validated['city'] ?? '',
+					'street'       => $session_validated['street'],
+					'house_number' => $session_validated['house_number'] ?? '',
+				);
+			}
+		}
+
+		// Skip the Checkout API call when the delivery options are already cached for this address.
+		// On validate_address=true: patch the latest validated_address into the cached data first.
+		if ( $cache_hit ) {
+			if ( $validate_address ) {
+				$cached                      = WC()->session->get( 'postnl_delivery_options_cache' );
+				$cached['validated_address'] = $validated_address;
+				WC()->session->set( 'postnl_delivery_options_cache', $cached );
+			}
+			return;
+		}
+
+		// Check letterbox eligibility.
+		$letterbox = Utils::is_cart_eligible_auto_letterbox( WC()->cart );
+
+		// Call PostNL Checkout API.
+		$response = array();
+		try {
+			$item_info = new Checkout\Item_Info( $post_data );
+			$api_call  = new Checkout\Client( $item_info );
+			$response  = $api_call->send_request();
+		} catch ( \Exception $e ) {
+			// API call failed — clear cache and bail.
+		}
+
+		if ( empty( $response ) ) {
+			WC()->session->__unset( 'postnl_delivery_options_cache' );
+			WC()->session->__unset( 'postnl_delivery_options_cache_key' );
+			return;
+		}
+
+		// Process delivery and dropoff options using the existing frontend classes.
+		// These classes only register display hooks which do not fire during Store API cart requests.
+		$delivery_day    = new Delivery_Day();
+		$dropoff         = new Dropoff_Points();
+		$delivery_result = $delivery_day->get_content_data( $response, $post_data );
+		$dropoff_result  = $dropoff->get_content_data( $response, $post_data );
+
+		$delivery_options = isset( $delivery_result['delivery_options'] ) ? $delivery_result['delivery_options'] : array();
+		$dropoff_options  = isset( $dropoff_result['dropoff_options'] ) ? $dropoff_result['dropoff_options'] : array();
+		$show_container   = ! empty( $delivery_options ) || ! empty( $dropoff_options );
+
+		WC()->session->set(
+			'postnl_delivery_options_cache',
+			array(
+				'show_container'           => $show_container,
+				'delivery_options'         => $delivery_options,
+				'dropoff_options'          => $dropoff_options,
+				'is_delivery_days_enabled' => isset( $delivery_result['is_delivery_days_enabled'] ) ? (bool) $delivery_result['is_delivery_days_enabled'] : true,
+				'validated_address'        => $validated_address,
+				'is_letterbox'             => $letterbox,
+			)
+		);
+		WC()->session->set( 'postnl_delivery_options_cache_key', $cache_key );
+	}
+
+	/**
+	 * Check if PostNL address validation is required for the given country.
+	 *
+	 * @param string $country Shipping country code.
+	 * @return bool
+	 */
+	private function is_address_validation_required_for_country( string $country ): bool {
+		return 'NL' === $country && $this->settings->is_validate_nl_address_enabled();
 	}
 
 	/**

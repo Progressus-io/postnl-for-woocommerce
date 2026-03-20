@@ -249,15 +249,32 @@ class Container {
 	}
 
 	/**
+	 * Get a cache key from the relevant shipping address fields.
+	 *
+	 * @param array $post_data Checkout post data.
+	 * @return string MD5 hash of country, postcode, and house number.
+	 */
+	protected function get_api_cache_key( $post_data ) {
+		$country      = isset( $post_data['shipping_country'] ) ? $post_data['shipping_country'] : '';
+		$postcode     = isset( $post_data['shipping_postcode'] ) ? $post_data['shipping_postcode'] : '';
+		$house_number = isset( $post_data['shipping_house_number'] ) ? $post_data['shipping_house_number'] : '';
+
+		return md5( $country . '|' . $postcode . '|' . $house_number );
+	}
+
+	/**
 	 * Add delivery day & Pickup points fields.
 	 *
-	 * @param  array $post_data  Checkout post input.
+	 * @param  array      $post_data     Checkout post input.
+	 * @param  array|null $checkout_data Optional pre-fetched API response (response + letterbox).
 	 *
 	 * @return void.
 	 * @throws \Exception.
 	 */
-	public function display_fields( $post_data ) {
-		$checkout_data = $this->get_checkout_data( $post_data );
+	public function display_fields( $post_data, $checkout_data = null ) {
+		if ( null === $checkout_data ) {
+			$checkout_data = $this->get_checkout_data( $post_data );
+		}
 
 		if ( empty( $checkout_data['response'] ) ) {
 			return;
@@ -369,8 +386,31 @@ class Container {
 				$this->validated_address( $post_data );
 			}
 
+			// Cache raw API response by address to avoid calling PostNL on every update_checkout.
+			$cache_key  = $this->get_api_cache_key( $post_data );
+			$stored_key = WC()->session->get( 'postnl_checkout_address_key', '' );
+			$api_cache  = WC()->session->get( 'postnl_checkout_api_cache', null );
+
+			if ( $cache_key === $stored_key && is_array( $api_cache ) ) {
+				$checkout_data = array(
+					'response'  => $api_cache['response'],
+					'post_data' => $post_data,
+					'letterbox' => $api_cache['letterbox'],
+				);
+			} else {
+				$checkout_data = $this->get_checkout_data( $post_data );
+				WC()->session->set( 'postnl_checkout_address_key', $cache_key );
+				WC()->session->set(
+					'postnl_checkout_api_cache',
+					array(
+						'response'  => $checkout_data['response'],
+						'letterbox' => $checkout_data['letterbox'],
+					)
+				);
+			}
+
 			// Display PostNL Delivery day & Pickup points.
-			$this->display_fields( $post_data );
+			$this->display_fields( $post_data, $checkout_data );
 
 		} catch ( \Exception $e ) {
 			wc_add_notice( $e->getMessage(), 'error' );
@@ -390,10 +430,8 @@ class Container {
 		if ( empty( $response[0] ) ) {
 			// Clear validated address.
 			WC()->session->set( POSTNL_SETTINGS_ID . '_validated_address', array() );
-			// Mark the address as invalid in the session:
+			// Mark the address as invalid in the session for checkout validation.
 			WC()->session->set( POSTNL_SETTINGS_ID . '_invalid_address_marker', true );
-			// Add notice without blocking checkout call.
-			wc_add_notice( esc_html__( 'This is not a valid address!', 'postnl-for-woocommerce' ), 'notice' );
 		} else {
 			// Set validated address.
 			WC()->session->set(
@@ -486,12 +524,15 @@ class Container {
 		$pickup_fee   = (float) $this->settings->get_pickup_delivery_fee();
 		$base_day_fee = (float) $this->settings->get_delivery_days_fee();
 
-		// Get morning/evening surcharge from package destination.
+		// Get morning/evening surcharge from package destination, falling back to session
+		// for requests that don't carry post_data (page load, order review, place order).
 		$morning_evening_fee = 0.0;
 		if ( 'delivery_day' === $option ) {
 			$non_standard_fees  = Base::non_standard_fees_data();
-			$delivery_day_type  = $package['destination']['postnl_delivery_day_type'] ?? '';
-			$delivery_day_price = $package['destination']['postnl_delivery_day_price'] ?? 0;
+			$delivery_day_type  = $package['destination']['postnl_delivery_day_type']
+				?? WC()->session->get( 'postnl_delivery_day_type', '' );
+			$delivery_day_price = $package['destination']['postnl_delivery_day_price']
+				?? WC()->session->get( 'postnl_delivery_day_price', 0 );
 
 			if ( ! empty( $delivery_day_type ) && isset( $non_standard_fees[ $delivery_day_type ] ) && $delivery_day_price > 0 ) {
 				$morning_evening_fee = (float) $delivery_day_price;
@@ -548,6 +589,12 @@ class Container {
 
 		$delivery_day_type  = $post_data['postnl_delivery_day_type'] ?? '';
 		$delivery_day_price = $post_data['postnl_delivery_day_price'] ?? '';
+
+		// Persist type and price to session so inject_postnl_base_fees() can read them
+		// on requests that don't carry post_data (page load, order review, place order).
+		// Always overwrite (including empty) so stale values don't persist after tab/option changes.
+		WC()->session->set( 'postnl_delivery_day_type', $delivery_day_type );
+		WC()->session->set( 'postnl_delivery_day_price', $delivery_day_price );
 
 		foreach ( $packages as $key => $package ) {
 			$packages[ $key ]['destination']['postnl_option']             = $option;

@@ -15,8 +15,6 @@ import {
 	getCurrencyFromPriceResponse,
 } from '@woocommerce/price-format';
 import { useDispatch, useSelect } from '@wordpress/data';
-import axios from 'axios';
-import { Spinner } from '@wordpress/components';
 
 /**
  * Internal dependencies
@@ -60,7 +58,6 @@ export const Block = ( { checkoutExtensionData } ) => {
 	const { setExtensionData } = checkoutExtensionData;
 	const postnlData = getSetting( 'postnl-for-woocommerce-blocks_data', {} );
 
-	const letterbox = postnlData.letterbox || false;
 	const { CART_STORE_KEY, CHECKOUT_STORE_KEY } = window.wc.wcBlocksData;
 
 	const { selectedShippingFee, selectedMethodId, cartDataLoaded } = useSelect(
@@ -274,25 +271,15 @@ export const Block = ( { checkoutExtensionData } ) => {
 	const { setShippingAddress, updateCustomerData } =
 		useDispatch( CART_STORE_KEY );
 
-	const [ showContainer, setShowContainer ] = useState( false );
-	const [ loading, setLoading ] = useState( false );
-
-	const [ deliveryOptions, setDeliveryOptions ] = useState( [] );
-	const [ dropoffOptions, setDropoffOptions ] = useState( [] );
-	const [ deliveryDaysEnabled, setDeliveryDaysEnabled ] = useState( true );
-
-	// To prevent infinite loops if we update the address programmatically.
-	const isUpdatingAddress = useRef( false );
-
-	// Ref to store the previous shipping address
-	const previousShippingAddress = useRef( null );
+	// Refs for tracking address fill-in and container visibility transitions.
+	const prevValidatedAddress = useRef( null );
+	const prevEffectiveShowContainer = useRef( false );
 
 	/**
 	 * Clear all PostNL data: session, extension data, and backend cart fee.
 	 */
 	const clearAllPostNLData = useCallback( () => {
 		clearSessionData();
-		previousShippingAddress.current = null;
 		clearAllExtensionData( setExtensionData );
 		clearBackendDeliveryFee();
 	}, [ setExtensionData ] );
@@ -309,196 +296,103 @@ export const Block = ( { checkoutExtensionData } ) => {
 		}
 	}, [ shippingAddress, setExtensionData ] );
 
-	// Track previous country to detect transitions to unsupported countries
-	const previousCountry = useRef( shippingAddress?.country || '' );
-	const supportedCountries = postnlData.supported_countries || [];
 
-	// Fetch data shipping address
-	useEffect( () => {
-		const country = shippingAddress?.country || '';
-		const isSupported = isCountrySupported( country, supportedCountries );
-		const wasSupported = isCountrySupported(
-			previousCountry.current,
-			supportedCountries
-		);
-
-		// Update previous country
-		previousCountry.current = country;
-
-		// If country is not supported, clear data once and stop all processing
-		if ( ! isSupported ) {
-			if ( wasSupported ) {
-				setShowContainer( false );
-				setDeliveryOptions( [] );
-				setDropoffOptions( [] );
-				clearAllPostNLData();
+	// Read PostNL delivery options from the WooCommerce Cart Store API extensions.
+	// Populated server-side by handle_address_update() via
+	// woocommerce_store_api_cart_update_customer_from_request.
+	//
+	// We serialise to JSON so useSelect can detect changes by value rather than
+	// reference. Without this, WooCommerce returns a new object on every selector
+	// call even when the data hasn't changed, causing an infinite render loop.
+	const postnlExtensionsJson = useSelect(
+		( select ) => {
+			const store = select( CART_STORE_KEY );
+			if ( ! store || ! store.getCartData ) {
+				return null;
 			}
-			return;
-		}
+			const ext = store.getCartData()?.extensions?.postnl;
+			return ext ? JSON.stringify( ext ) : null;
+		},
+		[ CART_STORE_KEY ]
+	);
+	const postnlExtensions = useMemo(
+		() => ( postnlExtensionsJson ? JSON.parse( postnlExtensionsJson ) : null ),
+		[ postnlExtensionsJson ]
+	);
 
-		if (
-			! shippingAddress ||
-			isEmpty( shippingAddress.postcode ) ||
-			( shippingAddress.country === 'NL' &&
-				postnlData.is_nl_address_enabled &&
-				isEmpty( shippingAddress[ 'postnl/house_number' ] ) )
-		) {
-			// If we have no valid postcode/house number, hide container.
-			setShowContainer( false );
-			return;
-		}
+	const supportedCountries = postnlData.supported_countries || [];
+	const country = shippingAddress?.country || '';
+	const isSupported = isCountrySupported( country, supportedCountries );
 
-		if ( isUpdatingAddress.current ) {
-			isUpdatingAddress.current = false;
-			return;
-		}
+	// Derive display state from cart extensions.
+	const showContainer       = postnlExtensions?.showContainer || false;
+	const deliveryOptions     = postnlExtensions?.deliveryOptions || [];
+	const dropoffOptions      = postnlExtensions?.dropoffOptions || [];
+	const deliveryDaysEnabled = postnlExtensions?.deliveryDaysEnabled ?? true;
+	const validatedAddress    = postnlExtensions?.validatedAddress || null;
+	// Prefer dynamic extensions value; fall back to PHP static value for initial render.
+	const isLetterbox = ( postnlExtensions?.isLetterbox ?? postnlData.letterbox ) || false;
 
-		// Check if the shipping address has changed.
-		if (
-			isAddressEqual( previousShippingAddress.current, shippingAddress )
-		) {
-			return;
-		}
+	// Hide container immediately on the client if country is unsupported.
+	const effectiveShowContainer = isSupported && showContainer;
 
-		const debounceDelay = 1500;
-		const handler = setTimeout( () => {
-			// Update the previous shipping address
-			previousShippingAddress.current = { ...shippingAddress };
-
-			const data = {
-				shipping_country: shippingAddress.country || '',
-				shipping_postcode: shippingAddress.postcode || '',
-				...( postnlData.is_nl_address_enabled
-					? {
-							shipping_house_number:
-								shippingAddress[ 'postnl/house_number' ] || '',
-					  }
-					: {} ),
-				shipping_address_2: shippingAddress.address_2 || '',
-				shipping_address_1: shippingAddress.address_1 || '',
-				shipping_city: shippingAddress.city || '',
-				shipping_state: shippingAddress.state || '',
-				shipping_phone: shippingAddress.phone || '',
-				shipping_email: shippingAddress.email || '',
-				shipping_method: 'postnl',
-				ship_to_different_address: '1',
-			};
-
-			const formData = new URLSearchParams();
-			formData.append( 'action', 'postnl_set_checkout_post_data' );
-			formData.append( 'nonce', postnlData.nonce );
-
-			Object.keys( data ).forEach( ( key ) => {
-				formData.append( `data[${ key }]`, data[ key ] );
-			} );
-
-			setLoading( true );
-
-			axios
-				.post( postnlData.ajax_url, formData, {
-					headers: {
-						'Content-Type': 'application/x-www-form-urlencoded',
-					},
-				} )
-				.then( ( response ) => {
-					if ( response.data.success && response.data.data ) {
-						const respData = response.data.data;
-
-						// If validated_address returned, update shipping address if needed
-						if (
-							respData.validated_address &&
-							respData.validated_address.street &&
-							respData.validated_address.city &&
-							respData.validated_address.house_number
-						) {
-							const { street, city, house_number } =
-								respData.validated_address;
-							const newShippingAddress = {
-								...shippingAddress,
-								city,
-								'postnl/house_number': house_number,
-							};
-
-							if ( ! postnlData.is_nl_address_enabled ) {
-								newShippingAddress.address_1 = `${ street } ${ house_number }`;
-							} else {
-								newShippingAddress.address_1 = street;
-							}
-
-							if (
-								shippingAddress.address_1 !== street ||
-								shippingAddress.city !== city ||
-								shippingAddress[ 'postnl/house_number' ] !==
-									house_number
-							) {
-								isUpdatingAddress.current = true;
-								setShippingAddress( newShippingAddress );
-								updateCustomerData( newShippingAddress );
-							}
-						}
-
-						setDeliveryDaysEnabled(
-							respData.is_delivery_days_enabled
-						);
-						setShowContainer( respData.show_container || false );
-						setDeliveryOptions( respData.delivery_options || [] );
-						setDropoffOptions( respData.dropoff_options || [] );
-
-						// Clear all PostNL data when container is hidden
-						if ( ! respData.show_container ) {
-							clearAllPostNLData();
-						}
-					} else {
-						// Response not success or no data: hide container
-						setShowContainer( false );
-						setDeliveryOptions( [] );
-						setDropoffOptions( [] );
-						clearAllPostNLData();
-					}
-
-					const event = new Event( 'postnl_address_updated' );
-					window.dispatchEvent( event );
-				} )
-				.catch( () => {
-					// On error, hide container and clear options
-					setShowContainer( false );
-					setDeliveryOptions( [] );
-					setDropoffOptions( [] );
-					clearAllPostNLData();
-
-					const event = new Event( 'postnl_address_updated' );
-					window.dispatchEvent( event );
-				} )
-				.finally( () => {
-					setLoading( false );
-				} );
-		}, debounceDelay );
-
-		// Cleanup function to cancel the timeout if address changes before debounceDelay
-		return () => clearTimeout( handler );
-	}, [
-		shippingAddress,
-		postnlData.ajax_url,
-		postnlData.nonce,
-		postnlData.is_nl_address_enabled,
-		setShippingAddress,
-		updateCustomerData,
-		clearAllPostNLData,
-		supportedCountries,
-	] );
-
-	// Clear local data if checkout is complete or letterbox.
-	// Note: Backend fee clearing is handled by AJAX response handlers via clearAllPostNLData().
+	// Fill in validated NL address fields when PostNL confirms the address.
 	useEffect( () => {
-		if ( isComplete || letterbox ) {
+		if ( ! validatedAddress || ! validatedAddress.street ) {
+			return;
+		}
+
+		const prev = prevValidatedAddress.current;
+		if (
+			prev &&
+			prev.street === validatedAddress.street &&
+			prev.city === validatedAddress.city &&
+			prev.house_number === validatedAddress.house_number
+		) {
+			return;
+		}
+
+		prevValidatedAddress.current = validatedAddress;
+
+		const { street, city, house_number } = validatedAddress;
+		const newShippingAddress = { ...shippingAddress, city };
+
+		if ( ! postnlData.is_nl_address_enabled ) {
+			newShippingAddress.address_1 = `${ street } ${ house_number }`;
+		} else {
+			newShippingAddress.address_1 = street;
+			if ( house_number ) {
+				newShippingAddress[ 'postnl/house_number' ] = house_number;
+			}
+		}
+
+		if (
+			shippingAddress.address_1 !== newShippingAddress.address_1 ||
+			shippingAddress.city !== city
+		) {
+			setShippingAddress( newShippingAddress );
+			updateCustomerData( newShippingAddress );
+		}
+	}, [ validatedAddress ] ); // eslint-disable-line react-hooks/exhaustive-deps
+
+	// Clear all PostNL data when the container transitions from visible to hidden.
+	useEffect( () => {
+		if ( prevEffectiveShowContainer.current && ! effectiveShowContainer ) {
+			clearAllPostNLData();
+		}
+		prevEffectiveShowContainer.current = effectiveShowContainer;
+	}, [ effectiveShowContainer, clearAllPostNLData ] );
+
+	// Clear local data if checkout is complete or letterbox eligibility detected.
+	useEffect( () => {
+		if ( isComplete || isLetterbox ) {
 			clearSessionData();
-			previousShippingAddress.current = null;
 			clearAllExtensionData( setExtensionData );
 		}
-	}, [ isComplete, letterbox, setExtensionData ] );
+	}, [ isComplete, isLetterbox, setExtensionData ] );
 
 	useEffect( () => {
-		if ( ! letterbox || ! showContainer || deliveryOptions.length === 0 ) {
+		if ( ! isLetterbox || ! effectiveShowContainer || deliveryOptions.length === 0 ) {
 			return;
 		}
 		const firstDelivery = deliveryOptions[ 0 ];
@@ -525,24 +419,15 @@ export const Block = ( { checkoutExtensionData } ) => {
 
 		// Clear dropoff point data using helper
 		clearDropoffPointExtensionData( setExtensionData );
-	}, [ letterbox, showContainer, deliveryOptions, setExtensionData ] );
+	}, [ isLetterbox, effectiveShowContainer, deliveryOptions, setExtensionData ] );
 
 	return (
 		<div
 			id="postnl_checkout_option"
-			className={ `postnl_checkout_container ${
-				loading ? 'loading' : ''
-			}` }
-			aria-busy={ loading }
+			className="postnl_checkout_container"
 		>
-			{ loading && (
-				<div className="postnl-spinner-overlay">
-					<Spinner />
-				</div>
-			) }
-
 			{ /* Content when not letterbox and showContainer */ }
-			{ ! letterbox && showContainer && (
+			{ ! isLetterbox && effectiveShowContainer && (
 				<>
 					<div className="postnl_checkout_tab_container">
 						<ul className="postnl_checkout_tab_list">
@@ -586,7 +471,10 @@ export const Block = ( { checkoutExtensionData } ) => {
 								isActive={ activeTab === 'delivery_day' }
 								deliveryOptions={ deliveryOptions }
 								isDeliveryDaysEnabled={ deliveryDaysEnabled }
-								isFreeShipping={ isFreeShipping }							onPriceChange={ handlePriceChange }							/>
+								isFreeShipping={ isFreeShipping }
+								isDataLoaded={ cartDataLoaded }
+								onPriceChange={ handlePriceChange }
+							/>
 						</div>
 						{ postnlData.is_pickup_points_enabled && (
 							<div
@@ -611,7 +499,7 @@ export const Block = ( { checkoutExtensionData } ) => {
 			) }
 
 			{ /* Content when letterbox is true */ }
-			{ letterbox && showContainer && (
+			{ isLetterbox && effectiveShowContainer && (
 				<div className="postnl-letterbox-message">
 					{ __(
 						'These items are eligible for letterbox delivery.',

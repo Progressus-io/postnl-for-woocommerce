@@ -10,6 +10,7 @@ namespace PostNLWooCommerce\Checkout_Blocks;
 use function PostNLWooCommerce\postnl;
 use Automattic\WooCommerce\StoreApi\StoreApi;
 use Automattic\WooCommerce\StoreApi\Schemas\ExtendSchema;
+use Automattic\WooCommerce\StoreApi\Schemas\V1\CartSchema;
 use Automattic\WooCommerce\StoreApi\Schemas\V1\CheckoutSchema;
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -50,19 +51,110 @@ class Extend_Store_Endpoint {
 	}
 
 	/**
-	 * Registers the actual data into the Checkout endpoint.
+	 * Registers the actual data into the Checkout and Cart endpoints.
 	 */
 	public static function extend_store() {
-		if ( is_callable( array( self::$extend, 'register_endpoint_data' ) ) ) {
-			self::$extend->register_endpoint_data(
-				array(
-					'endpoint'        => CheckoutSchema::IDENTIFIER,
-					'namespace'       => self::IDENTIFIER,
-					'schema_callback' => array( __CLASS__, 'extend_checkout_schema' ),
-					'schema_type'     => ARRAY_A,
-				)
+		if ( ! is_callable( array( self::$extend, 'register_endpoint_data' ) ) ) {
+			return;
+		}
+
+		self::$extend->register_endpoint_data(
+			array(
+				'endpoint'        => CheckoutSchema::IDENTIFIER,
+				'namespace'       => self::IDENTIFIER,
+				'schema_callback' => array( __CLASS__, 'extend_checkout_schema' ),
+				'schema_type'     => ARRAY_A,
+			)
+		);
+
+		self::$extend->register_endpoint_data(
+			array(
+				'endpoint'        => CartSchema::IDENTIFIER,
+				'namespace'       => self::IDENTIFIER,
+				'data_callback'   => array( __CLASS__, 'get_cart_data' ),
+				'schema_callback' => array( __CLASS__, 'extend_cart_schema' ),
+				'schema_type'     => ARRAY_A,
+			)
+		);
+	}
+
+	/**
+	 * Defines the schema for PostNL delivery data in Cart responses.
+	 *
+	 * @return array Schema structure.
+	 */
+	public static function extend_cart_schema(): array {
+		return array(
+			'showContainer'       => array(
+				'description' => 'Whether to display the PostNL checkout container',
+				'type'        => 'boolean',
+				'context'     => array( 'view', 'edit' ),
+				'readonly'    => true,
+			),
+			'deliveryOptions'     => array(
+				'description' => 'Available PostNL delivery day options',
+				'type'        => 'array',
+				'context'     => array( 'view', 'edit' ),
+				'readonly'    => true,
+				'items'       => array( 'type' => 'object' ),
+			),
+			'dropoffOptions'      => array(
+				'description' => 'Available PostNL dropoff point options',
+				'type'        => 'array',
+				'context'     => array( 'view', 'edit' ),
+				'readonly'    => true,
+				'items'       => array( 'type' => 'object' ),
+			),
+			'deliveryDaysEnabled' => array(
+				'description' => 'Whether delivery day selection is enabled',
+				'type'        => 'boolean',
+				'context'     => array( 'view', 'edit' ),
+				'readonly'    => true,
+			),
+			'validatedAddress'    => array(
+				'description' => 'Validated NL address data for auto-filling checkout fields',
+				'type'        => array( 'object', 'null' ),
+				'context'     => array( 'view', 'edit' ),
+				'readonly'    => true,
+				'nullable'    => true,
+			),
+			'isLetterbox'         => array(
+				'description' => 'Whether the cart is eligible for letterbox delivery',
+				'type'        => 'boolean',
+				'context'     => array( 'view', 'edit' ),
+				'readonly'    => true,
+			),
+		);
+	}
+
+	/**
+	 * Returns PostNL delivery options data for the Cart endpoint.
+	 * Reads from the session cache populated by handle_address_update().
+	 *
+	 * @return array
+	 */
+	public static function get_cart_data(): array {
+		$cache = WC()->session ? WC()->session->get( 'postnl_delivery_options_cache', null ) : null;
+
+		if ( ! is_array( $cache ) ) {
+			return array(
+				'showContainer'       => false,
+				'deliveryOptions'     => array(),
+				'dropoffOptions'      => array(),
+				'deliveryDaysEnabled' => true,
+				'validatedAddress'    => null,
+				'isLetterbox'         => false,
 			);
 		}
+
+		return array(
+			'showContainer'       => (bool) ( $cache['show_container'] ?? false ),
+			'deliveryOptions'     => $cache['delivery_options'] ?? array(),
+			'dropoffOptions'      => $cache['dropoff_options'] ?? array(),
+			'deliveryDaysEnabled' => (bool) ( $cache['is_delivery_days_enabled'] ?? true ),
+			'validatedAddress'    => $cache['validated_address'] ?? null,
+			'isLetterbox'         => (bool) ( $cache['is_letterbox'] ?? false ),
+		);
 	}
 
 	/**

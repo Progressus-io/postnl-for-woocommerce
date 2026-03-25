@@ -289,7 +289,7 @@ class Container {
 				// The morning/evening extra fee is folded into the rate; subtract it per-package.
 				$extra_fee = 0.0;
 				if ( 'delivery_day' === $option ) {
-					$extra_fee = (float) ( $package['destination']['postnl_delivery_day_price'] ?? 0 );
+					$extra_fee = (float) ( $package['destination']['postnl_delivery_day_price'] ?? WC()->session->get( 'postnl_delivery_day_price', 0 ) );
 				}
 				return max( 0.0, (float) $rate->cost - $tab_fee - $extra_fee );
 			}
@@ -521,10 +521,11 @@ class Container {
 				$extra = $pickup_fee;
 			} elseif ( 'delivery_day' === $option ) {
 				// Fold both the tab base fee and any morning/evening extra fee into the rate.
-				// Read the extra fee from the package destination (set by add_postnl_option_to_package)
-				// so the cache invalidation and the injection always use the same value.
+				// Prefer the package destination value (set by add_postnl_option_to_package during
+				// AJAX calls) and fall back to the session value for order placement, when
+				// $_REQUEST['post_data'] is no longer available.
 				$extra  = $base_day_fee;
-				$extra += (float) ( $package['destination']['postnl_delivery_day_price'] ?? 0 );
+				$extra += (float) ( $package['destination']['postnl_delivery_day_price'] ?? WC()->session->get( 'postnl_delivery_day_price', 0 ) );
 			}
 
 			if ( $extra <= 0 ) {
@@ -561,9 +562,13 @@ class Container {
 
 		// Store the morning/evening extra fee in the destination so the shipping
 		// rate cache key changes when the selection changes, forcing recalculation.
+		// Also persist to session so inject_postnl_base_fees can read it during
+		// order placement, when $_REQUEST['post_data'] is no longer available.
 		$delivery_day_price = ( 'delivery_day' === $option )
 			? (string) (float) ( $post_data['postnl_delivery_day_price'] ?? 0 )
 			: '0';
+
+		WC()->session->set( 'postnl_delivery_day_price', $delivery_day_price );
 
 		foreach ( $packages as $key => $package ) {
 			$packages[ $key ]['destination']['postnl_option']             = $option;

@@ -56,7 +56,9 @@ export const Block = ( { checkoutExtensionData } ) => {
 	const { setExtensionData } = checkoutExtensionData;
 	const postnlData = getSetting( 'postnl-for-woocommerce-blocks_data', {} );
 
-	const letterbox = postnlData.letterbox || false;
+	const [ isLetterbox, setIsLetterbox ] = useState(
+		postnlData.letterbox || false
+	);
 	const { CART_STORE_KEY, CHECKOUT_STORE_KEY } = window.wc.wcBlocksData;
 
 	const selectedShippingFee = useSelect(
@@ -190,7 +192,7 @@ export const Block = ( { checkoutExtensionData } ) => {
 	);
 
 	const shippingAddress = customerData ? customerData.shippingAddress : null;
-	const { setShippingAddress, updateCustomerData } =
+	const { setShippingAddress } =
 		useDispatch( CART_STORE_KEY );
 
 	const [ showContainer, setShowContainer ] = useState( false );
@@ -209,6 +211,10 @@ export const Block = ( { checkoutExtensionData } ) => {
 
 	// To prevent infinite loops if we update the address programmatically
 	const isUpdatingAddress = useRef( false );
+
+	// Always holds the latest shippingAddress so AJAX callbacks don't use a
+	// stale closure value captured at debounce-start time.
+	const currentShippingAddressRef = useRef( null );
 
 	// Ref to store the previous shipping address
 	const previousShippingAddress = useRef( null );
@@ -241,6 +247,9 @@ export const Block = ( { checkoutExtensionData } ) => {
 
 	// Fetch data shipping address
 	useEffect( () => {
+		// Keep the ref current so AJAX callbacks always use the latest address.
+		currentShippingAddressRef.current = shippingAddress;
+
 		const country = shippingAddress?.country || '';
 		const isSupported = isCountrySupported( country, supportedCountries );
 		const wasSupported = isCountrySupported(
@@ -329,7 +338,8 @@ export const Block = ( { checkoutExtensionData } ) => {
 				.then( ( response ) => {
 					if ( response.data.success && response.data.data ) {
 						const respData = response.data.data;
-
+							// Update letterbox state from AJAX response
+							setIsLetterbox( respData.is_letterbox || false );
 						// If validated_address returned, update shipping address if needed
 						if (
 							respData.validated_address &&
@@ -339,8 +349,13 @@ export const Block = ( { checkoutExtensionData } ) => {
 						) {
 							const { street, city, house_number } =
 								respData.validated_address;
+							// Use the ref (current store value) not the stale closure
+							// so fields the user filled in while the AJAX was in-flight
+							// are preserved.
+							const latestAddress =
+								currentShippingAddressRef.current || shippingAddress;
 							const newShippingAddress = {
-								...shippingAddress,
+								...latestAddress,
 								city,
 								'postnl/house_number': house_number,
 							};
@@ -352,14 +367,14 @@ export const Block = ( { checkoutExtensionData } ) => {
 							}
 
 							if (
-								shippingAddress.address_1 !== street ||
-								shippingAddress.city !== city ||
-								shippingAddress[ 'postnl/house_number' ] !==
+								latestAddress.address_1 !== street ||
+								latestAddress.city !== city ||
+								latestAddress[ 'postnl/house_number' ] !==
 									house_number
 							) {
 								isUpdatingAddress.current = true;
+								previousShippingAddress.current = { ...newShippingAddress };
 								setShippingAddress( newShippingAddress );
-								updateCustomerData( newShippingAddress );
 							}
 						}
 
@@ -387,6 +402,7 @@ export const Block = ( { checkoutExtensionData } ) => {
 				} )
 				.catch( () => {
 					// On error, hide container and clear options
+					setIsLetterbox( false );
 					setShowContainer( false );
 					setDeliveryOptions( [] );
 					setDropoffOptions( [] );
@@ -408,7 +424,6 @@ export const Block = ( { checkoutExtensionData } ) => {
 		postnlData.nonce,
 		postnlData.is_nl_address_enabled,
 		setShippingAddress,
-		updateCustomerData,
 		clearAllPostNLData,
 		supportedCountries,
 	] );
@@ -416,15 +431,15 @@ export const Block = ( { checkoutExtensionData } ) => {
 	// Clear local data if checkout is complete or letterbox.
 	// Note: Backend fee clearing is handled by AJAX response handlers via clearAllPostNLData().
 	useEffect( () => {
-		if ( isComplete || letterbox ) {
+		if ( isComplete || isLetterbox ) {
 			clearSessionData();
 			previousShippingAddress.current = null;
 			clearAllExtensionData( setExtensionData );
 		}
-	}, [ isComplete, letterbox, setExtensionData ] );
+	}, [ isComplete, isLetterbox, setExtensionData ] );
 
 	useEffect( () => {
-		if ( ! letterbox || ! showContainer || deliveryOptions.length === 0 ) {
+		if ( ! isLetterbox || ! showContainer || deliveryOptions.length === 0 ) {
 			return;
 		}
 		const firstDelivery = deliveryOptions[ 0 ];
@@ -451,7 +466,7 @@ export const Block = ( { checkoutExtensionData } ) => {
 
 		// Clear dropoff point data using helper
 		clearDropoffPointExtensionData( setExtensionData );
-	}, [ letterbox, showContainer, deliveryOptions, setExtensionData ] );
+	}, [ isLetterbox, showContainer, deliveryOptions, setExtensionData ] );
 
 	return (
 		<div
@@ -468,7 +483,7 @@ export const Block = ( { checkoutExtensionData } ) => {
 			) }
 
 			{ /* Content when not letterbox and showContainer */ }
-			{ ! letterbox && showContainer && (
+		{ ! isLetterbox && showContainer && (
 				<>
 					<div className="postnl_checkout_tab_container">
 						<ul className="postnl_checkout_tab_list">
@@ -538,7 +553,7 @@ export const Block = ( { checkoutExtensionData } ) => {
 			) }
 
 			{ /* Content when letterbox is true */ }
-			{ letterbox && showContainer && (
+		{ isLetterbox && showContainer && (
 				<div className="postnl-letterbox-message">
 					{ __(
 						'These items are eligible for letterbox delivery.',

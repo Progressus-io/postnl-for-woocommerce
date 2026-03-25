@@ -124,6 +124,30 @@
 			jQuery( '#shipping_postcode' ).on( 'change', function () {
 				jQuery( 'body' ).trigger( 'update_checkout' );
 			} );
+			jQuery( '#shipping_address_1' ).on( 'change', function () {
+				jQuery( 'body' ).trigger( 'update_checkout' );
+			} );
+			jQuery( '#billing_address_1' ).on( 'change', function () {
+				if (
+					! jQuery( '#ship-to-different-address-checkbox' ).is(
+						':checked'
+					)
+				) {
+					jQuery( 'body' ).trigger( 'update_checkout' );
+				}
+			} );
+			jQuery( '#shipping_country' ).on( 'change', function () {
+				jQuery( 'body' ).trigger( 'update_checkout' );
+			} );
+			jQuery( '#billing_country' ).on( 'change', function () {
+				if (
+					! jQuery( '#ship-to-different-address-checkbox' ).is(
+						':checked'
+					)
+				) {
+					jQuery( 'body' ).trigger( 'update_checkout' );
+				}
+			} );
 		},
 
 		isAddressReady: function () {

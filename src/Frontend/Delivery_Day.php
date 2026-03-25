@@ -151,6 +151,7 @@ class Delivery_Day extends Base {
 						'to'              => Utils::get_hour_min( $timeframe['To'] ),
 						'type'            => $type,
 						'price'           => $price,
+						'price_display'   => Utils::get_fee_total_price( $price ),
 						'price_formatted' => Utils::get_formatted_fee_total_price( $price ),
 					);
 				},

@@ -149,37 +149,13 @@ class Extend_Block_Core {
 	/**
 	 * Adds the delivery fee to the WooCommerce cart.
 	 *
+	 * Morning/evening delivery fees are folded directly into the shipping rate
+	 * cost via add_postnl_fees_to_rates(), so no separate fee line item is added.
+	 *
 	 * @param \WC_Cart $cart The WooCommerce cart object.
 	 */
 	public function postnl_add_custom_fee( $cart ) {
-		if ( is_admin() && ! defined( 'DOING_AJAX' ) ) {
-			return;
-		}
-
-		// Get the fee amount and type from session
-		$fee_amount = WC()->session->get( 'postnl_delivery_fee', 0 );
-		$fee_type   = WC()->session->get( 'postnl_delivery_type', '' );
-
-		$fee_label = __( 'PostNL Delivery Fee', 'postnl-for-woocommerce' );
-		if ( '08:00-12:00' === $fee_type || 'Morning' === $fee_type ) {
-			$fee_label = __( 'PostNL Morning Fee', 'postnl-for-woocommerce' );
-		} elseif ( 'Evening' === $fee_type ) {
-			$fee_label = __( 'PostNL Evening Fee', 'postnl-for-woocommerce' );
-		} else {
-			return;
-		}
-
-		$new_fees = array();
-		foreach ( $cart->get_fees() as $fee ) {
-			if ( strpos( $fee->name, 'PostNL' ) === false ) {
-				$new_fees[] = $fee;
-			}
-		}
-		$cart->fees_api()->set_fees( $new_fees );
-
-		if ( $fee_amount > 0 ) {
-			$cart->add_fee( $fee_label, $fee_amount, true );
-		}
+		return;
 	}
 
 	/**
@@ -190,6 +166,9 @@ class Extend_Block_Core {
 	 * @return array
 	 */
 	public function add_postnl_fees_to_rates( $rates, $package ) {
+		if ( Utils::is_free_shipping_applied() ) {
+			return $rates;
+		}
 
 		$session_type = WC()->session->get( 'postnl_delivery_type', '' );
 		if ( '' === $session_type ) {
@@ -210,11 +189,12 @@ class Extend_Block_Core {
 
 			if ( 'Pickup' === $session_type && $pickup_fee > 0 ) {
 				$extra = $pickup_fee;
-			} elseif ( 'Pickup' !== $session_type && $base_day_fee > 0 ) {
-				$extra = $base_day_fee;
+			} elseif ( 'Pickup' !== $session_type ) {
+				// Fold both the tab base fee and any morning/evening extra fee into the rate.
+				$extra = $base_day_fee + (float) WC()->session->get( 'postnl_delivery_fee', 0 );
 			}
 
-			if ( 0 === $extra ) {
+			if ( $extra <= 0 ) {
 				continue;
 			}
 
@@ -227,6 +207,50 @@ class Extend_Block_Core {
 		}
 
 		return $rates;
+	}
+
+	/**
+	 * Get the carrier base cost by reading the currently-selected PostNL rate
+	 * and subtracting the PostNL fees that were injected into it.
+	 *
+	 * The injected amount is: tab base fee + session extra fee (morning/evening).
+	 * Returns the raw carrier cost before PostNL touched the rate.
+	 *
+	 * @return float Carrier base cost (≥ 0), pre-tax.
+	 */
+	private function get_carrier_base_cost_for_blocks(): float {
+		$session_type = WC()->session->get( 'postnl_delivery_type', '' );
+		$session_fee  = (float) WC()->session->get( 'postnl_delivery_fee', 0 );
+		$pickup_fee   = (float) $this->settings->get_pickup_delivery_fee();
+		$base_day_fee = (float) $this->settings->get_delivery_days_fee();
+		$supported    = $this->settings->get_supported_shipping_methods();
+
+		$injected = 0.0;
+		if ( 'Pickup' === $session_type ) {
+			$injected = $pickup_fee;
+		} elseif ( '' !== $session_type ) {
+			$injected = $base_day_fee + $session_fee;
+		}
+
+		$chosen = WC()->session ? WC()->session->get( 'chosen_shipping_methods', array() ) : array();
+		WC()->cart->calculate_shipping();
+		$packages = WC()->shipping()->get_packages();
+
+		foreach ( $packages as $i => $package ) {
+			$method_key = $chosen[ $i ] ?? '';
+
+			if ( ! isset( $package['rates'][ $method_key ] ) ) {
+				continue;
+			}
+
+			$rate = $package['rates'][ $method_key ];
+
+			if ( in_array( $rate->get_method_id(), $supported, true ) ) {
+				return max( 0.0, (float) $rate->cost - $injected );
+			}
+		}
+
+		return 0.0;
 	}
 
 	/**
@@ -435,16 +459,27 @@ class Extend_Block_Core {
 		$delivery_options = $delivery_day->get_content_data( $checkout_data['response'], $checkout_data['post_data'] );
 		$dropoff_options  = $dropoff->get_content_data( $checkout_data['response'], $checkout_data['post_data'] );
 
+		$is_free_shipping = Utils::is_free_shipping_applied();
+
+		// Compute tax-display-adjusted values for block checkout tab labels.
+		$carrier_base_cost        = Utils::get_fee_total_price( $this->get_carrier_base_cost_for_blocks() );
+		$delivery_day_fee_display = Utils::get_fee_total_price( (float) $this->settings->get_delivery_days_fee() );
+		$pickup_fee_display       = Utils::get_fee_total_price( (float) $this->settings->get_pickup_delivery_fee() );
+
 		// **Letterbox is Eligible**
 		if ( $letterbox ) {
 			wp_send_json_success(
 				array(
-					'message'           => 'Eligible for letterbox.',
-					'show_container'    => true,
-					'validated_address' => $validated_address,
-					'delivery_options'  => $delivery_options['delivery_options'],
-					'dropoff_options'   => array(),
-					'is_letterbox'      => true,
+					'message'                  => 'Eligible for letterbox.',
+					'show_container'           => true,
+					'validated_address'        => $validated_address,
+					'delivery_options'         => $delivery_options['delivery_options'],
+					'dropoff_options'          => array(),
+					'is_letterbox'             => true,
+					'is_free_shipping'         => $is_free_shipping,
+					'carrier_base_cost'        => $carrier_base_cost,
+					'delivery_day_fee_display' => $delivery_day_fee_display,
+					'pickup_fee_display'       => $pickup_fee_display,
 				),
 				200
 			);
@@ -466,6 +501,7 @@ class Extend_Block_Core {
 						'validated_address' => $validated_address,
 						'delivery_options'  => array(),
 						'dropoff_options'   => array(),
+						'is_free_shipping'  => $is_free_shipping,
 					),
 					200
 				);
@@ -481,6 +517,10 @@ class Extend_Block_Core {
 					'delivery_options'         => $delivery_options_array,
 					'dropoff_options'          => $dropoff_options_array,
 					'is_delivery_days_enabled' => $delivery_options['is_delivery_days_enabled'],
+					'is_free_shipping'         => $is_free_shipping,
+					'carrier_base_cost'        => $carrier_base_cost,
+					'delivery_day_fee_display' => $delivery_day_fee_display,
+					'pickup_fee_display'       => $pickup_fee_display,
 				),
 				200
 			);

@@ -1118,6 +1118,30 @@ class Utils {
 	}
 
 	/**
+	 * Check whether free shipping is currently active for the cart.
+	 *
+	 * Returns true when any applied coupon grants free shipping. This is used
+	 * to suppress PostNL base-fee injection and morning/evening cart fees so
+	 * that no extra shipping charges appear when the cart qualifies for free
+	 * shipping.
+	 *
+	 * @return bool
+	 */
+	public static function is_free_shipping_applied(): bool {
+		if ( ! WC()->cart ) {
+			return false;
+		}
+
+		foreach ( WC()->cart->get_coupons() as $coupon ) {
+			if ( $coupon->get_free_shipping() ) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	/**
 	 * Clear all PostNL checkout session data.
 	 *
 	 * This is the centralized method for clearing PostNL session data.

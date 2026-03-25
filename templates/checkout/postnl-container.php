@@ -30,34 +30,31 @@ $field = array_shift( $fields );
 							$is_checked      = ( $field['value'] === $field_tab['id'] ) || ( empty( $field['value'] ) && 0 === $index );
 							$active_class    = ( $is_checked ) ? 'active' : '';
 							$display_checked = ( $is_checked ) ? 'checked="checked"' : '';
+
+							// Compute the tab's full base cost (carrier + tab fee), or 0 if free shipping.
+							if ( $is_free_shipping ) {
+								$tab_base_total = 0.0;
+							} elseif ( 'delivery_day' === $field_tab['id'] ) {
+								$tab_base_total = (float) $carrier_base_cost + (float) $delivery_day_fee;
+							} elseif ( 'dropoff_points' === $field_tab['id'] ) {
+								$tab_base_total = (float) $carrier_base_cost + (float) $pickup_fee;
+							} else {
+								$tab_base_total = 0.0;
+							}
 						?>
 
 						<li class="<?php echo esc_attr( $active_class ); ?>">
 							<label
 									for="<?php echo esc_attr( $field['name'] . '_' . $field_tab['id'] ); ?>"
 									class="postnl_checkout_tab"
-									data-base-fee="
-									<?php
-									echo esc_attr(
-										'delivery_day' === $field_tab['id']
-											? (float) $delivery_day_fee
-											: ( 'dropoff_points' === $field_tab['id']
-											? (float) $pickup_fee
-											: 0
-										)
-									);
-									?>
-									"
+									data-base-fee="<?php echo esc_attr( $is_free_shipping ? 0 : Utils::get_fee_total_price( $tab_base_total ) ); ?>"
 							>
 
 								<span>
 									<?php
 									echo esc_html( $field_tab['name'] );
-									if ( 'dropoff_points' === $field_tab['id'] && ! empty( $pickup_fee ) && $pickup_fee > 0 ) {
-										printf( ' (+%s)', Utils::get_formatted_fee_total_price( $pickup_fee ) );
-									}
-									if ( 'delivery_day' === $field_tab['id'] && ! empty( $delivery_day_fee ) && $delivery_day_fee > 0 ) {
-										printf( ' (+%s)', Utils::get_formatted_fee_total_price( $delivery_day_fee ) );
+									if ( $tab_base_total > 0 ) {
+										printf( ' (%s)', Utils::get_formatted_fee_total_price( $tab_base_total ) );
 									}
 									?>
 								</span>

@@ -19,7 +19,7 @@ import { Spinner } from '@wordpress/components';
  */
 import { Block as DeliveryDayBlock } from '../postnl-delivery-day/block';
 import { Block as DropoffPointsBlock } from '../postnl-dropoff-points/block';
-import { getDeliveryDay, clearSessionData } from '../../utils/session-manager';
+import { clearSessionData } from '../../utils/session-manager';
 import {
 	batchSetExtensionData,
 	clearAllExtensionData,
@@ -27,6 +27,41 @@ import {
 	clearDropoffPointExtensionData,
 	isCountrySupported,
 } from '../../utils/extension-data-helper';
+
+/**
+ * Format a decimal amount as a WooCommerce-style price string using the
+ * currency settings exposed by WooCommerce Blocks via getSetting('currency').
+ *
+ * @param {number} amount - The amount in full currency units (e.g. 5.99).
+ * @return {string} Formatted price string (e.g. "€5,99").
+ */
+function formatAmount( amount ) {
+	const currency = getSetting( 'currency', {} );
+	const symbol = currency.symbol || '';
+	const position = currency.symbolPosition || 'left';
+	const decimal = currency.decimalSeparator || '.';
+	const thousand = currency.thousandSeparator || ',';
+	const precision = parseInt( currency.precision || 2, 10 );
+
+	const fixed = amount.toFixed( precision );
+	const [ intPart, decPart ] = fixed.split( '.' );
+	const formattedInt = intPart.replace( /\B(?=(\d{3})+(?!\d))/g, thousand );
+	const formattedNum =
+		decPart !== undefined
+			? `${ formattedInt }${ decimal }${ decPart }`
+			: formattedInt;
+
+	switch ( position ) {
+		case 'right':
+			return `${ formattedNum }${ symbol }`;
+		case 'left_space':
+			return `${ symbol }\u00a0${ formattedNum }`;
+		case 'right_space':
+			return `${ formattedNum }\u00a0${ symbol }`;
+		default:
+			return `${ symbol }${ formattedNum }`;
+	}
+}
 
 /**
  * Helper function to check if a value is empty.
@@ -92,14 +127,15 @@ export const Block = ( { checkoutExtensionData } ) => {
 		[ CART_STORE_KEY ]
 	);
 
-	const [ { extraDeliveryFee, extraDeliveryFeeFormatted }, setFeeState ] =
-		useState( () => {
-			const saved = getDeliveryDay();
-			return {
-				extraDeliveryFee: Number( saved.price || 0 ),
-				extraDeliveryFeeFormatted: saved.priceFormatted || '',
-			};
-		} );
+	// Initialise to zero — stale session data must NOT seed the initial state,
+	// as that was the root cause of the visible tab-price flicker on load.
+	const [ extraDeliveryFee, setExtraDeliveryFee ] = useState( 0 );
+
+	// Stable display values from PHP AJAX response — used in the tab formula
+	// instead of selectedShippingFee so tab prices don't flicker on tab switch.
+	const [ carrierBaseCost, setCarrierBaseCost ] = useState( 0 );
+	const [ deliveryDayFeeDisplay, setDeliveryDayFeeDisplay ] = useState( 0 );
+	const [ pickupFeeDisplay, setPickupFeeDisplay ] = useState( 0 );
 
 	const baseTabs = useMemo(
 		() => [
@@ -130,55 +166,55 @@ export const Block = ( { checkoutExtensionData } ) => {
 
 	const [ activeTab, setActiveTab ] = useState( baseTabs[ 0 ].id );
 
-	const [ carrierBaseCost, setCarrierBaseCost ] = useState(
-		() => selectedShippingFee - baseTabs[ 0 ].base - extraDeliveryFee
-	);
+	const [ isFreeShipping, setIsFreeShipping ] = useState( false );
 
-	const prevShipping = useRef( selectedShippingFee );
+	const [ showContainer, setShowContainer ] = useState( false );
+	const [ loading, setLoading ] = useState( false );
 
-	useEffect( () => {
-		if ( prevShipping.current === selectedShippingFee ) {
-			return;
-		}
-		prevShipping.current = selectedShippingFee;
+	const tabs = useMemo( () => {
+		return baseTabs.map( ( tab ) => {
+			const label =
+				tab.id === 'delivery_day'
+					? __( 'Delivery', 'postnl-for-woocommerce' )
+					: __( 'Pickup', 'postnl-for-woocommerce' );
 
-		const currentTabBase =
-			baseTabs.find( ( tab ) => tab.id === activeTab )?.base || 0;
-		const extra = activeTab === 'delivery_day' ? extraDeliveryFee : 0;
+			// Suppress fee display while loading, free shipping is active, or
+			// before we have received carrier_base_cost from the AJAX response.
+			if ( loading || isFreeShipping || carrierBaseCost <= 0 ) {
+				return { id: tab.id, name: label, base: tab.base };
+			}
 
-		const raw = selectedShippingFee - currentTabBase - extra;
-		setCarrierBaseCost( raw < 0 ? 0 : raw );
-	}, [ selectedShippingFee ] );
+			// Stable formula: all values are independent of which tab is active,
+			// so tab prices never flicker during tab switches.
+			//   carrier_base_cost  — raw carrier rate cost (no PostNL fees)
+			//   tabFee             — the tab's base fee from settings (tax-adjusted)
+			//   extra              — morning/evening extra, only for delivery_day tab
+			const tabFee =
+				tab.id === 'delivery_day'
+					? deliveryDayFeeDisplay
+					: pickupFeeDisplay;
+			const extra = tab.id === 'delivery_day' ? extraDeliveryFee : 0;
+			const total = carrierBaseCost + tabFee + extra;
 
-	const tabs = useMemo(
-		() =>
-			baseTabs.map( ( tab ) => {
-				let title =
-					tab.id === 'delivery_day'
-						? __( 'Delivery', 'postnl-for-woocommerce' )
-						: __( 'Pickup', 'postnl-for-woocommerce' );
+			if ( total <= 0 ) {
+				return { id: tab.id, name: label, base: tab.base };
+			}
 
-				const fees = [];
-				if ( tab.displayFormatted && tab.base > 0 ) {
-					fees.push( tab.displayFormatted );
-				}
-
-				if (
-					tab.id === 'delivery_day' &&
-					extraDeliveryFeeFormatted &&
-					extraDeliveryFee > 0
-				) {
-					fees.push( extraDeliveryFeeFormatted );
-				}
-
-				if ( fees.length > 0 ) {
-					title += ` (+${ fees.join( ' +' ) })`;
-				}
-
-				return { id: tab.id, name: title, base: tab.base };
-			} ),
-		[ baseTabs, extraDeliveryFee, extraDeliveryFeeFormatted ]
-	);
+			return {
+				id: tab.id,
+				name: `${ label } (${ formatAmount( total ) })`,
+				base: tab.base,
+			};
+		} );
+	}, [
+		baseTabs,
+		loading,
+		isFreeShipping,
+		carrierBaseCost,
+		deliveryDayFeeDisplay,
+		pickupFeeDisplay,
+		extraDeliveryFee,
+	] );
 
 	// Retrieve customer data from WooCommerce cart store
 	const customerData = useSelect(
@@ -193,18 +229,12 @@ export const Block = ( { checkoutExtensionData } ) => {
 	const { setShippingAddress, updateCustomerData } =
 		useDispatch( CART_STORE_KEY );
 
-	const [ showContainer, setShowContainer ] = useState( false );
-	const [ loading, setLoading ] = useState( false );
-
 	const [ deliveryOptions, setDeliveryOptions ] = useState( [] );
 	const [ dropoffOptions, setDropoffOptions ] = useState( [] );
 	const [ deliveryDaysEnabled, setDeliveryDaysEnabled ] = useState( true );
 
 	const handlePriceChange = useCallback( ( priceData ) => {
-		setFeeState( {
-			extraDeliveryFee: priceData.numeric || 0,
-			extraDeliveryFeeFormatted: priceData.formatted || '',
-		} );
+		setExtraDeliveryFee( priceData.numeric || 0 );
 	}, [] );
 
 	// To prevent infinite loops if we update the address programmatically
@@ -369,6 +399,16 @@ export const Block = ( { checkoutExtensionData } ) => {
 						setShowContainer( respData.show_container || false );
 						setDeliveryOptions( respData.delivery_options || [] );
 						setDropoffOptions( respData.dropoff_options || [] );
+						setIsFreeShipping( respData.is_free_shipping || false );
+						setCarrierBaseCost(
+							Number( respData.carrier_base_cost || 0 )
+						);
+						setDeliveryDayFeeDisplay(
+							Number( respData.delivery_day_fee_display || 0 )
+						);
+						setPickupFeeDisplay(
+							Number( respData.pickup_fee_display || 0 )
+						);
 
 						// Clear all PostNL data when container is hidden
 						if ( ! respData.show_container ) {

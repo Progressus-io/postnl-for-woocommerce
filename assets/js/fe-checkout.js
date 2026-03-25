@@ -13,6 +13,34 @@
 		}
 	}
 
+	/**
+	 * Format a numeric amount as a WooCommerce price string using the
+	 * currency settings provided in postnlParams.currency.
+	 *
+	 * @param {number} amount
+	 * @return {string}
+	 */
+	function formatPrice( amount ) {
+		var cur = ( postnlParams.currency ) || {};
+		var symbol = cur.symbol || '';
+		var position = cur.symbolPosition || 'left';
+		var decimal = cur.decimalSeparator || '.';
+		var thousand = cur.thousandSeparator || ',';
+		var precision = parseInt( cur.precision || 2, 10 );
+
+		var fixed = amount.toFixed( precision );
+		var parts = fixed.split( '.' );
+		var intPart = parts[ 0 ].replace( /\B(?=(\d{3})+(?!\d))/g, thousand );
+		var formatted = intPart + ( parts[ 1 ] !== undefined ? decimal + parts[ 1 ] : '' );
+
+		switch ( position ) {
+			case 'right':       return formatted + symbol;
+			case 'left_space':  return symbol + '\u00a0' + formatted;
+			case 'right_space': return formatted + '\u00a0' + symbol;
+			default:            return symbol + formatted;
+		}
+	}
+
 	function updateDeliveryDayTabFee() {
 		const $input = $(
 			'.postnl_checkout_tab_list .postnl_option[value="delivery_day"]'
@@ -22,45 +50,31 @@
 			return;
 		}
 
+		// data-base-fee now holds the full base total (carrier + tab fee).
 		const tabBase = parseFloat( $label.data( 'base-fee' ) || 0 );
 		let extraFee = 0;
-		let extraFeeFormatted = '';
 
 		if ( $input.is( ':checked' ) ) {
-			extraFee = parseFloat(
-				$( '#postnl_delivery_day_price' ).val() || 0
-			);
+			// Read the tax-adjusted display price from the selected delivery option li.
+			const $checkedLi = $( '.postnl_delivery_day_list .postnl_sub_radio:checked' ).closest( 'li' );
+			extraFee = parseFloat( $checkedLi.data( 'price-display' ) || 0 );
 			if ( isNaN( extraFee ) ) {
 				extraFee = 0;
 			}
-			// Get formatted price from selected delivery option
-			const $selected = $( '.postnl_sub_radio:checked' ).closest( 'li' );
-			if ( $selected.length ) {
-				extraFeeFormatted = $selected.data( 'price-formatted' ) || '';
-			}
 		}
 
+		const total = tabBase + extraFee;
 		let text = postnlParams.i18n.deliveryDays;
-		const fees = [];
 
-		// Add base fee if > 0
-		if ( tabBase > 0 && postnlParams.delivery_day_fee_formatted ) {
-			fees.push( postnlParams.delivery_day_fee_formatted );
-		}
-
-		if ( extraFee > 0 && extraFeeFormatted ) {
-			fees.push( extraFeeFormatted );
-		}
-
-		if ( fees.length > 0 ) {
-			text += ' (+' + fees.join( ' +' ) + ')';
+		if ( total > 0 ) {
+			text += ' (' + formatPrice( total ) + ')';
 		}
 
 		$label.children( 'span' ).first().text( text );
 	}
 
 	/*
-	 * Helper – refresh the "Pickup" tab title with base-fee.
+	 * Helper – refresh the "Pickup" tab title with the full base total.
 	 */
 	function updatePickupTabFee() {
 		const $input = $(
@@ -71,13 +85,12 @@
 			return;
 		}
 
+		// data-base-fee now holds the full base total (carrier + pickup fee).
 		const tabBase = parseFloat( $label.data( 'base-fee' ) || 0 );
-
 		let text = postnlParams.i18n.pickup;
 
-		// Add base fee if > 0.
-		if ( tabBase > 0 && postnlParams.pickup_fee_formatted ) {
-			text += ' (+' + postnlParams.pickup_fee_formatted + ')';
+		if ( tabBase > 0 ) {
+			text += ' (' + formatPrice( tabBase ) + ')';
 		}
 
 		$label.children( 'span' ).first().text( text );

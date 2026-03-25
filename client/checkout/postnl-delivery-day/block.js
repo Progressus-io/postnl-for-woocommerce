@@ -129,6 +129,7 @@ export const Block = ( {
 				firstDelivery.options.length > 0
 			) {
 				const firstOption = firstDelivery.options[ 0 ];
+				// handleOptionChange already calls onPriceChange internally.
 				handleOptionChange(
 					`${ firstDelivery.date }_${ firstOption.from }-${ firstOption.to }_${ firstOption.price }`,
 					firstDelivery.date,
@@ -136,12 +137,9 @@ export const Block = ( {
 					firstOption.to,
 					firstOption.type || 'Unknown',
 					firstOption.price || 0,
-					firstOption.price_formatted || ''
+					firstOption.price_formatted || '',
+					firstOption.price_display || 0
 				);
-				onPriceChange( {
-					numeric: Number( firstOption.price || 0 ),
-					formatted: firstOption.price_formatted || '',
-				} );
 			}
 		}
 	}, [ isActive, deliveryOptions ] );
@@ -153,7 +151,8 @@ export const Block = ( {
 		to,
 		type,
 		price,
-		priceFormatted = ''
+		priceFormatted = '',
+		priceDisplay = 0
 	) => {
 		const deliveryDayValue = `${ deliveryDate }_${ from }-${ to }_${ price }`;
 		const numericPrice = Number( price );
@@ -193,8 +192,8 @@ export const Block = ( {
 			type,
 		} );
 
-		// Notify parent of price change
-		onPriceChange( { numeric: numericPrice, formatted: priceFormatted } );
+		// Notify parent of price change — use tax-display-adjusted amount for tab label.
+		onPriceChange( { numeric: priceDisplay, formatted: priceFormatted } );
 
 		// Clear dropoff point data
 		clearDropoffPoint();
@@ -245,6 +244,8 @@ export const Block = ( {
 											const optionType =
 												option.type || 'Unknown';
 											const price = option.price || 0;
+											const priceDisplay =
+												option.price_display || 0;
 											const priceDisplayFormatted =
 												option.price_formatted || '';
 											const value = `${ delivery.date }_${ from }-${ to }_${ price }`;
@@ -302,7 +303,8 @@ export const Block = ( {
 																	to,
 																	optionType,
 																	price,
-																	priceDisplayFormatted
+																	priceDisplayFormatted,
+																	priceDisplay
 																)
 															}
 														/>

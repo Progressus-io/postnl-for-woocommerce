@@ -33,17 +33,9 @@ msgstr ""
 msgid "https://postnl.post/"
 msgstr ""
 
-#: src/Frontend/Base.php:146
+#: src/Frontend/Base.php:145
 msgid "Pick up at PostNL-point"
 msgstr "Ophalen bij PostNL-punt"
-
-#: src/Frontend/Base.php:510
-msgid "PostNL Evening Fee"
-msgstr "Toeslag avondbezorging"
-
-#: src/Frontend/Base.php:529
-msgid "PostNL Morning Fee"
-msgstr "Toeslag ochtendbezorging"
 
 #: src/Checkout_Blocks/Extend_Block_Core.php:104
 #: src/Frontend/Checkout_Fields.php:65
@@ -333,12 +325,12 @@ msgstr "Bezorgdatum:"
 msgid "Pickup Address:"
 msgstr "Afhaaladres:"
 
-#: src/Frontend/Base.php:171
+#: src/Frontend/Base.php:170
 #: src/Order/Single.php:328
 msgid "Date:"
 msgstr "Datum:"
 
-#: src/Frontend/Base.php:175
+#: src/Frontend/Base.php:174
 #: src/Order/Single.php:332
 msgid "Time:"
 msgstr "Tijd:"
@@ -1523,7 +1515,7 @@ msgid "PostNL Smart Returns"
 msgstr ""
 
 #. translators: %s: shop cart url
-#: src/Frontend/Base.php:240
+#: src/Frontend/Base.php:239
 msgid "Sorry, your session has expired. <a href=\"%s\" class=\"wc-backward\">Return to shop</a>"
 msgstr ""
 
@@ -1884,4 +1876,12 @@ msgstr "Bezorgdagen"
 
 #: src/Shipping_Method/Settings.php:208
 msgid "Activate this setting to use a home address for return shipments"
+msgstr ""
+
+#: src/Frontend/Base.php:450
+msgid "PostNL Evening Fee"
+msgstr ""
+
+#: src/Frontend/Base.php:469
+msgid "PostNL Morning Fee"
 msgstr ""

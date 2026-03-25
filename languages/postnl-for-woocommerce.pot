@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-03-25T15:21:17+00:00\n"
+"POT-Creation-Date: 2026-03-25T15:58:16+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.11.0\n"
 "X-Domain: postnl-for-woocommerce\n"
@@ -71,30 +71,30 @@ msgstr ""
 msgid "PostNL Smart Returns"
 msgstr ""
 
-#: src/Frontend/Base.php:146
+#: src/Frontend/Base.php:145
 msgid "Pick up at PostNL-point"
 msgstr ""
 
-#: src/Frontend/Base.php:171
+#: src/Frontend/Base.php:170
 #: src/Order/Single.php:328
 msgid "Date:"
 msgstr ""
 
-#: src/Frontend/Base.php:175
+#: src/Frontend/Base.php:174
 #: src/Order/Single.php:332
 msgid "Time:"
 msgstr ""
 
 #. translators: %s: shop cart url
-#: src/Frontend/Base.php:240
+#: src/Frontend/Base.php:239
 msgid "Sorry, your session has expired. <a href=\"%s\" class=\"wc-backward\">Return to shop</a>"
 msgstr ""
 
-#: src/Frontend/Base.php:510
+#: src/Frontend/Base.php:450
 msgid "PostNL Evening Fee"
 msgstr ""
 
-#: src/Frontend/Base.php:529
+#: src/Frontend/Base.php:469
 msgid "PostNL Morning Fee"
 msgstr ""
 

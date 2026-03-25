@@ -56,3 +56,4 @@ phpcs.xml
 
 postnl-for-woocommerce.zip
 woo-postnl.zip
+/pnpm-lock.yaml

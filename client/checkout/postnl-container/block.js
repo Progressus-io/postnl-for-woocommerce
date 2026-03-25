@@ -192,7 +192,7 @@ export const Block = ( { checkoutExtensionData } ) => {
 	);
 
 	const shippingAddress = customerData ? customerData.shippingAddress : null;
-	const { setShippingAddress, updateCustomerData } =
+	const { setShippingAddress } =
 		useDispatch( CART_STORE_KEY );
 
 	const [ showContainer, setShowContainer ] = useState( false );
@@ -211,6 +211,10 @@ export const Block = ( { checkoutExtensionData } ) => {
 
 	// To prevent infinite loops if we update the address programmatically
 	const isUpdatingAddress = useRef( false );
+
+	// Always holds the latest shippingAddress so AJAX callbacks don't use a
+	// stale closure value captured at debounce-start time.
+	const currentShippingAddressRef = useRef( null );
 
 	// Ref to store the previous shipping address
 	const previousShippingAddress = useRef( null );
@@ -243,6 +247,9 @@ export const Block = ( { checkoutExtensionData } ) => {
 
 	// Fetch data shipping address
 	useEffect( () => {
+		// Keep the ref current so AJAX callbacks always use the latest address.
+		currentShippingAddressRef.current = shippingAddress;
+
 		const country = shippingAddress?.country || '';
 		const isSupported = isCountrySupported( country, supportedCountries );
 		const wasSupported = isCountrySupported(
@@ -342,8 +349,13 @@ export const Block = ( { checkoutExtensionData } ) => {
 						) {
 							const { street, city, house_number } =
 								respData.validated_address;
+							// Use the ref (current store value) not the stale closure
+							// so fields the user filled in while the AJAX was in-flight
+							// are preserved.
+							const latestAddress =
+								currentShippingAddressRef.current || shippingAddress;
 							const newShippingAddress = {
-								...shippingAddress,
+								...latestAddress,
 								city,
 								'postnl/house_number': house_number,
 							};
@@ -355,14 +367,14 @@ export const Block = ( { checkoutExtensionData } ) => {
 							}
 
 							if (
-								shippingAddress.address_1 !== street ||
-								shippingAddress.city !== city ||
-								shippingAddress[ 'postnl/house_number' ] !==
+								latestAddress.address_1 !== street ||
+								latestAddress.city !== city ||
+								latestAddress[ 'postnl/house_number' ] !==
 									house_number
 							) {
 								isUpdatingAddress.current = true;
+								previousShippingAddress.current = { ...newShippingAddress };
 								setShippingAddress( newShippingAddress );
-								updateCustomerData( newShippingAddress );
 							}
 						}
 
@@ -412,7 +424,6 @@ export const Block = ( { checkoutExtensionData } ) => {
 		postnlData.nonce,
 		postnlData.is_nl_address_enabled,
 		setShippingAddress,
-		updateCustomerData,
 		clearAllPostNLData,
 		supportedCountries,
 	] );

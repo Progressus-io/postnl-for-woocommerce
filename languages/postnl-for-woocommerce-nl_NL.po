@@ -1460,7 +1460,7 @@ msgstr "Verzekerd Verzenden Plus"
 
 #: templates/checkout/postnl-container.php:23
 #: build/postnl-container-frontend.js:1
-#: client/checkout/postnl-container/block.js:583
+#: client/checkout/postnl-container/block.js:634
 msgid "These items are eligible for letterbox delivery."
 msgstr "Deze bestelling past door de brievenbus."
 
@@ -1530,14 +1530,14 @@ msgstr ""
 #: src/Frontend/Delivery_Day.php:115
 #: src/Shipping_Method/Settings.php:327
 #: build/postnl-container-frontend.js:1
-#: client/checkout/postnl-container/block.js:178
+#: client/checkout/postnl-container/block.js:228
 msgid "Delivery"
 msgstr "Bezorgdagen"
 
 #: src/Frontend/Container.php:111
 #: src/Frontend/Dropoff_Points.php:52
 #: build/postnl-container-frontend.js:1
-#: client/checkout/postnl-container/block.js:179
+#: client/checkout/postnl-container/block.js:229
 msgid "Pickup"
 msgstr "Ophalen"
 

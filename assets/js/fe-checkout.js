@@ -100,6 +100,16 @@
 		// init Class
 		init: function () {
 			jQuery( 'body' ).on( 'updated_checkout', function () {
+				// The PostNL container is rendered inside the WC order-review table via
+				// woocommerce_review_order_after_shipping. Browsers foster-parent the
+				// <div> out of <table>, making it a DOM sibling. Each WC fragment update
+				// inserts a fresh container alongside the stale one — remove all but
+				// the last (newest) so selectors always reach the current data.
+				var $containers = $( '#postnl_checkout_option' );
+				if ( $containers.length > 1 ) {
+					$containers.not( ':last' ).remove();
+				}
+
 				// Check if container visibility changed (for session clearing)
 				var containerVisible = !! document.getElementById(
 					'postnl_checkout_option'

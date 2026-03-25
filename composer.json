@@ -38,7 +38,9 @@
 			"jest-puppeteer.config.js",
 			".*",
 			"*.zip",
-			"jest.config.js"
+			"jest.config.js",
+			"AGENTS.md",
+			"CLAUDE.md"
 		]
 	},
 	"require-dev": {

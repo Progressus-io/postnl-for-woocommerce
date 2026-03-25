@@ -171,6 +171,56 @@ export const Block = ( { checkoutExtensionData } ) => {
 	const [ showContainer, setShowContainer ] = useState( false );
 	const [ loading, setLoading ] = useState( false );
 
+	// Snapshot of the latest fee state, updated synchronously every render so
+	// the selectedShippingFee effect below can read current values without
+	// listing them as dependencies (which would cause it to re-run on every fee
+	// change rather than only on shipping-method changes).
+	const feeSnapRef = useRef( null );
+	feeSnapRef.current = {
+		activeTab,
+		deliveryDayFeeDisplay,
+		pickupFeeDisplay,
+		extraDeliveryFee,
+		isFreeShipping,
+	};
+
+	// Becomes true after the first AJAX response — prevents the effect below
+	// from running before fee amounts are known, which would otherwise derive
+	// an incorrect carrier base on initial load.
+	const hasAjaxDataRef = useRef( false );
+
+	// When the selected shipping rate changes (user picked a different shipping
+	// method), back-calculate carrierBaseCost so tab prices update immediately
+	// without waiting for a new address-change AJAX call.
+	useEffect( () => {
+		if ( ! hasAjaxDataRef.current || selectedShippingFee <= 0 ) {
+			return;
+		}
+		const {
+			activeTab: tab,
+			deliveryDayFeeDisplay: ddFee,
+			pickupFeeDisplay: pickFee,
+			extraDeliveryFee: extra,
+			isFreeShipping: freeShip,
+		} = feeSnapRef.current;
+
+		if ( freeShip ) {
+			setCarrierBaseCost( 0 );
+			return;
+		}
+
+		// Subtract the PostNL fees currently injected into the selected rate
+		// for the active tab to recover the raw carrier base cost.
+		const injected =
+			tab === 'delivery_day'
+				? ddFee + extra
+				: tab === 'dropoff_points'
+				? pickFee
+				: 0;
+
+		setCarrierBaseCost( Math.max( 0, selectedShippingFee - injected ) );
+	}, [ selectedShippingFee ] );
+
 	const tabs = useMemo( () => {
 		return baseTabs.map( ( tab ) => {
 			const label =
@@ -399,6 +449,7 @@ export const Block = ( { checkoutExtensionData } ) => {
 						setShowContainer( respData.show_container || false );
 						setDeliveryOptions( respData.delivery_options || [] );
 						setDropoffOptions( respData.dropoff_options || [] );
+						hasAjaxDataRef.current = true;
 						setIsFreeShipping( respData.is_free_shipping || false );
 						setCarrierBaseCost(
 							Number( respData.carrier_base_cost || 0 )

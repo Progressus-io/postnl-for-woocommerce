@@ -390,6 +390,19 @@ class Settings extends \WC_Settings_API {
 				'for_country' => array( 'NL' ),
 				'class'       => 'wc_input_price country-nl',
 			),
+			'default_checkout_tab'            => array(
+				'title'       => __( 'Default Delivery Options Tab', 'postnl-for-woocommerce' ),
+				'type'        => 'select',
+				'description' => __( 'Choose which tab is shown first in the delivery options menu at checkout.', 'postnl-for-woocommerce' ),
+				'desc_tip'    => true,
+				'default'     => 'delivery_day',
+				'options'     => array(
+					'delivery_day'   => __( 'Home Delivery', 'postnl-for-woocommerce' ),
+					'dropoff_points' => __( 'Pickup Points', 'postnl-for-woocommerce' ),
+				),
+				'for_country' => array( 'NL', 'BE' ),
+				'class'       => 'country-nl country-be',
+			),
 			'transit_time'                    => array(
 				'title'       => esc_html__( 'Transit Time', 'postnl-for-woocommerce' ),
 				'type'        => 'number',
@@ -1121,6 +1134,16 @@ class Settings extends \WC_Settings_API {
 	 */
 	public function get_number_delivery_days() {
 		return $this->get_country_option( 'number_delivery_days' );
+	}
+
+	/**
+	 * Get default checkout tab from the settings.
+	 *
+	 * @return string 'delivery_day' or 'dropoff_points'
+	 */
+	public function get_default_checkout_tab() {
+		$value = $this->get_country_option( 'default_checkout_tab' );
+		return in_array( $value, array( 'delivery_day', 'dropoff_points' ), true ) ? $value : 'delivery_day';
 	}
 
 	/**

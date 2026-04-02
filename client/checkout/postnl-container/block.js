@@ -102,33 +102,49 @@ export const Block = ( { checkoutExtensionData } ) => {
 		} );
 
 	const baseTabs = useMemo(
-		() => [
-			{
-				id: 'delivery_day',
-				base: Number( postnlData.delivery_day_fee || 0 ),
-				displayFormatted: postnlData.delivery_day_fee_formatted || '',
-			},
-			...( postnlData.is_pickup_points_enabled
-				? [
-						{
-							id: 'dropoff_points',
-							base: Number( postnlData.pickup_fee || 0 ),
-							displayFormatted:
-								postnlData.pickup_fee_formatted || '',
-						},
-				  ]
-				: [] ),
-		],
+		() => {
+			const tabs = [
+				{
+					id: 'delivery_day',
+					base: Number( postnlData.delivery_day_fee || 0 ),
+					displayFormatted: postnlData.delivery_day_fee_formatted || '',
+				},
+				...( postnlData.is_pickup_points_enabled
+					? [
+							{
+								id: 'dropoff_points',
+								base: Number( postnlData.pickup_fee || 0 ),
+								displayFormatted:
+									postnlData.pickup_fee_formatted || '',
+							},
+					  ]
+					: [] ),
+			];
+			// Reorder: put the merchant's preferred default tab first in the DOM.
+			if (
+				postnlData.default_checkout_tab === 'dropoff_points' &&
+				tabs.length > 1
+			) {
+				return [ tabs[ 1 ], tabs[ 0 ] ];
+			}
+			return tabs;
+		},
 		[
 			postnlData.delivery_day_fee,
 			postnlData.delivery_day_fee_formatted,
 			postnlData.is_pickup_points_enabled,
 			postnlData.pickup_fee,
 			postnlData.pickup_fee_formatted,
+			postnlData.default_checkout_tab,
 		]
 	);
 
-	const [ activeTab, setActiveTab ] = useState( baseTabs[ 0 ].id );
+	// Default tab: use merchant setting if the tab exists, otherwise fall back to the first available tab.
+	const defaultTabId = postnlData.default_checkout_tab || baseTabs[ 0 ].id;
+	const initialTabId = baseTabs.find( ( tab ) => tab.id === defaultTabId )
+		? defaultTabId
+		: baseTabs[ 0 ].id;
+	const [ activeTab, setActiveTab ] = useState( initialTabId );
 
 	const [ carrierBaseCost, setCarrierBaseCost ] = useState(
 		() => selectedShippingFee - baseTabs[ 0 ].base - extraDeliveryFee

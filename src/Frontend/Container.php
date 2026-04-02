@@ -263,8 +263,21 @@ class Container {
 			return;
 		}
 
+		$tabs        = $this->get_available_tabs( $checkout_data['response'] );
+		$default_tab = $this->settings->get_default_checkout_tab();
+
+		// Reorder tabs so the merchant's preferred default tab appears first in the DOM.
+		if ( 'dropoff_points' === $default_tab ) {
+			usort(
+				$tabs,
+				function ( $a ) {
+					return 'dropoff_points' === $a['id'] ? -1 : 1;
+				}
+			);
+		}
+
 		$template_args = array(
-			'tabs'             => $this->get_available_tabs( $checkout_data['response'] ),
+			'tabs'             => $tabs,
 			'response'         => $checkout_data['response'],
 			'post_data'        => $checkout_data['post_data'],
 			'default_val'      => $this->get_default_value( $checkout_data['response'], $checkout_data['post_data'] ),
@@ -277,6 +290,7 @@ class Container {
 			),
 			'pickup_fee'       => (float) $this->settings->get_pickup_delivery_fee(),
 			'delivery_day_fee' => (float) $this->settings->get_delivery_days_fee(),
+			'default_tab'      => $default_tab,
 		);
 
 		wc_get_template( 'checkout/postnl-container.php', $template_args, '', POSTNL_WC_PLUGIN_DIR_PATH . '/templates/' );

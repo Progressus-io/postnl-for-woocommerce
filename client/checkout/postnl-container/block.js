@@ -215,6 +215,10 @@ export const Block = ( { checkoutExtensionData } ) => {
 	const [ dropoffOptions, setDropoffOptions ] = useState( [] );
 	const [ deliveryDaysEnabled, setDeliveryDaysEnabled ] = useState( true );
 
+	useEffect( () => {
+		clearBackendDeliveryFee();
+	}, [] );
+
 	const handlePriceChange = useCallback( ( priceData ) => {
 		setFeeState( {
 			extraDeliveryFee: priceData.numeric || 0,

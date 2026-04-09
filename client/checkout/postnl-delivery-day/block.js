@@ -149,6 +149,17 @@ export const Block = ( {
 				numeric: Number( saved.price || 0 ),
 				formatted: saved.priceFormatted || '',
 			} );
+			const { extensionCartUpdate } = window.wc?.blocksCheckout || {};
+			if ( typeof extensionCartUpdate === 'function' ) {
+				extensionCartUpdate( {
+					namespace: 'postnl',
+					data: {
+						action: 'update_delivery_fee',
+						price: saved.price || 0,
+						type: saved.type || 'Standard',
+					},
+				} );
+			}
 		}
 	}, [ isActive, deliveryOptions ] );
 

@@ -11,7 +11,22 @@
             this.display_return_shipment_and_labels_all();
 			this.display_printer_type_resolution_field();
             this.init_merchant_codes_repeater();
+            jQuery( '#woocommerce_postnl_enable_pickup_points' ).on( 'change', this.toggle_default_checkout_tab );
+            jQuery( '#woocommerce_postnl_enable_delivery_days' ).on( 'change', this.toggle_default_checkout_tab );
+            this.toggle_default_checkout_tab();
 		},
+
+		toggle_default_checkout_tab: function() {
+            var pickupEnabled       = jQuery( '#woocommerce_postnl_enable_pickup_points' ).is( ':checked' );
+            var deliveryDaysField   = jQuery( '#woocommerce_postnl_enable_delivery_days' );
+            var deliveryDaysEnabled = deliveryDaysField.length > 0 && deliveryDaysField.is( ':checked' );
+
+            if ( pickupEnabled && deliveryDaysEnabled ) {
+                jQuery( '#woocommerce_postnl_default_checkout_tab' ).closest( 'tr' ).show();
+            } else {
+                jQuery( '#woocommerce_postnl_default_checkout_tab' ).val( 'delivery_day' ).closest( 'tr' ).hide();
+            }
+        },
 
 
 		display_api_key_field: function() {

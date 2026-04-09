@@ -266,14 +266,15 @@ class Container {
 		$tabs        = $this->get_available_tabs( $checkout_data['response'] );
 		$default_tab = $this->settings->get_default_checkout_tab();
 
-		// Reorder tabs so the merchant's preferred default tab appears first in the DOM.
-		if ( 'dropoff_points' === $default_tab ) {
-			usort(
-				$tabs,
-				function ( $a ) {
-					return 'dropoff_points' === $a['id'] ? -1 : 1;
-				}
-			);
+		$tab_ids = array_column( $tabs, 'id' );
+		if ( ! empty( $tabs ) && ! in_array( $default_tab, $tab_ids, true ) ) {
+			$default_tab = $tabs[0]['id'];
+		}
+
+		if ( 'dropoff_points' === $default_tab && count( $tabs ) > 1 ) {
+			$preferred = array_filter( $tabs, static fn( $t ) => $t['id'] === $default_tab );
+			$rest      = array_filter( $tabs, static fn( $t ) => $t['id'] !== $default_tab );
+			$tabs      = array_merge( array_values( $preferred ), array_values( $rest ) );
 		}
 
 		$template_args = array(

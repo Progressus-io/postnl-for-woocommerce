@@ -1143,7 +1143,13 @@ class Settings extends \WC_Settings_API {
 	 */
 	public function get_default_checkout_tab() {
 		$value = $this->get_country_option( 'default_checkout_tab' );
-		return in_array( $value, array( 'delivery_day', 'dropoff_points' ), true ) ? $value : 'delivery_day';
+		if ( in_array( $value, array( 'delivery_day', 'dropoff_points' ), true ) ) {
+			return $value;
+		}
+		if ( 'BE' === Utils::get_base_country() ) {
+			return 'dropoff_points';
+		}
+		return 'delivery_day';
 	}
 
 	/**

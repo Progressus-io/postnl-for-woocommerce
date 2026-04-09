@@ -93,12 +93,9 @@ export const Block = ( { checkoutExtensionData } ) => {
 	);
 
 	const [ { extraDeliveryFee, extraDeliveryFeeFormatted }, setFeeState ] =
-		useState( () => {
-			const saved = getDeliveryDay();
-			return {
-				extraDeliveryFee: Number( saved.price || 0 ),
-				extraDeliveryFeeFormatted: saved.priceFormatted || '',
-			};
+		useState( {
+			extraDeliveryFee: 0,
+			extraDeliveryFeeFormatted: '',
 		} );
 
 	const baseTabs = useMemo(
@@ -146,9 +143,11 @@ export const Block = ( { checkoutExtensionData } ) => {
 		: baseTabs[ 0 ].id;
 	const [ activeTab, setActiveTab ] = useState( initialTabId );
 
-	const [ carrierBaseCost, setCarrierBaseCost ] = useState(
-		() => selectedShippingFee - baseTabs[ 0 ].base - extraDeliveryFee
-	);
+	const [ carrierBaseCost, setCarrierBaseCost ] = useState( () => {
+		const activeBase = baseTabs.find( ( tab ) => tab.id === initialTabId )?.base ?? 0;
+		const extra = initialTabId === 'delivery_day' ? extraDeliveryFee : 0;
+		return selectedShippingFee - activeBase - extra;
+	} );
 
 	const prevShipping = useRef( selectedShippingFee );
 

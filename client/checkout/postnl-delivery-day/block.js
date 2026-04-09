@@ -143,6 +143,12 @@ export const Block = ( {
 					formatted: firstOption.price_formatted || '',
 				} );
 			}
+		} else if ( isActive && selection.selectedOption ) {
+			const saved = getDeliveryDay();
+			onPriceChange( {
+				numeric: Number( saved.price || 0 ),
+				formatted: saved.priceFormatted || '',
+			} );
 		}
 	}, [ isActive, deliveryOptions ] );
 

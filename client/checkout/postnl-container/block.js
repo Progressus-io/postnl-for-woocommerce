@@ -141,7 +141,10 @@ export const Block = ( { checkoutExtensionData } ) => {
 	const initialTabId = baseTabs.find( ( tab ) => tab.id === defaultTabId )
 		? defaultTabId
 		: baseTabs[ 0 ].id;
-	const [ activeTab, setActiveTab ] = useState( initialTabId );
+	const [ activeTab, setActiveTab ] = useState( null );
+	useEffect( () => {
+		setActiveTab( initialTabId );
+	}, [] );
 
 	const [ carrierBaseCost, setCarrierBaseCost ] = useState( () => {
 		const activeBase = baseTabs.find( ( tab ) => tab.id === initialTabId )?.base ?? 0;

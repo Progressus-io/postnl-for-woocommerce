@@ -59,7 +59,7 @@ msgid "Street Name"
 msgstr "Straat"
 
 #: src/Checkout_Blocks/Extend_Block_Core.php:89
-#: src/Frontend/Container.php:429
+#: src/Frontend/Container.php:459
 msgid "This is not a valid address!"
 msgstr "Dit is geen geldig adres!"
 
@@ -1494,7 +1494,7 @@ msgstr ""
 msgid "Leave a review"
 msgstr "Laat een beoordeling achter"
 
-#: src/Checkout_Blocks/Extend_Block_Core.php:387
+#: src/Checkout_Blocks/Extend_Block_Core.php:417
 msgid "Postcode or house number is missing."
 msgstr ""
 

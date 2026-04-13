@@ -185,6 +185,12 @@ class Extend_Block_Core {
 				continue;
 			}
 
+			// PostNL threshold-based free shipping: the rate was registered with
+			// cost = 0 by PostNL::calculate_shipping(). Do not inject any fees.
+			if ( 0.0 === (float) $rate->cost ) {
+				continue;
+			}
+
 			$extra = 0;
 
 			if ( 'Pickup' === $session_type && $pickup_fee > 0 ) {
@@ -251,6 +257,30 @@ class Extend_Block_Core {
 		}
 
 		return 0.0;
+	}
+
+	/**
+	 * Check whether a supported PostNL shipping method is the chosen method.
+	 *
+	 * Used to detect PostNL threshold-based free shipping: if a PostNL method is
+	 * selected but its carrier base cost is 0, the minimum_for_free_shipping
+	 * threshold has been reached and all PostNL fees should be suppressed.
+	 *
+	 * @return bool
+	 */
+	private function is_postnl_method_chosen(): bool {
+		$chosen    = WC()->session ? WC()->session->get( 'chosen_shipping_methods', array() ) : array();
+		$packages  = WC()->shipping()->get_packages();
+		$supported = $this->settings->get_supported_shipping_methods();
+
+		foreach ( $packages as $i => $package ) {
+			$method_key = $chosen[ $i ] ?? '';
+			if ( isset( $package['rates'][ $method_key ] ) && in_array( $package['rates'][ $method_key ]->get_method_id(), $supported, true ) ) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	/**
@@ -462,9 +492,17 @@ class Extend_Block_Core {
 		$is_free_shipping = Utils::is_free_shipping_applied();
 
 		// Compute tax-display-adjusted values for block checkout tab labels.
-		$carrier_base_cost        = Utils::get_fee_total_price( $this->get_carrier_base_cost_for_blocks() );
+		$raw_carrier_base_cost    = $this->get_carrier_base_cost_for_blocks();
+		$carrier_base_cost        = Utils::get_fee_total_price( $raw_carrier_base_cost );
 		$delivery_day_fee_display = Utils::get_fee_total_price( (float) $this->settings->get_delivery_days_fee() );
 		$pickup_fee_display       = Utils::get_fee_total_price( (float) $this->settings->get_pickup_delivery_fee() );
+
+		// PostNL threshold-based free shipping: a PostNL method is selected but its
+		// rate was registered with cost = 0 (minimum_for_free_shipping reached).
+		if ( ! $is_free_shipping && 0.0 === $raw_carrier_base_cost && $this->is_postnl_method_chosen() ) {
+			$is_free_shipping  = true;
+			$carrier_base_cost = 0.0;
+		}
 
 		// **Letterbox is Eligible**
 		if ( $letterbox ) {

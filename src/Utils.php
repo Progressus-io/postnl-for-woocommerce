@@ -1120,10 +1120,15 @@ class Utils {
 	/**
 	 * Check whether free shipping is currently active for the cart.
 	 *
-	 * Returns true when any applied coupon grants free shipping. This is used
-	 * to suppress PostNL base-fee injection and morning/evening cart fees so
-	 * that no extra shipping charges appear when the cart qualifies for free
-	 * shipping.
+	 * Returns true when any of the following apply:
+	 * - An applied coupon grants free shipping.
+	 * - The WooCommerce native "Free Shipping" method (method_id: free_shipping)
+	 *   is the currently selected shipping method.
+	 *
+	 * This is used to suppress PostNL base-fee injection and morning/evening cart
+	 * fees so that no extra shipping charges appear when the cart qualifies for
+	 * free shipping. Note: PostNL's own minimum_for_free_shipping threshold is
+	 * handled separately per rate in the fee injection filters.
 	 *
 	 * @return bool
 	 */
@@ -1135,6 +1140,16 @@ class Utils {
 		foreach ( WC()->cart->get_coupons() as $coupon ) {
 			if ( $coupon->get_free_shipping() ) {
 				return true;
+			}
+		}
+
+		// WooCommerce native "Free Shipping" method selected.
+		if ( WC()->session ) {
+			$chosen = WC()->session->get( 'chosen_shipping_methods', array() );
+			foreach ( $chosen as $method_key ) {
+				if ( 0 === strpos( (string) $method_key, 'free_shipping' ) ) {
+					return true;
+				}
 			}
 		}
 

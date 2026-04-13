@@ -28,6 +28,7 @@ PostNL’s official extension for WooCommerce on WordPress. Manage your national
 ## Changelog
 
 ### 5.9.5
+* Add: Ability to set the default checkout tab (Delivery or Pickup) from the PostNL checkout settings.
 * Fix: Update translations.
 
 ### 5.9.4

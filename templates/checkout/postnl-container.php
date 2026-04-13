@@ -25,12 +25,12 @@ $field = array_shift( $fields );
 		<div id="postnl_checkout_option" class="postnl_checkout_container <?php echo esc_attr( $letterbox ? 'is-hidden' : '' ); ?>">
 			<div class="postnl_checkout_tab_container">
 				<ul class="postnl_checkout_tab_list">
-                    <?php foreach ( $tabs as $index => $field_tab ) { ?>
-                        <?php
-                        $is_checked      = ( $field['value'] === $field_tab['id'] ) || ( empty( $field['value'] ) && $field_tab['id'] === $default_tab );
-                        $active_class    = ( $is_checked ) ? 'active' : '';
-                        $display_checked = ( $is_checked ) ? 'checked="checked"' : '';
-                        ?>
+					<?php foreach ( $tabs as $field_tab ) { ?>
+						<?php
+						$is_checked      = ( $field['value'] === $field_tab['id'] ) || ( empty( $field['value'] ) && $field_tab['id'] === $default_tab );
+						$active_class    = ( $is_checked ) ? 'active' : '';
+						$display_checked = ( $is_checked ) ? 'checked="checked"' : '';
+						?>
 
 						<li class="<?php echo esc_attr( $active_class ); ?>">
 							<label

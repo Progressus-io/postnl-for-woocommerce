@@ -486,4 +486,39 @@ abstract class Base {
 			'Evening'     => self::evening_fee_data(),
 		);
 	}
+
+	/**
+	 * Check whether the chosen PostNL shipping rate has cost = 0.
+	 *
+	 * Returns true when the currently selected shipping method is a supported
+	 * PostNL method and its rate cost is zero — meaning the store's
+	 * minimum_for_free_shipping threshold has been reached.
+	 *
+	 * @return bool
+	 */
+	protected function is_postnl_rate_free(): bool {
+		if ( ! WC()->session ) {
+			return false;
+		}
+
+		$chosen    = WC()->session->get( 'chosen_shipping_methods', array() );
+		$packages  = WC()->shipping()->get_packages();
+		$supported = $this->settings->get_supported_shipping_methods();
+
+		foreach ( $packages as $i => $package ) {
+			$method_key = $chosen[ $i ] ?? '';
+
+			if ( ! isset( $package['rates'][ $method_key ] ) ) {
+				continue;
+			}
+
+			$rate = $package['rates'][ $method_key ];
+
+			if ( in_array( $rate->get_method_id(), $supported, true ) && 0.0 === (float) $rate->cost ) {
+				return true;
+			}
+		}
+
+		return false;
+	}
 }

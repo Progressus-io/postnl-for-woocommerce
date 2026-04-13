@@ -118,11 +118,13 @@ export const Block = ( { checkoutExtensionData } ) => {
 					: [] ),
 			];
 			// Reorder: put the merchant's preferred default tab first in the DOM.
-			if (
-				postnlData.default_checkout_tab === 'dropoff_points' &&
-				tabs.length > 1
-			) {
-				return [ tabs[ 1 ], tabs[ 0 ] ];
+			const preferredIdx = tabs.findIndex(
+				( t ) => t.id === postnlData.default_checkout_tab
+			);
+			if ( preferredIdx > 0 ) {
+				const reordered = [ ...tabs ];
+				reordered.unshift( reordered.splice( preferredIdx, 1 )[ 0 ] );
+				return reordered;
 			}
 			return tabs;
 		},
@@ -219,7 +221,9 @@ export const Block = ( { checkoutExtensionData } ) => {
 	const [ deliveryDaysEnabled, setDeliveryDaysEnabled ] = useState( true );
 
 	useEffect( () => {
-		clearBackendDeliveryFee();
+		if ( initialTabId !== 'delivery_day' ) {
+			clearBackendDeliveryFee();
+		}
 	}, [] );
 
 	const handlePriceChange = useCallback( ( priceData ) => {

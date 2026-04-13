@@ -82,6 +82,8 @@ export const Block = ( {
 		};
 	} );
 
+	const [ isPending, setIsPending ] = useState( false );
+
 	// Sync with extension data when selection changes (debounced)
 	useEffect( () => {
 		debouncedBatchUpdate( {
@@ -201,6 +203,7 @@ export const Block = ( {
 
 		// Update cart fees on backend
 		try {
+			setIsPending( true );
 			const { extensionCartUpdate } = window.wc?.blocksCheckout || {};
 			if ( typeof extensionCartUpdate === 'function' ) {
 				await extensionCartUpdate( {
@@ -214,6 +217,8 @@ export const Block = ( {
 			}
 		} catch ( error ) {
 			// Handle error silently
+		} finally {
+			setIsPending( false );
 		}
 	};
 
@@ -224,7 +229,10 @@ export const Block = ( {
 	return (
 		<div className="postnl-block-container">
 			{ deliveryOptions.length > 0 && (
-				<ul className="postnl_delivery_day_list postnl_list">
+				<ul
+					className={ `postnl_delivery_day_list postnl_list${ isPending ? ' postnl-updating' : '' }` }
+					aria-busy={ isPending }
+				>
 					{ deliveryOptions.map( ( delivery, index ) => {
 						return (
 							<li key={ index }>

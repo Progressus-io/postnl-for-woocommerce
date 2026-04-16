@@ -497,6 +497,11 @@ class Extend_Block_Core {
 		$delivery_day_fee_display = Utils::get_fee_total_price( (float) $this->settings->get_delivery_days_fee() );
 		$pickup_fee_display       = Utils::get_fee_total_price( (float) $this->settings->get_pickup_delivery_fee() );
 
+		// The WC Store API returns shipping rate `price` as the ex-tax cost.
+		// The JS back-calculation must compensate by multiplying the ex-tax rate
+		// cost by this ratio before subtracting the incl-tax PostNL fee amounts.
+		$tax_ratio = Utils::get_fee_total_price( 1.0 );
+
 		// PostNL threshold-based free shipping: a PostNL method is selected but its
 		// rate was registered with cost = 0 (minimum_for_free_shipping reached).
 		if ( ! $is_free_shipping && 0.0 === $raw_carrier_base_cost && $this->is_postnl_method_chosen() ) {
@@ -518,6 +523,7 @@ class Extend_Block_Core {
 					'carrier_base_cost'        => $carrier_base_cost,
 					'delivery_day_fee_display' => $delivery_day_fee_display,
 					'pickup_fee_display'       => $pickup_fee_display,
+					'tax_ratio'                => $tax_ratio,
 				),
 				200
 			);
@@ -559,6 +565,7 @@ class Extend_Block_Core {
 					'carrier_base_cost'        => $carrier_base_cost,
 					'delivery_day_fee_display' => $delivery_day_fee_display,
 					'pickup_fee_display'       => $pickup_fee_display,
+					'tax_ratio'                => $tax_ratio,
 				),
 				200
 			);

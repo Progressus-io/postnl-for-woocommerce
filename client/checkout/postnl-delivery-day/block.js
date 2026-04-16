@@ -45,6 +45,7 @@ export const Block = ( {
 	deliveryOptions,
 	isDeliveryDaysEnabled,
 	onPriceChange = () => {},
+	isFreeShipping = false,
 } ) => {
 	const { setExtensionData } = checkoutExtensionData;
 
@@ -316,7 +317,8 @@ export const Block = ( {
 																)
 															}
 														/>
-														{ priceDisplayFormatted &&
+														{ ! isFreeShipping &&
+															priceDisplayFormatted &&
 															price > 0 && (
 																<i>
 																	+

@@ -196,12 +196,27 @@ export const Block = ( { checkoutExtensionData } ) => {
 	const hasAjaxDataRef = useRef( false );
 
 	// When the selected shipping rate changes (user picked a different shipping
-	// method), back-calculate carrierBaseCost so tab prices update immediately
-	// without waiting for a new address-change AJAX call.
+	// method), update isFreeShipping and back-calculate carrierBaseCost so tab
+	// prices update immediately without waiting for a new address-change AJAX call.
 	useEffect( () => {
-		if ( ! hasAjaxDataRef.current || selectedShippingFee <= 0 ) {
+		if ( ! hasAjaxDataRef.current ) {
 			return;
 		}
+
+		// When the selected rate has no cost, treat as free shipping for display
+		// purposes. This handles both WC native free-shipping methods and PostNL
+		// threshold-based free shipping, and covers the case where the user
+		// switches methods without triggering a new address-change AJAX call.
+		if ( selectedShippingFee <= 0 ) {
+			setIsFreeShipping( true );
+			setCarrierBaseCost( 0 );
+			return;
+		}
+
+		// A paid method is now selected — clear the free-shipping flag so prices
+		// are shown again, then back-calculate the carrier base cost from the rate.
+		setIsFreeShipping( false );
+
 		const {
 			activeTab: tab,
 			deliveryDayFeeDisplay: ddFee,
@@ -609,6 +624,7 @@ export const Block = ( { checkoutExtensionData } ) => {
 								deliveryOptions={ deliveryOptions }
 								isDeliveryDaysEnabled={ deliveryDaysEnabled }
 								onPriceChange={ handlePriceChange }
+								isFreeShipping={ isFreeShipping }
 							/>
 						</div>
 						{ postnlData.is_pickup_points_enabled && (

@@ -137,6 +137,11 @@ export const Block = ( { checkoutExtensionData } ) => {
 	const [ deliveryDayFeeDisplay, setDeliveryDayFeeDisplay ] = useState( 0 );
 	const [ pickupFeeDisplay, setPickupFeeDisplay ] = useState( 0 );
 
+	// Shipping tax ratio: (1 + shipping_tax_rate) when prices include tax, else 1.
+	// The WC Store API returns rate.price as the ex-tax cost, so we multiply it
+	// by this ratio before subtracting the incl-tax PostNL fees in the back-calc.
+	const [ taxRatio, setTaxRatio ] = useState( 1 );
+
 	const baseTabs = useMemo(
 		() => [
 			{
@@ -182,6 +187,7 @@ export const Block = ( { checkoutExtensionData } ) => {
 		pickupFeeDisplay,
 		extraDeliveryFee,
 		isFreeShipping,
+		taxRatio,
 	};
 
 	// Becomes true after the first AJAX response — prevents the effect below
@@ -201,16 +207,14 @@ export const Block = ( { checkoutExtensionData } ) => {
 			deliveryDayFeeDisplay: ddFee,
 			pickupFeeDisplay: pickFee,
 			extraDeliveryFee: extra,
-			isFreeShipping: freeShip,
+			taxRatio: ratio,
 		} = feeSnapRef.current;
 
-		if ( freeShip ) {
-			setCarrierBaseCost( 0 );
-			return;
-		}
-
-		// Subtract the PostNL fees currently injected into the selected rate
-		// for the active tab to recover the raw carrier base cost.
+		// The WC Store API exposes the shipping rate cost WITHOUT tax (rate.cost).
+		// Our display fees (ddFee, extra, pickFee) are tax-inclusive values from
+		// get_fee_total_price(). Multiplying the ex-tax fee by ratio converts it
+		// to the same incl-tax basis so the subtraction recovers the correct
+		// carrier base cost for display.
 		const injected =
 			tab === 'delivery_day'
 				? ddFee + extra
@@ -218,7 +222,7 @@ export const Block = ( { checkoutExtensionData } ) => {
 				? pickFee
 				: 0;
 
-		setCarrierBaseCost( Math.max( 0, selectedShippingFee - injected ) );
+		setCarrierBaseCost( Math.max( 0, selectedShippingFee * ratio - injected ) );
 	}, [ selectedShippingFee ] );
 
 	const tabs = useMemo( () => {
@@ -460,6 +464,7 @@ export const Block = ( { checkoutExtensionData } ) => {
 						setPickupFeeDisplay(
 							Number( respData.pickup_fee_display || 0 )
 						);
+						setTaxRatio( Number( respData.tax_ratio || 1 ) );
 
 						// Clear all PostNL data when container is hidden
 						if ( ! respData.show_container ) {

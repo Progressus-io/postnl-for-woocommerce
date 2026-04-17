@@ -419,9 +419,12 @@ class Single extends Base {
 			<?php $this->generate_pickup_points_html( $pickup_info ); ?>
 			<?php Utils::fields_generator( $available_fields ); ?>
 			<div class="button-container">
-				<button class="button button-primary button-save-form"><?php esc_html_e( 'Create Shipment', 'postnl-for-woocommerce' ); ?></button>
-				<a href="<?php echo esc_url( $this->get_download_label_url( $order->get_id() ) ); ?>"
-					class="button button-primary button-download-label"><?php esc_html_e( 'Print Label', 'postnl-for-woocommerce' ); ?></a>
+				<button class="button button-primary button-print-label"
+					data-print-url="<?php echo esc_url( $this->get_print_label_url( $order->get_id() ) ); ?>"
+				><?php esc_html_e( 'Print Label', 'postnl-for-woocommerce' ); ?></button>
+				<button class="button button-secondary button-download-label"
+					data-download-url="<?php echo esc_url( $this->get_download_label_url( $order->get_id() ) ); ?>"
+				><?php esc_html_e( 'Download Label', 'postnl-for-woocommerce' ); ?></button>
 				<a class="button button-secondary delete-label"
 					href="#"><?php esc_html_e( 'Delete Label', 'postnl-for-woocommerce' ); ?></a>
 			</div>

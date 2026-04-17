@@ -24,18 +24,6 @@
     width:50px;
 }
 
-#shipment-postnl-label-form.generated .button-save-form {
-    display:none;
-}
-
-#shipment-postnl-label-form .button-download-label {
-    display:none;
-}
-
-#shipment-postnl-label-form.generated .button-download-label {
-    display:inline-block;
-}
-
 #shipment-postnl-label-form .delete-label {
     display:none;
 }

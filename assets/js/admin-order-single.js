@@ -8,14 +8,90 @@
 		init: function() {
 			jQuery( '#shipment-postnl-label-form' )
 				.on( 'click', 'a.delete-label', this.delete_label )
-				.on( 'click', 'button.button-save-form', this.save_form )
+				.on( 'click', 'button.button-print-label', this.print_label )
+				.on( 'click', 'button.button-download-label', this.download_label )
 				.on( 'click', 'button.button-activate-return', this.activate_return )
 				.on( 'click', 'button.button-send-smart-return', this.send_smart_return );
 		},
 
-		// When a user enters a new tracking item
-		save_form: function () {
-			var error_cont = label_form.find( '#shipment-postnl-error-text' );
+		build_save_data: function() {
+			var data = {
+				action:   'postnl_order_save_form',
+				order_id: woocommerce_admin_meta_boxes.post_id,
+			};
+
+			for ( var i = 0; i < postnl_admin_order_obj.fields.length; i++ ) {
+				var field_name  = postnl_admin_order_obj.fields[ i ];
+				var maybe_field = label_form.find( '#' + field_name );
+
+				if ( ! maybe_field.is( ':input' ) ) {
+					continue;
+				}
+
+				if ( 'checkbox' === maybe_field.prop( 'type' ) ) {
+					data[ field_name ] = maybe_field.is( ':checked' ) ? maybe_field.val() : '';
+				} else {
+					data[ field_name ] = maybe_field.val();
+				}
+			}
+
+			return data;
+		},
+
+		handle_label_created: function( response ) {
+			label_form.addClass( 'generated' );
+
+			for ( let field in response.data.backend ) {
+				jQuery( '#postnl_' + field ).prop( 'disabled', true );
+
+				if ( 'create_return_label' === field && 'yes' === response.data.backend[ field ] ) {
+					label_form.addClass( 'has-return' );
+				}
+
+				if ( 'letterbox' === field && 'yes' === response.data.backend[ field ] ) {
+					label_form.addClass( 'has-letterbox' );
+				}
+			}
+
+			if ( response.data.tracking_note ) {
+				$( '#woocommerce-order-notes' ).block( {
+					message: null,
+					overlayCSS: {
+						background: '#fff',
+						opacity: 0.6
+					}
+				} );
+
+				var note_data = {
+					action:    'woocommerce_add_order_note',
+					post_id:   woocommerce_admin_meta_boxes.post_id,
+					note_type: response.data.note_type,
+					note:      response.data.tracking_note,
+					security:  woocommerce_admin_meta_boxes.add_order_note_nonce
+				};
+
+				$.post( woocommerce_admin_meta_boxes.ajax_url, note_data, function( response_note ) {
+					$( 'ul.order_notes' ).prepend( response_note );
+					$( '#woocommerce-order-notes' ).unblock();
+					$( '#add_order_note' ).val( '' );
+				} );
+			}
+		},
+
+		print_label: function() {
+			// Open window synchronously before AJAX to avoid popup blocker.
+			var printWindow  = window.open( '', '_blank' );
+			var printUrl     = $( this ).data( 'print-url' );
+			var error_cont   = label_form.find( '#shipment-postnl-error-text' );
+			error_cont.empty();
+
+			if ( label_form.hasClass( 'generated' ) ) {
+				printWindow.location.href = printUrl;
+				printWindow.onload = function() {
+					printWindow.print();
+				};
+				return false;
+			}
 
 			label_form.block( {
 				message: null,
@@ -25,77 +101,65 @@
 				}
 			} );
 
-			error_cont.empty();
-			
-			var data = {
-				action:   'postnl_order_save_form',
-				order_id: woocommerce_admin_meta_boxes.post_id,
-			};
-			
-			for ( var i = 0; i < postnl_admin_order_obj.fields.length; i++ ) {
-				var field_name = postnl_admin_order_obj.fields[ i ];
-				var maybe_field = label_form.find( '#' + postnl_admin_order_obj.fields[ i ] );
-
-				if ( ! maybe_field.is( ':input' ) ) {
-					continue;
-				}
-				
-				if ( 'checkbox' === maybe_field.prop( 'type' ) ) {
-					data[ field_name ] = maybe_field.is( ':checked' ) ? maybe_field.val() : '';
-				} else {
-					data[ field_name ] = maybe_field.val();
-				}
-			}
-
-			$.post( woocommerce_admin_meta_boxes.ajax_url, data, function( response ) {
+			$.post( woocommerce_admin_meta_boxes.ajax_url, postnl_order_single.build_save_data(), function( response ) {
 				label_form.unblock();
 
 				if ( true === response.success ) {
-					label_form.addClass( 'generated' );
+					postnl_order_single.handle_label_created( response );
+					printWindow.location.href = printUrl;
+					printWindow.onload = function() {
+						printWindow.print();
+					};
+				} else {
+					printWindow.close();
+					var error_text = response.data.hasOwnProperty( 'message' ) ? response.data.message : 'Unknown error!';
+					error_cont.html( error_text );
+				}
+			} );
 
-					for (let field in response.data.backend ) {
-						jQuery( '#postnl_' + field ).prop( 'disabled', true );
+			return false;
+		},
 
-						if ( 'create_return_label' === field && 'yes' === response.data.backend[ field ] ) {
-							label_form.addClass( 'has-return' );
-						}
+		download_label: function() {
+			var downloadUrl = $( this ).data( 'download-url' );
+			var error_cont  = label_form.find( '#shipment-postnl-error-text' );
+			error_cont.empty();
 
-						if ( 'letterbox' === field && 'yes' === response.data.backend[ field ] ) {
-							label_form.addClass( 'has-letterbox' );
-						}
-					}
+			if ( label_form.hasClass( 'generated' ) ) {
+				postnl_order_single.trigger_download( downloadUrl );
+				return false;
+			}
 
-					if( response.data.tracking_note ) {
+			label_form.block( {
+				message: null,
+				overlayCSS: {
+					background: '#fff',
+					opacity: 0.6
+				}
+			} );
 
-						$( '#woocommerce-order-notes' ).block({
-							message: null,
-							overlayCSS: {
-								background: '#fff',
-								opacity: 0.6
-							}
-						});
+			$.post( woocommerce_admin_meta_boxes.ajax_url, postnl_order_single.build_save_data(), function( response ) {
+				label_form.unblock();
 
-						var data = {
-							action:    'woocommerce_add_order_note',
-							post_id:   woocommerce_admin_meta_boxes.post_id,
-							note_type: response.data.note_type,
-							note:      response.data.tracking_note,
-							security:  woocommerce_admin_meta_boxes.add_order_note_nonce
-						};
-
-						$.post( woocommerce_admin_meta_boxes.ajax_url, data, function( response_note ) {
-							$( 'ul.order_notes' ).prepend( response_note );
-							$( '#woocommerce-order-notes' ).unblock();
-							$( '#add_order_note' ).val( '' );
-						});
-					}
+				if ( true === response.success ) {
+					postnl_order_single.handle_label_created( response );
+					postnl_order_single.trigger_download( downloadUrl );
 				} else {
 					var error_text = response.data.hasOwnProperty( 'message' ) ? response.data.message : 'Unknown error!';
 					error_cont.html( error_text );
 				}
-			});
+			} );
 
 			return false;
+		},
+
+		trigger_download: function( url ) {
+			var a = document.createElement( 'a' );
+			a.href = url;
+			a.download = '';
+			document.body.appendChild( a );
+			a.click();
+			document.body.removeChild( a );
 		},
 
 		// Delete a tracking item
@@ -110,7 +174,7 @@
 			} );
 
 			error_cont.empty();
-			
+
 			var data = {
 				action:   'postnl_order_delete_data',
 				order_id: woocommerce_admin_meta_boxes.post_id,
@@ -123,7 +187,7 @@
 				if ( ! maybe_field.is( ':input' ) ) {
 					continue;
 				}
-				
+
 				if ( 'checkbox' === maybe_field.prop( 'type' ) ) {
 					data[ field_name ] = maybe_field.is( ':checked' ) ? maybe_field.val() : '';
 				} else {
@@ -248,14 +312,14 @@
                     error_cont.html(  response.data.message );
                 }else{
 					console.log(response);
-					error_cont.html( 'Email sent successfully' );					
+					error_cont.html( 'Email sent successfully' );
 				}
 	            label_form.unblock();
             });
         }
 	}
 
-	
+
 	postnl_order_single.init();
 
 

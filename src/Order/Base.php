@@ -1303,6 +1303,26 @@ abstract class Base {
 	}
 
 	/**
+	 * Generate inline (print) label url
+	 *
+	 * @param int    $order_id ID of the order post.
+	 * @param String $label_type Type of the label. Possible options : 'label', 'return-label'.
+	 *
+	 * @return String.
+	 */
+	public function get_print_label_url( $order_id, $label_type = 'label' ) {
+		return add_query_arg(
+			array(
+				'postnl_label_order_id' => $order_id,
+				'label_type'            => $label_type,
+				'postnl_label_nonce'    => wp_create_nonce( 'postnl_download_label_nonce' ),
+				'view'                  => 'inline',
+			),
+			home_url()
+		);
+	}
+
+	/**
 	 * Get label file.
 	 *
 	 * @return  void
@@ -1337,7 +1357,13 @@ abstract class Base {
 			return;
 		}
 
-		$this->download_label( $saved_data['labels'][ $label_type ]['filepath'] );
+		$view_inline = ! empty( $_GET['view'] ) && 'inline' === sanitize_text_field( wp_unslash( $_GET['view'] ) );
+
+		if ( $view_inline ) {
+			$this->print_label( $saved_data['labels'][ $label_type ]['filepath'] );
+		} else {
+			$this->download_label( $saved_data['labels'][ $label_type ]['filepath'] );
+		}
 	}
 
 	/**
@@ -1359,6 +1385,35 @@ abstract class Base {
 			header( 'Content-Description: File Transfer' );
 			header( 'Content-Type: application/octet-stream' );
 			header( 'Content-Disposition: attachment; filename="' . $filename . '"' );
+			header( 'Expires: 0' );
+			header( 'Cache-Control: must-revalidate' );
+			header( 'Pragma: public' );
+			header( 'Content-Length: ' . filesize( $file_path ) );
+
+			readfile( $file_path );
+			exit;
+		} else {
+			return false;
+		}
+	}
+
+	/**
+	 * Serves the label file inline for browser print dialog.
+	 *
+	 * @param string $file_path File path to the label.
+	 *
+	 * @return boolean|void
+	 */
+	protected function print_label( $file_path ) {
+		if ( ! empty( $file_path ) && is_string( $file_path ) && file_exists( $file_path ) ) {
+			if ( ob_get_contents() ) {
+				ob_clean();
+			}
+
+			$filename = basename( $file_path );
+
+			header( 'Content-Type: application/pdf' );
+			header( 'Content-Disposition: inline; filename="' . $filename . '"' );
 			header( 'Expires: 0' );
 			header( 'Cache-Control: must-revalidate' );
 			header( 'Pragma: public' );

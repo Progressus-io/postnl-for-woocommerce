@@ -29,6 +29,8 @@ PostNL’s official extension for WooCommerce on WordPress. Manage your national
 
 ### 5.9.5
 * Fix: Update translations.
+* Add: Print Label and Download Label buttons on the single order page now auto-create the label if one does not exist, then immediately trigger the print dialog or file download.
+* Add: New "PostNL Print Labels" and "PostNL Download Labels" bulk actions that create labels for all selected orders and immediately trigger the print dialog or file download without a page reload.
 
 ### 5.9.4
 * Fix: Missing styles from the cart page.

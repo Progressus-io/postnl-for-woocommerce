@@ -75,6 +75,8 @@ class Bulk extends Base {
 		// Add 'Create Label' action button.
 		add_action( 'wp_ajax_postnl_create_label', array( $this, 'postnl_create_label_ajax' ) );
 		add_filter( 'woocommerce_admin_order_actions', array( $this, 'add_create_label_actions_button' ), 10, 2 );
+
+		add_action( 'wp_ajax_postnl_bulk_labels_ajax', array( $this, 'postnl_bulk_labels_ajax' ) );
 	}
 
 	/**
@@ -85,8 +87,10 @@ class Bulk extends Base {
 	 * @return array
 	 */
 	public function add_order_bulk_actions( $bulk_actions ) {
-		$base_country                        = Utils::get_base_country();
-		$bulk_actions['postnl-create-label'] = esc_html__( 'PostNL Create Label', 'postnl-for-woocommerce' );
+		$base_country                           = Utils::get_base_country();
+		$bulk_actions['postnl-create-label']    = esc_html__( 'PostNL Create Label', 'postnl-for-woocommerce' );
+		$bulk_actions['postnl-print-labels']    = esc_html__( 'PostNL Print Labels', 'postnl-for-woocommerce' );
+		$bulk_actions['postnl-download-labels'] = esc_html__( 'PostNL Download Labels', 'postnl-for-woocommerce' );
 		if ( $base_country != 'BE' ) {
 			$bulk_actions['postnl-change-shipping-options'] = esc_html__( 'PostNL Change Shipping Options', 'postnl-for-woocommerce' );
 		}
@@ -316,7 +320,13 @@ class Bulk extends Base {
 			return;
 		}
 
-		$this->download_label( $label_path );
+		$view_inline = ! empty( $_GET['view'] ) && 'inline' === sanitize_text_field( wp_unslash( $_GET['view'] ) );
+
+		if ( $view_inline ) {
+			$this->print_label( $label_path );
+		} else {
+			$this->download_label( $label_path );
+		}
 	}
 
 	/**
@@ -345,6 +355,15 @@ class Bulk extends Base {
 				array( 'thickbox' ),
 				POSTNL_WC_VERSION,
 				true
+			);
+
+			wp_localize_script(
+				'postnl-admin-order-bulk',
+				'postnl_admin_bulk_obj',
+				array(
+					'ajax_url' => admin_url( 'admin-ajax.php' ),
+					'security' => wp_create_nonce( 'postnl_bulk_labels_ajax_nonce' ),
+				)
 			);
 
 			wp_enqueue_script(
@@ -478,7 +497,103 @@ class Bulk extends Base {
 	 * Collection of fields in create label bulk action.
 	 */
 	public function modal_create_label() {
-		$this->create_modal_content_wrapper( 'postnl-create-label', $this->create_label_fields() );
+		$screen = get_current_screen();
+
+		$is_legacy_order = ! empty( $screen->id ) && 'edit-shop_order' === $screen->id && ! empty( $screen->base ) && 'edit' === $screen->base;
+		$is_hpos_order   = ! empty( $screen->id ) && 'woocommerce_page_wc-orders' === $screen->id && ( empty( $_GET['action'] ) || 'edit' !== $_GET['action'] );
+
+		global $thepostid, $post;
+
+		if ( $is_legacy_order && empty( $thepostid ) && empty( $post ) ) {
+			return;
+		}
+
+		if ( $is_legacy_order || $is_hpos_order ) {
+			$fields = $this->create_label_fields();
+			?>
+			<div id="postnl-create-label-modal" style="display:none;">
+				<div class="postnl-modal postnl-create-label-content">
+					<?php Utils::fields_generator( $fields ); ?>
+					<div id="postnl-bulk-spinner" class="postnl-bulk-spinner" style="display:none;">
+						<?php esc_html_e( 'Creating labels, please wait...', 'postnl-for-woocommerce' ); ?>
+					</div>
+					<div id="postnl-bulk-error" class="postnl-bulk-error" style="display:none;"></div>
+					<button type="button" class="button button-primary"
+						id="postnl-create-label-proceed"><?php esc_html_e( 'Submit', 'postnl-for-woocommerce' ); ?></button>
+				</div>
+			</div>
+			<?php
+		}
+	}
+
+	/**
+	 * Generate inline (print) bulk label url.
+	 *
+	 * @return String.
+	 */
+	public function get_print_bulk_url() {
+		return add_query_arg(
+			array(
+				'postnl_label_bulk_nonce' => wp_create_nonce( 'postnl_download_label_bulk_nonce' ),
+				'view'                    => 'inline',
+			),
+			home_url()
+		);
+	}
+
+	/**
+	 * AJAX handler for bulk Print/Download Labels actions.
+	 *
+	 * @throws \Exception On validation or processing failure.
+	 */
+	public function postnl_bulk_labels_ajax() {
+		try {
+			if ( empty( $_POST['security'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['security'] ) ), 'postnl_bulk_labels_ajax_nonce' ) ) {
+				throw new \Exception( esc_html__( 'Nonce is invalid!', 'postnl-for-woocommerce' ) );
+			}
+
+			if ( ! current_user_can( 'manage_woocommerce' ) ) {
+				throw new \Exception( esc_html__( 'Insufficient permissions.', 'postnl-for-woocommerce' ) );
+			}
+
+			$order_ids   = ! empty( $_POST['order_ids'] ) ? array_map( 'absint', (array) $_POST['order_ids'] ) : array();
+			$bulk_action = ( ! empty( $_POST['bulk_action'] ) && 'print' === $_POST['bulk_action'] ) ? 'print' : 'download';
+
+			if ( empty( $order_ids ) ) {
+				throw new \Exception( esc_html__( 'No orders selected.', 'postnl-for-woocommerce' ) );
+			}
+
+			$gen_labels = array();
+
+			foreach ( $order_ids as $order_id ) {
+				$result = $this->generate_label_and_notes( $order_id, $_POST );
+				if ( isset( $result['labels_data']['labels'] ) ) {
+					$gen_labels[] = $result['labels_data']['labels'];
+				}
+			}
+
+			if ( empty( $gen_labels ) ) {
+				throw new \Exception( esc_html__( 'No labels could be created for the selected orders.', 'postnl-for-woocommerce' ) );
+			}
+
+			$merge_result = $this->merge_bulk_labels( $gen_labels );
+
+			if ( empty( $merge_result ) || 'error' === ( $merge_result['type'] ?? '' ) ) {
+				$error_msg = ! empty( $merge_result['message'] ) ? wp_strip_all_tags( $merge_result['message'] ) : esc_html__( 'Could not merge bulk labels.', 'postnl-for-woocommerce' );
+				throw new \Exception( $error_msg );
+			}
+
+			$url = 'print' === $bulk_action ? $this->get_print_bulk_url() : $this->get_download_bulk_url();
+
+			wp_send_json_success(
+				array(
+					'url'         => $url,
+					'bulk_action' => $bulk_action,
+				)
+			);
+		} catch ( \Exception $e ) {
+			wp_send_json_error( array( 'message' => $e->getMessage() ) );
+		}
 	}
 
 	/**

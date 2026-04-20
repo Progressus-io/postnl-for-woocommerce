@@ -13,6 +13,22 @@
 				.on( 'change', '#bulk-action-selector-bottom', this.toggle_create_label_modal );
 			posts_filter
 				.on( 'click', '.button.action', this.disable_submit_button );
+			posts_filter
+				.on( 'click', 'a.postnl-action-print-label', this.row_print_label );
+		},
+
+		row_print_label: function( evt ) {
+			evt.preventDefault();
+			var printUrl    = jQuery( this ).attr( 'href' );
+			var printWindow = window.open( '', '_blank' );
+			if ( ! printWindow ) {
+				return false;
+			}
+			printWindow.location.href = printUrl;
+			printWindow.onload = function() {
+				printWindow.print();
+			};
+			return false;
 		},
 
 		get_selected_order_ids: function( post_form ) {

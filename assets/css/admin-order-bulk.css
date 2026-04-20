@@ -40,6 +40,9 @@
 .postnl-action-download-label:after {
 	background: url(../images/post-download-label.png) no-repeat center center;
 }
+a.postnl-action-print-label:after {
+	content: "\f193";
+}
 .postnl-bulk-spinner {
 	margin-bottom: 8px;
 	font-style: italic;

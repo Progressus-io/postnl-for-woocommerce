@@ -745,10 +745,15 @@ class Bulk extends Base {
 		}
 
 		if ( $this->have_label_file( $order ) ) {
-			$actions['postnl-label'] = array(
+			$actions['postnl-download-label'] = array(
 				'url'    => $this->get_download_label_url( $order->get_id() ),
-				'name'   => esc_html__( 'PostNL Print Label', 'postnl-for-woocommerce' ),
+				'name'   => esc_html__( 'PostNL Download Label', 'postnl-for-woocommerce' ),
 				'action' => 'postnl-action-download-label',
+			);
+			$actions['postnl-print-label']    = array(
+				'url'    => $this->get_print_label_url( $order->get_id() ),
+				'name'   => esc_html__( 'PostNL Print Label', 'postnl-for-woocommerce' ),
+				'action' => 'postnl-action-print-label',
 			);
 		} else {
 			$actions['postnl-label'] = array(

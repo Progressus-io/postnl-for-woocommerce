@@ -29,6 +29,7 @@ PostNL’s official extension for WooCommerce on WordPress. Manage your national
 
 ### 5.9.5
 * Fix: Update translations.
+* Fix: ZPL file format setting ignored for domestic letterbox.
 
 ### 5.9.4
 * Fix: Missing styles from the cart page.

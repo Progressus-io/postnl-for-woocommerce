@@ -15,6 +15,11 @@
             this.toggle_default_checkout_tab();
 		},
 
+		// TODO: drop the .val('delivery_day') reset. The PostNL::process_admin_options
+		// server-side reset already normalises the stored value when pickup is
+		// disabled, and the row is hidden anyway. Forcing the dropdown to
+		// 'delivery_day' visibly flickers for BE merchants whose country default
+		// is 'dropoff_points'. See PR #306 review.
 		toggle_default_checkout_tab: function() {
             var pickupEnabled = jQuery( '#woocommerce_postnl_enable_pickup_points' ).is( ':checked' );
 

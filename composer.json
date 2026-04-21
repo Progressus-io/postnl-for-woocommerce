@@ -40,7 +40,8 @@
 			"*.zip",
 			"jest.config.js",
 			"AGENTS.md",
-			"CLAUDE.md"
+			"CLAUDE.md",
+			"docs"
 		]
 	},
 	"require-dev": {

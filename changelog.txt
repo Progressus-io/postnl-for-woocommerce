@@ -1,7 +1,9 @@
 *** PostNL for WooCommerce ***
 
-= 5.9.5 (2026-xx-xx) =
+= 5.9.5 (2026-04-21) =
+* Add: Ability to set the default checkout tab (Delivery or Pickup) from the PostNL checkout settings.
 * Fix: Update translations.
+* Fix: ZPL file format setting ignored for domestic letterbox.
 
 = 5.9.4 (2026-02-06) =
 * Fix: Missing styles from the cart page.

@@ -349,8 +349,27 @@ class Container {
 			$is_free_shipping = true;
 		}
 
+		$tabs        = $this->get_available_tabs( $checkout_data['response'] );
+		$default_tab = $this->settings->get_default_checkout_tab();
+
+		$tab_ids = array_column( $tabs, 'id' );
+		if ( ! empty( $tabs ) && ! in_array( $default_tab, $tab_ids, true ) ) {
+			$default_tab = $tabs[0]['id'];
+		}
+
+		// TODO: generalise to mirror the JS path in client/checkout/postnl-container/block.js
+		// (findIndex + splice/unshift). Today this only fires for 'dropoff_points'
+		// because there are exactly two tabs and 'delivery_day' is naturally first;
+		// adding a third tab without revisiting this branch will silently break
+		// reorder in the shortcode checkout while the blocks checkout keeps working.
+		if ( 'dropoff_points' === $default_tab && count( $tabs ) > 1 ) {
+			$preferred = array_filter( $tabs, static fn( $t ) => $t['id'] === $default_tab );
+			$rest      = array_filter( $tabs, static fn( $t ) => $t['id'] !== $default_tab );
+			$tabs      = array_merge( array_values( $preferred ), array_values( $rest ) );
+		}
+
 		$template_args = array(
-			'tabs'              => $this->get_available_tabs( $checkout_data['response'] ),
+			'tabs'              => $tabs,
 			'response'          => $checkout_data['response'],
 			'post_data'         => $checkout_data['post_data'],
 			'default_val'       => $this->get_default_value( $checkout_data['response'], $checkout_data['post_data'] ),
@@ -365,6 +384,7 @@ class Container {
 			'delivery_day_fee'  => $delivery_day_fee,
 			'carrier_base_cost' => $carrier_base_cost,
 			'is_free_shipping'  => $is_free_shipping,
+			'default_tab'       => $default_tab,
 		);
 
 		wc_get_template( 'checkout/postnl-container.php', $template_args, '', POSTNL_WC_PLUGIN_DIR_PATH . '/templates/' );

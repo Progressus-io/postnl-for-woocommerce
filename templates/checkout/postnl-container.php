@@ -25,22 +25,22 @@ $field = array_shift( $fields );
 		<div id="postnl_checkout_option" class="postnl_checkout_container <?php echo esc_attr( $letterbox ? 'is-hidden' : '' ); ?>">
 			<div class="postnl_checkout_tab_container">
 				<ul class="postnl_checkout_tab_list">
-					<?php foreach ( $tabs as $index => $field_tab ) { ?>
+					<?php foreach ( $tabs as $field_tab ) { ?>
 						<?php
-							$is_checked      = ( $field['value'] === $field_tab['id'] ) || ( empty( $field['value'] ) && 0 === $index );
-							$active_class    = ( $is_checked ) ? 'active' : '';
-							$display_checked = ( $is_checked ) ? 'checked="checked"' : '';
+						$is_checked      = ( $field['value'] === $field_tab['id'] ) || ( empty( $field['value'] ) && $field_tab['id'] === $default_tab );
+						$active_class    = ( $is_checked ) ? 'active' : '';
+						$display_checked = ( $is_checked ) ? 'checked="checked"' : '';
 
-							// Compute the tab's full base cost (carrier + tab fee), or 0 if free shipping.
-							if ( $is_free_shipping ) {
-								$tab_base_total = 0.0;
-							} elseif ( 'delivery_day' === $field_tab['id'] ) {
-								$tab_base_total = (float) $carrier_base_cost + (float) $delivery_day_fee;
-							} elseif ( 'dropoff_points' === $field_tab['id'] ) {
-								$tab_base_total = (float) $carrier_base_cost + (float) $pickup_fee;
-							} else {
-								$tab_base_total = 0.0;
-							}
+						// Compute the tab's full base cost (carrier + tab fee), or 0 if free shipping.
+						if ( $is_free_shipping ) {
+							$tab_base_total = 0.0;
+						} elseif ( 'delivery_day' === $field_tab['id'] ) {
+							$tab_base_total = (float) $carrier_base_cost + (float) $delivery_day_fee;
+						} elseif ( 'dropoff_points' === $field_tab['id'] ) {
+							$tab_base_total = (float) $carrier_base_cost + (float) $pickup_fee;
+						} else {
+							$tab_base_total = 0.0;
+						}
 						?>
 
 						<li class="<?php echo esc_attr( $active_class ); ?>">

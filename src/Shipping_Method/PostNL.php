@@ -71,8 +71,7 @@ class PostNL extends \WC_Shipping_Flat_Rate {
 
 		// When pickup is disabled, reset the default checkout tab to its default value.
 		if ( 'yes' !== $this->get_option( 'enable_pickup_points' ) ) {
-			$this->settings['default_checkout_tab'] = 'delivery_day';
-			update_option( $this->get_option_key(), $this->settings );
+			$this->update_option( 'default_checkout_tab', 'delivery_day' );
 		}
 	}
 

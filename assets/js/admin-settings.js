@@ -35,9 +35,11 @@
 			var value = jQuery( '#woocommerce_postnl_environment_mode' ).val();
 			if ( 'production' === value ) {
 				jQuery('#woocommerce_postnl_api_keys').closest('tr').show();
+				jQuery('#woocommerce_postnl_api_keys_new').closest('tr').show();
 				jQuery('#woocommerce_postnl_api_keys_sandbox').closest('tr').hide();
 			} else {
 				jQuery('#woocommerce_postnl_api_keys').closest('tr').hide();
+				jQuery('#woocommerce_postnl_api_keys_new').closest('tr').hide();
 				jQuery('#woocommerce_postnl_api_keys_sandbox').closest('tr').show();
 			}
 		},

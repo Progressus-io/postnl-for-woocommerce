@@ -194,6 +194,10 @@ class Main {
 		$this->load_fill_in_with_postnl_settings();
 		$this->get_frontend();
 		$this->get_product_editor();
+
+		if ( is_admin() ) {
+			new Admin\Api_Key_Banner();
+		}
 	}
 
 	/**

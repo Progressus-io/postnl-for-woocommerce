@@ -7,6 +7,7 @@
 
 namespace PostNLWooCommerce\Shipping_Method;
 
+use PostNLWooCommerce\Rest_API\Barcode\Key_Validator;
 use PostNLWooCommerce\Utils;
 use WC_Admin_Settings;
 
@@ -73,6 +74,48 @@ class PostNL extends \WC_Shipping_Flat_Rate {
 		if ( 'yes' !== $this->get_option( 'enable_pickup_points' ) ) {
 			$this->update_option( 'default_checkout_tab', 'delivery_day' );
 		}
+
+		$this->process_new_api_key_validation();
+	}
+
+	/**
+	 * Validate the "New API Key" field whenever settings are saved.
+	 *
+	 * Only runs in production mode. Performs a live Barcode API call with
+	 * the candidate key. Success flips the validated flag on so the plugin
+	 * starts routing traffic through the new key; failure leaves the old
+	 * key in use and surfaces an error to the merchant.
+	 */
+	protected function process_new_api_key_validation() {
+		$settings = Settings::get_instance();
+
+		$env = $this->get_option( 'environment_mode' );
+		if ( 'production' !== $env ) {
+			return;
+		}
+
+		$new_key  = trim( (string) $this->get_option( 'api_keys_new' ) );
+		$original = trim( (string) $this->get_option( 'api_keys' ) );
+
+		if ( '' === $new_key || $new_key === $original ) {
+			$settings->set_api_key_new_validated( false );
+			return;
+		}
+
+		$customer_code = $this->get_option( 'customer_code' );
+		$customer_num  = $this->get_option( 'customer_num' );
+
+		$result = Key_Validator::validate( $new_key, $customer_code, $customer_num );
+
+		if ( is_wp_error( $result ) ) {
+			$settings->set_api_key_new_validated( false );
+			WC_Admin_Settings::add_error(
+				esc_html__( 'The newly entered API key is invalid. Please check the key and enter it again.', 'postnl-for-woocommerce' )
+			);
+			return;
+		}
+
+		$settings->set_api_key_new_validated( true );
 	}
 
 	/**

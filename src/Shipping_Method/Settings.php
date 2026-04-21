@@ -1147,6 +1147,11 @@ class Settings extends \WC_Settings_API {
 			return $value;
 		}
 		if ( 'BE' === Utils::get_base_country() ) {
+			// TODO: gate on is_pickup_points_enabled(). When pickup is disabled
+			// we still return 'dropoff_points' here, an id no tab list contains.
+			// Container.php and the React resolver both fall back, so it's
+			// harmless today, but the contract should be: never return an id
+			// that can't render. See PR #306 review.
 			return 'dropoff_points';
 		}
 		return 'delivery_day';

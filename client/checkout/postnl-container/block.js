@@ -143,6 +143,10 @@ export const Block = ( { checkoutExtensionData } ) => {
 	const initialTabId = baseTabs.find( ( tab ) => tab.id === defaultTabId )
 		? defaultTabId
 		: baseTabs[ 0 ].id;
+	// TODO: activeTab is null for one render frame, causing a brief "no active
+	// tab" flash. Eliminating it requires synchronous useState(initialTabId) +
+	// a ref-guarded effect for the side-effecting half — non-trivial refactor
+	// touching every effect that depends on activeTab. Acceptable today.
 	const [ activeTab, setActiveTab ] = useState( null );
 	useEffect( () => {
 		setActiveTab( initialTabId );

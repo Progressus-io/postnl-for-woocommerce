@@ -271,6 +271,11 @@ class Container {
 			$default_tab = $tabs[0]['id'];
 		}
 
+		// TODO: generalise to mirror the JS path in client/checkout/postnl-container/block.js
+		// (findIndex + splice/unshift). Today this only fires for 'dropoff_points'
+		// because there are exactly two tabs and 'delivery_day' is naturally first;
+		// adding a third tab without revisiting this branch will silently break
+		// reorder in the shortcode checkout while the blocks checkout keeps working.
 		if ( 'dropoff_points' === $default_tab && count( $tabs ) > 1 ) {
 			$preferred = array_filter( $tabs, static fn( $t ) => $t['id'] === $default_tab );
 			$rest      = array_filter( $tabs, static fn( $t ) => $t['id'] !== $default_tab );

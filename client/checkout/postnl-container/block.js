@@ -146,6 +146,10 @@ export const Block = ( { checkoutExtensionData } ) => {
 	const [ activeTab, setActiveTab ] = useState( null );
 	useEffect( () => {
 		setActiveTab( initialTabId );
+		// Mount-only by design: re-running on initialTabId would re-introduce
+		// the premature extensionCartUpdate bug fixed in commit 89519b4
+		// (PR #306 / ClickUp 868etp8wa).
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [] );
 
 	const [ carrierBaseCost, setCarrierBaseCost ] = useState( () => {
@@ -224,6 +228,10 @@ export const Block = ( { checkoutExtensionData } ) => {
 		if ( initialTabId !== 'delivery_day' ) {
 			clearBackendDeliveryFee();
 		}
+		// Mount-only: clears any stale backend fee from a prior session when
+		// the merchant's default tab isn't delivery_day. Re-running would
+		// nuke a legitimate fee a user just selected.
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [] );
 
 	const handlePriceChange = useCallback( ( priceData ) => {

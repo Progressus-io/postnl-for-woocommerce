@@ -68,6 +68,11 @@ class PostNL extends \WC_Shipping_Flat_Rate {
 	public function process_admin_options() {
 		parent::process_admin_options();
 		$this->process_merchant_codes();
+
+		// When pickup is disabled, reset the default checkout tab to its default value.
+		if ( 'yes' !== $this->get_option( 'enable_pickup_points' ) ) {
+			$this->update_option( 'default_checkout_tab', 'delivery_day' );
+		}
 	}
 
 	/**

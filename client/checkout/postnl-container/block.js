@@ -93,46 +93,74 @@ export const Block = ( { checkoutExtensionData } ) => {
 	);
 
 	const [ { extraDeliveryFee, extraDeliveryFeeFormatted }, setFeeState ] =
-		useState( () => {
-			const saved = getDeliveryDay();
-			return {
-				extraDeliveryFee: Number( saved.price || 0 ),
-				extraDeliveryFeeFormatted: saved.priceFormatted || '',
-			};
+		useState( {
+			extraDeliveryFee: 0,
+			extraDeliveryFeeFormatted: '',
 		} );
 
 	const baseTabs = useMemo(
-		() => [
-			{
-				id: 'delivery_day',
-				base: Number( postnlData.delivery_day_fee || 0 ),
-				displayFormatted: postnlData.delivery_day_fee_formatted || '',
-			},
-			...( postnlData.is_pickup_points_enabled
-				? [
-						{
-							id: 'dropoff_points',
-							base: Number( postnlData.pickup_fee || 0 ),
-							displayFormatted:
-								postnlData.pickup_fee_formatted || '',
-						},
-				  ]
-				: [] ),
-		],
+		() => {
+			const tabs = [
+				{
+					id: 'delivery_day',
+					base: Number( postnlData.delivery_day_fee || 0 ),
+					displayFormatted: postnlData.delivery_day_fee_formatted || '',
+				},
+				...( postnlData.is_pickup_points_enabled
+					? [
+							{
+								id: 'dropoff_points',
+								base: Number( postnlData.pickup_fee || 0 ),
+								displayFormatted:
+									postnlData.pickup_fee_formatted || '',
+							},
+					  ]
+					: [] ),
+			];
+			// Reorder: put the merchant's preferred default tab first in the DOM.
+			const preferredIdx = tabs.findIndex(
+				( t ) => t.id === postnlData.default_checkout_tab
+			);
+			if ( preferredIdx > 0 ) {
+				const reordered = [ ...tabs ];
+				reordered.unshift( reordered.splice( preferredIdx, 1 )[ 0 ] );
+				return reordered;
+			}
+			return tabs;
+		},
 		[
 			postnlData.delivery_day_fee,
 			postnlData.delivery_day_fee_formatted,
 			postnlData.is_pickup_points_enabled,
 			postnlData.pickup_fee,
 			postnlData.pickup_fee_formatted,
+			postnlData.default_checkout_tab,
 		]
 	);
 
-	const [ activeTab, setActiveTab ] = useState( baseTabs[ 0 ].id );
+	// Default tab: use merchant setting if the tab exists, otherwise fall back to the first available tab.
+	const defaultTabId = postnlData.default_checkout_tab || baseTabs[ 0 ].id;
+	const initialTabId = baseTabs.find( ( tab ) => tab.id === defaultTabId )
+		? defaultTabId
+		: baseTabs[ 0 ].id;
+	// TODO: activeTab is null for one render frame, causing a brief "no active
+	// tab" flash. Eliminating it requires synchronous useState(initialTabId) +
+	// a ref-guarded effect for the side-effecting half — non-trivial refactor
+	// touching every effect that depends on activeTab. Acceptable today.
+	const [ activeTab, setActiveTab ] = useState( null );
+	useEffect( () => {
+		setActiveTab( initialTabId );
+		// Mount-only by design: re-running on initialTabId would re-introduce
+		// the premature extensionCartUpdate bug fixed in commit 89519b4
+		// (PR #306 / ClickUp 868etp8wa).
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [] );
 
-	const [ carrierBaseCost, setCarrierBaseCost ] = useState(
-		() => selectedShippingFee - baseTabs[ 0 ].base - extraDeliveryFee
-	);
+	const [ carrierBaseCost, setCarrierBaseCost ] = useState( () => {
+		const activeBase = baseTabs.find( ( tab ) => tab.id === initialTabId )?.base ?? 0;
+		const extra = initialTabId === 'delivery_day' ? extraDeliveryFee : 0;
+		return selectedShippingFee - activeBase - extra;
+	} );
 
 	const prevShipping = useRef( selectedShippingFee );
 
@@ -199,6 +227,16 @@ export const Block = ( { checkoutExtensionData } ) => {
 	const [ deliveryOptions, setDeliveryOptions ] = useState( [] );
 	const [ dropoffOptions, setDropoffOptions ] = useState( [] );
 	const [ deliveryDaysEnabled, setDeliveryDaysEnabled ] = useState( true );
+
+	useEffect( () => {
+		if ( initialTabId !== 'delivery_day' ) {
+			clearBackendDeliveryFee();
+		}
+		// Mount-only: clears any stale backend fee from a prior session when
+		// the merchant's default tab isn't delivery_day. Re-running would
+		// nuke a legitimate fee a user just selected.
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [] );
 
 	const handlePriceChange = useCallback( ( priceData ) => {
 		setFeeState( {

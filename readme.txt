@@ -82,6 +82,7 @@ Follow these instructions (https://www.postnl.nl/Images/aanvragen-api-key-stappe
 == Changelog ==
 
 = 5.9.5 (2026-xx-xx) =
+* Add: Ability to set the default checkout tab (Delivery or Pickup) from the PostNL checkout settings.
 * Fix: Update translations.
 * Fix: ZPL file format setting ignored for domestic letterbox.
 

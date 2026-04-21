@@ -38,7 +38,8 @@
 			"jest-puppeteer.config.js",
 			".*",
 			"*.zip",
-			"jest.config.js"
+			"jest.config.js",
+			"docs"
 		]
 	},
 	"require-dev": {

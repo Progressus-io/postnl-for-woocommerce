@@ -85,7 +85,7 @@ Follow these instructions (https://www.postnl.nl/Images/aanvragen-api-key-stappe
 * Add: Ability to set the default checkout tab (Delivery or Pickup) from the PostNL checkout settings.
 * Fix: Update translations.
 * Fix: ZPL file format setting ignored for domestic letterbox.
-
+* Fix: Error when trying to create multicollo insured shipments.
 
 = 5.9.4 (2026-02-06) =
 * Fix: Missing styles from the cart page.

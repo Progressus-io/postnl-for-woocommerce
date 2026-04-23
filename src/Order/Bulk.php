@@ -263,8 +263,14 @@ class Bulk extends Base {
 			$bulk_download_label_url = $this->get_download_bulk_url();
 
 			return array(
-				// translators: %1$s is anchor tag opener. %2$s is anchor tag closer.
-				'message' => sprintf( esc_html__( 'Bulk PostNL labels file created - %1$sdownload file%2$s', 'postnl-for-woocommerce' ), '<a href="' . esc_url( $bulk_download_label_url ) . '" download>', '</a>' ),
+				// translators: %1$s is print button opener, %2$s is print button closer, %3$s is download link opener, %4$s is anchor tag closer.
+				'message' => sprintf(
+					esc_html__( 'Bulk PostNL labels file created - %1$sprint label%2$s - %3$sdownload file%4$s', 'postnl-for-woocommerce' ),
+					'<a href="' . esc_url( $bulk_download_label_url ) . '" class="button-print-label" data-label-url="' . esc_url( $bulk_download_label_url ) . '">',
+					'</a>',
+					'<a href="' . esc_url( $bulk_download_label_url ) . '" download>',
+					'</a>'
+				),
 				'type'    => 'success',
 			);
 		}
@@ -353,6 +359,30 @@ class Bulk extends Base {
 				array( 'jquery' ),
 				POSTNL_WC_VERSION,
 				true
+			);
+
+			wp_enqueue_script(
+				'postnl-pdfjs',
+				'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js',
+				array(),
+				null,
+				true
+			);
+
+			wp_enqueue_script(
+				'postnl-admin-print-label',
+				POSTNL_WC_PLUGIN_DIR_URL . '/assets/js/admin-print-label.js',
+				array( 'postnl-pdfjs' ),
+				POSTNL_WC_VERSION,
+				true
+			);
+
+			wp_localize_script(
+				'postnl-admin-print-label',
+				'postnlPrintLabelData',
+				array(
+					'workerSrc' => 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js',
+				)
 			);
 
 		}
@@ -630,9 +660,14 @@ class Bulk extends Base {
 		}
 
 		if ( $this->have_label_file( $order ) ) {
-			$actions['postnl-label'] = array(
+			$actions['postnl-print-label'] = array(
 				'url'    => $this->get_download_label_url( $order->get_id() ),
 				'name'   => esc_html__( 'PostNL Print Label', 'postnl-for-woocommerce' ),
+				'action' => 'postnl-action-print-label',
+			);
+			$actions['postnl-label'] = array(
+				'url'    => $this->get_download_label_url( $order->get_id() ),
+				'name'   => esc_html__( 'PostNL Download Label', 'postnl-for-woocommerce' ),
 				'action' => 'postnl-action-download-label',
 			);
 		} else {
@@ -698,10 +733,12 @@ class Bulk extends Base {
 			$order->add_order_note( $tracking_note, $customer_note );
 			$label_link        = esc_url( $this->get_download_label_url( $order_id ) );
 			$result['message'] = array(
-				// Translators: %1$s is the order ID, %2$s is the link to download the file, %3$s is the closing link tag.
+				// Translators: %1$s is the order ID, %2$s is the print button opener, %3$s is the print button closer, %4$s is the download link opener, %5$s is the closing link tag.
 				'message' => sprintf(
-					esc_html__( '#%1$s : PostNL label has been created - %2$sdownload file%3$s', 'postnl-for-woocommerce' ),
+					esc_html__( '#%1$s : PostNL label has been created - %2$sprint label%3$s - %4$sdownload file%5$s', 'postnl-for-woocommerce' ),
 					$order_id,
+					'<a href="' . $label_link . '" class="button-print-label" data-label-url="' . $label_link . '">',
+					'</a>',
 					'<a href="' . $label_link . '" download>',
 					'</a>'
 				),

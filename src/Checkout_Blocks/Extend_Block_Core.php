@@ -321,6 +321,11 @@ class Extend_Block_Core {
 
 		$shipping_country = isset( $sanitized_data['shipping_country'] ) ? $sanitized_data['shipping_country'] : '';
 
+		// Always sync the customer's shipping country from the request so
+		// downstream checks (e.g. is_cart_eligible_auto_letterbox) read the
+		// correct country even before the conditional customer save below.
+		WC()->customer->set_shipping_country( $shipping_country );
+
 		// Check letterbox eligibility
 		$letterbox = Utils::is_cart_eligible_auto_letterbox( WC()->cart );
 
@@ -328,7 +333,6 @@ class Extend_Block_Core {
 		if ( isset( $sanitized_data['shipping_house_number'] ) && isset( $sanitized_data['shipping_postcode'] ) ) {
 			WC()->customer->set_shipping_postcode( $sanitized_data['shipping_postcode'] );
 			WC()->customer->update_meta_data( '_wc_shipping/postnl/house_number', $sanitized_data['shipping_house_number'] );
-			WC()->customer->set_shipping_country( $sanitized_data['shipping_country'] );
 			WC()->customer->set_shipping_address_2( $sanitized_data['shipping_address_2'] ?? '' );
 			WC()->customer->save();
 		}

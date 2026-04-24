@@ -1907,3 +1907,31 @@ msgstr ""
 #: src/Shipping_Method/Settings.php:401
 msgid "Pickup Points"
 msgstr ""
+
+#: src/Shipping_Method/Settings.php
+msgid "New API Key"
+msgstr "Nieuwe API Key"
+
+#: src/Shipping_Method/Settings.php
+msgid "Enter the new API key here, required to access the new APIs when these have been released in the plug-in."
+msgstr "Vul hier je nieuwe API key in, die je toegang geeft tot de nieuwe APIs zodra deze zijn uitgerold in de plug-in."
+
+#: src/Shipping_Method/PostNL.php
+msgid "The newly entered API key is invalid. Please check the key and enter it again."
+msgstr "Ingevulde nieuwe API key ongeldig. Controleer de key en vul deze opnieuw in."
+
+#: src/Admin/Api_Key_Banner.php
+msgid "PostNL: New API Key required"
+msgstr "PostNL: nieuwe API key vereist"
+
+#: src/Admin/Api_Key_Banner.php
+msgid "Important: In the latest update of the plug-in, an additional API key field has been added to the account configuration of the PostNL plug-in. This field must be filled in with the new API key that can be obtained via the Self Service module on the PostNL Business Portal. This API key is required to gain access to the new APIs that will be rolled out in a future update of the plug-in. It is very important that this key is entered before the relevant update is performed; otherwise, no connection can be made to the new PostNL APIs, and it will not be possible to create labels or use checkout features such as delivery days and pickup points."
+msgstr "Let op: er is in de laatste update van de plug-in een extra API key veld toegevoegd aan de accountconfiguratie van de PostNL plug-in. In dit veld moet de nieuwe API key ingevuld worden die je via de Self Service module op het Business Portal van PostNL kunt verkrijgen. Deze API key is nodig om toegang te krijgen tot de nieuwe APIs die zullen worden uitgerold in een toekomstige update van de plug-in. Het is van groot belang dat deze key ingevuld wordt voordat de betreffende update wordt uitgevoerd, omdat er anders geen verbinding gemaakt kan worden met de nieuwe PostNL APIs en er dus geen labels aangemaakt kunnen worden of gebruik gemaakt kan worden van de check-out functies zoals bezorgdagen en afhaalpunten."
+
+#: src/Admin/Api_Key_Banner.php
+msgid "Remind me later"
+msgstr "Herinner me later"
+
+#: src/Admin/Api_Key_Banner.php
+msgid "Dismiss permanently"
+msgstr "Definitief verbergen"

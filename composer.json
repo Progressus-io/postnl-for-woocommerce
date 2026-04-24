@@ -39,6 +39,8 @@
 			".*",
 			"*.zip",
 			"jest.config.js",
+			"AGENTS.md",
+			"CLAUDE.md",
 			"docs"
 		]
 	},

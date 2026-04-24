@@ -93,6 +93,15 @@ tr.postnl-co-tr-container > td {
 	list-style-type:none;
 }
 
+.postnl_delivery_day_list {
+	transition: opacity 0.15s ease;
+}
+
+.postnl_delivery_day_list.postnl-updating {
+	opacity: 0.5;
+	pointer-events: none;
+}
+
 .postnl_content .postnl_list > li {
 	padding:0px;
 	margin:0px;

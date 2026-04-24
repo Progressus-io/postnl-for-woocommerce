@@ -105,7 +105,6 @@ abstract class Base {
 		add_action( 'woocommerce_checkout_update_order_meta', array( $this, 'save_data' ), 10, 2 );
 		add_action( 'woocommerce_checkout_update_order_meta', array( $this, 'save_letterbox_data' ), 13, 2 );
 		add_action( 'woocommerce_checkout_update_order_meta', array( $this, 'save_default_data' ), 15, 2 );
-		add_action( 'woocommerce_checkout_update_order_meta', array( $this, 'calculate_non_standard_fee' ), 20, 2 );
 		add_filter( 'postnl_frontend_checkout_tab', array( $this, 'add_checkout_tab' ), 10, 2 );
 		add_action( 'postnl_checkout_content', array( $this, 'display_content' ), 10, 2 );
 		add_filter( 'woocommerce_email_order_meta_fields', array( $this, 'add_pickup_points_fields_to_email' ), 10, 3 );
@@ -392,65 +391,6 @@ abstract class Base {
 	}
 
 	/**
-	 * Calculate non standard delivery day fee.
-	 *
-	 * @param array $order_id ID of order post.
-	 * @param array $posted_data Array of global _POST data.
-	 *
-	 * @return void
-	 */
-	public function calculate_non_standard_fee( $order_id, $posted_data ) {
-		$order = wc_get_order( $order_id );
-
-		if ( ! is_a( $order, 'WC_Order' ) ) {
-			return;
-		}
-
-		$data = $this->get_data( $order->get_id() );
-
-		$add_optional_fee  = true;
-		$non_standard_fees = self::non_standard_fees_data();
-
-		foreach ( $non_standard_fees as $type => $fee ) {
-			if ( ! isset( $data['frontend'][ $fee['condition']['key'] ] ) ) {
-				continue;
-			}
-
-			if ( $type === $data['frontend'][ $fee['condition']['key'] ] ) {
-				$fee_name  = $fee['fee_name'];
-				$fee_price = $fee['fee_price'];
-				break;
-			}
-		}
-
-		if ( ! isset( $fee_name ) ) {
-			return;
-		}
-
-		foreach ( $order->get_fees() as $item_fee ) {
-			if ( $item_fee->get_name() === $fee_name ) {
-				$add_optional_fee = false;
-			}
-		}
-
-		if ( true === $add_optional_fee ) {
-			$item_fee = new \WC_Order_Item_Fee();
-
-			$item_fee->set_name( $fee_name );
-			$item_fee->set_amount( $fee_price );
-			$item_fee->set_tax_class( '' );
-			$item_fee->set_tax_status( 'taxable' );
-			$item_fee->set_total( $fee_price );
-
-			$order->add_item( $item_fee );
-
-			$order->calculate_totals();
-		}
-
-		$order->save();
-	}
-
-	/**
 	 * Save frontend field value to meta.
 	 *
 	 * @param int   $order_id ID of the order.
@@ -536,7 +476,7 @@ abstract class Base {
 	}
 
 	/**
-	 * Get available nonstandard delivery time fees data
+	 * Get available nonstandard delivery time fees data.
 	 *
 	 * @return array
 	 */
@@ -545,5 +485,40 @@ abstract class Base {
 			'08:00-12:00' => self::morning_fee_data(),
 			'Evening'     => self::evening_fee_data(),
 		);
+	}
+
+	/**
+	 * Check whether the chosen PostNL shipping rate has cost = 0.
+	 *
+	 * Returns true when the currently selected shipping method is a supported
+	 * PostNL method and its rate cost is zero — meaning the store's
+	 * minimum_for_free_shipping threshold has been reached.
+	 *
+	 * @return bool
+	 */
+	protected function is_postnl_rate_free(): bool {
+		if ( ! WC()->session ) {
+			return false;
+		}
+
+		$chosen    = WC()->session->get( 'chosen_shipping_methods', array() );
+		$packages  = WC()->shipping()->get_packages();
+		$supported = $this->settings->get_supported_shipping_methods();
+
+		foreach ( $packages as $i => $package ) {
+			$method_key = $chosen[ $i ] ?? '';
+
+			if ( ! isset( $package['rates'][ $method_key ] ) ) {
+				continue;
+			}
+
+			$rate = $package['rates'][ $method_key ];
+
+			if ( in_array( $rate->get_method_id(), $supported, true ) && 0.0 === (float) $rate->cost ) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 }

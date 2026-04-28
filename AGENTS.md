@@ -321,6 +321,10 @@ JS tests use Jest with `@testing-library/react`. Mocks in `tests/js/__mocks__/` 
 
 PHP has no unit test suite — only PHPCS linting. All PHP testing is manual.
 
+### Pull Requests
+
+When opening a PR, always use the repository's PR template at `.github/PULL_REQUEST_TEMPLATE.md`. The template has required sections: **All Submissions** checklist, **Changes proposed in this Pull Request** (with `Closes # .`), **How to test the changes in this Pull Request** (numbered steps), **Other information** checklist, and **Changelog entry**. Don't substitute a generic "Summary / Test plan" body — read the template first and fill in each section.
+
 ## Decision Log
 
 ### 2024-07 — WooCommerce HPOS Compatibility

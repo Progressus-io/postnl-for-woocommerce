@@ -610,6 +610,23 @@ class Container {
 		$post_data = $this->get_checkout_post_data();
 		$option    = $post_data['postnl_option'] ?? '';
 
+		// Blocks-checkout fallback: Extend_Block_Core::postnl_store_api_callback
+		// writes postnl_delivery_type/postnl_delivery_fee to session before this
+		// filter fires. Mirror that state into $option so the destination injection
+		// below runs on the blocks path too — without it, the WC_Shipping package
+		// hash never changes on tab switch and add_postnl_fees_to_rates() is never
+		// re-invoked against fresh rates. WC ≤ 10.4 accidentally masked this via
+		// divergent package shapes in CartController::get_shipping_packages(); that
+		// divergence was removed, exposing the gap.
+		if ( '' === $option && WC()->session ) {
+			$session_type = WC()->session->get( 'postnl_delivery_type', '' );
+			if ( 'Pickup' === $session_type ) {
+				$option = 'dropoff_points';
+			} elseif ( '' !== $session_type ) {
+				$option = 'delivery_day';
+			}
+		}
+
 		if ( '' === $option ) {
 			return $packages;
 		}
@@ -620,8 +637,11 @@ class Container {
 		// rate cache key changes when the selection changes, forcing recalculation.
 		// Also persist to session so inject_postnl_base_fees can read it during
 		// order placement, when $_REQUEST['post_data'] is no longer available.
+		$raw_price = $post_data['postnl_delivery_day_price']
+			?? WC()->session->get( 'postnl_delivery_fee', 0 );
+
 		$delivery_day_price = ( 'delivery_day' === $option )
-			? (string) (float) ( $post_data['postnl_delivery_day_price'] ?? 0 )
+			? (string) (float) $raw_price
 			: '0';
 
 		WC()->session->set( 'postnl_delivery_day_price', $delivery_day_price );

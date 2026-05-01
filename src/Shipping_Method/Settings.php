@@ -812,11 +812,12 @@ class Settings extends \WC_Settings_API {
 	}
 
 	/**
-	 * Option name that stores whether the new API key has been validated
-	 * against the PostNL API. Kept as a standalone option rather than a
-	 * visible setting so merchants cannot toggle it manually.
+	 * Option storing the SHA-256 hash of the new API key value that last
+	 * passed validation. Storing a hash (rather than a global yes/no flag)
+	 * binds the validated state to the exact key value, so any out-of-band
+	 * edit or partial save naturally invalidates the flag.
 	 */
-	const NEW_API_KEY_VALIDATED_OPTION = 'postnl_api_keys_new_validated';
+	const NEW_API_KEY_VALIDATED_HASH_OPTION = 'postnl_api_keys_new_validated_hash';
 
 	/**
 	 * Get the raw value of the new API key as entered by the merchant.
@@ -828,22 +829,45 @@ class Settings extends \WC_Settings_API {
 	}
 
 	/**
-	 * Whether the new API key has passed validation against the PostNL API.
+	 * Whether the currently-entered new API key matches the key that last
+	 * passed validation against the PostNL API.
 	 *
 	 * @return bool
 	 */
 	public function is_api_key_new_validated() {
-		return 'yes' === get_option( self::NEW_API_KEY_VALIDATED_OPTION, '' );
+		$key = $this->get_api_key_new();
+		if ( '' === $key ) {
+			return false;
+		}
+
+		$stored = (string) get_option( self::NEW_API_KEY_VALIDATED_HASH_OPTION, '' );
+		if ( '' === $stored ) {
+			return false;
+		}
+
+		return hash_equals( $stored, hash( 'sha256', $key ) );
 	}
 
 	/**
-	 * Mark the new API key as validated or not. Called after the save-time
-	 * test call resolves.
+	 * Record that the currently-entered new API key has passed validation,
+	 * or clear the flag entirely. The hash binds the flag to the exact key
+	 * value the merchant just successfully tested.
 	 *
 	 * @param bool $validated Validation outcome.
 	 */
 	public function set_api_key_new_validated( $validated ) {
-		update_option( self::NEW_API_KEY_VALIDATED_OPTION, $validated ? 'yes' : 'no' );
+		if ( ! $validated ) {
+			delete_option( self::NEW_API_KEY_VALIDATED_HASH_OPTION );
+			return;
+		}
+
+		$key = $this->get_api_key_new();
+		if ( '' === $key ) {
+			delete_option( self::NEW_API_KEY_VALIDATED_HASH_OPTION );
+			return;
+		}
+
+		update_option( self::NEW_API_KEY_VALIDATED_HASH_OPTION, hash( 'sha256', $key ) );
 	}
 
 	/**
@@ -878,10 +902,12 @@ class Settings extends \WC_Settings_API {
 	 *
 	 *  - "No"   : the new-key field is empty.
 	 *  - "Same" : the new-key field matches the original key.
-	 *  - "Yes"  : a distinct new key has been entered and validated.
+	 *  - "Yes"  : a distinct new key has been entered.
 	 *
-	 * Entered-but-not-yet-validated keys report "No" because the plugin is
-	 * still sending traffic with the original key.
+	 * Reports "Yes" as soon as the merchant has typed in a key that is
+	 * different from the original, regardless of whether our save-time
+	 * validation has passed yet. The actual key swap (production traffic
+	 * using the new key) is gated separately by is_api_key_new_validated().
 	 *
 	 * @return string
 	 */
@@ -896,7 +922,7 @@ class Settings extends \WC_Settings_API {
 			return 'Same';
 		}
 
-		return $this->is_api_key_new_validated() ? 'Yes' : 'No';
+		return 'Yes';
 	}
 
 	/**

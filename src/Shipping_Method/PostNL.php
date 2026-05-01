@@ -109,6 +109,14 @@ class PostNL extends \WC_Shipping_Flat_Rate {
 
 		if ( is_wp_error( $result ) ) {
 			$settings->set_api_key_new_validated( false );
+
+			if ( 'postnl_missing_customer_data' === $result->get_error_code() ) {
+				WC_Admin_Settings::add_error(
+					esc_html__( 'Please fill in Customer Code and Customer Number first to validate the new API key.', 'postnl-for-woocommerce' )
+				);
+				return;
+			}
+
 			WC_Admin_Settings::add_error(
 				esc_html__( 'The newly entered API key is invalid. Please check the key and enter it again.', 'postnl-for-woocommerce' )
 			);

@@ -12,6 +12,7 @@
 namespace PostNLWooCommerce\Rest_API\Barcode;
 
 use PostNLWooCommerce\Main;
+use PostNLWooCommerce\Shipping_Method\Settings;
 use PostNLWooCommerce\Utils;
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -68,6 +69,7 @@ class Key_Validator {
 				'timeout' => 15,
 				'headers' => array(
 					'apikey'       => $api_key,
+					'NewKey'       => Settings::get_instance()->get_new_key_header_value(),
 					'accept'       => 'application/json',
 					'Content-Type' => 'application/json',
 					'SourceSystem' => '35',

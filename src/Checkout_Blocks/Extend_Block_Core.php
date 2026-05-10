@@ -371,6 +371,8 @@ class Extend_Block_Core {
 		// Sanitize data
 		$sanitized_data = array_map( 'sanitize_text_field', wp_unslash( $_POST['data'] ) );
 
+		$original_shipping_address_1 = $sanitized_data['shipping_address_1'] ?? '';
+
 		$sanitized_data = Address_Utils::set_post_data_address( $sanitized_data );
 
 		$shipping_country = isset( $sanitized_data['shipping_country'] ) ? $sanitized_data['shipping_country'] : '';
@@ -472,7 +474,11 @@ class Extend_Block_Core {
 
 			WC()->customer->set_shipping_city( $validated_address['city'] );
 		} else {
-			WC()->customer->set_shipping_address_1( $sanitized_data['shipping_address_1'] ?? '' );
+			if ( $this->settings->is_reorder_nl_address_enabled() ) {
+				WC()->customer->set_shipping_address_1( $sanitized_data['shipping_address_1'] ?? '' );
+			} else {
+				WC()->customer->set_shipping_address_1( $original_shipping_address_1 );
+			}
 			WC()->customer->set_shipping_city( $sanitized_data['shipping_city'] ?? '' );
 			WC()->customer->set_shipping_state( $sanitized_data['shipping_state'] ?? '' );
 		}

@@ -42,7 +42,7 @@ The SDK is installed in `postnl-sdk-audit/` for audit purposes only. Before any 
 
 ## SDK Docs Warning
 
-Several SDK README examples contain wrong method names and namespaces. Always use the source code, not the docs, for imports and method calls. Full mismatch list: `postnl-v4-sdk-api-reference.md §11`.
+The SDK docs under `docs/postnl-v4-migration/sources/sdk-docs/` are the primary reference for method names, namespaces, and request/response shapes. Several discrepancies exist between these docs and prior code inspection of the installed SDK — see `postnl-v4-sdk-api-reference.md §11` for the full list. Where SDK docs and code conflict, the discrepancy is noted in §11; verify against the installed SDK before use.
 
 ---
 
@@ -344,18 +344,18 @@ Migrate checkout delivery-day options to the SDK TimeFrame V4 services as a POC.
 - When SDK path is active: build request from mapped fields, call SDK TimeFrame service, map response, catch `PostnlExceptionInterface` inside the SDK branch.
 - Old checkout call remains in the class as the else branch — not removed.
 
-**SDK mismatch — use these exact calls (docs are wrong):**
-- `$client->singleTimeframe()->getTimeframe(SingleServiceTimeframeRequest)` → `TimeFrameSingleServiceResponse`
-- `$client->multipleTimeframes()->getTimeframes(MultipleServicesTimeframeRequest)` → `TimeframesMultipleServicesResponse`
-- Correct namespace: `Postnl\Sdk\Service\SingleServiceTimeframe\V4\Request\SingleServiceTimeframeRequest`
-- Correct namespace: `Postnl\Sdk\Service\MultipleServicesTimeframe\V4\Request\MultipleServicesTimeframeRequest`
-- SDK docs show `$postnl->checkout()->multipleTimeframes()` — **this method does not exist on the client.**
+**SDK method names — per SDK docs:**
+- `$client->checkout()->getSingleServiceTimeframe(SingleServiceTimeframeRequest)` → `TimeFrameSingleServiceResponse`
+- `$client->checkout()->getMultipleServicesTimeframe(MultipleServicesTimeframeRequest)` → `TimeframesMultipleServicesResponse`
+- SDK docs namespace: `Postnl\Sdk\Service\Checkout\V4\Request\SingleServiceTimeframeRequest`
+- SDK docs namespace: `Postnl\Sdk\Service\Checkout\V4\Request\MultipleServicesTimeframeRequest`
+- **Verify:** SDK docs consistently use `$postnl->checkout()` but prior code inspection found `singleTimeframe()`/`multipleTimeframes()` on `Client`. Verify `src/Client/Client.php` in installed SDK before use. SDK docs also show `$postnl->checkout()->multipleTimeframes()` in one complete example — inconsistent with `getMultipleServicesTimeframe()` used elsewhere in SDK docs.
 
 Choose single vs. multiple services based on plugin settings for daytime/evening options.
 
 ### SDK methods/classes involved
-- `Client::singleTimeframe()->getTimeframe(SingleServiceTimeframeRequest)`
-- `Client::multipleTimeframes()->getTimeframes(MultipleServicesTimeframeRequest)`
+- `Client::checkout()->getSingleServiceTimeframe(SingleServiceTimeframeRequest)` (per SDK docs; verify against installed SDK)
+- `Client::checkout()->getMultipleServicesTimeframe(MultipleServicesTimeframeRequest)` (per SDK docs; verify against installed SDK)
 - `Postnl\Sdk\ResponseData\V4\TimeFrame\TimeFrameSingleServiceResponse`
 - `Postnl\Sdk\ResponseData\V4\TimeFrame\TimeframesMultipleServicesResponse`
 
@@ -446,12 +446,13 @@ Migrate checkout pickup-point options to the SDK Locations V4 services as a POC.
 - Check `Router::use_sdk_for('locations')` — if false, fall through to old `POST /shipment/v1/checkout` call (default until staging validated).
 - When SDK path is active: build request from mapped fields, call SDK Locations service, map response, catch `PostnlExceptionInterface` inside the SDK branch.
 - Old checkout call remains in the class as the else branch — not removed.
-- By address (primary): `$client->addressLocations()->getNearestByAddress(PickUpNearAddressRequest)` → `PickUpLocationsResponse`
-- By coordinates (secondary, if lat/long available): `$client->coordinateLocations()->getNearestByCoordinates(PickUpNearCoordinatesRequest)` → `PickUpLocationsResponse`
+- By address (primary): `$client->locations()->getPickupLocationsByAddress(PickUpNearAddressRequest)` → `PickUpLocationsResponse`
+- By coordinates (secondary, if lat/long available): `$client->locations()->getNearPickupLocationsByCoordinates(PickUpNearCoordinatesRequest)` → `PickUpLocationsResponse`
+- **Verify:** SDK docs show `$postnl->locations()` but prior code inspection found `addressLocations()`/`coordinateLocations()` on `Client`. Verify `src/Client/Client.php` in installed SDK before use.
 
 ### SDK methods/classes involved
-- `Client::addressLocations()->getNearestByAddress(PickUpNearAddressRequest)`
-- `Client::coordinateLocations()->getNearestByCoordinates(PickUpNearCoordinatesRequest)`
+- `Client::locations()->getPickupLocationsByAddress(PickUpNearAddressRequest)` (per SDK docs; verify against installed SDK)
+- `Client::locations()->getNearPickupLocationsByCoordinates(PickUpNearCoordinatesRequest)` (per SDK docs; verify against installed SDK)
 - `Postnl\Sdk\RequestData\V4\Locations\PickUpNearAddressRequest`
 - `Postnl\Sdk\RequestData\V4\Locations\PickUpNearCoordinatesRequest`
 - `Postnl\Sdk\ResponseData\V4\Locations\PickUpLocationsResponse`
@@ -539,7 +540,7 @@ Remove the last reference to the old `POST /shipment/v1/checkout` call and repla
 - Call TimeFrame and Locations sequentially (or with isolated error handling).
 - If TimeFrame fails: return empty delivery days; still return pickup points.
 - If Locations fails: return empty pickup points; still return delivery days.
-- **There is no `checkout()` method on the SDK client.** Do not look for one.
+- **Verify:** SDK docs show `$postnl->checkout()` for TimeFrame calls, but prior code inspection did not find this method on `Client`. Verify `src/Client/Client.php` in the installed SDK before using `checkout()`.
 - **There is no standalone `DeliveryDate` V4 SDK service.** Do not look for one.
 - Postal-code check (`Postcode_Check/Client.php`) stays on old client; do not call from here.
 
@@ -753,7 +754,7 @@ Migrate standard return label generation to the SDK `returnShipment()->generateR
 |---|---|---|
 | Return address (merchant) | `receiver` | Merchant address for returns |
 | Sender (customer) | `sender` | Consumer contact + address |
-| Product code (return) | `returnOptions.domestic.returnPeriod` | Map to 20/35/100/200/365 days |
+| Product code (return) | `returnOptions.domestic.returnPeriod` | Map to 20 or 35 days per SDK `ReturnPeriod` enum; values 100, 200, 365 not confirmed in SDK docs |
 | Valuable return flag | `returnOptions.domestic.valuableReturn` (bool) | |
 | LiB product code | `returnOptions.labelType = labelinthebox` | |
 | LiB return barcode | `returnOptions.returnBarcode` | String |
@@ -962,7 +963,7 @@ Update the activatereturn flow to V4 (via SDK extension) or explicitly confirm o
 - **PostNL/Joris must answer:** Is `POST /shipment/delivery/v4/return/activate` equivalent to old `POST /parcels/v1/shipment/activatereturn`? Build SDK extension, keep old client, or drop?
 
 ### Notes for reviewer
-- SDK Extension docs reference a `cache` field in context that does not exist in current code (`ServiceContext`). Do not follow SDK Extension README for this; read `PostalCodeCheckExtension.php` source directly as the reference implementation.
+- SDK Extension docs show `$context->cache` as a valid `ServiceContext` property. Whether this property exists in the installed SDK's `ServiceContext.php` requires verification — check the installed source before using it. If absent, `PostalCodeCheckExtension.php` is the reference implementation.
 - Postman examples for `return/activate` show `ActivateReturn denied no label` and `ActivateReturn warning Label` responses — review these response shapes before Option A implementation.
 
 ---
@@ -1012,7 +1013,7 @@ Run after Tasks 1–7 are merged. Run again after Task 6 labels are considered s
 | Risk | Impact | Mitigation |
 |---|---|---|
 | Hosting / plugin PHP < 8.2 | Blocks SDK in production | Resolve PHP decision before Task 1 ships; develop on PHP 8.2 |
-| SDK docs / code mismatches | Wrong method names fail at runtime | Use code not docs; mismatch list in reference §11 |
+| SDK docs / code mismatches | Wrong method names fail at runtime | SDK docs are primary reference; discrepancies with installed code noted in reference §11; verify against installed SDK before use |
 | Product mapping incomplete or wrong | PR6 labels wrong or API rejects | PostNL signs off on mapping table in writing before Task 6 starts |
 | Checkout aggregation shape change | Breaks checkout display or fee calculation | Response adapters in Tasks 3+4; verify `taxRatio` logic in `Container.php` |
 | Smart Returns V4 differs from V2.2 | Wrong customer return flow | Keep old client; Task 8 blocked until PostNL confirms |

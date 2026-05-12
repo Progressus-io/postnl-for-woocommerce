@@ -25,6 +25,8 @@
 | transport layer | PSR-18 client, PSR-17 factories, Guzzle helper builder, retry/log/trace/plugin transport decorators | `src/Client/ClientBuilder.php`, `src/Transport/*` |
 | exception system | `PostnlSdkException`, `HttpSdkException`, client/server/transport/auth exceptions, parsers/normalizers | `src/Exception/*`, `docs/ErrorHandling/README.md` |
 | docs folder | Service docs under `docs/Barcode`, `docs/ShipmentDelivery`, `docs/Labelling`, `docs/Confirming`, `docs/ReturnShipment`, `docs/Locations`, `docs/TimeFrame`, `docs/Extension` | `postnl-sdk-audit/vendor/postnl/api-client-sdk/docs` |
+| versioning | `Version::V1` is deprecated with `#[DeprecatedVersion]`; `Version::V4` is the default (no explicit `withApiVersion()` call required); `SDK_POSTNL_API_VERSION` accepts `1`, `4`, or `5` but no V5 service implementations appear in SDK docs | `docs/Versioning.md`, `docs/Configuration/README.md` |
+| package distribution | Distributed via Private Packagist at `https://repo.packagist.com/postnl/`; customers add the repo + an `auth.json` with a read-only token; internal runbook is in `docs/Distribution/README.md` (not customer-facing) | `docs/Distribution/README.md` |
 
 ## 3. API Area Coverage Matrix
 
@@ -35,8 +37,8 @@
 | Labelling V4 | Not present | `LabellingInterface` | `requestLabel()` | `ShipmentDeliveryRequest` | `LabellingResponse` | Shipping label flow currently old client | Covered |
 | Confirming / pre-announce V4 | Not present | `ConfirmingInterface` | `preAnnounceShipment()` | `ShipmentDeliveryRequest` | `ConfirmingResponse` | No distinct old pre-announce-only flow found | Covered |
 | Barcode | Not present | `BarcodeInterface` | `generateBarcode()` | `BarcodeRequest` | `GenerateBarcodeResponse` | `src/Rest_API/Barcode/Client.php` old `GET /shipment/v1_1/barcode` | Covered |
-| Locations / pickup locations | Not present | `NearAddressPickupLocationsInterface`, `NearCoordinatesPickupLocationsInterface` | `getNearestByAddress()`, `getNearestByCoordinates()` | `PickUpNearAddressRequest`, `PickUpNearCoordinatesRequest` | `PickUpLocationsResponse` | Checkout pickup points through `src/Rest_API/Checkout/Client.php` old `POST /shipment/v1/checkout` | Covered |
-| TimeFrame / delivery dates | Not present | `SingleServiceTimeframeInterface`, `MultipleServicesTimeframeInterface` | `getTimeframe()`, `getTimeframes()` | `SingleServiceTimeframeRequest`, `MultipleServicesTimeframeRequest` | `TimeFrameSingleServiceResponse`, `TimeframesMultipleServicesResponse` | Checkout delivery days through `src/Rest_API/Checkout/Client.php` | Covered |
+| Locations / pickup locations | Not present | `Client::locations()` → `NearAddressPickupLocationsInterface`, `NearCoordinatesPickupLocationsInterface` | `getPickupLocationsByAddress()`, `getNearPickupLocationsByCoordinates()` | `PickUpNearAddressRequest`, `PickUpNearCoordinatesRequest` | `PickUpLocationsResponse` | Checkout pickup points through `src/Rest_API/Checkout/Client.php` old `POST /shipment/v1/checkout` | Covered |
+| TimeFrame / delivery dates | Not present | `Client::checkout()` → `SingleServiceTimeframeInterface`, `MultipleServicesTimeframeInterface` | `getSingleServiceTimeframe()`, `getMultipleServicesTimeframe()` | `SingleServiceTimeframeRequest`, `MultipleServicesTimeframeRequest` | `TimeFrameSingleServiceResponse`, `TimeframesMultipleServicesResponse` | Checkout delivery days through `src/Rest_API/Checkout/Client.php` | Covered |
 | Checkout coverage | Not present | No standalone `checkout()` service on `Client` | N/A | N/A | N/A | `src/Rest_API/Checkout/Client.php` old `POST /shipment/v1/checkout` | Needs mapping |
 | Postal code check / address validation | Not present | Extension only: `PostalCodeCheckExtension` | `ConfigurableAction::execute()` | `PostalCodeCheckRequest` | `PostalCodeAddressResponse` | `src/Rest_API/Postcode_Check/Client.php` old `POST /shipment/checkout/v1/postalcodecheck` | Partially covered |
 | Smart Returns | `POST /shipment/delivery/v4/return/generate` examples named Smart Returns | `ReturnShipmentInterface` | `generateReturn()` | `ReturnShipmentRequest` | `GenerateReturnResponse` | `src/Rest_API/Smart_Returns/Client.php` old `POST /shipment/v2_2/label/` | Needs mapping |
@@ -101,10 +103,10 @@ SDK endpoints not present in Postman collection:
 | Barcode | `POST` | `/shipment/delivery/v4/barcode` | `Client::barcode()->generateBarcode()` | `BarcodeRequest` |
 | Labelling | `POST` | `/shipment/delivery/v4/label` | `Client::labelling()->requestLabel()` | `ShipmentDeliveryRequest` |
 | Confirming | `POST` | `/shipment/delivery/v4/confirm` | `Client::confirming()->preAnnounceShipment()` | `ShipmentDeliveryRequest` |
-| Locations by address | `POST` | `/shipment/delivery/v4/locations/near-address` | `Client::addressLocations()->getNearestByAddress()` | `PickUpNearAddressRequest` |
-| Locations by coordinates | `POST` | `/shipment/delivery/v4/locations/near-coordinates` | `Client::coordinateLocations()->getNearestByCoordinates()` | `PickUpNearCoordinatesRequest` |
-| Single TimeFrame | `POST` | `/shipment/delivery/v4/timeframe/singleservice` | `Client::singleTimeframe()->getTimeframe()` | `SingleServiceTimeframeRequest` |
-| Multiple TimeFrames | `POST` | `/shipment/delivery/v4/timeframe/multipleservices` | `Client::multipleTimeframes()->getTimeframes()` | `MultipleServicesTimeframeRequest` |
+| Locations by address | `POST` | `/shipment/delivery/v4/locations/near-address` | `Client::locations()->getPickupLocationsByAddress()` | `PickUpNearAddressRequest` |
+| Locations by coordinates | `POST` | `/shipment/delivery/v4/locations/near-coordinates` | `Client::locations()->getNearPickupLocationsByCoordinates()` | `PickUpNearCoordinatesRequest` |
+| Single TimeFrame | `POST` | `/shipment/delivery/v4/timeframe/singleservice` | `Client::checkout()->getSingleServiceTimeframe()` | `SingleServiceTimeframeRequest` |
+| Multiple TimeFrames | `POST` | `/shipment/delivery/v4/timeframe/multipleservices` | `Client::checkout()->getMultipleServicesTimeframe()` | `MultipleServicesTimeframeRequest` |
 | Postal code check extension | `GET` | `/shipment/checkout/v1/postalcodecheck` | `PostalCodeCheckExtension` via `extensions()` | `PostalCodeCheckRequest` |
 
 ## 5. Payload Field Reference
@@ -188,7 +190,7 @@ SDK endpoints not present in Postman collection:
 | `labelSettings.outputType` | enum/string | Shipment/Return | `PDF` in Postman, SDK enum values are lowercase `pdf`, `zpl`, `jpg`, `gif`, `png` | Docs/code casing must be verified against API |
 | `labelSettings.resolution` | enum/int | Shipment/Return | `200` | SDK enum values `200`, `300`, `600` |
 | `labelSettings.pageOrientation` | enum/string | Shipment/Return | `portrait` | SDK enum `portrait`, `landscape` |
-| `labelSettings.printMethod` | enum/string | Return | `consumerPrint` | SDK enum `consumerPrint`, `retailPrint`; return endpoints only |
+| `labelSettings.printMethod` | enum/string | Labelling, ShipmentDelivery, Return | `consumerPrint` | SDK enum `consumerPrint` (BE, PDF recommended), `retailPrint` (NL, PNG/JPG recommended); present in all label endpoints, not return-only |
 | `labelSettings.mergeType` | enum/string | SDK model | Unclear | SDK enum `singlepdf`, `pdfa6toa4` |
 | `labelSettings.positioning` | enum/string | SDK model | Unclear | SDK enum `topleft`, `topright`, `bottomleft`, `bottomright` |
 
@@ -214,7 +216,7 @@ SDK endpoints not present in Postman collection:
 | `returnOptions.labelType` | enum/string | LiB / return labels | `labelinthebox` | SDK enum also `Label`, `shipmentandreturnlabel`, `retourLabel`, `CN23`, `CommercialInvoice` |
 | `returnOptions.returnBarcode` | string | LiB | `{{returnBarcode}}` | SDK `ReturnOptions::$returnBarcode` |
 | `returnOptions.returnAddress` | object | LiB / EU return | `returnOptions.returnAddress.*` | SDK `Address` |
-| `returnOptions.domestic.returnPeriod` | enum/int | Return generate | `20` | SDK enum `20`, `35`, `100`, `200`, `365` |
+| `returnOptions.domestic.returnPeriod` | enum/int | Return generate | `20` | SDK `ReturnPeriod` enum confirms `IN_20_DAYS` (20) and `IN_35_DAYS` (35) only; values `100`, `200`, `365` not found in provided SDK docs |
 | `returnOptions.domestic.valuableReturn` | bool | Valuable return | `false` | SDK `DomesticReturnOptions::$valuableReturn` |
 | `returnOptions.returnBlock` | bool | SDK model | Unclear | Present in SDK; likely relates activation, but not found in extracted Postman return/generate examples |
 
@@ -252,8 +254,8 @@ SDK endpoints not present in Postman collection:
 |---|---|---|---|---|
 | `customerNumber` | string | Barcode V4 | Unclear | SDK `BarcodeRequest` |
 | `customerCode` | string | Barcode V4 | Unclear | SDK `BarcodeRequest` |
-| `serieStart` | string | Barcode V4 | Unclear | SDK replaces old `Serie`/`Range` shape |
-| `serieEnd` | string | Barcode V4 | Unclear | SDK field |
+| `serieStart` | string | Barcode V4 | Unclear | SDK constructor parameter is `serieStart`/`serieEnd`; `fromArray()` key is `seriesStart`/`seriesEnd` — inconsistency in SDK docs; verify against installed SDK version |
+| `serieEnd` | string | Barcode V4 | Unclear | SDK field; see note on `serieStart` |
 | `numberOfBarcodes` | int | Barcode V4 | Unclear | SDK field |
 
 ## 6. Services / Options Reference
@@ -269,7 +271,7 @@ SDK endpoints not present in Postman collection:
 | deliveryWindow.guaranteedBefore | `services.deliveryWindow.guaranteedBefore` | `10:00`, `12:00`, `17:00` | Guaranteed Before 10/12/17 | SDK comment flags `12:00` validation issue |
 | deliveryWindow.service | `services.deliveryWindow.service` | `evening` | Evening Delivery | TimeFrame services use `daytime`/`evening` |
 | deliveryWindow.duration | `services.deliveryWindow.duration` | `non24hours` | Letterbox Parcel NL 48hours | SDK enum also `24hours` |
-| labelType | `returnOptions.labelType` | `labelinthebox` | Parcel NL LiB | SDK enum includes several legacy-like label types |
+| labelType | `returnOptions.labelType` | `labelinthebox` | Parcel NL LiB | SDK docs confirm 3 `LabelType` values: `Label`, `labelinthebox`, `shipmentandreturnlabel`; values `retourLabel`, `CN23`, `CommercialInvoice` not found in provided SDK docs |
 | returnBarcode | `returnOptions.returnBarcode` | `{{returnBarcode}}` | Parcel NL LiB | Used with label-in-the-box |
 | returnAddress | `returnOptions.returnAddress.*` | `Teststraat`, `Den Haag` | Parcel NL LiB; EU return options | SDK `Address` |
 | shipmentType | `shipmentType` | `parcel`, `letterbox`, `packet` | Parcel, Letterbox, Packet examples | SDK enum also `parcelnonstandard`, `letter`, `pallet` |
@@ -283,12 +285,12 @@ SDK endpoints not present in Postman collection:
 | ShipmentDelivery | `Client::shipmentDelivery()` | `ShipmentDeliveryInterface::labelConfirm()` | `ShipmentDeliveryRequest` | `LabelConfirmResponse` | `docs/ShipmentDelivery/README.md` | `POST /shipment/delivery/v4/labelconfirm` | Create shipment and label/confirm response |
 | ReturnShipment | `Client::returnShipment()` | `ReturnShipmentInterface::generateReturn()` | `ReturnShipmentRequest` | `GenerateReturnResponse` | `docs/ReturnShipment/README.md` | `POST /shipment/delivery/v4/return/generate` | Generate return shipment/label |
 | Labelling | `Client::labelling()` | `LabellingInterface::requestLabel()` | `ShipmentDeliveryRequest` | `LabellingResponse` | `docs/Labelling/README.md` | Not present | Request label endpoint without confirm path |
-| Confirming | `Client::confirming()` | `ConfirmingInterface::preAnnounceShipment()` | `ShipmentDeliveryRequest` | `ConfirmingResponse` | `docs/Confirming/README.md` | Not present | Pre-announce/confirm shipment without label |
+| Confirming | `Client::confirming()` | `confirmShipmentPreAnnouncement()` / `preAnnounceShipment()` (SDK docs inconsistent; prior code inspection found `preAnnounceShipment()` on interface — use that) | `ShipmentDeliveryRequest` | `ConfirmingResponse` | `docs/Confirming/README.md` | Not present | Pre-announce/confirm shipment without label |
 | Barcode | `Client::barcode()` | `BarcodeInterface::generateBarcode()` | `BarcodeRequest` | `GenerateBarcodeResponse` | `docs/Barcode/README.md` | Not present | Generate one or more barcodes |
-| Locations by address | `Client::addressLocations()` | `NearAddressPickupLocationsInterface::getNearestByAddress()` | `PickUpNearAddressRequest` | `PickUpLocationsResponse` | `docs/Locations/README.md` | Not present | Pickup locations near postal address |
-| Locations by coordinates | `Client::coordinateLocations()` | `NearCoordinatesPickupLocationsInterface::getNearestByCoordinates()` | `PickUpNearCoordinatesRequest` | `PickUpLocationsResponse` | `docs/Locations/README.md` | Not present | Pickup locations near lat/long |
-| Single TimeFrame | `Client::singleTimeframe()` | `SingleServiceTimeframeInterface::getTimeframe()` | `SingleServiceTimeframeRequest` | `TimeFrameSingleServiceResponse` | `docs/TimeFrame/README.md` | Not present | Delivery timeframes for one service |
-| Multiple TimeFrames | `Client::multipleTimeframes()` | `MultipleServicesTimeframeInterface::getTimeframes()` | `MultipleServicesTimeframeRequest` | `TimeframesMultipleServicesResponse` | `docs/TimeFrame/README.md` | Not present | Delivery timeframes for multiple services |
+| Locations by address | `Client::locations()` | `getPickupLocationsByAddress()` | `PickUpNearAddressRequest` | `PickUpLocationsResponse` | `docs/Locations/README.md` | Not present | Pickup locations near postal address |
+| Locations by coordinates | `Client::locations()` | `getNearPickupLocationsByCoordinates()` | `PickUpNearCoordinatesRequest` | `PickUpLocationsResponse` | `docs/Locations/README.md` | Not present | Pickup locations near lat/long |
+| Single TimeFrame | `Client::checkout()` | `getSingleServiceTimeframe()` | `SingleServiceTimeframeRequest` | `TimeFrameSingleServiceResponse` | `docs/TimeFrame/README.md` | Not present | Delivery timeframes for one service |
+| Multiple TimeFrames | `Client::checkout()` | `getMultipleServicesTimeframe()` (also `multipleTimeframes()` in SDK complete example — SDK docs are inconsistent) | `MultipleServicesTimeframeRequest` | `TimeframesMultipleServicesResponse` | `docs/TimeFrame/README.md` | Not present | Delivery timeframes for multiple services |
 | PostalCodeCheck extension | `Client::extensions()` | `ConfigurableAction::execute()` | `PostalCodeCheckRequest` | `PostalCodeAddressResponse` | `docs/Extension/README.md` | Not present | V1 checkout postal-code/address lookup extension |
 | Auth | `Postnl::client()`, `Postnl::sandboxClient()`, `Postnl::oauthClient()`, `Postnl::sandboxOauthClient()`, `Auth::*` | N/A | N/A | N/A | `docs/Configuration/README.md` | API key headers in Postman | Request authentication |
 | Extensions | `Client::extensions()` | `ClientExtensionsInterface::register()`, `getAs()` | Extension-defined | Extension-defined | `docs/Extension/README.md` | Not present | Add unsupported endpoints such as postal-code check or activatereturn |
@@ -301,9 +303,9 @@ SDK endpoints not present in Postman collection:
 | Shipping labels | `src/Rest_API/Shipping/Client.php` | `POST /v1/shipment?confirm=true` | `/shipment/delivery/v4/labelconfirm` | `shipmentDelivery()->labelConfirm()` | SDK after mapping | Must map old `ProductCodeDelivery`/`ProductOptions` to V4 `shipmentType` and `services` |
 | Return labels | `src/Rest_API/Return_Label/Client.php` | `POST /v1/shipment?confirm=true` via shipping client | `/shipment/delivery/v4/return/generate` or `/labelconfirm` with `returnOptions` | `returnShipment()->generateReturn()` or `shipmentDelivery()->labelConfirm()` | SDK after mapping | Preserve existing label output and return address behavior |
 | Letterbox labels | `src/Rest_API/Letterbox/Client.php` | `POST /v1/shipment?confirm=true` | `/shipment/delivery/v4/labelconfirm` | `shipmentDelivery()->labelConfirm()` | SDK after mapping | Map to `shipmentType=letterbox` and applicable dimensions/services |
-| Checkout delivery options | `src/Rest_API/Checkout/Client.php`, `src/Frontend/Container.php`, `src/Frontend/Delivery_Day.php` | `POST /shipment/v1/checkout` | `/shipment/delivery/v4/timeframe/singleservice`, `/shipment/delivery/v4/timeframe/multipleservices` | `singleTimeframe()->getTimeframe()`, `multipleTimeframes()->getTimeframes()` | Hybrid | Checkout V1 combines delivery dates and locations; V4 split requires aggregation |
-| Pickup points | `src/Rest_API/Checkout/Client.php`, `src/Frontend/Dropoff_Points.php` | `POST /shipment/v1/checkout` | `/shipment/delivery/v4/locations/near-address`, `/shipment/delivery/v4/locations/near-coordinates` | `addressLocations()->getNearestByAddress()`, `coordinateLocations()->getNearestByCoordinates()` | SDK after mapping | Preserve UI response shape expected by checkout frontend |
-| TimeFrame / delivery dates | `src/Rest_API/Checkout/Client.php`, `src/Frontend/Container.php` | `POST /shipment/v1/checkout` | `/shipment/delivery/v4/timeframe/*` | `getTimeframe()`, `getTimeframes()` | SDK after mapping | DeliveryDate is represented by TimeFrame V4, not standalone DeliveryDate service |
+| Checkout delivery options | `src/Rest_API/Checkout/Client.php`, `src/Frontend/Container.php`, `src/Frontend/Delivery_Day.php` | `POST /shipment/v1/checkout` | `/shipment/delivery/v4/timeframe/singleservice`, `/shipment/delivery/v4/timeframe/multipleservices` | `checkout()->getSingleServiceTimeframe()`, `checkout()->getMultipleServicesTimeframe()` | Hybrid | Checkout V1 combines delivery dates and locations; V4 split requires aggregation |
+| Pickup points | `src/Rest_API/Checkout/Client.php`, `src/Frontend/Dropoff_Points.php` | `POST /shipment/v1/checkout` | `/shipment/delivery/v4/locations/near-address`, `/shipment/delivery/v4/locations/near-coordinates` | `locations()->getPickupLocationsByAddress()`, `locations()->getNearPickupLocationsByCoordinates()` | SDK after mapping | Preserve UI response shape expected by checkout frontend |
+| TimeFrame / delivery dates | `src/Rest_API/Checkout/Client.php`, `src/Frontend/Container.php` | `POST /shipment/v1/checkout` | `/shipment/delivery/v4/timeframe/*` | `checkout()->getSingleServiceTimeframe()`, `checkout()->getMultipleServicesTimeframe()` | SDK after mapping | DeliveryDate is represented by TimeFrame V4, not standalone DeliveryDate service |
 | Postcode check | `src/Rest_API/Postcode_Check/Client.php` | `POST /shipment/checkout/v1/postalcodecheck` | `/shipment/checkout/v1/postalcodecheck` | `PostalCodeCheckExtension` | Old client | SDK extension uses `GET` while plugin uses `POST`; validation remains outside V4 |
 | Smart Returns | `src/Rest_API/Smart_Returns/Client.php` | `POST /shipment/v2_2/label/` | `/shipment/delivery/v4/return/generate` possibly | `returnShipment()->generateReturn()` | Needs confirmation | Postman names Smart Returns under return/generate, but old body/product behavior requires mapping confirmation |
 | Shipment & Return activation | `src/Rest_API/Shipment_and_Return/Client.php` | `POST /parcels/v1/shipment/activatereturn` | `/shipment/delivery/v4/return/activate` | Not found | Needs confirmation | Postman has V4 endpoint; SDK service absent |
@@ -314,11 +316,11 @@ SDK endpoints not present in Postman collection:
 - DeliveryDate is represented through TimeFrame V4 SDK services:
   - `POST /shipment/delivery/v4/timeframe/singleservice`
   - `POST /shipment/delivery/v4/timeframe/multipleservices`
+- SDK docs show `$postnl->checkout()->getSingleServiceTimeframe()` and `$postnl->checkout()->getMultipleServicesTimeframe()` for TimeFrame calls; prior code inspection found `singleTimeframe()` / `multipleTimeframes()` on `Client` — verify before use.
 - Checkout behavior is covered through TimeFrame + Locations:
   - delivery-day options: TimeFrame services.
-  - pickup-point options: Locations services.
-- No standalone Checkout V4 service is clearly exposed in SDK source.
-- No standalone DeliveryDate V4 service is clearly exposed in SDK source.
+  - pickup-point options: Locations services (`$postnl->locations()` per SDK docs).
+- No standalone Checkout V4 service is exposed; no standalone DeliveryDate V4 service is exposed.
 - Postal-code/address validation remains outside V4; SDK includes a V1 checkout postal-code extension.
 
 ## 10. Gaps / Unknowns
@@ -329,23 +331,26 @@ SDK endpoints not present in Postman collection:
 | Smart Returns replacement or keep-old decision | Postman has Smart Returns examples on `POST /shipment/delivery/v4/return/generate`; SDK covers return generate | Whether old `POST /shipment/v2_2/label/` Smart Returns behavior is fully replaced by V4 return generate | Keep old client or hybrid until equivalence confirmed |
 | activatereturn replacement or keep-old decision | Postman has `POST /shipment/delivery/v4/return/activate`; SDK has no service | Request/response model and SDK extension decision | Requires custom extension or old client fallback |
 | OAuth requirement per endpoint | Postman V4 shipment/return/activate examples show `apikey`; SDK supports API key and OAuth client credentials | Which V4 endpoints require OAuth instead of API key is not explicit in inspected sources | Mark endpoint auth as API-key evidenced; OAuth requirement unclear |
-| SDK docs/code mismatches that affect method names | Code exposes `preAnnounceShipment()`, `singleTimeframe()`, `multipleTimeframes()`, `addressLocations()`, `coordinateLocations()` | Docs show older/nonexistent names in places | Developers can call wrong methods if following docs only |
-| Checkout/DeliveryDate standalone absence | `Client` has no `checkout()` or `deliveryDate()` accessor | No direct V4 checkout equivalent | Checkout migration must aggregate V4 TimeFrame and Locations |
+| SDK docs/code mismatches that affect method names | SDK docs and prior code inspection disagree on facade accessor names for Locations and TimeFrame services (see Section 11 for detail); Confirming method name is inconsistent within the SDK docs themselves | If wrong method is called the call fails at runtime | Verify `src/Client/Client.php` and interfaces before any implementation |
+| Checkout/DeliveryDate standalone absence | SDK docs show `$postnl->checkout()` for TimeFrame calls; no standalone `deliveryDate()` accessor documented | No direct V4 deliveryDate or single checkout service; TimeFrame + Locations must be aggregated | Checkout migration must call TimeFrame and Locations separately |
 | `services.adrLq` casing | SDK `PayloadKey::adrLq = 'adrLq'`; extracted Postman field appeared as `services.adrlq` | Exact API casing accepted by V4 | Verify before sending ADR LQ requests |
 | `labelSettings.outputType` casing | SDK enum values lowercase; Postman examples show `PDF` | Whether API accepts both or only one casing | Normalize through SDK enum unless PostNL confirms otherwise |
+| Barcode request field naming | SDK constructor uses `serieStart`/`serieEnd`; SDK `fromArray()` uses `seriesStart`/`seriesEnd` (with trailing `s`) | Whether the API key (serialized form) is `serieStart` or `seriesStart` | Verify against installed SDK `src/Service/Barcode/V4/Request/BarcodeRequest.php` |
+| `LabelType` enum completeness | SDK docs confirm `Label`, `labelinthebox`, `shipmentandreturnlabel` | Values `retourLabel`, `CN23`, `CommercialInvoice` listed in prior reference but not found in provided SDK docs | Check SDK `src/Enums/Payload/LabelType.php` before mapping |
+| Locations and TimeFrame `Client` facade | SDK docs consistently show `$postnl->locations()` and `$postnl->checkout()` | Prior code inspection found `addressLocations()`, `coordinateLocations()`, `singleTimeframe()`, `multipleTimeframes()` on `Client` — if those are absent, SDK doc examples will fail | Verify `src/Client/Client.php` before implementation |
 
 ## 11. Docs / Code Mismatches
 
 | Area | Docs say | Code exposes | Impact | Evidence |
 |---|---|---|---|---|
 | TimeFrame namespaces | Docs import `Postnl\Sdk\Service\Checkout\V4\Request\SingleServiceTimeframeRequest` and `MultipleServicesTimeframeRequest` | Code classes are under `Postnl\Sdk\Service\SingleServiceTimeframe\V4\Request` and `Postnl\Sdk\Service\MultipleServicesTimeframe\V4\Request` | Wrong imports fail | `docs/TimeFrame/README.md`, `src/Service/SingleServiceTimeframe/V4/Request/SingleServiceTimeframeRequest.php` |
-| TimeFrame facade | Docs reference `$postnl->checkout()->multipleTimeframes($request)` | Code exposes `$postnl->multipleTimeframes()->getTimeframes($request)` and `$postnl->singleTimeframe()->getTimeframe($request)` | Wrong method chain fails | `docs/TimeFrame/README.md`, `src/Client/Client.php` |
-| Locations facade/namespaces | Docs are generally service docs; code accessors are `addressLocations()` and `coordinateLocations()` | Code exposes `getNearestByAddress()` / `getNearestByCoordinates()` | Verify against code, not inferred checkout service | `src/Client/Client.php`, `src/Service/NearAddressPickupLocations/*`, `src/Service/NearCoordinatesPickupLocations/*` |
-| Confirming method name | Docs mostly use `confirmShipmentPreAnnouncement()` | Code interface exposes `preAnnounceShipment()` | Wrong method call fails | `docs/Confirming/README.md`, `src/Service/Confirming/ConfirmingInterface.php` |
-| retry builder method | Docs show `withRetryPolicy(new ExponentialBackoffRetryPolicy(...))` | Code exposes `ClientBuilder::withRetry(RetryConfig $config)` | Wrong builder method fails | `docs/Configuration/README.md`, `src/Client/ClientBuilder.php` |
+| TimeFrame facade | SDK docs consistently use `$postnl->checkout()->getSingleServiceTimeframe()` and `$postnl->checkout()->getMultipleServicesTimeframe()`; one complete example uses `$postnl->checkout()->multipleTimeframes()` | Prior code inspection found `$postnl->singleTimeframe()->getTimeframe()` and `$postnl->multipleTimeframes()->getTimeframes()` on `Client` — if `checkout()` is absent from `Client`, all SDK doc examples fail | Verify `src/Client/Client.php` before writing integration code | `docs/TimeFrame/README.md` |
+| Locations facade | SDK docs use `$postnl->locations()->getPickupLocationsByAddress()` and `$postnl->locations()->getNearPickupLocationsByCoordinates()` | Prior code inspection found `$postnl->addressLocations()->getNearestByAddress()` and `$postnl->coordinateLocations()->getNearestByCoordinates()` on `Client` — if `locations()` is absent, SDK doc examples fail | Verify `src/Client/Client.php` before writing integration code | `docs/Locations/README.md` |
+| Confirming method name | SDK docs examples use `confirmShipmentPreAnnouncement()` in most code blocks but the complete example uses `preAnnounceShipment()` — SDK docs are internally inconsistent | Prior code inspection found interface exposes `preAnnounceShipment()` | Use `preAnnounceShipment()` per prior code inspection; confirm against installed SDK | `docs/Confirming/README.md` |
+| retry builder method | SDK docs show `withRetryPolicy(new ExponentialBackoffRetryPolicy(maxRetries: 3, baseDelayMs: 1000, maxDelayMs: 10000))` | Prior code inspection found `ClientBuilder::withRetry(RetryConfig $config)` — different method name and signature | Verify `src/Client/ClientBuilder.php` before calling | `docs/Configuration/README.md` |
 | enum namespaces | Docs examples may imply checkout-specific request namespace | Code payload enums are under `Postnl\Sdk\Enums\Payload` | Use code namespaces for imports | `src/Enums/Payload/*` |
-| Checkout references | Docs Extension examples reference checkout and postal-code extension; main `Client` has no `checkout()` method | Code has `Client::extensions()` and V1 extension classes only | Checkout V4 is not a first-class SDK service | `docs/Extension/README.md`, `src/Client/Client.php`, `src/Service/Checkout/V1/Extension/PostalCodeCheckExtension.php` |
-| Extension cache context | Docs mention `$context->cache` in extension docs | `ServiceContext` constructor fields do not include `cache` | Extension docs may not match current code | `docs/Extension/README.md`, `src/Service/ServiceContext.php` |
+| Checkout references | TimeFrame SDK docs use `$postnl->checkout()` as the facade accessor for timeframe calls; Extension docs reference V1 checkout postal-code extension only | Prior code inspection of `Client` found no `checkout()` method — if absent, TimeFrame calls via `$postnl->checkout()` will fail | Verify `src/Client/Client.php`; the postal-code V1 extension is accessed via `Client::extensions()` regardless | `docs/TimeFrame/README.md`, `docs/Extension/README.md`, `src/Client/Client.php` |
+| Extension cache context | SDK Extension docs explicitly show `$context->cache` as valid and document `ServiceContext` as exposing `transport`, `apiVersion`, `identity`, `logger`, `cache`, `payloadMapper` | Prior code inspection of `ServiceContext.php` did not find a `cache` property | Verify `src/Service/ServiceContext.php` against installed SDK | `docs/Extension/README.md` |
 
 ## 12. Error Handling Reference
 
@@ -371,6 +376,13 @@ SDK endpoints not present in Postman collection:
   - `Exception\Data\Parser\PlainTextParser`
   - `Exception\Data\Parser\FaultsNormalizer`
   - `Exception\Data\Parser\FieldErrorsNormalizer`
+- Additional exception: `SchemaMismatchException` — thrown when PostNL returns a response that does not conform to the SDK schema (required field absent or wrong type); implements `ServerErrorExceptionInterface`; exposes `$targetClass` and `$field` for structured logging.
+- Horizontal marker interfaces (catch-by-intent, all extend `PostnlExceptionInterface`):
+  - `AuthExceptionInterface` — any auth failure (pre-request or HTTP 401/403)
+  - `TransportExceptionInterface` — pre-response network failure; exposes `getFailureReason(): TransportFailureReason`
+  - `ClientErrorExceptionInterface` — any HTTP 4xx
+  - `ServerErrorExceptionInterface` — server-side failure or API schema break
+- Log redaction: SDK ships `RedactionRegistry` with default rules — sensitive fields (email, name, postal code, street, house number, label binary) are auto-redacted from all log output; customize via `withRedactionRegistry()` on `ClientBuilder`; disable with `NullRedactionRegistry`.
 - Integration boundary rule:
   - Catch `PostnlExceptionInterface` at the plugin SDK wrapper boundary.
   - Convert SDK exceptions to existing plugin admin/customer error surfaces.
@@ -385,10 +397,13 @@ SDK endpoints not present in Postman collection:
 | OAuth browser PKCE support | Not provided by SDK; plugin implements Fill In With PostNL manually | `postnl-for-woocommerce-org/src/Frontend/Fill_In_With_Postnl_Handler.php` |
 | sandbox base URL | `https://api-sandbox.postnl.nl/` | `ClientBuilder::SANDBOX_BASE_URI` |
 | production base URL | `https://api.postnl.nl/` | `ClientBuilder::PRODUCTION_BASE_URI` |
-| SDK env vars | `SDK_POSTNL_API_KEY`, `SDK_POSTNL_CLIENT_ID`, `SDK_POSTNL_CLIENT_SECRET`, `SDK_POSTNL_OAUTH_TOKEN_URL`, `SDK_POSTNL_IS_SANDBOX`, `SDK_POSTNL_API_VERSION`, `SDK_POSTNL_LOGGER_CLASS_PATH` | `src/Config/Environment.php`, `docs/Configuration/README.md` |
+| SDK env vars (auth) | `SDK_POSTNL_API_KEY`, `SDK_POSTNL_CLIENT_ID`, `SDK_POSTNL_CLIENT_SECRET`, `SDK_POSTNL_OAUTH_TOKEN_URL`, `SDK_POSTNL_IS_SANDBOX` | `docs/Configuration/README.md` |
+| SDK env vars (operational) | `SDK_POSTNL_API_VERSION` (1/4/5, default 4), `SDK_POSTNL_MAX_RETRIES` (default 3; 0 to disable), `SDK_POSTNL_RETRY_DELAY_MS` (default 1000), `SDK_POSTNL_MAX_RETRY_DELAY_MS` (default 10000), `SDK_POSTNL_SOURCE_SYSTEM`, `SDK_POSTNL_CUSTOMER_NUMBER`, `SDK_POSTNL_CUSTOMER_CODE`, `SDK_POSTNL_MIN_LOG_LEVEL`, `SDK_POSTNL_LOGGER_CLASS_PATH` | `docs/Configuration/README.md` |
+| SDK env vars (cache) | `SDK_POSTNL_CACHE_STORE_TYPE` (auto/redis/memcached/file/array), `SDK_POSTNL_CACHE_TTL` (default 3600), `SDK_POSTNL_CACHE_PREFIX` (default `sdk_postnl_`), `SDK_POSTNL_REDIS_HOST`/`_PORT`/`_PASSWORD`/`_DATABASE`, `SDK_POSTNL_MEMCACHED_HOST`/`_PORT`, `SDK_POSTNL_FILE_CACHE_DIR` | `docs/Configuration/README.md` |
 | where configured | `Auth::fromEnv()`, `Environment::readFactorySecrets()`, `ClientBuilder::withAuth()`, `ClientBuilder::withSandbox()` | `src/Auth/Auth.php`, `src/Config/Environment.php`, `src/Client/ClientBuilder.php` |
 | Postman apikey endpoints | All three Postman V4 paths show `apikey`: `/labelconfirm`, `/return/generate`, `/return/activate` | `postnl-docs/PostNL Future Proof V4 API's.postman_collection.json` |
 | OAuth requirement per endpoint | Unclear | Sources show apikey examples and SDK OAuth support, but no endpoint-level OAuth requirement matrix |
+| HTTP-layer response caching | `CachingPlugin::create(cache, ttl, allowedEndpoints, logger)` registered via `withPlugin()` on `ClientBuilder`; auth headers excluded from cache key; supports per-tenant `keyPrefix`; useful for `/timeframe/` and `/locations/` | `docs/Configuration/README.md` |
 
 ## 14. Developer Checklist
 
@@ -410,14 +425,15 @@ SDK endpoints not present in Postman collection:
 
 ### Locations task checklist
 
-- Uses `addressLocations()->getNearestByAddress()` for address searches.
-- Uses `coordinateLocations()->getNearestByCoordinates()` for coordinate searches.
+- Verifies the correct facade method name against `src/Client/Client.php` before calling (`locations()` per SDK docs vs. `addressLocations()`/`coordinateLocations()` per prior code inspection).
+- Uses `getPickupLocationsByAddress()` for address searches and `getNearPickupLocationsByCoordinates()` for coordinate searches (per SDK docs).
 - Maps checkout pickup UI data to `PickUpLocationsResponse` without changing frontend expected fields.
 - Preserves `numberOfLocations`, `locationType`, and `pickUpDate` behavior from plugin settings.
 
 ### TimeFrame task checklist
 
-- Uses `singleTimeframe()->getTimeframe()` or `multipleTimeframes()->getTimeframes()`.
+- Verifies the correct facade method name against `src/Client/Client.php` before calling (`checkout()` per SDK docs vs. `singleTimeframe()`/`multipleTimeframes()` per prior code inspection).
+- Uses `getSingleServiceTimeframe()` and `getMultipleServicesTimeframe()` (per SDK docs; `multipleTimeframes()` also appears in one SDK doc example).
 - Represents delivery dates through TimeFrame V4 responses.
 - Maps old checkout options `Daytime`, `Evening`, `08:00-12:00` only where V4 service fields support them.
 - Keeps checkout fee/selection behavior compatible with `src/Frontend/Container.php`.

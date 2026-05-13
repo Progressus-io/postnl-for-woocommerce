@@ -25,6 +25,7 @@ class Fill_In_With_PostNL_Settings {
 		add_filter( 'woocommerce_get_settings_shipping', array( $this, 'add_settings_fields' ), 10, 2 );
 		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_admin_scripts' ) );
 		add_filter( 'woocommerce_admin_settings_sanitize_option', array( $this, 'maybe_prevent_saving_invalid_data' ), 10, 3 );
+		add_action( 'woocommerce_admin_field_postnl_preview', array( $this, 'render_preview_field' ) );
 	}
 
 	/**
@@ -278,6 +279,10 @@ class Fill_In_With_PostNL_Settings {
 				),
 			),
 			array(
+				'type' => 'postnl_preview',
+				'id'   => 'postnl_button_preview',
+			),
+			array(
 				'type' => 'sectionend',
 				'id'   => 'postnl_button_styling_section_end',
 			),
@@ -310,6 +315,42 @@ class Fill_In_With_PostNL_Settings {
 		);
 
 		return $settings;
+	}
+
+	/**
+	 * Render the live button preview field.
+	 *
+	 * @return void
+	 */
+	public function render_preview_field(): void {
+		$background_color = sanitize_hex_color( get_option( 'postnl_button_background_color', '#ff6200' ) );
+		$border           = sanitize_text_field( get_option( 'postnl_button_border', 'none' ) );
+		$border_radius    = absint( get_option( 'postnl_button_border_radius', '4' ) );
+		$logo_url         = POSTNL_WC_PLUGIN_DIR_URL . '/assets/images/postnl-logo.svg';
+
+		$button_style = 'background-color:' . esc_attr( $background_color ) . ';'
+			. 'border:' . esc_attr( $border ) . ';'
+			. 'border-radius:' . $border_radius . 'px;';
+		?>
+		<tr valign="top">
+			<th scope="row" class="titledesc"><?php esc_html_e( 'Button Preview', 'postnl-for-woocommerce' ); ?></th>
+			<td class="forminp">
+				<div style="max-width:320px;">
+					<button
+						id="postnl-button-preview"
+						type="button"
+						style="<?php echo esc_attr( $button_style ); ?>min-height:35px;cursor:default;display:flex;align-items:center;justify-content:center;padding:5px 10px;color:#fff;font-size:16px;width:100%;box-sizing:border-box;transition:background-color 0.2s ease;"
+					>
+						<img src="<?php echo esc_url( $logo_url ); ?>" alt="" style="height:20px;margin-right:8px;vertical-align:middle;" />
+						<span><?php esc_html_e( 'Autofill with PostNL', 'postnl-for-woocommerce' ); ?></span>
+					</button>
+					<p style="font-size:0.85em;margin-top:6px;color:#646970;">
+						<?php esc_html_e( 'Your shipping details are filled in automatically via your PostNL account. That saves time and hassle.', 'postnl-for-woocommerce' ); ?>
+					</p>
+				</div>
+			</td>
+		</tr>
+		<?php
 	}
 
 	/**

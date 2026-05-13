@@ -35,7 +35,7 @@ class Fill_In_With_PostNL_Settings {
 	 * @return array
 	 */
 	public function add_settings_section( array $sections ): array {
-		$sections['fill-in-with-postnl'] = esc_html__( 'Fill in with PostNL', 'postnl-for-woocommerce' );
+		$sections['fill-in-with-postnl'] = esc_html__( 'Checkoutboosters', 'postnl-for-woocommerce' );
 		return $sections;
 	}
 
@@ -52,13 +52,15 @@ class Fill_In_With_PostNL_Settings {
 			return $settings;
 		}
 
-		$info_block = '<p>' . esc_html__( 'With this functionality your customers can easily and automatically fill in their shipping address via their PostNL account. This functionality is only available for consumers with a Dutch shipping address. Click the following link to activate the functionality:', 'postnl-for-woocommerce' ) . '</p>';
+		$activation_url = 'https://dil-business-portal.postnl.nl/checkout-prefill?referrer=wcplugin&url=' . site_url();
 
-		$info_block .= '<a href="https://dil-business-portal.postnl.nl/checkout-prefill?referrer=wcplugin&url=' . site_url() . '" target="_blank" style="margin-bottom: 10px;">https://dil-business-portal.postnl.nl/checkout-prefill?referrer=wcplugin&url=' . site_url() . '</a>';
+		$info_block  = '<p>' . esc_html__( 'Let customers autofill their shipping address in just a few clicks with their PostNL account. So customers don\'t have to manually enter their details anymore. Address details are securely prefilled with PostNL, reducing address errors, returns, and checkout drop-off.', 'postnl-for-woocommerce' ) . '</p>';
+		$info_block .= '<p>' . esc_html__( 'Available for all consumers with a PostNL account and a Dutch or Belgian shipping address.', 'postnl-for-woocommerce' ) . '</p>';
+		$info_block .= '<p>' . esc_html__( 'Activate PostNL autofill via this link:', 'postnl-for-woocommerce' ) . ' <a href="' . esc_url( $activation_url ) . '" target="_blank">' . esc_html( $activation_url ) . '</a></p>';
 
 		$settings = array(
 			array(
-				'title' => esc_html__( 'Fill in with PostNL', 'postnl-for-woocommerce' ),
+				'title' => esc_html__( 'Checkoutboosters', 'postnl-for-woocommerce' ),
 				'type'  => 'title',
 				'desc'  => $info_block,
 				'id'    => 'postnl_fill_in_with_title',
@@ -186,7 +188,7 @@ class Fill_In_With_PostNL_Settings {
 				'desc_tip' => true,
 				'id'       => 'postnl_button_border',
 				'type'     => 'text',
-				'default'  => '1px solid #000000',
+				'default'  => 'none',
 				'css'      => 'width: 150px;',
 			),
 			array(

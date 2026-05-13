@@ -37,6 +37,11 @@
 	width: 94%;
 }
 
+.postnl-button-in-cart .postnl-login-button__description {
+	font-size: 80%;
+	text-align: center;
+}
+
 .postnl-hidden{
 	visibility: hidden !important;
 }

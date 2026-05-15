@@ -32,6 +32,13 @@ PostNL’s official extension for WooCommerce on WordPress. Manage your national
 * Fix: Hide delivery-day, morning and evening surcharges when free shipping applies, including PostNL's minimum-order-amount threshold.
 * Fix: Prevent duplicate PostNL delivery options container from appearing during blocks checkout fragment updates.
 * Tweak: Improve tax handling so tab prices accurately reflect tax-inclusive and tax-exclusive display settings.
+* Add: Independent button width controls (slider) for cart, checkout, and minicart locations in the Checkoutboosters settings.
+* Add: Global button corner radius control (slider) in the Checkoutboosters settings.
+* Add: Live button preview in the Checkoutboosters settings section that updates in real time as styling options are changed.
+* Tweak: Renamed "Fill in with PostNL" settings section to "Checkoutboosters" with updated feature description and activation link.
+* Tweak: Updated Fill in With PostNL button label to "Autofill with PostNL" and refreshed the description text shown below the button.
+* Tweak: Description text below the Fill in With PostNL button is now displayed at 80% font size and centred on the cart page.
+* Tweak: Button border now defaults to none on fresh installations; background colour defaults to PostNL orange.
 
 ### 5.9.5
 * Add: Ability to set the default checkout tab (Delivery or Pickup) from the PostNL checkout settings.

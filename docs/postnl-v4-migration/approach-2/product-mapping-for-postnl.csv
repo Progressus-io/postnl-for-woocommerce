@@ -1,0 +1,96 @@
+ID,Sender,Receiver,Flow,Legacy Combination,Legacy Product Code,Legacy Characteristics,V4 ShipmentType (proposed),V4 Services (proposed),V4 DeliveryLocation,V4 InternationalShipmentData,Confidence,Notes / PostNL to confirm
+1,NL,NL,delivery_day,(default),3085,,parcel,(none),,no,High,Default parcel; round-trip should return productData=3085
+2,NL,NL,delivery_day,delivery_code_at_door + insured_shipping,3085,char=004 opt=020,parcel,"deliveryConfirmation=DELIVERY_CODE, insuredValue=<order_total>",,no,High,DELIVERY_CODE enum matches char 004/020 by name
+3,NL,NL,delivery_day,only_home_address,3385,,parcel,statedAddressOnly=true,,no,High,
+4,NL,NL,delivery_day,return_no_answer,3090,,parcel,returnWhenNotHome=true,,no,High,Confirm semantics: legacy 'return if no answer' vs V4 'return when not home'
+5,NL,NL,delivery_day,signature_on_delivery,3189,,parcel,deliveryConfirmation=SIGNATURE,,no,High,
+6,NL,NL,delivery_day,return_no_answer + only_home_address,3390,,parcel,"returnWhenNotHome=true, statedAddressOnly=true",,no,High,
+7,NL,NL,delivery_day,signature_on_delivery + insured_shipping + return_no_answer,3094,,parcel,"deliveryConfirmation=SIGNATURE, insuredValue=<order_total>, returnWhenNotHome=true",,no,High,
+8,NL,NL,delivery_day,signature_on_delivery + only_home_address,3089,,parcel,"deliveryConfirmation=SIGNATURE, statedAddressOnly=true",,no,High,
+9,NL,NL,delivery_day,insured_shipping + signature_on_delivery,3087,,parcel,"deliveryConfirmation=SIGNATURE, insuredValue=<order_total>",,no,High,
+10,NL,NL,delivery_day,signature_on_delivery + return_no_answer,3389,,parcel,"deliveryConfirmation=SIGNATURE, returnWhenNotHome=true",,no,High,
+11,NL,NL,delivery_day,signature_on_delivery + only_home_address + return_no_answer,3096,,parcel,"deliveryConfirmation=SIGNATURE, statedAddressOnly=true, returnWhenNotHome=true",,no,High,
+12,NL,NL,delivery_day,letterbox,2928,,letterbox,(none),,no,High,
+13,NL,NL,delivery_day,id_check,3438,char=002 opt=014,parcel,minimalAgeCheck=AGE_18_PLUS,,no,Medium,Confirm: is char 002/014 = 18+ or 16+? SDK enum supports both
+14,NL,NL,delivery_day,id_check + signature_on_delivery,3438,char=002 opt=014,parcel,"minimalAgeCheck=AGE_18_PLUS, deliveryConfirmation=SIGNATURE",,no,Medium,Same product code as #13 — id_check alone implies signature?
+15,NL,NL,delivery_day,id_check + only_home_address,3438,char=002 opt=014,parcel,"minimalAgeCheck=AGE_18_PLUS, statedAddressOnly=true",,no,Medium,
+16,NL,NL,delivery_day,id_check + only_home_address + signature_on_delivery,3438,char=002 opt=014,parcel,"minimalAgeCheck=AGE_18_PLUS, statedAddressOnly=true, deliveryConfirmation=SIGNATURE",,no,Medium,
+17,NL,NL,delivery_day,id_check + insured_shipping,3443,char=002 opt=014,parcel,"minimalAgeCheck=AGE_18_PLUS, insuredValue=<order_total>",,no,Medium,
+18,NL,NL,delivery_day,id_check + insured_shipping + signature_on_delivery,3443,char=002 opt=014,parcel,"minimalAgeCheck=AGE_18_PLUS, insuredValue=<order_total>, deliveryConfirmation=SIGNATURE",,no,Medium,
+19,NL,NL,delivery_day,id_check + insured_shipping + only_home_address,3443,char=002 opt=014,parcel,"minimalAgeCheck=AGE_18_PLUS, insuredValue=<order_total>, statedAddressOnly=true",,no,Medium,
+20,NL,NL,delivery_day,id_check + insured_shipping + only_home_address + signature_on_delivery,3443,char=002 opt=014,parcel,"minimalAgeCheck=AGE_18_PLUS, insuredValue=<order_total>, statedAddressOnly=true, deliveryConfirmation=SIGNATURE",,no,Medium,
+21,NL,NL,pickup_points,(default),3533,,parcel,(none),pickupLocationId=<location code>,no,High,
+22,NL,NL,pickup_points,insured_shipping,3534,,parcel,insuredValue=<order_total>,pickupLocationId=<location code>,no,High,
+23,NL,NL,pickup_points,id_check,3571,char=002 opt=014,parcel,minimalAgeCheck=AGE_18_PLUS,pickupLocationId=<location code>,no,Medium,
+24,NL,NL,pickup_points,id_check + insured_shipping,3581,char=002 opt=014,parcel,"minimalAgeCheck=AGE_18_PLUS, insuredValue=<order_total>",pickupLocationId=<location code>,no,Medium,
+25,NL,BE,delivery_day,(default),4946,,parcel,(none),,no,High,Receiver country=BE; no InternationalShipmentData needed
+26,NL,BE,delivery_day,only_home_address,4941,,parcel,statedAddressOnly=true,,no,High,
+27,NL,BE,delivery_day,signature_on_delivery,4912,,parcel,deliveryConfirmation=SIGNATURE,,no,High,
+28,NL,BE,delivery_day,insured_shipping,4914,,parcel,insuredValue=<order_total>,,no,High,
+29,NL,BE,delivery_day,insured_shipping + track_and_trace,4914,,parcel,"insuredValue=<order_total>, registered=true?",,no,Low,Same code as #28 — is track_and_trace already implicit for insured BE? Or maps to Services.registered?
+30,NL,BE,delivery_day,insured_shipping + signature_on_delivery,4914,,parcel,"insuredValue=<order_total>, deliveryConfirmation=SIGNATURE",,no,Medium,Same product code as just insured — confirm signature gets recorded
+31,NL,BE,delivery_day,insured_shipping + only_home_address,4914,,parcel,"insuredValue=<order_total>, statedAddressOnly=true",,no,Medium,
+32,NL,BE,delivery_day,insured_shipping + signature_on_delivery + only_home_address,4914,,parcel,"insuredValue=<order_total>, deliveryConfirmation=SIGNATURE, statedAddressOnly=true",,no,Medium,
+33,NL,BE,delivery_day,insured_shipping + track_and_trace + signature_on_delivery,4914,,parcel,"insuredValue=<order_total>, registered=true?, deliveryConfirmation=SIGNATURE",,no,Low,Same as #29 with signature
+34,NL,BE,delivery_day,insured_shipping + track_and_trace + only_home_address,4914,,parcel,"insuredValue=<order_total>, registered=true?, statedAddressOnly=true",,no,Low,
+35,NL,BE,delivery_day,insured_shipping + track_and_trace + signature_on_delivery + only_home_address,4914,,parcel,"insuredValue=<order_total>, registered=true?, deliveryConfirmation=SIGNATURE, statedAddressOnly=true",,no,Low,
+36,NL,BE,delivery_day,mailboxpacket,6440,,letterbox OR packet,(none),,no,Low,Is 'mailboxpacket' V4 = ShipmentType::LetterBox or ShipmentType::Packet?
+37,NL,BE,delivery_day,mailboxpacket + track_and_trace,6972,,letterbox OR packet,registered=true?,,no,Low,Tracked variant of #36
+38,NL,BE,delivery_day,packets,6405,,packet,(none),,no,Medium,
+39,NL,BE,delivery_day,packets + track_and_trace,6350,,packet,registered=true?,,no,Low,Confirm registered=true is the right V4 mapping for tracked packets
+40,NL,BE,delivery_day,packets + track_and_trace + insured_shipping,6906,,packet,"registered=true?, insuredValue=<order_total>",,no,Low,
+41,NL,BE,pickup_points,(default),4936,,parcel,(none),pickupLocationId=<BE location code>,no,High,
+42,NL,EU,delivery_day,(default),4907,"char=005 opt=025, char=101 opt=012",parcel,(none),,yes,Medium,What do chars 005/025 and 101/012 represent in V4? Possibly track_and_trace + customs flag
+43,NL,EU,delivery_day,track_and_trace,4907,"char=005 opt=025, char=101 opt=012",parcel,registered=true?,,yes,Low,Same code+chars as default — is 005/025 already a 'tracked' indicator?
+44,NL,EU,delivery_day,track_and_trace + insured_shipping,4907,"char=004 opt=015, char=101 opt=012",parcel,"registered=true?, insuredValue=<order_total>",,yes,Low,Char 004/015: standard insured shipping?
+45,NL,EU,delivery_day,track_and_trace + insured_plus,4907,"char=004 opt=016, char=101 opt=012",parcel,"registered=true?, insuredValue=<higher_amount>",,yes,Low,Char 004/016: 'insured plus' = higher tier? What threshold?
+46,NL,EU,delivery_day,mailboxpacket,6440,,letterbox OR packet,(none),,yes,Low,Same as #36; international variant
+47,NL,EU,delivery_day,track_and_trace + mailboxpacket,6972,,letterbox OR packet,registered=true?,,yes,Low,
+48,NL,EU,delivery_day,packets,6405,,packet,(none),,yes,Low,
+49,NL,EU,delivery_day,track_and_trace + packets,6350,,packet,registered=true?,,yes,Low,
+50,NL,EU,delivery_day,track_and_trace + packets + insured_shipping,6906,,packet,"registered=true?, insuredValue=<order_total>",,yes,Low,
+51,NL,EU,pickup_points,(default),4907,"char=005 opt=025, char=101 opt=012",parcel,(none),pickupLocationId=<EU location code>,yes,Low,Confirm pickup-point flow works for EU at all
+52,NL,ROW,delivery_day,(default),4909,char=004 opt=015,parcel,(none),,yes,Low,Char 004/015 in ROW context — different meaning vs EU?
+53,NL,ROW,delivery_day,track_and_trace,4909,char=005 opt=025,parcel,registered=true?,,yes,Low,
+54,NL,ROW,delivery_day,track_and_trace + insured_plus,4909,char=004 opt=016,parcel,"registered=true?, insuredValue=<higher_amount>",,yes,Low,
+55,NL,ROW,delivery_day,mailboxpacket,6440,,letterbox OR packet,(none),,yes,Low,
+56,NL,ROW,delivery_day,track_and_trace + mailboxpacket,6972,,letterbox OR packet,registered=true?,,yes,Low,
+57,NL,ROW,delivery_day,packets,6405,,packet,(none),,yes,Low,
+58,NL,ROW,delivery_day,track_and_trace + packets,6350,,packet,registered=true?,,yes,Low,
+59,NL,ROW,delivery_day,track_and_trace + packets + insured_shipping,6906,,packet,"registered=true?, insuredValue=<order_total>",,yes,Low,
+60,NL,ROW,pickup_points,(default),4909,char=005 opt=025,parcel,(none),pickupLocationId=<ROW location code>,yes,Low,Confirm pickup-point flow works for ROW at all
+61,BE,BE,delivery_day,(default),4961,,parcel,(none),,no,High,
+62,BE,BE,delivery_day,only_home_address,4960,,parcel,statedAddressOnly=true,,no,High,
+63,BE,BE,delivery_day,signature_on_delivery,4963,,parcel,deliveryConfirmation=SIGNATURE,,no,High,
+64,BE,BE,delivery_day,signature_on_delivery + only_home_address,4962,,parcel,"deliveryConfirmation=SIGNATURE, statedAddressOnly=true",,no,High,
+65,BE,BE,delivery_day,insured_shipping + only_home_address,4965,,parcel,"insuredValue=<order_total>, statedAddressOnly=true",,no,High,
+66,BE,BE,pickup_points,(default),4880,,parcel,(none),pickupLocationId=<BE location code>,no,High,
+67,BE,BE,pickup_points,insured_shipping,4878,,parcel,insuredValue=<order_total>,pickupLocationId=<BE location code>,no,High,
+68,BE,NL,delivery_day,(default),4890,,parcel,(none),,no,High,
+69,BE,NL,delivery_day,signature_on_delivery,4891,,parcel,deliveryConfirmation=SIGNATURE,,no,High,
+70,BE,NL,delivery_day,only_home_address,4893,,parcel,statedAddressOnly=true,,no,High,
+71,BE,NL,delivery_day,signature_on_delivery + only_home_address,4894,,parcel,"deliveryConfirmation=SIGNATURE, statedAddressOnly=true",,no,High,
+72,BE,NL,delivery_day,id_check + signature_on_delivery + only_home_address,4895,char=002 opt=014,parcel,"minimalAgeCheck=AGE_18_PLUS, deliveryConfirmation=SIGNATURE, statedAddressOnly=true",,no,Medium,
+73,BE,NL,delivery_day,signature_on_delivery + only_home_address + return_no_answer,4896,,parcel,"deliveryConfirmation=SIGNATURE, statedAddressOnly=true, returnWhenNotHome=true",,no,High,
+74,BE,NL,delivery_day,signature_on_delivery + only_home_address + insured_shipping,4897,,parcel,"deliveryConfirmation=SIGNATURE, statedAddressOnly=true, insuredValue=<order_total>",,no,High,
+75,BE,NL,pickup_points,signature_on_delivery,4898,,parcel,deliveryConfirmation=SIGNATURE,pickupLocationId=<NL location code>,no,High,Same code as #76 — signature flag still recorded?
+76,BE,NL,pickup_points,(default),4898,,parcel,(none),pickupLocationId=<NL location code>,no,High,
+77,BE,EU,delivery_day,(default),4907,"char=005 opt=025, char=101 opt=012",parcel,(none),,yes,Low,Same as #42 (sender=NL); confirm BE sender works the same
+78,BE,EU,delivery_day,track_and_trace,4907,"char=005 opt=025, char=101 opt=012",parcel,registered=true?,,yes,Low,
+79,BE,EU,delivery_day,track_and_trace + insured_shipping,4907,"char=004 opt=015, char=101 opt=012",parcel,"registered=true?, insuredValue=<order_total>",,yes,Low,
+80,BE,EU,delivery_day,track_and_trace + insured_plus,4907,"char=004 opt=016, char=101 opt=012",parcel,"registered=true?, insuredValue=<higher_amount>",,yes,Low,
+81,BE,EU,delivery_day,mailboxpacket,6440,,letterbox OR packet,(none),,yes,Low,
+82,BE,EU,delivery_day,track_and_trace + mailboxpacket,6972,,letterbox OR packet,registered=true?,,yes,Low,
+83,BE,EU,delivery_day,packets,6405,,packet,(none),,yes,Low,
+84,BE,EU,delivery_day,track_and_trace + packets,6350,,packet,registered=true?,,yes,Low,
+85,BE,EU,delivery_day,track_and_trace + packets + insured_shipping,6906,,packet,"registered=true?, insuredValue=<order_total>",,yes,Low,
+86,BE,ROW,delivery_day,(default),4909,char=004 opt=015,parcel,(none),,yes,Low,
+87,BE,ROW,delivery_day,track_and_trace,4909,char=005 opt=025,parcel,registered=true?,,yes,Low,
+88,BE,ROW,delivery_day,track_and_trace + insured_plus,4909,char=004 opt=016,parcel,"registered=true?, insuredValue=<higher_amount>",,yes,Low,
+89,any,NL,delivery_day,(slot) Evening (delivery_day_type),(varies),char=118 opt=006,,deliveryWindow.service=Evening,,no,High,DeliveryWindowService::Evening matches by name; applies on top of base product
+90,any,NL,delivery_day,(slot) 08:00-12:00 (delivery_day_type),(varies),char=118 opt=008,,deliveryWindow.duration=WITHIN_24_HOURS,,no,High,Likely the morning window. Confirm: is char 118/008 = 24hr window or guaranteedBefore=10:00 or 12:00?
+91,any,NL,delivery_day,(slot) Daytime (default),(varies),(none),,(no deliveryWindow),,no,High,Daytime is default — no DeliveryWindow needed
+92,any,any,return,Smart Return — in_box,(varies),char=152 opt=028,,(set in ReturnOptions),,N/A,Medium,Configure via ReturnOptions DTO — what's the V4 field name?
+93,any,any,return,Smart Return — shipping_return,3285 OR 2285,char=152 opt=026,,(set in ReturnOptions),,N/A,Medium,Configure via ReturnOptions DTO. 3285=return-to-home; 2285=reply-number/freepost. Confirm V4 mechanism for both
+94,any,any,return,Smart Return — return_all_labels_not_active,(varies),"char=152 opt=026, char=191 opt=004",,(set in ReturnOptions — don't auto-activate),,N/A,Low,Don't activate return until customer triggers. V4 equivalent?
+95,any,any,return,Smart Return — default (V2.2 currently),3285 OR 2285,char=152 opt=025,,(set in ReturnOptions),,N/A,Low,Plugin currently calls V2.2 endpoint. What V4 mechanism replaces this — generateReturn() or something else?

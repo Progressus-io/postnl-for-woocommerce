@@ -1,0 +1,45 @@
+name: PHP Tests
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  # Runs both PHPUnit suites inside the wp-env tests-cli container.
+  # Only Node.js + Docker are required on the runner — no host PHP or Composer.
+  php-tests:
+    name: PHPUnit (unit + integration)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'npm'
+
+      - name: Install npm dependencies
+        run: npm ci --prefer-offline
+
+      - name: Start wp-env
+        run: npm run env start
+
+      # Install Composer deps inside the container so the correct PHP version
+      # (8.2) resolves packages and no host PHP is required.
+      - name: Install Composer dependencies (in container)
+        run: npm run test:php:setup
+
+      - name: Unit tests
+        run: npm run test:php:unit
+
+      - name: Integration tests
+        run: npm run test:php:integration
+
+      - name: Stop wp-env
+        if: always()
+        run: npm run env stop

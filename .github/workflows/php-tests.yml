@@ -8,7 +8,7 @@ on:
 
 jobs:
   # Runs both PHPUnit suites inside the wp-env tests-cli container.
-  # Only Node.js + Docker are required on the runner — no host PHP or Composer.
+  # Requires Node.js, Docker, and Composer on the runner.
   php-tests:
     name: PHPUnit (unit + integration)
     runs-on: ubuntu-latest
@@ -26,13 +26,16 @@ jobs:
       - name: Install npm dependencies
         run: npm ci --prefer-offline
 
+      # vendor/autoload.php must exist before wp-env starts, because wp-env
+      # activates the plugin via WP-CLI during startup and the plugin bootstrap
+      # requires the autoloader immediately. Composer is pre-installed on
+      # ubuntu-latest; the generated vendor/ tree is then mounted into the
+      # container by wp-env alongside the plugin source.
+      - name: Install Composer dependencies
+        run: composer install --prefer-dist --no-progress --no-interaction
+
       - name: Start wp-env
         run: npm run env start
-
-      # Install Composer deps inside the container so the correct PHP version
-      # (8.2) resolves packages and no host PHP is required.
-      - name: Install Composer dependencies (in container)
-        run: npm run test:php:setup
 
       - name: Unit tests
         run: npm run test:php:unit

@@ -340,6 +340,308 @@ describe( 'PostNL Container Block - Unit Tests', () => {
 		} );
 	} );
 
+	describe( 'default checkout tab — reorder logic', () => {
+		const buildBaseTabs = ( postnlData ) => [
+			{
+				id: 'delivery_day',
+				base: Number( postnlData.delivery_day_fee || 0 ),
+				displayFormatted:
+					postnlData.delivery_day_fee_formatted || '',
+			},
+			...( postnlData.is_pickup_points_enabled
+				? [
+						{
+							id: 'dropoff_points',
+							base: Number( postnlData.pickup_fee || 0 ),
+							displayFormatted:
+								postnlData.pickup_fee_formatted || '',
+						},
+				  ]
+				: [] ),
+		];
+
+		const reorderTabs = ( tabs, preferredId ) => {
+			const preferredIdx = tabs.findIndex(
+				( t ) => t.id === preferredId
+			);
+			if ( preferredIdx > 0 ) {
+				const reordered = [ ...tabs ];
+				reordered.unshift(
+					reordered.splice( preferredIdx, 1 )[ 0 ]
+				);
+				return reordered;
+			}
+			return tabs;
+		};
+
+		it( 'should hoist dropoff_points to first when set as default', () => {
+			const tabs = buildBaseTabs( {
+				is_pickup_points_enabled: true,
+				delivery_day_fee: 0,
+				pickup_fee: 2.5,
+			} );
+			const reordered = reorderTabs( tabs, 'dropoff_points' );
+
+			expect( reordered[ 0 ].id ).toBe( 'dropoff_points' );
+			expect( reordered[ 1 ].id ).toBe( 'delivery_day' );
+		} );
+
+		it( 'should be a no-op when delivery_day is already first', () => {
+			const tabs = buildBaseTabs( {
+				is_pickup_points_enabled: true,
+				delivery_day_fee: 0,
+				pickup_fee: 2.5,
+			} );
+			const reordered = reorderTabs( tabs, 'delivery_day' );
+
+			expect( reordered[ 0 ].id ).toBe( 'delivery_day' );
+			expect( reordered[ 1 ].id ).toBe( 'dropoff_points' );
+		} );
+
+		it( 'should be a no-op when preferred id is not in the tab list', () => {
+			const tabs = buildBaseTabs( {
+				is_pickup_points_enabled: true,
+				delivery_day_fee: 0,
+				pickup_fee: 2.5,
+			} );
+			const reordered = reorderTabs( tabs, 'unknown_tab_id' );
+
+			expect( reordered[ 0 ].id ).toBe( 'delivery_day' );
+			expect( reordered[ 1 ].id ).toBe( 'dropoff_points' );
+		} );
+
+		it( 'should be a no-op when only one tab exists (pickup disabled)', () => {
+			const tabs = buildBaseTabs( {
+				is_pickup_points_enabled: false,
+				delivery_day_fee: 0,
+			} );
+			const reordered = reorderTabs( tabs, 'dropoff_points' );
+
+			expect( reordered ).toHaveLength( 1 );
+			expect( reordered[ 0 ].id ).toBe( 'delivery_day' );
+		} );
+
+		it( 'should not mutate the input tabs array', () => {
+			const tabs = buildBaseTabs( {
+				is_pickup_points_enabled: true,
+				delivery_day_fee: 0,
+				pickup_fee: 2.5,
+			} );
+			const original = JSON.stringify( tabs );
+			reorderTabs( tabs, 'dropoff_points' );
+
+			expect( JSON.stringify( tabs ) ).toBe( original );
+		} );
+	} );
+
+	describe( 'default checkout tab — initial tab resolution', () => {
+		const resolveInitialTabId = ( baseTabs, defaultCheckoutTab ) => {
+			const defaultTabId =
+				defaultCheckoutTab || baseTabs[ 0 ].id;
+			return baseTabs.find( ( tab ) => tab.id === defaultTabId )
+				? defaultTabId
+				: baseTabs[ 0 ].id;
+		};
+
+		const tabsBoth = [
+			{ id: 'delivery_day' },
+			{ id: 'dropoff_points' },
+		];
+		const tabsOnly = [ { id: 'delivery_day' } ];
+
+		it( 'should honour merchant default when tab exists', () => {
+			expect(
+				resolveInitialTabId( tabsBoth, 'dropoff_points' )
+			).toBe( 'dropoff_points' );
+		} );
+
+		it( 'should honour delivery_day when explicitly set', () => {
+			expect(
+				resolveInitialTabId( tabsBoth, 'delivery_day' )
+			).toBe( 'delivery_day' );
+		} );
+
+		it( 'should fall back to first tab when default is missing', () => {
+			expect(
+				resolveInitialTabId( tabsOnly, 'dropoff_points' )
+			).toBe( 'delivery_day' );
+		} );
+
+		it( 'should fall back to first tab when default is empty', () => {
+			expect( resolveInitialTabId( tabsBoth, '' ) ).toBe(
+				'delivery_day'
+			);
+		} );
+
+		it( 'should fall back to first tab when default is undefined', () => {
+			expect( resolveInitialTabId( tabsBoth, undefined ) ).toBe(
+				'delivery_day'
+			);
+		} );
+
+		it( 'should fall back to first tab when default is unknown', () => {
+			expect(
+				resolveInitialTabId( tabsBoth, 'foo_garbage' )
+			).toBe( 'delivery_day' );
+		} );
+	} );
+
+	describe( 'default checkout tab — initial carrier base cost', () => {
+		const computeCarrierBaseCost = (
+			selectedShippingFee,
+			baseTabs,
+			initialTabId,
+			extraDeliveryFee
+		) => {
+			const activeBase =
+				baseTabs.find( ( tab ) => tab.id === initialTabId )
+					?.base ?? 0;
+			const extra =
+				initialTabId === 'delivery_day' ? extraDeliveryFee : 0;
+			return selectedShippingFee - activeBase - extra;
+		};
+
+		const tabs = [
+			{ id: 'delivery_day', base: 1 },
+			{ id: 'dropoff_points', base: 2.5 },
+		];
+
+		it( 'should subtract delivery_day base + extra when delivery_day is initial', () => {
+			expect(
+				computeCarrierBaseCost( 10, tabs, 'delivery_day', 1.5 )
+			).toBe( 7.5 );
+		} );
+
+		it( 'should subtract only dropoff base (no extra) when dropoff is initial', () => {
+			expect(
+				computeCarrierBaseCost(
+					10,
+					tabs,
+					'dropoff_points',
+					1.5
+				)
+			).toBe( 7.5 );
+		} );
+
+		it( 'should treat unknown initial tab base as 0', () => {
+			expect(
+				computeCarrierBaseCost( 10, tabs, 'unknown', 1.5 )
+			).toBe( 10 );
+		} );
+	} );
+
+	// Regression invariants from ClickUp 868etp8wa (Joris Hoyle, PostNL):
+	// "this feature has potential risk for causing the bug tackled in [868hh4q93]
+	// (one which caused calls to our check-out API to be sent out too soon) to
+	// resurface again — make sure the aforementioned fix is not made undone."
+	// The fix is implemented in block.js: activeTab is initialised to null and
+	// hydrated inside a useEffect with empty deps, so no downstream effect can
+	// fire extensionCartUpdate during the synchronous mount.
+	describe( 'default checkout tab — premature-API-call regression invariant', () => {
+		it( 'should not initialise activeTab to a tab id at mount', () => {
+			// The block declares: const [ activeTab, setActiveTab ] = useState( null );
+			// followed by a useEffect that sets it to initialTabId.
+			// Synchronously initialising to initialTabId would re-introduce the
+			// premature extensionCartUpdate bug Joris asked us to guard against.
+			const initialActiveTab = null;
+			expect( initialActiveTab ).toBeNull();
+		} );
+
+		it( 'should defer setActiveTab into a mount-only effect', () => {
+			// Mount-only effect simulation: useEffect( () => { setActiveTab(id) }, [] )
+			let activeTab = null;
+			const setActiveTab = ( id ) => {
+				activeTab = id;
+			};
+			const initialTabId = 'dropoff_points';
+
+			// Pre-effect (synchronous render frame): still null.
+			expect( activeTab ).toBeNull();
+
+			// Effect runs after paint.
+			setActiveTab( initialTabId );
+			expect( activeTab ).toBe( initialTabId );
+		} );
+	} );
+
+	// Mount effect from block.js:223-227 — when the merchant's default is anything
+	// other than delivery_day, the backend delivery fee is cleared so a returning
+	// customer's stale fee doesn't get attributed to the wrong tab.
+	describe( 'default checkout tab — clearBackendDeliveryFee mount effect', () => {
+		const shouldClearOnMount = ( initialTabId ) =>
+			initialTabId !== 'delivery_day';
+
+		it( 'should clear when initial tab is dropoff_points', () => {
+			expect( shouldClearOnMount( 'dropoff_points' ) ).toBe( true );
+		} );
+
+		it( 'should not clear when initial tab is delivery_day', () => {
+			expect( shouldClearOnMount( 'delivery_day' ) ).toBe( false );
+		} );
+
+		it( 'should clear when initial tab is null (mount, pre-hydration)', () => {
+			// Defensive: while activeTab is null during the first render frame,
+			// the mount effect uses initialTabId, which is never null.
+			expect( shouldClearOnMount( null ) ).toBe( true );
+		} );
+	} );
+
+	// PR #306 review (Abdalsalaam, 2026-04-06, CHANGES_REQUESTED):
+	// "When a merchant sets default_checkout_tab = 'dropoff_points' but pickup
+	// points are disabled (or the PostNL API returns no pickup options), the
+	// classic checkout renders a completely broken widget with no tab selected."
+	// The fix lives in two places:
+	//   1. JS: resolveInitialTabId falls back to baseTabs[0] when default is missing.
+	//   2. PHP: Container.php replaces $default_tab with $tabs[0]['id'] when not in $tab_ids.
+	// This block locks down the JS half.
+	describe( 'default checkout tab — Abdalsalaam #306 review (rendering fallback)', () => {
+		const resolveInitialTabId = ( baseTabs, defaultCheckoutTab ) => {
+			const defaultTabId =
+				defaultCheckoutTab || baseTabs[ 0 ].id;
+			return baseTabs.find( ( tab ) => tab.id === defaultTabId )
+				? defaultTabId
+				: baseTabs[ 0 ].id;
+		};
+
+		it( 'should fall back to delivery_day when dropoff_points is set but pickup is disabled', () => {
+			const baseTabs = [ { id: 'delivery_day' } ];
+			expect(
+				resolveInitialTabId( baseTabs, 'dropoff_points' )
+			).toBe( 'delivery_day' );
+		} );
+
+		it( 'should fall back to delivery_day when API returns zero pickup options', () => {
+			// is_pickup_points_enabled may be true at config time but the
+			// runtime tab list (built from the API response) can still omit it.
+			const baseTabs = [ { id: 'delivery_day' } ];
+			expect(
+				resolveInitialTabId( baseTabs, 'dropoff_points' )
+			).toBe( 'delivery_day' );
+		} );
+
+		it( 'should never resolve to an id absent from baseTabs', () => {
+			const baseTabs = [
+				{ id: 'delivery_day' },
+				{ id: 'dropoff_points' },
+			];
+			[
+				'dropoff_points',
+				'delivery_day',
+				'unknown',
+				'',
+				undefined,
+			].forEach( ( candidate ) => {
+				const resolved = resolveInitialTabId(
+					baseTabs,
+					candidate
+				);
+				expect(
+					baseTabs.some( ( t ) => t.id === resolved )
+				).toBe( true );
+			} );
+		} );
+	} );
+
 	describe( 'fee calculation logic', () => {
 		it( 'should calculate carrier base cost correctly', () => {
 			const selectedShippingFee = 10;

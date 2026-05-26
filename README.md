@@ -7,7 +7,7 @@
 * Tested up to: 6.9
 * WC requires at least: 10.2
 * WC tested up to: 10.5
-* Stable tag: 5.9.4
+* Stable tag: 5.9.5
 * License: GPLv2 or later
 * License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -25,14 +25,19 @@ PostNL’s official extension for WooCommerce on WordPress. Manage your national
 2. Activate the plugin through the 'Plugins' screen in WordPress.
 3. Go to WooCommerce–>Settings->Shipping and Click the "PostNL" to configure the plugin.
 
-## Support
-
-## Additional Information
-
-## Screenshots
-
-
 ## Changelog
+
+### 5.9.6
+* Tweak: Checkout tab labels now show the full shipping cost (carrier + delivery-day/pickup fee) instead of only the additional fee.
+* Fix: Hide delivery-day, morning and evening surcharges when free shipping applies, including PostNL's minimum-order-amount threshold.
+* Fix: Prevent duplicate PostNL delivery options container from appearing during blocks checkout fragment updates.
+* Tweak: Improve tax handling so tab prices accurately reflect tax-inclusive and tax-exclusive display settings.
+
+### 5.9.5
+* Add: Ability to set the default checkout tab (Delivery or Pickup) from the PostNL checkout settings.
+* Fix: Update translations.
+* Fix: ZPL file format setting ignored for domestic letterbox.
+* Fix: Error when trying to create multicollo insured shipments.
 
 ### 5.9.4
 * Fix: Missing styles from the cart page.
@@ -235,4 +240,3 @@ PostNL’s official extension for WooCommerce on WordPress. Manage your national
 
 ### 5.0.0
 * First public release
-

@@ -13,13 +13,15 @@
 	"archive": {
 		"exclude": [
 			"!/assets",
+			"!/build",
+			"!/vendor",
 			"!/languages",
 			"/node_modules",
             "/client",
 			"bin",
 			"tests",
-			"LICENSE",
 			"README.md",
+			"changelog.txt",
 			"DEVELOPER.md",
 			"package.json",
 			"composer.lock",
@@ -36,7 +38,10 @@
 			"jest-puppeteer.config.js",
 			".*",
 			"*.zip",
-			"jest.config.js"
+			"jest.config.js",
+			"AGENTS.md",
+			"CLAUDE.md",
+			"docs"
 		]
 	},
 	"require-dev": {

@@ -34,6 +34,17 @@
             }
         },
 
+		toggle_letterbox_24_fee_field: function() {
+			var value = jQuery( '#woocommerce_postnl_default_automatic_letterboxparcel_product' ).val();
+			var $row  = jQuery( '#woocommerce_postnl_letterbox_24_fee' ).closest( 'tr' );
+
+			if ( 'letterbox_48' === value ) {
+				$row.hide();
+			} else {
+				$row.show();
+			}
+		},
+
 
 		display_api_key_field: function() {
 			var value = jQuery( '#woocommerce_postnl_environment_mode' ).val();

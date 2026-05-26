@@ -9,7 +9,7 @@
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
-	define( 'ABSPATH', '/' );
+	define( 'ABSPATH', dirname( __DIR__, 2 ) . '/' );
 }
 
 // Minimal WordPress filter registry stubs.

@@ -3,6 +3,8 @@
  * Base class for unit tests.
  */
 
+declare( strict_types = 1 );
+
 namespace PostNLWooCommerce\Tests;
 
 use Brain\Monkey;

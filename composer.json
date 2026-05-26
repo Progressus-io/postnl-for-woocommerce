@@ -26,7 +26,6 @@
 			"package.json",
 			"composer.lock",
 			"pnpm-lock.yaml",
-			"phpunit.xml.dist",
 			"phpunit-unit.xml.dist",
 			"phpunit-integration.xml.dist",
 			"webpack.config.js",

@@ -6,9 +6,10 @@
  * installed at /var/www/html. Override WP_ROOT_FOLDER env var to point
  * to a different WordPress root if needed.
  *
- * The Composer autoloader (including autoload-dev) is loaded by the
- * PostNL plugin when WordPress activates it, so test namespaces are
- * available without an explicit require here.
+ * The plugin loads `vendor/autoload.php` from its own bootstrap. Test
+ * namespaces from `autoload-dev` resolve through that same autoloader,
+ * but only because `composer install` ran without `--no-dev` before
+ * wp-env started — CI and the `build:dev` script both do this.
  */
 
 $wp_root = getenv( 'WP_ROOT_FOLDER' ) ?: '/var/www/html';

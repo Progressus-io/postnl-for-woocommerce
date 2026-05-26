@@ -5,6 +5,8 @@
  * @package PostNLWooCommerce\Rest_API
  */
 
+declare( strict_types = 1 );
+
 namespace PostNLWooCommerce\Rest_API;
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -14,7 +16,12 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Class Router
  *
+ * Decides per-flow whether the new PostNL SDK is wired up. Every supported
+ * flow is gated behind its own filter so flows can be toggled independently
+ * during the v4 migration.
+ *
  * @package PostNLWooCommerce\Rest_API
+ * @since   5.9.6
  */
 class Router {
 
@@ -23,6 +30,7 @@ class Router {
 	 *
 	 * postcode_check is intentionally absent — it stays on the legacy REST path.
 	 *
+	 * @since 5.9.6
 	 * @var string[]
 	 */
 	const SUPPORTED_FLOWS = array(
@@ -42,6 +50,8 @@ class Router {
 	 *
 	 * Flows not in SUPPORTED_FLOWS always return false without invoking any filter.
 	 * Every flow defaults to false; site owners opt in via the filter.
+	 *
+	 * @since 5.9.6
 	 *
 	 * @param string $flow Flow identifier.
 	 * @return bool

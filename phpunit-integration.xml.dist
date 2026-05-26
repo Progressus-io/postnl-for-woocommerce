@@ -5,6 +5,8 @@
 	bootstrap="tests/php/bootstrap-integration.php"
 	cacheDirectory=".phpunit.cache"
 	colors="true"
+	displayDetailsOnPhpunitDeprecations="true"
+	displayDetailsOnTestsThatTriggerDeprecations="true"
 >
 	<testsuites>
 		<testsuite name="Integration">

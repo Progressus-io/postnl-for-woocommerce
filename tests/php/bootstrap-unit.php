@@ -2,9 +2,10 @@
 /**
  * Bootstrap for unit tests.
  *
- * Defines ABSPATH so plugin files pass the ABSPATH guard, then registers
- * the Composer autoloader. No WordPress or WooCommerce is loaded here —
- * WP functions are stubbed/mocked per-test via Brain\Monkey.
+ * Defines ABSPATH so plugin files pass the ABSPATH guard, then loads the
+ * Composer autoloader. WordPress function stubs (add_filter, apply_filters,
+ * __return_true, __return_false, etc.) are provided per-test by Brain\Monkey
+ * via UnitTestCase — no global stubs needed here.
  */
 
 if ( ! defined( 'ABSPATH' ) ) {

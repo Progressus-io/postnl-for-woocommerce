@@ -136,7 +136,7 @@ class Single extends Base {
 						static function ( $meta_field ) {
 							return empty( $meta_field['id'] ) ? '' : $meta_field['id'];
 						},
-						$this->meta_box_fields( $order ?: false )
+						$this->meta_box_fields( $order ? $order : false )
 					)
 				)
 			),

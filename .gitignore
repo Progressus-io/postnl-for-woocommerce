@@ -50,6 +50,7 @@ Thumbs.db
 
 phpcs.xml
 .phpunit.cache
+.phpunit.result.cache
 .codegpt
 .vscode
 /vendor/

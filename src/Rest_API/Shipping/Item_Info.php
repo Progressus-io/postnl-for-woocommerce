@@ -938,7 +938,6 @@ class Item_Info extends Base_Info {
 		// Check if letterbox is selected and determine which letterbox type to use.
 		if ( isset( $checked_features['letterbox'] ) && 'yes' === $checked_features['letterbox'] ) {
 			$letterbox_type = $this->get_letterbox_type();
-			error_log( "Selected letterbox type: $letterbox_type" );
 			// Remove generic 'letterbox' and add specific type.
 			unset( $checked_features['letterbox'] );
 			

@@ -578,8 +578,17 @@ class Container {
 			}
 		}
 
-		$fee_24h   = $this->settings->get_letterbox_24_fee();
-		$supported = $this->settings->get_supported_shipping_methods();
+		// Letterbox pricing formula (single source of truth for variant emitters):
+		//     base_cost = letterbox_fee   when configured (not null)
+		//               = method.cost     otherwise
+		//     24h variant = base_cost + letterbox_24_fee
+		//     48h variant = base_cost
+		//     free shipping → both variants = 0
+		// inject_postnl_base_fees / add_postnl_fees_to_rates must NOT touch letterbox rates;
+		// any cost mutation downstream of this emitter is a bug.
+		$fee_24h       = $this->settings->get_letterbox_24_fee();
+		$letterbox_fee = $this->settings->get_letterbox_fee();
+		$supported     = $this->settings->get_supported_shipping_methods();
 
 		$new_rates = array();
 
@@ -596,12 +605,15 @@ class Container {
 				continue;
 			}
 
-			$base_cost  = (float) $rate->get_cost();
-			$base_label = $rate->get_label();
+			$original_cost = (float) $rate->get_cost();
+			$base_label    = $rate->get_label();
 
-			// Waive 24h fee if: free_shipping method exists in rates, base cost is 0, or it's a free_shipping method itself.
-			$is_free           = $has_free_shipping || 0 >= $base_cost || 'free_shipping' === $rate->get_method_id();
+			// Free-shipping detection runs against the carrier's original cost so a
+			// merchant-configured letterbox_fee of 0 doesn't accidentally short-circuit
+			// the 24h surcharge waiver.
+			$is_free           = $has_free_shipping || 0 >= $original_cost || 'free_shipping' === $rate->get_method_id();
 			$effective_fee_24h = $is_free ? 0 : $fee_24h;
+			$base_cost         = ( null !== $letterbox_fee ) ? (float) $letterbox_fee : $original_cost;
 			$base_cost         = $is_free ? 0 : $base_cost;
 
 			if ( 'customer_decide' === $letterbox_product_type ) {
@@ -685,12 +697,16 @@ class Container {
 			return $rates;
 		}
 
-		$option        = $package['destination']['postnl_option'] ?? WC()->session->get( 'postnl_option', '' );
-		$letterbox     = Utils::is_cart_eligible_auto_letterbox( \WC()->cart );
-		$letterbox_fee = $this->settings->get_letterbox_fee();
+		// Letterbox-eligible carts are owned by the variant emitters
+		// (inject_letterbox_rates_for_all_methods + PostNL::calculate_shipping).
+		// No tab-based extras apply on top — per spec, when ALA triggers the
+		// home delivery / pickup / delivery day surcharges are ignored.
+		if ( Utils::is_cart_eligible_auto_letterbox( \WC()->cart ) ) {
+			return $rates;
+		}
 
-		// Nothing to do when letterbox is not active and no option has been selected.
-		if ( ! $letterbox && '' === $option ) {
+		$option = $package['destination']['postnl_option'] ?? WC()->session->get( 'postnl_option', '' );
+		if ( '' === $option ) {
 			return $rates;
 		}
 
@@ -709,34 +725,23 @@ class Container {
 				continue;
 			}
 
-			if ( $letterbox ) {
-				if ( null === $letterbox_fee ) {
-					// Letterbox eligible but no fee configured — leave rate unchanged.
-					continue;
-				}
-				// Replace the entire shipping cost with the configured letterbox fee.
-				$rate->cost = $letterbox_fee;
-			} elseif ( '' !== $option ) {
-				$extra = 0;
-				if ( 'dropoff_points' === $option && $pickup_fee > 0 ) {
-					$extra = $pickup_fee;
-				} elseif ( 'delivery_day' === $option ) {
-					// Fold both the tab base fee and any morning/evening extra fee into the rate.
-					// Prefer the package destination value (set by add_postnl_option_to_package during
-					// AJAX calls) and fall back to the session value for order placement, when
-					// $_REQUEST['post_data'] is no longer available.
-					$extra  = $base_day_fee;
-					$extra += (float) ( $package['destination']['postnl_delivery_day_price'] ?? WC()->session->get( 'postnl_delivery_day_price', 0 ) );
-				}
+			$extra = 0;
+			if ( 'dropoff_points' === $option && $pickup_fee > 0 ) {
+				$extra = $pickup_fee;
+			} elseif ( 'delivery_day' === $option ) {
+				// Fold both the tab base fee and any morning/evening extra fee into the rate.
+				// Prefer the package destination value (set by add_postnl_option_to_package during
+				// AJAX calls) and fall back to the session value for order placement, when
+				// $_REQUEST['post_data'] is no longer available.
+				$extra  = $base_day_fee;
+				$extra += (float) ( $package['destination']['postnl_delivery_day_price'] ?? WC()->session->get( 'postnl_delivery_day_price', 0 ) );
+			}
 
-				if ( $extra <= 0 ) {
-					continue;
-				}
-
-				$rate->cost += $extra;
-			} else {
+			if ( $extra <= 0 ) {
 				continue;
 			}
+
+			$rate->cost += $extra;
 
 			if ( wc_tax_enabled() && 'taxable' === $rate->get_tax_status() ) {
 				$tax_rates   = \WC_Tax::get_shipping_tax_rates();

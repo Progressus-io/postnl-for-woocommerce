@@ -119,13 +119,22 @@ class PostNL extends \WC_Shipping_Flat_Rate {
 	 * @param array $package Package of items from cart.
 	 */
 	private function add_letterbox_shipping_rates( $package, $is_free = false ) {
-		$settings = Settings::get_instance();
-		$fee_24h  = $is_free ? 0 : $settings->get_letterbox_24_fee();
+		$settings      = Settings::get_instance();
+		$fee_24h       = $is_free ? 0 : $settings->get_letterbox_24_fee();
+		$letterbox_fee = $settings->get_letterbox_fee();
 
-		// Get base cost from parent calculation; waive entirely when free shipping threshold is met.
-		$base_cost = $is_free ? 0 : $this->get_option( 'cost' );
-		if ( '' === $base_cost ) {
+		// Resolve base cost (composition formula, see Container::inject_letterbox_rates_for_all_methods):
+		//     base = letterbox_fee when configured, else the method's own cost.
+		// Both are waived to 0 when the free-shipping threshold has been met.
+		if ( $is_free ) {
 			$base_cost = 0;
+		} elseif ( null !== $letterbox_fee ) {
+			$base_cost = (float) $letterbox_fee;
+		} else {
+			$base_cost = $this->get_option( 'cost' );
+			if ( '' === $base_cost ) {
+				$base_cost = 0;
+			}
 		}
 
 		// Letterbox 24 hours (2928) with extra fee.
@@ -161,12 +170,21 @@ class PostNL extends \WC_Shipping_Flat_Rate {
 	 * @param string $letterbox_type Type of letterbox (letterbox or letterbox_48).
 	 */
 	private function add_default_letterbox_rate( $package, $letterbox_type, $is_free = false ) {
-		$settings = Settings::get_instance();
+		$settings      = Settings::get_instance();
+		$letterbox_fee = $settings->get_letterbox_fee();
 
-		// Get base cost from parent calculation; waive entirely when free shipping threshold is met.
-		$base_cost = $is_free ? 0 : $this->get_option( 'cost' );
-		if ( '' === $base_cost ) {
+		// Resolve base cost (composition formula, see Container::inject_letterbox_rates_for_all_methods):
+		//     base = letterbox_fee when configured, else the method's own cost.
+		// Both are waived to 0 when the free-shipping threshold has been met.
+		if ( $is_free ) {
 			$base_cost = 0;
+		} elseif ( null !== $letterbox_fee ) {
+			$base_cost = (float) $letterbox_fee;
+		} else {
+			$base_cost = $this->get_option( 'cost' );
+			if ( '' === $base_cost ) {
+				$base_cost = 0;
+			}
 		}
 
 		// Determine cost and label based on type

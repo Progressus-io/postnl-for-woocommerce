@@ -136,7 +136,7 @@ class Single extends Base {
 						static function ( $meta_field ) {
 							return empty( $meta_field['id'] ) ? '' : $meta_field['id'];
 						},
-						$this->meta_box_fields( $order ? $order : false )
+						$this->meta_box_fields( $order ?: false )
 					)
 				)
 			),
@@ -171,11 +171,13 @@ class Single extends Base {
 	protected function resolve_order_from_request() {
 		$order_id = 0;
 
+		// phpcs:disable WordPress.Security.NonceVerification.Recommended -- Reading the order id from the admin query string for read-only enqueue-time context; no data is mutated.
 		if ( ! empty( $_GET['id'] ) ) {
 			$order_id = absint( wp_unslash( $_GET['id'] ) );
 		} elseif ( ! empty( $_GET['post'] ) ) {
 			$order_id = absint( wp_unslash( $_GET['post'] ) );
 		}
+		// phpcs:enable WordPress.Security.NonceVerification.Recommended
 
 		if ( ! $order_id ) {
 			return false;

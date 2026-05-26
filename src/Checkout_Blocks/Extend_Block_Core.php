@@ -351,7 +351,7 @@ class Extend_Block_Core {
 			$order->update_meta_data( '_postnl_order_metadata', $delivery_day_data );
 		}
 
-		// Save letterbox type from shipping method selection
+		// Save letterbox type from shipping method selection.
 		$this->save_letterbox_type_from_shipping( $order );
 
 		/**

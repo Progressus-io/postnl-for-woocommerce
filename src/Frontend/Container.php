@@ -545,6 +545,8 @@ class Container {
 	 * Inject letterbox 24h and 48h shipping rates for all non-PostNL shipping methods
 	 * when the cart is eligible for automatic letterbox delivery.
 	 *
+	 * @since 5.9.6
+	 *
 	 * @param array $rates   Shipping rates keyed by rate ID.
 	 * @param array $package Shipping package.
 	 * @return array

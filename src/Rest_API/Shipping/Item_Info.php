@@ -940,7 +940,7 @@ class Item_Info extends Base_Info {
 			$letterbox_type = $this->get_letterbox_type();
 			// Remove generic 'letterbox' and add specific type.
 			unset( $checked_features['letterbox'] );
-			
+
 			if ( 'letterbox_48' === $letterbox_type ) {
 				$checked_features['letterbox_48'] = 'yes';
 			} else {

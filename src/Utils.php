@@ -1191,6 +1191,8 @@ class Utils {
 	/**
 	 * Get the letterbox label for 24h.
 	 *
+	 * @since 5.9.6
+	 *
 	 * @return string
 	 */
 	public static function get_letterbox_label_24h() {
@@ -1199,6 +1201,8 @@ class Utils {
 
 	/**
 	 * Get the letterbox label for 48h.
+	 *
+	 * @since 5.9.6
 	 *
 	 * @return string
 	 */

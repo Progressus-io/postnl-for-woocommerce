@@ -441,7 +441,9 @@ abstract class Base {
 	/**
 	 * Save the letterbox type from the selected shipping method.
 	 *
-	 * @param int   $order_id ID of the order.
+	 * @since 5.9.6
+	 *
+	 * @param int   $order_id    ID of the order.
 	 * @param array $posted_data Posted values.
 	 */
 	public function save_letterbox_type( $order_id, $posted_data ) {
@@ -451,9 +453,9 @@ abstract class Base {
 			return;
 		}
 
-		// Get the shipping methods from the order
+		// Get the shipping methods from the order.
 		$shipping_methods = $order->get_shipping_methods();
-		
+
 		if ( empty( $shipping_methods ) ) {
 			return;
 		}

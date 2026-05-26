@@ -189,9 +189,9 @@ class PostNL extends \WC_Shipping_Flat_Rate {
 			}
 		}
 
-		// Determine cost and label based on type
+		// Determine cost and label based on type.
 		if ( 'letterbox' === $letterbox_type ) {
-			// 24 hours with extra fee (waived when free shipping threshold is met)
+			// 24 hours with extra fee (waived when free shipping threshold is met).
 			$fee_24h = $is_free ? 0 : $settings->get_letterbox_24_fee();
 			$cost    = $base_cost + $fee_24h;
 			$label   = $this->title . ' ' . Utils::get_letterbox_label_24h();

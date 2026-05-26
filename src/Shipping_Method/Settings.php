@@ -1072,6 +1072,8 @@ class Settings extends \WC_Settings_API {
 	/**
 	 * Get the letterboxparcel (24 hours) extra fee from the settings.
 	 *
+	 * @since 5.9.6
+	 *
 	 * @return float
 	 */
 	public function get_letterbox_24_fee() {
@@ -1626,6 +1628,8 @@ class Settings extends \WC_Settings_API {
 
 	/**
 	 * Get default automatic letterboxparcel product from the settings.
+	 *
+	 * @since 5.9.6
 	 *
 	 * @return String
 	 */

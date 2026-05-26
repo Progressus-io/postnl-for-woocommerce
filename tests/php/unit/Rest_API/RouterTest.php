@@ -35,7 +35,7 @@ class RouterTest extends UnitTestCase {
 	 *
 	 * @return array<string, array{string}>
 	 */
-	public function supported_flows_provider(): array {
+	public static function supported_flows_provider(): array {
 		$cases = array();
 		foreach ( Router::SUPPORTED_FLOWS as $flow ) {
 			$cases[ $flow ] = array( $flow );

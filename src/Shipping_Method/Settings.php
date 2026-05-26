@@ -701,7 +701,7 @@ class Settings extends \WC_Settings_API {
 			'default_automatic_letterboxparcel_product' => array(
 				'title'       => esc_html__( 'Default automatic letterboxparcel product', 'postnl-for-woocommerce' ),
 				'type'        => 'select',
-				'description' => esc_html__( '', 'postnl-for-woocommerce' ),
+				'description' => '',
 				'default'     => 'letterbox',
 				'for_country' => array( 'NL' ),
 				'options'     => array(
@@ -1070,7 +1070,7 @@ class Settings extends \WC_Settings_API {
 	}
 
 	/**
-	 * Get pick-up delivery fee from the settings.
+	 * Get the letterboxparcel (24 hours) extra fee from the settings.
 	 *
 	 * @return float
 	 */

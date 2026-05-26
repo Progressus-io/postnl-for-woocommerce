@@ -117,6 +117,7 @@ class PostNL extends \WC_Shipping_Flat_Rate {
 	 * Add letterbox shipping rates when customer can decide.
 	 *
 	 * @param array $package Package of items from cart.
+	 * @param bool  $is_free Whether the free-shipping threshold has been met; waives all letterbox costs to 0 when true.
 	 */
 	private function add_letterbox_shipping_rates( $package, $is_free = false ) {
 		$settings      = Settings::get_instance();
@@ -166,8 +167,9 @@ class PostNL extends \WC_Shipping_Flat_Rate {
 	/**
 	 * Add default letterbox rate when merchant has selected a default.
 	 *
-	 * @param array  $package Package of items from cart.
+	 * @param array  $package        Package of items from cart.
 	 * @param string $letterbox_type Type of letterbox (letterbox or letterbox_48).
+	 * @param bool   $is_free        Whether the free-shipping threshold has been met; waives the rate cost to 0 when true.
 	 */
 	private function add_default_letterbox_rate( $package, $letterbox_type, $is_free = false ) {
 		$settings      = Settings::get_instance();

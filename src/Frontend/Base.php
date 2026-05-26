@@ -460,7 +460,7 @@ abstract class Base {
 
 		foreach ( $shipping_methods as $shipping_item ) {
 			// Check if this is a PostNL shipping method.
-			if ( ! in_array( $shipping_item->get_method_id(), $this->settings->get_supported_shipping_methods() ) ) {
+			if ( ! in_array( $shipping_item->get_method_id(), $this->settings->get_supported_shipping_methods(), true ) ) {
 				continue;
 			}
 

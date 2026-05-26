@@ -6,6 +6,7 @@
   "main": "build/index.js",
   "scripts": {
     "build": "composer install && wp-scripts build && npm run updatepo && npm run makejson && composer install --no-dev && npm run archive",
+    "build:dev": "composer install --prefer-dist --no-progress --no-interaction && npm run env start",
     "format": "wp-scripts format",
     "lint:css": "wp-scripts lint-style",
     "lint": "wp-scripts lint-js ./client",

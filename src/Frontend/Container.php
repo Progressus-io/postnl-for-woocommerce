@@ -616,20 +616,24 @@ class Container {
 			$base_cost         = ( null !== $letterbox_fee ) ? (float) $letterbox_fee : $original_cost;
 			$base_cost         = $is_free ? 0 : $base_cost;
 
+			// Recalculate shipping taxes for the variant cost (carrier's original
+			// taxes apply to the original cost, not the letterbox-adjusted one).
+			$calc_taxes = function ( $cost ) use ( $rate ) {
+				if ( wc_tax_enabled() && 'taxable' === $rate->get_tax_status() ) {
+					return \WC_Tax::calc_shipping_tax( $cost, \WC_Tax::get_shipping_tax_rates() );
+				}
+				return array();
+			};
+
 			if ( 'customer_decide' === $letterbox_product_type ) {
 				// Replace rate with two letterbox variants: 24h and 48h.
-				$cost_24h  = $base_cost + $effective_fee_24h;
-				$taxes_24h = array();
-				if ( wc_tax_enabled() && 'taxable' === $rate->get_tax_status() ) {
-					$tax_rates = \WC_Tax::get_shipping_tax_rates();
-					$taxes_24h = \WC_Tax::calc_shipping_tax( $cost_24h, $tax_rates );
-				}
+				$cost_24h = $base_cost + $effective_fee_24h;
 
 				$rate_24h = new \WC_Shipping_Rate(
 					$rate_id . ':letterbox',
 					$base_label . ' ' . Utils::get_letterbox_label_24h(),
 					$cost_24h,
-					$taxes_24h,
+					$calc_taxes( $cost_24h ),
 					$rate->get_method_id(),
 					$rate->get_instance_id()
 				);
@@ -639,7 +643,7 @@ class Container {
 					$rate_id . ':letterbox_48',
 					$base_label . ' ' . Utils::get_letterbox_label_48h(),
 					$base_cost,
-					$rate->get_taxes(),
+					$calc_taxes( $base_cost ),
 					$rate->get_method_id(),
 					$rate->get_instance_id()
 				);
@@ -650,18 +654,13 @@ class Container {
 
 			} elseif ( 'letterbox' === $letterbox_product_type ) {
 				// Replace rate with 24h letterbox variant only.
-				$cost_24h  = $base_cost + $effective_fee_24h;
-				$taxes_24h = array();
-				if ( wc_tax_enabled() && 'taxable' === $rate->get_tax_status() ) {
-					$tax_rates = \WC_Tax::get_shipping_tax_rates();
-					$taxes_24h = \WC_Tax::calc_shipping_tax( $cost_24h, $tax_rates );
-				}
+				$cost_24h = $base_cost + $effective_fee_24h;
 
 				$modified_rate = new \WC_Shipping_Rate(
 					$rate_id . ':letterbox',
 					$base_label . ' ' . Utils::get_letterbox_label_24h(),
 					$cost_24h,
-					$taxes_24h,
+					$calc_taxes( $cost_24h ),
 					$rate->get_method_id(),
 					$rate->get_instance_id()
 				);
@@ -674,7 +673,7 @@ class Container {
 					$rate_id . ':letterbox_48',
 					$base_label . ' ' . Utils::get_letterbox_label_48h(),
 					$base_cost,
-					$rate->get_taxes(),
+					$calc_taxes( $base_cost ),
 					$rate->get_method_id(),
 					$rate->get_instance_id()
 				);

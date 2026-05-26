@@ -49,6 +49,8 @@ Thumbs.db
 *.wmv
 
 phpcs.xml
+.phpunit.cache
+.phpunit.result.cache
 .codegpt
 .vscode
 /vendor/
@@ -57,3 +59,6 @@ phpcs.xml
 postnl-for-woocommerce.zip
 woo-postnl.zip
 /pnpm-lock.yaml
+
+.wp-env.override.json
+.wp-env-local/

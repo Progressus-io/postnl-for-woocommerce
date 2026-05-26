@@ -3,6 +3,8 @@
  * Base class for integration tests.
  */
 
+declare( strict_types = 1 );
+
 namespace PostNLWooCommerce\Tests;
 
 use PHPUnit\Framework\TestCase;

@@ -32,6 +32,13 @@ class PluginBootstrapTest extends IntegrationTestCase {
 	}
 
 	/**
+	 * @testdox Should have run the PostNL plugin's bootstrap so POSTNL_WC_VERSION is defined.
+	 */
+	public function test_postnl_plugin_is_bootstrapped(): void {
+		$this->assertTrue( defined( 'POSTNL_WC_VERSION' ) );
+	}
+
+	/**
 	 * @testdox Should let PostNL Utils helpers be called from the integration context.
 	 */
 	public function test_postnl_utils_callable_from_integration_context(): void {

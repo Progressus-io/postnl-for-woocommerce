@@ -1313,6 +1313,14 @@ msgstr "Alleen huisadres"
 msgid "Letterbox"
 msgstr "Brievenbuspakje"
 
+#: src/Utils.php:1239
+msgid "Letterbox 24"
+msgstr "Brievenbuspakje 24"
+
+#: src/Utils.php:1236
+msgid "Letterbox 48"
+msgstr "Brievenbuspakje 48"
+
 #: src/Shipping_Method/Settings.php:611
 msgid "Signature on Delivery + Insured Shipping"
 msgstr "Handtekening voor ontvangst + Verzekerd verzenden"

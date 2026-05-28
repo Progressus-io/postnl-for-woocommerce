@@ -569,9 +569,21 @@ class Utils {
 		$selected_options   = array();
 
 		foreach ( $backend_data as $option_key => $value ) {
-			if ( isset( $options_to_display[ $option_key ] ) && 'yes' === $value ) {
-				$selected_options[] = $options_to_display[ $option_key ];
+			if ( ! isset( $options_to_display[ $option_key ] ) || 'yes' !== $value ) {
+				continue;
 			}
+
+			// Show the specific letterbox variant (24h / 48h) instead of the
+			// generic "Letterbox" label. Legacy orders with no recorded variant
+			// fall back to 24h, matching Item_Info::get_letterbox_type().
+			if ( 'letterbox' === $option_key ) {
+				$order              = wc_get_order( $order_id );
+				$letterbox_type     = ( $order instanceof \WC_Order ) ? $order->get_meta( '_postnl_letterbox_type' ) : '';
+				$selected_options[] = self::get_letterbox_admin_label( $letterbox_type );
+				continue;
+			}
+
+			$selected_options[] = $options_to_display[ $option_key ];
 		}
 
 		if ( empty( $selected_options ) ) {
@@ -1208,6 +1220,23 @@ class Utils {
 	 */
 	public static function get_letterbox_label_48h() {
 		return esc_html__( 'Letterboxparcel (48h)', 'postnl-for-woocommerce' );
+	}
+
+	/**
+	 * Get the short admin label for a letterbox variant, used in the order
+	 * overview Shipping Options column.
+	 *
+	 * @since 5.9.6
+	 *
+	 * @param string $letterbox_type Variant token: 'letterbox' (24h) or 'letterbox_48' (48h).
+	 * @return string Human-readable label (e.g. "Letterbox 24" / "Letterbox 48").
+	 */
+	public static function get_letterbox_admin_label( $letterbox_type ) {
+		if ( 'letterbox_48' === $letterbox_type ) {
+			return esc_html__( 'Letterbox 48', 'postnl-for-woocommerce' );
+		}
+
+		return esc_html__( 'Letterbox 24', 'postnl-for-woocommerce' );
 	}
 
 }

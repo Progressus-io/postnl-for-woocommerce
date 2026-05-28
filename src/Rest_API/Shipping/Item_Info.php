@@ -983,35 +983,54 @@ class Item_Info extends Base_Info {
 	}
 
 	/**
-	 * Get the letterbox type from order meta or settings.
+	 * Resolve the letterbox product variant for this shipment.
 	 *
-	 * @return string 'letterbox' (24h) or 'letterbox_48' (48h).
+	 * Note the asymmetric token values: 'letterbox' denotes the 24h variant
+	 * (product 2928) and 'letterbox_48' denotes the 48h variant (product 2948).
+	 *
+	 * Resolution order:
+	 *   1. The customer's recorded choice on the order (_postnl_letterbox_type).
+	 *   2. The merchant default setting (24h or 48h).
+	 *   3. For 'customer_decide' with no recorded choice — e.g. an order placed
+	 *      before this feature shipped — fall back to 24h (2928), which matches
+	 *      the behaviour that was in effect when those legacy orders were
+	 *      originally placed. The assigned variant is surfaced to the merchant
+	 *      in the Shipping Options order-overview column so they can correct it
+	 *      on the rare exception.
+	 *
+	 * @since 5.9.6
+	 *
+	 * @return string 'letterbox' (24h / 2928) or 'letterbox_48' (48h / 2948).
 	 */
 	protected function get_letterbox_type() {
-		// Check if order has a specific letterbox type selected from checkout.
-		if ( ! empty( $this->api_args['order_details']['order_id'] ) ) {
-			$order = wc_get_order( $this->api_args['order_details']['order_id'] );
-			
-			if ( is_a( $order, 'WC_Order' ) ) {
-				$letterbox_type = $order->get_meta( '_postnl_letterbox_type' );
-				
-				// If customer selected a letterbox type from checkout, use it.
-				if ( $letterbox_type ) {
-					return $letterbox_type;
-				}
+		$order = ! empty( $this->api_args['order_details']['order_id'] )
+			? wc_get_order( $this->api_args['order_details']['order_id'] )
+			: null;
 
+		if ( $order instanceof \WC_Order ) {
+			$stored_type = $order->get_meta( '_postnl_letterbox_type' );
+			if ( in_array( $stored_type, array( 'letterbox', 'letterbox_48' ), true ) ) {
+				return $stored_type;
 			}
 		}
 
-		// Fallback to settings default.
-		$default_letterbox = $this->settings->get_default_automatic_letterboxparcel_product();
-		
-		// If default is 48h, return letterbox_48.
-		if ( 'letterbox_48' === $default_letterbox ) {
+		$default_letterbox_type = $this->settings->get_default_automatic_letterboxparcel_product();
+
+		if ( 'letterbox_48' === $default_letterbox_type ) {
 			return 'letterbox_48';
 		}
-		
-		// Default to 24h.
+
+		// 'customer_decide' with no recorded choice: backward-compatibility gap
+		// for orders placed before this feature. Default to 24h and log it.
+		if ( 'customer_decide' === $default_letterbox_type && $order instanceof \WC_Order ) {
+			\PostNLWooCommerce\Main::get_logger()->write(
+				sprintf(
+					'PostNL letterbox: order #%d has no recorded 24h/48h choice under "customer decide"; defaulting to Letterbox 24h (2928).',
+					$order->get_id()
+				)
+			);
+		}
+
 		return 'letterbox';
 	}
 

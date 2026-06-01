@@ -86,6 +86,7 @@ Follow these instructions (https://www.postnl.nl/Images/aanvragen-api-key-stappe
 * Fix: Hide delivery-day, morning and evening surcharges when free shipping applies, including PostNL's minimum-order-amount threshold.
 * Fix: Prevent duplicate PostNL delivery options container from appearing during blocks checkout fragment updates.
 * Tweak: Improve tax handling so tab prices accurately reflect tax-inclusive and tax-exclusive display settings.
+* Fix: "Invullen met PostNL" now correctly sets the country to Belgium instead of Netherlands for Belgian PostNL accounts.
 
 = 5.9.5 (2026-04-21) =
 * Add: Ability to set the default checkout tab (Delivery or Pickup) from the PostNL checkout settings.

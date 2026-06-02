@@ -103,6 +103,16 @@ jobs:
         env:
           COMPOSER_AUTH: ${{ secrets.POSTNL_PRIVATE_PACKAGIST_AUTH }}
 
+      - name: Assert no auth.json written by Composer (dev install)
+        run: |
+          if find "$GITHUB_WORKSPACE" "$HOME" -maxdepth 4 \
+              \( -name "auth.json" -o -name "auth.*.json" \) 2>/dev/null | grep -q .; then
+            echo "::error::Composer wrote an auth credential file — credentials must stay in env only!"
+            find "$GITHUB_WORKSPACE" "$HOME" -maxdepth 4 \( -name "auth.json" -o -name "auth.*.json" \)
+            exit 1
+          fi
+          echo "Auth file check passed — no auth.json written to workspace or Composer home."
+
       # Step 2: Install npm dependencies
       - name: Install npm dependencies
         run: npm ci --prefer-offline
@@ -122,6 +132,16 @@ jobs:
         run: composer install --no-dev --prefer-dist --no-progress --no-interaction --optimize-autoloader
         env:
           COMPOSER_AUTH: ${{ secrets.POSTNL_PRIVATE_PACKAGIST_AUTH }}
+
+      - name: Assert no auth.json written by Composer (production install)
+        run: |
+          if find "$GITHUB_WORKSPACE" "$HOME" -maxdepth 4 \
+              \( -name "auth.json" -o -name "auth.*.json" \) 2>/dev/null | grep -q .; then
+            echo "::error::Composer wrote an auth credential file — credentials must stay in env only!"
+            find "$GITHUB_WORKSPACE" "$HOME" -maxdepth 4 \( -name "auth.json" -o -name "auth.*.json" \)
+            exit 1
+          fi
+          echo "Auth file check passed — no auth.json written to workspace or Composer home."
 
       # Sanity check — fail loudly if expected artifacts are missing
       - name: Verify build artifacts
@@ -163,19 +183,29 @@ jobs:
           zip -r "$ZIP_PATH" woo-postnl/
           echo "zip-path=$ZIP_PATH" >> "$GITHUB_OUTPUT"
 
-      # All paths: assert no credential files slipped into the ZIP
-      - name: Verify ZIP contains no credentials
+      # All paths: assert no credential files slipped in AND SDK source shipped
+      - name: Verify ZIP credentials and SDK presence
         run: |
           ZIP_PATH="${{ steps.build_zip.outputs.zip-path }}"
           VERIFY_DIR="$RUNNER_TEMP/zip_cred_verify"
           mkdir -p "$VERIFY_DIR"
           unzip -q "$ZIP_PATH" -d "$VERIFY_DIR"
 
+          # Negative: no credential files
           if find "$VERIFY_DIR" \( -name "auth.json" -o -name "auth.*.json" \) | grep -q .; then
             echo "::error::Composer auth credential file found in ZIP — credentials must not ship!"
+            find "$VERIFY_DIR" \( -name "auth.json" -o -name "auth.*.json" \)
             exit 1
           fi
           echo "Credential check passed — no auth credential files found in ZIP."
+
+          # Positive: PostNL SDK source must be present
+          if [ ! -d "$VERIFY_DIR/woo-postnl/vendor/postnl/api-client-sdk" ]; then
+            echo "::error::vendor/postnl/api-client-sdk missing from ZIP — SDK source must ship with the plugin!"
+            exit 1
+          fi
+          echo "SDK check passed — vendor/postnl/api-client-sdk present in ZIP."
+
           rm -rf "$VERIFY_DIR"
 
       # Dry run only: verify ZIP contents then clean up

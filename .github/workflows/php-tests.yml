@@ -37,6 +37,16 @@ jobs:
         env:
           COMPOSER_AUTH: ${{ secrets.POSTNL_PRIVATE_PACKAGIST_AUTH }}
 
+      - name: Assert no auth.json written by Composer
+        run: |
+          if find "$GITHUB_WORKSPACE" "$HOME" -maxdepth 4 \
+              \( -name "auth.json" -o -name "auth.*.json" \) 2>/dev/null | grep -q .; then
+            echo "::error::Composer wrote an auth credential file — credentials must stay in env only!"
+            find "$GITHUB_WORKSPACE" "$HOME" -maxdepth 4 \( -name "auth.json" -o -name "auth.*.json" \)
+            exit 1
+          fi
+          echo "Auth file check passed — no auth.json written to workspace or Composer home."
+
       - name: Start wp-env
         run: npm run env start
 

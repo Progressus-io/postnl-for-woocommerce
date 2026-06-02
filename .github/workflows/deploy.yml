@@ -100,6 +100,8 @@ jobs:
       # Step 1: Install Composer WITH dev deps — needed for vendor/bin/wp (i18n tools)
       - name: Install Composer dependencies (with dev)
         run: composer install --prefer-dist --no-progress --no-interaction
+        env:
+          COMPOSER_AUTH: ${{ secrets.POSTNL_PRIVATE_PACKAGIST_AUTH }}
 
       # Step 2: Install npm dependencies
       - name: Install npm dependencies
@@ -118,6 +120,8 @@ jobs:
       # Step 5: Reinstall Composer production-only → clean vendor/ for deploy
       - name: Reinstall Composer dependencies (production only)
         run: composer install --no-dev --prefer-dist --no-progress --no-interaction --optimize-autoloader
+        env:
+          COMPOSER_AUTH: ${{ secrets.POSTNL_PRIVATE_PACKAGIST_AUTH }}
 
       # Sanity check — fail loudly if expected artifacts are missing
       - name: Verify build artifacts
@@ -158,6 +162,21 @@ jobs:
           cd "$RUNNER_TEMP/zip_staging"
           zip -r "$ZIP_PATH" woo-postnl/
           echo "zip-path=$ZIP_PATH" >> "$GITHUB_OUTPUT"
+
+      # All paths: assert no credential files slipped into the ZIP
+      - name: Verify ZIP contains no credentials
+        run: |
+          ZIP_PATH="${{ steps.build_zip.outputs.zip-path }}"
+          VERIFY_DIR="$RUNNER_TEMP/zip_cred_verify"
+          mkdir -p "$VERIFY_DIR"
+          unzip -q "$ZIP_PATH" -d "$VERIFY_DIR"
+
+          if find "$VERIFY_DIR" \( -name "auth.json" -o -name "auth.*.json" \) | grep -q .; then
+            echo "::error::Composer auth credential file found in ZIP — credentials must not ship!"
+            exit 1
+          fi
+          echo "Credential check passed — no auth credential files found in ZIP."
+          rm -rf "$VERIFY_DIR"
 
       # Dry run only: verify ZIP contents then clean up
       - name: Verify and clean up dry-run ZIP

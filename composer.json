@@ -36,6 +36,8 @@
 			"babel.config.js",
 			"jest-puppeteer.config.js",
 			".*",
+			"auth.json",
+			"auth.*.json",
 			"*.zip",
 			"jest.config.js",
 			"AGENTS.md",

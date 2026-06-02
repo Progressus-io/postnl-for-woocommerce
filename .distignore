@@ -51,5 +51,9 @@ phpunit.xml.dist
 /changelog.txt
 /DEVELOPER.md
 
+# Composer auth — never ship credentials
+auth.json
+auth.*.json
+
 # Self-reference
 .distignore

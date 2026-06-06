@@ -52,6 +52,6 @@ class Letterbox_Service extends Order_Base implements Label_Service_Interface {
 	 * @throws \Exception If the API request fails or the label array is empty.
 	 */
 	public function create( array $post_data ): array {
-		return $this->maybe_create_letterbox( $post_data );
+		return $this->maybe_create_letterbox_pipeline( $post_data );
 	}
 }

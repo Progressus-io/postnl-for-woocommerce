@@ -59,7 +59,7 @@ class Return_Label_Service extends Order_Base implements Return_Label_Service_In
 	 * @throws \Exception If the API request fails or the label array is empty.
 	 */
 	public function create( array $post_data ): array {
-		return $this->maybe_create_return_label( $post_data );
+		return $this->maybe_create_return_label_pipeline( $post_data );
 	}
 
 	/**

@@ -413,9 +413,6 @@ class Extend_Block_Core {
 
 		$shipping_country = isset( $sanitized_data['shipping_country'] ) ? $sanitized_data['shipping_country'] : '';
 
-		// Check letterbox eligibility
-		$letterbox = Utils::is_cart_eligible_auto_letterbox( WC()->cart );
-
 		// Save the house number and postcode on WC customer if provided
 		if ( isset( $sanitized_data['shipping_house_number'] ) && isset( $sanitized_data['shipping_postcode'] ) ) {
 			WC()->customer->set_shipping_postcode( $sanitized_data['shipping_postcode'] );
@@ -518,6 +515,14 @@ class Extend_Block_Core {
 		// Save the customer data
 		WC()->customer->save();
 
+		// Check letterbox (ALA) eligibility *after* the customer's shipping
+		// country has been persisted above. is_cart_eligible_auto_letterbox()
+		// reads that saved country, so evaluating it earlier made the first
+		// AJAX call on a fresh session read a stale country and wrongly report
+		// not-eligible — which left the blocks delivery-day / pickup tabs
+		// unblocked until a full page reload.
+		$letterbox = Utils::is_cart_eligible_auto_letterbox( WC()->cart );
+
 		// Proceed to fetch delivery and dropoff options
 		$order_data = $sanitized_data;
 
@@ -584,6 +589,7 @@ class Extend_Block_Core {
 						'delivery_options'  => array(),
 						'dropoff_options'   => array(),
 						'is_free_shipping'  => $is_free_shipping,
+						'is_letterbox'      => false,
 					),
 					200
 				);
@@ -600,6 +606,7 @@ class Extend_Block_Core {
 					'dropoff_options'          => $dropoff_options_array,
 					'is_delivery_days_enabled' => $delivery_options['is_delivery_days_enabled'],
 					'is_free_shipping'         => $is_free_shipping,
+					'is_letterbox'             => false,
 					'carrier_base_cost'        => $carrier_base_cost,
 					'delivery_day_fee_display' => $delivery_day_fee_display,
 					'pickup_fee_display'       => $pickup_fee_display,

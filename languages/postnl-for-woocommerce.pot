@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-05-28T13:34:34+00:00\n"
+"POT-Creation-Date: 2026-06-09T14:16:00+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.11.0\n"
 "X-Domain: postnl-for-woocommerce\n"
@@ -40,7 +40,7 @@ msgid "https://postnl.post/"
 msgstr ""
 
 #: src/Checkout_Blocks/Extend_Block_Core.php:89
-#: src/Frontend/Container.php:479
+#: src/Frontend/Container.php:489
 msgid "This is not a valid address!"
 msgstr ""
 
@@ -51,7 +51,7 @@ msgstr ""
 msgid "House number"
 msgstr ""
 
-#: src/Checkout_Blocks/Extend_Block_Core.php:455
+#: src/Checkout_Blocks/Extend_Block_Core.php:452
 msgid "Postcode or house number is missing."
 msgstr ""
 
@@ -112,14 +112,14 @@ msgstr ""
 msgid "Street Name"
 msgstr ""
 
-#: src/Frontend/Container.php:110
+#: src/Frontend/Container.php:120
 msgid "Delivery Days"
 msgstr ""
 
-#: src/Frontend/Container.php:111
+#: src/Frontend/Container.php:121
 #: src/Frontend/Dropoff_Points.php:52
 #: build/postnl-container-frontend.js:1
-#: client/checkout/postnl-container/block.js:277
+#: client/checkout/postnl-container/block.js:283
 msgid "Pickup"
 msgstr ""
 
@@ -130,7 +130,7 @@ msgstr ""
 #: src/Frontend/Delivery_Day.php:115
 #: src/Shipping_Method/Settings.php:335
 #: build/postnl-container-frontend.js:1
-#: client/checkout/postnl-container/block.js:276
+#: client/checkout/postnl-container/block.js:282
 msgid "Delivery"
 msgstr ""
 
@@ -1863,7 +1863,7 @@ msgstr ""
 
 #: templates/checkout/postnl-container.php:23
 #: build/postnl-container-frontend.js:1
-#: client/checkout/postnl-container/block.js:694
+#: client/checkout/postnl-container/block.js:707
 msgid "These items are eligible for letterbox delivery."
 msgstr ""
 

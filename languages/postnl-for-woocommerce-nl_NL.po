@@ -67,7 +67,7 @@ msgid "Street Name"
 msgstr "Straat"
 
 #: src/Checkout_Blocks/Extend_Block_Core.php:89
-#: src/Frontend/Container.php:479
+#: src/Frontend/Container.php:489
 msgid "This is not a valid address!"
 msgstr "Dit is geen geldig adres!"
 
@@ -1468,7 +1468,7 @@ msgstr "Verzekerd Verzenden Plus"
 
 #: templates/checkout/postnl-container.php:23
 #: build/postnl-container-frontend.js:1
-#: client/checkout/postnl-container/block.js:694
+#: client/checkout/postnl-container/block.js:707
 msgid "These items are eligible for letterbox delivery."
 msgstr "Deze bestelling past door de brievenbus."
 
@@ -1510,7 +1510,7 @@ msgstr ""
 msgid "Leave a review"
 msgstr "Laat een beoordeling achter"
 
-#: src/Checkout_Blocks/Extend_Block_Core.php:455
+#: src/Checkout_Blocks/Extend_Block_Core.php:452
 msgid "Postcode or house number is missing."
 msgstr ""
 
@@ -1538,14 +1538,14 @@ msgstr ""
 #: src/Frontend/Delivery_Day.php:115
 #: src/Shipping_Method/Settings.php:335
 #: build/postnl-container-frontend.js:1
-#: client/checkout/postnl-container/block.js:276
+#: client/checkout/postnl-container/block.js:282
 msgid "Delivery"
 msgstr "Bezorgdagen"
 
-#: src/Frontend/Container.php:111
+#: src/Frontend/Container.php:121
 #: src/Frontend/Dropoff_Points.php:52
 #: build/postnl-container-frontend.js:1
-#: client/checkout/postnl-container/block.js:277
+#: client/checkout/postnl-container/block.js:283
 msgid "Pickup"
 msgstr "Ophalen"
 
@@ -1886,7 +1886,7 @@ msgstr "Bezorgcode aan de deur + Verzekerd verzenden"
 msgid "Delivery Code at Door"
 msgstr "Bezorgcode aan de deur"
 
-#: src/Frontend/Container.php:110
+#: src/Frontend/Container.php:120
 msgid "Delivery Days"
 msgstr "Bezorgdagen"
 

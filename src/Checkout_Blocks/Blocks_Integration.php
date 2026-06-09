@@ -255,6 +255,7 @@ class Blocks_Integration implements IntegrationInterface {
 			'delivery_day_fee_formatted' => Utils::get_formatted_fee_total_price( $settings->get_delivery_days_fee() ),
 			'pickup_fee'                 => $settings->get_pickup_delivery_fee(),
 			'pickup_fee_formatted'       => Utils::get_formatted_fee_total_price( $settings->get_pickup_delivery_fee() ),
+			'default_checkout_tab'       => $settings->get_default_checkout_tab(),
 		);
 	}
 }

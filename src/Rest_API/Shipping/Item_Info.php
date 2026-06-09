@@ -479,7 +479,7 @@ class Item_Info extends Base_Info {
 			'printer_type'            => array(
 				'default'  => $this->get_product_code() == '4909' ? 'GraphicFile|PDF' : $this->settings->get_printer_type(),
 				'sanitize' => function ( $value ) use ( $self ) {
-					if ( in_array( $this->get_product_code(), array( '4909', '2928' ) ) ) {
+					if ( in_array( $this->get_product_code(), array( '4909' ) ) ) {
 						return 'GraphicFile|PDF';
 					}
 

@@ -13,31 +13,34 @@
 	"archive": {
 		"exclude": [
 			"!/assets",
+			"!/build",
+			"!/vendor",
 			"!/languages",
 			"/node_modules",
             "/client",
 			"bin",
 			"tests",
-			"LICENSE",
 			"README.md",
 			"changelog.txt",
 			"DEVELOPER.md",
 			"package.json",
 			"composer.lock",
 			"pnpm-lock.yaml",
-			"phpunit.xml.dist",
+			"phpunit-unit.xml.dist",
+			"phpunit-integration.xml.dist",
 			"webpack.config.js",
 			"postcss.config.js",
 			"phpcs.xml",
 			"package-lock.json",
 			"composer.json",
-			"composer.lock",
 			"babel.config.js",
-			"phpunit.xml",
 			"jest-puppeteer.config.js",
 			".*",
 			"*.zip",
-			"jest.config.js"
+			"jest.config.js",
+			"AGENTS.md",
+			"CLAUDE.md",
+			"docs"
 		]
 	},
 	"require-dev": {
@@ -45,13 +48,21 @@
 		"squizlabs/php_codesniffer": "*",
 		"dealerdirect/phpcodesniffer-composer-installer": "*",
 		"wp-coding-standards/wpcs": "*",
-		"woocommerce/woocommerce-sniffs": "*"
+		"woocommerce/woocommerce-sniffs": "*",
+		"phpunit/phpunit": "^10.5",
+		"yoast/phpunit-polyfills": "^2.0",
+		"brain/monkey": "^2.6"
+	},
+	"autoload-dev": {
+		"psr-4": {
+			"PostNLWooCommerce\\Tests\\": "tests/php/"
+		}
 	},
 	"config": {
 		"allow-plugins": {
 			"dealerdirect/phpcodesniffer-composer-installer": true
 		},
-		"phpcs-ignore": ".git,vendor,node_modules,assets,build"
+		"phpcs-ignore": ".git,vendor,node_modules,assets,build,tests"
 	},
 	"scripts": {
 		"check-security": [

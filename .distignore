@@ -1,0 +1,55 @@
+# Version control
+/.git
+/.gitignore
+/.gitattributes
+
+# GitHub config
+/.github
+
+# WordPress.org assets (handled separately by SVN; not shipped with plugin)
+/.wordpress-org
+
+# Node / JavaScript build tooling
+/node_modules
+/client
+webpack.config.js
+babel.config.js
+jest.config.js
+jest-puppeteer.config.js
+postcss.config.js
+package.json
+package-lock.json
+pnpm-lock.yaml
+/.nvmrc
+/.prettierrc.js
+
+# PHP build/QA tooling
+composer.json
+composer.lock
+/.phpcs.xml
+/.phpcs.security.xml
+/.phpcs.l18n.xml
+phpunit.xml
+phpunit.xml.dist
+
+# Tests
+/tests
+
+# Local build artifacts and archives
+/dist
+/woo-postnl
+*.zip
+
+# IDE / OS
+/.idea
+/.vscode
+/.codegpt
+/.DS_Store
+
+# Docs not needed at runtime
+/README.md
+/changelog.txt
+/DEVELOPER.md
+
+# Self-reference
+.distignore

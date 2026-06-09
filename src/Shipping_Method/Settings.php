@@ -342,6 +342,14 @@ class Settings extends \WC_Settings_API {
 				'for_country' => array( 'NL', 'BE' ),
 				'class'       => 'wc_input_price country-nl country-be',
 			),
+			'letterbox_fee'                   => array(
+				'title'       => __( 'Letterbox fee', 'postnl-for-woocommerce' ),
+				'type'        => 'price',
+				'description' => __( 'Overrides the shipping cost when all items are eligible for letterbox delivery. Leave empty to use the standard shipping cost. The fee is set to €0 when free shipping applies.', 'postnl-for-woocommerce' ),
+				'desc_tip'    => true,
+				'for_country' => array( 'NL' ),
+				'class'       => 'wc_input_price country-nl',
+			),
 			'number_delivery_days'            => array(
 				'title'             => __( 'Number of Delivery Days', 'postnl-for-woocommerce' ),
 				'type'              => 'number',
@@ -390,6 +398,19 @@ class Settings extends \WC_Settings_API {
 				'desc_tip'    => true,
 				'for_country' => array( 'NL' ),
 				'class'       => 'wc_input_price country-nl',
+			),
+			'default_checkout_tab'            => array(
+				'title'       => __( 'Default Delivery Options Tab', 'postnl-for-woocommerce' ),
+				'type'        => 'select',
+				'description' => __( 'Choose which tab is shown first in the delivery options menu at checkout.', 'postnl-for-woocommerce' ),
+				'desc_tip'    => true,
+				'default'     => 'delivery_day',
+				'options'     => array(
+					'delivery_day'   => __( 'Home Delivery', 'postnl-for-woocommerce' ),
+					'dropoff_points' => __( 'Pickup Points', 'postnl-for-woocommerce' ),
+				),
+				'for_country' => array( 'NL', 'BE' ),
+				'class'       => 'country-nl country-be',
 			),
 			'transit_time'                    => array(
 				'title'       => esc_html__( 'Transit Time', 'postnl-for-woocommerce' ),
@@ -1116,12 +1137,44 @@ class Settings extends \WC_Settings_API {
 	}
 
 	/**
+	 * Get letterbox fee from the settings.
+	 * Returns null when the field is empty (meaning: do not override).
+	 *
+	 * @return float|null
+	 */
+	public function get_letterbox_fee() {
+		$value = $this->get_country_option( 'letterbox_fee' );
+		return ( '' !== $value ) ? (float) $value : null;
+	}
+
+	/**
 	 * Get number delivery days from the settings.
 	 *
 	 * @return Int
 	 */
 	public function get_number_delivery_days() {
 		return $this->get_country_option( 'number_delivery_days' );
+	}
+
+	/**
+	 * Get default checkout tab from the settings.
+	 *
+	 * @return string 'delivery_day' or 'dropoff_points'
+	 */
+	public function get_default_checkout_tab() {
+		$value = $this->get_country_option( 'default_checkout_tab' );
+		if ( in_array( $value, array( 'delivery_day', 'dropoff_points' ), true ) ) {
+			return $value;
+		}
+		if ( 'BE' === Utils::get_base_country() ) {
+			// TODO: gate on is_pickup_points_enabled(). When pickup is disabled
+			// we still return 'dropoff_points' here, an id no tab list contains.
+			// Container.php and the React resolver both fall back, so it's
+			// harmless today, but the contract should be: never return an id
+			// that can't render. See PR #306 review.
+			return 'dropoff_points';
+		}
+		return 'delivery_day';
 	}
 
 	/**

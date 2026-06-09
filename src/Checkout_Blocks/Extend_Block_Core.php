@@ -471,7 +471,13 @@ class Extend_Block_Core {
 		// Retrieve validated address from session
 		$validated_address = WC()->session->get( POSTNL_SETTINGS_ID . '_validated_address' );
 
-		$container = new Container();
+		// Construct without registering hooks: this instance is only used for its
+		// helper methods below. The bootstrap Container (Main::get_frontend(), fired
+		// on the init hook — which also runs during admin-ajax) already owns the
+		// global woocommerce_package_rates filters. Re-registering them here would
+		// run inject_letterbox_rates_for_all_methods twice during this request's
+		// shipping calculation and duplicate the letterbox 24h/48h rates.
+		$container = new Container( false );
 
 		// If validation is enabled and address changed or not validated yet
 		if ( $container->is_address_validation_required() && 'NL' === $shipping_country && ( $address_changed || empty( $validated_address ) ) ) {

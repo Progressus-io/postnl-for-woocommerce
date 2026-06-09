@@ -41,11 +41,21 @@ class Container {
 
 	/**
 	 * Init and hook in the integration.
+	 *
+	 * @param bool $register_hooks Whether to register the WordPress hooks. The
+	 *                             bootstrap instance (Main::get_frontend()) passes
+	 *                             true; transient instances created only to reuse
+	 *                             helper methods (e.g. the blocks AJAX handler) must
+	 *                             pass false, otherwise the global woocommerce_package_rates
+	 *                             filters get registered twice and inject_letterbox_rates_for_all_methods
+	 *                             runs twice in the same request, duplicating the 24h/48h rates.
 	 */
-	public function __construct() {
+	public function __construct( bool $register_hooks = true ) {
 		$this->settings = Settings::get_instance();
 
-		$this->init_hooks();
+		if ( $register_hooks ) {
+			$this->init_hooks();
+		}
 	}
 
 	/**
@@ -595,6 +605,17 @@ class Container {
 		$new_rates = array();
 
 		foreach ( $rates as $rate_id => $rate ) {
+			// Idempotency guard: a rate that already carries letterbox_type meta is
+			// an already-injected variant (either from PostNL::calculate_shipping or
+			// a previous pass of this filter in the same request). Carry it through
+			// untouched so a second ':letterbox' suffix can never be nested onto it,
+			// which would duplicate the 24h/48h options.
+			$rate_meta = $rate->get_meta_data();
+			if ( isset( $rate_meta['letterbox_type'] ) ) {
+				$new_rates[ $rate_id ] = $rate;
+				continue;
+			}
+
 			// Skip PostNL shipping method – it handles letterbox in its own calculate_shipping().
 			if ( POSTNL_SETTINGS_ID === $rate->get_method_id() ) {
 				$new_rates[ $rate_id ] = $rate;

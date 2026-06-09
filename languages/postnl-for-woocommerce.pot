@@ -1193,18 +1193,22 @@ msgid "- Shipment & Return: the label of the outward shipment can also be used f
 msgstr ""
 
 #: src/Shipping_Method/Settings.php:168
+msgid " ( Note: Shipment & Return Label will be discontinued on July 1. )"
+msgstr ""
+
+#: src/Shipping_Method/Settings.php:169
 msgid "- Label in the box: a separate return label is created at the same time as the label for the outward shipment and can be included in the box."
 msgstr ""
 
-#: src/Shipping_Method/Settings.php:171
+#: src/Shipping_Method/Settings.php:172
 msgid "None"
 msgstr ""
 
-#: src/Shipping_Method/Settings.php:172
-msgid "Shipping & Return Label"
+#: src/Shipping_Method/Settings.php:173
+msgid "Shipment & Return Label ( Note: Shipment & Return Label will be discontinued on July 1. )"
 msgstr ""
 
-#: src/Shipping_Method/Settings.php:173
+#: src/Shipping_Method/Settings.php:174
 msgid "Label in the box"
 msgstr ""
 

@@ -818,7 +818,8 @@ abstract class Base {
 			return '';
 		}
 
-		if ( '2928' === $shipping_item_info->shipment['shipping_product']['code'] ) {
+		if ( '2928' === $shipping_item_info->shipment['shipping_product']['code'] || 
+			'2948' === $shipping_item_info->shipment['shipping_product']['code'] ) {
 			return '';
 		}
 

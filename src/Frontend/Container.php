@@ -552,8 +552,22 @@ class Container {
 	}
 
 	/**
-	 * Inject letterbox 24h and 48h shipping rates for all non-PostNL shipping methods
-	 * when the cart is eligible for automatic letterbox delivery.
+	 * Collapse every PostNL-linked shipping method into a single canonical letterbox
+	 * option set when the cart is eligible for automatic letterbox delivery (ALA).
+	 *
+	 * This filter is the single source of truth for the letterbox rate set. When ALA
+	 * succeeds it:
+	 *   - keeps non-linked carriers (e.g. DHL) untouched;
+	 *   - keeps the WC native Free Shipping method as-is and always visible, even when
+	 *     the merchant has linked it to PostNL;
+	 *   - drops every other PostNL-linked rate (the PostNL method's own rate and any
+	 *     linked Flat Rate instances) and emits ONE canonical 24h/48h option set in
+	 *     their place, so the choice appears exactly once regardless of how many linked
+	 *     methods or instances the zone has.
+	 *
+	 * PostNL::calculate_shipping() deliberately does NOT emit its own letterbox variants
+	 * — it emits a plain PostNL rate that this filter folds into the canonical set, so
+	 * there is a single emitter and no duplication.
 	 *
 	 * @since 5.9.6
 	 *
@@ -563,14 +577,12 @@ class Container {
 	 */
 	public function inject_letterbox_rates_for_all_methods( $rates, $package ) {
 		// Only apply for NL base country.
-		$base_country = Utils::get_base_country();
-		if ( 'NL' !== $base_country ) {
+		if ( 'NL' !== Utils::get_base_country() ) {
 			return $rates;
 		}
 
 		// Check cart eligibility for letterbox.
-		$is_letterbox_eligible = Utils::is_cart_eligible_auto_letterbox( \WC()->cart );
-		if ( ! $is_letterbox_eligible ) {
+		if ( ! Utils::is_cart_eligible_auto_letterbox( \WC()->cart ) ) {
 			return $rates;
 		}
 
@@ -581,131 +593,126 @@ class Container {
 			return $rates;
 		}
 
-		// If any free_shipping rate exists, the free threshold has been met — waive the 24h fee.
-		$has_free_shipping = false;
+		// Idempotency guard: if the canonical letterbox set is already present (this filter
+		// ran earlier in the same request), do not rebuild it — that would nest a second
+		// ':letterbox' suffix onto an existing variant and duplicate the options.
 		foreach ( $rates as $rate ) {
-			if ( 'free_shipping' === $rate->get_method_id() ) {
-				$has_free_shipping = true;
+			$rate_meta = $rate->get_meta_data();
+			if ( isset( $rate_meta['letterbox_type'] ) ) {
+				return $rates;
+			}
+		}
+
+		$supported = $this->settings->get_supported_shipping_methods();
+
+		// Partition rates: free_shipping and non-linked carriers are kept as-is; every other
+		// PostNL-linked rate is collapsed into one canonical letterbox option set below.
+		$kept_rates        = array();
+		$linked_rates      = array();
+		$has_free_shipping = false;
+
+		foreach ( $rates as $rate_id => $rate ) {
+			$method_id = $rate->get_method_id();
+
+			if ( 'free_shipping' === $method_id ) {
+				$has_free_shipping      = true;
+				$kept_rates[ $rate_id ] = $rate;
+				continue;
+			}
+
+			if ( ! in_array( $method_id, $supported, true ) ) {
+				$kept_rates[ $rate_id ] = $rate;
+				continue;
+			}
+
+			$linked_rates[ $rate_id ] = $rate;
+		}
+
+		// No PostNL-linked rates to collapse — leave the package untouched.
+		if ( empty( $linked_rates ) ) {
+			return $rates;
+		}
+
+		// Free-shipping determination drives both variants to 0.
+		$is_free = $has_free_shipping || Utils::is_free_shipping_applied();
+
+		// Cheapest linked carrier cost is the base-cost fallback when no letterbox_fee is set.
+		$cheapest_cost = null;
+		foreach ( $linked_rates as $rate ) {
+			$cost = (float) $rate->get_cost();
+			if ( 0.0 === $cost ) {
+				// A linked rate at cost 0 means the PostNL free-shipping threshold was met.
+				$is_free = true;
+			}
+			if ( null === $cheapest_cost || $cost < $cheapest_cost ) {
+				$cheapest_cost = $cost;
+			}
+		}
+		$cheapest_cost = ( null === $cheapest_cost ) ? 0.0 : $cheapest_cost;
+
+		$letterbox_fee     = $this->settings->get_letterbox_fee();
+		$base_cost         = ( null !== $letterbox_fee ) ? (float) $letterbox_fee : $cheapest_cost;
+		$base_cost         = $is_free ? 0.0 : $base_cost;
+		$effective_fee_24h = $is_free ? 0.0 : (float) $this->settings->get_letterbox_24_fee();
+
+		$rep_rate_id = null;
+		$rep_rate    = null;
+		foreach ( $linked_rates as $rate_id => $rate ) {
+			if ( POSTNL_SETTINGS_ID === $rate->get_method_id() ) {
+				$rep_rate_id = $rate_id;
+				$rep_rate    = $rate;
 				break;
 			}
 		}
-
-		// Letterbox pricing formula (single source of truth for variant emitters):
-		//     base_cost = letterbox_fee   when configured (not null)
-		//               = method.cost     otherwise
-		//     24h variant = base_cost + letterbox_24_fee
-		//     48h variant = base_cost
-		//     free shipping → both variants = 0
-		// inject_postnl_base_fees / add_postnl_fees_to_rates must NOT touch letterbox rates;
-		// any cost mutation downstream of this emitter is a bug.
-		$fee_24h       = $this->settings->get_letterbox_24_fee();
-		$letterbox_fee = $this->settings->get_letterbox_fee();
-		$supported     = $this->settings->get_supported_shipping_methods();
-
-		$new_rates = array();
-
-		foreach ( $rates as $rate_id => $rate ) {
-			// Idempotency guard: a rate that already carries letterbox_type meta is
-			// an already-injected variant (either from PostNL::calculate_shipping or
-			// a previous pass of this filter in the same request). Carry it through
-			// untouched so a second ':letterbox' suffix can never be nested onto it,
-			// which would duplicate the 24h/48h options.
-			$rate_meta = $rate->get_meta_data();
-			if ( isset( $rate_meta['letterbox_type'] ) ) {
-				$new_rates[ $rate_id ] = $rate;
-				continue;
-			}
-
-			// Skip PostNL shipping method – it handles letterbox in its own calculate_shipping().
-			if ( POSTNL_SETTINGS_ID === $rate->get_method_id() ) {
-				$new_rates[ $rate_id ] = $rate;
-				continue;
-			}
-
-			// Only inject letterbox variants for the configured supported shipping methods.
-			if ( ! in_array( $rate->get_method_id(), $supported, true ) ) {
-				$new_rates[ $rate_id ] = $rate;
-				continue;
-			}
-
-			$original_cost = (float) $rate->get_cost();
-			$base_label    = $rate->get_label();
-
-			// Free-shipping detection runs against the carrier's original cost so a
-			// merchant-configured letterbox_fee of 0 doesn't accidentally short-circuit
-			// the 24h surcharge waiver.
-			$is_free           = $has_free_shipping || 0 >= $original_cost || 'free_shipping' === $rate->get_method_id();
-			$effective_fee_24h = $is_free ? 0 : $fee_24h;
-			$base_cost         = ( null !== $letterbox_fee ) ? (float) $letterbox_fee : $original_cost;
-			$base_cost         = $is_free ? 0 : $base_cost;
-
-			// Recalculate shipping taxes for the variant cost (carrier's original
-			// taxes apply to the original cost, not the letterbox-adjusted one).
-			$calc_taxes = function ( $cost ) use ( $rate ) {
-				if ( wc_tax_enabled() && 'taxable' === $rate->get_tax_status() ) {
-					return \WC_Tax::calc_shipping_tax( $cost, \WC_Tax::get_shipping_tax_rates() );
-				}
-				return array();
-			};
-
-			if ( 'customer_decide' === $letterbox_product_type ) {
-				// Replace rate with two letterbox variants: 24h and 48h.
-				$cost_24h = $base_cost + $effective_fee_24h;
-
-				$rate_24h = new \WC_Shipping_Rate(
-					$rate_id . ':letterbox',
-					$base_label . ' ' . Utils::get_letterbox_label_24h(),
-					$cost_24h,
-					$calc_taxes( $cost_24h ),
-					$rate->get_method_id(),
-					$rate->get_instance_id()
-				);
-				$rate_24h->add_meta_data( 'letterbox_type', 'letterbox' );
-
-				$rate_48h = new \WC_Shipping_Rate(
-					$rate_id . ':letterbox_48',
-					$base_label . ' ' . Utils::get_letterbox_label_48h(),
-					$base_cost,
-					$calc_taxes( $base_cost ),
-					$rate->get_method_id(),
-					$rate->get_instance_id()
-				);
-				$rate_48h->add_meta_data( 'letterbox_type', 'letterbox_48' );
-
-				$new_rates[ $rate_id . ':letterbox' ]    = $rate_24h;
-				$new_rates[ $rate_id . ':letterbox_48' ] = $rate_48h;
-
-			} elseif ( 'letterbox' === $letterbox_product_type ) {
-				// Replace rate with 24h letterbox variant only.
-				$cost_24h = $base_cost + $effective_fee_24h;
-
-				$modified_rate = new \WC_Shipping_Rate(
-					$rate_id . ':letterbox',
-					$base_label . ' ' . Utils::get_letterbox_label_24h(),
-					$cost_24h,
-					$calc_taxes( $cost_24h ),
-					$rate->get_method_id(),
-					$rate->get_instance_id()
-				);
-				$modified_rate->add_meta_data( 'letterbox_type', 'letterbox' );
-				$new_rates[ $rate_id . ':letterbox' ] = $modified_rate;
-
-			} elseif ( 'letterbox_48' === $letterbox_product_type ) {
-				// Replace rate with 48h letterbox variant only.
-				$modified_rate = new \WC_Shipping_Rate(
-					$rate_id . ':letterbox_48',
-					$base_label . ' ' . Utils::get_letterbox_label_48h(),
-					$base_cost,
-					$calc_taxes( $base_cost ),
-					$rate->get_method_id(),
-					$rate->get_instance_id()
-				);
-				$modified_rate->add_meta_data( 'letterbox_type', 'letterbox_48' );
-				$new_rates[ $rate_id . ':letterbox_48' ] = $modified_rate;
-			}
+		if ( null === $rep_rate ) {
+			$rep_rate_id = array_key_first( $linked_rates );
+			$rep_rate    = $linked_rates[ $rep_rate_id ];
 		}
 
-		return $new_rates;
+		$rep_method_id = $rep_rate->get_method_id();
+		$rep_instance  = $rep_rate->get_instance_id();
+
+		// Recalculate shipping taxes for the canonical cost.
+		$calc_taxes = function ( $cost ) use ( $rep_rate ) {
+			if ( wc_tax_enabled() && 'taxable' === $rep_rate->get_tax_status() ) {
+				return \WC_Tax::calc_shipping_tax( $cost, \WC_Tax::get_shipping_tax_rates() );
+			}
+			return array();
+		};
+
+		// Build the canonical letterbox option set ONCE.
+		$canonical = array();
+
+		if ( 'customer_decide' === $letterbox_product_type || 'letterbox' === $letterbox_product_type ) {
+			$cost_24h = $base_cost + $effective_fee_24h;
+
+			$rate_24h = new \WC_Shipping_Rate(
+				$rep_rate_id . ':letterbox',
+				Utils::get_letterbox_label_24h(),
+				$cost_24h,
+				$calc_taxes( $cost_24h ),
+				$rep_method_id,
+				$rep_instance
+			);
+			$rate_24h->add_meta_data( 'letterbox_type', 'letterbox' );
+			$canonical[ $rep_rate_id . ':letterbox' ] = $rate_24h;
+		}
+
+		if ( 'customer_decide' === $letterbox_product_type || 'letterbox_48' === $letterbox_product_type ) {
+			$rate_48h = new \WC_Shipping_Rate(
+				$rep_rate_id . ':letterbox_48',
+				Utils::get_letterbox_label_48h(),
+				$base_cost,
+				$calc_taxes( $base_cost ),
+				$rep_method_id,
+				$rep_instance
+			);
+			$rate_48h->add_meta_data( 'letterbox_type', 'letterbox_48' );
+			$canonical[ $rep_rate_id . ':letterbox_48' ] = $rate_48h;
+		}
+
+		// Canonical letterbox option(s) first, then the kept rates (non-linked + free_shipping).
+		return $canonical + $kept_rates;
 	}
 
 	/**
@@ -720,9 +727,6 @@ class Container {
 		}
 
 		// Letterbox-eligible carts are owned by the variant emitters
-		// (inject_letterbox_rates_for_all_methods + PostNL::calculate_shipping).
-		// No tab-based extras apply on top — per spec, when ALA triggers the
-		// home delivery / pickup / delivery day surcharges are ignored.
 		if ( Utils::is_cart_eligible_auto_letterbox( \WC()->cart ) ) {
 			return $rates;
 		}

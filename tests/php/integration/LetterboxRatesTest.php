@@ -119,6 +119,135 @@ class LetterboxRatesTest extends IntegrationTestCase {
 	}
 
 	/**
+	 * @testdox customer_decide collapses every linked method into ONE 24h/48h pair, keeps Free Shipping + non-linked carriers, drops linked rates.
+	 */
+	public function test_customer_decide_collapses_linked_methods_to_single_pair(): void {
+		$this->make_cart_letterbox_eligible();
+
+		$container = new Container( false );
+
+		// Example zone: two linked Flat Rate instances, the PostNL method, a Free Shipping
+		// method, and a non-linked carrier (DHL).
+		$rates = array(
+			'flat_rate:3'    => new \WC_Shipping_Rate( 'flat_rate:3', 'Flat rate', 10.0, array(), 'flat_rate', 3 ),
+			'flat_rate:4'    => new \WC_Shipping_Rate( 'flat_rate:4', 'Flat rate', 8.0, array(), 'flat_rate', 4 ),
+			'postnl:5'       => new \WC_Shipping_Rate( 'postnl:5', 'PostNL', 12.0, array(), 'postnl', 5 ),
+			'free_shipping:6' => new \WC_Shipping_Rate( 'free_shipping:6', 'Free shipping', 0.0, array(), 'free_shipping', 6 ),
+			'dhl:7'          => new \WC_Shipping_Rate( 'dhl:7', 'DHL', 9.0, array(), 'dhl', 7 ),
+		);
+
+		$out = $container->inject_letterbox_rates_for_all_methods( $rates, array() );
+
+		// Exactly one 24h + one 48h canonical option, derived from the PostNL rate.
+		$this->assertArrayHasKey( 'postnl:5:letterbox', $out );
+		$this->assertArrayHasKey( 'postnl:5:letterbox_48', $out );
+
+		$letterbox_keys = array_filter(
+			array_keys( $out ),
+			static fn( $k ) => false !== strpos( $k, ':letterbox' )
+		);
+		$this->assertCount( 2, $letterbox_keys, 'Exactly one 24h and one 48h option must exist — no per-method duplicates.' );
+
+		// Every individual PostNL-linked rate is gone.
+		$this->assertArrayNotHasKey( 'flat_rate:3', $out );
+		$this->assertArrayNotHasKey( 'flat_rate:4', $out );
+		$this->assertArrayNotHasKey( 'postnl:5', $out );
+
+		// Non-linked carrier survives untouched.
+		$this->assertArrayHasKey( 'dhl:7', $out );
+		$this->assertSame( 9.0, (float) $out['dhl:7']->get_cost() );
+
+		// Free Shipping survives and is never collapsed.
+		$this->assertArrayHasKey( 'free_shipping:6', $out );
+
+		// Canonical rates carry the correct letterbox_type meta.
+		$this->assertSame( 'letterbox', $out['postnl:5:letterbox']->get_meta_data()['letterbox_type'] );
+		$this->assertSame( 'letterbox_48', $out['postnl:5:letterbox_48']->get_meta_data()['letterbox_type'] );
+	}
+
+	/**
+	 * @testdox A forced letterbox setting yields exactly one canonical option.
+	 *
+	 * @dataProvider forced_letterbox_settings
+	 *
+	 * @param string $setting     Forced product setting (letterbox|letterbox_48).
+	 * @param string $suffix      Expected canonical rate-id suffix.
+	 * @param string $expect_type Expected letterbox_type meta value.
+	 */
+	public function test_forced_setting_yields_single_option( string $setting, string $suffix, string $expect_type ): void {
+		$this->make_cart_letterbox_eligible();
+		Settings::get_instance()->settings['default_automatic_letterboxparcel_product'] = $setting;
+
+		$container = new Container( false );
+
+		$rates = array(
+			'flat_rate:3'    => new \WC_Shipping_Rate( 'flat_rate:3', 'Flat rate', 10.0, array(), 'flat_rate', 3 ),
+			'postnl:5'       => new \WC_Shipping_Rate( 'postnl:5', 'PostNL', 12.0, array(), 'postnl', 5 ),
+			'free_shipping:6' => new \WC_Shipping_Rate( 'free_shipping:6', 'Free shipping', 0.0, array(), 'free_shipping', 6 ),
+			'dhl:7'          => new \WC_Shipping_Rate( 'dhl:7', 'DHL', 9.0, array(), 'dhl', 7 ),
+		);
+
+		$out = $container->inject_letterbox_rates_for_all_methods( $rates, array() );
+
+		$letterbox_keys = array_values(
+			array_filter(
+				array_keys( $out ),
+				static fn( $k ) => false !== strpos( $k, ':letterbox' )
+			)
+		);
+
+		$this->assertCount( 1, $letterbox_keys, 'A forced setting must yield exactly one canonical option.' );
+		$this->assertSame( 'postnl:5' . $suffix, $letterbox_keys[0] );
+		$this->assertSame( $expect_type, $out[ $letterbox_keys[0] ]->get_meta_data()['letterbox_type'] );
+
+		// Linked methods gone; Free Shipping and non-linked carrier survive.
+		$this->assertArrayNotHasKey( 'flat_rate:3', $out );
+		$this->assertArrayNotHasKey( 'postnl:5', $out );
+		$this->assertArrayHasKey( 'free_shipping:6', $out );
+		$this->assertArrayHasKey( 'dhl:7', $out );
+	}
+
+	/**
+	 * Forced-setting scenarios.
+	 *
+	 * @return array<string, array{0:string,1:string,2:string}>
+	 */
+	public static function forced_letterbox_settings(): array {
+		return array(
+			'24h forced' => array( 'letterbox', ':letterbox', 'letterbox' ),
+			'48h forced' => array( 'letterbox_48', ':letterbox_48', 'letterbox_48' ),
+		);
+	}
+
+	/**
+	 * @testdox With no PostNL method instance in the zone, the canonical pair is still produced from the linked carrier.
+	 */
+	public function test_collapse_without_postnl_method_uses_linked_carrier(): void {
+		$this->make_cart_letterbox_eligible();
+
+		$container = new Container( false );
+
+		// Only a linked Flat Rate and a non-linked carrier — no PostNL method present.
+		$rates = array(
+			'flat_rate:3' => new \WC_Shipping_Rate( 'flat_rate:3', 'Flat rate', 10.0, array(), 'flat_rate', 3 ),
+			'dhl:7'       => new \WC_Shipping_Rate( 'dhl:7', 'DHL', 9.0, array(), 'dhl', 7 ),
+		);
+
+		$out = $container->inject_letterbox_rates_for_all_methods( $rates, array() );
+
+		// Canonical pair synthesized from the linked Flat Rate; no zero-option outcome.
+		$this->assertArrayHasKey( 'flat_rate:3:letterbox', $out );
+		$this->assertArrayHasKey( 'flat_rate:3:letterbox_48', $out );
+		$this->assertArrayNotHasKey( 'flat_rate:3', $out );
+
+		// No free shipping here, so the base cost falls back to the linked carrier cost.
+		$this->assertSame( 10.0, (float) $out['flat_rate:3:letterbox_48']->get_cost() );
+
+		// Non-linked carrier survives.
+		$this->assertArrayHasKey( 'dhl:7', $out );
+	}
+
+	/**
 	 * Build an NL store + an eligible single-item letterbox cart.
 	 */
 	private function make_cart_letterbox_eligible(): void {

@@ -105,9 +105,7 @@ jobs:
 
       - name: Assert no auth.json written by Composer (dev install)
         run: |
-          # Scope to where Composer actually writes auth.json — project root
-          # (next to composer.json) and the Composer home dir — not all of
-          # $HOME, which can false-positive on unrelated runner tooling.
+          # Scan only where Composer writes auth.json: project root + Composer home.
           SCAN_DIRS=("$GITHUB_WORKSPACE")
           [ -n "$COMPOSER_HOME" ] && [ -d "$COMPOSER_HOME" ] && SCAN_DIRS+=("$COMPOSER_HOME")
           [ -d "$HOME/.composer" ] && SCAN_DIRS+=("$HOME/.composer")
@@ -142,9 +140,7 @@ jobs:
 
       - name: Assert no auth.json written by Composer (production install)
         run: |
-          # Scope to where Composer actually writes auth.json — project root
-          # (next to composer.json) and the Composer home dir — not all of
-          # $HOME, which can false-positive on unrelated runner tooling.
+          # Scan only where Composer writes auth.json: project root + Composer home.
           SCAN_DIRS=("$GITHUB_WORKSPACE")
           [ -n "$COMPOSER_HOME" ] && [ -d "$COMPOSER_HOME" ] && SCAN_DIRS+=("$COMPOSER_HOME")
           [ -d "$HOME/.composer" ] && SCAN_DIRS+=("$HOME/.composer")

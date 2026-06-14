@@ -18,9 +18,9 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Class Label_Service
  *
  * Legacy service wrapper for outbound shipping labels.  Implements
- * Label_Service_Interface by delegating to the existing Order\Base pipeline
- * (create_label → put_label_content → maybe_merge_labels) so no label-
- * generation logic is duplicated.
+ * Label_Service_Interface by delegating to Order\Base::create_label_pipeline()
+ * (API request → check_label_and_barcode → put_label_content →
+ * maybe_merge_labels) so no label-generation logic is duplicated.
  *
  * @package PostNLWooCommerce\Rest_API\Legacy
  */
@@ -38,10 +38,12 @@ class Label_Service extends Order_Base implements Label_Service_Interface {
 	/**
 	 * Create a PostNL shipping label and return the normalized label record.
 	 *
-	 * Delegates entirely to Order\Base::create_label(), which runs the full
-	 * pipeline: API request → check_label_and_barcode → put_label_content →
-	 * maybe_merge_labels.  The returned array is ready to be stored as
-	 * _postnl_order_metadata['labels'].
+	 * Delegates to Order\Base::create_label_pipeline() — not the public
+	 * create_label() — because this service extends Order\Base and create_label()
+	 * now routes through the factory; calling it here would recurse. The pipeline
+	 * runs the full flow: API request → check_label_and_barcode →
+	 * put_label_content → maybe_merge_labels.  The returned array is ready to be
+	 * stored as _postnl_order_metadata['labels'].
 	 *
 	 * @param array $post_data Context needed to build and send the label request.
 	 *

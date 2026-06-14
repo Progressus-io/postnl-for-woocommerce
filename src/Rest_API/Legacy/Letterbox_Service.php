@@ -18,9 +18,10 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Class Letterbox_Service
  *
  * Legacy service wrapper for letterbox parcel labels.  Implements
- * Label_Service_Interface by delegating to Order\Base::maybe_create_letterbox()
- * which runs the full Letterbox pipeline (API request → put_label_content →
- * maybe_merge_labels with type 'letterbox').
+ * Label_Service_Interface by delegating to
+ * Order\Base::maybe_create_letterbox_pipeline() which runs the full Letterbox
+ * pipeline (API request → put_label_content → maybe_merge_labels with type
+ * 'letterbox').
  *
  * @package PostNLWooCommerce\Rest_API\Legacy
  */
@@ -38,12 +39,14 @@ class Letterbox_Service extends Order_Base implements Label_Service_Interface {
 	/**
 	 * Create a PostNL letterbox label and return the normalized label record.
 	 *
-	 * Delegates to Order\Base::maybe_create_letterbox(), which uses the
-	 * Letterbox\Client pipeline and returns the normalized labels array ready
-	 * to be stored as _postnl_order_metadata['labels'].
+	 * Delegates to Order\Base::maybe_create_letterbox_pipeline() — not the public
+	 * maybe_create_letterbox() — because this service extends Order\Base and that
+	 * public method now routes through the factory; calling it here would recurse.
+	 * The pipeline uses the Letterbox\Client and returns the normalized labels
+	 * array ready to be stored as _postnl_order_metadata['labels'].
 	 *
 	 * Callers must ensure $post_data['saved_data']['backend']['letterbox'] === 'yes'
-	 * so the pipeline guard inside maybe_create_letterbox() does not short-circuit.
+	 * so the pipeline guard inside maybe_create_letterbox_pipeline() does not short-circuit.
 	 *
 	 * @param array $post_data Context needed to build and send the letterbox request.
 	 *

@@ -33,9 +33,8 @@ interface Pickup_Location_Service_Interface {
 	 * blocks postnl-dropoff-points component to render the pickup-point tab.
 	 *
 	 * The current PostNL endpoint is /shipment/v1/checkout (POST).
-	 * The number of returned locations is controlled by the
-	 * number_pickup_points setting (currently hardcoded to 20 via
-	 * Settings::get_number_pickup_points()).
+	 * The number of returned locations is a fixed count
+	 * (see Settings::get_number_pickup_points()).
 	 *
 	 * @param array $post_data {
 	 *     Checkout POST data as collected from the classic checkout or the blocks

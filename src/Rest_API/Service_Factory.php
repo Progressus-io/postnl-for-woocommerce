@@ -40,6 +40,14 @@ if ( ! defined( 'ABSPATH' ) ) {
  * postcode_check_service() is permanently wired to Legacy because postcode_check
  * is intentionally absent from Router::SUPPORTED_FLOWS.
  *
+ * The 'shipment_and_return' SUPPORTED_FLOW has no factory method yet: no service
+ * wrapper or interface exists for it on this branch. The S&R method lands with
+ * its interface when that flow is migrated.
+ *
+ * The 'checkout' SUPPORTED_FLOW is never queried directly; the checkout endpoint
+ * is split here into the 'timeframe' and 'pickup_location' flows, both backed by
+ * the shared Legacy\Checkout_Service.
+ *
  * Legacy services are created lazily on first access and memoised so repeated
  * calls within a request are cheap.
  *
@@ -249,6 +257,11 @@ class Service_Factory {
 	 *
 	 * Short-circuits on the key check so Router (and its filter) is never consulted
 	 * when no V4 key is configured.
+	 *
+	 * TODO (task 8 spec): product-coded flows (barcode, label, letterbox,
+	 * return_label, smart_returns) must additionally gate on
+	 * V4_Mapper::has_v4_equivalent(...). V4_Mapper does not exist on this branch,
+	 * so the gate is deferred and wired in alongside the V4 services that need it.
 	 *
 	 * @param string $flow Flow identifier.
 	 * @return bool

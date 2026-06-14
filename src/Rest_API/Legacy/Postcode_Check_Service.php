@@ -35,6 +35,9 @@ class Postcode_Check_Service implements Postcode_Check_Service_Interface {
 	public function check( array $post_data ): array {
 		$item_info = new Item_Info( $post_data );
 		$client    = new Client( $item_info );
-		return $client->send_request();
+
+		// send_request() can return null on an empty/non-JSON 200; normalize to honor the array return type.
+		$response = $client->send_request();
+		return is_array( $response ) ? $response : array();
 	}
 }

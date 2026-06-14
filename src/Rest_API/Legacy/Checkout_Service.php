@@ -38,7 +38,10 @@ class Checkout_Service implements Timeframe_Service_Interface, Pickup_Location_S
 	public function get_delivery_options( array $post_data ): array {
 		$item_info = new Item_Info( $post_data );
 		$client    = new Client( $item_info );
-		return $client->send_request();
+
+		// send_request() can return null on an empty/non-JSON 200; normalize to honor the array return type.
+		$response = $client->send_request();
+		return is_array( $response ) ? $response : array();
 	}
 
 	/**
@@ -51,6 +54,9 @@ class Checkout_Service implements Timeframe_Service_Interface, Pickup_Location_S
 	public function get_pickup_locations( array $post_data ): array {
 		$item_info = new Item_Info( $post_data );
 		$client    = new Client( $item_info );
-		return $client->send_request();
+
+		// send_request() can return null on an empty/non-JSON 200; normalize to honor the array return type.
+		$response = $client->send_request();
+		return is_array( $response ) ? $response : array();
 	}
 }

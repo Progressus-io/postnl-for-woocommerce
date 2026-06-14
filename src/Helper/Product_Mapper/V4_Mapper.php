@@ -26,11 +26,10 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Runtime outcomes: has_v4_equivalent = true (28 rows) or false (60 rows).
  * needs_confirmation rows behave as Legacy-only at runtime until promoted to v4_mapped.
  *
- * Not-yet-available codes (always Legacy-only):
- *   1175, 3571, 3574, 4936, 4960, 4961, 4962, 4963, 4965, 4983
- * Codes 1175, 3574, 4983 have no V1 matrix entry but are listed to prevent accidental mapping.
+ * Not-yet-available codes are always Legacy-only; see NOT_YET_AVAILABLE_CODES.
+ * EU/ROW stay Legacy-only — see SDK_SERVICES_BUNDLE_GAP.
  *
- * Source: docs/postnl-v4-migration/approach-2/v4-mapper-combination-matrix.csv (88 rows)
+ * Source: PostNL Product Overview documentation.
  */
 class V4_Mapper {
 
@@ -51,6 +50,9 @@ class V4_Mapper {
 	const REASON_NEEDS_CONFIRMATION    = 'needs_confirmation';
 	const REASON_UNKNOWN_COMBINATION   = 'unknown_combination';
 	const REASON_PRODUCT_CODE_MISMATCH = 'product_code_mismatch';
+
+	// V4 Services DTO has no `bundle` property, so EU/ROW stay Legacy-only. Pending SDK update.
+	const SDK_SERVICES_BUNDLE_GAP = 'sdk_v4_services_dto_missing_bundle_property';
 
 	/**
 	 * Returns true if a confirmed V4 equivalent exists for the given combination.
@@ -96,6 +98,11 @@ class V4_Mapper {
 				'source_row_id'       => 0,
 				'legacy_only_reason'  => self::REASON_PRODUCT_CODE_MISMATCH,
 			);
+		}
+
+		// Not-yet-available codes never map to V4, even if a future matrix edit says otherwise.
+		if ( in_array( $row['legacy_product_code'], self::NOT_YET_AVAILABLE_CODES, true ) ) {
+			return static::legacy_result( $row['source_row_id'], $row['legacy_product_code'], self::REASON_NOT_YET_AVAILABLE );
 		}
 
 		return $row;

@@ -9,6 +9,7 @@ declare( strict_types = 1 );
 
 namespace PostNLWooCommerce\Tests\Unit\Helper\Product_Mapper;
 
+use PostNLWooCommerce\Helper\Product_Mapper\V1_Mapper;
 use PostNLWooCommerce\Helper\Product_Mapper\V4_Mapper;
 use PostNLWooCommerce\Tests\UnitTestCase;
 
@@ -25,8 +26,11 @@ use PostNLWooCommerce\Tests\UnitTestCase;
  *  - NOT_YET_AVAILABLE_CODES contains all 10 required codes (incl. absent 1175, 3574, 4983)
  *  - Unknown combinations return reason = unknown_combination
  *  - Optional legacy_product_code validation (REASON_PRODUCT_CODE_MISMATCH)
+ *  - No silent gaps: every V1_Mapper::products_data() combination maps to a V4 shape or an
+ *    explicit Legacy-only reason, never REASON_UNKNOWN_COMBINATION
+ *  - SDK bundle gap marker and the load-bearing not-yet-available guard
  *
- * Source: docs/postnl-v4-migration/approach-2/v4-mapper-combination-matrix.csv
+ * Source: PostNL Product Overview documentation; the 88 rows mirror V1_Mapper::products_data().
  *
  * @covers \PostNLWooCommerce\Helper\Product_Mapper\V4_Mapper
  */
@@ -333,6 +337,135 @@ class V4_MapperTest extends UnitTestCase {
 	}
 
 	// =========================================================================
+	// No silent gaps — derived from V1_Mapper::products_data()
+	// =========================================================================
+
+	/**
+	 * Flattens V1_Mapper::products_data() into V4_Mapper combination inputs.
+	 *
+	 * @return array<array{origin:string,destination:string,flow:string,options:array}>
+	 */
+	private static function v1_combinations(): array {
+		$combinations = array();
+		foreach ( V1_Mapper::products_data() as $origin => $destinations ) {
+			foreach ( $destinations as $destination => $flows ) {
+				foreach ( $flows as $flow => $entries ) {
+					foreach ( $entries as $entry ) {
+						$combinations[] = array(
+							'origin'      => $origin,
+							'destination' => $destination,
+							'flow'        => $flow,
+							'options'     => $entry['combination'],
+						);
+					}
+				}
+			}
+		}
+		return $combinations;
+	}
+
+	/**
+	 * @testdox V1_Mapper::products_data() flattens to exactly 88 combinations (binds V1 source to matrix)
+	 */
+	public function test_v1_products_data_covers_88_combinations(): void {
+		$this->assertCount( 88, self::v1_combinations() );
+	}
+
+	/**
+	 * @testdox No silent gaps: every V1 combination maps to a V4 shape or an explicit Legacy-only reason
+	 */
+	public function test_every_v1_combination_maps_without_silent_gaps(): void {
+		$allowed_legacy = array(
+			V4_Mapper::REASON_NEEDS_CONFIRMATION,
+			V4_Mapper::REASON_NOT_YET_AVAILABLE,
+		);
+
+		foreach ( self::v1_combinations() as $combination ) {
+			$result = V4_Mapper::map( $combination );
+			$label  = sprintf(
+				'%s→%s/%s [%s]',
+				$combination['origin'],
+				$combination['destination'],
+				$combination['flow'],
+				implode( ',', $combination['options'] ) ?: '(base)'
+			);
+
+			if ( $result['has_v4_equivalent'] ) {
+				$this->assertArrayNotHasKey( 'legacy_only_reason', $result, "Unexpected legacy reason for {$label}" );
+				continue;
+			}
+
+			$this->assertNotSame(
+				V4_Mapper::REASON_UNKNOWN_COMBINATION,
+				$result['legacy_only_reason'],
+				"V1 combination resolved to unknown_combination (silent gap): {$label}"
+			);
+			$this->assertContains(
+				$result['legacy_only_reason'],
+				$allowed_legacy,
+				"Unexpected legacy reason for {$label}"
+			);
+		}
+	}
+
+	// =========================================================================
+	// SDK bundle gap marker + load-bearing not-yet-available guard
+	// =========================================================================
+
+	/**
+	 * @testdox SDK_SERVICES_BUNDLE_GAP marker is present and stable so the deferral can't be silently dropped
+	 */
+	public function test_sdk_services_bundle_gap_marker_is_present(): void {
+		$this->assertTrue( defined( V4_Mapper::class . '::SDK_SERVICES_BUNDLE_GAP' ) );
+		$this->assertSame( 'sdk_v4_services_dto_missing_bundle_property', V4_Mapper::SDK_SERVICES_BUNDLE_GAP );
+	}
+
+	/**
+	 * @testdox No mapped row emits services.bundle or internationalShipmentData (the SDK gap is honoured)
+	 */
+	public function test_no_row_emits_bundle_or_international_data(): void {
+		foreach ( self::combination_matrix_provider() as $name => $row ) {
+			$result = V4_Mapper::map( $row[0] );
+			if ( ! $result['has_v4_equivalent'] ) {
+				continue;
+			}
+			$this->assertArrayNotHasKey( 'bundle', $result['services'], "services.bundle must not be emitted ({$name})" );
+			$this->assertSame( array(), $result['internationalShipmentData'], "internationalShipmentData must stay empty ({$name})" );
+		}
+	}
+
+	/**
+	 * @testdox All EU/ROW combinations stay Legacy-only (international deferred on the SDK bundle gap)
+	 */
+	public function test_all_international_combinations_stay_legacy(): void {
+		foreach ( self::v1_combinations() as $combination ) {
+			if ( ! in_array( $combination['destination'], array( 'EU', 'ROW' ), true ) ) {
+				continue;
+			}
+			$this->assertFalse(
+				V4_Mapper::has_v4_equivalent( $combination ),
+				sprintf( 'International %s→%s must stay Legacy-only', $combination['origin'], $combination['destination'] )
+			);
+		}
+	}
+
+	/**
+	 * @testdox Load-bearing guard: every combination resolving to a NOT_YET_AVAILABLE code returns REASON_NOT_YET_AVAILABLE
+	 */
+	public function test_not_yet_available_guard_is_load_bearing(): void {
+		$asserted = 0;
+		foreach ( self::v1_combinations() as $combination ) {
+			$result = V4_Mapper::map( $combination );
+			if ( in_array( $result['legacy_product_code'], V4_Mapper::NOT_YET_AVAILABLE_CODES, true ) ) {
+				$this->assertFalse( $result['has_v4_equivalent'] );
+				$this->assertSame( V4_Mapper::REASON_NOT_YET_AVAILABLE, $result['legacy_only_reason'] );
+				$asserted++;
+			}
+		}
+		$this->assertGreaterThan( 0, $asserted, 'Expected at least one not-yet-available code in the matrix.' );
+	}
+
+	// =========================================================================
 	// Per-row assertions (data provider — all 88 rows)
 	// =========================================================================
 
@@ -371,7 +504,7 @@ class V4_MapperTest extends UnitTestCase {
 	// =========================================================================
 
 	/**
-	 * All 88 combinations from v4-mapper-combination-matrix.csv.
+	 * All 88 combinations mirroring V1_Mapper::products_data().
 	 *
 	 * Format: [ input_combination, expected_result_fields ]
 	 * Options are in V1_Mapper natural order to verify options_key() normalises via sort().

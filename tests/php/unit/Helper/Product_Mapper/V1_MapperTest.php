@@ -621,19 +621,93 @@ class V1_MapperTest extends UnitTestCase {
 	}
 
 	/**
-	 * @testdox shipping_return_labels_options() NL/NL shipping_return includes 15 product codes
+	 * @testdox shipping_return_labels_options() NL/NL shipping_return pins all 15 product codes verbatim
 	 */
-	public function test_shipping_return_nl_nl_shipping_return_product_count(): void {
+	public function test_shipping_return_nl_nl_shipping_return_products(): void {
 		$opts = V1_Mapper::shipping_return_labels_options();
-		$this->assertCount( 15, $opts['NL']['NL']['shipping_return']['products'] );
+		$this->assertSame(
+			array(
+				'3085',
+				'3438',
+				'3090',
+				'3189',
+				'3385',
+				'3087',
+				'3389',
+				'3094',
+				'3390',
+				'3096',
+				'3089',
+				'3533',
+				'3534',
+				'3443',
+				'3571',
+			),
+			$opts['NL']['NL']['shipping_return']['products']
+		);
 	}
 
 	/**
-	 * @testdox shipping_return_labels_options() NL/NL return_all_labels_not_active has two options
+	 * @testdox shipping_return_labels_options() NL/NL shipping_return option is char 152 / opt 026
 	 */
-	public function test_shipping_return_nl_nl_return_all_labels_option_count(): void {
+	public function test_shipping_return_nl_nl_shipping_return_options(): void {
 		$opts = V1_Mapper::shipping_return_labels_options();
-		$this->assertCount( 2, $opts['NL']['NL']['return_all_labels_not_active']['options'] );
+		$this->assertSame(
+			array(
+				array(
+					'characteristic' => '152',
+					'option'         => '026',
+				),
+			),
+			$opts['NL']['NL']['shipping_return']['options']
+		);
+	}
+
+	/**
+	 * @testdox shipping_return_labels_options() NL/NL return_all_labels_not_active pins all 15 product codes verbatim
+	 */
+	public function test_shipping_return_nl_nl_return_all_labels_products(): void {
+		$opts = V1_Mapper::shipping_return_labels_options();
+		$this->assertSame(
+			array(
+				'3085',
+				'3438',
+				'3090',
+				'3189',
+				'3385',
+				'3087',
+				'3389',
+				'3094',
+				'3390',
+				'3096',
+				'3089',
+				'3533',
+				'3534',
+				'3443',
+				'3571',
+			),
+			$opts['NL']['NL']['return_all_labels_not_active']['products']
+		);
+	}
+
+	/**
+	 * @testdox shipping_return_labels_options() NL/NL return_all_labels_not_active options are char 152/026 and 191/004
+	 */
+	public function test_shipping_return_nl_nl_return_all_labels_options(): void {
+		$opts = V1_Mapper::shipping_return_labels_options();
+		$this->assertSame(
+			array(
+				array(
+					'characteristic' => '152',
+					'option'         => '026',
+				),
+				array(
+					'characteristic' => '191',
+					'option'         => '004',
+				),
+			),
+			$opts['NL']['NL']['return_all_labels_not_active']['options']
+		);
 	}
 
 	/**
@@ -644,6 +718,22 @@ class V1_MapperTest extends UnitTestCase {
 		$this->assertSame(
 			array( '4946', '4941', '4912', '4914', '4936' ),
 			$opts['NL']['BE']['in_box']['products']
+		);
+	}
+
+	/**
+	 * @testdox shipping_return_labels_options() NL/BE in_box option is char 152 / opt 028
+	 */
+	public function test_shipping_return_nl_be_in_box_options(): void {
+		$opts = V1_Mapper::shipping_return_labels_options();
+		$this->assertSame(
+			array(
+				array(
+					'characteristic' => '152',
+					'option'         => '028',
+				),
+			),
+			$opts['NL']['BE']['in_box']['options']
 		);
 	}
 

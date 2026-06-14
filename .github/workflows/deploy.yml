@@ -105,10 +105,17 @@ jobs:
 
       - name: Assert no auth.json written by Composer (dev install)
         run: |
-          if find "$GITHUB_WORKSPACE" "$HOME" -maxdepth 4 \
+          # Scope to where Composer actually writes auth.json — project root
+          # (next to composer.json) and the Composer home dir — not all of
+          # $HOME, which can false-positive on unrelated runner tooling.
+          SCAN_DIRS=("$GITHUB_WORKSPACE")
+          [ -n "$COMPOSER_HOME" ] && [ -d "$COMPOSER_HOME" ] && SCAN_DIRS+=("$COMPOSER_HOME")
+          [ -d "$HOME/.composer" ] && SCAN_DIRS+=("$HOME/.composer")
+          [ -d "$HOME/.config/composer" ] && SCAN_DIRS+=("$HOME/.config/composer")
+          if find "${SCAN_DIRS[@]}" -maxdepth 1 \
               \( -name "auth.json" -o -name "auth.*.json" \) 2>/dev/null | grep -q .; then
             echo "::error::Composer wrote an auth credential file — credentials must stay in env only!"
-            find "$GITHUB_WORKSPACE" "$HOME" -maxdepth 4 \( -name "auth.json" -o -name "auth.*.json" \)
+            find "${SCAN_DIRS[@]}" -maxdepth 1 \( -name "auth.json" -o -name "auth.*.json" \) 2>/dev/null
             exit 1
           fi
           echo "Auth file check passed — no auth.json written to workspace or Composer home."
@@ -135,10 +142,17 @@ jobs:
 
       - name: Assert no auth.json written by Composer (production install)
         run: |
-          if find "$GITHUB_WORKSPACE" "$HOME" -maxdepth 4 \
+          # Scope to where Composer actually writes auth.json — project root
+          # (next to composer.json) and the Composer home dir — not all of
+          # $HOME, which can false-positive on unrelated runner tooling.
+          SCAN_DIRS=("$GITHUB_WORKSPACE")
+          [ -n "$COMPOSER_HOME" ] && [ -d "$COMPOSER_HOME" ] && SCAN_DIRS+=("$COMPOSER_HOME")
+          [ -d "$HOME/.composer" ] && SCAN_DIRS+=("$HOME/.composer")
+          [ -d "$HOME/.config/composer" ] && SCAN_DIRS+=("$HOME/.config/composer")
+          if find "${SCAN_DIRS[@]}" -maxdepth 1 \
               \( -name "auth.json" -o -name "auth.*.json" \) 2>/dev/null | grep -q .; then
             echo "::error::Composer wrote an auth credential file — credentials must stay in env only!"
-            find "$GITHUB_WORKSPACE" "$HOME" -maxdepth 4 \( -name "auth.json" -o -name "auth.*.json" \)
+            find "${SCAN_DIRS[@]}" -maxdepth 1 \( -name "auth.json" -o -name "auth.*.json" \) 2>/dev/null
             exit 1
           fi
           echo "Auth file check passed — no auth.json written to workspace or Composer home."
@@ -192,9 +206,9 @@ jobs:
           unzip -q "$ZIP_PATH" -d "$VERIFY_DIR"
 
           # Negative: no credential files
-          if find "$VERIFY_DIR" \( -name "auth.json" -o -name "auth.*.json" \) | grep -q .; then
+          if find "$VERIFY_DIR" \( -name "auth.json" -o -name "auth.*.json" \) 2>/dev/null | grep -q .; then
             echo "::error::Composer auth credential file found in ZIP — credentials must not ship!"
-            find "$VERIFY_DIR" \( -name "auth.json" -o -name "auth.*.json" \)
+            find "$VERIFY_DIR" \( -name "auth.json" -o -name "auth.*.json" \) 2>/dev/null
             exit 1
           fi
           echo "Credential check passed — no auth credential files found in ZIP."

@@ -12,6 +12,13 @@ jobs:
   php-tests:
     name: PHPUnit (unit + integration)
     runs-on: ubuntu-latest
+    # The Composer install authenticates against Private Packagist using the
+    # POSTNL_PRIVATE_PACKAGIST_AUTH secret. GitHub does NOT expose secrets to
+    # workflows triggered by PRs from forks, so on an external fork PR the
+    # secret would be empty and the private SDK install would fail. Gate the
+    # job to same-repo refs (push to main, or PRs whose head is this repo).
+    # External fork PRs are intentionally not supported for this job.
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
 
     steps:
       - name: Checkout
@@ -39,10 +46,18 @@ jobs:
 
       - name: Assert no auth.json written by Composer
         run: |
-          if find "$GITHUB_WORKSPACE" "$HOME" -maxdepth 4 \
+          # Scope the scan to where Composer actually writes auth.json — the
+          # project root (next to composer.json) and the Composer home dir —
+          # rather than all of $HOME, which can false-positive on unrelated
+          # runner tooling that happens to create an auth.*.json.
+          SCAN_DIRS=("$GITHUB_WORKSPACE")
+          [ -n "$COMPOSER_HOME" ] && [ -d "$COMPOSER_HOME" ] && SCAN_DIRS+=("$COMPOSER_HOME")
+          [ -d "$HOME/.composer" ] && SCAN_DIRS+=("$HOME/.composer")
+          [ -d "$HOME/.config/composer" ] && SCAN_DIRS+=("$HOME/.config/composer")
+          if find "${SCAN_DIRS[@]}" -maxdepth 1 \
               \( -name "auth.json" -o -name "auth.*.json" \) 2>/dev/null | grep -q .; then
             echo "::error::Composer wrote an auth credential file — credentials must stay in env only!"
-            find "$GITHUB_WORKSPACE" "$HOME" -maxdepth 4 \( -name "auth.json" -o -name "auth.*.json" \)
+            find "${SCAN_DIRS[@]}" -maxdepth 1 \( -name "auth.json" -o -name "auth.*.json" \) 2>/dev/null
             exit 1
           fi
           echo "Auth file check passed — no auth.json written to workspace or Composer home."

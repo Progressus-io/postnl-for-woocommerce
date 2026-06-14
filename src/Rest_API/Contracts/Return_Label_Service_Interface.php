@@ -78,8 +78,10 @@ interface Return_Label_Service_Interface {
 	 *         @type string   $filepath     Absolute path to the final return label file
 	 *                                      on disk.  Used by download_label() via
 	 *                                      get_download_label_url( $id, 'return-label' ).
-	 *         @type string[] $merged_files Paths to individual A6 files merged into
-	 *                                      $filepath.  Present only for A4 format merges.
+	 *         @type string[] $merged_files Paths to individual files merged into
+	 *                                      $filepath.  Present whenever labels were
+	 *                                      merged, i.e. any case other than a single
+	 *                                      A6 label (covers A4 and multi-collo A6).
 	 *     }
 	 * }
 	 *

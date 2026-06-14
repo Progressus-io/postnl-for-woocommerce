@@ -44,9 +44,10 @@ interface Barcode_Service_Interface {
 	 *                                   option flags (e.g. 'packets', 'mailboxpacket')
 	 *                                   that determine the barcode type via
 	 *                                   Barcode\Item_Info::check_product_barcode_type().
-	 *     @type string    $customer_code Optional. Override customer code used for
-	 *                                   return barcodes (get_return_customer_code()).
 	 * }
+	 *
+	 * Note: return barcodes use a customer code derived internally from
+	 * Settings::get_return_customer_code(); it is never supplied by the caller.
 	 *
 	 * @return array {
 	 *     JSON-decoded PostNL barcode API response body.

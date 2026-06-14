@@ -92,10 +92,11 @@ interface Label_Service_Interface {
 	 *         @type string   $filepath     Absolute path to the final label file on
 	 *                                      disk (merged A4 PDF or single A6 file).
 	 *                                      Used by download_label() and delete_label().
-	 *         @type string[] $merged_files Absolute paths of the individual A6 label
+	 *         @type string[] $merged_files Absolute paths of the individual label
 	 *                                      files that were merged into $filepath.
-	 *                                      Present only when label format is A4 and
-	 *                                      more than one source file was merged.
+	 *                                      Present whenever labels were merged, i.e.
+	 *                                      any case other than a single A6 label
+	 *                                      (covers A4 and multi-collo A6).
 	 *                                      Removed by delete_label() alongside $filepath.
 	 *     }
 	 * }

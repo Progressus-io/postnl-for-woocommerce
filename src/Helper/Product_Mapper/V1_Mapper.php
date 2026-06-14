@@ -594,7 +594,7 @@ class V1_Mapper {
 			'NL' => array(
 				'NL' => array(
 					'in_box'                       => array(
-						'products' => array(),
+						'products' => array(), // Empty mean it can be combined with all products.
 						'options'  => array(
 							array(
 								'characteristic' => '152',

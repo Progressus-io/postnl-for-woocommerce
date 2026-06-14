@@ -11,6 +11,7 @@ namespace PostNLWooCommerce\Tests\Rest_API\SDK;
 
 use Postnl\Sdk\Client\ClientBuilder;
 use Postnl\Sdk\Client\PostnlClientInterface;
+use Postnl\Sdk\Transport\Retry\RetryConfig;
 use PostNLWooCommerce\Rest_API\SDK\Client_Factory;
 use PostNLWooCommerce\Tests\UnitTestCase;
 use ReflectionProperty;
@@ -29,18 +30,20 @@ class Client_FactoryTest extends UnitTestCase {
 	 * @param string $customer_code PostNL customer code.
 	 * @return object
 	 */
-	private function make_settings( string $customer_num = '12345678', string $customer_code = 'PBNL' ): object {
+	private function make_settings( mixed $customer_num = '12345678', mixed $customer_code = 'PBNL' ): object {
+		// Getters are intentionally untyped to mirror the real Settings class, so the
+		// suite exercises the (string) cast in Client_Factory::build() rather than masking it.
 		return new class( $customer_num, $customer_code ) {
 			public function __construct(
-				private string $num,
-				private string $code,
+				private mixed $num,
+				private mixed $code,
 			) {}
 
-			public function get_customer_num(): string {
+			public function get_customer_num() {
 				return $this->num;
 			}
 
-			public function get_customer_code(): string {
+			public function get_customer_code() {
 				return $this->code;
 			}
 		};
@@ -133,6 +136,57 @@ class Client_FactoryTest extends UnitTestCase {
 			'POSTNL',
 			$this->builder_prop( $spy->captured_builder, 'customerCode' )
 		);
+	}
+
+	/**
+	 * @testdox Retry behaviour is configured on the SDK builder
+	 */
+	public function test_retry_config_is_configured(): void {
+		$spy = new Spy_Client_Factory( $this->make_settings() );
+		$spy->build( 'k', false );
+		$this->assertInstanceOf(
+			RetryConfig::class,
+			$this->builder_prop( $spy->captured_builder, 'retryConfig' ),
+			'Expected build() to configure a RetryConfig via withRetry().'
+		);
+	}
+
+	/**
+	 * @testdox Changed customer credentials bypass the memo, proving they are part of the cache key
+	 *
+	 * Credentials are read from Settings inside build(), so they cannot vary via build()
+	 * arguments. A mutable settings stub is the only way to prove the customer segment of
+	 * the cache key is load-bearing: if it were dropped, the second call would return the
+	 * memoized first instance.
+	 */
+	public function test_changed_customer_credentials_bypass_memo(): void {
+		$settings = new class {
+			public mixed $num = '11111111';
+			public function get_customer_num() {
+				return $this->num;
+			}
+			public function get_customer_code() {
+				return 'PBNL';
+			}
+		};
+
+		$factory      = new Client_Factory( $settings );
+		$a            = $factory->build( 'k', false );
+		$settings->num = '22222222';
+		$b            = $factory->build( 'k', false );
+
+		$this->assertNotSame( $a, $b );
+	}
+
+	/**
+	 * @testdox Non-string customer credentials are cast and do not raise a TypeError
+	 *
+	 * Legacy or corrupted option data can be a non-string. Without the boundary cast in
+	 * build(), strict_types would throw a TypeError at make_builder( string ... ).
+	 */
+	public function test_non_string_customer_credentials_are_cast(): void {
+		$factory = new Client_Factory( $this->make_settings( 12345678, null ) );
+		$this->assertInstanceOf( PostnlClientInterface::class, $factory->build( 'k', false ) );
 	}
 
 	/**

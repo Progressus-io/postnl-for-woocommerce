@@ -75,9 +75,13 @@ class Client_Factory {
 	 * @return PostnlClientInterface
 	 */
 	public function build( string $v4_key, bool $is_sandbox ): PostnlClientInterface {
-		$customer_number = $this->settings->get_customer_num();
-		$customer_code   = $this->settings->get_customer_code();
+		// Cast at the boundary: the Settings getters are untyped and may return non-string option data,
+		// which would TypeError against make_builder( string ... ) under strict_types.
+		$customer_number = (string) $this->settings->get_customer_num();
+		$customer_code   = (string) $this->settings->get_customer_code();
 
+		// Any future with*() value sourced from settings or request data must be added to this key,
+		// or memoization will return a client configured for a different combination.
 		$cache_key = sha1( $v4_key ) . '|' . ( $is_sandbox ? '1' : '0' ) . '|' . $customer_number . '|' . $customer_code;
 
 		if ( ! isset( $this->memo[ $cache_key ] ) ) {

@@ -78,6 +78,9 @@ class Return_Label_Service extends Order_Base implements Return_Label_Service_In
 	public function activate( int $order_id ): array {
 		$item_info = new Shipment_and_Return_Item_Info( $order_id );
 		$client    = new Shipment_and_Return_Client( $item_info );
-		return $client->send_request();
+
+		// send_request() can return null on an empty/non-JSON 200; normalize to honor the array return type.
+		$response = $client->send_request();
+		return is_array( $response ) ? $response : array();
 	}
 }

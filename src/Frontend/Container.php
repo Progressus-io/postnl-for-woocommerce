@@ -615,8 +615,14 @@ class Container {
 			$method_id = $rate->get_method_id();
 
 			if ( 'free_shipping' === $method_id ) {
-				$has_free_shipping      = true;
 				$kept_rates[ $rate_id ] = $rate;
+				// A Free Shipping method only waives the letterbox cost when the
+				// merchant has explicitly linked it to PostNL. A standalone (non-linked)
+				// Free Shipping option is independent and must never zero out the
+				// letterbox prices — it is kept visible alongside the letterbox options.
+				if ( in_array( $method_id, $supported, true ) ) {
+					$has_free_shipping = true;
+				}
 				continue;
 			}
 
@@ -633,8 +639,14 @@ class Container {
 			return $rates;
 		}
 
-		// Free-shipping determination drives both variants to 0.
-		$is_free = $has_free_shipping || Utils::is_free_shipping_applied();
+		// Free-shipping determination drives both variants to 0. It is derived ONLY
+		// from PostNL-linked signals: a linked Free Shipping method being present
+		// ($has_free_shipping) or a linked carrier rate at cost 0 (handled in the loop
+		// below, where the PostNL free-shipping threshold has been met). A non-linked
+		// Free Shipping method — even one the customer has selected — must not waive
+		// the letterbox cost, so Utils::is_free_shipping_applied() is intentionally not
+		// consulted here (it ignores linkage and would re-introduce that regression).
+		$is_free = $has_free_shipping;
 
 		// Cheapest linked carrier cost is the base-cost fallback when no letterbox_fee is set.
 		$cheapest_cost = null;

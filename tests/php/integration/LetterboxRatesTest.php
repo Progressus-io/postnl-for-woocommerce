@@ -166,6 +166,77 @@ class LetterboxRatesTest extends IntegrationTestCase {
 	}
 
 	/**
+	 * @testdox A non-linked Free Shipping method must NOT zero the canonical letterbox options.
+	 */
+	public function test_non_linked_free_shipping_does_not_zero_letterbox(): void {
+		$this->make_cart_letterbox_eligible();
+		// Only flat_rate is linked to PostNL; free_shipping is a standalone option.
+		Settings::get_instance()->settings['supported_shipping_methods'] = array( 'flat_rate' );
+
+		$container = new Container( false );
+
+		$rates = array(
+			'flat_rate:3'     => new \WC_Shipping_Rate( 'flat_rate:3', 'Flat rate', 10.0, array(), 'flat_rate', 3 ),
+			'postnl:5'        => new \WC_Shipping_Rate( 'postnl:5', 'PostNL', 12.0, array(), 'postnl', 5 ),
+			'free_shipping:6' => new \WC_Shipping_Rate( 'free_shipping:6', 'Free shipping', 0.0, array(), 'free_shipping', 6 ),
+		);
+
+		$out = $container->inject_letterbox_rates_for_all_methods( $rates, array() );
+
+		// The standalone Free Shipping option survives untouched.
+		$this->assertArrayHasKey( 'free_shipping:6', $out );
+		$this->assertSame( 0.0, (float) $out['free_shipping:6']->get_cost() );
+
+		// The canonical letterbox options keep the linked carrier price (cheapest
+		// linked cost = 10.0) instead of being forced to 0 by the unrelated Free
+		// Shipping method.
+		$this->assertSame(
+			10.0,
+			(float) $out['postnl:5:letterbox_48']->get_cost(),
+			'A non-linked Free Shipping method must not zero the 48h letterbox option.'
+		);
+		$this->assertSame(
+			10.0,
+			(float) $out['postnl:5:letterbox']->get_cost(),
+			'A non-linked Free Shipping method must not zero the 24h letterbox option.'
+		);
+	}
+
+	/**
+	 * @testdox A PostNL-linked Free Shipping method DOES waive the canonical letterbox cost.
+	 */
+	public function test_linked_free_shipping_zeroes_letterbox(): void {
+		$this->make_cart_letterbox_eligible();
+		// Free Shipping is explicitly linked to PostNL — it should waive the letterbox cost.
+		Settings::get_instance()->settings['supported_shipping_methods'] = array( 'flat_rate', 'free_shipping' );
+
+		$container = new Container( false );
+
+		$rates = array(
+			'flat_rate:3'     => new \WC_Shipping_Rate( 'flat_rate:3', 'Flat rate', 10.0, array(), 'flat_rate', 3 ),
+			'postnl:5'        => new \WC_Shipping_Rate( 'postnl:5', 'PostNL', 12.0, array(), 'postnl', 5 ),
+			'free_shipping:6' => new \WC_Shipping_Rate( 'free_shipping:6', 'Free shipping', 0.0, array(), 'free_shipping', 6 ),
+		);
+
+		$out = $container->inject_letterbox_rates_for_all_methods( $rates, array() );
+
+		// Free Shipping still survives as its own option.
+		$this->assertArrayHasKey( 'free_shipping:6', $out );
+
+		// Because Free Shipping is linked, both canonical options are waived to 0.
+		$this->assertSame(
+			0.0,
+			(float) $out['postnl:5:letterbox_48']->get_cost(),
+			'A linked Free Shipping method must waive the 48h letterbox option.'
+		);
+		$this->assertSame(
+			0.0,
+			(float) $out['postnl:5:letterbox']->get_cost(),
+			'A linked Free Shipping method must waive the 24h letterbox option.'
+		);
+	}
+
+	/**
 	 * @testdox A forced letterbox setting yields exactly one canonical option.
 	 *
 	 * @dataProvider forced_letterbox_settings

@@ -951,18 +951,22 @@ msgid "- Shipment & Return: the label of the outward shipment can also be used f
 msgstr "- Heen & Terug: het label van de heenzending kan ook gebruikt worden voor de retourzending."
 
 #: src/Shipping_Method/Settings.php:168
+msgid " ( Note: Shipment & Return Label will be discontinued on July 1. )"
+msgstr " ( Let op: het product 'Heen & Terug' wordt per 1 juli beëindigd. )"
+
+#: src/Shipping_Method/Settings.php:169
 msgid "- Label in the box: a separate return label is created at the same time as the label for the outward shipment and can be included in the box."
 msgstr "- Label in de doos: een los retourlabel wordt tegelijk met het label voor de heenzending aangemaakt en kan in de doos worden meegestuurd."
 
-#: src/Shipping_Method/Settings.php:171
+#: src/Shipping_Method/Settings.php:172
 msgid "None"
 msgstr "Geen"
 
-#: src/Shipping_Method/Settings.php:172
-msgid "Shipping & Return Label"
-msgstr "Heen & Terug"
-
 #: src/Shipping_Method/Settings.php:173
+msgid "Shipment & Return Label ( Note: Shipment & Return Label will be discontinued on July 1. )"
+msgstr "Heen & Terug ( Let op: het product 'Heen & Terug' wordt per 1 juli beëindigd. )"
+
+#: src/Shipping_Method/Settings.php:174
 msgid "Label in the box"
 msgstr "Label in de doos"
 

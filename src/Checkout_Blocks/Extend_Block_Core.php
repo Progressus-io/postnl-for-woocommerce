@@ -395,7 +395,7 @@ class Extend_Block_Core {
 	public function handle_set_checkout_post_data() {
 
 		// Verify nonce
-		if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( $_POST['nonce'], 'postnl_delivery_day_nonce' ) ) {
+		if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['nonce'] ) ), 'postnl_delivery_day_nonce' ) ) {
 			wp_send_json_error( array( 'message' => 'Invalid nonce' ), 400 );
 			wp_die();
 		}

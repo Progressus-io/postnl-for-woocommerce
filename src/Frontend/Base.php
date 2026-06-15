@@ -467,13 +467,16 @@ abstract class Base {
 			}
 
 			// Check if the rate has letterbox type in meta data.
-			// No explicit $order->save() — WooCommerce persists the order at the
-			// end of the woocommerce_checkout_update_order_meta hook chain. Calling
-			// save() mid-chain risks racing later callbacks (especially under HPOS).
 			$meta_data = $shipping_item->get_meta_data();
 			foreach ( $meta_data as $meta ) {
-				if ( 'letterbox_type' === $meta->key ) {
+				if ( 'letterbox_type' === $meta->key && in_array( $meta->value, array( 'letterbox', 'letterbox_48' ), true ) ) {
 					$order->update_meta_data( '_postnl_letterbox_type', $meta->value );
+					// Persist the meta explicitly. Core saves the order BEFORE this
+					// hook fires and passes only the order ID, so the in-memory change
+					// above would otherwise be discarded. save_meta_data() writes just
+					// the meta row and does not fire the full woocommerce_update_order
+					// save cycle.
+					$order->save_meta_data();
 					return;
 				}
 			}

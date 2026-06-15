@@ -530,19 +530,17 @@ describe( 'PostNL Container Block - Unit Tests', () => {
 		} );
 	} );
 
-	// Regression invariants from ClickUp 868etp8wa (Joris Hoyle, PostNL):
-	// "this feature has potential risk for causing the bug tackled in [868hh4q93]
-	// (one which caused calls to our check-out API to be sent out too soon) to
-	// resurface again — make sure the aforementioned fix is not made undone."
-	// The fix is implemented in block.js: activeTab is initialised to null and
-	// hydrated inside a useEffect with empty deps, so no downstream effect can
-	// fire extensionCartUpdate during the synchronous mount.
-	describe( 'default checkout tab — premature-API-call regression invariant', () => {
+	// Regression invariant: this letterbox/tab work risks resurfacing an earlier
+	// bug where checkout API calls were sent out too soon, so the existing guard
+	// must not be undone. The fix is implemented in block.js: activeTab is
+	// initialised to null and hydrated inside a useEffect with empty deps, so no
+	// downstream effect can fire extensionCartUpdate during the synchronous mount.
+	describe( 'default checkout tab: premature-API-call regression invariant', () => {
 		it( 'should not initialise activeTab to a tab id at mount', () => {
 			// The block declares: const [ activeTab, setActiveTab ] = useState( null );
 			// followed by a useEffect that sets it to initialTabId.
 			// Synchronously initialising to initialTabId would re-introduce the
-			// premature extensionCartUpdate bug Joris asked us to guard against.
+			// premature extensionCartUpdate bug this guard protects against.
 			const initialActiveTab = null;
 			expect( initialActiveTab ).toBeNull();
 		} );
@@ -729,13 +727,13 @@ describe( 'PostNL Container Block - Unit Tests', () => {
 		} );
 	} );
 
-	// ClickUp 868h3dz6m (Joris Hoyle testing): in the blocks checkout the
-	// delivery-day / pickup tabs were not blocked on first entry with an ALA
-	// eligible cart under "let customer decide"; they only blocked after a
-	// reload. Root cause: letterbox was read once from page-render data and
-	// never refreshed from the address-update AJAX response. block.js now seeds
-	// from postnlData.letterbox and updates via !! respData.is_letterbox.
-	describe( 'letterbox reactivity — ALA tab blocking', () => {
+	// Regression: in the blocks checkout the delivery-day / pickup tabs were
+	// not blocked on first entry with an ALA-eligible cart under "let customer
+	// decide"; they only blocked after a reload. Root cause: letterbox was read
+	// once from page-render data and never refreshed from the address-update
+	// AJAX response. block.js now seeds from postnlData.letterbox and updates
+	// via !! respData.is_letterbox.
+	describe( 'letterbox reactivity: ALA tab blocking', () => {
 		const seedLetterbox = ( postnlData ) => postnlData.letterbox || false;
 		const nextLetterbox = ( respData ) => !! respData.is_letterbox;
 

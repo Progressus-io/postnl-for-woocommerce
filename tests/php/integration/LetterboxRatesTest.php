@@ -2,10 +2,10 @@
 /**
  * Integration tests for letterbox shipping-rate injection.
  *
- * Guards the fixes for ClickUp 868h3dz6m (Joris Hoyle testing): the blocks
- * AJAX handler constructed a second Frontend\Container, which re-registered the
- * woocommerce_package_rates filters and made inject_letterbox_rates_for_all_methods
- * run twice in one request — duplicating the 24h / 48h options.
+ * Guards against a regression where the blocks AJAX handler constructed a
+ * second Frontend\Container, re-registering the woocommerce_package_rates
+ * filters so inject_letterbox_rates_for_all_methods ran twice in one request
+ * and duplicated the 24h / 48h options.
  */
 
 declare( strict_types = 1 );
@@ -245,6 +245,38 @@ class LetterboxRatesTest extends IntegrationTestCase {
 
 		// Non-linked carrier survives.
 		$this->assertArrayHasKey( 'dhl:7', $out );
+	}
+
+	/**
+	 * @testdox The 24h surcharge is added to the 24h variant only; the 48h variant stays at base cost.
+	 */
+	public function test_customer_decide_applies_24h_surcharge_to_24h_variant_only(): void {
+		$this->make_cart_letterbox_eligible();
+
+		// A non-zero 24h fee with no base letterbox_fee: the base cost falls back
+		// to the cheapest linked carrier cost (10.0), and only the 24h variant
+		// carries the surcharge on top.
+		Settings::get_instance()->settings['letterbox_24_fee'] = '1.50';
+		Settings::get_instance()->settings['letterbox_fee']    = '';
+
+		$container = new Container( false );
+
+		$rates = array(
+			'flat_rate:3' => new \WC_Shipping_Rate( 'flat_rate:3', 'Flat rate', 10.0, array(), 'flat_rate', 3 ),
+		);
+
+		$out = $container->inject_letterbox_rates_for_all_methods( $rates, array() );
+
+		$this->assertSame(
+			11.5,
+			(float) $out['flat_rate:3:letterbox']->get_cost(),
+			'24h variant must be base cost plus the configured 24h surcharge.'
+		);
+		$this->assertSame(
+			10.0,
+			(float) $out['flat_rate:3:letterbox_48']->get_cost(),
+			'48h variant must remain at base cost with no surcharge.'
+		);
 	}
 
 	/**

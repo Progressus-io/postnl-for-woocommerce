@@ -37,6 +37,8 @@
 			"jest-puppeteer.config.js",
 			".*",
 			"*.zip",
+			"*.patch",
+			"*.md",
 			"jest.config.js",
 			"AGENTS.md",
 			"CLAUDE.md",

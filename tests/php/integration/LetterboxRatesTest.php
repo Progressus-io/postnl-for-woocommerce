@@ -203,7 +203,7 @@ class LetterboxRatesTest extends IntegrationTestCase {
 	}
 
 	/**
-	 * @testdox A PostNL-linked Free Shipping method DOES waive the canonical letterbox cost.
+	 * @testdox A PostNL-linked Free Shipping method waives the canonical letterbox cost and is not shown as a separate row.
 	 */
 	public function test_linked_free_shipping_zeroes_letterbox(): void {
 		$this->make_cart_letterbox_eligible();
@@ -220,8 +220,9 @@ class LetterboxRatesTest extends IntegrationTestCase {
 
 		$out = $container->inject_letterbox_rates_for_all_methods( $rates, array() );
 
-		// Free Shipping still survives as its own option.
-		$this->assertArrayHasKey( 'free_shipping:6', $out );
+		// A linked Free Shipping method is collapsed too: only its waiver effect
+		// applies, so it must not appear as a separate row.
+		$this->assertArrayNotHasKey( 'free_shipping:6', $out );
 
 		// Because Free Shipping is linked, both canonical options are waived to 0.
 		$this->assertSame(

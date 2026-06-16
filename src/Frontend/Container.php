@@ -557,13 +557,14 @@ class Container {
 	 *
 	 * This filter is the single source of truth for the letterbox rate set. When ALA
 	 * succeeds it:
-	 *   - keeps non-linked carriers (e.g. DHL) untouched;
-	 *   - keeps the WC native Free Shipping method as-is and always visible, even when
-	 *     the merchant has linked it to PostNL;
-	 *   - drops every other PostNL-linked rate (the PostNL method's own rate and any
-	 *     linked Flat Rate instances) and emits ONE canonical 24h/48h option set in
-	 *     their place, so the choice appears exactly once regardless of how many linked
-	 *     methods or instances the zone has.
+	 *   - keeps non-linked carriers (e.g. DHL) untouched, including a non-linked
+	 *     Free Shipping method, which stays visible and never affects the letterbox cost;
+	 *   - drops every PostNL-linked rate (the PostNL method's own rate, any linked
+	 *     Flat Rate instances, and a linked Free Shipping method) and emits ONE canonical
+	 *     24h/48h option set in their place, so the choice appears exactly once regardless
+	 *     of how many linked methods or instances the zone has. A linked Free Shipping
+	 *     method still applies its waiver (the canonical cost drops to 0) but is not shown
+	 *     as a separate row.
 	 *
 	 * PostNL::calculate_shipping() deliberately does NOT emit its own letterbox variants
 	 * — it emits a plain PostNL rate that this filter folds into the canonical set, so
@@ -605,8 +606,9 @@ class Container {
 
 		$supported = $this->settings->get_supported_shipping_methods();
 
-		// Partition rates: free_shipping and non-linked carriers are kept as-is; every other
-		// PostNL-linked rate is collapsed into one canonical letterbox option set below.
+		// Partition rates: non-linked carriers (including a non-linked Free Shipping method)
+		// are kept as-is; every PostNL-linked rate is collapsed into one canonical letterbox
+		// option set below.
 		$kept_rates        = array();
 		$linked_rates      = array();
 		$has_free_shipping = false;
@@ -615,13 +617,18 @@ class Container {
 			$method_id = $rate->get_method_id();
 
 			if ( 'free_shipping' === $method_id ) {
-				$kept_rates[ $rate_id ] = $rate;
 				// A Free Shipping method only waives the letterbox cost when the
-				// merchant has explicitly linked it to PostNL. A standalone (non-linked)
-				// Free Shipping option is independent and must never zero out the
-				// letterbox prices — it is kept visible alongside the letterbox options.
+				// merchant has explicitly linked it to PostNL. When linked, it is
+				// collapsed like any other PostNL-linked rate: its waiver effect is
+				// applied (the canonical letterbox cost drops to 0) but the method
+				// itself is not shown as a separate row alongside the letterbox
+				// options. A standalone (non-linked) Free Shipping option is
+				// independent: it never zeros out the letterbox prices and is kept
+				// visible in checkout.
 				if ( in_array( $method_id, $supported, true ) ) {
 					$has_free_shipping = true;
+				} else {
+					$kept_rates[ $rate_id ] = $rate;
 				}
 				continue;
 			}

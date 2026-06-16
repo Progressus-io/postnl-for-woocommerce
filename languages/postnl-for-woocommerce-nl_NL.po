@@ -1662,7 +1662,7 @@ msgstr ""
 
 #: src/Product/Single.php:282
 msgid "“18+” and “Letterbox Parcel” cannot be enabled together. Letterbox has been disabled automatically."
-msgstr ""
+msgstr "“18+” en “Brievenbuspakje” kunnen niet samen worden ingeschakeld. Brievenbuspakje is automatisch uitgeschakeld."
 
 #: src/Rest_API/Shipment_and_Return/Item_Info.php:82
 msgid "Given id is not an Order"
@@ -1916,40 +1916,40 @@ msgstr ""
 
 #: src/Shipping_Method/Settings.php:292
 msgid "Extra fee for the letterboxparcel (24 hours)"
-msgstr ""
+msgstr "Toeslag voor het brievenbuspakje (24 uur)"
 
 #: src/Shipping_Method/Settings.php:294
 msgid "Extra fee added when Letterboxparcel Standard (24 hours) has been selected."
-msgstr ""
+msgstr "Toeslag die wordt toegevoegd wanneer Brievenbuspakje standaard (24 uur) is geselecteerd."
 
 #: src/Shipping_Method/Settings.php:354
 msgid "Letterbox fee"
-msgstr ""
+msgstr "Toeslag brievenbuspakje"
 
 #: src/Shipping_Method/Settings.php:356
 msgid "Overrides the shipping cost when all items are eligible for letterbox delivery. Leave empty to use the standard shipping cost. The fee is set to €0 when free shipping applies."
-msgstr ""
+msgstr "Vervangt de verzendkosten wanneer alle artikelen in aanmerking komen voor bezorging als brievenbuspakje. Laat leeg om de standaard verzendkosten te gebruiken. De toeslag wordt op €0 gezet wanneer gratis verzending van toepassing is."
 
 #: src/Shipping_Method/Settings.php:703
 msgid "Default automatic letterboxparcel product"
-msgstr ""
+msgstr "Standaard verzendoptie voor automatische brievenbuspakjes"
 
 #: src/Shipping_Method/Settings.php:709
 msgid "Letterboxparcel Standard (24 hours)"
-msgstr ""
+msgstr "Brievenbuspakje standaard (24 uur)"
 
 #: src/Shipping_Method/Settings.php:710
 msgid "Letterboxparcel 48 hours"
-msgstr ""
+msgstr "Brievenbuspakje 48 uur"
 
 #: src/Shipping_Method/Settings.php:711
 msgid "Let customer decide"
-msgstr ""
+msgstr "Keuze aan ontvanger"
 
 #: src/Utils.php:1211
 msgid "Letterboxparcel (24h)"
-msgstr ""
+msgstr "Brievenbuspakje (24 uur)"
 
 #: src/Utils.php:1222
 msgid "Letterboxparcel (48h)"
-msgstr ""
+msgstr "Brievenbuspakje (48 uur)"

@@ -239,6 +239,8 @@ class Fill_In_With_Postnl_Handler {
 			return $found;
 		}
 
+		$this->logger->write( sprintf( 'PostNL: Unmapped country name "%s", defaulting to NL.', $name ) );
+
 		return 'NL';
 	}
 

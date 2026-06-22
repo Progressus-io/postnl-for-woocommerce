@@ -170,12 +170,16 @@ class Extend_Block_Core {
 			return $rates;
 		}
 
-		$letterbox     = Utils::is_cart_eligible_auto_letterbox( WC()->cart );
-		$letterbox_fee = $this->settings->get_letterbox_fee();
-		$session_type  = WC()->session->get( 'postnl_delivery_type', '' );
+		// Letterbox-eligible carts are owned by the variant emitters
+		// (inject_letterbox_rates_for_all_methods + PostNL::calculate_shipping).
+		// No tab-based extras apply on top — per spec, when ALA triggers the
+		// home delivery / pickup / delivery day surcharges are ignored.
+		if ( Utils::is_cart_eligible_auto_letterbox( WC()->cart ) ) {
+			return $rates;
+		}
 
-		// Nothing to do when letterbox is not active and no delivery type has been chosen.
-		if ( ! $letterbox && '' === $session_type ) {
+		$session_type = WC()->session->get( 'postnl_delivery_type', '' );
+		if ( '' === $session_type ) {
 			return $rates;
 		}
 
@@ -195,28 +199,20 @@ class Extend_Block_Core {
 				continue;
 			}
 
-			if ( $letterbox && null !== $letterbox_fee ) {
-				// Replace the entire shipping cost with the configured letterbox fee.
-				$rate->cost = $letterbox_fee;
-			} elseif ( '' !== $session_type ) {
-				$extra = 0;
+			$extra = 0;
 
-				if ( 'Pickup' === $session_type && $pickup_fee > 0 ) {
-					$extra = $pickup_fee;
-				} elseif ( 'Pickup' !== $session_type ) {
-					// Fold both the tab base fee and any morning/evening extra fee into the rate.
-					$extra = $base_day_fee + (float) WC()->session->get( 'postnl_delivery_fee', 0 );
-				}
+			if ( 'Pickup' === $session_type && $pickup_fee > 0 ) {
+				$extra = $pickup_fee;
+			} elseif ( 'Pickup' !== $session_type ) {
+				// Fold both the tab base fee and any morning/evening extra fee into the rate.
+				$extra = $base_day_fee + (float) WC()->session->get( 'postnl_delivery_fee', 0 );
+			}
 
-				if ( $extra <= 0 ) {
-					continue;
-				}
-
-				$rate->cost += $extra;
-			} else {
-				// Letterbox active but no fee configured — leave rate unchanged.
+			if ( $extra <= 0 ) {
 				continue;
 			}
+
+			$rate->cost += $extra;
 
 			if ( wc_tax_enabled() && 'taxable' === $rate->get_tax_status() ) {
 				$tax_rates   = \WC_Tax::get_shipping_tax_rates();
@@ -355,13 +351,43 @@ class Extend_Block_Core {
 			$order->update_meta_data( '_postnl_order_metadata', $delivery_day_data );
 		}
 
+		// Save letterbox type from shipping method selection.
+		$this->save_letterbox_type_from_shipping( $order );
+
 		/**
 		 * Save the order to persist changes
 		 */
 		$order->save_meta_data();
 	}
 
+	/**
+	 * Save the letterbox type from the selected shipping method in blocks checkout.
+	 *
+	 * @param \WC_Order $order Order object.
+	 */
+	private function save_letterbox_type_from_shipping( $order ) {
+		$shipping_methods = $order->get_shipping_methods();
+		if ( empty( $shipping_methods ) ) {
+			return;
+		}
 
+		$supported = $this->settings->get_supported_shipping_methods();
+		$valid     = array( 'letterbox', 'letterbox_48' );
+
+		foreach ( $shipping_methods as $shipping_item ) {
+			// Restrict to PostNL-supported methods so a third-party plugin's
+			// own 'letterbox_type' shipping-item meta cannot leak into ours.
+			if ( ! in_array( $shipping_item->get_method_id(), $supported, true ) ) {
+				continue;
+			}
+
+			$letterbox_type = $shipping_item->get_meta( 'letterbox_type' );
+			if ( in_array( $letterbox_type, $valid, true ) ) {
+				$order->update_meta_data( '_postnl_letterbox_type', $letterbox_type );
+				return;
+			}
+		}
+	}
 
 	/**
 	 * Handle AJAX request to set checkout post data and return updated delivery options.
@@ -369,7 +395,7 @@ class Extend_Block_Core {
 	public function handle_set_checkout_post_data() {
 
 		// Verify nonce
-		if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( $_POST['nonce'], 'postnl_delivery_day_nonce' ) ) {
+		if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['nonce'] ) ), 'postnl_delivery_day_nonce' ) ) {
 			wp_send_json_error( array( 'message' => 'Invalid nonce' ), 400 );
 			wp_die();
 		}
@@ -386,9 +412,6 @@ class Extend_Block_Core {
 		$sanitized_data = Address_Utils::set_post_data_address( $sanitized_data );
 
 		$shipping_country = isset( $sanitized_data['shipping_country'] ) ? $sanitized_data['shipping_country'] : '';
-
-		// Check letterbox eligibility
-		$letterbox = Utils::is_cart_eligible_auto_letterbox( WC()->cart );
 
 		// Save the house number and postcode on WC customer if provided
 		if ( isset( $sanitized_data['shipping_house_number'] ) && isset( $sanitized_data['shipping_postcode'] ) ) {
@@ -448,7 +471,13 @@ class Extend_Block_Core {
 		// Retrieve validated address from session
 		$validated_address = WC()->session->get( POSTNL_SETTINGS_ID . '_validated_address' );
 
-		$container = new Container();
+		// Construct without registering hooks: this instance is only used for its
+		// helper methods below. The bootstrap Container (Main::get_frontend(), fired
+		// on the init hook — which also runs during admin-ajax) already owns the
+		// global woocommerce_package_rates filters. Re-registering them here would
+		// run inject_letterbox_rates_for_all_methods twice during this request's
+		// shipping calculation and duplicate the letterbox 24h/48h rates.
+		$container = new Container( false );
 
 		// If validation is enabled and address changed or not validated yet
 		if ( $container->is_address_validation_required() && 'NL' === $shipping_country && ( $address_changed || empty( $validated_address ) ) ) {
@@ -491,6 +520,14 @@ class Extend_Block_Core {
 
 		// Save the customer data
 		WC()->customer->save();
+
+		// Check letterbox (ALA) eligibility *after* the customer's shipping
+		// country has been persisted above. is_cart_eligible_auto_letterbox()
+		// reads that saved country, so evaluating it earlier made the first
+		// AJAX call on a fresh session read a stale country and wrongly report
+		// not-eligible — which left the blocks delivery-day / pickup tabs
+		// unblocked until a full page reload.
+		$letterbox = Utils::is_cart_eligible_auto_letterbox( WC()->cart );
 
 		// Proceed to fetch delivery and dropoff options
 		$order_data = $sanitized_data;
@@ -558,6 +595,7 @@ class Extend_Block_Core {
 						'delivery_options'  => array(),
 						'dropoff_options'   => array(),
 						'is_free_shipping'  => $is_free_shipping,
+						'is_letterbox'      => false,
 					),
 					200
 				);
@@ -574,6 +612,7 @@ class Extend_Block_Core {
 					'dropoff_options'          => $dropoff_options_array,
 					'is_delivery_days_enabled' => $delivery_options['is_delivery_days_enabled'],
 					'is_free_shipping'         => $is_free_shipping,
+					'is_letterbox'             => false,
 					'carrier_base_cost'        => $carrier_base_cost,
 					'delivery_day_fee_display' => $delivery_day_fee_display,
 					'pickup_fee_display'       => $pickup_fee_display,

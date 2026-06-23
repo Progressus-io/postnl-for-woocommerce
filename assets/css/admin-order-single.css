@@ -71,3 +71,22 @@
     color:#ff0000;
     font-weight:700;
 }
+#shipment-postnl-label-form .postnl-disabled-option label,
+#shipment-postnl-label-form input.postnl-pairing-disabled + label {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+#shipment-postnl-label-form input.postnl-pairing-disabled {
+    cursor: not-allowed;
+}
+
+#shipment-postnl-label-form .postnl-pairing-hint {
+    margin-top: 10px;
+    padding: 8px 10px;
+    background: #fff8e1;
+    border-left: 3px solid #f0b849;
+    color: #5a3e00;
+    font-size: 12px;
+    line-height: 1.4;
+}

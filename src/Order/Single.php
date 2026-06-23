@@ -85,9 +85,17 @@ class Single extends Base {
 			wp_enqueue_style( 'postnl-admin-order-single', POSTNL_WC_PLUGIN_DIR_URL . '/assets/css/admin-order-single.css', array(), POSTNL_WC_VERSION );
 
 			wp_enqueue_script(
+				'postnl-option-pairing',
+				POSTNL_WC_PLUGIN_DIR_URL . '/assets/js/postnl-option-pairing.js',
+				array(),
+				POSTNL_WC_VERSION,
+				true
+			);
+
+			wp_enqueue_script(
 				'postnl-admin-order-single',
 				POSTNL_WC_PLUGIN_DIR_URL . '/assets/js/admin-order-single.js',
-				array( 'jquery' ),
+				array( 'jquery', 'postnl-option-pairing' ),
 				POSTNL_WC_VERSION,
 				true
 			);
@@ -103,17 +111,106 @@ class Single extends Base {
 			wp_localize_script(
 				'postnl-admin-order-single',
 				'postnl_admin_order_obj',
-				array(
-					'prefix' => $this->prefix,
-					'fields' => array_map(
-						function ( $meta_field ) {
-							return empty( $meta_field['id'] ) ? '' : $meta_field['id'];
-						},
-						$this->meta_box_fields(),
-					),
-				)
+				$this->get_admin_order_script_data()
 			);
 		}
+	}
+
+	/**
+	 * Build the data payload localized to the admin order meta box script.
+	 *
+	 * Provides the field id list plus, when an order context can be resolved
+	 * from the current request, the allowed option combinations and labels
+	 * needed for client-side pairing validation.
+	 *
+	 * @return array
+	 */
+	protected function get_admin_order_script_data() {
+		$order = $this->resolve_order_from_request();
+
+		$data = array(
+			'prefix'               => $this->prefix,
+			'fields'               => array_values(
+				array_filter(
+					array_map(
+						static function ( $meta_field ) {
+							return empty( $meta_field['id'] ) ? '' : $meta_field['id'];
+						},
+						$this->meta_box_fields( $order ? $order : false )
+					)
+				)
+			),
+			'allowed_combinations' => array(),
+			'active_feature'       => '',
+			'option_labels'        => array(),
+			'i18n'                 => array(
+				'cannot_combine'     => esc_html__( 'Cannot be combined with: %s', 'postnl-for-woocommerce' ),
+				'requires_companion' => esc_html__( 'Add %s to complete a valid combination.', 'postnl-for-woocommerce' ),
+			),
+		);
+
+		if ( ! $order ) {
+			return $data;
+		}
+
+		$from_country = Utils::get_base_country();
+		$destination  = Utils::get_shipping_zone( $order->get_shipping_country(), $order->get_shipping_state() );
+
+		$data['allowed_combinations'] = Mapping::get_allowed_combinations( $from_country, $destination );
+		$data['active_feature']       = $this->get_active_shipping_feature( $order );
+		$data['option_labels']        = Utils::get_shipping_options( $order->get_id() );
+
+		return $data;
+	}
+
+	/**
+	 * Resolve the WC_Order being edited from the current admin request.
+	 *
+	 * @return \WC_Order|false
+	 */
+	protected function resolve_order_from_request() {
+		$order_id = 0;
+
+		// phpcs:disable WordPress.Security.NonceVerification.Recommended -- Reading the order id from the admin query string for read-only enqueue-time context; no data is mutated.
+		if ( ! empty( $_GET['id'] ) ) {
+			$order_id = absint( wp_unslash( $_GET['id'] ) );
+		} elseif ( ! empty( $_GET['post'] ) ) {
+			$order_id = absint( wp_unslash( $_GET['post'] ) );
+		}
+		// phpcs:enable WordPress.Security.NonceVerification.Recommended
+
+		if ( ! $order_id ) {
+			return false;
+		}
+
+		$order = wc_get_order( $order_id );
+		return is_a( $order, 'WC_Order' ) ? $order : false;
+	}
+
+	/**
+	 * Determine which shipping feature (delivery_day or pickup_points) applies to an order.
+	 *
+	 * Falls back to 'delivery_day' when no front-end selection is stored.
+	 *
+	 * @param \WC_Order $order Order object.
+	 *
+	 * @return string
+	 */
+	protected function get_active_shipping_feature( $order ) {
+		$saved = $this->get_data( $order->get_id() );
+		$front = $saved['frontend'] ?? array();
+
+		foreach ( $front as $key => $value ) {
+			if ( empty( $value ) ) {
+				continue;
+			}
+			$converted = Utils::convert_data_key( $key );
+			if ( in_array( $converted, array( 'delivery_day', 'pickup_points' ), true ) ) {
+				return $converted;
+			}
+		}
+
+		return 'delivery_day';
 	}
 
 	/**

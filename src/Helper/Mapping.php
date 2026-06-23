@@ -745,6 +745,52 @@ class Mapping {
 	}
 
 	/**
+	 * Get allowed option combinations for a given route.
+	 *
+	 * Projects products_data() into a lightweight structure intended for the
+	 * admin meta box JS: a list of allowed flag sets per shipping feature.
+	 *
+	 * @param string      $from        Origin country code (NL or BE).
+	 * @param string      $destination Destination zone (NL, BE, EU, ROW).
+	 * @param string|null $feature     Optional shipping feature ('delivery_day' or 'pickup_points').
+	 *                                 When null, returns combinations grouped by feature.
+	 *
+	 * @return array
+	 */
+	public static function get_allowed_combinations( $from, $destination, $feature = null ) {
+		$route = self::products_data()[ $from ][ $destination ] ?? array();
+
+		if ( null !== $feature ) {
+			$products = $route[ $feature ] ?? array();
+			return array_values(
+				array_map(
+					static function ( $product ) {
+						return array_values( $product['combination'] );
+					},
+					$products
+				)
+			);
+		}
+
+		$grouped = array();
+		foreach ( $route as $feature_key => $products ) {
+			if ( ! is_array( $products ) ) {
+				continue;
+			}
+			$grouped[ $feature_key ] = array_values(
+				array_map(
+					static function ( $product ) {
+						return array_values( $product['combination'] );
+					},
+					$products
+				)
+			);
+		}
+
+		return $grouped;
+	}
+
+	/**
 	 * Shipment & Return labels options mapping.
 	 *
 	 * @return array[].

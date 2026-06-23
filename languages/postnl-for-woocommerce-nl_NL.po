@@ -8,7 +8,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "POT-Creation-Date: 2025-09-08T20:48:30+00:00\n"
-"PO-Revision-Date: 2025-09-08 22:52+0200\n"
+"PO-Revision-Date: 2026-06-23T06:30:22+00:00\n"
 "Language: nl\n"
 "X-Generator: Poedit 3.7\n"
 "X-Domain: postnl-for-woocommerce\n"
@@ -23,6 +23,11 @@ msgstr ""
 msgid "https://github.com/Progressus-io/postnl-for-woocommerce/"
 msgstr ""
 
+#. Description of the plugin
+#: postnl-for-woocommerce.php
+msgid "The official PostNL plugin allows you to automate your e-commerce order process. Covering shipping services from PostNL Netherlands and Belgium."
+msgstr ""
+
 #. Author of the plugin
 #: postnl-for-woocommerce.php
 msgid "PostNL"
@@ -33,9 +38,57 @@ msgstr ""
 msgid "https://postnl.post/"
 msgstr ""
 
+#: src/Checkout_Blocks/Extend_Block_Core.php:89
+#: src/Frontend/Container.php:489
+msgid "This is not a valid address!"
+msgstr "Dit is geen geldig adres!"
+
+#: src/Checkout_Blocks/Extend_Block_Core.php:104
+#: src/Frontend/Checkout_Fields.php:65
+#: src/Frontend/Checkout_Fields.php:66
+#: src/Order/Single.php:539
+msgid "House number"
+msgstr "Huisnummer"
+
+#: src/Checkout_Blocks/Extend_Block_Core.php:452
+msgid "Postcode or house number is missing."
+msgstr ""
+
+#: src/Emails/WC_Email_Smart_Return.php:43
+msgid "Smart Return Email"
+msgstr ""
+
+#: src/Emails/WC_Email_Smart_Return.php:44
+msgid "This is a smart return email sent for return purposes."
+msgstr ""
+
+#: src/Emails/WC_Email_Smart_Return.php:62
+msgid "[{site_title}]: PostNL Smart Returns"
+msgstr ""
+
+#: src/Emails/WC_Email_Smart_Return.php:72
+msgid "PostNL Smart Returns"
+msgstr ""
+
 #: src/Frontend/Base.php:146
 msgid "Pick up at PostNL-point"
 msgstr "Ophalen bij PostNL-punt"
+
+#: src/Frontend/Base.php:171
+#: src/Order/Single.php:328
+msgid "Date:"
+msgstr "Datum:"
+
+#: src/Frontend/Base.php:175
+#: src/Order/Single.php:332
+msgid "Time:"
+msgstr "Tijd:"
+
+#. translators: %s: shop cart url
+#: src/Frontend/Base.php:240
+#, php-format
+msgid "Sorry, your session has expired. <a href=\"%s\" class=\"wc-backward\">Return to shop</a>"
+msgstr ""
 
 #: src/Frontend/Base.php:497
 msgid "PostNL Evening Fee"
@@ -44,13 +97,6 @@ msgstr "Toeslag avondbezorging"
 #: src/Frontend/Base.php:516
 msgid "PostNL Morning Fee"
 msgstr "Toeslag ochtendbezorging"
-
-#: src/Checkout_Blocks/Extend_Block_Core.php:104
-#: src/Frontend/Checkout_Fields.php:65
-#: src/Frontend/Checkout_Fields.php:66
-#: src/Order/Single.php:539
-msgid "House number"
-msgstr "Huisnummer"
 
 #: src/Frontend/Checkout_Fields.php:102
 #: src/Frontend/Checkout_Fields.php:103
@@ -66,14 +112,68 @@ msgstr "Straat"
 msgid "Street Name"
 msgstr "Straat"
 
-#: src/Checkout_Blocks/Extend_Block_Core.php:89
-#: src/Frontend/Container.php:489
-msgid "This is not a valid address!"
-msgstr "Dit is geen geldig adres!"
+#: src/Frontend/Container.php:120
+msgid "Delivery Days"
+msgstr "Bezorgdagen"
+
+#: src/Frontend/Container.php:121
+#: src/Frontend/Dropoff_Points.php:52
+#: build/postnl-container-frontend.js:1
+#: client/checkout/postnl-container/block.js:283
+msgid "Pickup"
+msgstr "Ophalen"
 
 #: src/Frontend/Delivery_Day.php:45
 msgid "Please choose the delivery day!"
 msgstr "Kies a.u.b. de bezorgdag!"
+
+#: src/Frontend/Delivery_Day.php:115
+#: src/Shipping_Method/Settings.php:336
+#: build/postnl-container-frontend.js:1
+#: client/checkout/postnl-container/block.js:282
+msgid "Delivery"
+msgstr "Bezorgdagen"
+
+#: src/Frontend/Fill_In_With_Postnl.php:216
+msgid "Invalid or expired nonce."
+msgstr ""
+
+#: src/Frontend/Fill_In_With_Postnl.php:226
+#: src/Frontend/Fill_In_With_Postnl_Handler.php:71
+msgid "Fill in with PostNL is not enabled or Client ID is missing."
+msgstr ""
+
+#: src/Frontend/Fill_In_With_Postnl_Handler.php:68
+msgid "Invalid nonce."
+msgstr ""
+
+#: src/Frontend/Fill_In_With_Postnl_Handler.php:76
+msgid "No user data"
+msgstr ""
+
+#: src/Frontend/Fill_In_With_Postnl_Handler.php:109
+msgid "Login session expired. Please try again."
+msgstr ""
+
+#. translators: %s is the error message from PostNL
+#: src/Frontend/Fill_In_With_Postnl_Handler.php:133
+#, php-format
+msgid "PostNL Token Request Error: %s"
+msgstr ""
+
+#: src/Frontend/Fill_In_With_Postnl_Handler.php:146
+msgid "PostNL: Access token not found"
+msgstr ""
+
+#. translators: %s is the error message from PostNL
+#: src/Frontend/Fill_In_With_Postnl_Handler.php:165
+#, php-format
+msgid "PostNL User Info Error: %s"
+msgstr ""
+
+#: src/Frontend/Fill_In_With_Postnl_Handler.php:181
+msgid "Incomplete user data."
+msgstr ""
 
 #: src/Helper/Mapping.php:30
 #: src/Shipping_Method/Settings.php:375
@@ -93,10 +193,11 @@ msgstr "Avondbezorging"
 msgid "Pickup at PostNL Point"
 msgstr "Ophalen bij PostNL Punt"
 
-#: src/Order/Bulk.php:510
-#: src/Order/Bulk.php:528
-msgid "Belgium"
-msgstr "België"
+#: src/Helper/Mapping.php:40
+#: src/Shipping_Method/Settings.php:644
+#: src/Utils.php:614
+msgid "Standard Shipment Belgium"
+msgstr "Standaardzending België"
 
 #: src/Helper/Mapping.php:43
 msgid "Pickup at PostNL Point Belgium"
@@ -126,6 +227,18 @@ msgstr "De PostNL plugin vereist het installeren en activeren van WooCommerce!"
 #: src/Main.php:379
 msgid "PostNL plugin requires store country to be Netherlands (NL) or Belgium (BE)!"
 msgstr "De PostNL plugin vereist een winkellocatie in Nederland of België!"
+
+#: src/Main.php:457
+msgid "Postnl Checkout Blocks"
+msgstr ""
+
+#: src/Main.php:476
+msgid "Leave a review"
+msgstr "Laat een beoordeling achter"
+
+#: src/Main.php:496
+msgid "Settings"
+msgstr ""
 
 #: src/Order/Base.php:153
 msgid "ID Check (18+): "
@@ -166,6 +279,10 @@ msgstr "Brievenbuspakje (Internationaal): "
 #: src/Order/Base.php:261
 msgid "Track & Trace: "
 msgstr "Track & Trace: "
+
+#: src/Order/Base.php:273
+msgid "Delivery code at the door: "
+msgstr "Bezorgcode aan de deur: "
 
 #: src/Order/Base.php:291
 #: src/Order/Bulk.php:429
@@ -218,6 +335,14 @@ msgstr "Kan geen barcode genereren."
 msgid "Cannot create return barcode."
 msgstr "Kan geen retourbarcode genereren."
 
+#: src/Order/Base.php:1071
+msgid "There are no files to merge."
+msgstr ""
+
+#: src/Order/Base.php:1075
+msgid "\"Imagick\" must be installed on the server to merge png files."
+msgstr ""
+
 #: src/Order/Base.php:1160
 #: src/Order/Base.php:1259
 msgid "Cannot create the label. Label content is missing"
@@ -237,6 +362,7 @@ msgstr "Kan geen label creëren, barcode-informatie ontbreekt"
 
 #. translators: %s the current service.
 #: src/Order/Base.php:1388
+#, php-format
 msgid "%s Tracking Number: {tracking-link}"
 msgstr "%s Barcode: {tracking-link}"
 
@@ -251,16 +377,19 @@ msgstr "PostNL Verander verzendopties"
 
 #. Translators: %1$d is the order ID.
 #: src/Order/Bulk.php:169
+#, php-format
 msgid "Order #%1$d already has a label."
 msgstr "Label voor order  #%1$d reeds aangemaakt."
 
 #. Translators: %1$d is the order ID.
 #: src/Order/Bulk.php:179
+#, php-format
 msgid "Order #%1$d is from another shipping zone."
 msgstr "Order  #%1$d behoort tot een andere verzendzone."
 
 #. translators: %1$s is anchor tag opener. %2$s is anchor tag closer.
 #: src/Order/Bulk.php:267
+#, php-format
 msgid "Bulk PostNL labels file created - %1$sdownload file%2$s"
 msgstr "Bulkactie voltooid - %1$sbestand downloaden%2$s"
 
@@ -280,18 +409,41 @@ msgstr "Verzendzone"
 msgid "Domestic"
 msgstr "Nederland"
 
+#: src/Order/Bulk.php:510
+#: src/Order/Bulk.php:528
+msgid "Belgium"
+msgstr "België"
+
+#: src/Order/Bulk.php:513
+msgid "Pick-up at PostNL"
+msgstr "Ophalen bij PostNL"
+
+#: src/Order/Bulk.php:519
+#: src/Shipping_Method/Settings.php:614
+msgid "Shipping options domestic"
+msgstr "Verzendopties binnenland"
+
 #: src/Order/Bulk.php:537
 #: src/Shipping_Method/Settings.php:656
 msgid "Shipping options EU"
 msgstr "Verzendopties EU"
 
-#: src/Shipping_Method/Settings.php:675
-msgid "Shipping options non-EU (outside the EU borders)."
-msgstr "Selecteer een standaard verzendoptie voor alle zendingen die worden verstuurd met PostNL."
+#: src/Order/Bulk.php:546
+msgid "Shipping options non-EU"
+msgstr "Verzendopties Pakketten non-EU"
+
+#: src/Order/Bulk.php:555
+msgid "Shipping options for Pick-up at PostNL"
+msgstr "Verzendopties voor Ophalen bij PostNL"
 
 #: src/Order/Bulk.php:635
 msgid "PostNL Print Label"
 msgstr "Print Label"
+
+#: src/Order/Bulk.php:703
+#, php-format
+msgid "#%1$s : PostNL label has been created - %2$sdownload file%3$s"
+msgstr ""
 
 #: src/Order/OrdersList.php:78
 msgid "PostNL Tracking"
@@ -333,20 +485,6 @@ msgstr "Bezorgdatum:"
 msgid "Pickup Address:"
 msgstr "Afhaaladres:"
 
-#: src/Frontend/Base.php:171
-#: src/Order/Single.php:328
-msgid "Date:"
-msgstr "Datum:"
-
-#: src/Frontend/Base.php:175
-#: src/Order/Single.php:332
-msgid "Time:"
-msgstr "Tijd:"
-
-#: src/Order/Single.php:422
-msgid "Create Shipment"
-msgstr "Zending aanmaken"
-
 #: src/Order/Single.php:360
 msgid "Activate return function"
 msgstr "Activeer retour functie"
@@ -362,6 +500,10 @@ msgstr "Klik hier om de retour functie voor dit label te activeren"
 #: src/Order/Single.php:384
 msgid "Send email with Smart Return"
 msgstr "Zend Smart Return email"
+
+#: src/Order/Single.php:422
+msgid "Create Shipment"
+msgstr "Zending aanmaken"
 
 #: src/Order/Single.php:424
 msgid "Print Label"
@@ -396,9 +538,44 @@ msgstr "Nonce is ongeldig!"
 msgid "Nonce is invalid"
 msgstr "Nonce is ongeldig"
 
+#: src/Order/Single.php:624
+msgid "Already activated!"
+msgstr ""
+
+#: src/Order/Single.php:640
+msgid "Unknown error."
+msgstr ""
+
+#. Translators: %s is the error message.
+#: src/Order/Single.php:664
+#, php-format
+msgid "Error: %s"
+msgstr ""
+
+#: src/Order/Single.php:720
+msgid "PrintcodeLabel could not found"
+msgstr ""
+
+#: src/Order/Single.php:751
+msgid "Email could not be send"
+msgstr ""
+
+#: src/Order/Single.php:782
+msgid "18+ Adults Only"
+msgstr ""
+
 #: src/Product/Product_Editor.php:47
 msgid "PostNL extra settings"
 msgstr "PostNL extra instellingen"
+
+#: src/Product/Product_Editor.php:48
+msgid "Mark as 18+ (Adults Only)"
+msgstr ""
+
+#: src/Product/Product_Editor.php:50
+#: src/Product/Single.php:94
+msgid "Enable this for products intended only for adults (18+)."
+msgstr ""
 
 #: src/Product/Product_Editor.php:63
 msgid "Enable Letterbox Parcel"
@@ -408,18 +585,14 @@ msgstr "Activeer automatische brievenbuspakjes"
 msgid "When enabled, PostNL plugin automatically determines whether a shipment fits through a letterbox."
 msgstr "Wanneer deze geactiveerd wordt zal de plug-in nagaan of een zending door de brievenbus past."
 
-#. translators: %s will be replaced by service name.
-#: src/Product/Single.php:101
-msgid "Enable Letterbox Parcel (%s)"
-msgstr "Activeer automatische toewijzing Brievenbuspakje"
-
-#: src/Product/Single.php:102
-msgid "When this setting is enabled the PostNL plug-in automatically determines whether a shipment fits through a letterbox. This choice can be overridden when creating a shipment manually via the Label & Tracking menu. This only works for orders with destination Netherlands."
-msgstr "Wanneer deze optie geactiveerd wordt zal de plug-in automatisch bepalen of een bestelling in een brievenbuspakje past en deze verzendoptie toewijzen. Deze toewijzing kan ongedaan gemaakt worden door handmatig de verzendopties aan te passen vanuit het bulkactie-menu of het Label & Tracking menu. Automatische toewijzing van brievenbuspakjes werkt alleen voor zendingen binnen Nederland."
-
 #: src/Product/Product_Editor.php:78
 msgid "Maximum Quantity per Letterbox Parcel"
 msgstr "Maximum aantal per brievenbuspakje"
+
+#: src/Product/Product_Editor.php:80
+#: src/Product/Single.php:112
+msgid "Enter max quantity"
+msgstr "Voer maximaal aantal in"
 
 #: src/Product/Product_Editor.php:82
 msgid "Specify how many times this product fits in a letterbox parcel."
@@ -429,6 +602,11 @@ msgstr "Geef aan hoe vaak het product in een brievenbuspakje past."
 msgid "Country of Origin"
 msgstr "Land van herkomst"
 
+#: src/Product/Product_Editor.php:99
+#: src/Product/Single.php:125
+msgid "- select country -"
+msgstr "- Selecteer land -"
+
 #: src/Product/Product_Editor.php:113
 msgid "Select the country of origin for this product."
 msgstr "Selecteer het land van herkomst voor dit product."
@@ -437,12 +615,34 @@ msgstr "Selecteer het land van herkomst voor dit product."
 msgid "HS Tariff Code"
 msgstr ""
 
+#: src/Product/Product_Editor.php:126
+#: src/Product/Single.php:136
+msgid "HS Code"
+msgstr "HS Code"
+
 #: src/Product/Product_Editor.php:127
 msgid "HS Tariff Code for international shipping."
 msgstr "HS Tariff Code voor internationale zendingen."
 
 #. translators: %s will be replaced by service name.
+#: src/Product/Single.php:93
+#, php-format
+msgid "Mark as 18+ (Adults Only) (%s)"
+msgstr ""
+
+#. translators: %s will be replaced by service name.
+#: src/Product/Single.php:101
+#, php-format
+msgid "Enable Letterbox Parcel (%s)"
+msgstr "Activeer automatische toewijzing Brievenbuspakje"
+
+#: src/Product/Single.php:102
+msgid "When this setting is enabled the PostNL plug-in automatically determines whether a shipment fits through a letterbox. This choice can be overridden when creating a shipment manually via the Label & Tracking menu. This only works for orders with destination Netherlands."
+msgstr "Wanneer deze optie geactiveerd wordt zal de plug-in automatisch bepalen of een bestelling in een brievenbuspakje past en deze verzendoptie toewijzen. Deze toewijzing kan ongedaan gemaakt worden door handmatig de verzendopties aan te passen vanuit het bulkactie-menu of het Label & Tracking menu. Automatische toewijzing van brievenbuspakjes werkt alleen voor zendingen binnen Nederland."
+
+#. translators: %s will be replaced by service name.
 #: src/Product/Single.php:109
+#, php-format
 msgid "Maximum amount per letterbox parcel (%s)"
 msgstr "Maximaal aantal per brievenbuspakje (%s)"
 
@@ -450,13 +650,9 @@ msgstr "Maximaal aantal per brievenbuspakje (%s)"
 msgid "Please fill in how many times this product fits in a letterbox parcel. A letterbox parcel may weigh a maximum of 2 kilograms and has the following maximum dimensions: 38x26.5x3.2 cm"
 msgstr "Vul hier in hoe vaak dit product in een brievenbuspakje past. Een brievenbuspakje mag maximaal 2 kilogram wegen en heeft de volgende maximale afmetingen: 38x26,5x3,2 cm"
 
-#: src/Product/Product_Editor.php:80
-#: src/Product/Single.php:112
-msgid "Enter max quantity"
-msgstr "Voer maximaal aantal in"
-
 #. translators: %s will be replaced by service name.
 #: src/Product/Single.php:121
+#, php-format
 msgid "Country of Origin (%s)"
 msgstr "Land van herkomst (%s)"
 
@@ -464,13 +660,9 @@ msgstr "Land van herkomst (%s)"
 msgid "Country of Origin."
 msgstr "Land van herkomst."
 
-#: src/Product/Product_Editor.php:99
-#: src/Product/Single.php:125
-msgid "- select country -"
-msgstr "- Selecteer land -"
-
 #. translators: %s will be replaced by service name.
 #: src/Product/Single.php:133
+#, php-format
 msgid "HS Tariff Code (%s)"
 msgstr "GS tarief code (%s)"
 
@@ -478,14 +670,13 @@ msgstr "GS tarief code (%s)"
 msgid "HS Tariff Code is a number assigned to every possible commodity that can be imported or exported from any country."
 msgstr "De GS tarief code is een code die wordt toegewezen aan ieder mogelijk product wat geïmporteerd en geëxporteerd kan worden naar iedere bestemming."
 
-#: src/Product/Product_Editor.php:126
-#: src/Product/Single.php:136
-msgid "HS Code"
-msgstr "HS Code"
-
 #: src/Product/Single.php:223
 msgid "Product ID does not exists!"
 msgstr "Product ID bestaat niet!"
+
+#: src/Product/Single.php:282
+msgid "“18+” and “Letterbox Parcel” cannot be enabled together. Letterbox has been disabled automatically."
+msgstr "“18+” en “Brievenbuspakje” kunnen niet samen worden ingeschakeld. Brievenbuspakje is automatisch uitgeschakeld."
 
 #: src/Rest_API/Barcode/Item_Info.php:66
 #: src/Rest_API/Shipping/Item_Info.php:140
@@ -569,6 +760,14 @@ msgstr "Waarde is geen getal!"
 msgid "Shipping \"House number\" is empty!"
 msgstr "Huisnummer is een vereist veld!"
 
+#: src/Rest_API/Shipment_and_Return/Item_Info.php:82
+msgid "Given id is not an Order"
+msgstr ""
+
+#: src/Rest_API/Shipment_and_Return/Item_Info.php:86
+msgid "Missing barcode"
+msgstr ""
+
 #: src/Rest_API/Shipping/Item_Info.php:353
 msgid "Location Code is empty!"
 msgstr "Locatiecode niet ingevuld!"
@@ -625,6 +824,14 @@ msgstr "Bezorgdag “tot” is leeg!"
 msgid "Delivery day \"Type\" is empty!"
 msgstr "Bezorgdag “Type” is leeg!"
 
+#: src/Rest_API/Shipping/Item_Info.php:610
+msgid "Pickup \"Date\" is empty!"
+msgstr ""
+
+#: src/Rest_API/Shipping/Item_Info.php:626
+msgid "Pickup \"Time\" is empty!"
+msgstr ""
+
 #: src/Rest_API/Shipping/Item_Info.php:638
 msgid "Pickup \"Company name\" is empty!"
 msgstr "Afhaaladres winkelnaam is leeg!"
@@ -665,6 +872,12 @@ msgstr "Hoeveelheid moet meer dan 1 zijn"
 msgid "Max weight for Mailbox Packet is 2kg!"
 msgstr "Het maximale gewicht van een brievenbuspakje is 2kg!"
 
+#. Translators: %s is the order total.
+#: src/Rest_API/Shipping/Item_Info.php:1119
+#, php-format
+msgid "Insurance amount for EU shipments cannot exceed €5000. Your total is: %d"
+msgstr ""
+
 #: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:38
 #: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:61
 #: templates/checkout/postnl-fill-in-with-button.php:22
@@ -693,6 +906,10 @@ msgstr "Activeer"
 #: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:68
 msgid "Enable Fill in with PostNL functionality."
 msgstr "Activeer Invullen Met PostNL."
+
+#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:74
+msgid "Client ID"
+msgstr ""
 
 #: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:75
 msgid "Enter your PostNL Client ID from the Digital Business Portal."
@@ -837,11 +1054,13 @@ msgstr "Er moet ten minste één optie geactiveerd worden in de winkelwagen, che
 
 #. translators: %1$s & %2$s is replaced with <a> tag.
 #: src/Shipping_Method/PostNL.php:39
+#, php-format
 msgid "Below you will find all functions for controlling, preparing and processing your shipment with PostNL. Prerequisite is a valid PostNL business customer contract. If you are not yet a PostNL business customer, you can request a quote %1$shere%2$s."
 msgstr "Hieronder vind je alle functies voor het controleren, voorbereiden en verwerken van jouw zendingen met PostNL. Hiervoor heb je een zakelijk contract nodig met PostNL. Ben je nog geen klant van PostNL? Dan kan je %1$shier%2$s klant worden."
 
 #. Translators: %s is the currency symbol.
 #: src/Shipping_Method/PostNL.php:117
+#, php-format
 msgid "Free shipping from %s"
 msgstr "Gratis verzenden vanaf %s"
 
@@ -849,12 +1068,52 @@ msgstr "Gratis verzenden vanaf %s"
 msgid "Keep empty if you don’t want to use Free shipping"
 msgstr "Laat leeg in als je geen gebruik wil maken van Gratis verzenden"
 
+#: src/Shipping_Method/PostNL.php:186
+msgid "Country"
+msgstr "Land"
+
+#: src/Shipping_Method/PostNL.php:189
+msgid "Merchant Code"
+msgstr "Verkoperscode"
+
+#: src/Shipping_Method/PostNL.php:192
+msgid "Action"
+msgstr "Actie"
+
+#: src/Shipping_Method/PostNL.php:203
+#: src/Shipping_Method/PostNL.php:243
+msgid "Select Country"
+msgstr "Selecteer land"
+
+#: src/Shipping_Method/PostNL.php:215
+#: src/Shipping_Method/PostNL.php:255
+msgid "Enter merchant code"
+msgstr "Voer de verkoperscode in"
+
+#: src/Shipping_Method/PostNL.php:220
+#: src/Shipping_Method/PostNL.php:260
+msgid "Remove"
+msgstr "Verwijderen"
+
+#: src/Shipping_Method/PostNL.php:229
+msgid "Add Merchant Code"
+msgstr "Verkoperscode toevoegen"
+
+#: src/Shipping_Method/PostNL.php:291
+msgid "Duplicate countries found and have been removed. Only the last entry for each country will be saved."
+msgstr ""
+
+#: src/Shipping_Method/PostNL.php:310
+msgid "Some merchant codes were not saved because of missing country or code."
+msgstr ""
+
 #: src/Shipping_Method/Settings.php:63
 msgid "Manual"
 msgstr "Handleiding"
 
 #. translators: %1$s & %2$s is replaced with <a> tag.
 #: src/Shipping_Method/Settings.php:66
+#, php-format
 msgid "Consult the %1$smanual%2$s for help installing the plug-in."
 msgstr "Raadpleeg de %1$shandleiding%2$s voor hulp bij het installeren van de plug-in."
 
@@ -864,6 +1123,7 @@ msgstr "Account Instellingen"
 
 #. translators: %1$s & %2$s is replaced with <a> tag.
 #: src/Shipping_Method/Settings.php:73
+#, php-format
 msgid "Please configure your shipping parameters and your access towards the PostNL APIs by means of authentication. You can find the details of your PostNL account in Mijn %1$sPostNL%2$s under \"My Account > API beheren\"."
 msgstr "Vul hier je klant gegevens in om de plug-in te koppelen aan jouw PostNL account. Jouw klantgegevens kan je vinden in de Mijn %1$sPostNL%2$s omgeving onder “Mijn Account > API beheren”."
 
@@ -889,6 +1149,7 @@ msgstr "Productie API Key"
 
 #. translators: %1$s & %2$s is replaced with <a> tag.
 #: src/Shipping_Method/Settings.php:92
+#, php-format
 msgid "Insert your PostNL production API-key. You can find your API-key on Mijn %1$sPostNL%2$s under \"My Account\"."
 msgstr "Voer jouw PostNL productie API-key in. Jouw productie en sandbox API-key is te vinden op Mijn %1$sPostNL%2$s onder “My Account”."
 
@@ -898,6 +1159,7 @@ msgstr "Sandbox API Key"
 
 #. translators: %1$s & %2$s is replaced with <a> tag.
 #: src/Shipping_Method/Settings.php:101
+#, php-format
 msgid "Insert your PostNL staging API-key. You can find your API-key on Mijn %1$sPostNL%2$s under \"My Account\"."
 msgstr "Voer jouw PostNL sandbox API-key in. Jouw productie en sandbox API-key is te vinden op Mijn %1$sPostNL%2$s onder “My Account”."
 
@@ -907,6 +1169,7 @@ msgstr "Logging"
 
 #. translators: %1$s is anchor opener tag and %2$s is anchor closer tag.
 #: src/Shipping_Method/Settings.php:111
+#, php-format
 msgid "A log file containing the communication to the PostNL server will be maintained if this option is checked. This can be used in case of technical issues and can be found %1$shere%2$s."
 msgstr "Als deze functie is ingeschakeld wordt er een log-bestand opgebouwd die communictie gegevens bevat naar de server van PostNL. Deze gegevens van toegevoegde waarde zijn in geval van technische issues en kunnen %1$shier%2$s gevonden worden."
 
@@ -995,6 +1258,10 @@ msgstr "Activeren"
 msgid "Return to home address"
 msgstr "Retour naar huisadres"
 
+#: src/Shipping_Method/Settings.php:209
+msgid "Activate this setting to use a home address for return shipments"
+msgstr ""
+
 #: src/Shipping_Method/Settings.php:213
 msgid "Replynumber"
 msgstr "Antwoordnummer"
@@ -1034,6 +1301,10 @@ msgstr "Huisnummer"
 #: src/Shipping_Method/Settings.php:245
 msgid "Enter return house number."
 msgstr "Voer hier het huisnummer in van het retouradres."
+
+#: src/Shipping_Method/Settings.php:252
+msgid "Enter return house number extension."
+msgstr "Vul hier een huisnummertoevoeging in voor het retouradres."
 
 #: src/Shipping_Method/Settings.php:257
 msgid "Zipcode"
@@ -1075,6 +1346,14 @@ msgstr "Verzendmethoden"
 msgid "Select Shipping Methods can be associated with PostNL."
 msgstr "Selecteer de verzendmethode die gebruikt worden voor verzending met PostNL."
 
+#: src/Shipping_Method/Settings.php:292
+msgid "Extra fee for the letterboxparcel (24 hours)"
+msgstr "Toeslag voor het brievenbuspakje (24 uur)"
+
+#: src/Shipping_Method/Settings.php:294
+msgid "Extra fee added when Letterboxparcel Standard (24 hours) has been selected."
+msgstr "Toeslag die wordt toegevoegd wanneer Brievenbuspakje standaard (24 uur) is geselecteerd."
+
 #: src/Shipping_Method/Settings.php:300
 msgid "PostNL Pick-up Points"
 msgstr "Ophalen bij PostNL-punt"
@@ -1083,9 +1362,33 @@ msgstr "Ophalen bij PostNL-punt"
 msgid "Show PostNL pick-up points in the checkout so that your customers can choose to get their orders delivered at a PostNL pick-up point."
 msgstr "Toon de PostNL-punten in de checkout zodat jouw klanten kunnen kiezen om hun bestelling op te halen bij een PostNL-punt."
 
+#: src/Shipping_Method/Settings.php:310
+msgid "Extra fee pick-up delivery"
+msgstr "Toeslag ophalen bij PostNL"
+
+#: src/Shipping_Method/Settings.php:312
+msgid "Extra fee added when the customer selects a PostNL pick-up point."
+msgstr "Toeslag wanneer er voor ophalen bij PostNL is gekozen."
+
 #: src/Shipping_Method/Settings.php:339
 msgid "Show delivery days in the checkout so that your customers can choose which day to receive their order."
 msgstr "Laat jouw klanten kiezen wanneer zij hun bestelling ontvangen door de bezorgdagen in de checkout te tonen."
+
+#: src/Shipping_Method/Settings.php:346
+msgid "Extra fee home delivery"
+msgstr "Toeslag thuisbezorging"
+
+#: src/Shipping_Method/Settings.php:348
+msgid "Extra fee added when the customer selects home delivery."
+msgstr "Toeslag voor verzendingen naar een huisadres."
+
+#: src/Shipping_Method/Settings.php:354
+msgid "Letterbox fee"
+msgstr "Alternatieve verzendkosten Brievenbuspakje"
+
+#: src/Shipping_Method/Settings.php:356
+msgid "Overrides the shipping cost when all items are eligible for letterbox delivery. Leave empty to use the standard shipping cost. The fee is set to €0 when free shipping applies."
+msgstr "Vervangt de verzendkosten wanneer alle artikelen in aanmerking komen voor bezorging als brievenbuspakje. Laat leeg om de standaard verzendkosten te gebruiken. De toeslag wordt op €0 gezet wanneer gratis verzending van toepassing is."
 
 #: src/Shipping_Method/Settings.php:362
 msgid "Number of Delivery Days"
@@ -1118,6 +1421,22 @@ msgstr "Toeslag avondbezorging"
 #: src/Shipping_Method/Settings.php:405
 msgid "Fee for receiving orders in the evening."
 msgstr "De toeslag die jouw klanten betalen om ’s avonds de bestelling te ontvangen."
+
+#: src/Shipping_Method/Settings.php:411
+msgid "Default Delivery Options Tab"
+msgstr "Standaard tabblad in bezorgoptiemenu"
+
+#: src/Shipping_Method/Settings.php:413
+msgid "Choose which tab is shown first in the delivery options menu at checkout."
+msgstr "Selecteer het tabblad wat als eerste getoond wordt in het bezorgoptiemenu in de check-out."
+
+#: src/Shipping_Method/Settings.php:417
+msgid "Home Delivery"
+msgstr "Thuisbezorging/Bezorgdagen"
+
+#: src/Shipping_Method/Settings.php:418
+msgid "Pickup Points"
+msgstr "Afhaalpunten"
 
 #: src/Shipping_Method/Settings.php:424
 msgid "Transit Time"
@@ -1234,6 +1553,14 @@ msgstr "Standaard land van herkomst"
 msgid "Default country of origin is used by customs."
 msgstr "De douane bekijkt het land van herkomst."
 
+#: src/Shipping_Method/Settings.php:535
+msgid "Merchant Customs Code"
+msgstr "Handelsdouanecode"
+
+#: src/Shipping_Method/Settings.php:537
+msgid "Add merchant codes for specific non-EU countries."
+msgstr "Voeg handelscodes toe voor specifieke landen buiten de EU."
+
 #: src/Shipping_Method/Settings.php:544
 msgid "Printer &amp; Email Settings"
 msgstr "Printer &amp; Email Instellingen"
@@ -1242,6 +1569,18 @@ msgstr "Printer &amp; Email Instellingen"
 msgid "Please configure your printer and email preferences."
 msgstr "Stel hier jouw printer en email voorkeuren in."
 
+#: src/Shipping_Method/Settings.php:549
+msgid "Printer Type"
+msgstr ""
+
+#: src/Shipping_Method/Settings.php:551
+msgid "It is not recommended to send .pdf files/labels directly to a Zebra printer If you want to send it directly to your Zebra printer, please use .gif files or the native (generic) zpl printer type"
+msgstr "Het is af te raden om PDF-bestanden af te drukken met een Zebra-printer. Gebruik voor een Zebra-printer labels in GIF-formaat of in ZPL-formaat"
+
+#: src/Shipping_Method/Settings.php:562
+msgid "DPI"
+msgstr ""
+
 #: src/Shipping_Method/Settings.php:572
 msgid "Label Format"
 msgstr "Labelformaat"
@@ -1249,6 +1588,14 @@ msgstr "Labelformaat"
 #: src/Shipping_Method/Settings.php:574
 msgid "Use A6 format in case you use a labelprinter. Use A4 format for other regular printers."
 msgstr "Stel A6 formaat in indien je gebruik maakt van een label printen. Gebruik het A4 formaat voor gebruikelijke printers."
+
+#: src/Shipping_Method/Settings.php:584
+msgid "Shipping confirmation e-mail address"
+msgstr "E-mailadres verzendbewijzen"
+
+#: src/Shipping_Method/Settings.php:586
+msgid "This e-mail address will be used by PostNL for shipping confirmations. If left empty, no sender e-mail will be included."
+msgstr "Dit e-mailadres zal worden gebruikt voor de verzendbewijzen voor de verzender. Indien hier niets ingevuld wordt zal de verzender geen digitaal bewijs van verzending ontvangen."
 
 #: src/Shipping_Method/Settings.php:590
 msgid "WooCommerce Email"
@@ -1297,6 +1644,11 @@ msgstr "Standaardzending"
 msgid "ID Check (18+)"
 msgstr "ID Check (18+)"
 
+#: src/Shipping_Method/Settings.php:622
+#: src/Shipping_Method/Settings.php:699
+msgid "ID Check (18+) + Insured Shipping"
+msgstr "ID Check (18+) + Verzekerd verzenden"
+
 #: src/Shipping_Method/Settings.php:624
 #: src/Utils.php:609
 msgid "Return if no answer"
@@ -1316,14 +1668,6 @@ msgstr "Alleen huisadres"
 #: src/Utils.php:612
 msgid "Letterbox"
 msgstr "Brievenbuspakje"
-
-#: src/Utils.php:1239
-msgid "Letterbox 24"
-msgstr "Brievenbuspakje 24"
-
-#: src/Utils.php:1236
-msgid "Letterbox 48"
-msgstr "Brievenbuspakje 48"
 
 #: src/Shipping_Method/Settings.php:628
 msgid "Signature on Delivery + Insured Shipping"
@@ -1348,6 +1692,14 @@ msgstr "Alleen Huisadres + Retour bij geen gehoor + Handtekening voor ontvangst"
 #: src/Shipping_Method/Settings.php:633
 msgid "Only Home Address + Signature on Delivery"
 msgstr "Alleen huisadres + Handtekening voor ontvangst"
+
+#: src/Shipping_Method/Settings.php:634
+msgid "Delivery Code at Door + Insured Shipping"
+msgstr "Bezorgcode aan de deur + Verzekerd verzenden"
+
+#: src/Shipping_Method/Settings.php:638
+msgid "Shipping options Belgium"
+msgstr "Standaard verzendopties België"
 
 #: src/Shipping_Method/Settings.php:640
 msgid "Select a default shipping option for the orders shipped to Belgium with PostNL."
@@ -1417,6 +1769,10 @@ msgstr "EU Pakket + Track & Trace + Verzekerd Verzenden Plus"
 msgid "Default Shipping International"
 msgstr "Standaard verzendopties non-EU"
 
+#: src/Shipping_Method/Settings.php:675
+msgid "Shipping options non-EU (outside the EU borders)."
+msgstr "Selecteer een standaard verzendoptie voor alle zendingen die worden verstuurd met PostNL."
+
 #: src/Shipping_Method/Settings.php:679
 msgid "Parcel non-EU + Track & Trace"
 msgstr "Non-EU Pakket + Track & Trace"
@@ -1438,6 +1794,31 @@ msgstr "Standaard verzendmethode afhalen"
 msgid "Shipping options Pickup."
 msgstr "Selecteer een standaard verzendoptie voor afhalen bij PostNL."
 
+#: src/Shipping_Method/Settings.php:696
+msgid "Standard Shipping"
+msgstr "Standaardzending"
+
+#: src/Shipping_Method/Settings.php:698
+#: src/Utils.php:617
+msgid "Insured Shipping"
+msgstr "Verzekerd verzenden"
+
+#: src/Shipping_Method/Settings.php:703
+msgid "Default automatic letterboxparcel product"
+msgstr "Standaard verzendoptie voor automatische brievenbuspakjes"
+
+#: src/Shipping_Method/Settings.php:709
+msgid "Letterboxparcel Standard (24 hours)"
+msgstr "Brievenbuspakje standaard (24 uur)"
+
+#: src/Shipping_Method/Settings.php:710
+msgid "Letterboxparcel 48 hours"
+msgstr "Brievenbuspakje 48 uur"
+
+#: src/Shipping_Method/Settings.php:711
+msgid "Let customer decide"
+msgstr "Keuze aan ontvanger"
+
 #: src/Shipping_Method/Settings.php:715
 msgid "Automatically change order status to Completed"
 msgstr "Automatische statuswijziging naar Voltooid"
@@ -1447,15 +1828,27 @@ msgstr "Automatische statuswijziging naar Voltooid"
 msgid "Automatically change order status to Completed once an order has been pre-alerted and printed"
 msgstr "Wijzig de status automatisch naar Afgerond nadat een order is aangemaakt en geprint"
 
+#: src/Shipping_Method/Settings.php:750
+msgid "Select a default shipping option for the orders shipped internationally (outside the EU borders)."
+msgstr ""
+
 #. translators: %s is a field argument.
 #: src/Utils.php:296
+#, php-format
 msgid "Please specify a \"%s\" argument"
 msgstr "Specificeer een “%s” argument"
 
-#: src/Shipping_Method/Settings.php:698
-#: src/Utils.php:617
-msgid "Insured Shipping"
-msgstr "Verzekerd verzenden"
+#: src/Utils.php:613
+msgid "Packet"
+msgstr ""
+
+#: src/Utils.php:616
+msgid "Track & Trace"
+msgstr ""
+
+#: src/Utils.php:618
+msgid "Delivery Code at Door"
+msgstr "Bezorgcode aan de deur"
 
 #: src/Utils.php:626
 msgid "Parcels Non-EU Insured"
@@ -1465,10 +1858,34 @@ msgstr "Non-EU Pakket + Track & Trace + Verzekerd Verzenden"
 msgid "Parcels non-EU Insured Plus"
 msgstr "Non-EU Pakket + Track & Trace + Verzekerd Verzenden Plus"
 
+#: src/Utils.php:633
+msgid "Parcels EU"
+msgstr "Pakketten EU"
+
 #: src/Utils.php:634
 #: src/Utils.php:641
 msgid "Insured Plus"
 msgstr "Verzekerd Verzenden Plus"
+
+#: src/Utils.php:640
+msgid "Parcels Non-EU"
+msgstr "Pakketten non-EU"
+
+#: src/Utils.php:1211
+msgid "Letterboxparcel (24h)"
+msgstr "Brievenbuspakje (24 uur)"
+
+#: src/Utils.php:1222
+msgid "Letterboxparcel (48h)"
+msgstr "Brievenbuspakje (48 uur)"
+
+#: src/Utils.php:1236
+msgid "Letterbox 48"
+msgstr "Brievenbuspakje 48"
+
+#: src/Utils.php:1239
+msgid "Letterbox 24"
+msgstr "Brievenbuspakje 24"
 
 #: templates/checkout/postnl-container.php:23
 #: build/postnl-container-frontend.js:1
@@ -1499,266 +1916,17 @@ msgstr "Zending thuis ontvangen? Maak een selectie uit de bezorgdagen."
 msgid "Vanaf"
 msgstr ""
 
-#: templates/checkout/postnl-fill-in-with-button.php:29
-#: build/postnl-fill-in-with-frontend.js:1
-#: client/checkout/postnl-fill-in-with/block.js:162
-msgid "Your name and address are automatically filled in via your PostNL account. That saves you from having to fill in the form!"
-msgstr "Je naam en adres worden automatisch ingevuld via je PostNL-account. Zo hoef je het formulier niet zelf in te vullen!"
-
-#. Description of the plugin
-#: postnl-for-woocommerce.php
-msgid "The official PostNL plugin allows you to automate your e-commerce order process. Covering shipping services from PostNL Netherlands and Belgium."
-msgstr ""
-
-#: src/Main.php:476
-msgid "Leave a review"
-msgstr "Laat een beoordeling achter"
-
-#: src/Checkout_Blocks/Extend_Block_Core.php:452
-msgid "Postcode or house number is missing."
-msgstr ""
-
-#: src/Emails/WC_Email_Smart_Return.php:43
-msgid "Smart Return Email"
-msgstr ""
-
-#: src/Emails/WC_Email_Smart_Return.php:44
-msgid "This is a smart return email sent for return purposes."
-msgstr ""
-
-#: src/Emails/WC_Email_Smart_Return.php:62
-msgid "[{site_title}]: PostNL Smart Returns"
-msgstr ""
-
-#: src/Emails/WC_Email_Smart_Return.php:72
-msgid "PostNL Smart Returns"
-msgstr ""
-
-#. translators: %s: shop cart url
-#: src/Frontend/Base.php:240
-msgid "Sorry, your session has expired. <a href=\"%s\" class=\"wc-backward\">Return to shop</a>"
-msgstr ""
-
-#: src/Frontend/Delivery_Day.php:115
-#: src/Shipping_Method/Settings.php:336
-#: build/postnl-container-frontend.js:1
-#: client/checkout/postnl-container/block.js:282
-msgid "Delivery"
-msgstr "Bezorgdagen"
-
-#: src/Frontend/Container.php:121
-#: src/Frontend/Dropoff_Points.php:52
-#: build/postnl-container-frontend.js:1
-#: client/checkout/postnl-container/block.js:283
-msgid "Pickup"
-msgstr "Ophalen"
-
-#: src/Frontend/Fill_In_With_Postnl.php:216
-msgid "Invalid or expired nonce."
-msgstr ""
-
-#: src/Frontend/Fill_In_With_Postnl.php:226
-#: src/Frontend/Fill_In_With_Postnl_Handler.php:71
-msgid "Fill in with PostNL is not enabled or Client ID is missing."
-msgstr ""
-
-#: src/Frontend/Fill_In_With_Postnl_Handler.php:68
-msgid "Invalid nonce."
-msgstr ""
-
-#: src/Frontend/Fill_In_With_Postnl_Handler.php:76
-msgid "No user data"
-msgstr ""
-
-#: src/Frontend/Fill_In_With_Postnl_Handler.php:109
-msgid "Login session expired. Please try again."
-msgstr ""
-
-#. translators: %s is the error message from PostNL
-#: src/Frontend/Fill_In_With_Postnl_Handler.php:133
-msgid "PostNL Token Request Error: %s"
-msgstr ""
-
-#: src/Frontend/Fill_In_With_Postnl_Handler.php:146
-msgid "PostNL: Access token not found"
-msgstr ""
-
-#. translators: %s is the error message from PostNL
-#: src/Frontend/Fill_In_With_Postnl_Handler.php:165
-msgid "PostNL User Info Error: %s"
-msgstr ""
-
-#: src/Frontend/Fill_In_With_Postnl_Handler.php:181
-msgid "Incomplete user data."
-msgstr ""
-
-#: src/Helper/Mapping.php:40
-#: src/Shipping_Method/Settings.php:644
-#: src/Utils.php:614
-msgid "Standard Shipment Belgium"
-msgstr "Standaardzending België"
-
-#: src/Main.php:457
-msgid "Postnl Checkout Blocks"
-msgstr ""
-
-#: src/Main.php:496
-msgid "Settings"
-msgstr ""
-
-#: src/Order/Base.php:1071
-msgid "There are no files to merge."
-msgstr ""
-
-#: src/Order/Base.php:1075
-msgid "\"Imagick\" must be installed on the server to merge png files."
-msgstr ""
-
-#: src/Order/Bulk.php:513
-msgid "Pick-up at PostNL"
-msgstr "Ophalen bij PostNL"
-
-#: src/Order/Bulk.php:519
-#: src/Shipping_Method/Settings.php:614
-msgid "Shipping options domestic"
-msgstr "Verzendopties binnenland"
-
-#: src/Order/Bulk.php:546
-msgid "Shipping options non-EU"
-msgstr "Verzendopties Pakketten non-EU"
-
-#: src/Order/Bulk.php:555
-msgid "Shipping options for Pick-up at PostNL"
-msgstr "Verzendopties voor Ophalen bij PostNL"
-
-#: src/Order/Bulk.php:703
-msgid "#%1$s : PostNL label has been created - %2$sdownload file%3$s"
-msgstr ""
-
-#: src/Order/Single.php:624
-msgid "Already activated!"
-msgstr ""
-
-#: src/Order/Single.php:640
-msgid "Unknown error."
-msgstr ""
-
-#. Translators: %s is the error message.
-#: src/Order/Single.php:664
-msgid "Error: %s"
-msgstr ""
-
-#: src/Order/Single.php:720
-msgid "PrintcodeLabel could not found"
-msgstr ""
-
-#: src/Order/Single.php:751
-msgid "Email could not be send"
-msgstr ""
-
-#: src/Order/Single.php:782
-msgid "18+ Adults Only"
-msgstr ""
-
-#: src/Product/Single.php:282
-msgid "“18+” and “Letterbox Parcel” cannot be enabled together. Letterbox has been disabled automatically."
-msgstr "“18+” en “Brievenbuspakje” kunnen niet samen worden ingeschakeld. Brievenbuspakje is automatisch uitgeschakeld."
-
-#: src/Rest_API/Shipment_and_Return/Item_Info.php:82
-msgid "Given id is not an Order"
-msgstr ""
-
-#: src/Rest_API/Shipment_and_Return/Item_Info.php:86
-msgid "Missing barcode"
-msgstr ""
-
-#: src/Rest_API/Shipping/Item_Info.php:610
-msgid "Pickup \"Date\" is empty!"
-msgstr ""
-
-#: src/Rest_API/Shipping/Item_Info.php:626
-msgid "Pickup \"Time\" is empty!"
-msgstr ""
-
-#. Translators: %s is the order total.
-#: src/Rest_API/Shipping/Item_Info.php:1119
-msgid "Insurance amount for EU shipments cannot exceed €5000. Your total is: %d"
-msgstr ""
-
-#: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:74
-msgid "Client ID"
-msgstr ""
-
-#: src/Shipping_Method/Settings.php:252
-msgid "Enter return house number extension."
-msgstr "Vul hier een huisnummertoevoeging in voor het retouradres."
-
-#: src/Shipping_Method/Settings.php:310
-msgid "Extra fee pick-up delivery"
-msgstr "Toeslag ophalen bij PostNL"
-
-#: src/Shipping_Method/Settings.php:312
-msgid "Extra fee added when the customer selects a PostNL pick-up point."
-msgstr "Toeslag wanneer er voor ophalen bij PostNL is gekozen."
-
-#: src/Shipping_Method/Settings.php:346
-msgid "Extra fee home delivery"
-msgstr "Toeslag thuisbezorging"
-
-#: src/Shipping_Method/Settings.php:348
-msgid "Extra fee added when the customer selects home delivery."
-msgstr "Toeslag voor verzendingen naar een huisadres."
-
-#: src/Shipping_Method/Settings.php:549
-msgid "Printer Type"
-msgstr ""
-
-#: src/Shipping_Method/Settings.php:551
-msgid "It is not recommended to send .pdf files/labels directly to a Zebra printer If you want to send it directly to your Zebra printer, please use .gif files or the native (generic) zpl printer type"
-msgstr "Het is af te raden om PDF-bestanden af te drukken met een Zebra-printer. Gebruik voor een Zebra-printer labels in GIF-formaat of in ZPL-formaat"
-
-#: src/Shipping_Method/Settings.php:562
-msgid "DPI"
-msgstr ""
-
-#: src/Shipping_Method/Settings.php:622
-#: src/Shipping_Method/Settings.php:699
-msgid "ID Check (18+) + Insured Shipping"
-msgstr "ID Check (18+) + Verzekerd verzenden"
-
-#: src/Shipping_Method/Settings.php:638
-msgid "Shipping options Belgium"
-msgstr "Standaard verzendopties België"
-
-#: src/Shipping_Method/Settings.php:696
-msgid "Standard Shipping"
-msgstr "Standaardzending"
-
-#: src/Shipping_Method/Settings.php:750
-msgid "Select a default shipping option for the orders shipped internationally (outside the EU borders)."
-msgstr ""
-
-#: src/Utils.php:613
-msgid "Packet"
-msgstr ""
-
-#: src/Utils.php:616
-msgid "Track & Trace"
-msgstr ""
-
-#: src/Utils.php:633
-msgid "Parcels EU"
-msgstr "Pakketten EU"
-
-#: src/Utils.php:640
-msgid "Parcels Non-EU"
-msgstr "Pakketten non-EU"
-
 #: templates/checkout/postnl-fill-in-with-button.php:23
 #: build/postnl-fill-in-with-frontend.js:1
 #: client/checkout/postnl-fill-in-with/block.js:180
 msgid "PostNL Logo"
 msgstr ""
+
+#: templates/checkout/postnl-fill-in-with-button.php:29
+#: build/postnl-fill-in-with-frontend.js:1
+#: client/checkout/postnl-fill-in-with/block.js:162
+msgid "Your name and address are automatically filled in via your PostNL account. That saves you from having to fill in the form!"
+msgstr "Je naam en adres worden automatisch ingevuld via je PostNL-account. Zo hoef je het formulier niet zelf in te vullen!"
 
 #. translators: %s: Order number
 #: templates/emails/plain/smart-return-email.php:27
@@ -1808,148 +1976,3 @@ msgstr ""
 msgctxt "block description"
 msgid "Fill in address with PostNL account"
 msgstr ""
-
-#: src/Shipping_Method/Settings.php:584
-msgid "Shipping confirmation e-mail address"
-msgstr "E-mailadres verzendbewijzen"
-
-#: src/Shipping_Method/Settings.php:586
-msgid "This e-mail address will be used by PostNL for shipping confirmations. If left empty, no sender e-mail will be included."
-msgstr "Dit e-mailadres zal worden gebruikt voor de verzendbewijzen voor de verzender. Indien hier niets ingevuld wordt zal de verzender geen digitaal bewijs van verzending ontvangen."
-
-#: src/Product/Product_Editor.php:48
-msgid "Mark as 18+ (Adults Only)"
-msgstr ""
-
-#: src/Product/Product_Editor.php:50
-#: src/Product/Single.php:94
-msgid "Enable this for products intended only for adults (18+)."
-msgstr ""
-
-#. translators: %s will be replaced by service name.
-#: src/Product/Single.php:93
-msgid "Mark as 18+ (Adults Only) (%s)"
-msgstr ""
-
-#: src/Shipping_Method/Settings.php:535
-msgid "Merchant Customs Code"
-msgstr "Handelsdouanecode"
-
-#: src/Shipping_Method/Settings.php:537
-msgid "Add merchant codes for specific non-EU countries."
-msgstr "Voeg handelscodes toe voor specifieke landen buiten de EU."
-
-#: src/Shipping_Method/PostNL.php:186
-msgid "Country"
-msgstr "Land"
-
-#: src/Shipping_Method/PostNL.php:189
-msgid "Merchant Code"
-msgstr "Verkoperscode"
-
-#: src/Shipping_Method/PostNL.php:192
-msgid "Action"
-msgstr "Actie"
-
-#: src/Shipping_Method/PostNL.php:203
-#: src/Shipping_Method/PostNL.php:243
-msgid "Select Country"
-msgstr "Selecteer land"
-
-#: src/Shipping_Method/PostNL.php:215
-#: src/Shipping_Method/PostNL.php:255
-msgid "Enter merchant code"
-msgstr "Voer de verkoperscode in"
-
-#: src/Shipping_Method/PostNL.php:220
-#: src/Shipping_Method/PostNL.php:260
-msgid "Remove"
-msgstr "Verwijderen"
-
-#: src/Shipping_Method/PostNL.php:229
-msgid "Add Merchant Code"
-msgstr "Verkoperscode toevoegen"
-
-#: src/Shipping_Method/PostNL.php:291
-msgid "Duplicate countries found and have been removed. Only the last entry for each country will be saved."
-msgstr ""
-
-#: src/Shipping_Method/PostNL.php:310
-msgid "Some merchant codes were not saved because of missing country or code."
-msgstr ""
-
-#: src/Order/Base.php:273
-msgid "Delivery code at the door: "
-msgstr "Bezorgcode aan de deur: "
-
-#: src/Shipping_Method/Settings.php:634
-msgid "Delivery Code at Door + Insured Shipping"
-msgstr "Bezorgcode aan de deur + Verzekerd verzenden"
-
-#: src/Utils.php:618
-msgid "Delivery Code at Door"
-msgstr "Bezorgcode aan de deur"
-
-#: src/Frontend/Container.php:120
-msgid "Delivery Days"
-msgstr "Bezorgdagen"
-
-#: src/Shipping_Method/Settings.php:209
-msgid "Activate this setting to use a home address for return shipments"
-msgstr ""
-
-#: src/Shipping_Method/Settings.php:411
-msgid "Default Delivery Options Tab"
-msgstr ""
-
-#: src/Shipping_Method/Settings.php:413
-msgid "Choose which tab is shown first in the delivery options menu at checkout."
-msgstr ""
-
-#: src/Shipping_Method/Settings.php:417
-msgid "Home Delivery"
-msgstr ""
-
-#: src/Shipping_Method/Settings.php:418
-msgid "Pickup Points"
-msgstr ""
-
-#: src/Shipping_Method/Settings.php:292
-msgid "Extra fee for the letterboxparcel (24 hours)"
-msgstr "Toeslag voor het brievenbuspakje (24 uur)"
-
-#: src/Shipping_Method/Settings.php:294
-msgid "Extra fee added when Letterboxparcel Standard (24 hours) has been selected."
-msgstr "Toeslag die wordt toegevoegd wanneer Brievenbuspakje standaard (24 uur) is geselecteerd."
-
-#: src/Shipping_Method/Settings.php:354
-msgid "Letterbox fee"
-msgstr "Toeslag brievenbuspakje"
-
-#: src/Shipping_Method/Settings.php:356
-msgid "Overrides the shipping cost when all items are eligible for letterbox delivery. Leave empty to use the standard shipping cost. The fee is set to €0 when free shipping applies."
-msgstr "Vervangt de verzendkosten wanneer alle artikelen in aanmerking komen voor bezorging als brievenbuspakje. Laat leeg om de standaard verzendkosten te gebruiken. De toeslag wordt op €0 gezet wanneer gratis verzending van toepassing is."
-
-#: src/Shipping_Method/Settings.php:703
-msgid "Default automatic letterboxparcel product"
-msgstr "Standaard verzendoptie voor automatische brievenbuspakjes"
-
-#: src/Shipping_Method/Settings.php:709
-msgid "Letterboxparcel Standard (24 hours)"
-msgstr "Brievenbuspakje standaard (24 uur)"
-
-#: src/Shipping_Method/Settings.php:710
-msgid "Letterboxparcel 48 hours"
-msgstr "Brievenbuspakje 48 uur"
-
-#: src/Shipping_Method/Settings.php:711
-msgid "Let customer decide"
-msgstr "Keuze aan ontvanger"
-
-#: src/Utils.php:1211
-msgid "Letterboxparcel (24h)"
-msgstr "Brievenbuspakje (24 uur)"
-
-#: src/Utils.php:1222
-msgid "Letterboxparcel (48h)"
-msgstr "Brievenbuspakje (48 uur)"

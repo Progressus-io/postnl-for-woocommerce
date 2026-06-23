@@ -296,6 +296,14 @@ class Settings extends \WC_Settings_API {
 				'for_country' => array( 'NL' ),
 				'class'       => 'wc_input_price country-nl',
 			),
+			'letterbox_fee'                   => array(
+				'title'       => __( 'Letterbox fee', 'postnl-for-woocommerce' ),
+				'type'        => 'price',
+				'description' => __( 'Overrides the shipping cost when all items are eligible for letterbox delivery. Leave empty to use the standard shipping cost. The fee is set to €0 when free shipping applies.', 'postnl-for-woocommerce' ),
+				'desc_tip'    => true,
+				'for_country' => array( 'NL' ),
+				'class'       => 'wc_input_price country-nl',
+			),
 			'enable_pickup_points'            => array(
 				'title'       => __( 'PostNL Pick-up Points', 'postnl-for-woocommerce' ),
 				'type'        => 'checkbox',
@@ -349,14 +357,6 @@ class Settings extends \WC_Settings_API {
 				'desc_tip'    => true,
 				'for_country' => array( 'NL', 'BE' ),
 				'class'       => 'wc_input_price country-nl country-be',
-			),
-			'letterbox_fee'                   => array(
-				'title'       => __( 'Letterbox fee', 'postnl-for-woocommerce' ),
-				'type'        => 'price',
-				'description' => __( 'Overrides the shipping cost when all items are eligible for letterbox delivery. Leave empty to use the standard shipping cost. The fee is set to €0 when free shipping applies.', 'postnl-for-woocommerce' ),
-				'desc_tip'    => true,
-				'for_country' => array( 'NL' ),
-				'class'       => 'wc_input_price country-nl',
 			),
 			'number_delivery_days'            => array(
 				'title'             => __( 'Number of Delivery Days', 'postnl-for-woocommerce' ),

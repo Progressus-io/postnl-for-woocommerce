@@ -90,6 +90,7 @@ Follow these instructions (https://www.postnl.nl/Images/aanvragen-api-key-stappe
 * Tweak: Note in the Standard return option that the Shipment & Return label will be discontinued on July 1.
 * Fix: Hide delivery-day, morning and evening surcharges when free shipping applies, including PostNL's minimum-order-amount threshold.
 * Fix: Prevent duplicate PostNL delivery options container from appearing during blocks checkout fragment updates.
+* Fix: House number disappearing from blocks checkout when "Use PostNL address-field" and "Validate Dutch addresses" are both disabled.
 * Fix: "Invullen met PostNL" now correctly sets the country to Belgium instead of Netherlands for Belgian PostNL accounts.
 * Fix: "Invullen met PostNL" no longer fills the checkout with a previously used PostNL account's address after switching accounts or an incomplete login.
 * Fix: Update Dutch translations.

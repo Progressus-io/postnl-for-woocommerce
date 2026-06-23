@@ -101,6 +101,11 @@ class Fill_In_With_Postnl_Handler {
 			exit;
 		}
 
+		// A genuine login is being processed. Drop any address cached from a
+		// previous PostNL account so a failed or abandoned attempt cannot leave
+		// the wrong account's data behind for the checkout autofill to replay.
+		WC()->session->__unset( POSTNL_SETTINGS_ID . self::$session_user_data_key );
+
 		$code     = sanitize_text_field( wp_unslash( $_GET['code'] ) );
 		$verifier = get_transient( 'postnl_' . self::$session_verifier_key );
 

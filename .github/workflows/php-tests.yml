@@ -1,0 +1,49 @@
+name: PHP Tests
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  # Runs both PHPUnit suites inside the wp-env tests-cli container.
+  # Requires Node.js, Docker, and Composer on the runner.
+  php-tests:
+    name: PHPUnit (unit + integration)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'npm'
+
+      - name: Install npm dependencies
+        run: npm ci --prefer-offline
+
+      # vendor/autoload.php must exist before wp-env starts, because wp-env
+      # activates the plugin via WP-CLI during startup and the plugin bootstrap
+      # requires the autoloader immediately. The action caches the Composer
+      # download cache (keyed on composer.lock) and then runs composer install;
+      # the resulting vendor/ tree is mounted into the tests-cli container by
+      # wp-env alongside the plugin source.
+      - name: Install Composer dependencies
+        uses: ramsey/composer-install@v3
+
+      - name: Start wp-env
+        run: npm run env start
+
+      - name: Unit tests
+        run: npm run test:php:unit
+
+      - name: Integration tests
+        run: npm run test:php:integration
+
+      - name: Stop wp-env
+        if: always()
+        run: npm run env stop

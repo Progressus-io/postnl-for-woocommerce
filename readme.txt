@@ -7,7 +7,7 @@ Requires at least: 6.7
 Tested up to: 6.9
 WC requires at least: 10.2
 WC tested up to: 10.5
-Stable tag: 5.9.5
+Stable tag: 5.9.6
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -81,7 +81,7 @@ Follow these instructions (https://www.postnl.nl/Images/aanvragen-api-key-stappe
 
 == Changelog ==
 
-= 5.9.6 (2026-xx-xx) =
+= 5.9.6 (2026-06-24) =
 * Add: Letterbox Parcel now offers 24-hour and 48-hour delivery variants at checkout, selectable by the customer or assigned automatically.
 * Add: New "Default automatic letterboxparcel product" setting to choose the default letterbox variant (24 or 48 hours) for automatic assignment.
 * Add: New "Letterbox fee" setting that overrides the shipping cost when all items are eligible for letterbox delivery, plus an extra fee field for the 24-hour variant.

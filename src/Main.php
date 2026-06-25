@@ -190,6 +190,8 @@ class Main {
 	 * PostNL discontinues the Shipment & Return Label product on 1 July 2026.
 	 * Stores that still have it selected are reverted to "None" so outbound
 	 * label generation does not fail against the API. Runs once per install.
+	 *
+	 * @since 5.9.7
 	 */
 	public function maybe_revert_discontinued_return_option() {
 		if ( 'done' === get_option( 'postnl_shipping_return_reverted' ) ) {
@@ -197,13 +199,18 @@ class Main {
 		}
 
 		$settings = get_option( 'woocommerce_postnl_settings', array() );
+		$reverted = true;
 
-		if ( is_array( $settings ) && isset( $settings['return_shipment_and_labels'] ) && 'shipping_return' === $settings['return_shipment_and_labels'] ) {
+		if ( is_array( $settings ) && 'shipping_return' === ( $settings['return_shipment_and_labels'] ?? null ) ) {
 			$settings['return_shipment_and_labels'] = 'none';
-			update_option( 'woocommerce_postnl_settings', $settings );
+			$reverted                               = update_option( 'woocommerce_postnl_settings', $settings );
 		}
 
-		update_option( 'postnl_shipping_return_reverted', 'done' );
+		// Only mark the migration complete when nothing needed reverting or the
+		// revert write succeeded, so a failed write retries on the next request.
+		if ( $reverted ) {
+			update_option( 'postnl_shipping_return_reverted', 'done' );
+		}
 	}
 
 	/**

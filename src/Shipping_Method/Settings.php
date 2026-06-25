@@ -1034,10 +1034,17 @@ class Settings extends \WC_Settings_API {
 	/**
 	 * Get return shipment and labels select value.
 	 *
+	 * PostNL discontinues the "Shipment & Return" label product on 1 July 2026.
+	 * Any value still stored as 'shipping_return' is coerced to 'none' at read
+	 * time so outbound label generation never requests the discontinued product,
+	 * even on stores the one-time revert migration has not reached.
+	 *
 	 * @return String
 	 */
 	public function get_return_shipment_and_labels() {
-		return $this->get_country_option( 'return_shipment_and_labels', '' );
+		$value = $this->get_country_option( 'return_shipment_and_labels', '' );
+
+		return 'shipping_return' === $value ? 'none' : $value;
 	}
 
 	/**

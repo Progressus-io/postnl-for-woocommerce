@@ -104,6 +104,7 @@ jobs:
           COMPOSER_AUTH: ${{ secrets.POSTNL_PRIVATE_PACKAGIST_AUTH }}
 
       - name: Assert no auth.json written by Composer (dev install)
+        shell: bash
         run: |
           # Scan only where Composer writes auth.json: project root + Composer home.
           SCAN_DIRS=("$GITHUB_WORKSPACE")
@@ -139,6 +140,7 @@ jobs:
           COMPOSER_AUTH: ${{ secrets.POSTNL_PRIVATE_PACKAGIST_AUTH }}
 
       - name: Assert no auth.json written by Composer (production install)
+        shell: bash
         run: |
           # Scan only where Composer writes auth.json: project root + Composer home.
           SCAN_DIRS=("$GITHUB_WORKSPACE")
@@ -195,6 +197,7 @@ jobs:
 
       # All paths: assert no credential files slipped in AND SDK source shipped
       - name: Verify ZIP credentials and SDK presence
+        shell: bash
         run: |
           ZIP_PATH="${{ steps.build_zip.outputs.zip-path }}"
           VERIFY_DIR="$RUNNER_TEMP/zip_cred_verify"

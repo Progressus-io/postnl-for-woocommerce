@@ -40,6 +40,7 @@ jobs:
           COMPOSER_AUTH: ${{ secrets.POSTNL_PRIVATE_PACKAGIST_AUTH }}
 
       - name: Assert no auth.json written by Composer
+        shell: bash
         run: |
           # Scan only where Composer writes auth.json: project root + Composer home.
           SCAN_DIRS=("$GITHUB_WORKSPACE")

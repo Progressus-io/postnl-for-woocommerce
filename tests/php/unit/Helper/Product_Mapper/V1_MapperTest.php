@@ -20,8 +20,9 @@ use PostNLWooCommerce\Tests\UnitTestCase;
  * derived from the original Mapping.php data. None of the expected values are
  * generated at runtime from V1_Mapper itself.
  *
- * Combination count: 88 total across all origin × destination × service entries.
- * (The task description estimated 72; the actual tally from Mapping.php is 88.)
+ * Combination count: 89 total across all origin × destination × service entries.
+ * (The task description estimated 72; the actual tally from Mapping.php is 89,
+ * including letterbox_48 → 2948 from the Letterbox 24h/48h feature.)
  *
  * @covers \PostNLWooCommerce\Helper\Product_Mapper\V1_Mapper
  */
@@ -59,7 +60,7 @@ class V1_MapperTest extends UnitTestCase {
 	// -------------------------------------------------------------------------
 
 	/**
-	 * @testdox products_data() contains exactly 88 combination entries across all zones
+	 * @testdox products_data() contains exactly 89 combination entries across all zones
 	 */
 	public function test_products_data_total_combination_count(): void {
 		$data  = V1_Mapper::products_data();
@@ -72,9 +73,9 @@ class V1_MapperTest extends UnitTestCase {
 			}
 		}
 		$this->assertSame(
-			88,
+			89,
 			$count,
-			'products_data() must contain exactly 88 combination entries (V1 golden-master count).'
+			'products_data() must contain exactly 89 combination entries (V1 golden-master count).'
 		);
 	}
 
@@ -307,6 +308,9 @@ class V1_MapperTest extends UnitTestCase {
 
 			'NL→NL/dd: [letterbox] → 2928'
 				=> array( 'NL', 'NL', 'delivery_day', array( 'letterbox' ), '2928', array() ),
+
+			'NL→NL/dd: [letterbox_48] → 2948'
+				=> array( 'NL', 'NL', 'delivery_day', array( 'letterbox_48' ), '2948', array() ),
 
 			'NL→NL/dd: [id_check] → 3438'
 				=> array( 'NL', 'NL', 'delivery_day', array( 'id_check' ), '3438', $id_check_opt ),
@@ -589,7 +593,7 @@ class V1_MapperTest extends UnitTestCase {
 				=> array( 'BE', 'ROW', 'delivery_day', array( 'track_and_trace', 'insured_plus' ), '4909', $gp_insured_plus_opts ),
 
 		);
-		// Total: 20 + 4 + 16 + 1 + 9 + 1 + 8 + 1 + 5 + 2 + 7 + 2 + 9 + 3 = 88
+		// Total: 21 + 4 + 16 + 1 + 9 + 1 + 8 + 1 + 5 + 2 + 7 + 2 + 9 + 3 = 89
 	}
 
 	// -------------------------------------------------------------------------

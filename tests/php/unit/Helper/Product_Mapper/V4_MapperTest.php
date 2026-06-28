@@ -14,12 +14,12 @@ use PostNLWooCommerce\Helper\Product_Mapper\V4_Mapper;
 use PostNLWooCommerce\Tests\UnitTestCase;
 
 /**
- * Exhaustive tests for V4_Mapper, driven by the 88-row combination matrix.
+ * Exhaustive tests for V4_Mapper, driven by the 89-row combination matrix.
  *
  * Coverage:
- *  - Total row count = 88 (from provider data and from runtime calls)
+ *  - Total row count = 89 (from provider data and from runtime calls)
  *  - has_v4_equivalent true  count = 28 (provider + runtime)
- *  - has_v4_equivalent false count = 60 (provider + runtime)
+ *  - has_v4_equivalent false count = 61 (provider + runtime)
  *  - All v4_mapped rows: expected shipmentType / services / deliveryLocation / internationalShipmentData
  *  - All legacy_only rows: reason = not_yet_available_in_v4
  *  - All needs_confirmation rows: reason = needs_confirmation
@@ -30,7 +30,7 @@ use PostNLWooCommerce\Tests\UnitTestCase;
  *    explicit Legacy-only reason, never REASON_UNKNOWN_COMBINATION
  *  - SDK bundle gap marker and the load-bearing not-yet-available guard
  *
- * Source: PostNL Product Overview documentation; the 88 rows mirror V1_Mapper::products_data().
+ * Source: PostNL Product Overview documentation; the 89 rows mirror V1_Mapper::products_data().
  *
  * @covers \PostNLWooCommerce\Helper\Product_Mapper\V4_Mapper
  */
@@ -41,10 +41,10 @@ class V4_MapperTest extends UnitTestCase {
 	// =========================================================================
 
 	/**
-	 * @testdox combination_matrix_provider() covers exactly 88 rows
+	 * @testdox combination_matrix_provider() covers exactly 89 rows
 	 */
 	public function test_total_covered_rows(): void {
-		$this->assertCount( 88, self::combination_matrix_provider() );
+		$this->assertCount( 89, self::combination_matrix_provider() );
 	}
 
 	/**
@@ -61,7 +61,7 @@ class V4_MapperTest extends UnitTestCase {
 	}
 
 	/**
-	 * @testdox Provider expected data: has_v4_equivalent false count = 60
+	 * @testdox Provider expected data: has_v4_equivalent false count = 61
 	 */
 	public function test_provider_v4_equivalent_false_count(): void {
 		$count = 0;
@@ -70,7 +70,7 @@ class V4_MapperTest extends UnitTestCase {
 				$count++;
 			}
 		}
-		$this->assertSame( 60, $count, 'Exactly 60 rows must be marked has_v4_equivalent=false.' );
+		$this->assertSame( 61, $count, 'Exactly 61 rows must be marked has_v4_equivalent=false.' );
 	}
 
 	// =========================================================================
@@ -91,7 +91,7 @@ class V4_MapperTest extends UnitTestCase {
 	}
 
 	/**
-	 * @testdox Runtime: V4_Mapper::has_v4_equivalent() returns false for exactly 60 provider inputs
+	 * @testdox Runtime: V4_Mapper::has_v4_equivalent() returns false for exactly 61 provider inputs
 	 */
 	public function test_runtime_v4_equivalent_false_count(): void {
 		$count = 0;
@@ -100,7 +100,7 @@ class V4_MapperTest extends UnitTestCase {
 				$count++;
 			}
 		}
-		$this->assertSame( 60, $count );
+		$this->assertSame( 61, $count );
 	}
 
 	// =========================================================================
@@ -365,10 +365,10 @@ class V4_MapperTest extends UnitTestCase {
 	}
 
 	/**
-	 * @testdox V1_Mapper::products_data() flattens to exactly 88 combinations (binds V1 source to matrix)
+	 * @testdox V1_Mapper::products_data() flattens to exactly 89 combinations (binds V1 source to matrix)
 	 */
-	public function test_v1_products_data_covers_88_combinations(): void {
-		$this->assertCount( 88, self::v1_combinations() );
+	public function test_v1_products_data_covers_89_combinations(): void {
+		$this->assertCount( 89, self::v1_combinations() );
 	}
 
 	/**
@@ -609,6 +609,11 @@ class V4_MapperTest extends UnitTestCase {
 				=> array(
 					array( 'origin' => 'NL', 'destination' => 'NL', 'flow' => 'delivery_day', 'options' => array( 'letterbox' ) ),
 					$v4( 12, '2928', 'letterbox' ),
+				),
+			'NL→NL/dd row 89: [letterbox_48] needs_confirmation'
+				=> array(
+					array( 'origin' => 'NL', 'destination' => 'NL', 'flow' => 'delivery_day', 'options' => array( 'letterbox_48' ) ),
+					$leg( 89, '2948', $nc ),
 				),
 			'NL→NL/dd row 13: [id_check] needs_confirmation'
 				=> array(

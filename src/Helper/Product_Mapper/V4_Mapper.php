@@ -259,6 +259,8 @@ class V4_Mapper {
 							)
 						),
 						'letterbox'                      => self::v4_result( 12, '2928', 'letterbox' ),
+						// letterbox_48 (2948, 48h Letterbox): V4 shape unconfirmed against the portal — keep on Legacy.
+						'letterbox_48'                   => self::legacy_result( 89, '2948', $nc ),
 						'id_check'                       => self::legacy_result( 13, '3438', $nc ),
 						'id_check+signature_on_delivery' => self::legacy_result( 14, '3438', $nc ),
 						'id_check+only_home_address'     => self::legacy_result( 15, '3438', $nc ),

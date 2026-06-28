@@ -23,7 +23,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  *       'legacy_product_code' => optional string,
  *   )
  *
- * Runtime outcomes: has_v4_equivalent = true (28 rows) or false (60 rows).
+ * Runtime outcomes: has_v4_equivalent = true (28 rows) or false (61 rows).
  * needs_confirmation rows behave as Legacy-only at runtime until promoted to v4_mapped.
  *
  * Not-yet-available codes are always Legacy-only; see NOT_YET_AVAILABLE_CODES.
@@ -170,7 +170,7 @@ class V4_Mapper {
 	}
 
 	/**
-	 * 88-row combination matrix indexed for O(1) lookup.
+	 * 89-row combination matrix indexed for O(1) lookup.
 	 *
 	 * @return array
 	 */

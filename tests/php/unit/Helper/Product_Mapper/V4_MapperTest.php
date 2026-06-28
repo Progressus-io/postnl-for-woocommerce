@@ -466,7 +466,7 @@ class V4_MapperTest extends UnitTestCase {
 	}
 
 	// =========================================================================
-	// Per-row assertions (data provider — all 88 rows)
+	// Per-row assertions (data provider — all 89 rows)
 	// =========================================================================
 
 	/**
@@ -500,11 +500,11 @@ class V4_MapperTest extends UnitTestCase {
 	}
 
 	// =========================================================================
-	// Data provider — all 88 rows
+	// Data provider — all 89 rows
 	// =========================================================================
 
 	/**
-	 * All 88 combinations mirroring V1_Mapper::products_data().
+	 * All 89 combinations mirroring V1_Mapper::products_data().
 	 *
 	 * Format: [ input_combination, expected_result_fields ]
 	 * Options are in V1_Mapper natural order to verify options_key() normalises via sort().
@@ -1062,7 +1062,8 @@ class V4_MapperTest extends UnitTestCase {
 				),
 
 		);
-		// Total: NL→NL 20+4 + NL→BE 16+1 + NL→EU 9+1 + NL→ROW 8+1
-		//      + BE→BE 5+2  + BE→NL 7+2  + BE→EU 9   + BE→ROW 3 = 88
+		// Total: NL→NL 21+4 + NL→BE 16+1 + NL→EU 9+1 + NL→ROW 8+1
+		//      + BE→BE 5+2  + BE→NL 7+2  + BE→EU 9   + BE→ROW 3 = 89
+		//      (NL→NL delivery_day includes row 89 letterbox_48)
 	}
 }

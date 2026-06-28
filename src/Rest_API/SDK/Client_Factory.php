@@ -67,22 +67,23 @@ class Client_Factory {
 	 * Return a configured SDK client for the given V4 API key and environment.
 	 *
 	 * Repeated calls with the same arguments return the same memoized instance.
-	 * The raw V4 key is hashed before it is used as the cache key so it cannot
-	 * appear in logs, var_dump output, or exception stack traces.
+	 * The raw V4 key is hashed before it is used as the cache key so it is never
+	 * stored as a visible array key. The SDK marks the key argument
+	 * #[SensitiveParameter], which keeps it out of exception stack traces.
 	 *
 	 * @param string $v4_key     PostNL V4 API key.
 	 * @param bool   $is_sandbox Whether to target the sandbox environment.
 	 * @return PostnlClientInterface
+	 *
+	 * @since 5.9.6
 	 */
 	public function build( string $v4_key, bool $is_sandbox ): PostnlClientInterface {
-		$customer_number = $this->settings->get_customer_num();
-		$customer_code   = $this->settings->get_customer_code();
+		$customer_number = (string) $this->settings->get_customer_num();
+		$customer_code   = (string) $this->settings->get_customer_code();
 
 		$cache_key = sha1( $v4_key ) . '|' . ( $is_sandbox ? '1' : '0' ) . '|' . $customer_number . '|' . $customer_code;
 
-		if ( ! isset( $this->memo[ $cache_key ] ) ) {
-			$this->memo[ $cache_key ] = $this->make_builder( $v4_key, $is_sandbox, $customer_number, $customer_code )->make();
-		}
+		$this->memo[ $cache_key ] ??= $this->make_builder( $v4_key, $is_sandbox, $customer_number, $customer_code )->make();
 
 		return $this->memo[ $cache_key ];
 	}
@@ -99,6 +100,8 @@ class Client_Factory {
 	 * @param string $customer_number PostNL customer number from settings.
 	 * @param string $customer_code   PostNL customer code from settings.
 	 * @return ClientBuilder
+	 *
+	 * @since 5.9.6
 	 */
 	protected function make_builder(
 		string $v4_key,

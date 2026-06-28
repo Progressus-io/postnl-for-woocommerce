@@ -166,6 +166,60 @@ class Client_FactoryTest extends UnitTestCase {
 	}
 
 	/**
+	 * @testdox Changing customer credentials on the same factory returns a distinct client
+	 *
+	 * Guards the customer_number|customer_code dimension of the memoization key.
+	 * A mutable settings stub is used so both builds run against the SAME factory
+	 * instance — if the credentials were dropped from the cache key, both calls
+	 * would hit the same memo entry and the assertion would fail.
+	 */
+	public function test_changing_customer_credentials_returns_different_instance(): void {
+		$settings = new class() {
+			public string $num  = '11111111';
+			public string $code = 'AAA';
+
+			public function get_customer_num(): string {
+				return $this->num;
+			}
+
+			public function get_customer_code(): string {
+				return $this->code;
+			}
+		};
+
+		$factory = new Client_Factory( $settings );
+		$a       = $factory->build( 'key', false );
+
+		$settings->num  = '22222222';
+		$settings->code = 'BBB';
+		$b              = $factory->build( 'key', false );
+
+		$this->assertNotSame( $a, $b );
+	}
+
+	/**
+	 * @testdox build() coerces non-string customer settings instead of throwing a TypeError
+	 *
+	 * get_customer_num()/get_customer_code() return get_option() output, which may
+	 * be unset (null) or stored as an integer. build() must cast these before
+	 * forwarding to the strict-typed builder, so a misconfigured store cannot fatal.
+	 */
+	public function test_build_coerces_non_string_customer_settings(): void {
+		$settings = new class() {
+			public function get_customer_num() {
+				return 12345678;
+			}
+
+			public function get_customer_code() {
+				return null;
+			}
+		};
+
+		$factory = new Client_Factory( $settings );
+		$this->assertInstanceOf( PostnlClientInterface::class, $factory->build( 'key', false ) );
+	}
+
+	/**
 	 * @testdox Client_Factory does not configure or reference MessageID
 	 *
 	 * MessageID is a V1-only field.  V4 has no MessageID concept.

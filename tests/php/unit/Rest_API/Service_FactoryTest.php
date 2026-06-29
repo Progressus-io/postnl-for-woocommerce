@@ -442,4 +442,31 @@ class Service_FactoryTest extends UnitTestCase {
 
 		$this->assertSame( $timeframe, $pickup );
 	}
+
+	/**
+	 * @testdox Each lazily-built Legacy service getter memoizes — repeated calls return the same instance
+	 *
+	 * Covers the stateless flows the factory constructs directly. The Order\Base-extending
+	 * flows (label/letterbox/return_label) are pre-seeded stubs in unit context (see scenarios
+	 * above), so their memoization is exercised there rather than here.
+	 */
+	public function test_lazy_service_getters_are_memoized(): void {
+		$factory = new Service_Factory( null );
+
+		$getters = array(
+			'barcode_service',
+			'smart_returns_service',
+			'postcode_check_service',
+			'timeframe_service',
+			'pickup_location_service',
+		);
+
+		foreach ( $getters as $getter ) {
+			$this->assertSame(
+				$factory->$getter(),
+				$factory->$getter(),
+				"{$getter}() must return the same memoized instance on repeated calls."
+			);
+		}
+	}
 }

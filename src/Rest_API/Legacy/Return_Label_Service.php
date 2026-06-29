@@ -21,9 +21,10 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * Legacy service wrapper implementing Return_Label_Service_Interface.
  *
- * - create(): delegates to Order\Base::maybe_create_return_label() so the full
- *   pipeline (Return_Label\Client → put_label_content → maybe_merge_labels with
- *   type 'return-label') is used without duplicating any logic.
+ * - create(): delegates to Order\Base::maybe_create_return_label_pipeline() so
+ *   the full pipeline (Return_Label\Client → put_label_content →
+ *   maybe_merge_labels with type 'return-label') is used without duplicating any
+ *   logic.
  *
  * - activate(): wraps Shipment_and_Return\Client which calls the PostNL
  *   /parcels/v1/shipment/activatereturn endpoint.  This mirrors what
@@ -45,12 +46,14 @@ class Return_Label_Service extends Order_Base implements Return_Label_Service_In
 	/**
 	 * Create a PostNL return label and return the normalized label record.
 	 *
-	 * Delegates to Order\Base::maybe_create_return_label(), which uses the
-	 * Return_Label\Client pipeline and returns the normalized labels array ready
-	 * to be stored as _postnl_order_metadata['labels'].
+	 * Delegates to Order\Base::maybe_create_return_label_pipeline() — not the
+	 * public maybe_create_return_label() — because this service extends Order\Base
+	 * and that public method now routes through the factory; calling it here would
+	 * recurse. The pipeline uses the Return_Label\Client and returns the normalized
+	 * labels array ready to be stored as _postnl_order_metadata['labels'].
 	 *
 	 * Callers must ensure $post_data['saved_data']['backend']['create_return_label'] === 'yes'
-	 * so the pipeline guard inside maybe_create_return_label() does not short-circuit.
+	 * so the pipeline guard inside maybe_create_return_label_pipeline() does not short-circuit.
 	 *
 	 * @param array $post_data Context needed to build and send the return label request.
 	 *
@@ -59,7 +62,7 @@ class Return_Label_Service extends Order_Base implements Return_Label_Service_In
 	 * @throws \Exception If the API request fails or the label array is empty.
 	 */
 	public function create( array $post_data ): array {
-		return $this->maybe_create_return_label( $post_data );
+		return $this->maybe_create_return_label_pipeline( $post_data );
 	}
 
 	/**

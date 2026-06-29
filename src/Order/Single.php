@@ -7,10 +7,6 @@
 
 namespace PostNLWooCommerce\Order;
 
-use PostNLWooCommerce\Rest_API\Shipment_and_Return\Item_Info;
-use PostNLWooCommerce\Rest_API\Shipment_and_Return\Client;
-use PostNLWooCommerce\Rest_API\Smart_Returns\Item_Info as smart_info;
-use PostNLWooCommerce\Rest_API\Smart_Returns\Client as smart_client;
 use PostNLWooCommerce\Utils;
 use PostNLWooCommerce\Helper\Mapping;
 use WC_Order_Item;
@@ -624,9 +620,7 @@ class Single extends Base {
 				throw new \Exception( esc_html__( 'Already activated!', 'postnl-for-woocommerce' ) );
 			}
 
-			$item_info = new Item_Info( $order_id );
-			$api_call  = new Client( $item_info );
-			$response  = $api_call->send_request();
+			$response = $this->service_factory()->return_label_service()->activate( (int) $order_id );
 
 			if ( ! empty( $response['successFulBarcodes'] ) && is_array( $response['successFulBarcodes'] ) ) {
 				$order->update_meta_data( $this->is_return_activated_meta, 'yes' );
@@ -693,9 +687,7 @@ class Single extends Base {
 				throw new \Exception( esc_html__( 'Order does not exist!', 'postnl-for-woocommerce' ) );
 			}
 
-			$item_info = new smart_info( $order );
-			$api_call  = new smart_client( $item_info );
-			$response  = $api_call->send_request();
+			$response = $this->service_factory()->smart_returns_service()->generate( $order );
 			if ( ! empty( $response ) ) {
 				$printcodeLabelContent = null;
 

@@ -9,8 +9,7 @@ namespace PostNLWooCommerce\Frontend;
 
 use PostNLWooCommerce\Address_Utils;
 use PostNLWooCommerce\Shipping_Method\Settings;
-use PostNLWooCommerce\Rest_API\Checkout;
-use PostNLWooCommerce\Rest_API\Postcode_Check;
+use PostNLWooCommerce\Rest_API\Service_Factory;
 use PostNLWooCommerce\Utils;
 use PostNLWooCommerce\Helper\Mapping;
 use PostNLWooCommerce\Frontend\Checkout_Fields;
@@ -31,6 +30,13 @@ class Container {
 	 * @var PostNLWooCommerce\Shipping_Method\Settings
 	 */
 	protected $settings;
+
+	/**
+	 * Lazy-initialised Service_Factory instance.
+	 *
+	 * @var Service_Factory|null
+	 */
+	private $service_factory_instance = null;
 
 	/**
 	 * Tab field name.
@@ -75,6 +81,18 @@ class Container {
 		}
 		add_filter( 'woocommerce_package_rates', array( $this, 'inject_letterbox_rates_for_all_methods' ), 15, 2 );
 		add_filter( 'woocommerce_cart_shipping_packages', array( $this, 'add_postnl_option_to_package' ) );
+	}
+
+	/**
+	 * Return a lazy-initialised Service_Factory instance.
+	 *
+	 * @return Service_Factory
+	 */
+	private function service_factory(): Service_Factory {
+		if ( null === $this->service_factory_instance ) {
+			$this->service_factory_instance = new Service_Factory( $this->settings );
+		}
+		return $this->service_factory_instance;
 	}
 
 	/**
@@ -181,9 +199,7 @@ class Container {
 	 * @throws \Exception If the checkout data process has error.
 	 */
 	public function get_checkout_data( $post_data ) {
-		$item_info = new Checkout\Item_Info( $post_data );
-		$api_call  = new Checkout\Client( $item_info );
-		$response  = $api_call->send_request();
+		$response  = $this->service_factory()->timeframe_service()->get_delivery_options( $post_data );
 		$letterbox = Utils::is_cart_eligible_auto_letterbox( \WC()->cart );
 
 		return array(
@@ -476,9 +492,7 @@ class Container {
 	 * @param Array $post_data Checkout post data.
 	 */
 	public function validated_address( $post_data ) {
-		$item_info = new Postcode_Check\Item_Info( $post_data );
-		$api_call  = new Postcode_Check\Client( $item_info );
-		$response  = $api_call->send_request();
+		$response = $this->service_factory()->postcode_check_service()->check( $post_data );
 
 		if ( empty( $response[0] ) ) {
 			// Clear validated address.

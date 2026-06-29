@@ -10,9 +10,13 @@
             jQuery( '#woocommerce_postnl_return_shipment_and_labels' ).on( 'change', this.display_return_shipment_and_labels_all );
             this.display_return_shipment_and_labels_all();
 			this.display_printer_type_resolution_field();
-            this.init_merchant_codes_repeater();
-            jQuery( '#woocommerce_postnl_enable_pickup_points' ).on( 'change', this.toggle_default_checkout_tab );
-            this.toggle_default_checkout_tab();
+			this.init_merchant_codes_repeater();
+			jQuery(
+				'#woocommerce_postnl_default_automatic_letterboxparcel_product'
+			).on( 'change', this.toggle_letterbox_24_fee_field );
+			this.toggle_letterbox_24_fee_field();
+			jQuery( '#woocommerce_postnl_enable_pickup_points' ).on( 'change', this.toggle_default_checkout_tab );
+			this.toggle_default_checkout_tab();
 		},
 
 		// TODO: drop the .val('delivery_day') reset. The PostNL::process_admin_options
@@ -29,6 +33,17 @@
                 jQuery( '#woocommerce_postnl_default_checkout_tab' ).val( 'delivery_day' ).closest( 'tr' ).hide();
             }
         },
+
+		toggle_letterbox_24_fee_field: function() {
+			var value = jQuery( '#woocommerce_postnl_default_automatic_letterboxparcel_product' ).val();
+			var $row  = jQuery( '#woocommerce_postnl_letterbox_24_fee' ).closest( 'tr' );
+
+			if ( 'letterbox_48' === value ) {
+				$row.hide();
+			} else {
+				$row.show();
+			}
+		},
 
 
 		display_api_key_field: function() {

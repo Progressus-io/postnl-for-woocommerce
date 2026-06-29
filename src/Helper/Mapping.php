@@ -136,6 +136,11 @@ class Mapping {
 							'options'     => array(),
 						),
 						array(
+							'combination' => array( 'letterbox_48' ),
+							'code'        => '2948',
+							'options'     => array(),
+						),
+						array(
 							'combination' => array( 'id_check' ),
 							'code'        => '3438',
 							'options'     => array(

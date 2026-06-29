@@ -138,6 +138,48 @@ class Logger_AdapterTest extends UnitTestCase {
 	}
 
 	/**
+	 * @testdox A non-string (e.g. RFC 5424 numeric) level falls back to notice
+	 */
+	public function test_non_string_level_falls_back_to_notice(): void {
+		$wc_logger = $this->fake_wc_logger();
+		$wc_logger->shouldReceive( 'log' )
+			->once()
+			->with( 'notice', '[postnl-v4] numeric', array( 'source' => 'PostNLWooCommerce' ) );
+
+		$this->make_adapter()->log( 3, 'numeric' );
+	}
+
+	/**
+	 * @testdox A Stringable message object is cast to its string form
+	 */
+	public function test_stringable_message_object_is_cast(): void {
+		$wc_logger = $this->fake_wc_logger();
+		$wc_logger->shouldReceive( 'log' )
+			->once()
+			->with( 'warning', '[postnl-v4] stringy message', array( 'source' => 'PostNLWooCommerce' ) );
+
+		$message = new class() implements \Stringable {
+			public function __toString(): string {
+				return 'stringy message';
+			}
+		};
+
+		$this->make_adapter()->warning( $message );
+	}
+
+	/**
+	 * @testdox A placeholder with no matching context key is left intact
+	 */
+	public function test_placeholder_without_matching_context_is_left_intact(): void {
+		$wc_logger = $this->fake_wc_logger();
+		$wc_logger->shouldReceive( 'log' )
+			->once()
+			->with( 'info', '[postnl-v4] order 7 for {missing}', array( 'source' => 'PostNLWooCommerce' ) );
+
+		$this->make_adapter()->info( 'order {id} for {missing}', array( 'id' => 7 ) );
+	}
+
+	/**
 	 * @testdox Nothing is written when the plugin logging toggle is off
 	 */
 	public function test_disabled_logger_writes_nothing(): void {

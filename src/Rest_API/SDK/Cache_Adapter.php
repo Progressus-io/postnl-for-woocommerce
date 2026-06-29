@@ -26,7 +26,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * allowlist are stored, so any other endpoint transparently bypasses the cache.
  *
  * Transient keys are namespaced with a hash of the V4 API key so two stores on
- * shared hosting can never read each other's cached responses.
+ * shared hosting are extremely unlikely to read each other's cached responses.
  *
  * @since   5.9.6
  * @package PostNLWooCommerce\Rest_API\SDK
@@ -67,6 +67,10 @@ class Cache_Adapter extends AbstractCacheAdapter {
 
 	/**
 	 * Fetch a cached value, or $default on a miss or non-cacheable key.
+	 *
+	 * A stored boolean false cannot be told apart from a miss and yields
+	 * $default; the cached payloads are timeframe/locations arrays, so this
+	 * edge does not arise on the wired path.
 	 *
 	 * @param string $key     Cache key.
 	 * @param mixed  $default Value returned when nothing is cached.
@@ -129,9 +133,12 @@ class Cache_Adapter extends AbstractCacheAdapter {
 	/**
 	 * Remove every transient in this adapter's namespace.
 	 *
-	 * Transients are global, so the deletion is scoped to this adapter's prefix
-	 * to avoid clearing unrelated caches. There is no WordPress API to delete
-	 * transients by prefix, so the options table is queried directly.
+	 * There is no WordPress API to delete transients by prefix, so the options
+	 * table is queried to find this namespace's transients, then each is removed
+	 * via delete_transient() — which clears both the value and timeout rows and
+	 * invalidates the option cache (a raw DELETE would leave stale cache entries
+	 * readable within the same request). Object-cache-backed transients are not
+	 * enumerable by prefix and so are left to expire on their own TTL.
 	 *
 	 * @return bool
 	 */
@@ -142,18 +149,20 @@ class Cache_Adapter extends AbstractCacheAdapter {
 			return false;
 		}
 
-		$value_like   = $wpdb->esc_like( '_transient_' . $this->prefix ) . '%';
-		$timeout_like = $wpdb->esc_like( '_transient_timeout_' . $this->prefix ) . '%';
-
-		$wpdb->query(
-			$wpdb->prepare(
-				"DELETE FROM {$wpdb->options} WHERE option_name LIKE %s OR option_name LIKE %s",
-				$value_like,
-				$timeout_like
-			)
+		$like  = $wpdb->esc_like( '_transient_' . $this->prefix ) . '%';
+		$names = $wpdb->get_col(
+			$wpdb->prepare( "SELECT option_name FROM {$wpdb->options} WHERE option_name LIKE %s", $like )
 		);
 
-		return true;
+		$success = true;
+		foreach ( (array) $names as $option_name ) {
+			$transient = substr( (string) $option_name, strlen( '_transient_' ) );
+			if ( ! delete_transient( $transient ) ) {
+				$success = false;
+			}
+		}
+
+		return $success;
 	}
 
 	/**

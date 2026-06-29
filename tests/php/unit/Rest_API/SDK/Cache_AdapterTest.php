@@ -191,30 +191,81 @@ class Cache_AdapterTest extends UnitTestCase {
 	}
 
 	/**
-	 * @testdox clear() deletes only this adapter's namespaced transients
+	 * @testdox clear() finds namespaced transients and removes each via delete_transient()
 	 */
-	public function test_clear_scopes_deletion_to_namespace(): void {
+	public function test_clear_deletes_namespaced_transients(): void {
 		global $wpdb;
 		$previous = $wpdb ?? null;
 
+		$captured_like = null;
 		$wpdb          = Mockery::mock();
 		$wpdb->options = 'wp_options';
 		$wpdb->shouldReceive( 'esc_like' )->andReturnUsing( fn( $s ) => $s );
-		$captured = array();
 		$wpdb->shouldReceive( 'prepare' )->andReturnUsing(
-			function ( $sql, ...$args ) use ( &$captured ) {
-				$captured = $args;
+			function ( $sql, $like ) use ( &$captured_like ) {
+				$captured_like = $like;
 				return $sql;
 			}
 		);
-		$wpdb->shouldReceive( 'query' )->once()->andReturn( 2 );
+		$wpdb->shouldReceive( 'get_col' )->once()->andReturn(
+			array( '_transient_postnl_v4_abc_one', '_transient_postnl_v4_abc_two' )
+		);
+
+		$deleted = array();
+		Functions\when( 'delete_transient' )->alias(
+			function ( $key ) use ( &$deleted ) {
+				$deleted[] = $key;
+				return true;
+			}
+		);
 
 		$result = ( new Cache_Adapter( 'tenant-key' ) )->clear();
 
 		$this->assertTrue( $result );
-		$this->assertStringStartsWith( '_transient_postnl_v4_', $captured[0] );
-		$this->assertStringStartsWith( '_transient_timeout_postnl_v4_', $captured[1] );
+		$this->assertStringStartsWith( '_transient_postnl_v4_', $captured_like );
+		// The '_transient_' prefix is stripped so delete_transient() gets the bare key.
+		$this->assertSame( array( 'postnl_v4_abc_one', 'postnl_v4_abc_two' ), $deleted );
 
 		$wpdb = $previous;
+	}
+
+	/**
+	 * @testdox clear() returns false when $wpdb is unavailable
+	 */
+	public function test_clear_returns_false_when_wpdb_unavailable(): void {
+		global $wpdb;
+		$previous = $wpdb ?? null;
+		$wpdb     = null;
+
+		$this->assertFalse( ( new Cache_Adapter( 'tenant-key' ) )->clear() );
+
+		$wpdb = $previous;
+	}
+
+	/**
+	 * @testdox A DateInterval TTL is normalized to seconds before storage
+	 */
+	public function test_date_interval_ttl_is_normalized_to_seconds(): void {
+		$captured_ttl = null;
+		Functions\when( 'set_transient' )->alias(
+			function ( $key, $value, $ttl ) use ( &$captured_ttl ) {
+				$captured_ttl = $ttl;
+				return true;
+			}
+		);
+
+		( new Cache_Adapter( 'tenant-key' ) )->set( 'timeframe_abc', 'v', new \DateInterval( 'PT30S' ) );
+
+		$this->assertSame( 30, $captured_ttl );
+	}
+
+	/**
+	 * @testdox An empty prefix in the allowlist does not make every key cacheable
+	 */
+	public function test_empty_allowlist_prefix_does_not_match_everything(): void {
+		Filters\expectApplied( 'postnl_v4_cache_allowed_prefixes' )->andReturn( array( '' ) );
+		Functions\expect( 'set_transient' )->never();
+
+		$this->assertFalse( ( new Cache_Adapter( 'tenant-key' ) )->set( 'anything_at_all', 'v' ) );
 	}
 }

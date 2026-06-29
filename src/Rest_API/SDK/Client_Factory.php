@@ -12,6 +12,7 @@ namespace PostNLWooCommerce\Rest_API\SDK;
 use Postnl\Sdk\Auth\Auth;
 use Postnl\Sdk\Client\ClientBuilder;
 use Postnl\Sdk\Client\PostnlClientInterface;
+use Postnl\Sdk\Enums\Version;
 use Postnl\Sdk\Transport\Retry\RetryConfig;
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -113,6 +114,7 @@ class Client_Factory {
 		$builder = new ClientBuilder();
 
 		return $builder
+			->withApiVersion( Version::V4 )
 			->withAuth( Auth::apiKey( $v4_key ) )
 			->withSandbox( $is_sandbox )
 			->withSourceSystem( self::SOURCE_SYSTEM )

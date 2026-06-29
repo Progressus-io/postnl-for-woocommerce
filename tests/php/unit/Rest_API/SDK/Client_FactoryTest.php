@@ -122,6 +122,18 @@ class Client_FactoryTest extends UnitTestCase {
 	}
 
 	/**
+	 * @testdox API version V4 is explicitly pinned on the SDK builder
+	 */
+	public function test_api_version_v4_is_pinned(): void {
+		$spy = new Spy_Client_Factory( $this->make_settings() );
+		$spy->build( 'k', false );
+		$this->assertSame(
+			\Postnl\Sdk\Enums\Version::V4,
+			$this->builder_prop( $spy->captured_builder, 'apiVersion' )
+		);
+	}
+
+	/**
 	 * @testdox Customer number and customer code are forwarded to the SDK builder
 	 */
 	public function test_customer_credentials_are_configured(): void {

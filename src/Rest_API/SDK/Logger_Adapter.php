@@ -81,6 +81,10 @@ class Logger_Adapter extends AbstractLogger {
 	/**
 	 * Write a PSR-3 log record to the WooCommerce logger.
 	 *
+	 * Best-effort: any failure while formatting or writing (e.g. a throwing
+	 * Stringable message, or wc_get_logger() being unavailable) is swallowed so
+	 * logging can never break the SDK operation that emitted the line.
+	 *
 	 * @param mixed              $level   PSR-3 level (one of LogLevel::*).
 	 * @param string|\Stringable $message Message, optionally with {placeholders}.
 	 * @param array              $context Context values for placeholder interpolation.
@@ -92,10 +96,18 @@ class Logger_Adapter extends AbstractLogger {
 			return;
 		}
 
-		$level   = $this->normalize_level( $level );
-		$message = self::TAG . ' ' . $this->interpolate( (string) $message, $context );
+		try {
+			$level   = $this->normalize_level( $level );
+			$message = self::TAG . ' ' . $this->interpolate( (string) $message, $context );
 
-		wc_get_logger()->log( $level, $message, array( 'source' => self::SOURCE ) );
+			$wc_logger = wc_get_logger();
+			if ( $wc_logger ) {
+				$wc_logger->log( $level, $message, array( 'source' => self::SOURCE ) );
+			}
+		} catch ( \Throwable $e ) {
+			// Swallowed deliberately — logging is best-effort and must not propagate.
+			return;
+		}
 	}
 
 	/**

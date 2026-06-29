@@ -187,4 +187,34 @@ class Logger_AdapterTest extends UnitTestCase {
 
 		$this->make_adapter( false )->error( 'should not be written' );
 	}
+
+	/**
+	 * @testdox A throwing Stringable message is swallowed and never reaches the WC logger
+	 */
+	public function test_throwing_stringable_message_is_swallowed(): void {
+		$wc_logger = $this->fake_wc_logger();
+		$wc_logger->shouldNotReceive( 'log' );
+
+		$message = new class() implements \Stringable {
+			public function __toString(): string {
+				throw new \RuntimeException( 'boom in __toString' );
+			}
+		};
+
+		// Must not propagate — logging is best-effort.
+		$this->make_adapter()->error( $message );
+
+		$this->assertTrue( true );
+	}
+
+	/**
+	 * @testdox A null logger from wc_get_logger() is handled without fataling
+	 */
+	public function test_null_wc_logger_is_handled_gracefully(): void {
+		Functions\when( 'wc_get_logger' )->justReturn( null );
+
+		$this->make_adapter()->error( 'no logger available' );
+
+		$this->assertTrue( true );
+	}
 }

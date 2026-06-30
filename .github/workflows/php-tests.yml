@@ -7,10 +7,33 @@ on:
       - main
 
 jobs:
-  # Runs both PHPUnit suites inside the wp-env tests-cli container.
-  # Requires Node.js, Docker, and Composer on the runner.
-  php-tests:
-    name: PHPUnit (unit + integration)
+  # Unit suite is pure PHP (no wp-env), so a Docker Hub outage can't block it.
+  unit:
+    name: PHPUnit (unit)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: mbstring, dom, xml
+          coverage: none
+
+      - name: Install Composer dependencies
+        uses: ramsey/composer-install@v3
+
+      - name: Unit tests
+        run: vendor/bin/phpunit -c phpunit-unit.xml.dist
+
+  # Integration suite needs a real WordPress, so it runs inside the wp-env
+  # tests-cli container. wp-env start is wrapped in a retry because the Docker
+  # image pulls occasionally time out against Docker Hub on the runner.
+  integration:
+    name: PHPUnit (integration)
     runs-on: ubuntu-latest
 
     steps:
@@ -35,11 +58,16 @@ jobs:
       - name: Install Composer dependencies
         uses: ramsey/composer-install@v3
 
+      # Retry: wp-env image pulls occasionally time out against Docker Hub.
       - name: Start wp-env
-        run: npm run env start
-
-      - name: Unit tests
-        run: npm run test:php:unit
+        run: |
+          for i in 1 2 3; do
+            npm run env start && break
+            echo "wp-env start failed (attempt $i); retrying in 15s..."
+            npm run env stop || true
+            sleep 15
+          done
+        timeout-minutes: 12
 
       - name: Integration tests
         run: npm run test:php:integration

@@ -861,7 +861,21 @@ class Settings extends \WC_Settings_API {
 	 * @return bool
 	 */
 	public function is_api_key_new_validated() {
-		$key = $this->get_api_key_new();
+		return $this->is_api_key_new_validated_value( $this->get_api_key_new() );
+	}
+
+	/**
+	 * Whether a specific key value matches the key that last passed
+	 * validation. Takes the value explicitly so callers (e.g. the save-time
+	 * handler) can check the freshly-entered key without relying on the
+	 * settings object's in-memory cache being up to date.
+	 *
+	 * @param string $key Candidate key value.
+	 *
+	 * @return bool
+	 */
+	public function is_api_key_new_validated_value( $key ) {
+		$key = trim( (string) $key );
 		if ( '' === $key ) {
 			return false;
 		}
@@ -879,15 +893,20 @@ class Settings extends \WC_Settings_API {
 	 * or clear the flag entirely. The hash binds the flag to the exact key
 	 * value the merchant just successfully tested.
 	 *
-	 * @param bool $validated Validation outcome.
+	 * @param bool        $validated Validation outcome.
+	 * @param string|null $key       The exact key value that was validated. When
+	 *                               omitted, falls back to the stored setting —
+	 *                               but callers running mid-save should pass the
+	 *                               freshly-entered value to avoid hashing a
+	 *                               stale cached value.
 	 */
-	public function set_api_key_new_validated( $validated ) {
+	public function set_api_key_new_validated( $validated, $key = null ) {
 		if ( ! $validated ) {
 			delete_option( self::NEW_API_KEY_VALIDATED_HASH_OPTION );
 			return;
 		}
 
-		$key = $this->get_api_key_new();
+		$key = trim( (string) ( null === $key ? $this->get_api_key_new() : $key ) );
 		if ( '' === $key ) {
 			delete_option( self::NEW_API_KEY_VALIDATED_HASH_OPTION );
 			return;

@@ -102,15 +102,33 @@ class PostNL extends \WC_Shipping_Flat_Rate {
 			return;
 		}
 
+		// This exact key already passed validation; skip the live call so an
+		// unrelated settings save doesn't make a blocking request every time.
+		if ( $settings->is_api_key_new_validated_value( $new_key ) ) {
+			return;
+		}
+
 		$customer_code = $this->get_option( 'customer_code' );
 		$customer_num  = $this->get_option( 'customer_num' );
 
 		$result = Key_Validator::validate( $new_key, $customer_code, $customer_num );
 
 		if ( is_wp_error( $result ) ) {
+			$error_code = $result->get_error_code();
+
+			// Transport failures / 5xx mean we could not reach PostNL — this is
+			// not proof the key is bad, so leave any previously-validated state
+			// untouched rather than disabling a working key on a network blip.
+			if ( in_array( $error_code, array( 'postnl_key_http_error', 'postnl_key_http_status' ), true ) ) {
+				WC_Admin_Settings::add_error(
+					esc_html__( 'Could not reach PostNL to validate the new API key. Your previous settings were kept unchanged; please try saving again later.', 'postnl-for-woocommerce' )
+				);
+				return;
+			}
+
 			$settings->set_api_key_new_validated( false );
 
-			if ( 'postnl_missing_customer_data' === $result->get_error_code() ) {
+			if ( 'postnl_missing_customer_data' === $error_code ) {
 				WC_Admin_Settings::add_error(
 					esc_html__( 'Please fill in Customer Code and Customer Number first to validate the new API key.', 'postnl-for-woocommerce' )
 				);
@@ -123,7 +141,7 @@ class PostNL extends \WC_Shipping_Flat_Rate {
 			return;
 		}
 
-		$settings->set_api_key_new_validated( true );
+		$settings->set_api_key_new_validated( true, $new_key );
 	}
 
 	/**

@@ -108,7 +108,11 @@ class Key_Validator {
 		}
 
 		if ( $code < 200 || $code >= 300 ) {
-			return new \WP_Error( 'postnl_key_http_status', sprintf( __( 'Unexpected HTTP status %d from PostNL.', 'postnl-for-woocommerce' ), $code ) );
+			return new \WP_Error(
+				'postnl_key_http_status',
+				// translators: %d is the HTTP status code returned by PostNL.
+				sprintf( __( 'Unexpected HTTP status %d from PostNL.', 'postnl-for-woocommerce' ), $code )
+			);
 		}
 
 		if ( is_array( $data ) && isset( $data['Barcode'] ) ) {

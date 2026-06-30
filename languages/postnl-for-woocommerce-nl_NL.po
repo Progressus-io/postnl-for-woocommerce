@@ -1993,6 +1993,10 @@ msgstr "Ingevulde nieuwe API key ongeldig. Controleer de key en vul deze opnieuw
 msgid "Please fill in Customer Code and Customer Number first to validate the new API key."
 msgstr "Vul eerst de Klantcode en het Klantnummer in om de nieuwe API key te valideren."
 
+#: src/Shipping_Method/PostNL.php
+msgid "Could not reach PostNL to validate the new API key. Your previous settings were kept unchanged; please try saving again later."
+msgstr "Kan PostNL niet bereiken om de nieuwe API key te valideren. Je vorige instellingen zijn ongewijzigd gebleven; probeer later opnieuw op te slaan."
+
 #: src/Admin/Api_Key_Banner.php
 msgid "PostNL: New API Key required"
 msgstr "PostNL: nieuwe API key vereist"

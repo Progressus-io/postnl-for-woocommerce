@@ -30,6 +30,13 @@ class Api_Key_Banner {
 	const AJAX_ACTION        = 'postnl_dismiss_new_api_key_banner';
 
 	/**
+	 * Memoized result of is_target_screen() for the current request.
+	 *
+	 * @var bool|null
+	 */
+	protected $is_target_screen = null;
+
+	/**
 	 * Register hooks.
 	 */
 	public function __construct() {
@@ -43,6 +50,19 @@ class Api_Key_Banner {
 	 * Is the current screen one where the banner should appear?
 	 */
 	protected function is_target_screen() {
+		if ( null !== $this->is_target_screen ) {
+			return $this->is_target_screen;
+		}
+
+		$this->is_target_screen = $this->resolve_target_screen();
+
+		return $this->is_target_screen;
+	}
+
+	/**
+	 * Determine whether the current screen is one where the banner appears.
+	 */
+	protected function resolve_target_screen() {
 		if ( ! function_exists( 'get_current_screen' ) ) {
 			return false;
 		}

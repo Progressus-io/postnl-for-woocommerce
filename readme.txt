@@ -81,6 +81,15 @@ Follow these instructions (https://www.postnl.nl/Images/aanvragen-api-key-stappe
 
 == Changelog ==
 
+= 5.9.8 (2026-xx-xx) =
+* Add: Independent button width controls (slider) for cart, checkout, and minicart locations in the Checkoutboosters settings.
+* Add: Global button corner radius control (slider) in the Checkoutboosters settings.
+* Add: Live button preview in the Checkoutboosters settings section that updates in real time as styling options are changed.
+* Tweak: Renamed "Fill in with PostNL" settings section to "Checkoutboosters" with updated feature description and activation link.
+* Tweak: Updated Fill in With PostNL button label to "Autofill with PostNL" and refreshed the description text shown below the button.
+* Tweak: Description text below the Fill in With PostNL button is now displayed at 80% font size and centred on the cart page.
+* Tweak: Button border now defaults to none on fresh installations; background colour defaults to PostNL orange.
+
 = 5.9.7 (2026-06-30) =
 * Remove: Removed the Shipment & Return return option, as PostNL is discontinuing it on 1 July 2026.
 

@@ -2,7 +2,7 @@
 	min-height: 35px;
 	max-height: 60px;
 	width: 100%;
-	border: 1px solid #F56900;
+	border: none;
 	background-color: #F56900;
 	cursor: pointer;
 	outline: none;
@@ -35,6 +35,11 @@
 .postnl-button-in-minicart{
 	margin: auto;
 	width: 94%;
+}
+
+.postnl-button-in-cart .postnl-login-button__description {
+	font-size: 80%;
+	text-align: center;
 }
 
 .postnl-hidden{

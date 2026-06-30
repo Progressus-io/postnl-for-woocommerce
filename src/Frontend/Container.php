@@ -41,11 +41,21 @@ class Container {
 
 	/**
 	 * Init and hook in the integration.
+	 *
+	 * @param bool $register_hooks Whether to register the WordPress hooks. The
+	 *                             bootstrap instance (Main::get_frontend()) passes
+	 *                             true; transient instances created only to reuse
+	 *                             helper methods (e.g. the blocks AJAX handler) must
+	 *                             pass false, otherwise the global woocommerce_package_rates
+	 *                             filters get registered twice and inject_letterbox_rates_for_all_methods
+	 *                             runs twice in the same request, duplicating the 24h/48h rates.
 	 */
-	public function __construct() {
+	public function __construct( bool $register_hooks = true ) {
 		$this->settings = Settings::get_instance();
 
-		$this->init_hooks();
+		if ( $register_hooks ) {
+			$this->init_hooks();
+		}
 	}
 
 	/**
@@ -63,7 +73,7 @@ class Container {
 		if ( ! Utils::is_blocks_checkout() ) {
 			add_filter( 'woocommerce_package_rates', array( $this, 'inject_postnl_base_fees' ), 20, 2 );
 		}
-
+		add_filter( 'woocommerce_package_rates', array( $this, 'inject_letterbox_rates_for_all_methods' ), 15, 2 );
 		add_filter( 'woocommerce_cart_shipping_packages', array( $this, 'add_postnl_option_to_package' ) );
 	}
 
@@ -112,6 +122,13 @@ class Container {
 				),
 				'delivery_day_fee_formatted'  => Utils::get_formatted_fee_total_price( $settings->get_delivery_days_fee() ),
 				'pickup_fee_formatted'        => Utils::get_formatted_fee_total_price( $settings->get_pickup_delivery_fee() ),
+				'currency'                    => array(
+					'symbol'           => html_entity_decode( get_woocommerce_currency_symbol(), ENT_QUOTES, 'UTF-8' ),
+					'symbolPosition'   => get_option( 'woocommerce_currency_pos', 'left' ),
+					'decimalSeparator' => wc_get_price_decimal_separator(),
+					'thousandSeparator' => wc_get_price_thousand_separator(),
+					'precision'        => wc_get_price_decimals(),
+				),
 			)
 		);
 	}
@@ -248,6 +265,74 @@ class Container {
 	}
 
 	/**
+	 * Get the carrier base cost by reading the currently-selected PostNL rate
+	 * and subtracting the PostNL tab fee that was injected into it.
+	 *
+	 * @param array $post_data Checkout post data (used to determine active tab).
+	 *
+	 * @return float Carrier base cost (≥ 0).
+	 */
+	private function get_carrier_base_cost( array $post_data ): float {
+		$option = $post_data['postnl_option'] ?? '';
+
+		$tab_fee = 0.0;
+		if ( 'delivery_day' === $option ) {
+			$tab_fee = (float) $this->settings->get_delivery_days_fee();
+		} elseif ( 'dropoff_points' === $option ) {
+			$tab_fee = (float) $this->settings->get_pickup_delivery_fee();
+		}
+
+		$chosen    = WC()->session ? WC()->session->get( 'chosen_shipping_methods', array() ) : array();
+		$packages  = WC()->shipping()->get_packages();
+		$supported = $this->settings->get_supported_shipping_methods();
+
+		foreach ( $packages as $i => $package ) {
+			$method_key = $chosen[ $i ] ?? '';
+
+			if ( ! isset( $package['rates'][ $method_key ] ) ) {
+				continue;
+			}
+
+			$rate = $package['rates'][ $method_key ];
+
+			if ( in_array( $rate->get_method_id(), $supported, true ) ) {
+				// The morning/evening extra fee is folded into the rate; subtract it per-package.
+				$extra_fee = 0.0;
+				if ( 'delivery_day' === $option ) {
+					$extra_fee = (float) ( $package['destination']['postnl_delivery_day_price'] ?? WC()->session->get( 'postnl_delivery_day_price', 0 ) );
+				}
+				return max( 0.0, (float) $rate->cost - $tab_fee - $extra_fee );
+			}
+		}
+
+		return 0.0;
+	}
+
+	/**
+	 * Check whether a supported PostNL shipping method is the chosen method.
+	 *
+	 * Used to detect PostNL threshold-based free shipping: if a PostNL method is
+	 * selected but its carrier base cost is 0, the minimum_for_free_shipping
+	 * threshold has been reached and all PostNL fees should be suppressed.
+	 *
+	 * @return bool
+	 */
+	private function is_postnl_method_chosen(): bool {
+		$chosen    = WC()->session ? WC()->session->get( 'chosen_shipping_methods', array() ) : array();
+		$packages  = WC()->shipping()->get_packages();
+		$supported = $this->settings->get_supported_shipping_methods();
+
+		foreach ( $packages as $i => $package ) {
+			$method_key = $chosen[ $i ] ?? '';
+			if ( isset( $package['rates'][ $method_key ] ) && in_array( $package['rates'][ $method_key ]->get_method_id(), $supported, true ) ) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	/**
 	 * Add delivery day & Pickup points fields.
 	 *
 	 * @param  array $post_data  Checkout post input.
@@ -261,6 +346,17 @@ class Container {
 
 		if ( empty( $checkout_data['response'] ) ) {
 			return;
+		}
+
+		$is_free_shipping  = Utils::is_free_shipping_applied();
+		$delivery_day_fee  = (float) $this->settings->get_delivery_days_fee();
+		$pickup_fee        = (float) $this->settings->get_pickup_delivery_fee();
+		$carrier_base_cost = $is_free_shipping ? 0.0 : $this->get_carrier_base_cost( $checkout_data['post_data'] );
+
+		// PostNL threshold-based free shipping: a PostNL method is selected but its
+		// rate was registered with cost = 0 (minimum_for_free_shipping reached).
+		if ( ! $is_free_shipping && 0.0 === $carrier_base_cost && $this->is_postnl_method_chosen() ) {
+			$is_free_shipping = true;
 		}
 
 		$tabs        = $this->get_available_tabs( $checkout_data['response'] );
@@ -283,20 +379,22 @@ class Container {
 		}
 
 		$template_args = array(
-			'tabs'             => $tabs,
-			'response'         => $checkout_data['response'],
-			'post_data'        => $checkout_data['post_data'],
-			'default_val'      => $this->get_default_value( $checkout_data['response'], $checkout_data['post_data'] ),
-			'letterbox'        => $checkout_data['letterbox'],
-			'fields'           => array(
+			'tabs'              => $tabs,
+			'response'          => $checkout_data['response'],
+			'post_data'         => $checkout_data['post_data'],
+			'default_val'       => $this->get_default_value( $checkout_data['response'], $checkout_data['post_data'] ),
+			'letterbox'         => $checkout_data['letterbox'],
+			'fields'            => array(
 				array(
 					'name'  => $this->tab_field,
 					'value' => $this->get_tab_field_value( $checkout_data['post_data'] ),
 				),
 			),
-			'pickup_fee'       => (float) $this->settings->get_pickup_delivery_fee(),
-			'delivery_day_fee' => (float) $this->settings->get_delivery_days_fee(),
-			'default_tab'      => $default_tab,
+			'pickup_fee'        => $pickup_fee,
+			'delivery_day_fee'  => $delivery_day_fee,
+			'carrier_base_cost' => $carrier_base_cost,
+			'is_free_shipping'  => $is_free_shipping,
+			'default_tab'       => $default_tab,
 		);
 
 		wc_get_template( 'checkout/postnl-container.php', $template_args, '', POSTNL_WC_PLUGIN_DIR_PATH . '/templates/' );
@@ -444,32 +542,215 @@ class Container {
 	/**
 	 * Add cart fees.
 	 *
+	 * Morning/evening delivery fees are folded directly into the shipping rate
+	 * cost via inject_postnl_base_fees(), so no separate fee line item is needed.
+	 *
 	 * @param \WC_Cart $cart Cart object.
 	 */
 	public function add_cart_fees( $cart ) {
-		$post_data = $this->get_checkout_post_data();
-
-		if ( empty( $post_data ) ) {
-			return;
-		}
-
-		$non_standard_fees        = Base::non_standard_fees_data();
-		$is_non_standard_delivery = ! empty( $post_data['postnl_delivery_day_type'] ) && isset( $non_standard_fees[ $post_data['postnl_delivery_day_type'] ] );
-
-		if ( ! empty( $post_data['postnl_delivery_day_price'] ) && 'delivery_day' === $post_data['postnl_option'] && $is_non_standard_delivery ) {
-			$cart->add_fee( $non_standard_fees[ $post_data['postnl_delivery_day_type'] ]['fee_name'], wc_format_decimal( $post_data['postnl_delivery_day_price'] ), true );
-		}
+		return;
 	}
+
 	/**
-	 * ِAdd the shipping option fees to the shipping methods
+	 * Collapse every PostNL-linked shipping method into a single canonical letterbox
+	 * option set when the cart is eligible for automatic letterbox delivery (ALA).
+	 *
+	 * This filter is the single source of truth for the letterbox rate set. When ALA
+	 * succeeds it:
+	 *   - keeps non-linked carriers (e.g. DHL) untouched, including a non-linked
+	 *     Free Shipping method, which stays visible and never affects the letterbox cost;
+	 *   - drops every PostNL-linked rate (the PostNL method's own rate, any linked
+	 *     Flat Rate instances, and a linked Free Shipping method) and emits ONE canonical
+	 *     24h/48h option set in their place, so the choice appears exactly once regardless
+	 *     of how many linked methods or instances the zone has. A linked Free Shipping
+	 *     method still applies its waiver (the canonical cost drops to 0) but is not shown
+	 *     as a separate row.
+	 *
+	 * PostNL::calculate_shipping() deliberately does NOT emit its own letterbox variants
+	 * — it emits a plain PostNL rate that this filter folds into the canonical set, so
+	 * there is a single emitter and no duplication.
+	 *
+	 * @since 5.9.6
+	 *
+	 * @param array $rates   Shipping rates keyed by rate ID.
+	 * @param array $package Shipping package.
+	 * @return array
+	 */
+	public function inject_letterbox_rates_for_all_methods( $rates, $package ) {
+		// Only apply for NL base country.
+		if ( 'NL' !== Utils::get_base_country() ) {
+			return $rates;
+		}
+
+		// Check cart eligibility for letterbox.
+		if ( ! Utils::is_cart_eligible_auto_letterbox( \WC()->cart ) ) {
+			return $rates;
+		}
+
+		$letterbox_product_type = $this->settings->get_default_automatic_letterboxparcel_product();
+
+		// Only inject when customer can decide or a specific letterbox type is configured.
+		if ( ! in_array( $letterbox_product_type, array( 'customer_decide', 'letterbox', 'letterbox_48' ), true ) ) {
+			return $rates;
+		}
+
+		// Idempotency guard: if the canonical letterbox set is already present (this filter
+		// ran earlier in the same request), do not rebuild it — that would nest a second
+		// ':letterbox' suffix onto an existing variant and duplicate the options.
+		foreach ( $rates as $rate ) {
+			$rate_meta = $rate->get_meta_data();
+			if ( isset( $rate_meta['letterbox_type'] ) ) {
+				return $rates;
+			}
+		}
+
+		$supported = $this->settings->get_supported_shipping_methods();
+
+		// Partition rates: non-linked carriers (including a non-linked Free Shipping method)
+		// are kept as-is; every PostNL-linked rate is collapsed into one canonical letterbox
+		// option set below.
+		$kept_rates        = array();
+		$linked_rates      = array();
+		$has_free_shipping = false;
+
+		foreach ( $rates as $rate_id => $rate ) {
+			$method_id = $rate->get_method_id();
+
+			if ( 'free_shipping' === $method_id ) {
+				// A Free Shipping method only waives the letterbox cost when the
+				// merchant has explicitly linked it to PostNL. When linked, it is
+				// collapsed like any other PostNL-linked rate: its waiver effect is
+				// applied (the canonical letterbox cost drops to 0) but the method
+				// itself is not shown as a separate row alongside the letterbox
+				// options. A standalone (non-linked) Free Shipping option is
+				// independent: it never zeros out the letterbox prices and is kept
+				// visible in checkout.
+				if ( in_array( $method_id, $supported, true ) ) {
+					$has_free_shipping = true;
+				} else {
+					$kept_rates[ $rate_id ] = $rate;
+				}
+				continue;
+			}
+
+			if ( ! in_array( $method_id, $supported, true ) ) {
+				$kept_rates[ $rate_id ] = $rate;
+				continue;
+			}
+
+			$linked_rates[ $rate_id ] = $rate;
+		}
+
+		// No PostNL-linked rates to collapse — leave the package untouched.
+		if ( empty( $linked_rates ) ) {
+			return $rates;
+		}
+
+		// Free-shipping determination drives both variants to 0. It is derived ONLY
+		// from PostNL-linked signals: a linked Free Shipping method being present
+		// ($has_free_shipping) or a linked carrier rate at cost 0 (handled in the loop
+		// below, where the PostNL free-shipping threshold has been met). A non-linked
+		// Free Shipping method — even one the customer has selected — must not waive
+		// the letterbox cost, so Utils::is_free_shipping_applied() is intentionally not
+		// consulted here (it ignores linkage and would re-introduce that regression).
+		$is_free = $has_free_shipping;
+
+		// Cheapest linked carrier cost is the base-cost fallback when no letterbox_fee is set.
+		$cheapest_cost = null;
+		foreach ( $linked_rates as $rate ) {
+			$cost = (float) $rate->get_cost();
+			if ( 0.0 === $cost ) {
+				// A linked rate at cost 0 means the PostNL free-shipping threshold was met.
+				$is_free = true;
+			}
+			if ( null === $cheapest_cost || $cost < $cheapest_cost ) {
+				$cheapest_cost = $cost;
+			}
+		}
+		$cheapest_cost = ( null === $cheapest_cost ) ? 0.0 : $cheapest_cost;
+
+		$letterbox_fee     = $this->settings->get_letterbox_fee();
+		$base_cost         = ( null !== $letterbox_fee ) ? (float) $letterbox_fee : $cheapest_cost;
+		$base_cost         = $is_free ? 0.0 : $base_cost;
+		$effective_fee_24h = $is_free ? 0.0 : (float) $this->settings->get_letterbox_24_fee();
+
+		$rep_rate_id = null;
+		$rep_rate    = null;
+		foreach ( $linked_rates as $rate_id => $rate ) {
+			if ( POSTNL_SETTINGS_ID === $rate->get_method_id() ) {
+				$rep_rate_id = $rate_id;
+				$rep_rate    = $rate;
+				break;
+			}
+		}
+		if ( null === $rep_rate ) {
+			$rep_rate_id = array_key_first( $linked_rates );
+			$rep_rate    = $linked_rates[ $rep_rate_id ];
+		}
+
+		$rep_method_id = $rep_rate->get_method_id();
+		$rep_instance  = $rep_rate->get_instance_id();
+
+		// Recalculate shipping taxes for the canonical cost.
+		$calc_taxes = function ( $cost ) use ( $rep_rate ) {
+			if ( wc_tax_enabled() && 'taxable' === $rep_rate->get_tax_status() ) {
+				return \WC_Tax::calc_shipping_tax( $cost, \WC_Tax::get_shipping_tax_rates() );
+			}
+			return array();
+		};
+
+		// Build the canonical letterbox option set ONCE.
+		$canonical = array();
+
+		if ( 'customer_decide' === $letterbox_product_type || 'letterbox' === $letterbox_product_type ) {
+			$cost_24h = $base_cost + $effective_fee_24h;
+
+			$rate_24h = new \WC_Shipping_Rate(
+				$rep_rate_id . ':letterbox',
+				Utils::get_letterbox_label_24h(),
+				$cost_24h,
+				$calc_taxes( $cost_24h ),
+				$rep_method_id,
+				$rep_instance
+			);
+			$rate_24h->add_meta_data( 'letterbox_type', 'letterbox' );
+			$canonical[ $rep_rate_id . ':letterbox' ] = $rate_24h;
+		}
+
+		if ( 'customer_decide' === $letterbox_product_type || 'letterbox_48' === $letterbox_product_type ) {
+			$rate_48h = new \WC_Shipping_Rate(
+				$rep_rate_id . ':letterbox_48',
+				Utils::get_letterbox_label_48h(),
+				$base_cost,
+				$calc_taxes( $base_cost ),
+				$rep_method_id,
+				$rep_instance
+			);
+			$rate_48h->add_meta_data( 'letterbox_type', 'letterbox_48' );
+			$canonical[ $rep_rate_id . ':letterbox_48' ] = $rate_48h;
+		}
+
+		// Canonical letterbox option(s) first, then the kept rates (non-linked + free_shipping).
+		return $canonical + $kept_rates;
+	}
+
+	/**
+	 * Add the shipping option fees to the shipping methods
 	 *
 	 * @param array $rates.
 	 * @return array
 	 */
 	public function inject_postnl_base_fees( $rates, $package ) {
+		if ( Utils::is_free_shipping_applied() ) {
+			return $rates;
+		}
+
+		// Letterbox-eligible carts are owned by the variant emitters
+		if ( Utils::is_cart_eligible_auto_letterbox( \WC()->cart ) ) {
+			return $rates;
+		}
 
 		$option = $package['destination']['postnl_option'] ?? WC()->session->get( 'postnl_option', '' );
-
 		if ( '' === $option ) {
 			return $rates;
 		}
@@ -483,11 +764,22 @@ class Container {
 				continue;
 			}
 
+			// PostNL threshold-based free shipping: the rate was registered with
+			// cost = 0 by PostNL::calculate_shipping(). Do not inject any fees.
+			if ( 0.0 === (float) $rate->cost ) {
+				continue;
+			}
+
 			$extra = 0;
 			if ( 'dropoff_points' === $option && $pickup_fee > 0 ) {
 				$extra = $pickup_fee;
-			} elseif ( 'delivery_day' === $option && $base_day_fee > 0 ) {
-				$extra = $base_day_fee;
+			} elseif ( 'delivery_day' === $option ) {
+				// Fold both the tab base fee and any morning/evening extra fee into the rate.
+				// Prefer the package destination value (set by add_postnl_option_to_package during
+				// AJAX calls) and fall back to the session value for order placement, when
+				// $_REQUEST['post_data'] is no longer available.
+				$extra  = $base_day_fee;
+				$extra += (float) ( $package['destination']['postnl_delivery_day_price'] ?? WC()->session->get( 'postnl_delivery_day_price', 0 ) );
 			}
 
 			if ( $extra <= 0 ) {
@@ -516,14 +808,45 @@ class Container {
 		$post_data = $this->get_checkout_post_data();
 		$option    = $post_data['postnl_option'] ?? '';
 
+		// Blocks-checkout fallback: Extend_Block_Core::postnl_store_api_callback
+		// writes postnl_delivery_type/postnl_delivery_fee to session before this
+		// filter fires. Mirror that state into $option so the destination injection
+		// below runs on the blocks path too — without it, the WC_Shipping package
+		// hash never changes on tab switch and add_postnl_fees_to_rates() is never
+		// re-invoked against fresh rates. WC ≤ 10.4 accidentally masked this via
+		// divergent package shapes in CartController::get_shipping_packages(); that
+		// divergence was removed, exposing the gap.
+		if ( '' === $option && WC()->session ) {
+			$session_type = WC()->session->get( 'postnl_delivery_type', '' );
+			if ( 'Pickup' === $session_type ) {
+				$option = 'dropoff_points';
+			} elseif ( '' !== $session_type ) {
+				$option = 'delivery_day';
+			}
+		}
+
 		if ( '' === $option ) {
 			return $packages;
 		}
 
 		WC()->session->set( 'postnl_option', $option );
 
+		// Store the morning/evening extra fee in the destination so the shipping
+		// rate cache key changes when the selection changes, forcing recalculation.
+		// Also persist to session so inject_postnl_base_fees can read it during
+		// order placement, when $_REQUEST['post_data'] is no longer available.
+		$raw_price = $post_data['postnl_delivery_day_price']
+			?? WC()->session->get( 'postnl_delivery_fee', 0 );
+
+		$delivery_day_price = ( 'delivery_day' === $option )
+			? (string) (float) $raw_price
+			: '0';
+
+		WC()->session->set( 'postnl_delivery_day_price', $delivery_day_price );
+
 		foreach ( $packages as $key => $package ) {
-			$packages[ $key ]['destination']['postnl_option'] = $option;
+			$packages[ $key ]['destination']['postnl_option']             = $option;
+			$packages[ $key ]['destination']['postnl_delivery_day_price'] = $delivery_day_price;
 		}
 
 		return $packages;

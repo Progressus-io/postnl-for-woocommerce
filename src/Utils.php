@@ -569,9 +569,21 @@ class Utils {
 		$selected_options   = array();
 
 		foreach ( $backend_data as $option_key => $value ) {
-			if ( isset( $options_to_display[ $option_key ] ) && 'yes' === $value ) {
-				$selected_options[] = $options_to_display[ $option_key ];
+			if ( ! isset( $options_to_display[ $option_key ] ) || 'yes' !== $value ) {
+				continue;
 			}
+
+			// Show the specific letterbox variant (24h / 48h) instead of the
+			// generic "Letterbox" label. Legacy orders with no recorded variant
+			// fall back to 24h, matching Item_Info::get_letterbox_type().
+			if ( 'letterbox' === $option_key ) {
+				$order              = wc_get_order( $order_id );
+				$letterbox_type     = ( $order instanceof \WC_Order ) ? $order->get_meta( '_postnl_letterbox_type' ) : '';
+				$selected_options[] = self::get_letterbox_admin_label( $letterbox_type );
+				continue;
+			}
+
+			$selected_options[] = $options_to_display[ $option_key ];
 		}
 
 		if ( empty( $selected_options ) ) {
@@ -1118,6 +1130,45 @@ class Utils {
 	}
 
 	/**
+	 * Check whether free shipping is currently active for the cart.
+	 *
+	 * Returns true when any of the following apply:
+	 * - An applied coupon grants free shipping.
+	 * - The WooCommerce native "Free Shipping" method (method_id: free_shipping)
+	 *   is the currently selected shipping method.
+	 *
+	 * This is used to suppress PostNL base-fee injection and morning/evening cart
+	 * fees so that no extra shipping charges appear when the cart qualifies for
+	 * free shipping. Note: PostNL's own minimum_for_free_shipping threshold is
+	 * handled separately per rate in the fee injection filters.
+	 *
+	 * @return bool
+	 */
+	public static function is_free_shipping_applied(): bool {
+		if ( ! WC()->cart ) {
+			return false;
+		}
+
+		foreach ( WC()->cart->get_coupons() as $coupon ) {
+			if ( $coupon->get_free_shipping() ) {
+				return true;
+			}
+		}
+
+		// WooCommerce native "Free Shipping" method selected.
+		if ( WC()->session ) {
+			$chosen = WC()->session->get( 'chosen_shipping_methods', array() );
+			foreach ( $chosen as $method_key ) {
+				if ( 0 === strpos( (string) $method_key, 'free_shipping' ) ) {
+					return true;
+				}
+			}
+		}
+
+		return false;
+	}
+
+	/**
 	 * Clear all PostNL checkout session data.
 	 *
 	 * This is the centralized method for clearing PostNL session data.
@@ -1148,4 +1199,44 @@ class Utils {
 		WC()->session->__unset( POSTNL_SETTINGS_ID . '_invalid_address_marker' );
 		WC()->session->__unset( POSTNL_SETTINGS_ID . '_validated_address' );
 	}
+
+	/**
+	 * Get the letterbox label for 24h.
+	 *
+	 * @since 5.9.6
+	 *
+	 * @return string
+	 */
+	public static function get_letterbox_label_24h() {
+		return esc_html__( 'Letterboxparcel (24h)', 'postnl-for-woocommerce' );
+	}
+
+	/**
+	 * Get the letterbox label for 48h.
+	 *
+	 * @since 5.9.6
+	 *
+	 * @return string
+	 */
+	public static function get_letterbox_label_48h() {
+		return esc_html__( 'Letterboxparcel (48h)', 'postnl-for-woocommerce' );
+	}
+
+	/**
+	 * Get the short admin label for a letterbox variant, used in the order
+	 * overview Shipping Options column.
+	 *
+	 * @since 5.9.6
+	 *
+	 * @param string $letterbox_type Variant token: 'letterbox' (24h) or 'letterbox_48' (48h).
+	 * @return string Human-readable label (e.g. "Letterbox 24" / "Letterbox 48").
+	 */
+	public static function get_letterbox_admin_label( $letterbox_type ) {
+		if ( 'letterbox_48' === $letterbox_type ) {
+			return esc_html__( 'Letterbox 48', 'postnl-for-woocommerce' );
+		}
+
+		return esc_html__( 'Letterbox 24', 'postnl-for-woocommerce' );
+	}
+
 }

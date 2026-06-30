@@ -7,7 +7,7 @@ Requires at least: 6.7
 Tested up to: 6.9
 WC requires at least: 10.2
 WC tested up to: 10.5
-Stable tag: 5.9.5
+Stable tag: 5.9.7
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -81,11 +81,7 @@ Follow these instructions (https://www.postnl.nl/Images/aanvragen-api-key-stappe
 
 == Changelog ==
 
-= 5.9.6 (2026-xx-xx) =
-* Tweak: Checkout tab labels now show the full shipping cost (carrier + delivery-day/pickup fee) instead of only the additional fee.
-* Fix: Hide delivery-day, morning and evening surcharges when free shipping applies, including PostNL's minimum-order-amount threshold.
-* Fix: Prevent duplicate PostNL delivery options container from appearing during blocks checkout fragment updates.
-* Tweak: Improve tax handling so tab prices accurately reflect tax-inclusive and tax-exclusive display settings.
+= 5.9.8 (2026-xx-xx) =
 * Add: Independent button width controls (slider) for cart, checkout, and minicart locations in the Checkoutboosters settings.
 * Add: Global button corner radius control (slider) in the Checkoutboosters settings.
 * Add: Live button preview in the Checkoutboosters settings section that updates in real time as styling options are changed.
@@ -93,6 +89,23 @@ Follow these instructions (https://www.postnl.nl/Images/aanvragen-api-key-stappe
 * Tweak: Updated Fill in With PostNL button label to "Autofill with PostNL" and refreshed the description text shown below the button.
 * Tweak: Description text below the Fill in With PostNL button is now displayed at 80% font size and centred on the cart page.
 * Tweak: Button border now defaults to none on fresh installations; background colour defaults to PostNL orange.
+
+= 5.9.7 (2026-06-30) =
+* Remove: Removed the Shipment & Return return option, as PostNL is discontinuing it on 1 July 2026.
+
+= 5.9.6 (2026-06-24) =
+* Add: Letterbox Parcel now offers 24-hour and 48-hour delivery variants at checkout, selectable by the customer or assigned automatically.
+* Add: New "Default automatic letterboxparcel product" setting to choose the default letterbox variant (24 or 48 hours) for automatic assignment.
+* Add: New "Letterbox fee" setting that overrides the shipping cost when all items are eligible for letterbox delivery, plus an extra fee field for the 24-hour variant.
+* Tweak: Checkout tab labels now show the full shipping cost (carrier + delivery-day/pickup fee) instead of only the additional fee.
+* Tweak: Improve tax handling so tab prices accurately reflect tax-inclusive and tax-exclusive display settings.
+* Tweak: Note in the Standard return option that the Shipment & Return label will be discontinued on July 1.
+* Fix: Hide delivery-day, morning and evening surcharges when free shipping applies, including PostNL's minimum-order-amount threshold.
+* Fix: Prevent duplicate PostNL delivery options container from appearing during blocks checkout fragment updates.
+* Fix: House number disappearing from blocks checkout when "Use PostNL address-field" and "Validate Dutch addresses" are both disabled.
+* Fix: "Invullen met PostNL" now correctly sets the country to Belgium instead of Netherlands for Belgian PostNL accounts.
+* Fix: "Invullen met PostNL" no longer fills the checkout with a previously used PostNL account's address after switching accounts or an incomplete login.
+* Fix: Update Dutch translations.
 
 = 5.9.5 (2026-04-21) =
 * Add: Ability to set the default checkout tab (Delivery or Pickup) from the PostNL checkout settings.

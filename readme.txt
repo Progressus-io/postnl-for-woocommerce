@@ -81,6 +81,9 @@ Follow these instructions (https://www.postnl.nl/Images/aanvragen-api-key-stappe
 
 == Changelog ==
 
+= 5.9.7 (2026-xx-xx) =
+* Remove: Removed the Shipment & Return return option, as PostNL is discontinuing it on 1 July 2026.
+
 = 5.9.6 (2026-06-24) =
 * Add: Letterbox Parcel now offers 24-hour and 48-hour delivery variants at checkout, selectable by the customer or assigned automatically.
 * Add: New "Default automatic letterboxparcel product" setting to choose the default letterbox variant (24 or 48 hours) for automatic assignment.

@@ -103,6 +103,14 @@ class Settings extends \WC_Settings_API {
 				'default'     => '',
 				'placeholder' => '',
 			),
+			'api_keys_new'                    => array(
+				'title'       => esc_html__( 'New API Key', 'postnl-for-woocommerce' ),
+				'type'        => 'text',
+				'description' => esc_html__( 'Enter the new API key here, required to access the new APIs when these have been released in the plug-in.', 'postnl-for-woocommerce' ),
+				'desc_tip'    => true,
+				'default'     => '',
+				'placeholder' => '',
+			),
 			'enable_logging'                  => array(
 				'title'       => esc_html__( 'Logging', 'postnl-for-woocommerce' ),
 				'type'        => 'checkbox',
@@ -827,6 +835,139 @@ class Settings extends \WC_Settings_API {
 	 */
 	public function get_api_key_sandbox() {
 		return $this->get_country_option( 'api_keys_sandbox', '' );
+	}
+
+	/**
+	 * Option storing the SHA-256 hash of the new API key value that last
+	 * passed validation. Storing a hash (rather than a global yes/no flag)
+	 * binds the validated state to the exact key value, so any out-of-band
+	 * edit or partial save naturally invalidates the flag.
+	 */
+	const NEW_API_KEY_VALIDATED_HASH_OPTION = 'postnl_api_keys_new_validated_hash';
+
+	/**
+	 * Get the raw value of the new API key as entered by the merchant.
+	 *
+	 * @return string
+	 */
+	public function get_api_key_new() {
+		return trim( (string) $this->get_country_option( 'api_keys_new', '' ) );
+	}
+
+	/**
+	 * Whether the currently-entered new API key matches the key that last
+	 * passed validation against the PostNL API.
+	 *
+	 * @return bool
+	 */
+	public function is_api_key_new_validated() {
+		return $this->is_api_key_new_validated_value( $this->get_api_key_new() );
+	}
+
+	/**
+	 * Whether a specific key value matches the key that last passed
+	 * validation. Takes the value explicitly so callers (e.g. the save-time
+	 * handler) can check the freshly-entered key without relying on the
+	 * settings object's in-memory cache being up to date.
+	 *
+	 * @param string $key Candidate key value.
+	 *
+	 * @return bool
+	 */
+	public function is_api_key_new_validated_value( $key ) {
+		$key = trim( (string) $key );
+		if ( '' === $key ) {
+			return false;
+		}
+
+		$stored = (string) get_option( self::NEW_API_KEY_VALIDATED_HASH_OPTION, '' );
+		if ( '' === $stored ) {
+			return false;
+		}
+
+		return hash_equals( $stored, hash( 'sha256', $key ) );
+	}
+
+	/**
+	 * Record that the currently-entered new API key has passed validation,
+	 * or clear the flag entirely. The hash binds the flag to the exact key
+	 * value the merchant just successfully tested.
+	 *
+	 * @param bool        $validated Validation outcome.
+	 * @param string|null $key       The exact key value that was validated. When
+	 *                               omitted, falls back to the stored setting —
+	 *                               but callers running mid-save should pass the
+	 *                               freshly-entered value to avoid hashing a
+	 *                               stale cached value.
+	 */
+	public function set_api_key_new_validated( $validated, $key = null ) {
+		if ( ! $validated ) {
+			delete_option( self::NEW_API_KEY_VALIDATED_HASH_OPTION );
+			return;
+		}
+
+		$key = trim( (string) ( null === $key ? $this->get_api_key_new() : $key ) );
+		if ( '' === $key ) {
+			delete_option( self::NEW_API_KEY_VALIDATED_HASH_OPTION );
+			return;
+		}
+
+		update_option( self::NEW_API_KEY_VALIDATED_HASH_OPTION, hash( 'sha256', $key ) );
+	}
+
+	/**
+	 * Return the API key the plugin should actually send to PostNL for
+	 * production traffic. Falls back to the original key whenever the new
+	 * key is empty, identical, or has not been validated.
+	 *
+	 * @return string
+	 */
+	public function get_effective_api_key() {
+		$original = trim( (string) $this->get_api_key() );
+		$new_key  = $this->get_api_key_new();
+
+		if ( '' === $new_key ) {
+			return $original;
+		}
+
+		if ( $new_key === $original ) {
+			return $original;
+		}
+
+		if ( ! $this->is_api_key_new_validated() ) {
+			return $original;
+		}
+
+		return $new_key;
+	}
+
+	/**
+	 * Value for the NewKey header sent on every outgoing API call. Used by
+	 * PostNL to track adoption of the new key ahead of the API migration.
+	 *
+	 *  - "No"   : the new-key field is empty.
+	 *  - "Same" : the new-key field matches the original key.
+	 *  - "Yes"  : a distinct new key has been entered.
+	 *
+	 * Reports "Yes" as soon as the merchant has typed in a key that is
+	 * different from the original, regardless of whether our save-time
+	 * validation has passed yet. The actual key swap (production traffic
+	 * using the new key) is gated separately by is_api_key_new_validated().
+	 *
+	 * @return string
+	 */
+	public function get_new_key_header_value() {
+		$new_key = $this->get_api_key_new();
+		if ( '' === $new_key ) {
+			return 'No';
+		}
+
+		$original = trim( (string) $this->get_api_key() );
+		if ( $new_key === $original ) {
+			return 'Same';
+		}
+
+		return 'Yes';
 	}
 
 	/**

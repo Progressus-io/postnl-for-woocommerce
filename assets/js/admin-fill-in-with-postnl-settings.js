@@ -36,15 +36,14 @@
 	$( '#postnl_button_border, #postnl_button_border_radius' ).on( 'input change', postnlUpdatePreview );
 	$( '#postnl_button_background_color' ).on( 'change', postnlUpdatePreview );
 
+	// Reflect the saved values in the preview on initial load.
+	postnlUpdatePreview();
+
 	( function () {
-		var $preview       = $( '#postnl-button-preview' );
-		var savedHoverColor = $( '#postnl_button_hover_background_color' ).val() || '#e55500';
-		$preview.on( 'mouseenter', function () {
-			var hoverColor = $( '#postnl_button_hover_background_color' ).val() || savedHoverColor;
-			$( this ).css( 'background-color', hoverColor );
+		$( '#postnl-button-preview' ).on( 'mouseenter', function () {
+			$( this ).css( 'background-color', $( '#postnl_button_hover_background_color' ).val() || '#e55500' );
 		} ).on( 'mouseleave', function () {
-			var bgColor = $( '#postnl_button_background_color' ).val() || '#ff6200';
-			$( this ).css( 'background-color', bgColor );
+			$( this ).css( 'background-color', $( '#postnl_button_background_color' ).val() || '#ff6200' );
 		} );
 	} )();
 

@@ -108,8 +108,8 @@ class Fill_In_With_PostNL_Settings {
 				),
 			),
 			array(
-				'title'             => esc_html__( 'Cart Button Width', 'postnl-for-woocommerce' ),
-				'desc'              => esc_html__( 'Set the button width as a percentage (0–100%).', 'postnl-for-woocommerce' ),
+				'title'             => esc_html__( 'Cart button width', 'postnl-for-woocommerce' ),
+				'desc'              => esc_html__( 'Set the button width as a percentage (1–100%).', 'postnl-for-woocommerce' ),
 				'desc_tip'          => true,
 				'id'                => 'postnl_cart_button_width',
 				'type'              => 'number',
@@ -117,7 +117,7 @@ class Fill_In_With_PostNL_Settings {
 				'css'               => 'width: 70px;',
 				'class'             => 'postnl-range-slider',
 				'custom_attributes' => array(
-					'min'       => '0',
+					'min'       => '1',
 					'max'       => '100',
 					'step'      => '1',
 					'data-unit' => '%',
@@ -152,8 +152,8 @@ class Fill_In_With_PostNL_Settings {
 				),
 			),
 			array(
-				'title'             => esc_html__( 'Checkout Button Width', 'postnl-for-woocommerce' ),
-				'desc'              => esc_html__( 'Set the button width as a percentage (0–100%).', 'postnl-for-woocommerce' ),
+				'title'             => esc_html__( 'Checkout button width', 'postnl-for-woocommerce' ),
+				'desc'              => esc_html__( 'Set the button width as a percentage (1–100%).', 'postnl-for-woocommerce' ),
 				'desc_tip'          => true,
 				'id'                => 'postnl_checkout_button_width',
 				'type'              => 'number',
@@ -161,7 +161,7 @@ class Fill_In_With_PostNL_Settings {
 				'css'               => 'width: 70px;',
 				'class'             => 'postnl-range-slider',
 				'custom_attributes' => array(
-					'min'       => '0',
+					'min'       => '1',
 					'max'       => '100',
 					'step'      => '1',
 					'data-unit' => '%',
@@ -196,8 +196,8 @@ class Fill_In_With_PostNL_Settings {
 				),
 			),
 			array(
-				'title'             => esc_html__( 'Minicart Button Width', 'postnl-for-woocommerce' ),
-				'desc'              => esc_html__( 'Set the button width as a percentage (0–100%).', 'postnl-for-woocommerce' ),
+				'title'             => esc_html__( 'Minicart button width', 'postnl-for-woocommerce' ),
+				'desc'              => esc_html__( 'Set the button width as a percentage (1–100%).', 'postnl-for-woocommerce' ),
 				'desc_tip'          => true,
 				'id'                => 'postnl_minicart_button_width',
 				'type'              => 'number',
@@ -205,7 +205,7 @@ class Fill_In_With_PostNL_Settings {
 				'css'               => 'width: 70px;',
 				'class'             => 'postnl-range-slider',
 				'custom_attributes' => array(
-					'min'       => '0',
+					'min'       => '1',
 					'max'       => '100',
 					'step'      => '1',
 					'data-unit' => '%',
@@ -263,7 +263,7 @@ class Fill_In_With_PostNL_Settings {
 				'css'      => 'width: 80px;',
 			),
 			array(
-				'title'             => esc_html__( 'Button Corner Radius', 'postnl-for-woocommerce' ),
+				'title'             => esc_html__( 'Button corner radius', 'postnl-for-woocommerce' ),
 				'desc'              => esc_html__( 'Set the button corner roundness in pixels (0 = square, 50 = fully rounded).', 'postnl-for-woocommerce' ),
 				'desc_tip'          => true,
 				'id'                => 'postnl_button_border_radius',
@@ -333,7 +333,7 @@ class Fill_In_With_PostNL_Settings {
 			. 'border-radius:' . $border_radius . 'px;';
 		?>
 		<tr valign="top">
-			<th scope="row" class="titledesc"><?php esc_html_e( 'Button Preview', 'postnl-for-woocommerce' ); ?></th>
+			<th scope="row" class="titledesc"><?php esc_html_e( 'Button preview', 'postnl-for-woocommerce' ); ?></th>
 			<td class="forminp">
 				<div style="max-width:320px;">
 					<button
@@ -397,7 +397,21 @@ class Fill_In_With_PostNL_Settings {
 			return $value;
 		}
 
-		// Only run once per settings save.
+		// Clamp numeric range options to their allowed bounds — the HTML "max"
+		// attribute is only a client-side hint and can be bypassed on save.
+		$numeric_ranges = array(
+			'postnl_cart_button_width'     => array( 1, 100 ),
+			'postnl_checkout_button_width' => array( 1, 100 ),
+			'postnl_minicart_button_width' => array( 1, 100 ),
+			'postnl_button_border_radius'  => array( 0, 50 ),
+		);
+
+		if ( isset( $numeric_ranges[ $option['id'] ] ) ) {
+			list( $min, $max ) = $numeric_ranges[ $option['id'] ];
+			return max( $min, min( $max, absint( $value ) ) );
+		}
+
+		// Only run the cross-field checks below once per settings save.
 		if ( $validation_done ) {
 			return $value;
 		}

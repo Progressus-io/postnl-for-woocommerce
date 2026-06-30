@@ -12,6 +12,8 @@ jobs:
   php-tests:
     name: PHPUnit (unit + integration)
     runs-on: ubuntu-latest
+    # Skip on fork PRs — GitHub withholds secrets, so the Private Packagist install would fail.
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
 
     steps:
       - name: Checkout
@@ -34,6 +36,24 @@ jobs:
       # wp-env alongside the plugin source.
       - name: Install Composer dependencies
         uses: ramsey/composer-install@v3
+        env:
+          COMPOSER_AUTH: ${{ secrets.POSTNL_PRIVATE_PACKAGIST_AUTH }}
+
+      - name: Assert no auth.json written by Composer
+        shell: bash
+        run: |
+          # Scan only where Composer writes auth.json: project root + Composer home.
+          SCAN_DIRS=("$GITHUB_WORKSPACE")
+          [ -n "$COMPOSER_HOME" ] && [ -d "$COMPOSER_HOME" ] && SCAN_DIRS+=("$COMPOSER_HOME")
+          [ -d "$HOME/.composer" ] && SCAN_DIRS+=("$HOME/.composer")
+          [ -d "$HOME/.config/composer" ] && SCAN_DIRS+=("$HOME/.config/composer")
+          if find "${SCAN_DIRS[@]}" -maxdepth 1 \
+              \( -name "auth.json" -o -name "auth.*.json" \) 2>/dev/null | grep -q .; then
+            echo "::error::Composer wrote an auth credential file — credentials must stay in env only!"
+            find "${SCAN_DIRS[@]}" -maxdepth 1 \( -name "auth.json" -o -name "auth.*.json" \) 2>/dev/null
+            exit 1
+          fi
+          echo "Auth file check passed — no auth.json written to workspace or Composer home."
 
       - name: Start wp-env
         run: npm run env start

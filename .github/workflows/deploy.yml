@@ -100,6 +100,24 @@ jobs:
       # Step 1: Install Composer WITH dev deps — needed for vendor/bin/wp (i18n tools)
       - name: Install Composer dependencies (with dev)
         run: composer install --prefer-dist --no-progress --no-interaction
+        env:
+          COMPOSER_AUTH: ${{ secrets.POSTNL_PRIVATE_PACKAGIST_AUTH }}
+
+      - name: Assert no auth.json written by Composer (dev install)
+        shell: bash
+        run: |
+          # Scan only where Composer writes auth.json: project root + Composer home.
+          SCAN_DIRS=("$GITHUB_WORKSPACE")
+          [ -n "$COMPOSER_HOME" ] && [ -d "$COMPOSER_HOME" ] && SCAN_DIRS+=("$COMPOSER_HOME")
+          [ -d "$HOME/.composer" ] && SCAN_DIRS+=("$HOME/.composer")
+          [ -d "$HOME/.config/composer" ] && SCAN_DIRS+=("$HOME/.config/composer")
+          if find "${SCAN_DIRS[@]}" -maxdepth 1 \
+              \( -name "auth.json" -o -name "auth.*.json" \) 2>/dev/null | grep -q .; then
+            echo "::error::Composer wrote an auth credential file — credentials must stay in env only!"
+            find "${SCAN_DIRS[@]}" -maxdepth 1 \( -name "auth.json" -o -name "auth.*.json" \) 2>/dev/null
+            exit 1
+          fi
+          echo "Auth file check passed — no auth.json written to workspace or Composer home."
 
       # Step 2: Install npm dependencies
       - name: Install npm dependencies
@@ -118,6 +136,24 @@ jobs:
       # Step 5: Reinstall Composer production-only → clean vendor/ for deploy
       - name: Reinstall Composer dependencies (production only)
         run: composer install --no-dev --prefer-dist --no-progress --no-interaction --optimize-autoloader
+        env:
+          COMPOSER_AUTH: ${{ secrets.POSTNL_PRIVATE_PACKAGIST_AUTH }}
+
+      - name: Assert no auth.json written by Composer (production install)
+        shell: bash
+        run: |
+          # Scan only where Composer writes auth.json: project root + Composer home.
+          SCAN_DIRS=("$GITHUB_WORKSPACE")
+          [ -n "$COMPOSER_HOME" ] && [ -d "$COMPOSER_HOME" ] && SCAN_DIRS+=("$COMPOSER_HOME")
+          [ -d "$HOME/.composer" ] && SCAN_DIRS+=("$HOME/.composer")
+          [ -d "$HOME/.config/composer" ] && SCAN_DIRS+=("$HOME/.config/composer")
+          if find "${SCAN_DIRS[@]}" -maxdepth 1 \
+              \( -name "auth.json" -o -name "auth.*.json" \) 2>/dev/null | grep -q .; then
+            echo "::error::Composer wrote an auth credential file — credentials must stay in env only!"
+            find "${SCAN_DIRS[@]}" -maxdepth 1 \( -name "auth.json" -o -name "auth.*.json" \) 2>/dev/null
+            exit 1
+          fi
+          echo "Auth file check passed — no auth.json written to workspace or Composer home."
 
       # Sanity check — fail loudly if expected artifacts are missing
       - name: Verify build artifacts
@@ -158,6 +194,32 @@ jobs:
           cd "$RUNNER_TEMP/zip_staging"
           zip -r "$ZIP_PATH" woo-postnl/
           echo "zip-path=$ZIP_PATH" >> "$GITHUB_OUTPUT"
+
+      # All paths: assert no credential files slipped in AND SDK source shipped
+      - name: Verify ZIP credentials and SDK presence
+        shell: bash
+        run: |
+          ZIP_PATH="${{ steps.build_zip.outputs.zip-path }}"
+          VERIFY_DIR="$RUNNER_TEMP/zip_cred_verify"
+          mkdir -p "$VERIFY_DIR"
+          unzip -q "$ZIP_PATH" -d "$VERIFY_DIR"
+
+          # Negative: no credential files
+          if find "$VERIFY_DIR" \( -name "auth.json" -o -name "auth.*.json" \) 2>/dev/null | grep -q .; then
+            echo "::error::Composer auth credential file found in ZIP — credentials must not ship!"
+            find "$VERIFY_DIR" \( -name "auth.json" -o -name "auth.*.json" \) 2>/dev/null
+            exit 1
+          fi
+          echo "Credential check passed — no auth credential files found in ZIP."
+
+          # Positive: PostNL SDK source must be present
+          if [ ! -d "$VERIFY_DIR/woo-postnl/vendor/postnl/api-client-sdk" ]; then
+            echo "::error::vendor/postnl/api-client-sdk missing from ZIP — SDK source must ship with the plugin!"
+            exit 1
+          fi
+          echo "SDK check passed — vendor/postnl/api-client-sdk present in ZIP."
+
+          rm -rf "$VERIFY_DIR"
 
       # Dry run only: verify ZIP contents then clean up
       - name: Verify and clean up dry-run ZIP

@@ -860,6 +860,57 @@ class Utils {
 	}
 
 	/**
+	 * Normalize an admin letterbox selection into the generic feature + variant.
+	 *
+	 * The admin controls (single order meta box, the "Change Shipping Options"
+	 * bulk modal and the "Shipping options domestic" default setting) let the
+	 * merchant pick the 24h or the 48h letterboxparcel explicitly. The label
+	 * engine, however, routes every letterbox shipment through the generic
+	 * 'letterbox' feature (see Order\Base::maybe_create_letterbox) and resolves
+	 * the concrete product code — 2928 (24h) vs 2948 (48h) — from the
+	 * '_postnl_letterbox_type' order meta (see
+	 * Rest_API\Shipping\Item_Info::get_letterbox_type). This helper keeps that
+	 * contract: it collapses the explicit 'letterbox_48' token back onto
+	 * 'letterbox' and reports the chosen variant so the caller can persist it
+	 * as the authoritative merchant choice. When both are set, 48h wins.
+	 *
+	 * @param array $backend_options Backend option map ( feature => 'yes' ).
+	 *
+	 * @return array {
+	 *     @type array  $options Normalized options with only the generic 'letterbox' feature.
+	 *     @type string $type    Variant token: 'letterbox', 'letterbox_48', or '' when no letterbox is selected.
+	 * }
+	 */
+	public static function normalize_letterbox_options( $backend_options ) {
+		if ( ! is_array( $backend_options ) ) {
+			return array(
+				'options' => array(),
+				'type'    => '',
+			);
+		}
+
+		$type = '';
+
+		if ( 'yes' === ( $backend_options['letterbox_48'] ?? '' ) ) {
+			$type = 'letterbox_48';
+		} elseif ( 'yes' === ( $backend_options['letterbox'] ?? '' ) ) {
+			$type = 'letterbox';
+		}
+
+		// Carry the variant separately; downstream letterbox logic only knows the generic feature.
+		unset( $backend_options['letterbox_48'] );
+
+		if ( '' !== $type ) {
+			$backend_options['letterbox'] = 'yes';
+		}
+
+		return array(
+			'options' => $backend_options,
+			'type'    => $type,
+		);
+	}
+
+	/**
 	 * Get filtered pickup points specific infos.
 	 *
 	 * @param array $infos Dropoff points informations.

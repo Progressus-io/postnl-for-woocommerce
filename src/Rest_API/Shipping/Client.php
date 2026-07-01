@@ -157,14 +157,6 @@ class Client extends Base {
 			$shipment['ReturnBarcode'] = $this->item_info->shipment['main_barcode'];
 		}
 
-		if ( $this->item_info->backend_data['insured_shipping'] ) {
-			$shipment['Amounts'][] = array(
-				'AmountType' => '02',
-				'Currency'   => $this->item_info->shipment['currency'],
-				'Value'      => $this->item_info->shipment['subtotal'],
-			);
-		}
-
 		for ( $i = 1; $i <= $this->item_info->backend_data['num_labels']; $i++ ) {
 			if ( $this->item_info->backend_data['num_labels'] > 1 ) {
 				$shipment['Barcode'] = $this->item_info->shipment['barcodes'][ ( $i - 1 ) ];
@@ -177,6 +169,23 @@ class Client extends Base {
 					),
 				);
 			}
+
+			// Amounts (insurance) must only be present on the first/parent shipment.
+			// Unset it for child shipments to avoid the "child shipment cannot contain an insurance amount" error.
+			if ( $this->item_info->backend_data['insured_shipping'] ) {
+				if ( 1 === $i ) {
+					$shipment['Amounts'] = array(
+						array(
+							'AmountType' => '02',
+							'Currency'   => $this->item_info->shipment['currency'],
+							'Value'      => $this->item_info->shipment['subtotal'],
+						),
+					);
+				} else {
+					unset( $shipment['Amounts'] );
+				}
+			}
+
 			$shipments[] = $shipment;
 		}
 

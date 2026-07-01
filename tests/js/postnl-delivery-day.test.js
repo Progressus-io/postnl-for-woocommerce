@@ -2,6 +2,13 @@
  * PostNL Delivery Day Block Tests
  *
  * Tests for the delivery day selection component.
+ *
+ * TODO: this entire suite (and tests/js/postnl-fill-in-with.test.js) currently
+ * fails on `main` and on every feature branch with React `useRef`/`useState`
+ * returning null — symptom of a duplicate React resolution somewhere in
+ * node_modules. Pre-existing infra issue, not a regression. Investigate the
+ * pnpm dependency graph (likely @testing-library/react vs @wordpress/element
+ * pulling different React majors) before re-enabling these in CI.
  */
 
 import { render, screen, waitFor, act } from '@testing-library/react';

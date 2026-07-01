@@ -383,7 +383,7 @@ class Item_Info extends Base_Info {
 				'default'  => '',
 				'sanitize' => function ( $value ) use ( $self ) {
 					if ( 'NL' === $self->api_args['store_address']['country'] ) {
-						return ( $self->api_args['settings']['is_return_to_home_enabled'] || $this->get_product_code() == '2928' ) ? $self->api_args['settings']['return_address_street'] : 'Antwoordnummer';
+						return ( $self->api_args['settings']['is_return_to_home_enabled'] || '2928' === $this->get_product_code() || '2948' === $this->get_product_code() ) ? $self->api_args['settings']['return_address_street'] : 'Antwoordnummer';
 					}
 
 					return $self->string_length_sanitization( $value, 95 );
@@ -393,7 +393,7 @@ class Item_Info extends Base_Info {
 				'default'  => '',
 				'sanitize' => function ( $value ) use ( $self ) {
 					if ( 'NL' === $self->api_args['store_address']['country'] ) {
-						$value = ( $self->api_args['settings']['is_return_to_home_enabled'] || $this->get_product_code() == '2928' ) ? $self->api_args['settings']['return_address_house_no'] : $self->api_args['settings']['return_replynumber'];
+						$value = ( $self->api_args['settings']['is_return_to_home_enabled'] || '2928' === $this->get_product_code() || '2948' === $this->get_product_code() ) ? $self->api_args['settings']['return_address_house_no'] : $self->api_args['settings']['return_replynumber'];
 					}
 
 					return $self->string_length_sanitization( $value, 35 );
@@ -477,9 +477,9 @@ class Item_Info extends Base_Info {
 				},
 			),
 			'printer_type'            => array(
-				'default'  => $this->get_product_code() == '4909' ? 'GraphicFile|PDF' : $this->settings->get_printer_type(),
+				'default'  => '4909' === $this->get_product_code() ? 'GraphicFile|PDF' : $this->settings->get_printer_type(),
 				'sanitize' => function ( $value ) use ( $self ) {
-					if ( in_array( $this->get_product_code(), array( '4909', '2928' ) ) ) {
+					if ( in_array( $this->get_product_code(), array( '4909', '2928', '2948' ), true ) ) {
 						return 'GraphicFile|PDF';
 					}
 
@@ -935,6 +935,20 @@ class Item_Info extends Base_Info {
 		$to_country       = $this->api_args['shipping_address']['country'];
 		$to_state         = $this->api_args['shipping_address']['state'];
 
+		// Check if letterbox is selected and determine which letterbox type to use.
+		if ( 'yes' === ( $checked_features['letterbox'] ?? '' ) ) {
+			$letterbox_type = $this->get_letterbox_type();
+			// Remove generic 'letterbox' and add specific type.
+			unset( $checked_features['letterbox'] );
+
+			if ( 'letterbox_48' === $letterbox_type ) {
+				$checked_features['letterbox_48'] = 'yes';
+			} else {
+				// Default to letterbox (24 hours).
+				$checked_features['letterbox'] = 'yes';
+			}
+		}
+
 		$features = array_keys( $checked_features );
 		$code_map = Mapping::products_data();
 
@@ -966,6 +980,58 @@ class Item_Info extends Base_Info {
 		}
 
 		return $selected_product;
+	}
+
+	/**
+	 * Resolve the letterbox product variant for this shipment.
+	 *
+	 * Note the asymmetric token values: 'letterbox' denotes the 24h variant
+	 * (product 2928) and 'letterbox_48' denotes the 48h variant (product 2948).
+	 *
+	 * Resolution order:
+	 *   1. The customer's recorded choice on the order (_postnl_letterbox_type).
+	 *   2. The merchant default setting (24h or 48h).
+	 *   3. For 'customer_decide' with no recorded choice — e.g. an order placed
+	 *      before this feature shipped — fall back to 24h (2928), which matches
+	 *      the behaviour that was in effect when those legacy orders were
+	 *      originally placed. The assigned variant is surfaced to the merchant
+	 *      in the Shipping Options order-overview column so they can correct it
+	 *      on the rare exception.
+	 *
+	 * @since 5.9.6
+	 *
+	 * @return string 'letterbox' (24h / 2928) or 'letterbox_48' (48h / 2948).
+	 */
+	protected function get_letterbox_type() {
+		$order = ! empty( $this->api_args['order_details']['order_id'] )
+			? wc_get_order( $this->api_args['order_details']['order_id'] )
+			: null;
+
+		if ( $order instanceof \WC_Order ) {
+			$stored_type = $order->get_meta( '_postnl_letterbox_type' );
+			if ( in_array( $stored_type, array( 'letterbox', 'letterbox_48' ), true ) ) {
+				return $stored_type;
+			}
+		}
+
+		$default_letterbox_type = $this->settings->get_default_automatic_letterboxparcel_product();
+
+		if ( 'letterbox_48' === $default_letterbox_type ) {
+			return 'letterbox_48';
+		}
+
+		// 'customer_decide' with no recorded choice: backward-compatibility gap
+		// for orders placed before this feature. Default to 24h and log it.
+		if ( 'customer_decide' === $default_letterbox_type && $order instanceof \WC_Order ) {
+			\PostNLWooCommerce\Main::get_logger()->write(
+				sprintf(
+					'PostNL letterbox: order #%d has no recorded 24h/48h choice under "customer decide"; defaulting to Letterbox 24h (2928).',
+					$order->get_id()
+				)
+			);
+		}
+
+		return 'letterbox';
 	}
 
 	/**

@@ -415,11 +415,17 @@ class Extend_Block_Core {
 
 		$shipping_country = isset( $sanitized_data['shipping_country'] ) ? $sanitized_data['shipping_country'] : '';
 
+		// Always sync the customer's shipping country from the request so the
+		// letterbox (ALA) eligibility check further down reads the correct
+		// country even when the conditional customer save below does not run
+		// (e.g. no house number). Eligibility itself is evaluated later, after
+		// the full customer address has been persisted.
+		WC()->customer->set_shipping_country( $shipping_country );
+
 		// Save the house number and postcode on WC customer if provided
 		if ( isset( $sanitized_data['shipping_house_number'] ) && isset( $sanitized_data['shipping_postcode'] ) ) {
 			WC()->customer->set_shipping_postcode( $sanitized_data['shipping_postcode'] );
 			WC()->customer->update_meta_data( '_wc_shipping/postnl/house_number', $sanitized_data['shipping_house_number'] );
-			WC()->customer->set_shipping_country( $sanitized_data['shipping_country'] );
 			WC()->customer->set_shipping_address_2( $sanitized_data['shipping_address_2'] ?? '' );
 			WC()->customer->save();
 		}

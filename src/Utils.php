@@ -862,17 +862,12 @@ class Utils {
 	/**
 	 * Normalize an admin letterbox selection into the generic feature + variant.
 	 *
-	 * The admin controls (single order meta box, the "Change Shipping Options"
-	 * bulk modal and the "Shipping options domestic" default setting) let the
-	 * merchant pick the 24h or the 48h letterboxparcel explicitly. The label
-	 * engine, however, routes every letterbox shipment through the generic
-	 * 'letterbox' feature (see Order\Base::maybe_create_letterbox) and resolves
-	 * the concrete product code — 2928 (24h) vs 2948 (48h) — from the
-	 * '_postnl_letterbox_type' order meta (see
-	 * Rest_API\Shipping\Item_Info::get_letterbox_type). This helper keeps that
-	 * contract: it collapses the explicit 'letterbox_48' token back onto
-	 * 'letterbox' and reports the chosen variant so the caller can persist it
-	 * as the authoritative merchant choice. When both are set, 48h wins.
+	 * Collapses the explicit 'letterbox_48' token onto the generic 'letterbox'
+	 * feature (which the label engine routes on) and reports the chosen 24h/48h
+	 * variant so the caller can persist it to '_postnl_letterbox_type'. When both
+	 * are selected, 48h wins.
+	 *
+	 * @since 5.9.8
 	 *
 	 * @param array $backend_options Backend option map ( feature => 'yes' ).
 	 *

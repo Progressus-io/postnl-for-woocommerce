@@ -129,6 +129,8 @@ abstract class Base {
 	/**
 	 * Resolve the pre-selected shipping options from the order meta or the plugin settings.
 	 *
+	 * @since 5.9.8
+	 *
 	 * @param \WC_Order $order Order object.
 	 *
 	 * @return array
@@ -165,6 +167,8 @@ abstract class Base {
 	 * Kept in sync with Rest_API\Shipping\Item_Info::get_letterbox_type():
 	 * the recorded choice on the order wins, otherwise the merchant default
 	 * setting, otherwise the 24h variant.
+	 *
+	 * @since 5.9.8
 	 *
 	 * @param \WC_Order $order Order object.
 	 *
@@ -556,11 +560,14 @@ abstract class Base {
 
 		// Collapse an explicit 24h/48h letterbox choice onto the generic 'letterbox'
 		// feature and record the variant as the authoritative merchant choice, which
-		// Item_Info::get_letterbox_type() reads to pick product 2928 vs 2948.
+		// Item_Info::get_letterbox_type() reads to pick product 2928 vs 2948. The meta
+		// must be persisted here: Item_Info (constructed below) re-reads the order via
+		// wc_get_order(), which returns a fresh instance that would not see an unsaved value.
 		$letterbox_selection   = Utils::normalize_letterbox_options( $saved_data['backend'] );
 		$saved_data['backend'] = $letterbox_selection['options'];
 		if ( '' !== $letterbox_selection['type'] ) {
 			$order->update_meta_data( '_postnl_letterbox_type', $letterbox_selection['type'] );
+			$order->save_meta_data();
 		}
 
 		$label_post_data = array(

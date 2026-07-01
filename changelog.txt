@@ -1,5 +1,8 @@
 *** PostNL for WooCommerce ***
 
+= 5.9.8 (2026-07-02) =
+* Fix: Automatic letterbox assignment now correctly re-detects when the shipping country changes between the Netherlands and Belgium, in both classic and blocks checkout.
+
 = 5.9.7 (2026-06-30) =
 * Remove: Removed the Shipment & Return return option, as PostNL is discontinuing it on 1 July 2026.
 

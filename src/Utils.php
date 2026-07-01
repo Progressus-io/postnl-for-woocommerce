@@ -860,6 +860,52 @@ class Utils {
 	}
 
 	/**
+	 * Normalize an admin letterbox selection into the generic feature + variant.
+	 *
+	 * Collapses the explicit 'letterbox_48' token onto the generic 'letterbox'
+	 * feature (which the label engine routes on) and reports the chosen 24h/48h
+	 * variant so the caller can persist it to '_postnl_letterbox_type'. When both
+	 * are selected, 48h wins.
+	 *
+	 * @since 5.9.8
+	 *
+	 * @param array $backend_options Backend option map ( feature => 'yes' ).
+	 *
+	 * @return array {
+	 *     @type array  $options Normalized options with only the generic 'letterbox' feature.
+	 *     @type string $type    Variant token: 'letterbox', 'letterbox_48', or '' when no letterbox is selected.
+	 * }
+	 */
+	public static function normalize_letterbox_options( $backend_options ) {
+		if ( ! is_array( $backend_options ) ) {
+			return array(
+				'options' => array(),
+				'type'    => '',
+			);
+		}
+
+		$type = '';
+
+		if ( 'yes' === ( $backend_options['letterbox_48'] ?? '' ) ) {
+			$type = 'letterbox_48';
+		} elseif ( 'yes' === ( $backend_options['letterbox'] ?? '' ) ) {
+			$type = 'letterbox';
+		}
+
+		// Carry the variant separately; downstream letterbox logic only knows the generic feature.
+		unset( $backend_options['letterbox_48'] );
+
+		if ( '' !== $type ) {
+			$backend_options['letterbox'] = 'yes';
+		}
+
+		return array(
+			'options' => $backend_options,
+			'type'    => $type,
+		);
+	}
+
+	/**
 	 * Get filtered pickup points specific infos.
 	 *
 	 * @param array $infos Dropoff points informations.

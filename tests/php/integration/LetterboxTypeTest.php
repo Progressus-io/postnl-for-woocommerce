@@ -30,6 +30,7 @@ use PostNLWooCommerce\Tests\IntegrationTestCase;
 use PostNLWooCommerce\Frontend\Base;
 use PostNLWooCommerce\Shipping_Method\Settings;
 use PostNLWooCommerce\Rest_API\Shipping\Item_Info;
+use PostNLWooCommerce\Utils;
 
 /**
  * Covers the classic-checkout persistence path and the variant resolver.
@@ -156,6 +157,33 @@ class LetterboxTypeTest extends IntegrationTestCase {
 		// No order is passed, which exercises the customer_decide fallback without
 		// depending on the order-only logging branch.
 		$this->assertSame( 'letterbox', $this->resolve_letterbox_type( array() ) );
+	}
+
+	/**
+	 * @testdox An explicit admin letterbox_48 selection persists so a fresh order load resolves to 2948, not the 24h default.
+	 */
+	public function test_admin_letterbox_48_selection_persists_and_resolves(): void {
+		// A 24h merchant default means a dropped/unsaved selection would resolve to
+		// letterbox (2928); the explicit 48h choice must override it.
+		Settings::get_instance()->settings['default_automatic_letterboxparcel_product'] = 'letterbox';
+
+		$order = new \WC_Order();
+		$order->save();
+		$this->order_ids[] = $order->get_id();
+		$order_id          = $order->get_id();
+
+		// Mirror the admin save path (Order\Base::save_meta_value): normalize the
+		// explicit selection and persist the variant before the label engine, which
+		// re-reads the order via wc_get_order(), is constructed.
+		$selection = Utils::normalize_letterbox_options( array( 'letterbox_48' => 'yes' ) );
+		$order->update_meta_data( '_postnl_letterbox_type', $selection['type'] );
+		$order->save_meta_data();
+
+		$this->assertSame(
+			'letterbox_48',
+			$this->resolve_letterbox_type( array( 'order_details' => array( 'order_id' => $order_id ) ) ),
+			'The explicit 48h admin selection must survive a fresh order load and resolve to 2948.'
+		);
 	}
 
 	/**

@@ -28,6 +28,7 @@ namespace PostNLWooCommerce\Tests\Integration;
 
 use PostNLWooCommerce\Tests\IntegrationTestCase;
 use PostNLWooCommerce\Frontend\Base;
+use PostNLWooCommerce\Order\Base as Order_Base;
 use PostNLWooCommerce\Shipping_Method\Settings;
 use PostNLWooCommerce\Rest_API\Shipping\Item_Info;
 use PostNLWooCommerce\Utils;
@@ -184,6 +185,73 @@ class LetterboxTypeTest extends IntegrationTestCase {
 			$this->resolve_letterbox_type( array( 'order_details' => array( 'order_id' => $order_id ) ) ),
 			'The explicit 48h admin selection must survive a fresh order load and resolve to 2948.'
 		);
+	}
+
+	/**
+	 * @testdox On reload, a stored 48h choice swaps the generic letterbox option for letterbox_48 so the meta box pre-selects 48h.
+	 */
+	public function test_get_shipping_options_preselects_48h_from_stored_variant(): void {
+		// A 24h merchant default proves the swap is driven by the stored variant,
+		// not the default: without it get_shipping_options() would pre-select 24h.
+		Settings::get_instance()->settings['default_automatic_letterboxparcel_product'] = 'letterbox';
+
+		$handler = $this->make_order_handler();
+
+		$order = new \WC_Order();
+		$order->save();
+		$this->order_ids[] = $order->get_id();
+
+		$handler->seed_backend_options( $order, array( 'letterbox' => 'yes' ) );
+		$order->update_meta_data( '_postnl_letterbox_type', 'letterbox_48' );
+		$order->save();
+
+		$options = $handler->get_shipping_options( wc_get_order( $order->get_id() ) );
+
+		$this->assertSame( 'yes', $options['letterbox_48'] ?? '', 'A stored 48h choice must pre-select the 48h option on reload.' );
+		$this->assertArrayNotHasKey( 'letterbox', $options, 'The generic 24h letterbox must be swapped out for the 48h variant.' );
+	}
+
+	/**
+	 * @testdox On reload, a stored 24h choice leaves the generic letterbox option in place and never surfaces letterbox_48.
+	 */
+	public function test_get_shipping_options_keeps_24h_from_stored_variant(): void {
+		Settings::get_instance()->settings['default_automatic_letterboxparcel_product'] = 'letterbox';
+
+		$handler = $this->make_order_handler();
+
+		$order = new \WC_Order();
+		$order->save();
+		$this->order_ids[] = $order->get_id();
+
+		$handler->seed_backend_options( $order, array( 'letterbox' => 'yes' ) );
+		$order->update_meta_data( '_postnl_letterbox_type', 'letterbox' );
+		$order->save();
+
+		$options = $handler->get_shipping_options( wc_get_order( $order->get_id() ) );
+
+		$this->assertSame( 'yes', $options['letterbox'] ?? '', 'A stored 24h choice must keep the generic letterbox option selected.' );
+		$this->assertArrayNotHasKey( 'letterbox_48', $options, 'A 24h choice must never surface the 48h variant.' );
+	}
+
+	/**
+	 * A minimal concrete Order\Base whose only dependencies are the settings
+	 * instance and the meta name. The constructor is overridden so the real one
+	 * does not register admin hooks, which would leak into sibling tests.
+	 *
+	 * @return Order_Base
+	 */
+	private function make_order_handler(): Order_Base {
+		return new class() extends Order_Base {
+			public function __construct() {
+				$this->settings  = Settings::get_instance();
+				$this->meta_name = '_' . $this->prefix . 'order_metadata';
+			}
+			public function init_hooks() {}
+			public function seed_backend_options( \WC_Order $order, array $backend ): void {
+				$order->update_meta_data( $this->meta_name, array( 'backend' => $backend ) );
+				$order->save();
+			}
+		};
 	}
 
 	/**

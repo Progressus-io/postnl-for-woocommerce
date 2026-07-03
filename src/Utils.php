@@ -569,17 +569,25 @@ class Utils {
 		$selected_options   = array();
 
 		foreach ( $backend_data as $option_key => $value ) {
-			if ( ! isset( $options_to_display[ $option_key ] ) || 'yes' !== $value ) {
+			if ( 'yes' !== $value ) {
 				continue;
 			}
 
-			// Show the specific letterbox variant (24h / 48h) instead of the
-			// generic "Letterbox" label. Legacy orders with no recorded variant
-			// fall back to 24h, matching Item_Info::get_letterbox_type().
-			if ( 'letterbox' === $option_key ) {
-				$order              = wc_get_order( $order_id );
-				$letterbox_type     = ( $order instanceof \WC_Order ) ? $order->get_meta( '_postnl_letterbox_type' ) : '';
+			// Resolve either letterbox key to its 24h/48h label; 'letterbox_48' is
+			// not in the display map, so the recorded variant wins, else the key.
+			if ( 'letterbox' === $option_key || 'letterbox_48' === $option_key ) {
+				$order          = wc_get_order( $order_id );
+				$letterbox_type = ( $order instanceof \WC_Order ) ? $order->get_meta( '_postnl_letterbox_type' ) : '';
+
+				if ( ! in_array( $letterbox_type, array( 'letterbox', 'letterbox_48' ), true ) ) {
+					$letterbox_type = ( 'letterbox_48' === $option_key ) ? 'letterbox_48' : 'letterbox';
+				}
+
 				$selected_options[] = self::get_letterbox_admin_label( $letterbox_type );
+				continue;
+			}
+
+			if ( ! isset( $options_to_display[ $option_key ] ) ) {
 				continue;
 			}
 

@@ -27,6 +27,9 @@ PostNL’s official extension for WooCommerce on WordPress. Manage your national
 
 ## Changelog
 
+### 5.9.8
+* Add: Letterboxparcel 48 hours as a selectable option in the domestic default shipping option, the bulk Change Shipping Options action, and the Label & Tracking menu.
+
 ### 5.9.7
 * Remove: Removed the Shipment & Return return option, as PostNL is discontinuing it on 1 July 2026.
 

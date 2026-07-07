@@ -81,6 +81,9 @@ Follow these instructions (https://www.postnl.nl/Images/aanvragen-api-key-stappe
 
 == Changelog ==
 
+= 5.9.8 (2026-xx-xx) =
+* Add: Letterboxparcel 48 hours as a selectable option in the domestic default shipping option, the bulk Change Shipping Options action, and the Label & Tracking menu.
+
 = 5.9.7 (2026-06-30) =
 * Remove: Removed the Shipment & Return return option, as PostNL is discontinuing it on 1 July 2026.
 

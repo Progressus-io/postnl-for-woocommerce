@@ -118,12 +118,37 @@ abstract class Base {
 		// The default options only carry the generic 'letterbox' feature; surface the
 		// resolved 24h/48h variant so the matching option is pre-selected and a re-save
 		// preserves the existing choice instead of silently reverting it to 24h.
-		if ( 'yes' === ( $default_options['letterbox'] ?? '' ) && 'letterbox_48' === $this->resolve_letterbox_variant( $order ) ) {
-			unset( $default_options['letterbox'] );
-			$default_options['letterbox_48'] = 'yes';
+		return $this->apply_letterbox_display_variant( $default_options, $order );
+	}
+
+	/**
+	 * Swap the generic 'letterbox' feature for the resolved 24h/48h display variant.
+	 *
+	 * The stored backend selection and the plugin defaults only ever carry the
+	 * generic 'letterbox' feature; the concrete 24h/48h variant is recorded
+	 * separately in the _postnl_letterbox_type meta. Surfacing the resolved variant
+	 * keeps the two mutually-exclusive admin checkboxes in step with the label
+	 * engine so exactly one of them is pre-selected, instead of the generic 24h
+	 * feature re-checking the 24h box on top of the pre-selected 48h box.
+	 *
+	 * @since 5.9.8
+	 *
+	 * @param array     $options Option map ( feature => 'yes' ).
+	 * @param \WC_Order $order   Order object.
+	 *
+	 * @return array
+	 */
+	protected function apply_letterbox_display_variant( $options, $order ) {
+		if ( ! is_array( $options ) ) {
+			return $options;
 		}
 
-		return $default_options;
+		if ( 'yes' === ( $options['letterbox'] ?? '' ) && 'letterbox_48' === $this->resolve_letterbox_variant( $order ) ) {
+			unset( $options['letterbox'] );
+			$options['letterbox_48'] = 'yes';
+		}
+
+		return $options;
 	}
 
 	/**

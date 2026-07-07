@@ -272,8 +272,17 @@
 		'#postnl_delivery_code_at_door'
 	].join( ', ' );
 
+	/**
+	 * Keep the two letterbox variants (24h / 48h) mutually exclusive and toggle
+	 * the options that cannot be combined with a letterbox parcel.
+	 *
+	 * @param {Event} [event] Change event identifying the toggled checkbox.
+	 *                        Absent on the initial page-load call.
+	 * @return {void}
+	 */
 	function postnl_toggle_shipping_products( event ) {
 		var changed = ( event && event.target ) ? event.target : null;
+		var letterbox_selected;
 
 		// Keep the two letterbox variants mutually exclusive.
 		if ( changed === $( postnl_letterbox_24 ).get( 0 ) && $( postnl_letterbox_24 ).is( ':checked' ) ) {
@@ -283,7 +292,7 @@
 		}
 
 		// A letterbox parcel (either variant) cannot be combined with these options.
-		var letterbox_selected = $( postnl_letterbox_24 ).is( ':checked' ) || $( postnl_letterbox_48 ).is( ':checked' );
+		letterbox_selected = $( postnl_letterbox_24 ).is( ':checked' ) || $( postnl_letterbox_48 ).is( ':checked' );
 
 		if ( letterbox_selected ) {
 			$( postnl_letterbox_incompatible )

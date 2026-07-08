@@ -23,6 +23,8 @@ use Postnl\Sdk\Exception\Client\TimeoutException;
 use Postnl\Sdk\Exception\Client\ValidationException;
 use Postnl\Sdk\Exception\Data\FieldError;
 use Postnl\Sdk\Exception\Data\ProblemDetails;
+use Postnl\Sdk\Exception\HttpSdkException;
+use Postnl\Sdk\Exception\InvalidArgumentSdkException;
 use Postnl\Sdk\Exception\Retry\RetryExhaustedException;
 use Postnl\Sdk\Exception\RuntimeSdkException;
 use Postnl\Sdk\Exception\SchemaMismatchException;
@@ -182,7 +184,7 @@ class Exception_ConverterTest extends UnitTestCase {
 	 */
 	public function test_validation_exception_without_field_errors_uses_problem_message(): void {
 		$sdk = new ValidationException(
-			'Bad Request',
+			'The request body is malformed',
 			HttpStatus::BadRequest,
 			400,
 			$this->request(),
@@ -213,7 +215,7 @@ class Exception_ConverterTest extends UnitTestCase {
 
 		$error = Exception_Converter::convert( $sdk );
 
-		$this->assertSame( 'PostNL temporarily unavailable, please try again.', $error->getMessage() );
+		$this->assertSame( 'PostNL is temporarily unavailable. Please try again.', $error->getMessage() );
 		$this->assertSame( 429, $error->getCode() );
 	}
 
@@ -232,7 +234,7 @@ class Exception_ConverterTest extends UnitTestCase {
 
 		$error = Exception_Converter::convert( $sdk );
 
-		$this->assertSame( 'PostNL temporarily unavailable, please try again.', $error->getMessage() );
+		$this->assertSame( 'PostNL is temporarily unavailable. Please try again.', $error->getMessage() );
 		$this->assertSame( 408, $error->getCode() );
 	}
 
@@ -252,7 +254,7 @@ class Exception_ConverterTest extends UnitTestCase {
 		$error = Exception_Converter::convert( $sdk );
 
 		$this->assertSame(
-			'PostNL temporarily unavailable, please try again. (traceId: trace-503)',
+			'PostNL is temporarily unavailable. Please try again. (traceId: trace-503)',
 			$error->getMessage()
 		);
 		$this->assertSame( 503, $error->getCode() );
@@ -272,7 +274,7 @@ class Exception_ConverterTest extends UnitTestCase {
 
 		$error = Exception_Converter::convert( $sdk );
 
-		$this->assertSame( 'PostNL temporarily unavailable, please try again.', $error->getMessage() );
+		$this->assertSame( 'PostNL is temporarily unavailable. Please try again.', $error->getMessage() );
 		$this->assertSame( 0, $error->getCode() );
 	}
 
@@ -284,18 +286,19 @@ class Exception_ConverterTest extends UnitTestCase {
 
 		$error = Exception_Converter::convert( $sdk );
 
-		$this->assertSame( 'PostNL temporarily unavailable, please try again.', $error->getMessage() );
+		$this->assertSame( 'PostNL is temporarily unavailable. Please try again.', $error->getMessage() );
 		$this->assertSame( 503, $error->getCode() );
 	}
 
 	// ── Generic HTTP + non-HTTP ────────────────────────────────────────────────
 
 	/**
-	 * @testdox A generic 4xx client error uses the ProblemDetails message and preserves the status
+	 * @testdox A generic 4xx client error uses the SDK message and preserves the status
 	 */
-	public function test_generic_client_exception_uses_problem_message(): void {
+	public function test_generic_client_exception_uses_sdk_message(): void {
+		// HttpSdkException::fromResponse() seeds the exception message from ProblemDetails, so mirror that here.
 		$sdk = new ClientException(
-			'Not Found',
+			'Shipment not found',
 			HttpStatus::NotFound,
 			404,
 			$this->request(),
@@ -306,6 +309,19 @@ class Exception_ConverterTest extends UnitTestCase {
 		$error = Exception_Converter::convert( $sdk );
 
 		$this->assertSame( 'Shipment not found (traceId: trace-404)', $error->getMessage() );
+		$this->assertSame( 404, $error->getCode() );
+	}
+
+	/**
+	 * @testdox An HTTP error with an empty body never leaks the raw "Unknown error" fallback
+	 */
+	public function test_empty_body_http_error_does_not_leak_unknown_error(): void {
+		// A real parsed error from an empty 404 body: the SDK cleans "Unknown error" to the status reason.
+		$sdk = HttpSdkException::fromResponse( $this->request(), $this->response( 404 ) );
+
+		$error = Exception_Converter::convert( $sdk );
+
+		$this->assertStringNotContainsString( 'Unknown error', $error->getMessage() );
 		$this->assertSame( 404, $error->getCode() );
 	}
 
@@ -332,6 +348,18 @@ class Exception_ConverterTest extends UnitTestCase {
 
 		$this->assertSame( 'SDK: internal failure', $error->getMessage() );
 		$this->assertSame( 500, $error->getCode() );
+	}
+
+	/**
+	 * @testdox An SDK exception rooted in InvalidArgumentException (not RuntimeException) still falls through cleanly
+	 */
+	public function test_invalid_argument_sdk_exception_passes_message_through(): void {
+		$sdk = InvalidArgumentSdkException::create( 'bad argument', 0 );
+
+		$error = Exception_Converter::convert( $sdk );
+
+		$this->assertSame( 'SDK: bad argument', $error->getMessage() );
+		$this->assertSame( 0, $error->getCode() );
 	}
 
 	/**

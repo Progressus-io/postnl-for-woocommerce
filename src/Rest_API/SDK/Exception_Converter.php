@@ -22,11 +22,12 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Class Exception_Converter
  *
- * Translates a V4 SDK exception into a plain \Exception matching the shape the
- * legacy REST clients throw (a human-readable getMessage() plus the HTTP status
- * in getCode()). Because the converted error is indistinguishable from what
- * Rest_API\Base::check_response_error() throws, the V4 path can be dropped in
- * behind Order\Base and the frontend handlers with no error-handling changes.
+ * Translates a V4 SDK exception into a plain \Exception carrying a human-readable
+ * getMessage(), so it is consumed exactly like the errors
+ * Rest_API\Base::check_response_error() throws. Callers only read getMessage(),
+ * so the V4 path can be dropped in behind Order\Base and the frontend handlers
+ * with no error-handling changes; getCode() additionally carries the HTTP status,
+ * which the legacy path leaves at 0.
  *
  * The original SDK exception is preserved as the previous exception so the full
  * cause chain stays available for logging.
@@ -47,7 +48,7 @@ class Exception_Converter {
 	 *  - Transient failures (429, 408, 5xx, network, retries exhausted) collapse
 	 *    to "PostNL temporarily unavailable, please try again." since a retry may
 	 *    succeed.
-	 *  - Any other HTTP error uses the parsed ProblemDetails message.
+	 *  - Any other HTTP error uses the exception's already-cleaned message.
 	 *  - Non-HTTP SDK/runtime errors pass their own message through unchanged.
 	 *
 	 * When available, the PostNL traceId is appended for support correlation.
@@ -65,12 +66,12 @@ class Exception_Converter {
 		}
 
 		if ( $exception instanceof RetryableExceptionInterface || $exception instanceof RetryExhaustedException ) {
-			return self::to_error( esc_html__( 'PostNL temporarily unavailable, please try again.', 'postnl-for-woocommerce' ), $exception );
+			return self::to_error( esc_html__( 'PostNL is temporarily unavailable. Please try again.', 'postnl-for-woocommerce' ), $exception );
 		}
 
 		if ( $exception instanceof HttpSdkException ) {
-			// phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- Third-party SDK DTO property.
-			return self::to_error( $exception->problemDetails->getMessage(), $exception );
+			// getMessage() is the SDK's already-cleaned message; it never leaks the raw "Unknown error" fallback.
+			return self::to_error( $exception->getMessage(), $exception );
 		}
 
 		return self::to_error( $exception->getMessage(), $exception );
@@ -95,8 +96,8 @@ class Exception_Converter {
 	/**
 	 * Flatten a ValidationException's field errors into "field: message" pairs.
 	 *
-	 * Falls back to the ProblemDetails message when PostNL returned a 400/422
-	 * without any structured field errors.
+	 * Falls back to the exception's own (already-cleaned) message when PostNL
+	 * returned a 400/422 without any structured field errors.
 	 *
 	 * @param ValidationException $exception Validation exception to describe.
 	 * @return string
@@ -109,8 +110,7 @@ class Exception_Converter {
 		}
 
 		if ( empty( $parts ) ) {
-			// phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- Third-party SDK DTO property.
-			return $exception->problemDetails->getMessage();
+			return $exception->getMessage();
 		}
 
 		return implode( '; ', $parts );

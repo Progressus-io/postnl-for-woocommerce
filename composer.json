@@ -92,7 +92,7 @@
 	"repositories": {
 		"private-packagist": {
 			"type": "composer",
-			"url": "https://repo.packagist.com/postnl/"
+			"url": "https://postnl.repo.packagist.com/progressus/"
 		}
 	}
 }

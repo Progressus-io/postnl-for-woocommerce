@@ -57,7 +57,7 @@ class Fill_In_With_PostNL_Settings {
 
 		$info_block  = '<p>' . esc_html__( 'Let customers autofill their shipping address in just a few clicks with their PostNL account. So customers don\'t have to manually enter their details anymore. Address details are securely prefilled with PostNL, reducing address errors, returns, and checkout drop-off.', 'postnl-for-woocommerce' ) . '</p>';
 		$info_block .= '<p>' . esc_html__( 'Available for all consumers with a PostNL account and a Dutch or Belgian shipping address.', 'postnl-for-woocommerce' ) . '</p>';
-		$info_block .= '<p>' . esc_html__( 'Activate PostNL autofill via this link:', 'postnl-for-woocommerce' ) . ' <a href="' . esc_url( $activation_url ) . '" target="_blank">' . esc_html( $activation_url ) . '</a></p>';
+		$info_block .= '<p>' . esc_html__( 'Activate PostNL autofill via this link:', 'postnl-for-woocommerce' ) . ' <a href="' . esc_url( $activation_url ) . '" target="_blank" rel="noopener noreferrer">' . esc_html( $activation_url ) . '</a></p>';
 
 		$settings = array(
 			array(
@@ -331,8 +331,9 @@ class Fill_In_With_PostNL_Settings {
 		$border_radius    = absint( get_option( 'postnl_button_border_radius', '4' ) );
 		$logo_url         = POSTNL_WC_PLUGIN_DIR_URL . '/assets/images/postnl-logo.svg';
 
-		$button_style = 'background-color:' . esc_attr( $background_color ) . ';'
-			. 'border:' . esc_attr( $border ) . ';'
+		// Built raw: the whole declaration list is escaped once at the point of output.
+		$button_style = 'background-color:' . $background_color . ';'
+			. 'border:' . $border . ';'
 			. 'border-radius:' . $border_radius . 'px;';
 		?>
 		<tr valign="top">

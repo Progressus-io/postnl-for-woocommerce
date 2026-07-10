@@ -28,8 +28,11 @@ namespace PostNLWooCommerce\Tests\Integration;
 
 use PostNLWooCommerce\Tests\IntegrationTestCase;
 use PostNLWooCommerce\Frontend\Base;
+use PostNLWooCommerce\Order\Base as Order_Base;
+use PostNLWooCommerce\Order\Single;
 use PostNLWooCommerce\Shipping_Method\Settings;
 use PostNLWooCommerce\Rest_API\Shipping\Item_Info;
+use PostNLWooCommerce\Utils;
 
 /**
  * Covers the classic-checkout persistence path and the variant resolver.
@@ -156,6 +159,238 @@ class LetterboxTypeTest extends IntegrationTestCase {
 		// No order is passed, which exercises the customer_decide fallback without
 		// depending on the order-only logging branch.
 		$this->assertSame( 'letterbox', $this->resolve_letterbox_type( array() ) );
+	}
+
+	/**
+	 * @testdox An explicit admin letterbox_48 selection persists so a fresh order load resolves to 2948, not the 24h default.
+	 */
+	public function test_admin_letterbox_48_selection_persists_and_resolves(): void {
+		// A 24h merchant default means a dropped/unsaved selection would resolve to
+		// letterbox (2928); the explicit 48h choice must override it.
+		Settings::get_instance()->settings['default_automatic_letterboxparcel_product'] = 'letterbox';
+
+		$order = new \WC_Order();
+		$order->save();
+		$this->order_ids[] = $order->get_id();
+		$order_id          = $order->get_id();
+
+		// Mirror the admin save path (Order\Base::save_meta_value): normalize the
+		// explicit selection and persist the variant before the label engine, which
+		// re-reads the order via wc_get_order(), is constructed.
+		$selection = Utils::normalize_letterbox_options( array( 'letterbox_48' => 'yes' ) );
+		$order->update_meta_data( '_postnl_letterbox_type', $selection['type'] );
+		$order->save_meta_data();
+
+		$this->assertSame(
+			'letterbox_48',
+			$this->resolve_letterbox_type( array( 'order_details' => array( 'order_id' => $order_id ) ) ),
+			'The explicit 48h admin selection must survive a fresh order load and resolve to 2948.'
+		);
+	}
+
+	/**
+	 * @testdox On reload, a stored 48h choice swaps the generic letterbox option for letterbox_48 so the meta box pre-selects 48h.
+	 */
+	public function test_get_shipping_options_preselects_48h_from_stored_variant(): void {
+		// A 24h merchant default proves the swap is driven by the stored variant,
+		// not the default: without it get_shipping_options() would pre-select 24h.
+		Settings::get_instance()->settings['default_automatic_letterboxparcel_product'] = 'letterbox';
+
+		$handler = $this->make_order_handler();
+
+		$order = new \WC_Order();
+		$order->save();
+		$this->order_ids[] = $order->get_id();
+
+		$handler->seed_backend_options( $order, array( 'letterbox' => 'yes' ) );
+		$order->update_meta_data( '_postnl_letterbox_type', 'letterbox_48' );
+		$order->save();
+
+		$options = $handler->get_shipping_options( wc_get_order( $order->get_id() ) );
+
+		$this->assertSame( 'yes', $options['letterbox_48'] ?? '', 'A stored 48h choice must pre-select the 48h option on reload.' );
+		$this->assertArrayNotHasKey( 'letterbox', $options, 'The generic 24h letterbox must be swapped out for the 48h variant.' );
+	}
+
+	/**
+	 * @testdox On reload, a stored 24h choice leaves the generic letterbox option in place and never surfaces letterbox_48.
+	 */
+	public function test_get_shipping_options_keeps_24h_from_stored_variant(): void {
+		Settings::get_instance()->settings['default_automatic_letterboxparcel_product'] = 'letterbox';
+
+		$handler = $this->make_order_handler();
+
+		$order = new \WC_Order();
+		$order->save();
+		$this->order_ids[] = $order->get_id();
+
+		$handler->seed_backend_options( $order, array( 'letterbox' => 'yes' ) );
+		$order->update_meta_data( '_postnl_letterbox_type', 'letterbox' );
+		$order->save();
+
+		$options = $handler->get_shipping_options( wc_get_order( $order->get_id() ) );
+
+		$this->assertSame( 'yes', $options['letterbox'] ?? '', 'A stored 24h choice must keep the generic letterbox option selected.' );
+		$this->assertArrayNotHasKey( 'letterbox_48', $options, 'A 24h choice must never surface the 48h variant.' );
+	}
+
+	/**
+	 * @testdox After a 48h selection, the reloaded meta box pre-selects only the 48h checkbox, not both.
+	 */
+	public function test_add_meta_box_value_shows_only_48h_after_48h_selection(): void {
+		// A 24h merchant default proves the display is driven by the stored 48h
+		// variant, not the default: without the swap both checkboxes surface.
+		Settings::get_instance()->settings['default_automatic_letterboxparcel_product'] = 'letterbox';
+
+		$handler = $this->make_single_handler();
+
+		$order = new \WC_Order();
+		$order->save();
+		$this->order_ids[] = $order->get_id();
+
+		// Mirror the persisted state after a 48h save: the backend collapses onto
+		// the generic 'letterbox' feature and the variant is recorded separately.
+		$handler->seed_backend_options( $order, array( 'letterbox' => 'yes' ) );
+		$order->update_meta_data( '_postnl_letterbox_type', 'letterbox_48' );
+		$order->save();
+
+		$fields = $handler->add_meta_box_value( wc_get_order( $order->get_id() ) );
+
+		$this->assertNotSame(
+			'yes',
+			$this->field( $fields, 'postnl_letterbox' )['value'],
+			'The 24h checkbox must not be pre-selected for a 48h order.'
+		);
+		$this->assertSame(
+			'yes',
+			$this->field( $fields, 'postnl_letterbox_48' )['value'],
+			'The 48h checkbox must be pre-selected for a 48h order.'
+		);
+	}
+
+	/**
+	 * @testdox A 24h selection still pre-selects only the 24h checkbox on reload.
+	 */
+	public function test_add_meta_box_value_keeps_24h_after_24h_selection(): void {
+		// A 48h merchant default proves the display is driven by the stored 24h
+		// variant, not the default.
+		Settings::get_instance()->settings['default_automatic_letterboxparcel_product'] = 'letterbox_48';
+
+		$handler = $this->make_single_handler();
+
+		$order = new \WC_Order();
+		$order->save();
+		$this->order_ids[] = $order->get_id();
+
+		$handler->seed_backend_options( $order, array( 'letterbox' => 'yes' ) );
+		$order->update_meta_data( '_postnl_letterbox_type', 'letterbox' );
+		$order->save();
+
+		$fields = $handler->add_meta_box_value( wc_get_order( $order->get_id() ) );
+
+		$this->assertSame(
+			'yes',
+			$this->field( $fields, 'postnl_letterbox' )['value'],
+			'The 24h checkbox must stay pre-selected for a 24h order.'
+		);
+		$this->assertNotSame(
+			'yes',
+			$this->field( $fields, 'postnl_letterbox_48' )['value'],
+			'The 48h checkbox must not surface for a 24h order.'
+		);
+	}
+
+	/**
+	 * @testdox Once a label exists, the pre-selected 48h checkbox is locked (disabled).
+	 */
+	public function test_add_meta_box_value_disables_48h_checkbox_when_label_exists(): void {
+		Settings::get_instance()->settings['default_automatic_letterboxparcel_product'] = 'letterbox';
+
+		$handler = $this->make_single_handler( true );
+
+		$order = new \WC_Order();
+		$order->save();
+		$this->order_ids[] = $order->get_id();
+
+		$handler->seed_backend_options( $order, array( 'letterbox' => 'yes' ) );
+		$order->update_meta_data( '_postnl_letterbox_type', 'letterbox_48' );
+		$order->save();
+
+		$fields = $handler->add_meta_box_value( wc_get_order( $order->get_id() ) );
+
+		$this->assertSame(
+			'disabled',
+			$this->field( $fields, 'postnl_letterbox_48' )['custom_attributes']['disabled'] ?? '',
+			'The pre-selected 48h checkbox must be locked once a label exists.'
+		);
+	}
+
+	/**
+	 * A minimal concrete Order\Base whose only dependencies are the settings
+	 * instance and the meta name. The constructor is overridden so the real one
+	 * does not register admin hooks, which would leak into sibling tests.
+	 *
+	 * @return Order_Base
+	 */
+	private function make_order_handler(): Order_Base {
+		return new class() extends Order_Base {
+			public function __construct() {
+				$this->settings  = Settings::get_instance();
+				$this->meta_name = '_' . $this->prefix . 'order_metadata';
+			}
+			public function init_hooks() {}
+			public function seed_backend_options( \WC_Order $order, array $backend ): void {
+				$order->update_meta_data( $this->meta_name, array( 'backend' => $backend ) );
+				$order->save();
+			}
+		};
+	}
+
+	/**
+	 * A minimal concrete Order\Single whose label-file state is controllable and
+	 * whose constructor does not register the real admin hooks.
+	 *
+	 * @param bool $has_label Whether have_label_file() should report a saved label.
+	 * @return Single
+	 */
+	private function make_single_handler( bool $has_label = false ): Single {
+		return new class( $has_label ) extends Single {
+			/**
+			 * @var bool
+			 */
+			private $fake_has_label;
+
+			public function __construct( bool $has_label ) {
+				$this->fake_has_label = $has_label;
+				$this->settings       = Settings::get_instance();
+				$this->meta_name      = '_' . $this->prefix . 'order_metadata';
+			}
+			public function init_hooks() {}
+			public function have_label_file( $order ) {
+				return $this->fake_has_label;
+			}
+			public function seed_backend_options( \WC_Order $order, array $backend ): void {
+				$order->update_meta_data( $this->meta_name, array( 'backend' => $backend ) );
+				$order->save();
+			}
+		};
+	}
+
+	/**
+	 * Return the meta-box field definition with the given prefixed id.
+	 *
+	 * @param array  $fields Field definitions from add_meta_box_value().
+	 * @param string $id     Prefixed field id to find.
+	 * @return array
+	 */
+	private function field( array $fields, string $id ): array {
+		foreach ( $fields as $field ) {
+			if ( $field['id'] === $id ) {
+				return $field;
+			}
+		}
+
+		$this->fail( sprintf( 'Field %s not found in the meta box.', $id ) );
 	}
 
 	/**

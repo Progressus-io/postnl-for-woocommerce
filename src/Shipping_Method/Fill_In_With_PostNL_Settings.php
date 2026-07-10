@@ -25,7 +25,7 @@ class Fill_In_With_PostNL_Settings {
 		add_filter( 'woocommerce_get_settings_shipping', array( $this, 'add_settings_fields' ), 10, 2 );
 		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_admin_scripts' ) );
 		add_filter( 'woocommerce_admin_settings_sanitize_option', array( $this, 'maybe_prevent_saving_invalid_data' ), 10, 3 );
-		add_action( 'woocommerce_admin_field_postnl_preview', array( $this, 'render_preview_field' ) );
+		add_action( 'woocommerce_admin_field_postnl_preview', array( __CLASS__, 'render_preview_field' ) );
 	}
 
 	/**
@@ -320,9 +320,12 @@ class Fill_In_With_PostNL_Settings {
 	/**
 	 * Render the live button preview field.
 	 *
+	 * Registered as a static callback so the hook survives this class being
+	 * instantiated more than once per request without rendering duplicates.
+	 *
 	 * @return void
 	 */
-	public function render_preview_field(): void {
+	public static function render_preview_field(): void {
 		$background_color = sanitize_hex_color( get_option( 'postnl_button_background_color', '#ff6200' ) );
 		$border           = sanitize_text_field( get_option( 'postnl_button_border', 'none' ) );
 		$border_radius    = absint( get_option( 'postnl_button_border_radius', '4' ) );

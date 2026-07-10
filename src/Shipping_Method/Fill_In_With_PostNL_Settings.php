@@ -411,7 +411,10 @@ class Fill_In_With_PostNL_Settings {
 
 		if ( isset( $numeric_ranges[ $option['id'] ] ) ) {
 			list( $min, $max ) = $numeric_ranges[ $option['id'] ];
-			return max( $min, min( $max, absint( $value ) ) );
+
+			// intval(), not absint(): absint() reflects a negative into range
+			// (-500 would become a 100% width) instead of clamping to $min.
+			return max( $min, min( $max, intval( $value ) ) );
 		}
 
 		// Only run the cross-field checks below once per settings save.

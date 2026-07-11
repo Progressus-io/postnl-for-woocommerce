@@ -46,8 +46,8 @@ class Exception_Converter {
 	 *  - Validation errors (400/422) surface the field-level errors PostNL
 	 *    reported so the merchant can correct the request.
 	 *  - Transient failures (429, 408, 5xx, network, retries exhausted) collapse
-	 *    to "PostNL temporarily unavailable, please try again." since a retry may
-	 *    succeed.
+	 *    to "PostNL is temporarily unavailable. Please try again." since a retry
+	 *    may succeed.
 	 *  - Any other HTTP error uses the exception's already-cleaned message.
 	 *  - Non-HTTP SDK/runtime errors pass their own message through unchanged.
 	 *

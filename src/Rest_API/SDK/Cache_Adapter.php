@@ -101,7 +101,7 @@ class Cache_Adapter extends AbstractCacheAdapter {
 	}
 
 	/**
-	 * Store a value. Non-allowlisted keys are not cached and report success.
+	 * Store a value. Non-allowlisted keys are not cached and return false.
 	 *
 	 * @param string                $key   Cache key.
 	 * @param mixed                 $value Value to cache.

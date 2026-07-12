@@ -7,10 +7,53 @@ on:
       - main
 
 jobs:
-  # Runs both PHPUnit suites inside the wp-env tests-cli container.
-  # Requires Node.js, Docker, and Composer on the runner.
-  php-tests:
-    name: PHPUnit (unit + integration)
+  # Unit suite is pure PHP (no wp-env), so a Docker Hub outage can't block it.
+  unit:
+    name: PHPUnit (unit)
+    runs-on: ubuntu-latest
+    # Skip on fork PRs — GitHub withholds secrets, so the Private Packagist install would fail.
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: mbstring, dom, xml
+          coverage: none
+
+      - name: Install Composer dependencies
+        uses: ramsey/composer-install@v3
+        env:
+          COMPOSER_AUTH: ${{ secrets.POSTNL_PRIVATE_PACKAGIST_AUTH }}
+
+      - name: Assert no auth.json written by Composer
+        shell: bash
+        run: |
+          # Scan only where Composer writes auth.json: project root + Composer home.
+          SCAN_DIRS=("$GITHUB_WORKSPACE")
+          [ -n "$COMPOSER_HOME" ] && [ -d "$COMPOSER_HOME" ] && SCAN_DIRS+=("$COMPOSER_HOME")
+          [ -d "$HOME/.composer" ] && SCAN_DIRS+=("$HOME/.composer")
+          [ -d "$HOME/.config/composer" ] && SCAN_DIRS+=("$HOME/.config/composer")
+          if find "${SCAN_DIRS[@]}" -maxdepth 1 \
+              \( -name "auth.json" -o -name "auth.*.json" \) 2>/dev/null | grep -q .; then
+            echo "::error::Composer wrote an auth credential file — credentials must stay in env only!"
+            find "${SCAN_DIRS[@]}" -maxdepth 1 \( -name "auth.json" -o -name "auth.*.json" \) 2>/dev/null
+            exit 1
+          fi
+          echo "Auth file check passed — no auth.json written to workspace or Composer home."
+
+      - name: Unit tests
+        run: vendor/bin/phpunit -c phpunit-unit.xml.dist
+
+  # Integration suite needs a real WordPress, so it runs inside the wp-env
+  # tests-cli container. wp-env start is wrapped in a retry because the Docker
+  # image pulls occasionally time out against Docker Hub on the runner.
+  integration:
+    name: PHPUnit (integration)
     runs-on: ubuntu-latest
     # Skip on fork PRs — GitHub withholds secrets, so the Private Packagist install would fail.
     if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
@@ -55,11 +98,16 @@ jobs:
           fi
           echo "Auth file check passed — no auth.json written to workspace or Composer home."
 
+      # Retry: wp-env image pulls occasionally time out against Docker Hub.
       - name: Start wp-env
-        run: npm run env start
-
-      - name: Unit tests
-        run: npm run test:php:unit
+        run: |
+          for i in 1 2 3; do
+            npm run env start && break
+            echo "wp-env start failed (attempt $i); retrying in 15s..."
+            npm run env stop || true
+            sleep 15
+          done
+        timeout-minutes: 12
 
       - name: Integration tests
         run: npm run test:php:integration

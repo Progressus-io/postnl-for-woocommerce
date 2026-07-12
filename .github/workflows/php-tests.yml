@@ -30,21 +30,29 @@ jobs:
         env:
           COMPOSER_AUTH: ${{ secrets.POSTNL_PRIVATE_PACKAGIST_AUTH }}
 
-      - name: Assert no auth.json written by Composer
+      - name: Assert no Packagist credential written by Composer
         shell: bash
         run: |
           # Scan only where Composer writes auth.json: project root + Composer home.
+          # Runner tooling (setup-php) pre-creates ~/.composer/auth.json with a
+          # github-oauth token, so only a Packagist credential on disk is a leak.
           SCAN_DIRS=("$GITHUB_WORKSPACE")
           [ -n "$COMPOSER_HOME" ] && [ -d "$COMPOSER_HOME" ] && SCAN_DIRS+=("$COMPOSER_HOME")
           [ -d "$HOME/.composer" ] && SCAN_DIRS+=("$HOME/.composer")
           [ -d "$HOME/.config/composer" ] && SCAN_DIRS+=("$HOME/.config/composer")
-          if find "${SCAN_DIRS[@]}" -maxdepth 1 \
-              \( -name "auth.json" -o -name "auth.*.json" \) 2>/dev/null | grep -q .; then
-            echo "::error::Composer wrote an auth credential file — credentials must stay in env only!"
-            find "${SCAN_DIRS[@]}" -maxdepth 1 \( -name "auth.json" -o -name "auth.*.json" \) 2>/dev/null
+          LEAK=0
+          while IFS= read -r auth_file; do
+            if grep -qi "packagist" "$auth_file"; then
+              echo "::error::Composer auth file with a Packagist credential found on disk: $auth_file"
+              LEAK=1
+            else
+              echo "Ignoring non-Packagist auth file created by runner tooling: $auth_file"
+            fi
+          done < <(find "${SCAN_DIRS[@]}" -maxdepth 1 \( -name "auth.json" -o -name "auth.*.json" \) 2>/dev/null)
+          if [ "$LEAK" -eq 1 ]; then
             exit 1
           fi
-          echo "Auth file check passed — no auth.json written to workspace or Composer home."
+          echo "Auth file check passed — no Packagist credential written to disk."
 
       - name: Unit tests
         run: vendor/bin/phpunit -c phpunit-unit.xml.dist
@@ -82,21 +90,29 @@ jobs:
         env:
           COMPOSER_AUTH: ${{ secrets.POSTNL_PRIVATE_PACKAGIST_AUTH }}
 
-      - name: Assert no auth.json written by Composer
+      - name: Assert no Packagist credential written by Composer
         shell: bash
         run: |
           # Scan only where Composer writes auth.json: project root + Composer home.
+          # Runner tooling (setup-php) pre-creates ~/.composer/auth.json with a
+          # github-oauth token, so only a Packagist credential on disk is a leak.
           SCAN_DIRS=("$GITHUB_WORKSPACE")
           [ -n "$COMPOSER_HOME" ] && [ -d "$COMPOSER_HOME" ] && SCAN_DIRS+=("$COMPOSER_HOME")
           [ -d "$HOME/.composer" ] && SCAN_DIRS+=("$HOME/.composer")
           [ -d "$HOME/.config/composer" ] && SCAN_DIRS+=("$HOME/.config/composer")
-          if find "${SCAN_DIRS[@]}" -maxdepth 1 \
-              \( -name "auth.json" -o -name "auth.*.json" \) 2>/dev/null | grep -q .; then
-            echo "::error::Composer wrote an auth credential file — credentials must stay in env only!"
-            find "${SCAN_DIRS[@]}" -maxdepth 1 \( -name "auth.json" -o -name "auth.*.json" \) 2>/dev/null
+          LEAK=0
+          while IFS= read -r auth_file; do
+            if grep -qi "packagist" "$auth_file"; then
+              echo "::error::Composer auth file with a Packagist credential found on disk: $auth_file"
+              LEAK=1
+            else
+              echo "Ignoring non-Packagist auth file created by runner tooling: $auth_file"
+            fi
+          done < <(find "${SCAN_DIRS[@]}" -maxdepth 1 \( -name "auth.json" -o -name "auth.*.json" \) 2>/dev/null)
+          if [ "$LEAK" -eq 1 ]; then
             exit 1
           fi
-          echo "Auth file check passed — no auth.json written to workspace or Composer home."
+          echo "Auth file check passed — no Packagist credential written to disk."
 
       # Retry: wp-env image pulls occasionally time out against Docker Hub.
       - name: Start wp-env

@@ -51,6 +51,25 @@ class Service implements Timeframe_Service_Interface {
 	private const V4_MAX_DELIVERY_DAYS = 14;
 
 	/**
+	 * Cut-off time used when the merchant has not configured one, matching the
+	 * Legacy\Checkout\Item_Info default.
+	 */
+	private const DEFAULT_CUT_OFF_TIME = '23:00';
+
+	/**
+	 * Weekday keys by ISO-8601 day number, as Settings::get_dropoff_days() returns them.
+	 */
+	private const WEEKDAYS = array(
+		1 => 'mon',
+		2 => 'tue',
+		3 => 'wed',
+		4 => 'thu',
+		5 => 'fri',
+		6 => 'sat',
+		7 => 'sun',
+	);
+
+	/**
 	 * Look-ahead days used by the plugin today; overridable per instance.
 	 */
 	public const DEFAULT_DELIVERY_DAYS = 10;
@@ -270,10 +289,95 @@ class Service implements Timeframe_Service_Interface {
 	/**
 	 * Handover date (ISO 8601 date) the SDK computes delivery days from.
 	 *
+	 * The legacy checkout call sends OrderDate, ShippingDuration, and per-day
+	 * CutOffTimes and lets PostNL walk the calendar to the first shippable day;
+	 * the V4 request only accepts the resulting handoverDate, so that walk
+	 * happens here: an order placed after the cut-off time hands over a day
+	 * later, each transit day beyond the first adds a preparation day, and the
+	 * handover then lands on the next enabled drop-off day.
+	 *
 	 * @return string
 	 */
 	protected function get_handover_date(): string {
-		return current_time( 'Y-m-d' );
+		$now      = $this->now();
+		$handover = $now;
+
+		if ( $now->format( 'H:i' ) > $this->get_cut_off_time() ) {
+			$handover = $handover->modify( '+1 day' );
+		}
+
+		$extra_days = $this->get_shipping_duration() - 1;
+		if ( $extra_days > 0 ) {
+			$handover = $handover->modify( '+' . $extra_days . ' days' );
+		}
+
+		$dropoff_days = $this->get_dropoff_days();
+		if ( ! empty( $dropoff_days ) ) {
+			$attempts = 0;
+			while ( $attempts < 6 && ! in_array( self::WEEKDAYS[ (int) $handover->format( 'N' ) ], $dropoff_days, true ) ) {
+				$handover = $handover->modify( '+1 day' );
+				++$attempts;
+			}
+		}
+
+		return $handover->format( 'Y-m-d' );
+	}
+
+	/**
+	 * Current site-timezone datetime; a seam for deterministic tests.
+	 *
+	 * @return \DateTimeImmutable
+	 */
+	protected function now(): \DateTimeImmutable {
+		return current_datetime();
+	}
+
+	/**
+	 * Cut-off time (HH:MM) after which an order hands over the next day.
+	 *
+	 * Falls back to the Legacy\Checkout\Item_Info default when the setting is
+	 * missing or malformed, instead of failing the checkout lookup.
+	 *
+	 * @return string
+	 */
+	private function get_cut_off_time(): string {
+		if ( method_exists( $this->settings, 'get_cut_off_time' ) ) {
+			$cut_off = (string) $this->settings->get_cut_off_time();
+
+			if ( 1 === preg_match( '/^(?:[01][0-9]|2[0-4]):[0-5][0-9]$/', $cut_off ) ) {
+				return $cut_off;
+			}
+		}
+
+		return self::DEFAULT_CUT_OFF_TIME;
+	}
+
+	/**
+	 * Shipping duration in days (the legacy ShippingDuration / transit_time setting), minimum 1.
+	 *
+	 * @return int
+	 */
+	private function get_shipping_duration(): int {
+		if ( ! method_exists( $this->settings, 'get_transit_time' ) ) {
+			return 1;
+		}
+
+		return max( 1, (int) $this->settings->get_transit_time() );
+	}
+
+	/**
+	 * Enabled drop-off weekday keys ('mon' … 'sun'); empty means no restriction.
+	 *
+	 * @return string[]
+	 */
+	private function get_dropoff_days(): array {
+		if ( ! method_exists( $this->settings, 'get_dropoff_days' ) ) {
+			return array();
+		}
+
+		$days = $this->settings->get_dropoff_days();
+
+		return is_array( $days ) ? $days : array();
 	}
 
 	/**

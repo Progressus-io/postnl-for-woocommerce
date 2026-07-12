@@ -226,6 +226,129 @@ class ServiceTest extends UnitTestCase {
 		$this->assertSame( array( 'Daytime' ), $mapped[0]['Timeframe'][0]['Options'] );
 	}
 
+	// ── Handover date ────────────────────────────────────────────────────────
+
+	/**
+	 * Build a settings stub that also exposes the shipping-day settings the
+	 * handover-date walk reads (cut-off time, transit time, drop-off days).
+	 *
+	 * @param string   $cut_off Cut-off time (HH:MM).
+	 * @param string   $transit Transit time in days, as the setting stores it.
+	 * @param string[] $dropoff Enabled drop-off weekday keys.
+	 * @return object
+	 */
+	private function make_shipping_settings( string $cut_off, string $transit, array $dropoff ): object {
+		return new class( $cut_off, $transit, $dropoff ) {
+			public function __construct(
+				private string $cut_off,
+				private string $transit,
+				private array $dropoff,
+			) {}
+
+			public function get_customer_code() {
+				return 'DEVC';
+			}
+
+			public function get_customer_num() {
+				return '11223344';
+			}
+
+			public function get_v4_api_key() {
+				return 'v4-secret';
+			}
+
+			public function is_sandbox() {
+				return true;
+			}
+
+			public function get_cut_off_time() {
+				return $this->cut_off;
+			}
+
+			public function get_transit_time() {
+				return $this->transit;
+			}
+
+			public function get_dropoff_days() {
+				return $this->dropoff;
+			}
+		};
+	}
+
+	/**
+	 * Build a handover-exposing service pinned to the given "now".
+	 *
+	 * @param string $now      Site-timezone datetime, e.g. '2026-07-14 10:00:00'.
+	 * @param object $settings Settings stub.
+	 * @return Handover_Timeframe_Service
+	 */
+	private function make_handover_service( string $now, object $settings ): Handover_Timeframe_Service {
+		$service = new Handover_Timeframe_Service( new Client_Factory( $settings ), $settings );
+		$service->set_now( new \DateTimeImmutable( $now ) );
+
+		return $service;
+	}
+
+	/**
+	 * @testdox An order before the cut-off time hands over the same day
+	 */
+	public function test_handover_before_cutoff_is_same_day(): void {
+		$settings = $this->make_shipping_settings( '16:00', '1', array( 'mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun' ) );
+		$service  = $this->make_handover_service( '2026-07-14 10:00:00', $settings );
+
+		$this->assertSame( '2026-07-14', $service->expose_handover_date() );
+	}
+
+	/**
+	 * @testdox An order after the cut-off time hands over the next day
+	 */
+	public function test_handover_after_cutoff_shifts_a_day(): void {
+		$settings = $this->make_shipping_settings( '16:00', '1', array( 'mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun' ) );
+		$service  = $this->make_handover_service( '2026-07-14 17:00:00', $settings );
+
+		$this->assertSame( '2026-07-15', $service->expose_handover_date() );
+	}
+
+	/**
+	 * @testdox Each transit day beyond the first adds a preparation day
+	 */
+	public function test_handover_adds_transit_days(): void {
+		$settings = $this->make_shipping_settings( '16:00', '3', array( 'mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun' ) );
+		$service  = $this->make_handover_service( '2026-07-14 10:00:00', $settings );
+
+		$this->assertSame( '2026-07-16', $service->expose_handover_date() );
+	}
+
+	/**
+	 * @testdox The handover lands on the next enabled drop-off day
+	 */
+	public function test_handover_skips_disabled_dropoff_days(): void {
+		// Friday 2026-07-17 after the 16:00 cut-off; weekends are not drop-off days.
+		$settings = $this->make_shipping_settings( '16:00', '1', array( 'mon', 'tue', 'wed', 'thu', 'fri' ) );
+		$service  = $this->make_handover_service( '2026-07-17 17:00:00', $settings );
+
+		$this->assertSame( '2026-07-20', $service->expose_handover_date() );
+	}
+
+	/**
+	 * @testdox Settings without shipping-day getters fall back to same-day handover before 23:00
+	 */
+	public function test_handover_defaults_without_shipping_settings(): void {
+		$service = $this->make_handover_service( '2026-07-14 22:00:00', $this->make_settings() );
+
+		$this->assertSame( '2026-07-14', $service->expose_handover_date() );
+	}
+
+	/**
+	 * @testdox A malformed cut-off setting falls back to the 23:00 default instead of failing
+	 */
+	public function test_handover_tolerates_malformed_cutoff(): void {
+		$settings = $this->make_shipping_settings( 'not-a-time', '1', array( 'mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun' ) );
+		$service  = $this->make_handover_service( '2026-07-14 22:00:00', $settings );
+
+		$this->assertSame( '2026-07-14', $service->expose_handover_date() );
+	}
+
 	// ── Caching ──────────────────────────────────────────────────────────────
 
 	/**
@@ -237,7 +360,7 @@ class ServiceTest extends UnitTestCase {
 	 */
 	public function test_second_identical_call_hits_cache(): void {
 		$this->with_transient_store();
-		Functions\when( 'current_time' )->justReturn( '2026-07-14' );
+		Functions\when( 'current_datetime' )->justReturn( new \DateTimeImmutable( '2026-07-14 10:00:00' ) );
 
 		$body = wp_json_encode(
 			array(
@@ -334,6 +457,46 @@ class Testable_Timeframe_Service extends Service {
 	 */
 	protected function get_handover_date(): string {
 		return '2026-07-14';
+	}
+}
+
+/**
+ * Exposes get_handover_date() with a pinned clock so the calendar walk is deterministic.
+ */
+class Handover_Timeframe_Service extends Service {
+
+	/**
+	 * Pinned "now" returned by the clock seam.
+	 *
+	 * @var \DateTimeImmutable
+	 */
+	private \DateTimeImmutable $fixed_now;
+
+	/**
+	 * Pin the clock.
+	 *
+	 * @param \DateTimeImmutable $now Datetime to treat as the current time.
+	 */
+	public function set_now( \DateTimeImmutable $now ): void {
+		$this->fixed_now = $now;
+	}
+
+	/**
+	 * The pinned clock.
+	 *
+	 * @return \DateTimeImmutable
+	 */
+	protected function now(): \DateTimeImmutable {
+		return $this->fixed_now;
+	}
+
+	/**
+	 * Public wrapper for get_handover_date().
+	 *
+	 * @return string
+	 */
+	public function expose_handover_date(): string {
+		return $this->get_handover_date();
 	}
 }
 

@@ -213,6 +213,7 @@ jobs:
 
       # All paths: assert no credential files slipped in AND SDK source shipped
       - name: Verify ZIP credentials and SDK presence
+        shell: bash
         run: |
           ZIP_PATH="${{ steps.build_zip.outputs.zip-path }}"
           VERIFY_DIR="$RUNNER_TEMP/zip_cred_verify"

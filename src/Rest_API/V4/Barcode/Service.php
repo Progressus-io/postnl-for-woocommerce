@@ -30,6 +30,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * for the barcode flow; generate() returns an empty array as a safe fallback if
  * it is ever reached.
  *
+ * @since   5.9.6
  * @package PostNLWooCommerce\Rest_API\V4\Barcode
  */
 class Service implements Barcode_Service_Interface {

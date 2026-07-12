@@ -23,7 +23,6 @@ use PostNLWooCommerce\Rest_API\Legacy\Letterbox_Service as Legacy_Letterbox_Serv
 use PostNLWooCommerce\Rest_API\Legacy\Postcode_Check_Service as Legacy_Postcode_Check_Service;
 use PostNLWooCommerce\Rest_API\Legacy\Return_Label_Service as Legacy_Return_Label_Service;
 use PostNLWooCommerce\Rest_API\Legacy\Smart_Returns_Service as Legacy_Smart_Returns_Service;
-use PostNLWooCommerce\Rest_API\V4\Barcode\Service as V4_Barcode_Service;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -129,14 +128,7 @@ class Service_Factory {
 	 * @return Barcode_Service_Interface
 	 */
 	public function barcode_service(): Barcode_Service_Interface {
-		if ( $this->should_use_v4( 'barcode' ) ) {
-			// The V4 barcode service is a dependency-free no-op, so it is built here
-			// directly rather than requiring inject_v4_service() (unit tests may still
-			// pre-inject a double). V4 has no standalone barcode endpoint; the barcode
-			// is issued by the label call — see V4\Barcode\Service.
-			if ( ! isset( $this->v4_services['barcode'] ) ) {
-				$this->v4_services['barcode'] = new V4_Barcode_Service();
-			}
+		if ( $this->should_use_v4( 'barcode' ) && isset( $this->v4_services['barcode'] ) ) {
 			return $this->v4_services['barcode'];
 		}
 		if ( ! isset( $this->legacy_memos['barcode'] ) ) {
@@ -153,11 +145,13 @@ class Service_Factory {
 	 * i.e. the label flow is routed to V4 and a V4 label service has been registered.
 	 * On V4 the label call auto-issues the barcode (PostNL confirmed 2026-05-21), so
 	 * Order\Base skips the barcode prefetch, generates the label first, and harvests
-	 * the barcode(s) from the label response.
+	 * the barcode(s) from the label response — barcode_service() is never called on
+	 * that path.
 	 *
 	 * Gating on the V4 label service (not merely the barcode flag) keeps the reorder
-	 * dormant until the V4 label service exists, so no half-migrated state can ask a
-	 * Legacy label service to build a request without a prefetched barcode.
+	 * dormant until the V4 label service exists: barcode_service() therefore stays on
+	 * Legacy prefetch until the label is genuinely V4, so a Legacy label is never fed
+	 * a missing barcode and the V4 no-op is never asked to prefetch one.
 	 *
 	 * @return bool
 	 */

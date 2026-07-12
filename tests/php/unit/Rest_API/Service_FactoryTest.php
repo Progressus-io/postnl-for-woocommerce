@@ -22,7 +22,6 @@ use PostNLWooCommerce\Rest_API\Legacy\Checkout_Service as Legacy_Checkout_Servic
 use PostNLWooCommerce\Rest_API\Legacy\Postcode_Check_Service as Legacy_Postcode_Check_Service;
 use PostNLWooCommerce\Rest_API\Legacy\Smart_Returns_Service as Legacy_Smart_Returns_Service;
 use PostNLWooCommerce\Rest_API\Service_Factory;
-use PostNLWooCommerce\Rest_API\V4\Barcode\Service as V4_Barcode_Service;
 use PostNLWooCommerce\Tests\UnitTestCase;
 
 /**
@@ -398,18 +397,14 @@ class Service_FactoryTest extends UnitTestCase {
 	// -------------------------------------------------------------------------
 
 	/**
-	 * @testdox V4 key + flag: barcode_service() self-wires the V4 no-op service without injection
-	 *
-	 * The V4 barcode service is a dependency-free no-op (V4 has no standalone barcode
-	 * endpoint), so the factory builds it directly rather than requiring
-	 * inject_v4_service(). This is the one flow where key + flag alone routes to V4.
+	 * @testdox V4 key + flag but no stub: barcode_service() returns Legacy
 	 */
-	public function test_key_and_flag_barcode_returns_v4_service(): void {
+	public function test_key_and_flag_but_no_stub_barcode_returns_legacy(): void {
 		Filters\expectApplied( 'postnl_sdk_enable_barcode' )->andReturn( true );
 
 		$factory = new Service_Factory( $this->settings_with_key() );
 		// Deliberately no inject_v4_service() call.
-		$this->assertInstanceOf( V4_Barcode_Service::class, $factory->barcode_service() );
+		$this->assertInstanceOf( Legacy_Barcode_Service::class, $factory->barcode_service() );
 	}
 
 	/**

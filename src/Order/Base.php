@@ -849,7 +849,6 @@ abstract class Base {
 		return $barcodes;
 	}
 
-
 	/**
 	 * Create PostNL return barcode for current order
 	 *

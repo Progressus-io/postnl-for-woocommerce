@@ -21,8 +21,8 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Class Logger_Adapter
  *
  * Bridges the V4 SDK's PSR-3 logging to the plugin's WooCommerce logger.
- * Messages are tagged [postnl-v4] (vs the legacy path's [postnl-legacy]) so
- * support can filter the WC log on the originating API version.
+ * Messages are tagged [postnl-v4] so support can filter the shared WC log on
+ * the originating API version; legacy entries carry no tag.
  *
  * The SDK redacts label binary, PII, and credentials via its
  * RedactionRegistry::forProduction() (on by default) before a message ever

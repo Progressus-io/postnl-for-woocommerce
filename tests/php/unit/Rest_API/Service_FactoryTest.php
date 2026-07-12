@@ -22,6 +22,7 @@ use PostNLWooCommerce\Rest_API\Legacy\Checkout_Service as Legacy_Checkout_Servic
 use PostNLWooCommerce\Rest_API\Legacy\Postcode_Check_Service as Legacy_Postcode_Check_Service;
 use PostNLWooCommerce\Rest_API\Legacy\Smart_Returns_Service as Legacy_Smart_Returns_Service;
 use PostNLWooCommerce\Rest_API\Service_Factory;
+use PostNLWooCommerce\Rest_API\V4\Barcode\Service as V4_Barcode_Service;
 use PostNLWooCommerce\Tests\UnitTestCase;
 
 /**
@@ -397,14 +398,18 @@ class Service_FactoryTest extends UnitTestCase {
 	// -------------------------------------------------------------------------
 
 	/**
-	 * @testdox V4 key + flag but no stub: barcode_service() returns Legacy
+	 * @testdox V4 key + flag: barcode_service() self-wires the V4 no-op service without injection
+	 *
+	 * The V4 barcode service is a dependency-free no-op (V4 has no standalone barcode
+	 * endpoint), so the factory builds it directly rather than requiring
+	 * inject_v4_service(). This is the one flow where key + flag alone routes to V4.
 	 */
-	public function test_key_and_flag_but_no_stub_barcode_returns_legacy(): void {
+	public function test_key_and_flag_barcode_returns_v4_service(): void {
 		Filters\expectApplied( 'postnl_sdk_enable_barcode' )->andReturn( true );
 
 		$factory = new Service_Factory( $this->settings_with_key() );
 		// Deliberately no inject_v4_service() call.
-		$this->assertInstanceOf( Legacy_Barcode_Service::class, $factory->barcode_service() );
+		$this->assertInstanceOf( V4_Barcode_Service::class, $factory->barcode_service() );
 	}
 
 	/**
@@ -425,6 +430,46 @@ class Service_FactoryTest extends UnitTestCase {
 
 		$factory = new Service_Factory( $this->settings_with_key() );
 		$this->assertInstanceOf( Legacy_Smart_Returns_Service::class, $factory->smart_returns_service() );
+	}
+
+	// -------------------------------------------------------------------------
+	// Scenario 8 — barcode_from_label(): gates the Order\Base reorder
+	// -------------------------------------------------------------------------
+
+	/** @testdox barcode_from_label() is false with no V4 key */
+	public function test_barcode_from_label_false_without_key(): void {
+		$factory = new Service_Factory( null );
+		$this->assertFalse( $factory->barcode_from_label() );
+	}
+
+	/** @testdox barcode_from_label() is false with a key but the label flag off */
+	public function test_barcode_from_label_false_when_label_flag_off(): void {
+		$factory = new Service_Factory( $this->settings_with_key() );
+		$this->assertFalse( $factory->barcode_from_label() );
+	}
+
+	/**
+	 * @testdox barcode_from_label() is false with key + label flag on but no V4 label service
+	 *
+	 * The safety gate: the reorder must stay dormant until a V4 label service exists,
+	 * so a Legacy label service is never asked to build a request without a prefetched
+	 * barcode.
+	 */
+	public function test_barcode_from_label_false_without_v4_label_service(): void {
+		Filters\expectApplied( 'postnl_sdk_enable_label' )->andReturn( true );
+
+		$factory = new Service_Factory( $this->settings_with_key() );
+		$this->assertFalse( $factory->barcode_from_label() );
+	}
+
+	/** @testdox barcode_from_label() is true with key + label flag on + a V4 label service */
+	public function test_barcode_from_label_true_with_v4_label_service(): void {
+		Filters\expectApplied( 'postnl_sdk_enable_label' )->andReturn( true );
+
+		$factory = new Service_Factory( $this->settings_with_key() );
+		$factory->inject_v4_service( 'label', $this->make_label_stub() );
+
+		$this->assertTrue( $factory->barcode_from_label() );
 	}
 
 	// -------------------------------------------------------------------------

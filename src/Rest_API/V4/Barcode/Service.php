@@ -5,6 +5,8 @@
  * @package PostNLWooCommerce\Rest_API\V4\Barcode
  */
 
+declare( strict_types = 1 );
+
 namespace PostNLWooCommerce\Rest_API\V4\Barcode;
 
 use PostNLWooCommerce\Rest_API\Contracts\Barcode_Service_Interface;

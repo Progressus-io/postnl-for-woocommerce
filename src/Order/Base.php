@@ -533,6 +533,12 @@ abstract class Base {
 
 			$labels   = $this->create_label( $label_post_data );
 			$barcodes = self::get_barcodes_from_labels( $labels );
+
+			// The prefetch path fails loudly when no barcode exists; the harvest path must too,
+			// or labels would be stored with an empty barcodes[] and no tracking URL.
+			if ( empty( $barcodes ) ) {
+				throw new \Exception( esc_html__( 'No barcode found in the label response!', 'postnl-for-woocommerce' ) );
+			}
 		} else {
 			$barcodes                        = $this->maybe_create_multi_barcodes( $label_post_data );
 			$label_post_data['main_barcode'] = $barcodes[0]; // for MainBarcode.

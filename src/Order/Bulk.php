@@ -189,8 +189,15 @@ class Bulk extends Base {
 				$meta = array();
 			}
 
-			$meta['backend'] = $selected_shipping_options;
+			// Collapse an explicit 24h/48h letterbox choice onto the generic 'letterbox'
+			// feature and record the variant as the authoritative merchant choice, which
+			// Item_Info::get_letterbox_type() reads to pick product 2928 vs 2948.
+			$letterbox_selection = Utils::normalize_letterbox_options( $selected_shipping_options );
+			$meta['backend']     = $letterbox_selection['options'];
 			$order->update_meta_data( $this->meta_name, $meta );
+			if ( '' !== $letterbox_selection['type'] ) {
+				$order->update_meta_data( '_postnl_letterbox_type', $letterbox_selection['type'] );
+			}
 			$order->save();
 		}
 

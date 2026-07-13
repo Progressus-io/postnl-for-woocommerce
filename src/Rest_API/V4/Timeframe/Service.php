@@ -121,6 +121,13 @@ class Service implements Timeframe_Service_Interface {
 	 * @throws \Exception Converted SDK error when the request fails.
 	 */
 	public function get_delivery_options( array $post_data ): array {
+		// A merchant who disabled every drop-off day never hands parcels over; the
+		// legacy path marks all days unavailable so PostNL returns nothing — mirror
+		// that with an empty result instead of asking for undeliverable days.
+		if ( $this->all_dropoff_days_disabled() ) {
+			return array( 'DeliveryOptions' => array() );
+		}
+
 		try {
 			$request  = $this->build_request( $post_data );
 			$client   = $this->build_client();
@@ -128,7 +135,8 @@ class Service implements Timeframe_Service_Interface {
 
 			return array( 'DeliveryOptions' => $this->map_response( $response->timeframes() ) );
 		} catch ( \Throwable $exception ) {
-			// Exception_Converter returns a plugin-shaped \Exception with an already-escaped message.
+			// Exception_Converter returns a plugin-shaped \Exception; its message can
+			// carry raw API text (field errors, upstream messages) — escape on output.
 			$error = Exception_Converter::convert( $exception );
 			throw $error;
 		}
@@ -381,6 +389,24 @@ class Service implements Timeframe_Service_Interface {
 	}
 
 	/**
+	 * Whether the merchant explicitly disabled every drop-off day.
+	 *
+	 * Only true when the setting getter exists and returns an empty list; a
+	 * settings object without the getter means "no restriction", not "disabled".
+	 *
+	 * @return bool
+	 */
+	private function all_dropoff_days_disabled(): bool {
+		if ( ! method_exists( $this->settings, 'get_dropoff_days' ) ) {
+			return false;
+		}
+
+		$days = $this->settings->get_dropoff_days();
+
+		return is_array( $days ) && empty( $days );
+	}
+
+	/**
 	 * TTL, in seconds, for cached timeframe responses.
 	 *
 	 * Reads the same filter as Cache_Adapter so both agree, and never returns a
@@ -394,11 +420,11 @@ class Service implements Timeframe_Service_Interface {
 		 *
 		 * @since 5.9.6
 		 *
-		 * @param int $ttl Default 600 seconds.
+		 * @param int $ttl Default Cache_Adapter::DEFAULT_TTL (600 seconds).
 		 */
-		$ttl = (int) apply_filters( 'postnl_v4_cache_ttl', 600 );
+		$ttl = (int) apply_filters( 'postnl_v4_cache_ttl', Cache_Adapter::DEFAULT_TTL );
 
-		return $ttl > 0 ? $ttl : 600;
+		return $ttl > 0 ? $ttl : Cache_Adapter::DEFAULT_TTL;
 	}
 
 	/**

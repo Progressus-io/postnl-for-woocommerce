@@ -349,6 +349,40 @@ class ServiceTest extends UnitTestCase {
 		$this->assertSame( '2026-07-14', $service->expose_handover_date() );
 	}
 
+	/**
+	 * @testdox An order placed during the exact cut-off minute still hands over the same day
+	 */
+	public function test_handover_at_exact_cutoff_minute_is_same_day(): void {
+		$settings = $this->make_shipping_settings( '16:00', '1', array( 'mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun' ) );
+		$service  = $this->make_handover_service( '2026-07-14 16:00:59', $settings );
+
+		$this->assertSame( '2026-07-14', $service->expose_handover_date() );
+	}
+
+	/**
+	 * @testdox A 24:00 cut-off behaves as end-of-day: no order ever shifts to the next day
+	 */
+	public function test_handover_24_00_cutoff_never_shifts(): void {
+		$settings = $this->make_shipping_settings( '24:00', '1', array( 'mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun' ) );
+		$service  = $this->make_handover_service( '2026-07-14 23:59:00', $settings );
+
+		$this->assertSame( '2026-07-14', $service->expose_handover_date() );
+	}
+
+	/**
+	 * @testdox All drop-off days disabled short-circuits to an empty DeliveryOptions result
+	 */
+	public function test_all_dropoff_days_disabled_returns_empty_options(): void {
+		$settings = $this->make_shipping_settings( '16:00', '1', array() );
+		$service  = new Service( new Client_Factory( $settings ), $settings );
+
+		$this->assertSame(
+			array( 'DeliveryOptions' => array() ),
+			$service->get_delivery_options( $this->nl_post_data() ),
+			'No SDK request must be made when the merchant never hands over parcels.'
+		);
+	}
+
 	// ── Caching ──────────────────────────────────────────────────────────────
 
 	/**

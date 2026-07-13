@@ -40,6 +40,8 @@
 			"auth.json",
 			"auth.*.json",
 			"*.zip",
+			"*.patch",
+			"*.md",
 			"jest.config.js",
 			"AGENTS.md",
 			"CLAUDE.md",

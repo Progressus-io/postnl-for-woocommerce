@@ -60,9 +60,19 @@ postnl-for-woocommerce.zip
 woo-postnl.zip
 /pnpm-lock.yaml
 
+# Local diff/patch exports
+*.patch
+
+# Internal hand-off notes (keep them out of commits and the package)
+*-handoff.md
+
 .wp-env.override.json
 .wp-env-local/
 
 # Composer auth — never commit credentials
 auth.json
 auth.*.json
+
+# Environment files — may hold credentials
+.env
+.env.*

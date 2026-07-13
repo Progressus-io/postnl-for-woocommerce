@@ -72,3 +72,7 @@ woo-postnl.zip
 # Composer auth — never commit credentials
 auth.json
 auth.*.json
+
+# Environment files — may hold credentials
+.env
+.env.*

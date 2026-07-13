@@ -55,6 +55,10 @@ phpunit.xml.dist
 auth.json
 auth.*.json
 
+# Environment files — may hold credentials
+.env
+.env.*
+
 # Self-reference
 .distignore
 

@@ -258,10 +258,10 @@ class Service_Factory {
 	 * Short-circuits on the key check so Router (and its filter) is never consulted
 	 * when no V4 key is configured.
 	 *
-	 * TODO (task 8 spec): product-coded flows (barcode, label, letterbox,
+	 * Deferred (task 8 spec): product-coded flows (barcode, label, letterbox,
 	 * return_label, smart_returns) must additionally gate on
 	 * V4_Mapper::has_v4_equivalent(...). V4_Mapper does not exist on this branch,
-	 * so the gate is deferred and wired in alongside the V4 services that need it.
+	 * so the gate is wired in alongside the V4 services that need it (tasks 18+).
 	 *
 	 * @param string $flow Flow identifier.
 	 * @return bool

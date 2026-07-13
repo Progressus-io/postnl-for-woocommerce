@@ -1240,7 +1240,7 @@ abstract class Base {
 	 *
 	 * @param array $post_data Order post data.
 	 *
-	 * @return array|Boolean
+	 * @return array
 	 *
 	 * @throws \Exception Error when response has an error.
 	 */
@@ -1256,7 +1256,7 @@ abstract class Base {
 	 *
 	 * @param array $post_data Order post data.
 	 *
-	 * @return array|Boolean
+	 * @return array
 	 *
 	 * @throws \Exception Error when response has an error.
 	 */
@@ -1287,7 +1287,7 @@ abstract class Base {
 	 *
 	 * @param array $post_data Order post data.
 	 *
-	 * @return array|Boolean
+	 * @return array
 	 *
 	 * @throws \Exception Error when response has an error.
 	 */
@@ -1303,7 +1303,7 @@ abstract class Base {
 	 *
 	 * @param array $post_data Order post data.
 	 *
-	 * @return array|Boolean
+	 * @return array
 	 *
 	 * @throws \Exception Error when response has an error.
 	 */

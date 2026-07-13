@@ -16,7 +16,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Class Client
  *
- * @package PostNLWooCommerce\Rest_API\Legacy\Shipment_and_return
+ * @package PostNLWooCommerce\Rest_API\Legacy\Shipment_and_Return
  */
 class Client extends Base {
 

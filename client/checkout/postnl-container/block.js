@@ -91,7 +91,13 @@ export const Block = ( { checkoutExtensionData } ) => {
 	const { setExtensionData } = checkoutExtensionData;
 	const postnlData = getSetting( 'postnl-for-woocommerce-blocks_data', {} );
 
-	const letterbox = postnlData.letterbox || false;
+	// Seed from the page-render value, but keep it as state: this flag can be
+	// stale on first checkout entry (it is computed server-side before the
+	// shipping country is known) and must be refreshed from each address-update
+	// AJAX response — see the setLetterbox() call in the response handler below.
+	const [ letterbox, setLetterbox ] = useState(
+		postnlData.letterbox || false
+	);
 	const { CART_STORE_KEY, CHECKOUT_STORE_KEY } = window.wc.wcBlocksData;
 
 	const selectedShippingFee = useSelect(
@@ -505,6 +511,11 @@ export const Block = ( { checkoutExtensionData } ) => {
 							respData.is_delivery_days_enabled
 						);
 						setShowContainer( respData.show_container || false );
+						// Reactively reflect server-side letterbox (ALA) eligibility
+						// so the delivery-day/pickup tabs are blocked as soon as the
+						// address is known, matching the classic checkout. Without
+						// this the static page-render value persisted until reload.
+						setLetterbox( !! respData.is_letterbox );
 						setDeliveryOptions( respData.delivery_options || [] );
 						setDropoffOptions( respData.dropoff_options || [] );
 						hasAjaxDataRef.current = true;
@@ -527,6 +538,7 @@ export const Block = ( { checkoutExtensionData } ) => {
 					} else {
 						// Response not success or no data: hide container
 						setShowContainer( false );
+						setLetterbox( false );
 						setDeliveryOptions( [] );
 						setDropoffOptions( [] );
 						clearAllPostNLData();
@@ -538,6 +550,7 @@ export const Block = ( { checkoutExtensionData } ) => {
 				.catch( () => {
 					// On error, hide container and clear options
 					setShowContainer( false );
+					setLetterbox( false );
 					setDeliveryOptions( [] );
 					setDropoffOptions( [] );
 					clearAllPostNLData();

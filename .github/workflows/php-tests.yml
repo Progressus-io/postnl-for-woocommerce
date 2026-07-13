@@ -117,12 +117,20 @@ jobs:
       # Retry: wp-env image pulls occasionally time out against Docker Hub.
       - name: Start wp-env
         run: |
+          STARTED=0
           for i in 1 2 3; do
-            npm run env start && break
+            if npm run env start; then
+              STARTED=1
+              break
+            fi
             echo "wp-env start failed (attempt $i); retrying in 15s..."
             npm run env stop || true
             sleep 15
           done
+          if [ "$STARTED" -ne 1 ]; then
+            echo "::error::wp-env failed to start after 3 attempts"
+            exit 1
+          fi
         timeout-minutes: 12
 
       - name: Integration tests

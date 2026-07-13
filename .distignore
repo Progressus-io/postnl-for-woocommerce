@@ -55,5 +55,19 @@ phpunit.xml.dist
 auth.json
 auth.*.json
 
+# Environment files — may hold credentials
+.env
+.env.*
+
 # Self-reference
 .distignore
+
+# Internal docs / AI agent instructions — never ship
+/AGENTS.md
+/CLAUDE.md
+/docs
+
+# Dev environment and test-suite configs — never ship
+/.wp-env.json
+phpunit-unit.xml.dist
+phpunit-integration.xml.dist

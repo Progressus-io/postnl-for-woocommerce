@@ -7,7 +7,7 @@ Requires at least: 6.7
 Tested up to: 6.9
 WC requires at least: 10.2
 WC tested up to: 10.5
-Stable tag: 5.9.6
+Stable tag: 5.9.8
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -80,6 +80,12 @@ Follow these instructions (https://www.postnl.nl/Images/aanvragen-api-key-stappe
 5. PostNL information on the order details page
 
 == Changelog ==
+
+= 5.9.8 (2026-07-07) =
+* Add: Letterboxparcel 48 hours as a selectable option in the domestic default shipping option, the bulk Change Shipping Options action, and the Label & Tracking menu.
+
+= 5.9.7 (2026-06-30) =
+* Remove: Removed the Shipment & Return return option, as PostNL is discontinuing it on 1 July 2026.
 
 = 5.9.6 (2026-06-24) =
 * Add: Letterbox Parcel now offers 24-hour and 48-hour delivery variants at checkout, selectable by the customer or assigned automatically.

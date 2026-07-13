@@ -132,6 +132,54 @@ abstract class Base {
 			return array();
 		}
 
+		$default_options = $this->resolve_default_shipping_options( $order );
+
+		// The default options only carry the generic 'letterbox' feature; surface the
+		// resolved 24h/48h variant so the matching option is pre-selected and a re-save
+		// preserves the existing choice instead of silently reverting it to 24h.
+		return $this->apply_letterbox_display_variant( $default_options, $order );
+	}
+
+	/**
+	 * Swap the generic 'letterbox' feature for the resolved 24h/48h display variant.
+	 *
+	 * The stored backend selection and the plugin defaults only ever carry the
+	 * generic 'letterbox' feature; the concrete 24h/48h variant is recorded
+	 * separately in the _postnl_letterbox_type meta. Surfacing the resolved variant
+	 * keeps the two mutually-exclusive admin checkboxes in step with the label
+	 * engine so exactly one of them is pre-selected, instead of the generic 24h
+	 * feature re-checking the 24h box on top of the pre-selected 48h box.
+	 *
+	 * @since 5.9.8
+	 *
+	 * @param array     $options Option map ( feature => 'yes' ).
+	 * @param \WC_Order $order   Order object.
+	 *
+	 * @return array
+	 */
+	protected function apply_letterbox_display_variant( $options, $order ) {
+		if ( ! is_array( $options ) ) {
+			return $options;
+		}
+
+		if ( 'yes' === ( $options['letterbox'] ?? '' ) && 'letterbox_48' === $this->resolve_letterbox_variant( $order ) ) {
+			unset( $options['letterbox'] );
+			$options['letterbox_48'] = 'yes';
+		}
+
+		return $options;
+	}
+
+	/**
+	 * Resolve the pre-selected shipping options from the order meta or the plugin settings.
+	 *
+	 * @since 5.9.8
+	 *
+	 * @param \WC_Order $order Order object.
+	 *
+	 * @return array
+	 */
+	protected function resolve_default_shipping_options( $order ) {
 		// Return shipping options already selected by the user.
 		$default_options = $this->get_backend_data( $order->get_id() );
 		if ( ! empty( $default_options ) ) {
@@ -155,6 +203,28 @@ abstract class Base {
 		}
 
 		return $this->settings->get_default_shipping_options( $shipping_zone );
+	}
+
+	/**
+	 * Resolve the letterbox variant for display, mirroring the label engine.
+	 *
+	 * Kept in sync with Rest_API\Shipping\Item_Info::get_letterbox_type():
+	 * the recorded choice on the order wins, otherwise the merchant default
+	 * setting, otherwise the 24h variant.
+	 *
+	 * @since 5.9.8
+	 *
+	 * @param \WC_Order $order Order object.
+	 *
+	 * @return string 'letterbox' (24h) or 'letterbox_48' (48h).
+	 */
+	protected function resolve_letterbox_variant( $order ) {
+		$stored_type = $order->get_meta( '_postnl_letterbox_type' );
+		if ( in_array( $stored_type, array( 'letterbox', 'letterbox_48' ), true ) ) {
+			return $stored_type;
+		}
+
+		return ( 'letterbox_48' === $this->settings->get_default_automatic_letterboxparcel_product() ) ? 'letterbox_48' : 'letterbox';
 	}
 
 	/**
@@ -241,11 +311,23 @@ abstract class Base {
 			array(
 				'id'            => $this->prefix . 'letterbox',
 				'type'          => 'checkbox',
-				'label'         => __( 'Letterbox: ', 'postnl-for-woocommerce' ),
+				'label'         => __( 'Letterboxparcel Standard (24 hours)', 'postnl-for-woocommerce' ) . ': ',
 				'placeholder'   => '',
 				'description'   => '',
 				'value'         => $default_options['letterbox'] ?? '',
 				'show_in_bulk'  => true,
+				'standard_feat' => false,
+				'const_field'   => false,
+				'container'     => true,
+			),
+			array(
+				'id'            => $this->prefix . 'letterbox_48',
+				'type'          => 'checkbox',
+				'label'         => __( 'Letterboxparcel 48 hours', 'postnl-for-woocommerce' ) . ': ',
+				'placeholder'   => '',
+				'description'   => '',
+				'value'         => $default_options['letterbox_48'] ?? '',
+				'show_in_bulk'  => false,
 				'standard_feat' => false,
 				'const_field'   => false,
 				'container'     => true,
@@ -518,6 +600,18 @@ abstract class Base {
 			$post_field = Utils::remove_prefix_field( $this->prefix, $field['id'] );
 
 			$saved_data['backend'][ $post_field ] = $post_value;
+		}
+
+		// Collapse an explicit 24h/48h letterbox choice onto the generic 'letterbox'
+		// feature and record the variant as the authoritative merchant choice, which
+		// Item_Info::get_letterbox_type() reads to pick product 2928 vs 2948. The meta
+		// must be persisted here: Item_Info (constructed below) re-reads the order via
+		// wc_get_order(), which returns a fresh instance that would not see an unsaved value.
+		$letterbox_selection   = Utils::normalize_letterbox_options( $saved_data['backend'] );
+		$saved_data['backend'] = $letterbox_selection['options'];
+		if ( '' !== $letterbox_selection['type'] ) {
+			$order->update_meta_data( '_postnl_letterbox_type', $letterbox_selection['type'] );
+			$order->save_meta_data();
 		}
 
 		$label_post_data = array(

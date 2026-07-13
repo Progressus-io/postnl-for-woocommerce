@@ -35,8 +35,10 @@ class Cache_Adapter extends AbstractCacheAdapter {
 
 	/**
 	 * Default time-to-live, in seconds, before a cached response expires.
+	 * Public so consumers of the postnl_v4_cache_ttl filter (e.g. the V4
+	 * Timeframe service) share one source of truth for the default.
 	 */
-	private const DEFAULT_TTL = 600;
+	public const DEFAULT_TTL = 600;
 
 	/**
 	 * Raw-key prefixes whose responses may be cached. Anything else bypasses.

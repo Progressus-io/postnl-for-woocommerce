@@ -164,14 +164,11 @@ class Settings extends \WC_Settings_API {
 				'title'       => esc_html__( 'Standard return option', 'postnl-for-woocommerce' ),
 				'type'        => 'select',
 				'description' => esc_html__( '- None: return labels are not automatically created', 'postnl-for-woocommerce' ) . '<br>' .
-								esc_html__( '- Shipment & Return: the label of the outward shipment can also be used for the return shipment.', 'postnl-for-woocommerce' ) .
-								esc_html__( ' ( Note: Shipment & Return Label will be discontinued on July 1. )', 'postnl-for-woocommerce' ) . '<br>' .
 								esc_html__( '- Label in the box: a separate return label is created at the same time as the label for the outward shipment and can be included in the box.', 'postnl-for-woocommerce' ),
 
 				'options'     => array(
-					'none'            => esc_html__( 'None', 'postnl-for-woocommerce' ),
-					'shipping_return' => esc_html__( 'Shipment & Return Label ( Note: Shipment & Return Label will be discontinued on July 1. )', 'postnl-for-woocommerce' ),
-					'in_box'          => esc_html__( 'Label in the box', 'postnl-for-woocommerce' ),
+					'none'   => esc_html__( 'None', 'postnl-for-woocommerce' ),
+					'in_box' => esc_html__( 'Label in the box', 'postnl-for-woocommerce' ),
 				),
 				'for_country' => array( 'NL' ),
 			),
@@ -624,7 +621,8 @@ class Settings extends \WC_Settings_API {
 					'return_no_answer'                   => __( 'Return if no answer', 'postnl-for-woocommerce' ),
 					'signature_on_delivery'              => __( 'Signature on Delivery', 'postnl-for-woocommerce' ),
 					'only_home_address'                  => __( 'Only Home Address', 'postnl-for-woocommerce' ),
-					'letterbox'                          => __( 'Letterbox', 'postnl-for-woocommerce' ),
+					'letterbox'                          => __( 'Letterboxparcel Standard (24 hours)', 'postnl-for-woocommerce' ),
+					'letterbox_48'                       => __( 'Letterboxparcel 48 hours', 'postnl-for-woocommerce' ),
 					'signature_on_delivery|insured_shipping' => __( 'Signature on Delivery + Insured Shipping', 'postnl-for-woocommerce' ),
 					'signature_on_delivery|return_no_answer' => __( 'Signature on Delivery + Return if no answer', 'postnl-for-woocommerce' ),
 					'insured_shipping|return_no_answer|signature_on_delivery' => __( 'Insured Shipping + Return if no answer + Signature on Delivery', 'postnl-for-woocommerce' ),
@@ -1037,10 +1035,17 @@ class Settings extends \WC_Settings_API {
 	/**
 	 * Get return shipment and labels select value.
 	 *
+	 * PostNL discontinues the "Shipment & Return" label product on 1 July 2026.
+	 * Any value still stored as 'shipping_return' is coerced to 'none' at read
+	 * time so outbound label generation never requests the discontinued product,
+	 * even on stores the one-time revert migration has not reached.
+	 *
 	 * @return String
 	 */
 	public function get_return_shipment_and_labels() {
-		return $this->get_country_option( 'return_shipment_and_labels', '' );
+		$value = $this->get_country_option( 'return_shipment_and_labels', '' );
+
+		return 'shipping_return' === $value ? 'none' : $value;
 	}
 
 	/**

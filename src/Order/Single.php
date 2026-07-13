@@ -159,6 +159,15 @@ class Single extends Base {
 		$to_state     = $order->get_shipping_state();
 		$destination  = Utils::get_shipping_zone( $to_country, $to_state );
 
+		// The persisted backend collapses the 24h/48h choice onto the generic
+		// 'letterbox' feature. Swap in the resolved variant so the override loop
+		// below re-checks (and, once a label exists, locks) the correct checkbox
+		// instead of re-checking the generic 24h box on top of the pre-selected
+		// 48h box, which would show both letterbox variants as selected.
+		if ( isset( $order_data['backend'] ) && is_array( $order_data['backend'] ) ) {
+			$order_data['backend'] = $this->apply_letterbox_display_variant( $order_data['backend'], $order );
+		}
+
 		foreach ( $meta_fields as $index => $field ) {
 			if ( isset( $field['nonce'] ) && true === $field['nonce'] ) {
 				continue;

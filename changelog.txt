@@ -1,5 +1,11 @@
 *** PostNL for WooCommerce ***
 
+= 5.9.8 (2026-07-07) =
+* Add: Letterboxparcel 48 hours as a selectable option in the domestic default shipping option, the bulk Change Shipping Options action, and the Label & Tracking menu.
+
+= 5.9.7 (2026-06-30) =
+* Remove: Removed the Shipment & Return return option, as PostNL is discontinuing it on 1 July 2026.
+
 = 5.9.6 (2026-06-24) =
 * Add: Letterbox Parcel now offers 24-hour and 48-hour delivery variants at checkout, selectable by the customer or assigned automatically.
 * Add: New "Default automatic letterboxparcel product" setting to choose the default letterbox variant (24 or 48 hours) for automatic assignment.
@@ -18,6 +24,7 @@
 * Add: Ability to set the default checkout tab (Delivery or Pickup) from the PostNL checkout settings.
 * Fix: Update translations.
 * Fix: ZPL file format setting ignored for domestic letterbox.
+* Fix: Error when trying to create multicollo insured shipments.
 
 = 5.9.4 (2026-02-06) =
 * Fix: Missing styles from the cart page.

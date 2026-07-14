@@ -101,7 +101,7 @@ class Fill_In_With_Postnl {
 		}
 
 		$border                 = sanitize_text_field( get_option( 'postnl_button_border', 'none' ) );
-		$alignment              = sanitize_text_field( get_option( 'postnl_button_alignment', 'left' ) );
+		$alignment              = sanitize_text_field( get_option( 'postnl_button_alignment', 'center' ) );
 		$custom_css             = wp_strip_all_tags( get_option( 'postnl_custom_css', '' ) );
 		$background_color       = sanitize_hex_color( get_option( 'postnl_button_background_color', '#ff6200' ) );
 		$hover_background_color = sanitize_hex_color( get_option( 'postnl_button_hover_background_color', '#e55500' ) );

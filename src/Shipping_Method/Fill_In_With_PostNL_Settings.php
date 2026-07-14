@@ -246,7 +246,7 @@ class Fill_In_With_PostNL_Settings {
 				'desc_tip' => true,
 				'id'       => 'postnl_button_alignment',
 				'type'     => 'select',
-				'default'  => 'left',
+				'default'  => 'center',
 				'options'  => array(
 					'left'   => esc_html__( 'Left', 'postnl-for-woocommerce' ),
 					'center' => esc_html__( 'Center', 'postnl-for-woocommerce' ),

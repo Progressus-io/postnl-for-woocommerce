@@ -248,6 +248,19 @@ class FillInWithButtonStylingTest extends IntegrationTestCase {
 	}
 
 	/**
+	 * @testdox With no alignment saved the button defaults to centered so reduced widths do not hug the left edge.
+	 */
+	public function test_add_custom_css_defaults_to_centered_alignment(): void {
+		update_option( 'postnl_enable_fill_in_with', 'yes' );
+		update_option( 'postnl_fill_in_with_client_id', 'test-client-id' );
+		delete_option( 'postnl_button_alignment' );
+
+		$css = $this->generate_inline_css();
+
+		$this->assertStringContainsString( 'margin-left: auto; margin-right: auto;', $css );
+	}
+
+	/**
 	 * @testdox A zero corner radius is emitted rather than falling back to the default.
 	 */
 	public function test_add_custom_css_emits_a_zero_radius(): void {

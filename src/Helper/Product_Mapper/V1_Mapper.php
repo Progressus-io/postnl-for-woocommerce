@@ -13,7 +13,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 /**
  * Pure data class: the V1 combination → product-code mapping.
- *
  */
 class V1_Mapper {
 

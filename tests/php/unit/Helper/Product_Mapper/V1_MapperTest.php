@@ -270,7 +270,7 @@ class V1_MapperTest extends UnitTestCase {
 		return array(
 
 			// =================================================================
-			// NL → NL / delivery_day  (20 combinations)
+			// NL → NL / delivery_day  (21 combinations)
 			// =================================================================
 
 			'NL→NL/dd: base → 3085'

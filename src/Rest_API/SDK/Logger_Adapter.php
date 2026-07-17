@@ -28,8 +28,21 @@ if ( ! defined( 'ABSPATH' ) ) {
  * RedactionRegistry::forProduction() (on by default) before a message ever
  * reaches this adapter, so the adapter writes what it receives verbatim — it
  * deliberately does not re-run the legacy Logger::check_pdf_content() scan.
+ * The V4 label binary travels under the label, mergedLabel and labelSignature
+ * keys, all three of which the SDK registry omits; the legacy Labels[].Content
+ * shape never reaches this adapter.
  *
- * @since   5.9.6
+ * PSR-3 context is forwarded to WC_Logger alongside the source, per WooCommerce
+ * logging standards: the file handler strips source, JSON-encodes whatever
+ * remains and appends it as a "CONTEXT:" segment, which the admin Logs screen
+ * parses back out and renders as structured data. Forwarding therefore keeps
+ * the adapter correct under either SDK log format. Under the default
+ * LogFormat::Human the SDK folds the payload into the message and hands over an
+ * empty context, so nothing is appended; under LogFormat::Structured the
+ * message is a bare event label and the payload arrives as context, where
+ * WooCommerce renders it.
+ *
+ * @since   5.9.9
  * @package PostNLWooCommerce\Rest_API\SDK
  */
 class Logger_Adapter extends AbstractLogger {
@@ -49,6 +62,11 @@ class Logger_Adapter extends AbstractLogger {
 	 * WC_Log_Levels (both follow RFC 5424). Any value outside this set falls
 	 * back to notice rather than reaching WC_Logger, which rejects unknown
 	 * levels.
+	 *
+	 * PSR-3 allows an unknown level to raise Psr\Log\InvalidArgumentException.
+	 * Coercing to notice is a deliberate departure: this adapter is a sink for
+	 * SDK output, and a logging call must never break the operation that
+	 * emitted it.
 	 */
 	private const VALID_LEVELS = array(
 		LogLevel::EMERGENCY,
@@ -100,9 +118,13 @@ class Logger_Adapter extends AbstractLogger {
 			$level   = $this->normalize_level( $level );
 			$message = self::TAG . ' ' . $this->interpolate( (string) $message, $context );
 
+			// Source is merged last so incoming context can never redirect the
+			// entry away from the plugin's shared WC log channel.
+			$wc_context = array_merge( $context, array( 'source' => self::SOURCE ) );
+
 			$wc_logger = wc_get_logger();
 			if ( $wc_logger ) {
-				$wc_logger->log( $level, $message, array( 'source' => self::SOURCE ) );
+				$wc_logger->log( $level, $message, $wc_context );
 			}
 		} catch ( \Throwable $e ) {
 			// Swallowed deliberately — logging is best-effort and must not propagate.

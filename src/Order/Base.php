@@ -731,6 +731,18 @@ abstract class Base {
 	 * @return String.
 	 */
 	public function get_delivery_type( $order ) {
+		// A letterbox order has no delivery-day or pickup type, so the frontend
+		// mapping below would fall through to the generic "Standard Shipment"
+		// label. Surface the resolved 24h/48h variant instead, mirroring the
+		// selected shipping option so the summary matches the checkbox.
+		$shipping_options = $this->get_shipping_options( $order );
+		if ( 'yes' === ( $shipping_options['letterbox_48'] ?? '' ) ) {
+			return Utils::get_letterbox_label_48h();
+		}
+		if ( 'yes' === ( $shipping_options['letterbox'] ?? '' ) ) {
+			return Utils::get_letterbox_label_24h();
+		}
+
 		$from_country      = Utils::get_base_country();
 		$to_country        = $order->get_shipping_country();
 		$to_state          = $order->get_shipping_state();

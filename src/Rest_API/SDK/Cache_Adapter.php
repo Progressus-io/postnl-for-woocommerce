@@ -28,7 +28,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Transient keys are namespaced with a hash of the V4 API key so two stores on
  * shared hosting are extremely unlikely to read each other's cached responses.
  *
- * @since   5.9.6
+ * @since   5.9.9
  * @package PostNLWooCommerce\Rest_API\SDK
  */
 class Cache_Adapter extends AbstractCacheAdapter {
@@ -56,7 +56,7 @@ class Cache_Adapter extends AbstractCacheAdapter {
 		/**
 		 * Filters the TTL, in seconds, for cached V4 timeframe/locations responses.
 		 *
-		 * @since 5.9.6
+		 * @since 5.9.9
 		 *
 		 * @param int $ttl Default 600 seconds.
 		 */
@@ -117,7 +117,17 @@ class Cache_Adapter extends AbstractCacheAdapter {
 			return false;
 		}
 
-		return set_transient( $this->transient_name( $key ), $value, $this->normalizeTtlSeconds( $ttl ) );
+		// normalizeTtlSeconds() maps a non-positive int to the default, but returns 0 for a
+		// zero or negative DateInterval. The SDK's own adapters turn that 0 into an absolute
+		// expiry of "now" and treat the entry as already expired, whereas set_transient()
+		// reads 0 as "no expiration" and would cache the response permanently. Fall back to
+		// the default so the two backends agree that a non-positive TTL never means forever.
+		$seconds = $this->normalizeTtlSeconds( $ttl );
+
+		// phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- name is fixed by the SDK's AbstractCacheAdapter.
+		$default_seconds = $this->defaultTtl;
+
+		return set_transient( $this->transient_name( $key ), $value, $seconds > 0 ? $seconds : $default_seconds );
 	}
 
 	/**
@@ -186,7 +196,7 @@ class Cache_Adapter extends AbstractCacheAdapter {
 		/**
 		 * Filters the raw-key prefixes whose V4 responses may be cached.
 		 *
-		 * @since 5.9.6
+		 * @since 5.9.9
 		 *
 		 * @param string[] $prefixes Default: timeframe and locations.
 		 */

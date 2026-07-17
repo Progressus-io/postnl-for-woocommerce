@@ -260,6 +260,51 @@ class Cache_AdapterTest extends UnitTestCase {
 	}
 
 	/**
+	 * A zero or negative DateInterval normalizes to 0 seconds. WordPress reads
+	 * set_transient( $key, $value, 0 ) as "no expiration" and would cache the
+	 * response permanently, while the SDK's own adapters treat the same 0 as
+	 * already expired. The non-positive TTL must fall back to the default rather
+	 * than reach set_transient() as 0.
+	 *
+	 * @dataProvider non_positive_interval_provider
+	 * @testdox A non-positive DateInterval TTL falls back to the default instead of caching forever
+	 *
+	 * @param \DateInterval $ttl Interval under test.
+	 */
+	public function test_non_positive_date_interval_ttl_does_not_cache_forever( \DateInterval $ttl ): void {
+		$captured_ttl = null;
+		Functions\when( 'set_transient' )->alias(
+			function ( $key, $value, $ttl ) use ( &$captured_ttl ) {
+				$captured_ttl = $ttl;
+				return true;
+			}
+		);
+
+		( new Cache_Adapter( 'tenant-key' ) )->set( 'timeframe_abc', 'v', $ttl );
+
+		$this->assertSame(
+			600,
+			$captured_ttl,
+			'A non-positive TTL must not reach set_transient() as 0, which WordPress stores permanently.'
+		);
+	}
+
+	/**
+	 * Yields the zero and negative intervals that normalize to 0 seconds.
+	 *
+	 * @return array<string, array{\DateInterval}>
+	 */
+	public static function non_positive_interval_provider(): array {
+		$negative         = new \DateInterval( 'PT10M' );
+		$negative->invert = 1;
+
+		return array(
+			'zero interval'     => array( new \DateInterval( 'PT0S' ) ),
+			'negative interval' => array( $negative ),
+		);
+	}
+
+	/**
 	 * @testdox An empty prefix in the allowlist does not make every key cacheable
 	 */
 	public function test_empty_allowlist_prefix_does_not_match_everything(): void {

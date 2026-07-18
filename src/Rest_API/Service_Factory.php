@@ -33,7 +33,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * Single factory that resolves the correct service implementation per flow.
  * Every method returns the Legacy service unless all three conditions hold:
- *   (a) a V4 API key is present on the settings object,
+ *   (a) a validated "New API Key" is present on the settings object,
  *   (b) Router::sdk_enabled_for() returns true for the flow, and
  *   (c) a V4 service has been registered for that flow via inject_v4_service().
  *
@@ -51,7 +51,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Legacy services are created lazily on first access and memoised so repeated
  * calls within a request are cheap.
  *
- * @since   5.9.6
+ * @since   5.9.9
  * @package PostNLWooCommerce\Rest_API
  */
 class Service_Factory {
@@ -280,10 +280,11 @@ class Service_Factory {
 	 * Short-circuits on the key check so Router (and its filter) is never consulted
 	 * when no V4 key is configured.
 	 *
-	 * Deferred (task 8 spec): product-coded flows (barcode, label, letterbox,
+	 * Deferred by design: product-coded flows (barcode, label, letterbox,
 	 * return_label, smart_returns) must additionally gate on
-	 * V4_Mapper::has_v4_equivalent(...). V4_Mapper does not exist on this branch,
-	 * so the gate is wired in alongside the V4 services that need it (tasks 18+).
+	 * V4_Mapper::has_v4_equivalent(...). That gate needs a resolved product
+	 * combination, which only exists once each flow builds its request, so it is
+	 * wired in alongside the V4 services that need it.
 	 *
 	 * @param string $flow Flow identifier.
 	 * @return bool
@@ -293,11 +294,19 @@ class Service_Factory {
 	}
 
 	/**
-	 * Return whether a non-empty V4 API key is available on the settings object.
+	 * Return whether a validated V4-capable API key is available on the settings object.
 	 *
-	 * Returns false when: no settings object was injected; the settings object does
-	 * not yet expose get_v4_api_key() (the V4 key field is in a separate in-progress
-	 * PR); or the key string is empty or whitespace-only.
+	 * The V4-capable key is the separate "New API Key" field, not the original key.
+	 * It only becomes usable once a save-time validation call has confirmed it, so an
+	 * entered-but-unvalidated key must never route traffic to V4.
+	 *
+	 * get_effective_api_key() is deliberately not used here: it answers "which key do
+	 * we send" and falls back to the original key, so it is never empty and would
+	 * report a V4 key on every site.
+	 *
+	 * Returns false when: no settings object was injected; the settings object does not
+	 * yet expose the new-key accessors (that field ships in its own in-progress PR); the
+	 * key is empty or whitespace-only; or the entered key has not passed validation.
 	 *
 	 * @return bool
 	 */
@@ -305,10 +314,17 @@ class Service_Factory {
 		if ( null === $this->settings ) {
 			return false;
 		}
-		if ( ! method_exists( $this->settings, 'get_v4_api_key' ) ) {
+		if ( ! method_exists( $this->settings, 'get_api_key_new' )
+			|| ! method_exists( $this->settings, 'is_api_key_new_validated' ) ) {
 			return false;
 		}
-		$key = $this->settings->get_v4_api_key();
-		return is_string( $key ) && '' !== trim( $key );
+
+		$key = $this->settings->get_api_key_new();
+
+		if ( ! is_string( $key ) || '' === trim( $key ) ) {
+			return false;
+		}
+
+		return true === $this->settings->is_api_key_new_validated();
 	}
 }

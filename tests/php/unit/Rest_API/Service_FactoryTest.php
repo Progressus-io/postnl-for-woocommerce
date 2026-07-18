@@ -34,35 +34,94 @@ class Service_FactoryTest extends UnitTestCase {
 	// -------------------------------------------------------------------------
 
 	/**
-	 * Return an anonymous settings object that exposes get_v4_api_key().
-	 * method_exists() returns true for it, satisfying the has_v4_key() check.
+	 * Return an anonymous settings object exposing the new-key accessors that the
+	 * "New API Key" field adds, mirroring their real signatures so has_v4_key()
+	 * is exercised against the same contract it meets in production.
 	 *
-	 * @param string $key API key to return (default non-empty).
+	 * @param string $key       New API key value (default non-empty).
+	 * @param bool   $validated Whether the key passed save-time validation.
 	 * @return object
 	 */
-	private function settings_with_key( string $key = 'test-v4-key' ): object {
-		return new class( $key ) {
+	private function settings_with_key( string $key = 'test-v4-key', bool $validated = true ): object {
+		return new class( $key, $validated ) {
 			/** @var string */
-			private $api_key;
-			/** @param string $k Key value. */
-			public function __construct( string $k ) {
-				$this->api_key = $k;
+			private $api_key_new;
+			/** @var bool */
+			private $validated;
+			/**
+			 * @param string $k New API key value.
+			 * @param bool   $v Whether the key passed validation.
+			 */
+			public function __construct( string $k, bool $v ) {
+				$this->api_key_new = $k;
+				$this->validated   = $v;
 			}
 			/** @return string */
-			public function get_v4_api_key(): string {
-				return $this->api_key;
+			public function get_api_key_new() {
+				return trim( (string) $this->api_key_new );
+			}
+			/** @return bool */
+			public function is_api_key_new_validated() {
+				return $this->validated;
+			}
+			/** @return string */
+			public function get_api_key() {
+				return 'original-legacy-key';
+			}
+			/** @return string */
+			public function get_effective_api_key() {
+				return '' !== $this->get_api_key_new() && $this->validated
+					? $this->get_api_key_new()
+					: $this->get_api_key();
 			}
 		};
 	}
 
 	/**
-	 * Return an anonymous settings object that does NOT have get_v4_api_key().
-	 * Simulates the Settings class before the V4 key field PR is merged.
+	 * Return an anonymous settings object without the new-key accessors.
+	 * Simulates the Settings class before the "New API Key" field PR is merged.
 	 *
 	 * @return object
 	 */
 	private function settings_without_v4_getter(): object {
-		return new class {};
+		return new class {
+			/** @return string */
+			public function get_api_key() {
+				return 'original-legacy-key';
+			}
+		};
+	}
+
+	/**
+	 * Return an anonymous settings object exposing only get_api_key_new(), without
+	 * is_api_key_new_validated(). Guards against a half-present new-key API.
+	 *
+	 * @return object
+	 */
+	private function settings_with_partial_new_key_api(): object {
+		return new class {
+			/** @return string */
+			public function get_api_key_new() {
+				return 'test-v4-key';
+			}
+		};
+	}
+
+	/**
+	 * Return a minimal Barcode_Service_Interface stub for V4 injection.
+	 *
+	 * @return Barcode_Service_Interface
+	 */
+	private function v4_barcode_stub(): Barcode_Service_Interface {
+		return new class implements Barcode_Service_Interface {
+			/**
+			 * @param array $post_data Post data.
+			 * @return array
+			 */
+			public function generate( array $post_data ): array {
+				return array();
+			}
+		};
 	}
 
 	/**
@@ -178,23 +237,73 @@ class Service_FactoryTest extends UnitTestCase {
 	}
 
 	// -------------------------------------------------------------------------
-	// Scenario 2 — Settings object present but get_v4_api_key() not yet defined
+	// Scenario 2 — Settings object present but the new-key accessors are absent
 	// -------------------------------------------------------------------------
 
 	/**
-	 * @testdox Settings without get_v4_api_key(): barcode_service() still returns Legacy
+	 * @testdox Settings without the new-key accessors: barcode_service() still returns Legacy
 	 *
-	 * Covers the case where the V4 key settings field PR has not been merged yet.
+	 * Covers the case where the "New API Key" field PR has not been merged yet.
 	 */
 	public function test_settings_without_getter_barcode_returns_legacy(): void {
 		$factory = new Service_Factory( $this->settings_without_v4_getter() );
 		$this->assertInstanceOf( Legacy_Barcode_Service::class, $factory->barcode_service() );
 	}
 
-	/** @testdox Settings without get_v4_api_key(): postcode_check_service() still returns Legacy */
+	/** @testdox Settings without the new-key accessors: postcode_check_service() still returns Legacy */
 	public function test_settings_without_getter_postcode_check_returns_legacy(): void {
 		$factory = new Service_Factory( $this->settings_without_v4_getter() );
 		$this->assertInstanceOf( Legacy_Postcode_Check_Service::class, $factory->postcode_check_service() );
+	}
+
+	/**
+	 * @testdox Settings exposing get_api_key_new() but not is_api_key_new_validated(): returns Legacy
+	 *
+	 * A half-present new-key API must not be treated as a usable V4 key, since the
+	 * validated state cannot be established.
+	 */
+	public function test_settings_with_partial_new_key_api_returns_legacy(): void {
+		Filters\expectApplied( 'postnl_sdk_enable_barcode' )->andReturn( true );
+
+		$factory = new Service_Factory( $this->settings_with_partial_new_key_api() );
+		$factory->inject_v4_service( 'barcode', $this->v4_barcode_stub() );
+
+		$this->assertInstanceOf( Legacy_Barcode_Service::class, $factory->barcode_service() );
+	}
+
+	// -------------------------------------------------------------------------
+	// Scenario 2b — New key entered but not validated → Legacy
+	// -------------------------------------------------------------------------
+
+	/**
+	 * @testdox New key entered but not validated: barcode_service() returns Legacy
+	 *
+	 * The new key is only usable once the save-time validation call confirms it, so an
+	 * entered-but-unvalidated key must never route traffic to V4.
+	 */
+	public function test_unvalidated_new_key_returns_legacy(): void {
+		Filters\expectApplied( 'postnl_sdk_enable_barcode' )->andReturn( true );
+
+		$factory = new Service_Factory( $this->settings_with_key( 'test-v4-key', false ) );
+		$factory->inject_v4_service( 'barcode', $this->v4_barcode_stub() );
+
+		$this->assertInstanceOf( Legacy_Barcode_Service::class, $factory->barcode_service() );
+	}
+
+	/**
+	 * @testdox Validated new key + flag + stub: barcode_service() routes to V4
+	 *
+	 * The positive counterpart to the unvalidated case, so the validation gate is
+	 * proven to be the deciding factor rather than an always-false check.
+	 */
+	public function test_validated_new_key_routes_to_v4(): void {
+		Filters\expectApplied( 'postnl_sdk_enable_barcode' )->andReturn( true );
+
+		$stub    = $this->v4_barcode_stub();
+		$factory = new Service_Factory( $this->settings_with_key( 'test-v4-key', true ) );
+		$factory->inject_v4_service( 'barcode', $stub );
+
+		$this->assertSame( $stub, $factory->barcode_service() );
 	}
 
 	// -------------------------------------------------------------------------

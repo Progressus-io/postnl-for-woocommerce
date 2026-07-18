@@ -1,39 +1,19 @@
 <?php
 /**
- * Class Rest_API\Postcode_Check\Client file.
+ * Backward-compatibility shim for Rest_API\Postcode_Check\Client.
+ *
+ * The implementation has moved to Rest_API\Legacy\Postcode_Check\Client.
+ * This file registers a class alias so all existing callers that reference
+ * PostNLWooCommerce\Rest_API\Postcode_Check\Client continue to work unchanged.
  *
  * @package PostNLWooCommerce\Rest_API\Postcode_Check
  */
-
-namespace PostNLWooCommerce\Rest_API\Postcode_Check;
-
-use PostNLWooCommerce\Rest_API\Base;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-/**
- * Class Client
- *
- * @package PostNLWooCommerce\Rest_API\Checkout
- */
-class Client extends Base {
-	/**
-	 * API Endpoint.
-	 *
-	 * @var string
-	 */
-	public $endpoint = '/shipment/checkout/v1/postalcodecheck';
-
-	/**
-	 * Function for composing API request.
-	 */
-	public function compose_body_request() {
-		return array(
-			'postalcode'          => $this->item_info->receiver['postcode'],
-			'housenumber'         => $this->item_info->receiver['house_number'],
-			'housenumberaddition' => $this->item_info->receiver['address_2'],
-		);
-	}
-}
+class_alias(
+	'PostNLWooCommerce\\Rest_API\\Legacy\\Postcode_Check\\Client',
+	'PostNLWooCommerce\\Rest_API\\Postcode_Check\\Client'
+);

@@ -9,11 +9,16 @@ declare( strict_types = 1 );
 
 namespace PostNLWooCommerce\Tests\Rest_API\SDK;
 
+use Postnl\Sdk\Auth\Method\ApiKeyAuth;
 use Postnl\Sdk\Client\ClientBuilder;
 use Postnl\Sdk\Client\PostnlClientInterface;
+use Postnl\Sdk\Exception\InvalidArgumentSdkException;
 use Postnl\Sdk\Transport\Retry\RetryConfig;
 use PostNLWooCommerce\Rest_API\SDK\Client_Factory;
 use PostNLWooCommerce\Tests\UnitTestCase;
+use Psr\Http\Client\ClientInterface;
+use Psr\Http\Message\RequestInterface;
+use Psr\Http\Message\ResponseInterface;
 use ReflectionProperty;
 
 /**
@@ -26,8 +31,8 @@ class Client_FactoryTest extends UnitTestCase {
 	/**
 	 * Build a minimal settings stub with configurable customer credentials.
 	 *
-	 * @param string $customer_num  PostNL customer number.
-	 * @param string $customer_code PostNL customer code.
+	 * @param mixed $customer_num  PostNL customer number; intentionally untyped to mirror Settings.
+	 * @param mixed $customer_code PostNL customer code; intentionally untyped to mirror Settings.
 	 * @return object
 	 */
 	private function make_settings( mixed $customer_num = '12345678', mixed $customer_code = 'PBNL' ): object {
@@ -75,19 +80,54 @@ class Client_FactoryTest extends UnitTestCase {
 	}
 
 	/**
-	 * @testdox build() does not perform a network call during construction
+	 * @testdox build() sends no HTTP request while constructing the client
 	 *
-	 * ClientBuilder::make() assembles the Guzzle HTTP client and middleware
-	 * stack without sending any HTTP request.  Requests are deferred until a
-	 * service accessor (barcodes(), labelling(), etc.) is invoked on the
-	 * returned client.  If construction attempted a real network call it would
-	 * throw a connection error on this obviously-unreachable fake key.
+	 * ClientBuilder::make() assembles the transport and middleware stack without
+	 * sending any request; requests are deferred until a service accessor
+	 * (barcodes(), labelling(), etc.) is invoked on the returned client.
+	 *
+	 * Asserting only that build() returns a client would not prove this — the
+	 * sandbox host is reachable and would answer a stray request with a 401
+	 * rather than raising. So a PSR-18 spy is injected and the test fails if the
+	 * SDK reaches for the network at all.
 	 */
 	public function test_build_does_not_perform_network_call(): void {
-		$factory = new Client_Factory( $this->make_settings() );
-		// Passes because make() is lazy — no network activity at construction.
-		$client = $factory->build( 'fake-key-no-network', true );
+		$http = new class() implements ClientInterface {
+			/**
+			 * Requests captured during construction; must remain empty.
+			 *
+			 * @var array<int, string>
+			 */
+			public array $requests = array();
+
+			public function sendRequest( RequestInterface $request ): ResponseInterface {
+				$this->requests[] = (string) $request->getUri();
+				throw new \RuntimeException( 'Unexpected HTTP request during construction: ' . $request->getUri() );
+			}
+		};
+
+		$factory = new Http_Spy_Client_Factory( $this->make_settings(), $http );
+		$client  = $factory->build( 'fake-key-no-network', true );
+
 		$this->assertInstanceOf( PostnlClientInterface::class, $client );
+		$this->assertSame(
+			array(),
+			$http->requests,
+			'build() must not send any HTTP request while constructing the SDK client.'
+		);
+	}
+
+	/**
+	 * @testdox An empty API key is rejected by the SDK rather than yielding an unusable client
+	 *
+	 * Pins the contract documented by build()'s @throws tag. Callers wiring this into
+	 * checkout must gate on a non-empty key or surface this exception deliberately.
+	 */
+	public function test_empty_api_key_throws(): void {
+		$factory = new Client_Factory( $this->make_settings() );
+
+		$this->expectException( InvalidArgumentSdkException::class );
+		$factory->build( '   ', false );
 	}
 
 	/**
@@ -131,6 +171,23 @@ class Client_FactoryTest extends UnitTestCase {
 			\Postnl\Sdk\Enums\Version::V4,
 			$this->builder_prop( $spy->captured_builder, 'apiVersion' )
 		);
+	}
+
+	/**
+	 * @testdox The V4 API key passed to build() is the key configured on the SDK builder
+	 *
+	 * Without this assertion every other test still passes when the key argument is
+	 * dropped and a literal is hardcoded into Auth::apiKey(), because the memo tests
+	 * key off build()'s arguments rather than what actually reaches the builder.
+	 */
+	public function test_api_key_is_forwarded_to_auth(): void {
+		$spy = new Spy_Client_Factory( $this->make_settings() );
+		$spy->build( 'fake-v4-key-abc123', false );
+
+		$auth = $this->builder_prop( $spy->captured_builder, 'auth' );
+
+		$this->assertInstanceOf( ApiKeyAuth::class, $auth );
+		$this->assertSame( 'fake-v4-key-abc123', $auth->reveal() );
 	}
 
 	/**
@@ -182,12 +239,46 @@ class Client_FactoryTest extends UnitTestCase {
 			}
 		};
 
-		$factory      = new Client_Factory( $settings );
-		$a            = $factory->build( 'k', false );
+		$factory = new Client_Factory( $settings );
+		$a       = $factory->build( 'k', false );
+
 		$settings->num = '22222222';
-		$b            = $factory->build( 'k', false );
+
+		$b = $factory->build( 'k', false );
 
 		$this->assertNotSame( $a, $b );
+	}
+
+	/**
+	 * @testdox Customer credentials containing the key delimiter do not collide onto one client
+	 *
+	 * Joining the raw values with '|' let the delimiter shift the segment boundary, so
+	 * ( '1|2', '3' ) and ( '1', '2|3' ) hashed to the same key and the second config was
+	 * silently served the first config's client. Customer values are country-scoped, so
+	 * they can differ within a single request.
+	 */
+	public function test_customer_credentials_containing_delimiter_do_not_collide(): void {
+		$settings = new class {
+			public string $num  = '1|2';
+			public string $code = '3';
+			public function get_customer_num() {
+				return $this->num;
+			}
+			public function get_customer_code() {
+				return $this->code;
+			}
+		};
+
+		$factory = new Client_Factory( $settings );
+		$a       = $factory->build( 'same-key', false );
+
+		// Same joined string, different decomposition.
+		$settings->num  = '1';
+		$settings->code = '2|3';
+
+		$b = $factory->build( 'same-key', false );
+
+		$this->assertNotSame( $a, $b, 'Distinct customer credentials must not share a memoized client.' );
 	}
 
 	/**
@@ -238,11 +329,16 @@ class Client_FactoryTest extends UnitTestCase {
 	 * This assertion confirms the source file contains no reference to it.
 	 */
 	public function test_no_message_id_referenced(): void {
-		$source = (string) file_get_contents( ABSPATH . 'src/Rest_API/SDK/Client_Factory.php' );
+		$path   = ABSPATH . 'src/Rest_API/SDK/Client_Factory.php';
+		$source = (string) file_get_contents( $path );
 
-		$this->assertStringNotContainsString( 'MessageID', $source );
-		$this->assertStringNotContainsString( 'message_id', $source );
+		// Without this the guard rots silently: file_get_contents() on a moved or renamed
+		// file yields '', and every assertion below then passes against an empty string.
+		$this->assertNotEmpty( $source, "Could not read {$path} — the MessageID guard would pass vacuously." );
+
+		// Case-insensitive, so it also covers 'MessageID' and 'messageid'.
 		$this->assertStringNotContainsStringIgnoringCase( 'messageid', $source );
+		$this->assertStringNotContainsString( 'message_id', $source );
 	}
 }
 
@@ -281,5 +377,51 @@ class Spy_Client_Factory extends Client_Factory {
 		$builder                = parent::make_builder( $v4_key, $is_sandbox, $customer_number, $customer_code );
 		$this->captured_builder = $builder;
 		return $builder;
+	}
+}
+
+/**
+ * Spy subclass that pins a PSR-18 client onto the builder.
+ *
+ * Lets a test observe whether the SDK reaches for the network while the client
+ * is being constructed, without contacting a real host.
+ */
+class Http_Spy_Client_Factory extends Client_Factory {
+
+	/**
+	 * PSR-18 client to hand the SDK.
+	 *
+	 * @var ClientInterface
+	 */
+	private ClientInterface $http;
+
+	/**
+	 * Constructor.
+	 *
+	 * @param object          $settings Settings stub.
+	 * @param ClientInterface $http     PSR-18 spy client.
+	 */
+	public function __construct( object $settings, ClientInterface $http ) {
+		parent::__construct( $settings );
+		$this->http = $http;
+	}
+
+	/**
+	 * Attach the spy HTTP client to the configured builder.
+	 *
+	 * @param string $v4_key          V4 API key.
+	 * @param bool   $is_sandbox      Sandbox flag.
+	 * @param string $customer_number PostNL customer number.
+	 * @param string $customer_code   PostNL customer code.
+	 * @return ClientBuilder
+	 */
+	protected function make_builder(
+		string $v4_key,
+		bool $is_sandbox,
+		string $customer_number,
+		string $customer_code
+	): ClientBuilder {
+		return parent::make_builder( $v4_key, $is_sandbox, $customer_number, $customer_code )
+			->withHttpClient( $this->http );
 	}
 }

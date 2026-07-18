@@ -32,10 +32,6 @@
     display:none;
 }
 
-#shipment-postnl-label-form.generated .button-download-label {
-    display:inline-block;
-}
-
 #shipment-postnl-label-form .delete-label {
     display:none;
 }
@@ -63,11 +59,30 @@
 }
 
 #shipment-postnl-label-form.generated .delete-label {
-    display:inline-block;
+    display: flex;
+    align-items: center;
+}
+
+#shipment-postnl-label-form.generated .button-download-label {
+    display: flex;
+    align-items: center;
 }
 
 #shipment-postnl-label-form #shipment-postnl-error-text {
     margin-top:15px;
     color:#ff0000;
     font-weight:700;
+}
+
+#shipment-postnl-label-form .button-container {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+}
+
+#shipment-postnl-label-form .button-container .button {
+    margin: 0;
+    text-align: center;
+    justify-content: center;
 }

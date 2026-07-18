@@ -100,11 +100,15 @@ class Fill_In_With_Postnl {
 			return;
 		}
 
-		$border                 = sanitize_text_field( get_option( 'postnl_button_border', '1px solid #000000' ) );
-		$alignment              = sanitize_text_field( get_option( 'postnl_button_alignment', 'left' ) );
+		$border                 = sanitize_text_field( get_option( 'postnl_button_border', 'none' ) );
+		$alignment              = sanitize_text_field( get_option( 'postnl_button_alignment', 'center' ) );
 		$custom_css             = wp_strip_all_tags( get_option( 'postnl_custom_css', '' ) );
 		$background_color       = sanitize_hex_color( get_option( 'postnl_button_background_color', '#ff6200' ) );
 		$hover_background_color = sanitize_hex_color( get_option( 'postnl_button_hover_background_color', '#e55500' ) );
+		$border_radius          = absint( get_option( 'postnl_button_border_radius', '4' ) );
+		$cart_width             = absint( get_option( 'postnl_cart_button_width', '100' ) );
+		$checkout_width         = absint( get_option( 'postnl_checkout_button_width', '100' ) );
+		$minicart_width         = absint( get_option( 'postnl_minicart_button_width', '100' ) );
 
 		$css = '';
 
@@ -112,6 +116,7 @@ class Fill_In_With_Postnl {
 		$css .= '#postnl-login-button {';
 		$css .= 'background-color: ' . $background_color . ';';
 		$css .= 'border: ' . $border . ';';
+		$css .= 'border-radius: ' . $border_radius . 'px;';
 		if ( 'center' === $alignment ) {
 			$css .= 'display: block; margin-left: auto; margin-right: auto;';
 		} elseif ( 'right' === $alignment ) {
@@ -125,6 +130,11 @@ class Fill_In_With_Postnl {
 		$css .= '#postnl-login-button:hover {';
 		$css .= 'background-color: ' . $hover_background_color . ';';
 		$css .= '}';
+
+		// Per-context button widths.
+		$css .= '.postnl-button-in-cart #postnl-login-button { width: ' . $cart_width . '%; }';
+		$css .= '.postnl-button-in-checkout #postnl-login-button { width: ' . $checkout_width . '%; }';
+		$css .= '.postnl-button-in-minicart #postnl-login-button { width: ' . $minicart_width . '%; }';
 
 		// Append custom CSS from the textarea field.
 		if ( ! empty( $custom_css ) ) {

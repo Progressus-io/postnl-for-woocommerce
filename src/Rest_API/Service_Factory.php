@@ -138,6 +138,28 @@ class Service_Factory {
 	}
 
 	/**
+	 * Whether the barcode is issued by the label response instead of a standalone
+	 * barcode request.
+	 *
+	 * True only when a V4 label service is actually resolvable for this request —
+	 * i.e. the label flow is routed to V4 and a V4 label service has been registered.
+	 * On V4 the label call auto-issues the barcode (PostNL confirmed 2026-05-21), so
+	 * Order\Base skips the barcode prefetch, generates the label first, and harvests
+	 * the barcode(s) from the label response — barcode_service() is never called on
+	 * that path.
+	 *
+	 * Gating on the V4 label service (not merely the barcode flag) keeps the reorder
+	 * dormant until the V4 label service exists: barcode_service() therefore stays on
+	 * Legacy prefetch until the label is genuinely V4, so a Legacy label is never fed
+	 * a missing barcode and the V4 no-op is never asked to prefetch one.
+	 *
+	 * @return bool
+	 */
+	public function barcode_from_label(): bool {
+		return $this->should_use_v4( 'label' ) && isset( $this->v4_services['label'] );
+	}
+
+	/**
 	 * Return the timeframe (delivery options) service for the current configuration.
 	 *
 	 * @return Timeframe_Service_Interface

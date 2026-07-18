@@ -619,17 +619,33 @@ abstract class Base {
 			'saved_data' => $saved_data,
 		);
 
-		$barcodes                        = $this->maybe_create_multi_barcodes( $label_post_data );
-		$label_post_data['main_barcode'] = $barcodes[0]; // for MainBarcode.
-		$label_post_data['barcodes']     = $barcodes;
+		if ( $this->service_factory()->barcode_from_label() ) {
+			// V4: the label call issues the barcode(s); there is no standalone barcode
+			// request. Generate the label first, then harvest the barcode(s) out of the
+			// label response into the same barcodes[] shape the prefetch path produces.
+			$label_post_data['is_return_activated'] = $this->is_return_function_activated( $order );
 
-		// Need to be refactored.
-		$shipping_item_info                         = new Shipping\Item_Info( $label_post_data );
-		$label_post_data['return_barcode']          = $this->maybe_create_return_barcode( $label_post_data, $shipping_item_info );
-		$label_post_data['shipping_return_barcode'] = $this->maybe_create_shipping_return_barcode( $label_post_data, $shipping_item_info );
-		$label_post_data['is_return_activated']     = $this->is_return_function_activated( $order );
+			$labels   = $this->create_label( $label_post_data );
+			$barcodes = self::get_barcodes_from_labels( $labels );
 
-		$labels = $this->create_label( $label_post_data );
+			// The prefetch path fails loudly when no barcode exists; the harvest path must too,
+			// or labels would be stored with an empty barcodes[] and no tracking URL.
+			if ( empty( $barcodes ) ) {
+				throw new \Exception( esc_html__( 'No barcode found in the label response!', 'postnl-for-woocommerce' ) );
+			}
+		} else {
+			$barcodes                        = $this->maybe_create_multi_barcodes( $label_post_data );
+			$label_post_data['main_barcode'] = $barcodes[0]; // for MainBarcode.
+			$label_post_data['barcodes']     = $barcodes;
+
+			// Need to be refactored.
+			$shipping_item_info                         = new Shipping\Item_Info( $label_post_data );
+			$label_post_data['return_barcode']          = $this->maybe_create_return_barcode( $label_post_data, $shipping_item_info );
+			$label_post_data['shipping_return_barcode'] = $this->maybe_create_shipping_return_barcode( $label_post_data, $shipping_item_info );
+			$label_post_data['is_return_activated']     = $this->is_return_function_activated( $order );
+
+			$labels = $this->create_label( $label_post_data );
+		}
 
 		/*
 		Temporarily commented.
@@ -904,6 +920,34 @@ abstract class Base {
 		return $barcodes;
 	}
 
+	/**
+	 * Harvest the barcode(s) out of a label-generation response.
+	 *
+	 * On the V4 path the label call issues the barcode, so it arrives inside each
+	 * label record under the same 'barcode' key the Legacy pipeline already writes
+	 * (see put_label_content() and maybe_merge_labels()). Returned in the indexed
+	 * shape maybe_create_multi_barcodes() produces so the caller stores barcodes[]
+	 * identically to the prefetch path.
+	 *
+	 * @param array $labels Label records returned by create_label().
+	 *
+	 * @return array List of barcode strings.
+	 */
+	protected static function get_barcodes_from_labels( $labels ) {
+		$barcodes = array();
+
+		if ( ! is_array( $labels ) ) {
+			return $barcodes;
+		}
+
+		foreach ( $labels as $label ) {
+			if ( ! empty( $label['barcode'] ) && ! in_array( $label['barcode'], $barcodes, true ) ) {
+				$barcodes[] = $label['barcode'];
+			}
+		}
+
+		return $barcodes;
+	}
 
 	/**
 	 * Create PostNL return barcode for current order

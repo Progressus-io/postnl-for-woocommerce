@@ -13,6 +13,7 @@ use Postnl\Sdk\Auth\Auth;
 use Postnl\Sdk\Client\ClientBuilder;
 use Postnl\Sdk\Client\PostnlClientInterface;
 use Postnl\Sdk\Enums\Version;
+use Postnl\Sdk\Transport\HttpPluginInterface;
 use Postnl\Sdk\Transport\Retry\RetryConfig;
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -112,6 +113,34 @@ class Client_Factory {
 		}
 
 		return $this->memo[ $cache_key ];
+	}
+
+	/**
+	 * Build a client with extra transport plugins attached (e.g. HTTP caching).
+	 *
+	 * Unlike build(), this is not memoized: plugin instances are request-scoped
+	 * (a caching plugin carries its own cache backend), so a fresh client is
+	 * assembled each call. The shared auth/version/customer/retry configuration
+	 * still comes from make_builder(), so callers add only the plugins they need.
+	 *
+	 * @param string              $v4_key     PostNL V4 API key.
+	 * @param bool                $is_sandbox Whether to target the sandbox environment.
+	 * @param HttpPluginInterface ...$plugins Transport plugins to attach in order.
+	 * @return PostnlClientInterface
+	 */
+	public function build_with_plugins( string $v4_key, bool $is_sandbox, HttpPluginInterface ...$plugins ): PostnlClientInterface {
+		$builder = $this->make_builder(
+			$v4_key,
+			$is_sandbox,
+			(string) $this->settings->get_customer_num(),
+			(string) $this->settings->get_customer_code()
+		);
+
+		foreach ( $plugins as $plugin ) {
+			$builder = $builder->withPlugin( $plugin );
+		}
+
+		return $builder->make();
 	}
 
 	/**

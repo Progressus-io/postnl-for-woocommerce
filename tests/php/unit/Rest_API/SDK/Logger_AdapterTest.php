@@ -102,7 +102,15 @@ class Logger_AdapterTest extends UnitTestCase {
 		$wc_logger = $this->fake_wc_logger();
 		$wc_logger->shouldReceive( 'log' )
 			->once()
-			->with( 'info', '[postnl-v4] Label 3SABC created for order 42', array( 'source' => 'PostNLWooCommerce' ) );
+			->with(
+				'info',
+				'[postnl-v4] Label 3SABC created for order 42',
+				array(
+					'barcode'  => '3SABC',
+					'order_id' => 42,
+					'source'   => 'PostNLWooCommerce',
+				)
+			);
 
 		$this->make_adapter()->info(
 			'Label {barcode} created for order {order_id}',
@@ -120,7 +128,14 @@ class Logger_AdapterTest extends UnitTestCase {
 		$wc_logger = $this->fake_wc_logger();
 		$wc_logger->shouldReceive( 'log' )
 			->once()
-			->with( 'debug', '[postnl-v4] payload {data}', array( 'source' => 'PostNLWooCommerce' ) );
+			->with(
+				'debug',
+				'[postnl-v4] payload {data}',
+				array(
+					'data'   => array( 'nested' => true ),
+					'source' => 'PostNLWooCommerce',
+				)
+			);
 
 		$this->make_adapter()->debug( 'payload {data}', array( 'data' => array( 'nested' => true ) ) );
 	}
@@ -174,9 +189,58 @@ class Logger_AdapterTest extends UnitTestCase {
 		$wc_logger = $this->fake_wc_logger();
 		$wc_logger->shouldReceive( 'log' )
 			->once()
-			->with( 'info', '[postnl-v4] order 7 for {missing}', array( 'source' => 'PostNLWooCommerce' ) );
+			->with(
+				'info',
+				'[postnl-v4] order 7 for {missing}',
+				array(
+					'id'     => 7,
+					'source' => 'PostNLWooCommerce',
+				)
+			);
 
 		$this->make_adapter()->info( 'order {id} for {missing}', array( 'id' => 7 ) );
+	}
+
+	/**
+	 * Under LogFormat::Structured the SDK sends a bare event label plus the
+	 * payload as context. WooCommerce renders that as a CONTEXT: segment, so it
+	 * must reach WC_Logger rather than being dropped.
+	 *
+	 * @testdox Structured-format context reaches the WC logger for WooCommerce to render
+	 */
+	public function test_structured_format_context_is_forwarded(): void {
+		$wc_logger = $this->fake_wc_logger();
+		$wc_logger->shouldReceive( 'log' )
+			->once()
+			->with(
+				'info',
+				'[postnl-v4] SDK.Response',
+				array(
+					'status'  => 200,
+					'barcode' => '3SABCD1234567',
+					'source'  => 'PostNLWooCommerce',
+				)
+			);
+
+		$this->make_adapter()->info(
+			'SDK.Response',
+			array(
+				'status'  => 200,
+				'barcode' => '3SABCD1234567',
+			)
+		);
+	}
+
+	/**
+	 * @testdox Incoming context cannot redirect the entry to another log source
+	 */
+	public function test_context_cannot_override_the_log_source(): void {
+		$wc_logger = $this->fake_wc_logger();
+		$wc_logger->shouldReceive( 'log' )
+			->once()
+			->with( 'warning', '[postnl-v4] msg', array( 'source' => 'PostNLWooCommerce' ) );
+
+		$this->make_adapter()->warning( 'msg', array( 'source' => 'somewhere-else' ) );
 	}
 
 	/**
@@ -208,13 +272,19 @@ class Logger_AdapterTest extends UnitTestCase {
 	}
 
 	/**
+	 * Pins the contract rather than the null guard in isolation: the guard and
+	 * the surrounding catch absorb a missing logger identically from the
+	 * outside, so this asserts the lookup is reached and the call returns
+	 * without throwing.
+	 *
 	 * @testdox A null logger from wc_get_logger() is handled without fataling
 	 */
 	public function test_null_wc_logger_is_handled_gracefully(): void {
-		Functions\when( 'wc_get_logger' )->justReturn( null );
+		// Verified by Mockery on teardown: proves the enable-logging gate was
+		// passed and the logger lookup actually ran.
+		Functions\expect( 'wc_get_logger' )->once()->andReturn( null );
 
+		// Returning from this call at all is the assertion; a throw fails the test.
 		$this->make_adapter()->error( 'no logger available' );
-
-		$this->assertTrue( true );
 	}
 }

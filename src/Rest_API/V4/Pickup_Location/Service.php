@@ -102,6 +102,14 @@ class Service implements Pickup_Location_Service_Interface {
 	private $number_of_locations;
 
 	/**
+	 * Memoised pickup date so the request and the mapped group always agree and
+	 * the calendar walk runs once per lookup.
+	 *
+	 * @var string|null
+	 */
+	private $pickup_date = null;
+
+	/**
 	 * Service constructor.
 	 *
 	 * @param Client_Factory $client_factory      SDK client factory.
@@ -321,6 +329,10 @@ class Service implements Pickup_Location_Service_Interface {
 	 * @return string
 	 */
 	protected function get_pickup_date(): string {
+		if ( null !== $this->pickup_date ) {
+			return $this->pickup_date;
+		}
+
 		$now      = $this->now();
 		$handover = $now;
 
@@ -342,7 +354,9 @@ class Service implements Pickup_Location_Service_Interface {
 			}
 		}
 
-		return $handover->format( 'Y-m-d' );
+		$this->pickup_date = $handover->format( 'Y-m-d' );
+
+		return $this->pickup_date;
 	}
 
 	/**

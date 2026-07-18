@@ -242,6 +242,40 @@ class ServiceTest extends UnitTestCase {
 		$this->assertSame( array(), $mapped[0]['Locations'][0]['OpeningHours'] );
 	}
 
+	/**
+	 * @testdox A closed day (no times) maps to an empty Times list without warnings
+	 */
+	public function test_map_response_maps_closed_day(): void {
+		$service = new Testable_Pickup_Service( new Client_Factory( $this->make_settings() ), $this->make_settings() );
+
+		$collection = new PickUpLocationsCollection(
+			array(
+				new PickupLocation(
+					pickupLocationId: '555',
+					name: 'Closed Sundays',
+					address: new Address( countryIso: Country::NL, postalCode: '1000AA', city: 'Amsterdam', street: 'Damrak' ),
+					openingTimes: new LocationOpeningHours(
+						openingTimes: array(
+							new DayOpeningTimes( day: 'Sunday', times: null ),
+						)
+					)
+				),
+			)
+		);
+
+		$mapped = $service->expose_map_response( $collection );
+
+		$this->assertSame(
+			array(
+				array(
+					'Day'   => 'Sunday',
+					'Times' => array(),
+				),
+			),
+			$mapped[0]['Locations'][0]['OpeningHours']
+		);
+	}
+
 	// ── Pickup date ──────────────────────────────────────────────────────────
 
 	/**
@@ -374,6 +408,17 @@ class ServiceTest extends UnitTestCase {
 							'city'        => 'Den Haag',
 							'countryIso'  => 'NL',
 						),
+						'openingTimes'     => array(
+							array(
+								'day'   => 'Monday',
+								'times' => array(
+									array(
+										'from'  => '08:00',
+										'until' => '21:00',
+									),
+								),
+							),
+						),
 					),
 				),
 			)
@@ -389,8 +434,25 @@ class ServiceTest extends UnitTestCase {
 
 		$this->assertSame( 1, $http->count, 'Second identical lookup must be served from cache.' );
 		$this->assertSame( $first, $second );
-		$this->assertSame( '176227', $first['PickupOptions'][0]['Locations'][0]['LocationCode'] );
-		$this->assertSame( 'Jumbo Den Haag', $first['PickupOptions'][0]['Locations'][0]['Address']['CompanyName'] );
+
+		$location = $first['PickupOptions'][0]['Locations'][0];
+		$this->assertSame( '176227', $location['LocationCode'] );
+		$this->assertSame( 'Jumbo Den Haag', $location['Address']['CompanyName'] );
+		// Exercises the real API-JSON -> LocationOpeningHours::fromArray() -> map_opening_hours() path.
+		$this->assertSame(
+			array(
+				array(
+					'Day'   => 'Monday',
+					'Times' => array(
+						array(
+							'From' => '08:00',
+							'To'   => '21:00',
+						),
+					),
+				),
+			),
+			$location['OpeningHours']
+		);
 	}
 
 	/**

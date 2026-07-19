@@ -10,6 +10,8 @@ namespace PostNLWooCommerce\Frontend;
 use PostNLWooCommerce\Address_Utils;
 use PostNLWooCommerce\Shipping_Method\Settings;
 use PostNLWooCommerce\Rest_API\Service_Factory;
+use PostNLWooCommerce\Rest_API\Contracts\Pickup_Location_Service_Interface;
+use PostNLWooCommerce\Rest_API\Contracts\Timeframe_Service_Interface;
 use PostNLWooCommerce\Utils;
 use PostNLWooCommerce\Helper\Mapping;
 use PostNLWooCommerce\Frontend\Checkout_Fields;
@@ -199,7 +201,11 @@ class Container {
 	 * @throws \Exception If the checkout data process has error.
 	 */
 	public function get_checkout_data( $post_data ) {
-		$response  = $this->service_factory()->timeframe_service()->get_delivery_options( $post_data );
+		$response  = $this->aggregate_delivery_options(
+			$this->service_factory()->timeframe_service(),
+			$this->service_factory()->pickup_location_service(),
+			$post_data
+		);
 		$letterbox = Utils::is_cart_eligible_auto_letterbox( \WC()->cart );
 
 		return array(
@@ -207,6 +213,52 @@ class Container {
 			'post_data' => $post_data,
 			'letterbox' => $letterbox,
 		);
+	}
+
+	/**
+	 * Compose the checkout response from the delivery-day and pickup-location services.
+	 *
+	 * V1 returned delivery days and pickup points in a single /shipment/v1/checkout
+	 * response, so the Legacy transport resolves both flows to one shared
+	 * Checkout_Service instance whose one response already carries DeliveryOptions
+	 * and PickupOptions. V4 splits them into two endpoints, so Service_Factory hands
+	 * back a distinct pickup service that must be queried separately and its result
+	 * merged back into the delivery-day response.
+	 *
+	 * The two transports are reconciled here, at the consumer, so the assembled
+	 * array is identical either way and Frontend\Delivery_Day / Frontend\Dropoff_Points
+	 * (and the blocks components reached via Extend_Block_Core) render the same
+	 * regardless of which transport answered.
+	 *
+	 * The V4 lookups are issued sequentially: the plugin and the SDK have no async
+	 * transport, so genuine parallel execution is deferred. Repeat pageloads for the
+	 * same address are served from the SDK response cache, so the second call is cheap
+	 * after the first.
+	 *
+	 * Error semantics match the legacy single call: either service throwing aborts the
+	 * whole lookup, so a failure never renders delivery days without pickup points or
+	 * vice versa.
+	 *
+	 * @param Timeframe_Service_Interface       $timeframe_service Delivery-day service.
+	 * @param Pickup_Location_Service_Interface $pickup_service    Pickup-location service.
+	 * @param array                             $post_data         Checkout post input.
+	 *
+	 * @return array Combined response carrying both DeliveryOptions and PickupOptions.
+	 * @throws \Exception If either underlying service request fails.
+	 */
+	protected function aggregate_delivery_options( Timeframe_Service_Interface $timeframe_service, Pickup_Location_Service_Interface $pickup_service, $post_data ) {
+		$response = $timeframe_service->get_delivery_options( $post_data );
+
+		// Legacy shares one instance across both flows; its single response already
+		// holds both halves, so a second call would only repeat the same request.
+		if ( $pickup_service === $timeframe_service ) {
+			return $response;
+		}
+
+		$pickup                    = $pickup_service->get_pickup_locations( $post_data );
+		$response['PickupOptions'] = isset( $pickup['PickupOptions'] ) ? $pickup['PickupOptions'] : array();
+
+		return $response;
 	}
 
 	/**

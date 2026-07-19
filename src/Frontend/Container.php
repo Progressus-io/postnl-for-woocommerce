@@ -201,7 +201,7 @@ class Container {
 	 * @throws \Exception If the checkout data process has error.
 	 */
 	public function get_checkout_data( $post_data ) {
-		$response  = $this->aggregate_delivery_options(
+		$response  = self::aggregate_delivery_options(
 			$this->service_factory()->timeframe_service(),
 			$this->service_factory()->pickup_location_service(),
 			$post_data
@@ -246,7 +246,7 @@ class Container {
 	 * @return array Combined response carrying both DeliveryOptions and PickupOptions.
 	 * @throws \Exception If either underlying service request fails.
 	 */
-	protected function aggregate_delivery_options( Timeframe_Service_Interface $timeframe_service, Pickup_Location_Service_Interface $pickup_service, $post_data ) {
+	protected static function aggregate_delivery_options( Timeframe_Service_Interface $timeframe_service, Pickup_Location_Service_Interface $pickup_service, $post_data ) {
 		$response = $timeframe_service->get_delivery_options( $post_data );
 
 		// Legacy shares one instance across both flows; its single response already

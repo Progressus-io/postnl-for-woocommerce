@@ -19,14 +19,23 @@ use PostNLWooCommerce\Tests\UnitTestCase;
  */
 class ContainerCheckoutAggregationTest extends UnitTestCase {
 
-	protected function setUp(): void {
-		parent::setUp();
+	/**
+	 * Invoke the protected static aggregation method under test.
+	 *
+	 * Reflection is used instead of instantiating Container so the test never
+	 * touches the WooCommerce-dependent constructor or the POSTNL_SETTINGS_ID
+	 * constant (defining it here would leak into every later test in the run).
+	 *
+	 * @param Timeframe_Service_Interface       $timeframe Delivery-day service.
+	 * @param Pickup_Location_Service_Interface $pickup    Pickup-location service.
+	 * @param array                             $post_data Checkout post input.
+	 * @return array
+	 */
+	private function aggregate( $timeframe, $pickup, array $post_data ): array {
+		$method = new \ReflectionMethod( Container::class, 'aggregate_delivery_options' );
+		$method->setAccessible( true );
 
-		// Container declares $tab_field = POSTNL_SETTINGS_ID . '_option' as a
-		// property default, which is resolved when the object is created.
-		if ( ! defined( 'POSTNL_SETTINGS_ID' ) ) {
-			define( 'POSTNL_SETTINGS_ID', 'postnl' );
-		}
+		return $method->invoke( null, $timeframe, $pickup, $post_data );
 	}
 
 	/**
@@ -39,28 +48,6 @@ class ContainerCheckoutAggregationTest extends UnitTestCase {
 			'shipping_country'  => 'NL',
 			'shipping_postcode' => '1234AB',
 		);
-	}
-
-	/**
-	 * Container subclass that skips the WooCommerce-dependent constructor and
-	 * exposes the protected aggregation method under test.
-	 */
-	private function aggregating_container(): Container {
-		return new class() extends Container {
-			// Skip Settings::get_instance() and hook registration; this instance is
-			// only used to exercise the pure aggregation method.
-			public function __construct() {} // phpcs:ignore Squiz.Commenting.FunctionComment.Missing, Generic.CodeAnalysis.EmptyStatement.DetectedFunction
-
-			/**
-			 * @param Timeframe_Service_Interface       $timeframe Delivery-day service.
-			 * @param Pickup_Location_Service_Interface $pickup    Pickup-location service.
-			 * @param array                             $post_data Checkout post input.
-			 * @return array
-			 */
-			public function aggregate( $timeframe, $pickup, $post_data ): array {
-				return $this->aggregate_delivery_options( $timeframe, $pickup, $post_data );
-			}
-		};
 	}
 
 	/**
@@ -86,7 +73,7 @@ class ContainerCheckoutAggregationTest extends UnitTestCase {
 			}
 		};
 
-		$result = $this->aggregating_container()->aggregate( $legacy, $legacy, $this->post_data() );
+		$result = $this->aggregate( $legacy, $legacy, $this->post_data() );
 
 		$this->assertSame( 1, $legacy->delivery_calls, 'Delivery options should be fetched exactly once.' );
 		$this->assertSame( 0, $legacy->pickup_calls, 'The shared legacy response must not trigger a second pickup call.' );
@@ -118,7 +105,7 @@ class ContainerCheckoutAggregationTest extends UnitTestCase {
 			}
 		};
 
-		$result = $this->aggregating_container()->aggregate( $timeframe, $pickup, $this->post_data() );
+		$result = $this->aggregate( $timeframe, $pickup, $this->post_data() );
 
 		$this->assertSame( 1, $timeframe->calls );
 		$this->assertSame( 1, $pickup->calls );
@@ -143,7 +130,7 @@ class ContainerCheckoutAggregationTest extends UnitTestCase {
 			}
 		};
 
-		$result = $this->aggregating_container()->aggregate( $timeframe, $pickup, $this->post_data() );
+		$result = $this->aggregate( $timeframe, $pickup, $this->post_data() );
 
 		$this->assertSame( array( array( 'DeliveryDate' => '03-01-2026' ) ), $result['DeliveryOptions'] );
 		$this->assertSame( array(), $result['PickupOptions'] );

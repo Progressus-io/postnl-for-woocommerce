@@ -374,19 +374,37 @@ class LetterboxTypeTest extends IntegrationTestCase {
 	}
 
 	/**
-	 * @testdox A non-letterbox order never reports a letterbox label as its delivery type.
+	 * @testdox A saved non-letterbox selection wins over a letterbox merchant default, so no letterbox label leaks onto the order.
 	 */
-	public function test_get_delivery_type_does_not_leak_letterbox_label_for_non_letterbox_order(): void {
+	public function test_get_delivery_type_prefers_saved_non_letterbox_choice_over_letterbox_default(): void {
+		// Force the store to default to Letterbox 48 and make the order auto
+		// letterbox eligible, so with no explicit choice the delivery type would
+		// resolve to the 48h label. The saved non-letterbox selection must take
+		// precedence over that default and never surface a letterbox label.
+		Settings::get_instance()->settings['default_automatic_letterboxparcel_product'] = 'letterbox_48';
+
 		$handler = $this->make_order_handler();
 
 		$order = new \WC_Order();
+		$order->set_shipping_country( 'NL' );
+		$order->update_meta_data( '_postnl_letterbox', true );
 		$order->save();
 		$this->order_ids[] = $order->get_id();
 
+		$handler->seed_backend_options( $order, array( 'delivery_day' => 'yes' ) );
+
 		$delivery_type = $handler->get_delivery_type( wc_get_order( $order->get_id() ) );
 
-		$this->assertNotSame( Utils::get_letterbox_label_24h(), $delivery_type );
-		$this->assertNotSame( Utils::get_letterbox_label_48h(), $delivery_type );
+		$this->assertNotSame(
+			Utils::get_letterbox_label_24h(),
+			$delivery_type,
+			'A saved non-letterbox selection must not surface the 24h letterbox label.'
+		);
+		$this->assertNotSame(
+			Utils::get_letterbox_label_48h(),
+			$delivery_type,
+			'The letterbox merchant default must not override the saved non-letterbox selection.'
+		);
 	}
 
 	/**

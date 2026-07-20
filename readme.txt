@@ -81,6 +81,9 @@ Follow these instructions (https://www.postnl.nl/Images/aanvragen-api-key-stappe
 
 == Changelog ==
 
+= 5.9.9 (2026-xx-xx) =
+* Fix: Order edit page showed "Standard Shipment" as the delivery type for Letterboxparcel orders instead of the selected 24-hour or 48-hour variant.
+
 = 5.9.8 (2026-07-07) =
 * Add: Letterboxparcel 48 hours as a selectable option in the domestic default shipping option, the bulk Change Shipping Options action, and the Label & Tracking menu.
 

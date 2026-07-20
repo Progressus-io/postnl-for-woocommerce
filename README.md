@@ -29,8 +29,6 @@ PostNL’s official extension for WooCommerce on WordPress. Manage your national
 
 ### 5.9.9
 * Fix: Order edit page showed "Standard Shipment" as the delivery type for Letterboxparcel orders instead of the selected 24-hour or 48-hour variant.
-* Fix: Prevented a critical error on the order edit page for orders whose saved delivery date was in an unexpected format.
-* Fix: Plugin no longer fails to load on PHP 7.4-8.1 due to a development-only API SDK dependency being included in the production build.
 
 ### 5.9.8
 * Add: Letterboxparcel 48 hours as a selectable option in the domestic default shipping option, the bulk Change Shipping Options action, and the Label & Tracking menu.

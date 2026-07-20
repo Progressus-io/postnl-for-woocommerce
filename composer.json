@@ -3,8 +3,8 @@
 	"license": "GPL-3.0",
 	"type": "wordpress-plugin",
 	"require": {
-		"clegginabox/pdf-merger": "dev-master",
-		"postnl/api-client-sdk": "1.x-dev@dev"
+		"php": ">=7.4",
+		"clegginabox/pdf-merger": "dev-master"
 	},
 	"autoload": {
 		"psr-4": {
@@ -49,6 +49,7 @@
 		]
 	},
 	"require-dev": {
+		"postnl/api-client-sdk": "dev-main#5a064dd",
 		"wp-cli/i18n-command": "^2.6",
 		"squizlabs/php_codesniffer": "*",
 		"dealerdirect/phpcodesniffer-composer-installer": "*",
@@ -56,7 +57,9 @@
 		"woocommerce/woocommerce-sniffs": "*",
 		"phpunit/phpunit": "^10.5",
 		"yoast/phpunit-polyfills": "^2.0",
-		"brain/monkey": "^2.6"
+		"brain/monkey": "^2.6",
+		"guzzlehttp/guzzle": "^7.11",
+		"league/oauth2-client": "^2.9"
 	},
 	"autoload-dev": {
 		"psr-4": {

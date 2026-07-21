@@ -23,18 +23,6 @@ use PostNLWooCommerce\Tests\UnitTestCase;
 class Request_BuilderTest extends UnitTestCase {
 
 	/**
-	 * The System Under Test.
-	 *
-	 * @var Request_Builder
-	 */
-	private $sut;
-
-	protected function setUp(): void {
-		parent::setUp();
-		$this->sut = new Request_Builder();
-	}
-
-	/**
 	 * A representative happy-path domestic parcel field set.
 	 *
 	 * @return array
@@ -81,7 +69,7 @@ class Request_BuilderTest extends UnitTestCase {
 	 * @return array
 	 */
 	private function payload( array $fields ): array {
-		$request = $this->sut->build( $fields );
+		$request = Request_Builder::build( $fields );
 		$this->assertInstanceOf( ShipmentDeliveryRequest::class, $request );
 
 		return $request->toArray( PayloadMapper::create() );
@@ -162,7 +150,7 @@ class Request_BuilderTest extends UnitTestCase {
 			'resolution'  => 999,
 		);
 
-		$request = $this->sut->build( $fields );
+		$request = Request_Builder::build( $fields );
 		$payload = $request->toArray( PayloadMapper::create() );
 
 		$this->assertSame( ShipmentType::Parcel->value, $payload['shipmentType'] );

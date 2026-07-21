@@ -7,12 +7,13 @@
 
 namespace PostNLWooCommerce\Rest_API\V4\Label;
 
+use Postnl\Sdk\Client\PostnlClientInterface;
+use Postnl\Sdk\Service\ShipmentDelivery\V4\Response\LabelConfirmResponseInterface;
 use PostNLWooCommerce\Order\Base as Order_Base;
 use PostNLWooCommerce\Rest_API\Contracts\Label_Service_Interface;
 use PostNLWooCommerce\Rest_API\SDK\Client_Factory;
 use PostNLWooCommerce\Rest_API\SDK\Exception_Converter;
 use PostNLWooCommerce\Rest_API\Shipping;
-use PostNLWooCommerce\Helper\Product_Mapper\V4_Mapper;
 use PostNLWooCommerce\Utils;
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -90,15 +91,14 @@ class Service extends Order_Base implements Label_Service_Interface {
 	 */
 	public function create( array $post_data ): array {
 		$item_info = new Shipping\Item_Info( $post_data );
+		$signals   = $this->gather_signals( $item_info, $post_data );
 
-		$mapped = $this->map_combination( $item_info );
-
-		if ( ! $this->is_v4_eligible( $item_info, $mapped, $post_data ) ) {
+		if ( ! Eligibility::is_eligible( $signals ) ) {
 			return $this->create_label_pipeline( $post_data );
 		}
 
-		$fields  = $this->extract_fields( $item_info, $mapped, $post_data );
-		$request = ( new Request_Builder() )->build( $fields );
+		$fields  = $this->extract_fields( $item_info, $signals['mapped'], $post_data );
+		$request = Request_Builder::build( $fields );
 
 		try {
 			$response = $this->build_client()->shipmentDelivery()->labelConfirm( $request );
@@ -112,76 +112,58 @@ class Service extends Order_Base implements Label_Service_Interface {
 	}
 
 	/**
-	 * Resolve the V4 mapper result for the order's product combination.
+	 * Collect the eligibility signals for an order from the legacy parser.
+	 *
+	 * The selected backend features are read from the raw post data (string
+	 * 'yes' values), not the parsed booleans on Item_Info, because
+	 * Utils::get_selected_label_features() matches on 'yes'. Passing the real
+	 * options into the mapper is what lets a service-bearing combination that
+	 * keeps product 3085 (e.g. insured) resolve to a services row and be
+	 * rejected below, rather than silently masquerading as the base parcel.
 	 *
 	 * @param Shipping\Item_Info $item_info Parsed legacy item info.
-	 * @return array V4_Mapper::map() result.
-	 */
-	private function map_combination( Shipping\Item_Info $item_info ): array {
-		$destination = Utils::get_shipping_zone(
-			$item_info->receiver['country'] ?? '',
-			$item_info->receiver['state'] ?? ''
-		);
-
-		return V4_Mapper::map(
-			array(
-				'origin'              => $item_info->shipper['country'] ?? '',
-				'destination'         => $destination,
-				'flow'                => $item_info->is_pickup_points() ? 'pickup_points' : 'delivery_day',
-				'options'             => array(),
-				'legacy_product_code' => $item_info->get_product_code(),
-			)
-		);
-	}
-
-	/**
-	 * Decide whether this order is the happy-path domestic parcel handled here.
-	 *
-	 * @param Shipping\Item_Info $item_info Parsed legacy item info.
-	 * @param array              $mapped    V4_Mapper::map() result.
 	 * @param array              $post_data Original label post data.
-	 * @return bool
+	 * @return array Signal set consumed by is_eligible().
 	 */
-	private function is_v4_eligible( Shipping\Item_Info $item_info, array $mapped, array $post_data ): bool {
-		$backend = $post_data['saved_data']['backend'] ?? array();
+	private function gather_signals( Shipping\Item_Info $item_info, array $post_data ): array {
+		$backend_raw = $post_data['saved_data']['backend'] ?? array();
 
-		// Single collo only.
-		if ( 1 !== (int) ( $item_info->backend_data['num_labels'] ?? 1 ) ) {
-			return false;
-		}
+		$origin      = (string) ( $item_info->shipper['country'] ?? '' );
+		$destination = Utils::get_shipping_zone(
+			(string) ( $item_info->receiver['country'] ?? '' ),
+			(string) ( $item_info->receiver['state'] ?? '' )
+		);
 
-		// No delivery-day or pickup selection (timeframes/pickup land later).
-		if ( $item_info->is_delivery_day() || $item_info->is_pickup_points() ) {
-			return false;
-		}
-
-		// No return labels/barcodes (returns land later).
-		if ( ! empty( $item_info->shipment['return_barcode'] )
+		$has_return = ! empty( $item_info->shipment['return_barcode'] )
 			|| ! empty( $item_info->shipment['shipping_return_barcode'] )
 			|| ! empty( $item_info->shipment['return_options'] )
-			|| 'yes' === ( $backend['create_return_label'] ?? '' )
-			|| 'yes' === ( $backend['create_shipment_return_label'] ?? '' ) ) {
-			return false;
-		}
+			|| 'yes' === ( $backend_raw['create_return_label'] ?? '' )
+			|| 'yes' === ( $backend_raw['create_shipment_return_label'] ?? '' );
 
-		// No product options (evening, insurance, etc. land later).
-		if ( ! empty( $item_info->get_product_options() )
+		// Any product option (frontend additional options, a resolved characteristic,
+		// or the product's own bundled options such as delivery-code) means the label
+		// carries more than the base parcel and must stay on the legacy path.
+		$has_product_options = ! empty( $item_info->get_product_options() )
 			|| ! empty( $item_info->shipment['product_options']['characteristic'] )
-			|| 'Standard' !== ( $item_info->backend_data['delivery_type'] ?? 'Standard' ) ) {
-			return false;
-		}
+			|| ! empty( $item_info->shipment['shipping_product']['options'] );
 
-		// Domestic NL → NL only.
-		if ( 'NL' !== ( $item_info->shipper['country'] ?? '' )
-			|| 'NL' !== ( $item_info->receiver['country'] ?? '' ) ) {
-			return false;
-		}
-
-		// The mapper must confirm a plain V4 parcel with no services or pickup location.
-		return ! empty( $mapped['has_v4_equivalent'] )
-			&& 'parcel' === ( $mapped['shipmentType'] ?? '' )
-			&& empty( $mapped['services'] )
-			&& empty( $mapped['deliveryLocation'] );
+		return array(
+			'num_labels'          => (int) ( $item_info->backend_data['num_labels'] ?? 1 ),
+			'is_delivery_day'     => $item_info->is_delivery_day(),
+			'is_pickup'           => $item_info->is_pickup_points(),
+			'has_return'          => $has_return,
+			'has_product_options' => $has_product_options,
+			'delivery_type'       => (string) ( $item_info->backend_data['delivery_type'] ?? 'Standard' ),
+			'origin'              => $origin,
+			'destination'         => $destination,
+			'mapped'              => Eligibility::resolve_mapped(
+				$origin,
+				$destination,
+				$item_info->is_pickup_points(),
+				$backend_raw,
+				(string) $item_info->get_product_code()
+			),
+		);
 	}
 
 	/**
@@ -229,9 +211,9 @@ class Service extends Order_Base implements Label_Service_Interface {
 	/**
 	 * Build the configured SDK client for the current environment.
 	 *
-	 * @return \Postnl\Sdk\Client\PostnlClientInterface
+	 * @return PostnlClientInterface
 	 */
-	private function build_client() {
+	private function build_client(): PostnlClientInterface {
 		$factory = $this->client_factory ?? new Client_Factory( $this->settings );
 
 		$v4_key = method_exists( $this->settings, 'get_api_key_new' )
@@ -247,13 +229,13 @@ class Service extends Order_Base implements Label_Service_Interface {
 	 * Reuses Order\Base::maybe_merge_labels() so the A4/A6 handling matches the
 	 * legacy path, then re-tags the merged record as V4.
 	 *
-	 * @param \Postnl\Sdk\Service\ShipmentDelivery\V4\Response\LabelConfirmResponseInterface $response        labelconfirm response.
-	 * @param \WC_Order                                                                      $order           WooCommerce order.
-	 * @param string                                                                         $fallback_barcode Barcode to use if the response omits one.
+	 * @param LabelConfirmResponseInterface $response         labelconfirm response.
+	 * @param \WC_Order                     $order            WooCommerce order.
+	 * @param string                        $fallback_barcode Barcode to use if the response omits one.
 	 * @return array
 	 * @throws \Exception When the response carries no shipment or no label content.
 	 */
-	private function store_labels( $response, $order, string $fallback_barcode ): array {
+	private function store_labels( LabelConfirmResponseInterface $response, $order, string $fallback_barcode ): array {
 		$item = Response_Mapper::first_shipment_item( $response );
 
 		if ( null === $item ) {
@@ -282,8 +264,12 @@ class Service extends Order_Base implements Label_Service_Interface {
 			$filename = Utils::generate_label_name( $order->get_id(), $label_type, $barcode, 'A6', $output_type );
 			$filepath = trailingslashit( POSTNL_UPLOADS_DIR ) . $filename;
 
-			if ( wp_mkdir_p( POSTNL_UPLOADS_DIR ) && ! file_exists( $filepath ) ) {
-				file_put_contents( $filepath, $content ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents -- Binary label bytes; mirrors Order\Base::put_label_content().
+			$this->write_label_file( $filepath, $content );
+
+			// Only record a label that actually exists on disk, so a failed write
+			// never persists a meta entry pointing at a missing file.
+			if ( ! is_file( $filepath ) ) {
+				continue;
 			}
 
 			$records[] = Response_Mapper::to_label_record( $label_type, $barcode, $filepath );
@@ -302,5 +288,29 @@ class Service extends Order_Base implements Label_Service_Interface {
 		}
 
 		return $labels;
+	}
+
+	/**
+	 * Write a decoded label document to disk, creating the uploads dir as needed.
+	 *
+	 * A pre-existing file is left untouched. Failure is intentionally silent —
+	 * store_labels() verifies the file exists afterwards and skips the record if
+	 * it does not.
+	 *
+	 * @param string $filepath Absolute destination path.
+	 * @param string $content  Raw (decoded) label bytes.
+	 * @return void
+	 */
+	private function write_label_file( string $filepath, string $content ): void {
+		if ( is_file( $filepath ) ) {
+			return;
+		}
+
+		if ( ! wp_mkdir_p( POSTNL_UPLOADS_DIR ) ) {
+			return;
+		}
+
+		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents -- Binary label bytes; mirrors Order\Base::put_label_content().
+		file_put_contents( $filepath, $content );
 	}
 }

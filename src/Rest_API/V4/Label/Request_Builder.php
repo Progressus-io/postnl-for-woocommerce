@@ -66,30 +66,30 @@ class Request_Builder {
 	 * }
 	 * @return ShipmentDeliveryRequest
 	 */
-	public function build( array $fields ): ShipmentDeliveryRequest {
+	public static function build( array $fields ): ShipmentDeliveryRequest {
 		$sender_fields   = $fields['sender'] ?? array();
 		$receiver_fields = $fields['receiver'] ?? array();
 		$label_fields    = $fields['label'] ?? array();
 
 		$sender = ShipmentParty::asSender(
-			address: $this->address( $sender_fields )
+			address: self::address( $sender_fields )
 		);
 
 		$receiver = ShipmentParty::asReceiver(
-			address: $this->address( $receiver_fields ),
-			contact: $this->contact( $receiver_fields ),
+			address: self::address( $receiver_fields ),
+			contact: self::contact( $receiver_fields ),
 			receiverType: ReceiverType::Consumer
 		);
 
 		$label_settings = new LabelSettings(
-			outputType: $this->output_type( (string) ( $label_fields['output_type'] ?? 'pdf' ) ),
-			resolution: $this->resolution( (int) ( $label_fields['resolution'] ?? 200 ) )
+			outputType: self::output_type( (string) ( $label_fields['output_type'] ?? 'pdf' ) ),
+			resolution: self::resolution( (int) ( $label_fields['resolution'] ?? 200 ) )
 		);
 
 		$item = new ShippingItem(
-			barcode: $this->maybe_null( (string) ( $fields['barcode'] ?? '' ) ),
+			barcode: self::maybe_null( (string) ( $fields['barcode'] ?? '' ) ),
 			customerReferences: new CustomerReferences(
-				shipmentReference: $this->maybe_null( (string) ( $fields['reference'] ?? '' ) )
+				shipmentReference: self::maybe_null( (string) ( $fields['reference'] ?? '' ) )
 			),
 			dimensions: new Dimensions(
 				weightGr: max( 1, (int) ( $fields['weight_gr'] ?? 0 ) )
@@ -100,7 +100,7 @@ class Request_Builder {
 			sender: $sender,
 			receiver: $receiver,
 			labelSettings: $label_settings,
-			shipmentType: $this->shipment_type( (string) ( $fields['shipment_type'] ?? 'parcel' ) ),
+			shipmentType: self::shipment_type( (string) ( $fields['shipment_type'] ?? 'parcel' ) ),
 			items: array( $item )
 		);
 	}
@@ -111,15 +111,15 @@ class Request_Builder {
 	 * @param array $fields Address fields keyed as documented on build().
 	 * @return Address
 	 */
-	private function address( array $fields ): Address {
+	private static function address( array $fields ): Address {
 		return new Address(
-			countryIso: $this->country( (string) ( $fields['country'] ?? '' ) ),
-			houseNumber: $this->maybe_null( (string) ( $fields['house_number'] ?? '' ) ),
-			postalCode: $this->maybe_null( (string) ( $fields['postcode'] ?? '' ) ),
-			companyName: $this->maybe_null( (string) ( $fields['company'] ?? '' ) ),
-			street: $this->maybe_null( (string) ( $fields['street'] ?? '' ) ),
-			houseNumberAddition: $this->maybe_null( (string) ( $fields['house_number_ext'] ?? '' ) ),
-			city: $this->maybe_null( (string) ( $fields['city'] ?? '' ) )
+			countryIso: self::country( (string) ( $fields['country'] ?? '' ) ),
+			houseNumber: self::maybe_null( (string) ( $fields['house_number'] ?? '' ) ),
+			postalCode: self::maybe_null( (string) ( $fields['postcode'] ?? '' ) ),
+			companyName: self::maybe_null( (string) ( $fields['company'] ?? '' ) ),
+			street: self::maybe_null( (string) ( $fields['street'] ?? '' ) ),
+			houseNumberAddition: self::maybe_null( (string) ( $fields['house_number_ext'] ?? '' ) ),
+			city: self::maybe_null( (string) ( $fields['city'] ?? '' ) )
 		);
 	}
 
@@ -129,13 +129,13 @@ class Request_Builder {
 	 * @param array $fields Receiver fields keyed as documented on build().
 	 * @return Contact
 	 */
-	private function contact( array $fields ): Contact {
+	private static function contact( array $fields ): Contact {
 		return new Contact(
-			email: $this->maybe_null( (string) ( $fields['email'] ?? '' ) ),
-			firstName: $this->maybe_null( (string) ( $fields['first_name'] ?? '' ) ),
-			lastName: $this->maybe_null( (string) ( $fields['last_name'] ?? '' ) ),
-			mobileNumber: $this->maybe_null( (string) ( $fields['phone'] ?? '' ) ),
-			companyName: $this->maybe_null( (string) ( $fields['company'] ?? '' ) )
+			email: self::maybe_null( (string) ( $fields['email'] ?? '' ) ),
+			firstName: self::maybe_null( (string) ( $fields['first_name'] ?? '' ) ),
+			lastName: self::maybe_null( (string) ( $fields['last_name'] ?? '' ) ),
+			mobileNumber: self::maybe_null( (string) ( $fields['phone'] ?? '' ) ),
+			companyName: self::maybe_null( (string) ( $fields['company'] ?? '' ) )
 		);
 	}
 
@@ -145,7 +145,7 @@ class Request_Builder {
 	 * @param string $code Two-letter ISO country code.
 	 * @return Country
 	 */
-	private function country( string $code ): Country {
+	private static function country( string $code ): Country {
 		return Country::tryFrom( strtoupper( $code ) ) ?? Country::NL;
 	}
 
@@ -155,7 +155,7 @@ class Request_Builder {
 	 * @param string $type ShipmentType value, e.g. 'parcel'.
 	 * @return ShipmentType
 	 */
-	private function shipment_type( string $type ): ShipmentType {
+	private static function shipment_type( string $type ): ShipmentType {
 		return ShipmentType::tryFrom( $type ) ?? ShipmentType::Parcel;
 	}
 
@@ -165,7 +165,7 @@ class Request_Builder {
 	 * @param string $output_type One of pdf|zpl|jpg|gif|png.
 	 * @return LabelOutputType
 	 */
-	private function output_type( string $output_type ): LabelOutputType {
+	private static function output_type( string $output_type ): LabelOutputType {
 		return LabelOutputType::tryFrom( strtolower( $output_type ) ) ?? LabelOutputType::PDF;
 	}
 
@@ -175,7 +175,7 @@ class Request_Builder {
 	 * @param int $resolution One of 200|300|600.
 	 * @return LabelResolution
 	 */
-	private function resolution( int $resolution ): LabelResolution {
+	private static function resolution( int $resolution ): LabelResolution {
 		return LabelResolution::tryFrom( $resolution ) ?? LabelResolution::DPI_200;
 	}
 
@@ -215,7 +215,7 @@ class Request_Builder {
 	 * @param string $value Candidate value.
 	 * @return string|null
 	 */
-	private function maybe_null( string $value ): ?string {
+	private static function maybe_null( string $value ): ?string {
 		return '' === $value ? null : $value;
 	}
 }

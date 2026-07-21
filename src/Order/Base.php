@@ -230,9 +230,15 @@ abstract class Base {
 	/**
 	 * List of meta box fields.
 	 *
-	 * @param \WC_Order $order WooCommerce order ID.
+	 * @param \WC_Order $order   WooCommerce order ID.
+	 * @param string    $context Why the fields are requested: 'display' (default) when
+	 *                           rendering the admin UI, or 'save' when persisting a
+	 *                           submitted selection. The bulk-modal trimming
+	 *                           ( Bulk::additional_meta_box ) applies to 'display' only, so
+	 *                           it can never silently drop a persisted option such as
+	 *                           Letterbox 48 or ID Check during a bulk label generation.
 	 */
-	public function meta_box_fields( $order = false ) {
+	public function meta_box_fields( $order = false, $context = 'display' ) {
 
 		$default_options = $this->get_shipping_options( $order );
 		$fields          = array(
@@ -454,7 +460,8 @@ abstract class Base {
 
 		return apply_filters(
 			'postnl_order_meta_box_fields',
-			$fields
+			$fields,
+			$context
 		);
 	}
 
@@ -590,7 +597,10 @@ abstract class Base {
 		$nonce_fields = array_values( $this->get_nonce_fields() );
 
 		// Loop through inputs within id 'shipment-postnl-label-form'.
-		foreach ( $this->meta_box_fields( $order_id ) as $field ) {
+		// Use the 'save' context so the bulk-modal display trim cannot drop a persisted
+		// field (e.g. Letterbox 48 / ID Check) when generating a label from the legacy
+		// orders list bulk action.
+		foreach ( $this->meta_box_fields( $order_id, 'save' ) as $field ) {
 			// Don't save nonce field.
 			if ( $nonce_fields[0]['id'] === $field['id'] ) {
 				continue;

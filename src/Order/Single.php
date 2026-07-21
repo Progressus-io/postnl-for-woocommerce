@@ -298,9 +298,11 @@ class Single extends Base {
 			<label for="postnl_pickup_points"><?php esc_html_e( 'Delivery Date:', 'postnl-for-woocommerce' ); ?></label>
 			<?php
 			foreach ( $filtered_infos as $info_idx => $info_val ) {
-				// Convert to the Dutch date format
+				// Convert to the Dutch date format, falling back to the stored value
+				// when it does not parse as Y-m-d so a malformed date cannot fatal the
+				// whole order edit screen via date_format( false, ... ).
 				$date_obj   = date_create_from_format( 'Y-m-d', $info_val );
-				$dutch_date = date_format( $date_obj, 'd/m/Y' );
+				$dutch_date = ( false !== $date_obj ) ? date_format( $date_obj, 'd/m/Y' ) : $info_val;
 				?>
 				<div class="postnl-info <?php echo esc_attr( $info_idx ); ?>">
 					<?php echo esc_html( $dutch_date ); ?>

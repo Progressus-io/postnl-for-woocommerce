@@ -211,8 +211,9 @@ jobs:
           zip -r "$ZIP_PATH" woo-postnl/
           echo "zip-path=$ZIP_PATH" >> "$GITHUB_OUTPUT"
 
-      # All paths: assert no credential files slipped in AND SDK source shipped
-      - name: Verify ZIP credentials and SDK presence
+      # All paths: assert no credential files slipped in AND the production
+      # PHP floor is intact (the SDK must stay out of the shipped build)
+      - name: Verify ZIP credentials, SDK absence and PHP floor
         shell: bash
         run: |
           ZIP_PATH="${{ steps.build_zip.outputs.zip-path }}"
@@ -228,12 +229,33 @@ jobs:
           fi
           echo "Credential check passed — no auth credential files found in ZIP."
 
-          # Positive: PostNL SDK source must be present
-          if [ ! -d "$VERIFY_DIR/woo-postnl/vendor/postnl/api-client-sdk" ]; then
-            echo "::error::vendor/postnl/api-client-sdk missing from ZIP — SDK source must ship with the plugin!"
+          # Negative: the PostNL SDK must NOT ship. It declares php >=8.2, which
+          # raises the whole package floor and makes Composer generate a
+          # platform_check.php that fatals every request on PHP below 8.2. The
+          # SDK stays in require-dev until the V4 API ships.
+          if [ -d "$VERIFY_DIR/woo-postnl/vendor/postnl/api-client-sdk" ]; then
+            echo "::error::vendor/postnl/api-client-sdk found in ZIP — the SDK is dev-only until V4 ships; shipping it raises the PHP floor to 8.2 and fatals PHP 7.4 sites!"
             exit 1
           fi
-          echo "SDK check passed — vendor/postnl/api-client-sdk present in ZIP."
+          echo "SDK check passed — vendor/postnl/api-client-sdk correctly absent from ZIP."
+
+          # Positive: the generated platform check must not exceed the 7.4 floor
+          # declared in composer.json and the plugin header.
+          PLATFORM_CHECK="$VERIFY_DIR/woo-postnl/vendor/composer/platform_check.php"
+          if [ ! -f "$PLATFORM_CHECK" ]; then
+            echo "::error::vendor/composer/platform_check.php missing from ZIP — cannot verify the production PHP floor!"
+            exit 1
+          fi
+          PHP_FLOOR=$(grep -oP 'PHP_VERSION_ID >= \K[0-9]+' "$PLATFORM_CHECK" | head -1)
+          if [ -z "$PHP_FLOOR" ]; then
+            echo "::error::Could not parse the PHP floor out of platform_check.php — the Composer format may have changed!"
+            exit 1
+          fi
+          if [ "$PHP_FLOOR" -gt 70400 ]; then
+            echo "::error::Production build requires PHP_VERSION_ID >= $PHP_FLOOR, above the declared 7.4 floor (70400) — a dependency raised the platform requirement!"
+            exit 1
+          fi
+          echo "PHP floor check passed — platform_check.php requires PHP_VERSION_ID >= $PHP_FLOOR."
 
           rm -rf "$VERIFY_DIR"
 

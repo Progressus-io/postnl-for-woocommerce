@@ -23,6 +23,7 @@ use PostNLWooCommerce\Rest_API\Legacy\Letterbox_Service as Legacy_Letterbox_Serv
 use PostNLWooCommerce\Rest_API\Legacy\Postcode_Check_Service as Legacy_Postcode_Check_Service;
 use PostNLWooCommerce\Rest_API\Legacy\Return_Label_Service as Legacy_Return_Label_Service;
 use PostNLWooCommerce\Rest_API\Legacy\Smart_Returns_Service as Legacy_Smart_Returns_Service;
+use PostNLWooCommerce\Rest_API\V4\Label\Service as V4_Label_Service;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -167,7 +168,13 @@ class Service_Factory {
 	 * @return Label_Service_Interface
 	 */
 	public function label_service(): Label_Service_Interface {
-		if ( $this->should_use_v4( 'label' ) && isset( $this->v4_services['label'] ) ) {
+		if ( $this->should_use_v4( 'label' ) ) {
+			// A test double injected via inject_v4_service() wins; otherwise build the real V4 service.
+			// The per-combination V4_Mapper gate lives inside the service, which falls back to the
+			// legacy pipeline for anything outside the happy-path domestic parcel.
+			if ( ! isset( $this->v4_services['label'] ) ) {
+				$this->v4_services['label'] = new V4_Label_Service();
+			}
 			return $this->v4_services['label'];
 		}
 		if ( ! isset( $this->legacy_memos['label'] ) ) {

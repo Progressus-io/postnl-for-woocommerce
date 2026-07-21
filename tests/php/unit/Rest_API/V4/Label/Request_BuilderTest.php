@@ -159,6 +159,79 @@ class Request_BuilderTest extends UnitTestCase {
 	}
 
 	/**
+	 * @testdox build() omits the Services block for a plain parcel with no service flags.
+	 */
+	public function test_services_omitted_when_empty(): void {
+		$payload = $this->payload( $this->domestic_fields() );
+
+		$this->assertArrayNotHasKey( 'services', $payload, 'A plain parcel must not send an empty Services block.' );
+	}
+
+	/**
+	 * @testdox build() maps a signature + insured + return-when-not-home combination to the Services DTO.
+	 */
+	public function test_services_combination_is_mapped(): void {
+		$fields             = $this->domestic_fields();
+		$fields['services'] = array(
+			'deliveryConfirmation' => 'signature',
+			'insuredValue'         => 49.95,
+			'returnWhenNotHome'    => true,
+		);
+
+		$services = $this->payload( $fields )['services'];
+
+		$this->assertSame( 'signature', $services['deliveryConfirmation'] );
+		$this->assertSame( 49.95, $services['insuredValue'] );
+		$this->assertTrue( $services['returnWhenNotHome'] );
+		$this->assertArrayNotHasKey( 'statedAddressOnly', $services, 'Unset flags must be omitted, not sent false.' );
+	}
+
+	/**
+	 * @testdox build() maps individual service flags to their Services fields.
+	 * @dataProvider service_flag_provider
+	 *
+	 * @param array  $services Resolved service flags.
+	 * @param string $key      Expected Services payload key.
+	 * @param mixed  $expected Expected value at that key.
+	 */
+	public function test_individual_service_flags( array $services, string $key, $expected ): void {
+		$fields             = $this->domestic_fields();
+		$fields['services'] = $services;
+
+		$this->assertSame( $expected, $this->payload( $fields )['services'][ $key ] );
+	}
+
+	/**
+	 * Data provider mapping a single service flag to its expected payload value.
+	 *
+	 * @return array
+	 */
+	public static function service_flag_provider(): array {
+		return array(
+			'signature'          => array( array( 'deliveryConfirmation' => 'signature' ), 'deliveryConfirmation', 'signature' ),
+			'delivery code'      => array( array( 'deliveryConfirmation' => 'deliverycode' ), 'deliveryConfirmation', 'deliverycode' ),
+			'stated address only' => array( array( 'statedAddressOnly' => true ), 'statedAddressOnly', true ),
+			'return when not home' => array( array( 'returnWhenNotHome' => true ), 'returnWhenNotHome', true ),
+			'insured value'      => array( array( 'insuredValue' => 12.5 ), 'insuredValue', 12.5 ),
+			'age check 18+'      => array( array( 'minimalAgeCheck' => '18+' ), 'minimalAgeCheck', '18+' ),
+			'age check 16+'      => array( array( 'minimalAgeCheck' => '16+' ), 'minimalAgeCheck', '16+' ),
+		);
+	}
+
+	/**
+	 * @testdox build() drops unrecognised service values rather than sending the Services block.
+	 */
+	public function test_unrecognised_service_values_omit_block(): void {
+		$fields             = $this->domestic_fields();
+		$fields['services'] = array(
+			'deliveryConfirmation' => 'nonsense',
+			'minimalAgeCheck'      => '99+',
+		);
+
+		$this->assertArrayNotHasKey( 'services', $this->payload( $fields ), 'Unknown enum values must not force an empty Services block.' );
+	}
+
+	/**
 	 * @testdox printer_type_to_label_settings() splits legacy combined strings into output type and resolution.
 	 * @dataProvider printer_type_provider
 	 *

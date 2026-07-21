@@ -63,7 +63,6 @@ class Eligibility {
 	 *     @type bool   $is_delivery_day     A delivery-day option was selected.
 	 *     @type bool   $is_pickup           A pickup point was selected.
 	 *     @type bool   $has_return          A return label/barcode is involved.
-	 *     @type bool   $has_product_options Any product option is present.
 	 *     @type string $delivery_type       'Standard' or 'Evening'.
 	 *     @type string $origin              Origin country.
 	 *     @type string $destination         Shipping zone.
@@ -80,7 +79,7 @@ class Eligibility {
 			return false;
 		}
 
-		if ( ! empty( $signals['has_return'] ) || ! empty( $signals['has_product_options'] ) ) {
+		if ( ! empty( $signals['has_return'] ) ) {
 			return false;
 		}
 
@@ -92,11 +91,34 @@ class Eligibility {
 			return false;
 		}
 
+		// The mapper is authoritative: for a combination it marks as having a V4
+		// equivalent, its services array is the full V4 representation of every
+		// selected option, so no separate product-option gate is needed. Only a
+		// pickup DeliveryLocation is excluded here — that variant lands separately.
 		$mapped = $signals['mapped'] ?? array();
 
 		return ! empty( $mapped['has_v4_equivalent'] )
 			&& 'parcel' === ( $mapped['shipmentType'] ?? '' )
-			&& empty( $mapped['services'] )
 			&& empty( $mapped['deliveryLocation'] );
+	}
+
+	/**
+	 * Resolve the mapper's service placeholders into concrete request values.
+	 *
+	 * The matrix stores insuredValue as the '<order_total>' placeholder; it is
+	 * replaced here with the order's insured amount. All other flags
+	 * (deliveryConfirmation, statedAddressOnly, returnWhenNotHome, minimalAgeCheck)
+	 * pass through unchanged.
+	 *
+	 * @param array $mapped_services Services array from V4_Mapper::map().
+	 * @param float $insured_value   Amount to insure (order subtotal).
+	 * @return array Concrete service flags for Request_Builder.
+	 */
+	public static function resolve_services( array $mapped_services, float $insured_value ): array {
+		if ( array_key_exists( 'insuredValue', $mapped_services ) ) {
+			$mapped_services['insuredValue'] = $insured_value;
+		}
+
+		return $mapped_services;
 	}
 }

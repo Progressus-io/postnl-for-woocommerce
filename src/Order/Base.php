@@ -109,8 +109,10 @@ abstract class Base {
 	 * @return array
 	 */
 	public function get_nonce_fields() {
+		// Resolve from the 'save' field set: the nonce is a structural field the save/verify
+		// callers always need, so it must never be subject to the bulk-modal display trim.
 		return array_filter(
-			$this->meta_box_fields(),
+			$this->meta_box_fields( false, 'save' ),
 			function ( $field ) {
 				return ( ! empty( $field['nonce'] ) && true === $field['nonce'] );
 			}
@@ -231,12 +233,7 @@ abstract class Base {
 	 * List of meta box fields.
 	 *
 	 * @param \WC_Order $order   WooCommerce order ID.
-	 * @param string    $context Why the fields are requested: 'display' (default) when
-	 *                           rendering the admin UI, or 'save' when persisting a
-	 *                           submitted selection. The bulk-modal trimming
-	 *                           ( Bulk::additional_meta_box ) applies to 'display' only, so
-	 *                           it can never silently drop a persisted option such as
-	 *                           Letterbox 48 or ID Check during a bulk label generation.
+	 * @param string    $context 'display' (default) when rendering the admin UI, 'save' when persisting.
 	 */
 	public function meta_box_fields( $order = false, $context = 'display' ) {
 

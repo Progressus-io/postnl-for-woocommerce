@@ -207,4 +207,56 @@ class EligibilityTest extends UnitTestCase {
 
 		$this->assertSame( $services, Eligibility::resolve_services( $services, 10.0 ) );
 	}
+
+	/**
+	 * @testdox Every domestic NL parcel option routes to V4 with the expected services.
+	 * @dataProvider domestic_option_provider
+	 *
+	 * @param array  $backend  Raw backend feature flags ('yes' strings).
+	 * @param string $code     Legacy product code resolved for that combination.
+	 * @param array  $services Expected resolved service flags (keys/values).
+	 */
+	public function test_domestic_options_route_to_v4_with_services( array $backend, string $code, array $services ): void {
+		$mapped = Eligibility::resolve_mapped( 'NL', 'NL', false, $backend, $code );
+
+		$this->assertTrue(
+			Eligibility::is_eligible( $this->signals( array( 'mapped' => $mapped ) ) ),
+			"Combination for product {$code} should route to V4."
+		);
+
+		$resolved = Eligibility::resolve_services( $mapped['services'], 42.0 );
+
+		foreach ( $services as $key => $value ) {
+			$this->assertArrayHasKey( $key, $resolved, "Expected service '{$key}' for product {$code}." );
+			$this->assertSame( $value, $resolved[ $key ], "Unexpected value for service '{$key}' on product {$code}." );
+		}
+
+		$this->assertSame(
+			count( $services ),
+			count( $resolved ),
+			"Product {$code} produced unexpected extra services: " . implode( ',', array_keys( $resolved ) )
+		);
+	}
+
+	/**
+	 * Every NL→NL delivery_day parcel row that has a V4 equivalent, with its
+	 * expected resolved services (insurance resolved to the 42.0 subtotal above).
+	 *
+	 * @return array
+	 */
+	public static function domestic_option_provider(): array {
+		return array(
+			'base'                                   => array( array(), '3085', array() ),
+			'only_home_address'                      => array( array( 'only_home_address' => 'yes' ), '3385', array( 'statedAddressOnly' => true ) ),
+			'return_no_answer'                       => array( array( 'return_no_answer' => 'yes' ), '3090', array( 'returnWhenNotHome' => true ) ),
+			'signature'                              => array( array( 'signature_on_delivery' => 'yes' ), '3189', array( 'deliveryConfirmation' => 'signature' ) ),
+			'home + return'                          => array( array( 'only_home_address' => 'yes', 'return_no_answer' => 'yes' ), '3390', array( 'returnWhenNotHome' => true, 'statedAddressOnly' => true ) ),
+			'home + signature'                       => array( array( 'only_home_address' => 'yes', 'signature_on_delivery' => 'yes' ), '3089', array( 'deliveryConfirmation' => 'signature', 'statedAddressOnly' => true ) ),
+			'insured + signature'                    => array( array( 'insured_shipping' => 'yes', 'signature_on_delivery' => 'yes' ), '3087', array( 'deliveryConfirmation' => 'signature', 'insuredValue' => 42.0 ) ),
+			'return + signature'                     => array( array( 'return_no_answer' => 'yes', 'signature_on_delivery' => 'yes' ), '3389', array( 'deliveryConfirmation' => 'signature', 'returnWhenNotHome' => true ) ),
+			'home + return + signature'              => array( array( 'only_home_address' => 'yes', 'return_no_answer' => 'yes', 'signature_on_delivery' => 'yes' ), '3096', array( 'deliveryConfirmation' => 'signature', 'returnWhenNotHome' => true, 'statedAddressOnly' => true ) ),
+			'insured + return + signature'           => array( array( 'insured_shipping' => 'yes', 'return_no_answer' => 'yes', 'signature_on_delivery' => 'yes' ), '3094', array( 'deliveryConfirmation' => 'signature', 'insuredValue' => 42.0, 'returnWhenNotHome' => true ) ),
+			'delivery_code + insured'                => array( array( 'delivery_code_at_door' => 'yes', 'insured_shipping' => 'yes' ), '3085', array( 'deliveryConfirmation' => 'deliverycode', 'insuredValue' => 42.0 ) ),
+		);
+	}
 }

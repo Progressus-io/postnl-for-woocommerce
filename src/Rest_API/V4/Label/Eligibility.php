@@ -110,8 +110,12 @@ class Eligibility {
 	 * (deliveryConfirmation, statedAddressOnly, returnWhenNotHome, minimalAgeCheck)
 	 * pass through unchanged.
 	 *
+	 * The insured amount must remain the order item subtotal (WC_Order::get_subtotal),
+	 * matching the value the legacy Shipping\Client puts in the Amounts block. Do not
+	 * switch it to the order total — that would add tax/shipping and diverge from V1.
+	 *
 	 * @param array $mapped_services Services array from V4_Mapper::map().
-	 * @param float $insured_value   Amount to insure (order subtotal).
+	 * @param float $insured_value   Amount to insure (order item subtotal).
 	 * @return array Concrete service flags for Request_Builder.
 	 */
 	public static function resolve_services( array $mapped_services, float $insured_value ): array {

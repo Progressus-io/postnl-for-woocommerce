@@ -219,6 +219,16 @@ class Request_BuilderTest extends UnitTestCase {
 	}
 
 	/**
+	 * @testdox build() sends a zero insured value rather than omitting it, matching the legacy Amounts block.
+	 */
+	public function test_zero_insured_value_is_sent(): void {
+		$fields             = $this->domestic_fields();
+		$fields['services'] = array( 'insuredValue' => 0.0 );
+
+		$this->assertSame( 0.0, $this->payload( $fields )['services']['insuredValue'] );
+	}
+
+	/**
 	 * @testdox build() drops unrecognised service values rather than sending the Services block.
 	 */
 	public function test_unrecognised_service_values_omit_block(): void {

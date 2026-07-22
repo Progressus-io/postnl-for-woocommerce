@@ -5,6 +5,8 @@
  * @package PostNLWooCommerce\Rest_API\V4\Label
  */
 
+declare( strict_types = 1 );
+
 namespace PostNLWooCommerce\Rest_API\V4\Label;
 
 use Postnl\Sdk\Client\PostnlClientInterface;

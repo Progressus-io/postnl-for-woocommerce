@@ -125,15 +125,12 @@ class Request_Builder {
 	 * @return Services|null
 	 */
 	private static function services( array $flags ): ?Services {
-		$confirmation = isset( $flags['deliveryConfirmation'] )
-			? DeliveryConfirmation::tryFrom( (string) $flags['deliveryConfirmation'] )
-			: null;
-		$age_check    = isset( $flags['minimalAgeCheck'] )
-			? MinimalAgeCheck::tryFrom( (string) $flags['minimalAgeCheck'] )
-			: null;
-		$insured      = isset( $flags['insuredValue'] ) ? (float) $flags['insuredValue'] : null;
-		$stated_only  = ! empty( $flags['statedAddressOnly'] ) ? true : null;
-		$return_home  = ! empty( $flags['returnWhenNotHome'] ) ? true : null;
+		$confirmation = DeliveryConfirmation::tryFrom( (string) ( $flags['deliveryConfirmation'] ?? '' ) );
+		$age_check    = MinimalAgeCheck::tryFrom( (string) ( $flags['minimalAgeCheck'] ?? '' ) );
+		// isset (not ??) so a missing insured value stays null instead of coercing to 0.0.
+		$insured     = isset( $flags['insuredValue'] ) ? (float) $flags['insuredValue'] : null;
+		$stated_only = ! empty( $flags['statedAddressOnly'] ) ? true : null;
+		$return_home = ! empty( $flags['returnWhenNotHome'] ) ? true : null;
 
 		if ( null === $confirmation && null === $age_check && null === $insured
 			&& null === $stated_only && null === $return_home ) {

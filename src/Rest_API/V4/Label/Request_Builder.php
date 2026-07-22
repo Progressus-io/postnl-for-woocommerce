@@ -10,8 +10,10 @@ declare( strict_types = 1 );
 namespace PostNLWooCommerce\Rest_API\V4\Label;
 
 use Postnl\Sdk\Enums\Payload\Country;
+use Postnl\Sdk\Enums\Payload\DeliveryConfirmation;
 use Postnl\Sdk\Enums\Payload\LabelOutputType;
 use Postnl\Sdk\Enums\Payload\LabelResolution;
+use Postnl\Sdk\Enums\Payload\MinimalAgeCheck;
 use Postnl\Sdk\Enums\Payload\ReceiverType;
 use Postnl\Sdk\Enums\Payload\ShipmentType;
 use Postnl\Sdk\RequestData\V4\Address;
@@ -19,6 +21,7 @@ use Postnl\Sdk\RequestData\V4\Contact;
 use Postnl\Sdk\RequestData\V4\CustomerReferences;
 use Postnl\Sdk\RequestData\V4\Dimensions;
 use Postnl\Sdk\RequestData\V4\LabelSettings;
+use Postnl\Sdk\RequestData\V4\Services;
 use Postnl\Sdk\RequestData\V4\ShipmentParty;
 use Postnl\Sdk\RequestData\V4\ShipmentDelivery\ShipmentDeliveryRequest;
 use Postnl\Sdk\ResponseData\V4\ShippingItem;
@@ -35,8 +38,10 @@ if ( ! defined( 'ABSPATH' ) ) {
  * endpoint. It performs no WooCommerce or settings access, so the DTO shape
  * can be asserted in isolation.
  *
- * Scope: happy-path single domestic parcel, single collo, no extra services.
- * The customer number/code are injected into the sender by the SDK client
+ * Scope: single domestic parcel, single collo, optional delivery Services
+ * (insurance, signature/delivery-code confirmation, stated-address-only,
+ * return-when-not-home and their combinations). The customer number/code are
+ * injected into the sender by the SDK client
  * (ClientBuilder::withCustomerCredentials), so they are deliberately absent
  * here. CollectionLocation and MessageID are V1-only and never emitted.
  *
@@ -63,6 +68,10 @@ class Request_Builder {
 	 *                                  labelconfirm auto-issue one.
 	 *     @type array  $label         Label output: output_type (pdf|zpl|jpg|gif|png)
 	 *                                  and resolution (200|300|600).
+	 *     @type array  $services      Optional resolved service flags: deliveryConfirmation
+	 *                                  ('signature'|'deliverycode'), insuredValue (float),
+	 *                                  statedAddressOnly (bool), returnWhenNotHome (bool),
+	 *                                  minimalAgeCheck ('16+'|'18+').
 	 * }
 	 * @return ShipmentDeliveryRequest
 	 */
@@ -101,7 +110,39 @@ class Request_Builder {
 			receiver: $receiver,
 			labelSettings: $label_settings,
 			shipmentType: self::shipment_type( (string) ( $fields['shipment_type'] ?? 'parcel' ) ),
+			services: self::services( $fields['services'] ?? array() ),
 			items: array( $item )
+		);
+	}
+
+	/**
+	 * Translate resolved service flags into a V4 Services DTO.
+	 *
+	 * Returns null when no recognised service is present, so the request omits
+	 * the Services block entirely for a plain parcel.
+	 *
+	 * @param array $flags Resolved service flags keyed as documented on build().
+	 * @return Services|null
+	 */
+	private static function services( array $flags ): ?Services {
+		$confirmation = DeliveryConfirmation::tryFrom( (string) ( $flags['deliveryConfirmation'] ?? '' ) );
+		$age_check    = MinimalAgeCheck::tryFrom( (string) ( $flags['minimalAgeCheck'] ?? '' ) );
+		// isset (not ??) so a missing insured value stays null instead of coercing to 0.0.
+		$insured     = isset( $flags['insuredValue'] ) ? (float) $flags['insuredValue'] : null;
+		$stated_only = ! empty( $flags['statedAddressOnly'] ) ? true : null;
+		$return_home = ! empty( $flags['returnWhenNotHome'] ) ? true : null;
+
+		if ( null === $confirmation && null === $age_check && null === $insured
+			&& null === $stated_only && null === $return_home ) {
+			return null;
+		}
+
+		return new Services(
+			statedAddressOnly: $stated_only,
+			returnWhenNotHome: $return_home,
+			minimalAgeCheck: $age_check,
+			deliveryConfirmation: $confirmation,
+			insuredValue: $insured
 		);
 	}
 

@@ -26,15 +26,14 @@ class EligibilityTest extends UnitTestCase {
 	private function signals( array $overrides = array() ): array {
 		return array_merge(
 			array(
-				'num_labels'          => 1,
-				'is_delivery_day'     => false,
-				'is_pickup'           => false,
-				'has_return'          => false,
-				'has_product_options' => false,
-				'delivery_type'       => 'Standard',
-				'origin'              => 'NL',
-				'destination'         => 'NL',
-				'mapped'              => array(
+				'num_labels'      => 1,
+				'is_delivery_day' => false,
+				'is_pickup'       => false,
+				'has_return'      => false,
+				'delivery_type'   => 'Standard',
+				'origin'          => 'NL',
+				'destination'     => 'NL',
+				'mapped'          => array(
 					'has_v4_equivalent' => true,
 					'shipmentType'      => 'parcel',
 					'services'          => array(),
@@ -50,6 +49,31 @@ class EligibilityTest extends UnitTestCase {
 	 */
 	public function test_base_parcel_is_eligible(): void {
 		$this->assertTrue( Eligibility::is_eligible( $this->signals() ) );
+	}
+
+	/**
+	 * @testdox is_eligible() accepts a domestic parcel carrying delivery services.
+	 *
+	 * A signature + insured + return-when-not-home parcel has a V4 equivalent and
+	 * no pickup location, so it is routed to V4 with the services attached.
+	 */
+	public function test_service_bearing_parcel_is_eligible(): void {
+		$signals = $this->signals(
+			array(
+				'mapped' => array(
+					'has_v4_equivalent' => true,
+					'shipmentType'      => 'parcel',
+					'services'          => array(
+						'deliveryConfirmation' => 'signature',
+						'insuredValue'         => '<order_total>',
+						'returnWhenNotHome'    => true,
+					),
+					'deliveryLocation'  => array(),
+				),
+			)
+		);
+
+		$this->assertTrue( Eligibility::is_eligible( $signals ), 'A service-bearing domestic parcel should route to V4.' );
 	}
 
 	/**
@@ -77,13 +101,11 @@ class EligibilityTest extends UnitTestCase {
 			'delivery-day selected'      => array( array( 'is_delivery_day' => true ), 'a delivery-day option' ),
 			'pickup selected'            => array( array( 'is_pickup' => true ), 'a pickup point' ),
 			'return involved'            => array( array( 'has_return' => true ), 'a return label' ),
-			'product options present'    => array( array( 'has_product_options' => true ), 'product options' ),
 			'evening delivery'           => array( array( 'delivery_type' => 'Evening' ), 'evening delivery' ),
 			'non-NL origin'              => array( array( 'origin' => 'BE' ), 'a non-NL origin' ),
 			'non-NL destination'         => array( array( 'destination' => 'BE' ), 'a non-NL destination' ),
 			'no v4 equivalent'           => array( array( 'mapped' => array( 'has_v4_equivalent' => false ) ), 'no V4 equivalent' ),
 			'non-parcel shipment type'   => array( array( 'mapped' => array( 'has_v4_equivalent' => true, 'shipmentType' => 'letterbox', 'services' => array() ) ), 'a letterbox shipment type' ),
-			'mapped with services'       => array( array( 'mapped' => array( 'has_v4_equivalent' => true, 'shipmentType' => 'parcel', 'services' => array( 'insuredValue' => '<order_total>' ) ) ), 'mapped services' ),
 			'mapped with pickup location' => array( array( 'mapped' => array( 'has_v4_equivalent' => true, 'shipmentType' => 'parcel', 'services' => array(), 'deliveryLocation' => array( 'pickupLocationId' => 'x' ) ) ), 'a pickup delivery location' ),
 		);
 	}
@@ -123,9 +145,14 @@ class EligibilityTest extends UnitTestCase {
 	}
 
 	/**
-	 * @testdox resolve_mapped() keeps a delivery-code + insured 3085 parcel off V4.
+	 * @testdox A delivery-code + insured 3085 parcel routes to V4 with both services.
+	 *
+	 * This combination keeps product 3085 but resolves to a V4 services row
+	 * (deliveryConfirmation=deliverycode + insuredValue), so it is eligible and
+	 * the services carry the delivery-code and insurance that V1 expressed via a
+	 * product option and an Amounts block.
 	 */
-	public function test_resolve_mapped_delivery_code_insured_stays_legacy(): void {
+	public function test_delivery_code_insured_is_eligible_with_services(): void {
 		$mapped = Eligibility::resolve_mapped(
 			'NL',
 			'NL',
@@ -137,9 +164,99 @@ class EligibilityTest extends UnitTestCase {
 			'3085'
 		);
 
-		$this->assertFalse(
+		$this->assertTrue( $mapped['has_v4_equivalent'] );
+		$this->assertSame( 'deliverycode', $mapped['services']['deliveryConfirmation'] );
+		$this->assertArrayHasKey( 'insuredValue', $mapped['services'] );
+		$this->assertTrue(
 			Eligibility::is_eligible( $this->signals( array( 'mapped' => $mapped ) ) ),
-			'A delivery-code + insured parcel must fall back to the legacy path.'
+			'A delivery-code + insured parcel should route to V4 with services.'
+		);
+	}
+
+	/**
+	 * @testdox resolve_mapped() maps a signature-on-delivery parcel to the confirmation service.
+	 */
+	public function test_resolve_mapped_signature_service(): void {
+		$mapped = Eligibility::resolve_mapped( 'NL', 'NL', false, array( 'signature_on_delivery' => 'yes' ), '3189' );
+
+		$this->assertTrue( $mapped['has_v4_equivalent'] );
+		$this->assertSame( 'signature', $mapped['services']['deliveryConfirmation'] );
+	}
+
+	/**
+	 * @testdox resolve_services() replaces the order-total placeholder with the insured amount.
+	 */
+	public function test_resolve_services_fills_insured_value(): void {
+		$resolved = Eligibility::resolve_services(
+			array(
+				'deliveryConfirmation' => 'signature',
+				'insuredValue'         => '<order_total>',
+			),
+			49.95
+		);
+
+		$this->assertSame( 49.95, $resolved['insuredValue'] );
+		$this->assertSame( 'signature', $resolved['deliveryConfirmation'], 'Other flags pass through unchanged.' );
+	}
+
+	/**
+	 * @testdox resolve_services() leaves a services array without insurance untouched.
+	 */
+	public function test_resolve_services_without_insurance_is_unchanged(): void {
+		$services = array( 'statedAddressOnly' => true );
+
+		$this->assertSame( $services, Eligibility::resolve_services( $services, 10.0 ) );
+	}
+
+	/**
+	 * @testdox Every domestic NL parcel option routes to V4 with the expected services.
+	 * @dataProvider domestic_option_provider
+	 *
+	 * @param array  $backend  Raw backend feature flags ('yes' strings).
+	 * @param string $code     Legacy product code resolved for that combination.
+	 * @param array  $services Expected resolved service flags (keys/values).
+	 */
+	public function test_domestic_options_route_to_v4_with_services( array $backend, string $code, array $services ): void {
+		$mapped = Eligibility::resolve_mapped( 'NL', 'NL', false, $backend, $code );
+
+		$this->assertTrue(
+			Eligibility::is_eligible( $this->signals( array( 'mapped' => $mapped ) ) ),
+			"Combination for product {$code} should route to V4."
+		);
+
+		$resolved = Eligibility::resolve_services( $mapped['services'], 42.0 );
+
+		foreach ( $services as $key => $value ) {
+			$this->assertArrayHasKey( $key, $resolved, "Expected service '{$key}' for product {$code}." );
+			$this->assertSame( $value, $resolved[ $key ], "Unexpected value for service '{$key}' on product {$code}." );
+		}
+
+		$this->assertSame(
+			count( $services ),
+			count( $resolved ),
+			"Product {$code} produced unexpected extra services: " . implode( ',', array_keys( $resolved ) )
+		);
+	}
+
+	/**
+	 * Every NL→NL delivery_day parcel row that has a V4 equivalent, with its
+	 * expected resolved services (insurance resolved to the 42.0 subtotal above).
+	 *
+	 * @return array
+	 */
+	public static function domestic_option_provider(): array {
+		return array(
+			'base'                                   => array( array(), '3085', array() ),
+			'only_home_address'                      => array( array( 'only_home_address' => 'yes' ), '3385', array( 'statedAddressOnly' => true ) ),
+			'return_no_answer'                       => array( array( 'return_no_answer' => 'yes' ), '3090', array( 'returnWhenNotHome' => true ) ),
+			'signature'                              => array( array( 'signature_on_delivery' => 'yes' ), '3189', array( 'deliveryConfirmation' => 'signature' ) ),
+			'home + return'                          => array( array( 'only_home_address' => 'yes', 'return_no_answer' => 'yes' ), '3390', array( 'returnWhenNotHome' => true, 'statedAddressOnly' => true ) ),
+			'home + signature'                       => array( array( 'only_home_address' => 'yes', 'signature_on_delivery' => 'yes' ), '3089', array( 'deliveryConfirmation' => 'signature', 'statedAddressOnly' => true ) ),
+			'insured + signature'                    => array( array( 'insured_shipping' => 'yes', 'signature_on_delivery' => 'yes' ), '3087', array( 'deliveryConfirmation' => 'signature', 'insuredValue' => 42.0 ) ),
+			'return + signature'                     => array( array( 'return_no_answer' => 'yes', 'signature_on_delivery' => 'yes' ), '3389', array( 'deliveryConfirmation' => 'signature', 'returnWhenNotHome' => true ) ),
+			'home + return + signature'              => array( array( 'only_home_address' => 'yes', 'return_no_answer' => 'yes', 'signature_on_delivery' => 'yes' ), '3096', array( 'deliveryConfirmation' => 'signature', 'returnWhenNotHome' => true, 'statedAddressOnly' => true ) ),
+			'insured + return + signature'           => array( array( 'insured_shipping' => 'yes', 'return_no_answer' => 'yes', 'signature_on_delivery' => 'yes' ), '3094', array( 'deliveryConfirmation' => 'signature', 'insuredValue' => 42.0, 'returnWhenNotHome' => true ) ),
+			'delivery_code + insured'                => array( array( 'delivery_code_at_door' => 'yes', 'insured_shipping' => 'yes' ), '3085', array( 'deliveryConfirmation' => 'deliverycode', 'insuredValue' => 42.0 ) ),
 		);
 	}
 }

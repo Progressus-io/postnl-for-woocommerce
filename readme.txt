@@ -81,7 +81,7 @@ Follow these instructions (https://www.postnl.nl/Images/aanvragen-api-key-stappe
 
 == Changelog ==
 
-= 6.0.0 (2026-xx-xx) =
+= 5.9.10 (2026-xx-xx) =
 * Fix: Letterboxparcel 48-hour orders reverted to Standard Shipment when the label was generated with the bulk action on the classic orders list.
 
 = 5.9.9 (2026-07-20) =

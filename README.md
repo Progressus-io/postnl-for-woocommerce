@@ -27,7 +27,7 @@ PostNL’s official extension for WooCommerce on WordPress. Manage your national
 
 ## Changelog
 
-### 6.0.0
+### 5.9.10
 * Fix: Letterboxparcel 48-hour orders reverted to Standard Shipment when the label was generated with the bulk action on the classic orders list.
 
 ### 5.9.9

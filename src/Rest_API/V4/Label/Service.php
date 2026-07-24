@@ -264,7 +264,8 @@ class Service extends Order_Base implements Label_Service_Interface {
 			'transaction_code'      => '11',
 			'associated_document'   => array(
 				'type'   => 'invoice',
-				'number' => (string) ( $item_info->shipment['order_number'] ?? '' ),
+				// Mirrors the legacy Customs InvoiceNr, which uses the order id (not the display order number).
+				'number' => (string) ( $item_info->shipment['order_id'] ?? '' ),
 			),
 			'sender_identification' => (string) ( $item_info->shipment['merchant_code'] ?? '' ),
 			'content'               => $content,

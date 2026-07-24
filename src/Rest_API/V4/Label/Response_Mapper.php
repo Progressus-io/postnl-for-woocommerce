@@ -64,6 +64,31 @@ class Response_Mapper {
 	}
 
 	/**
+	 * Return the international partner barcode issued for a shipment item.
+	 *
+	 * For EU/ROW shipments the labelconfirm response echoes the delivering
+	 * partner's barcode and id; both are empty for a domestic shipment.
+	 *
+	 * @param ShipmentShippingItem $item Shipment item from the response.
+	 * @return string
+	 */
+	public static function get_partner_barcode( ShipmentShippingItem $item ): string {
+		// phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- Third-party SDK DTO property.
+		return null !== $item->partnerBarcode ? $item->partnerBarcode : '';
+	}
+
+	/**
+	 * Return the international partner id issued for a shipment item.
+	 *
+	 * @param ShipmentShippingItem $item Shipment item from the response.
+	 * @return string
+	 */
+	public static function get_partner_id( ShipmentShippingItem $item ): string {
+		// phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- Third-party SDK DTO property.
+		return null !== $item->partnerId ? $item->partnerId : '';
+	}
+
+	/**
 	 * Return the non-empty Label objects attached to a shipment item.
 	 *
 	 * @param ShipmentShippingItem $item Shipment item from the response.
@@ -105,13 +130,18 @@ class Response_Mapper {
 	 * Build a normalized label record matching the shape stored in
 	 * _postnl_order_metadata['labels'] by the legacy path, tagged as V4.
 	 *
-	 * @param string $type     Label type slug, e.g. 'label'.
-	 * @param string $barcode  Barcode for this label.
-	 * @param string $filepath Absolute path to the written label file.
-	 * @return array{type:string,barcode:string,created_at:int,filepath:string,api_version:string}
+	 * The partner barcode/id are added only for international shipments, where the
+	 * labelconfirm response returns them; they are omitted for domestic labels.
+	 *
+	 * @param string $type            Label type slug, e.g. 'label'.
+	 * @param string $barcode         Barcode for this label.
+	 * @param string $filepath        Absolute path to the written label file.
+	 * @param string $partner_barcode Optional international partner barcode.
+	 * @param string $partner_id      Optional international partner id.
+	 * @return array<string,mixed>
 	 */
-	public static function to_label_record( string $type, string $barcode, string $filepath ): array {
-		return array(
+	public static function to_label_record( string $type, string $barcode, string $filepath, string $partner_barcode = '', string $partner_id = '' ): array {
+		$record = array(
 			'type'        => $type,
 			'barcode'     => $barcode,
 			// phpcs:ignore WordPress.DateTime.CurrentTimeTimestamp.Requested -- Mirrors the legacy label record's created_at timestamp stored in order meta.
@@ -119,5 +149,15 @@ class Response_Mapper {
 			'filepath'    => $filepath,
 			'api_version' => 'v4',
 		);
+
+		if ( '' !== $partner_barcode ) {
+			$record['partner_barcode'] = $partner_barcode;
+		}
+
+		if ( '' !== $partner_id ) {
+			$record['partner_id'] = $partner_id;
+		}
+
+		return $record;
 	}
 }

@@ -125,6 +125,26 @@ class Response_MapperTest extends UnitTestCase {
 	}
 
 	/**
+	 * @testdox get_partner_barcode() and get_partner_id() capture the international partner refs.
+	 */
+	public function test_partner_refs_captured_from_response(): void {
+		$item = new ShipmentShippingItem( barcode: '3SDEVC1', partnerId: 'DHL', partnerBarcode: 'CD123456785NL' );
+
+		$this->assertSame( 'CD123456785NL', Response_Mapper::get_partner_barcode( $item ) );
+		$this->assertSame( 'DHL', Response_Mapper::get_partner_id( $item ) );
+	}
+
+	/**
+	 * @testdox get_partner_barcode() and get_partner_id() return empty strings for a domestic item.
+	 */
+	public function test_partner_refs_empty_for_domestic(): void {
+		$item = new ShipmentShippingItem( barcode: '3SDEVC1' );
+
+		$this->assertSame( '', Response_Mapper::get_partner_barcode( $item ) );
+		$this->assertSame( '', Response_Mapper::get_partner_id( $item ) );
+	}
+
+	/**
 	 * @testdox to_label_record() builds a record in the legacy meta shape tagged as V4.
 	 */
 	public function test_to_label_record_shape(): void {
@@ -142,5 +162,29 @@ class Response_MapperTest extends UnitTestCase {
 			),
 			$record
 		);
+	}
+
+	/**
+	 * @testdox to_label_record() adds the partner barcode and id for an international label.
+	 */
+	public function test_to_label_record_includes_partner_refs(): void {
+		Functions\when( 'current_time' )->justReturn( 1700000000 );
+
+		$record = Response_Mapper::to_label_record( 'label', '3SDEVC1', '/uploads/postnl/label.pdf', 'CD123456785NL', 'DHL' );
+
+		$this->assertSame( 'CD123456785NL', $record['partner_barcode'] );
+		$this->assertSame( 'DHL', $record['partner_id'] );
+	}
+
+	/**
+	 * @testdox to_label_record() omits partner keys when no partner refs are supplied.
+	 */
+	public function test_to_label_record_omits_empty_partner_refs(): void {
+		Functions\when( 'current_time' )->justReturn( 1700000000 );
+
+		$record = Response_Mapper::to_label_record( 'label', '3SDEVC1', '/uploads/postnl/label.pdf' );
+
+		$this->assertArrayNotHasKey( 'partner_barcode', $record );
+		$this->assertArrayNotHasKey( 'partner_id', $record );
 	}
 }

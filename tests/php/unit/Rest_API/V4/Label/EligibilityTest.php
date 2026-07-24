@@ -77,6 +77,45 @@ class EligibilityTest extends UnitTestCase {
 	}
 
 	/**
+	 * @testdox is_eligible() accepts an EU/ROW international parcel from NL or BE.
+	 * @dataProvider international_provider
+	 *
+	 * @param string $origin      Origin country.
+	 * @param string $destination Shipping zone (EU|ROW).
+	 */
+	public function test_international_parcel_is_eligible( string $origin, string $destination ): void {
+		$signals = $this->signals(
+			array(
+				'origin'      => $origin,
+				'destination' => $destination,
+				'mapped'      => array(
+					'has_v4_equivalent'         => true,
+					'shipmentType'              => 'parcel',
+					'services'                  => array(),
+					'deliveryLocation'          => array(),
+					'internationalShipmentData' => array( 'bundle' => 'track_trace' ),
+				),
+			)
+		);
+
+		$this->assertTrue( Eligibility::is_eligible( $signals ), "An {$origin}→{$destination} parcel should route to V4." );
+	}
+
+	/**
+	 * Origin/destination pairs for supported international parcels.
+	 *
+	 * @return array
+	 */
+	public static function international_provider(): array {
+		return array(
+			'NL→EU'  => array( 'NL', 'EU' ),
+			'NL→ROW' => array( 'NL', 'ROW' ),
+			'BE→EU'  => array( 'BE', 'EU' ),
+			'BE→ROW' => array( 'BE', 'ROW' ),
+		);
+	}
+
+	/**
 	 * @testdox is_eligible() rejects orders outside the happy path.
 	 * @dataProvider ineligible_provider
 	 *

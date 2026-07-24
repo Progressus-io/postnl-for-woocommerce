@@ -319,6 +319,132 @@ class Request_BuilderTest extends UnitTestCase {
 	}
 
 	/**
+	 * @testdox build() omits the internationalShipmentData block for a domestic parcel.
+	 */
+	public function test_international_block_omitted_for_domestic(): void {
+		$this->assertArrayNotHasKey( 'internationalShipmentData', $this->payload( $this->domestic_fields() ) );
+	}
+
+	/**
+	 * A representative EU international field set with a customs declaration.
+	 *
+	 * @return array
+	 */
+	private function international_fields(): array {
+		$fields                  = $this->domestic_fields();
+		$fields['international']  = array(
+			'bundle'  => 'insured',
+			'customs' => array(
+				'currency'              => 'EUR',
+				'transaction_code'      => '11',
+				'associated_document'   => array(
+					'type'   => 'invoice',
+					'number' => 'ORDER-1001',
+				),
+				'sender_identification' => 'VOEC-12345',
+				'content'               => array(
+					array(
+						'description'       => 'Blue cotton t-shirt',
+						'quantity'          => 2,
+						'weight'            => 500,
+						'value'             => 19.95,
+						'country_of_origin' => 'NL',
+						'hs_code'           => '610910',
+					),
+				),
+			),
+		);
+
+		return $fields;
+	}
+
+	/**
+	 * @testdox build() attaches the service bundle to internationalShipmentData, never to services.
+	 */
+	public function test_international_bundle_is_on_international_block(): void {
+		$payload = $this->payload( $this->international_fields() );
+
+		$this->assertSame( 'insured', $payload['internationalShipmentData']['bundle'] );
+		$this->assertArrayNotHasKey( 'bundle', $payload['internationalShipmentData']['services'] ?? array() );
+		$this->assertArrayNotHasKey( 'services', $payload, 'An international parcel with no domestic services must not send a Services block.' );
+	}
+
+	/**
+	 * @testdox build() maps the customs declaration fields onto the Customs DTO.
+	 */
+	public function test_international_customs_is_mapped(): void {
+		$customs = $this->payload( $this->international_fields() )['internationalShipmentData']['customs'];
+
+		$this->assertSame( '11', $customs['transactionCode'] );
+		$this->assertSame( 'EUR', $customs['currency'] );
+		$this->assertSame( 'invoice', $customs['associatedDocument']['type'] );
+		$this->assertSame( 'ORDER-1001', $customs['associatedDocument']['number'] );
+		$this->assertSame( 'VOEC-12345', $customs['senderIdentification'] );
+		$this->assertArrayNotHasKey( 'receiverIdentification', $customs, 'An unset receiver id must be omitted.' );
+
+		$item = $customs['content'][0];
+		$this->assertSame( 'Blue cotton t-shirt', $item['description'] );
+		$this->assertSame( 2, $item['quantity'] );
+		$this->assertSame( 500, $item['weight'] );
+		$this->assertSame( 19.95, $item['value'] );
+		$this->assertSame( 'NL', $item['countryOfOrigin'] );
+		$this->assertSame( '610910', $item['hsTariffNumber'] );
+	}
+
+	/**
+	 * @testdox build() truncates a customs item description to 35 characters.
+	 */
+	public function test_customs_description_is_truncated(): void {
+		$fields = $this->international_fields();
+		$fields['international']['customs']['content'][0]['description'] = str_repeat( 'a', 50 );
+
+		$content = $this->payload( $fields )['internationalShipmentData']['customs']['content'][0];
+
+		$this->assertSame( str_repeat( 'a', 35 ), $content['description'] );
+	}
+
+	/**
+	 * @testdox build() clamps a zero customs item weight and quantity to a minimum of one.
+	 */
+	public function test_customs_item_weight_and_quantity_are_clamped(): void {
+		$fields = $this->international_fields();
+		$fields['international']['customs']['content'][0]['weight']   = 0;
+		$fields['international']['customs']['content'][0]['quantity'] = 0;
+
+		$content = $this->payload( $fields )['internationalShipmentData']['customs']['content'][0];
+
+		$this->assertSame( 1, $content['weight'] );
+		$this->assertSame( 1, $content['quantity'] );
+	}
+
+	/**
+	 * @testdox build() drops an unrecognised bundle and currency rather than sending them.
+	 */
+	public function test_unknown_bundle_and_currency_are_omitted(): void {
+		$fields                                       = $this->international_fields();
+		$fields['international']['bundle']             = 'nonsense';
+		$fields['international']['customs']['currency'] = 'XXX';
+
+		$international = $this->payload( $fields )['internationalShipmentData'];
+
+		$this->assertArrayNotHasKey( 'bundle', $international, 'An unknown bundle must not be sent.' );
+		$this->assertArrayNotHasKey( 'currency', $international['customs'], 'An unknown currency must not be sent.' );
+	}
+
+	/**
+	 * @testdox build() omits the Customs block when no content items are declared but keeps the bundle.
+	 */
+	public function test_customs_omitted_without_content(): void {
+		$fields                                      = $this->international_fields();
+		$fields['international']['customs']['content'] = array();
+
+		$international = $this->payload( $fields )['internationalShipmentData'];
+
+		$this->assertSame( 'insured', $international['bundle'] );
+		$this->assertArrayNotHasKey( 'customs', $international, 'Customs with no content items must be omitted.' );
+	}
+
+	/**
 	 * @testdox printer_type_to_label_settings() splits legacy combined strings into output type and resolution.
 	 * @dataProvider printer_type_provider
 	 *

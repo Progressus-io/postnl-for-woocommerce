@@ -365,8 +365,7 @@ class Request_BuilderTest extends UnitTestCase {
 		$payload = $this->payload( $this->international_fields() );
 
 		$this->assertSame( 'insured', $payload['internationalShipmentData']['bundle'] );
-		$this->assertArrayNotHasKey( 'bundle', $payload['internationalShipmentData']['services'] ?? array() );
-		$this->assertArrayNotHasKey( 'services', $payload, 'An international parcel with no domestic services must not send a Services block.' );
+		$this->assertArrayNotHasKey( 'services', $payload, 'An international parcel with no domestic services must not send a Services block; the bundle lives on internationalShipmentData.' );
 	}
 
 	/**

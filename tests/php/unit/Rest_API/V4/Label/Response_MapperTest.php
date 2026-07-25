@@ -70,6 +70,28 @@ class Response_MapperTest extends UnitTestCase {
 	}
 
 	/**
+	 * @testdox all_shipment_items() returns every collo item in order for a multi-collo shipment.
+	 */
+	public function test_all_shipment_items_returns_all_collos(): void {
+		$first  = new ShipmentShippingItem( barcode: '3SDEVC1' );
+		$second = new ShipmentShippingItem( barcode: '3SDEVC2' );
+		$third  = new ShipmentShippingItem( barcode: '3SDEVC3' );
+
+		$items = Response_Mapper::all_shipment_items( $this->response( $first, $second, $third ) );
+
+		$this->assertCount( 3, $items );
+		$this->assertSame( '3SDEVC1', $items[0]->barcode );
+		$this->assertSame( '3SDEVC3', $items[2]->barcode );
+	}
+
+	/**
+	 * @testdox all_shipment_items() returns an empty array when the response carries no shipment.
+	 */
+	public function test_all_shipment_items_empty_when_no_shipment(): void {
+		$this->assertSame( array(), Response_Mapper::all_shipment_items( $this->response() ) );
+	}
+
+	/**
 	 * @testdox get_barcode() captures the barcode auto-issued on the response item.
 	 */
 	public function test_get_barcode_captured_from_response(): void {

@@ -74,7 +74,11 @@ class Request_Builder {
 	 *     @type int    $weight_gr     Total shipment weight in grams.
 	 *     @type string $reference     Merchant shipment reference (order number).
 	 *     @type string $barcode       Pre-issued barcode to confirm; empty to let
-	 *                                  labelconfirm auto-issue one.
+	 *                                  labelconfirm auto-issue one. Ignored when
+	 *                                  $barcodes is provided.
+	 *     @type array  $barcodes      Pre-issued barcodes, one per collo, for a
+	 *                                  multi-collo shipment. Falls back to a single
+	 *                                  item built from $barcode when absent.
 	 *     @type array  $label         Label output: output_type (pdf|zpl|jpg|gif|png)
 	 *                                  and resolution (200|300|600).
 	 *     @type array  $services      Optional resolved service flags: deliveryConfirmation
@@ -112,16 +116,6 @@ class Request_Builder {
 			resolution: self::resolution( (int) ( $label_fields['resolution'] ?? 200 ) )
 		);
 
-		$item = new ShippingItem(
-			barcode: self::maybe_null( (string) ( $fields['barcode'] ?? '' ) ),
-			customerReferences: new CustomerReferences(
-				shipmentReference: self::maybe_null( (string) ( $fields['reference'] ?? '' ) )
-			),
-			dimensions: new Dimensions(
-				weightGr: max( 1, (int) ( $fields['weight_gr'] ?? 0 ) )
-			)
-		);
-
 		return new ShipmentDeliveryRequest(
 			sender: $sender,
 			receiver: $receiver,
@@ -129,8 +123,44 @@ class Request_Builder {
 			shipmentType: self::shipment_type( (string) ( $fields['shipment_type'] ?? 'parcel' ) ),
 			services: self::services( $fields['services'] ?? array() ),
 			internationalShipmentData: self::international( $fields['international'] ?? array() ),
-			items: array( $item )
+			items: self::items( $fields )
 		);
+	}
+
+	/**
+	 * Build one ShippingItem per collo.
+	 *
+	 * A multi-collo shipment sends one item per barcode in a single request; the
+	 * SDK derives itemCount from the item count. Each collo carries the same
+	 * shipment reference and weight, matching the legacy per-shipment payload.
+	 *
+	 * @param array $fields Builder input keyed as documented on build().
+	 * @return ShippingItem[]
+	 */
+	private static function items( array $fields ): array {
+		$barcodes = array_values( array_filter( (array) ( $fields['barcodes'] ?? array() ), 'is_scalar' ) );
+
+		if ( empty( $barcodes ) ) {
+			$barcodes = array( (string) ( $fields['barcode'] ?? '' ) );
+		}
+
+		$reference = self::maybe_null( (string) ( $fields['reference'] ?? '' ) );
+		$weight_gr = max( 1, (int) ( $fields['weight_gr'] ?? 0 ) );
+
+		$items = array();
+		foreach ( $barcodes as $barcode ) {
+			$items[] = new ShippingItem(
+				barcode: self::maybe_null( (string) $barcode ),
+				customerReferences: new CustomerReferences(
+					shipmentReference: $reference
+				),
+				dimensions: new Dimensions(
+					weightGr: $weight_gr
+				)
+			);
+		}
+
+		return $items;
 	}
 
 	/**

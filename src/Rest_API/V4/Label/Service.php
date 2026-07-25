@@ -309,7 +309,7 @@ class Service extends Order_Base implements Label_Service_Interface {
 			'weight_gr'     => (int) ( $item_info->shipment['total_weight'] ?? 0 ),
 			'reference'     => (string) ( $item_info->shipment['order_number'] ?? '' ),
 			'barcode'       => (string) ( $post_data['main_barcode'] ?? '' ),
-			'barcodes'      => array_values( (array) ( $post_data['barcodes'] ?? array() ) ),
+			'barcodes'      => array_values( array_filter( (array) ( $post_data['barcodes'] ?? array() ), 'is_scalar' ) ),
 			'services'      => Eligibility::resolve_services(
 				$mapped['services'] ?? array(),
 				(float) ( $item_info->shipment['subtotal'] ?? 0 )

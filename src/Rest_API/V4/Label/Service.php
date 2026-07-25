@@ -201,7 +201,7 @@ class Service extends Order_Base implements Label_Service_Interface {
 			'weight_gr'     => (int) ( $item_info->shipment['total_weight'] ?? 0 ),
 			'reference'     => (string) ( $item_info->shipment['order_number'] ?? '' ),
 			'barcode'       => (string) ( $post_data['main_barcode'] ?? '' ),
-			'barcodes'      => array_values( (array) ( $post_data['barcodes'] ?? array() ) ),
+			'barcodes'      => array_values( array_filter( (array) ( $post_data['barcodes'] ?? array() ), 'is_scalar' ) ),
 			'services'      => Eligibility::resolve_services(
 				$mapped['services'] ?? array(),
 				(float) ( $item_info->shipment['subtotal'] ?? 0 )
@@ -335,8 +335,22 @@ class Service extends Order_Base implements Label_Service_Interface {
 
 		$labels = $this->maybe_merge_labels( $records, $order, $parent_barcode, 'label' );
 
+		// The merge helper rebuilds a fresh record for a multi-collo shipment, so
+		// re-attach the parent collo's international partner refs (both empty for a
+		// domestic shipment) — the single-collo record already carries them.
+		$partner_barcode = Response_Mapper::get_partner_barcode( $items[0] );
+		$partner_id      = Response_Mapper::get_partner_id( $items[0] );
+
 		foreach ( array_keys( $labels ) as $key ) {
 			$labels[ $key ]['api_version'] = 'v4';
+
+			if ( '' !== $partner_barcode && empty( $labels[ $key ]['partner_barcode'] ) ) {
+				$labels[ $key ]['partner_barcode'] = $partner_barcode;
+			}
+
+			if ( '' !== $partner_id && empty( $labels[ $key ]['partner_id'] ) ) {
+				$labels[ $key ]['partner_id'] = $partner_id;
+			}
 		}
 
 		return $labels;

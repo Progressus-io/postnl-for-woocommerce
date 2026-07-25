@@ -27,6 +27,7 @@ use PostNLWooCommerce\Rest_API\Legacy\Smart_Returns_Service as Legacy_Smart_Retu
 use PostNLWooCommerce\Rest_API\SDK\Client_Factory;
 use PostNLWooCommerce\Rest_API\SDK\Logger_Adapter;
 use PostNLWooCommerce\Rest_API\V4\Label\Service as V4_Label_Service;
+use PostNLWooCommerce\Rest_API\V4\Returns\Service as V4_Returns_Service;
 use Psr\Log\LoggerInterface;
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -248,7 +249,12 @@ class Service_Factory {
 	 * @return Return_Label_Service_Interface
 	 */
 	public function return_label_service(): Return_Label_Service_Interface {
-		if ( $this->should_use_v4( 'return_label' ) && isset( $this->v4_services['return_label'] ) ) {
+		if ( $this->should_use_v4( 'return_label' ) ) {
+			// A test double injected via inject_v4_service() wins; otherwise build the real V4 service,
+			// which handles the NL retailPrint return and falls back to the legacy pipeline for the rest.
+			if ( ! isset( $this->v4_services['return_label'] ) ) {
+				$this->v4_services['return_label'] = new V4_Returns_Service();
+			}
 			return $this->v4_services['return_label'];
 		}
 		if ( ! isset( $this->legacy_memos['return_label'] ) ) {

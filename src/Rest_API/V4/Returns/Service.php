@@ -88,7 +88,10 @@ class Service extends Order_Base implements Return_Label_Service_Interface {
 	public function create( array $post_data ): array {
 		$item_info = new Item_Info( $post_data );
 
-		if ( ! $this->is_eligible( $item_info ) ) {
+		// Mirror the legacy pipeline guard: a return label is only created when the
+		// merchant selected it. The pipeline returns an empty array in that case.
+		if ( 'yes' !== ( $post_data['saved_data']['backend']['create_return_label'] ?? '' )
+			|| ! $this->is_eligible( $item_info ) ) {
 			return $this->maybe_create_return_label_pipeline( $post_data );
 		}
 

@@ -55,12 +55,13 @@ class Eligibility {
 	}
 
 	/**
-	 * Decide whether the collected signals describe the happy-path domestic parcel.
+	 * Decide whether the collected signals describe a parcel the V4 service handles
+	 * — a domestic NL or EU/ROW international parcel, single- or multi-collo.
 	 *
 	 * @param array $signals {
 	 *     Signal set assembled by Service::gather_signals().
 	 *
-	 *     @type int    $num_labels          Collo count.
+	 *     @type int    $num_labels          Collo count (>= 1).
 	 *     @type bool   $is_delivery_day     A delivery-day option was selected.
 	 *     @type bool   $is_pickup           A pickup point was selected.
 	 *     @type bool   $has_return          A return label/barcode is involved.
@@ -72,7 +73,9 @@ class Eligibility {
 	 * @return bool
 	 */
 	public static function is_eligible( array $signals ): bool {
-		if ( 1 !== (int) ( $signals['num_labels'] ?? 1 ) ) {
+		// Multi-collo (num_labels > 1) is supported via multiple request items;
+		// only a missing/invalid collo count is rejected here.
+		if ( (int) ( $signals['num_labels'] ?? 1 ) < 1 ) {
 			return false;
 		}
 

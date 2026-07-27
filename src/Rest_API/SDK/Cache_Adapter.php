@@ -236,7 +236,12 @@ class Cache_Adapter extends AbstractCacheAdapter {
 		$allowed = (array) apply_filters( 'postnl_v4_cache_allowed_prefixes', self::ALLOWED_PREFIXES );
 
 		foreach ( $allowed as $prefix ) {
-			if ( '' !== $prefix && str_starts_with( $key, (string) $prefix ) ) {
+			// Cast before the emptiness check: null and false both survive a
+			// strict comparison against '' but cast to it, and an empty needle
+			// makes str_starts_with() match every key.
+			$prefix = (string) $prefix;
+
+			if ( '' !== $prefix && str_starts_with( $key, $prefix ) ) {
 				return true;
 			}
 		}

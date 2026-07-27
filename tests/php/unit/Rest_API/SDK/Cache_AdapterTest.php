@@ -410,12 +410,43 @@ class Cache_AdapterTest extends UnitTestCase {
 	}
 
 	/**
-	 * @testdox An empty prefix in the allowlist does not make every key cacheable
+	 * @dataProvider empty_like_prefix_provider
+	 * @testdox An empty-like prefix in the allowlist does not make every key cacheable
+	 *
+	 * @param mixed $prefix Value a site filter may inject alongside a real prefix.
 	 */
-	public function test_empty_allowlist_prefix_does_not_match_everything(): void {
-		Filters\expectApplied( 'postnl_v4_cache_allowed_prefixes' )->andReturn( array( '' ) );
+	public function test_empty_like_allowlist_prefix_does_not_match_everything( $prefix ): void {
+		Filters\expectApplied( 'postnl_v4_cache_allowed_prefixes' )->andReturn( array( $prefix ) );
 		Functions\expect( 'set_transient' )->never();
 
 		$this->assertFalse( ( new Cache_Adapter( 'tenant-key' ) )->set( 'anything_at_all', 'v' ) );
+	}
+
+	/**
+	 * Values that cast to an empty string. null and false survive a strict
+	 * comparison against '', so a cast-last guard lets them through and an
+	 * empty needle then matches every key. A missing get_option() returns
+	 * false, which makes this reachable from an ordinary site filter.
+	 *
+	 * @return array<string, array{mixed}>
+	 */
+	public static function empty_like_prefix_provider(): array {
+		return array(
+			'empty string' => array( '' ),
+			'null'         => array( null ),
+			'false'        => array( false ),
+		);
+	}
+
+	/**
+	 * @testdox A real prefix alongside an empty-like one still gates correctly
+	 */
+	public function test_empty_like_prefix_beside_a_real_one_does_not_leak(): void {
+		Filters\expectApplied( 'postnl_v4_cache_allowed_prefixes' )->andReturn(
+			array( Cache_Adapter::PREFIX_TIMEFRAME, null )
+		);
+		Functions\expect( 'set_transient' )->never();
+
+		$this->assertFalse( ( new Cache_Adapter( 'tenant-key' ) )->set( 'shipment_label_1', 'PDF-BYTES' ) );
 	}
 }

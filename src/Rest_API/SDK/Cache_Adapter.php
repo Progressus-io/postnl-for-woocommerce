@@ -42,9 +42,27 @@ class Cache_Adapter extends AbstractCacheAdapter {
 	public const DEFAULT_TTL = 600;
 
 	/**
+	 * Cacheable key prefix for the timeframe flow. Pass as the CachingPlugin
+	 * keyPrefix so the plugin's generated keys clear this adapter's allowlist.
+	 */
+	public const PREFIX_TIMEFRAME = 'timeframe';
+
+	/**
+	 * Cacheable key prefix for the pickup-locations flow.
+	 */
+	public const PREFIX_LOCATIONS = 'locations';
+
+	/**
 	 * Raw-key prefixes whose responses may be cached. Anything else bypasses.
 	 */
-	private const ALLOWED_PREFIXES = array( 'timeframe', 'locations' );
+	private const ALLOWED_PREFIXES = array( self::PREFIX_TIMEFRAME, self::PREFIX_LOCATIONS );
+
+	/**
+	 * Whether a non-allowlisted key has already been reported for this instance.
+	 *
+	 * @var bool
+	 */
+	private $bypass_logged = false;
 
 	/**
 	 * Cache_Adapter constructor.
@@ -223,7 +241,36 @@ class Cache_Adapter extends AbstractCacheAdapter {
 			}
 		}
 
+		$this->log_bypass( $key, $allowed );
+
 		return false;
+	}
+
+	/**
+	 * Warn once per instance that a key fell outside the allowlist.
+	 *
+	 * A CachingPlugin built without a matching keyPrefix caches nothing at all,
+	 * which is otherwise indistinguishable from a cold cache. Reporting it once
+	 * surfaces the mis-wiring without flooding the log on every request.
+	 *
+	 * @param string  $key     Rejected cache key.
+	 * @param mixed[] $allowed Allowlisted prefixes in effect.
+	 * @return void
+	 */
+	private function log_bypass( string $key, array $allowed ): void {
+		if ( $this->bypass_logged || null === $this->logger ) {
+			return;
+		}
+
+		$this->bypass_logged = true;
+
+		$this->logger->warning(
+			sprintf(
+				'PostNL V4 cache bypassed: key "%s" matches no allowed prefix (%s). Check the CachingPlugin keyPrefix.',
+				substr( $key, 0, 24 ),
+				implode( ', ', array_map( 'strval', $allowed ) )
+			)
+		);
 	}
 
 	/**

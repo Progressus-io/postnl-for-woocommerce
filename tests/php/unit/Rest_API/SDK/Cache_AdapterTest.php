@@ -358,6 +358,58 @@ class Cache_AdapterTest extends UnitTestCase {
 	}
 
 	/**
+	 * @testdox The SDK's default keyPrefix is not cacheable, so an unwired CachingPlugin caches nothing
+	 */
+	public function test_sdk_default_key_prefix_is_not_cacheable(): void {
+		Functions\expect( 'set_transient' )->never();
+
+		$sdk_default_key = 'sdk_postnl_http_' . hash( 'sha256', 'get|https://api.postnl.nl/v4/timeframe/|' );
+
+		$this->assertFalse( ( new Cache_Adapter( 'tenant-key' ) )->set( $sdk_default_key, 'v' ) );
+	}
+
+	/**
+	 * @testdox A key built from the exported prefix constants is cacheable
+	 */
+	public function test_exported_prefix_constants_are_cacheable(): void {
+		$this->with_transient_store();
+		$adapter = new Cache_Adapter( 'tenant-key' );
+
+		$timeframe = Cache_Adapter::PREFIX_TIMEFRAME . hash( 'sha256', 'timeframe-request' );
+		$locations = Cache_Adapter::PREFIX_LOCATIONS . hash( 'sha256', 'locations-request' );
+
+		$this->assertTrue( $adapter->set( $timeframe, 'a' ) );
+		$this->assertTrue( $adapter->set( $locations, 'b' ) );
+	}
+
+	/**
+	 * @testdox A bypassed key is reported to the logger once per instance
+	 */
+	public function test_bypass_is_logged_once_per_instance(): void {
+		$logger = Mockery::mock( LoggerInterface::class );
+		$logger->shouldReceive( 'warning' )->once()->with( Mockery::pattern( '/cache bypassed/' ) );
+
+		$adapter = new Cache_Adapter( 'tenant-key', $logger );
+
+		// Three rejected calls, one warning: a mis-wired plugin must not flood the log.
+		$adapter->set( 'shipment_label_1', 'v' );
+		$adapter->get( 'shipment_label_1' );
+		$adapter->has( 'shipment_label_1' );
+	}
+
+	/**
+	 * @testdox An allowlisted key is never reported as a bypass
+	 */
+	public function test_allowlisted_key_is_not_logged_as_bypass(): void {
+		$this->with_transient_store();
+
+		$logger = Mockery::mock( LoggerInterface::class );
+		$logger->shouldNotReceive( 'warning' );
+
+		( new Cache_Adapter( 'tenant-key', $logger ) )->set( Cache_Adapter::PREFIX_TIMEFRAME . 'abc', 'v' );
+	}
+
+	/**
 	 * @testdox An empty prefix in the allowlist does not make every key cacheable
 	 */
 	public function test_empty_allowlist_prefix_does_not_match_everything(): void {

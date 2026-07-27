@@ -23,26 +23,51 @@ use Psr\Log\LoggerInterface;
 class Cache_AdapterTest extends UnitTestCase {
 
 	/**
-	 * In-memory stand-in for the WP transient store.
+	 * In-memory stand-in for the WP transient store, keyed to a value and the
+	 * timestamp it expires at (0 meaning no expiry).
 	 *
-	 * @var array<string, mixed>
+	 * @var array<string, array{mixed, int}>
 	 */
 	private array $store = array();
 
 	/**
+	 * Current time for the fake store, so expiry can be driven without sleeping.
+	 *
+	 * @var int
+	 */
+	private int $now = 1000000;
+
+	/**
 	 * Wire get/set/delete_transient to the in-memory store so round-trips work.
+	 *
+	 * The store honours the TTL it is handed: WordPress drops an expired
+	 * transient on read, so a stub that ignores the TTL cannot exercise the
+	 * expire half of the adapter's contract.
 	 */
 	private function with_transient_store(): void {
 		$this->store = array();
 
 		Functions\when( 'set_transient' )->alias(
-			function ( $key, $value ) {
-				$this->store[ $key ] = $value;
+			function ( $key, $value, $ttl = 0 ) {
+				$this->store[ $key ] = array( $value, 0 < $ttl ? $this->now + (int) $ttl : 0 );
 				return true;
 			}
 		);
 		Functions\when( 'get_transient' )->alias(
-			fn( $key ) => array_key_exists( $key, $this->store ) ? $this->store[ $key ] : false
+			function ( $key ) {
+				if ( ! array_key_exists( $key, $this->store ) ) {
+					return false;
+				}
+
+				list( $value, $expires_at ) = $this->store[ $key ];
+
+				if ( 0 !== $expires_at && $this->now >= $expires_at ) {
+					unset( $this->store[ $key ] );
+					return false;
+				}
+
+				return $value;
+			}
 		);
 		Functions\when( 'delete_transient' )->alias(
 			function ( $key ) {
@@ -51,6 +76,15 @@ class Cache_AdapterTest extends UnitTestCase {
 				return $existed;
 			}
 		);
+	}
+
+	/**
+	 * Move the fake store's clock forward.
+	 *
+	 * @param int $seconds Seconds to advance.
+	 */
+	private function advance_time( int $seconds ): void {
+		$this->now += $seconds;
 	}
 
 	// ── Tests ────────────────────────────────────────────────────────────────
@@ -81,7 +115,7 @@ class Cache_AdapterTest extends UnitTestCase {
 	}
 
 	/**
-	 * @testdox An expired or missing entry returns the supplied default
+	 * @testdox A missing entry returns the supplied default
 	 */
 	public function test_missing_entry_returns_default(): void {
 		Functions\when( 'get_transient' )->justReturn( false );
@@ -90,6 +124,41 @@ class Cache_AdapterTest extends UnitTestCase {
 		$this->assertNull( $adapter->get( 'timeframe_gone' ) );
 		$this->assertSame( 'fallback', $adapter->get( 'timeframe_gone', 'fallback' ) );
 		$this->assertFalse( $adapter->has( 'timeframe_gone' ) );
+	}
+
+	/**
+	 * @testdox An entry is readable until its TTL elapses and gone afterwards
+	 */
+	public function test_entry_expires_once_its_ttl_elapses(): void {
+		$this->with_transient_store();
+		$adapter = new Cache_Adapter( 'tenant-key' );
+
+		$adapter->set( 'timeframe_abc', array( 'slots' => 3 ), 30 );
+
+		$this->advance_time( 29 );
+		$this->assertSame( array( 'slots' => 3 ), $adapter->get( 'timeframe_abc' ) );
+		$this->assertTrue( $adapter->has( 'timeframe_abc' ) );
+
+		$this->advance_time( 2 );
+		$this->assertNull( $adapter->get( 'timeframe_abc' ) );
+		$this->assertSame( 'fallback', $adapter->get( 'timeframe_abc', 'fallback' ) );
+		$this->assertFalse( $adapter->has( 'timeframe_abc' ) );
+	}
+
+	/**
+	 * @testdox An entry stored with the default TTL survives to 600 seconds
+	 */
+	public function test_entry_stored_with_the_default_ttl_expires_at_600_seconds(): void {
+		$this->with_transient_store();
+		$adapter = new Cache_Adapter( 'tenant-key' );
+
+		$adapter->set( 'timeframe_abc', 'v' );
+
+		$this->advance_time( Cache_Adapter::DEFAULT_TTL - 1 );
+		$this->assertSame( 'v', $adapter->get( 'timeframe_abc' ) );
+
+		$this->advance_time( 1 );
+		$this->assertNull( $adapter->get( 'timeframe_abc' ) );
 	}
 
 	/**

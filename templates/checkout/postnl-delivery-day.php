@@ -54,6 +54,7 @@ if ( empty( $data['delivery_options'] ) ) {
 							data-from="<?php echo esc_attr( $option['from'] ); ?>"
 							data-to="<?php echo esc_attr( $option['to'] ); ?>"
 							data-price="<?php echo esc_attr( $option['price'] ); ?>"
+							data-price-display="<?php echo esc_attr( $option['price_display'] ?? 0 ); ?>"
 							data-price-formatted="<?php echo esc_attr( Utils::get_formatted_fee_total_price( $option['price'] ) ); ?>"
 							data-type="<?php echo esc_attr( $option['type'] ); ?>"
 						>

@@ -1,47 +1,19 @@
 <?php
 /**
- * Class Rest_API\Checkout\Client file.
+ * Backward-compatibility shim for Rest_API\Shipment_and_Return\Client.
  *
- * @package PostNLWooCommerce\Rest_API\Checkout
+ * The implementation has moved to Rest_API\Legacy\Shipment_and_Return\Client.
+ * This file registers a class alias so all existing callers that reference
+ * PostNLWooCommerce\Rest_API\Shipment_and_Return\Client continue to work unchanged.
+ *
+ * @package PostNLWooCommerce\Rest_API\Shipment_and_Return
  */
-
-namespace PostNLWooCommerce\Rest_API\Shipment_and_Return;
-
-use PostNLWooCommerce\Rest_API\Base;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-/**
- * Class Client
- *
- * @package PostNLWooCommerce\Rest_API\Shipment_and_return
- */
-class Client extends Base {
-
-	/**
-	 * PostnL API Method.
-	 *
-	 * @var string
-	 */
-	public $method = 'POST';
-
-	/**
-	 * API Endpoint.
-	 *
-	 * @var string
-	 */
-	public $endpoint = '/parcels/v1/shipment/activatereturn';
-
-	/**
-	 * Function for composing API request.
-	 */
-	public function compose_body_request() {
-		return array(
-			'CustomerNumber' => $this->item_info->body['CustomerNumber'],
-			'CustomerCode'   => $this->item_info->body['CustomerCode'],
-			'Barcode'        => $this->item_info->body['Barcode'],
-		);
-	}
-}
+class_alias(
+	'PostNLWooCommerce\\Rest_API\\Legacy\\Shipment_and_Return\\Client',
+	'PostNLWooCommerce\\Rest_API\\Shipment_and_Return\\Client'
+);

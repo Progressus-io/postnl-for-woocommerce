@@ -135,6 +135,7 @@ class Delivery_Day extends Base {
 		$return_data                             = $this->get_init_content_data( $post_data );
 		$show_delivery_days                      = $this->is_customer_allowed_to_pick_delivery_day();
 		$return_data['is_delivery_days_enabled'] = $show_delivery_days;
+		$is_free_shipping                        = Utils::is_free_shipping_applied() || $this->is_postnl_rate_free();
 
 		foreach ( $response['DeliveryOptions'] as $delivery_option ) {
 			if ( empty( $delivery_option['DeliveryDate'] ) || empty( $delivery_option['Timeframe'] ) ) {
@@ -142,15 +143,16 @@ class Delivery_Day extends Base {
 			}
 
 			$options = array_map(
-				function ( $timeframe ) use ( $non_standard_fees ) {
+				function ( $timeframe ) use ( $non_standard_fees, $is_free_shipping ) {
 					$type  = array_shift( $timeframe['Options'] );
-					$price = isset( $non_standard_fees[ $type ] ) ? $non_standard_fees[ $type ]['fee_price'] : 0;
+					$price = ( $is_free_shipping || ! isset( $non_standard_fees[ $type ] ) ) ? 0 : $non_standard_fees[ $type ]['fee_price'];
 
 					return array(
 						'from'            => Utils::get_hour_min( $timeframe['From'] ),
 						'to'              => Utils::get_hour_min( $timeframe['To'] ),
 						'type'            => $type,
 						'price'           => $price,
+						'price_display'   => Utils::get_fee_total_price( $price ),
 						'price_formatted' => Utils::get_formatted_fee_total_price( $price ),
 					);
 				},

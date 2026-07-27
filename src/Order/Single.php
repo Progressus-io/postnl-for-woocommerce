@@ -7,10 +7,6 @@
 
 namespace PostNLWooCommerce\Order;
 
-use PostNLWooCommerce\Rest_API\Shipment_and_Return\Item_Info;
-use PostNLWooCommerce\Rest_API\Shipment_and_Return\Client;
-use PostNLWooCommerce\Rest_API\Smart_Returns\Item_Info as smart_info;
-use PostNLWooCommerce\Rest_API\Smart_Returns\Client as smart_client;
 use PostNLWooCommerce\Utils;
 use PostNLWooCommerce\Helper\Mapping;
 use WC_Order_Item;
@@ -187,6 +183,15 @@ class Single extends Base {
 		$to_state     = $order->get_shipping_state();
 		$destination  = Utils::get_shipping_zone( $to_country, $to_state );
 
+		// The persisted backend collapses the 24h/48h choice onto the generic
+		// 'letterbox' feature. Swap in the resolved variant so the override loop
+		// below re-checks (and, once a label exists, locks) the correct checkbox
+		// instead of re-checking the generic 24h box on top of the pre-selected
+		// 48h box, which would show both letterbox variants as selected.
+		if ( isset( $order_data['backend'] ) && is_array( $order_data['backend'] ) ) {
+			$order_data['backend'] = $this->apply_letterbox_display_variant( $order_data['backend'], $order );
+		}
+
 		foreach ( $meta_fields as $index => $field ) {
 			if ( isset( $field['nonce'] ) && true === $field['nonce'] ) {
 				continue;
@@ -317,9 +322,11 @@ class Single extends Base {
 			<label for="postnl_pickup_points"><?php esc_html_e( 'Delivery Date:', 'postnl-for-woocommerce' ); ?></label>
 			<?php
 			foreach ( $filtered_infos as $info_idx => $info_val ) {
-				// Convert to the Dutch date format
+				// Convert to the Dutch date format, falling back to the stored value
+				// when it does not parse as Y-m-d so a malformed date cannot fatal the
+				// whole order edit screen via date_format( false, ... ).
 				$date_obj   = date_create_from_format( 'Y-m-d', $info_val );
-				$dutch_date = date_format( $date_obj, 'd/m/Y' );
+				$dutch_date = ( false !== $date_obj ) ? date_format( $date_obj, 'd/m/Y' ) : $info_val;
 				?>
 				<div class="postnl-info <?php echo esc_attr( $info_idx ); ?>">
 					<?php echo esc_html( $dutch_date ); ?>
@@ -644,9 +651,7 @@ class Single extends Base {
 				throw new \Exception( esc_html__( 'Already activated!', 'postnl-for-woocommerce' ) );
 			}
 
-			$item_info = new Item_Info( $order_id );
-			$api_call  = new Client( $item_info );
-			$response  = $api_call->send_request();
+			$response = $this->service_factory()->return_label_service()->activate( (int) $order_id );
 
 			if ( ! empty( $response['successFulBarcodes'] ) && is_array( $response['successFulBarcodes'] ) ) {
 				$order->update_meta_data( $this->is_return_activated_meta, 'yes' );
@@ -713,9 +718,7 @@ class Single extends Base {
 				throw new \Exception( esc_html__( 'Order does not exist!', 'postnl-for-woocommerce' ) );
 			}
 
-			$item_info = new smart_info( $order );
-			$api_call  = new smart_client( $item_info );
-			$response  = $api_call->send_request();
+			$response = $this->service_factory()->smart_returns_service()->generate( $order );
 			if ( ! empty( $response ) ) {
 				$printcodeLabelContent = null;
 

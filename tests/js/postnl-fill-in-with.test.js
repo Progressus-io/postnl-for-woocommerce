@@ -424,6 +424,52 @@ describe( 'PostNL Fill-in-with Block', () => {
 			} );
 		} );
 
+		it( 'should set country to BE for a Belgium address', async () => {
+			global.fetch.mockResolvedValueOnce( {
+				json: () =>
+					Promise.resolve( {
+						success: true,
+						data: {
+							person: {
+								givenName: 'Jan',
+								familyName: 'Peeters',
+								email: 'jan@example.be',
+							},
+							primaryAddress: {
+								streetName: 'Uilenbaan',
+								houseNumber: '200',
+								houseNumberAddition: '',
+								cityName: 'Wommelgem',
+								postalCode: '2160',
+								countryName: 'BE',
+							},
+						},
+					} ),
+			} );
+
+			await act( async () => {
+				renderComponent();
+			} );
+
+			await waitFor( () => {
+				expect( mockSetShippingAddress ).toHaveBeenCalledWith(
+					expect.objectContaining( {
+						country: 'BE',
+						postcode: '2160',
+						city: 'Wommelgem',
+					} )
+				);
+			} );
+
+			await waitFor( () => {
+				expect( mockSetBillingAddress ).toHaveBeenCalledWith(
+					expect.objectContaining( {
+						country: 'BE',
+					} )
+				);
+			} );
+		} );
+
 		it( 'should show error notice when prefill fails', async () => {
 			global.fetch.mockResolvedValueOnce( {
 				json: () =>

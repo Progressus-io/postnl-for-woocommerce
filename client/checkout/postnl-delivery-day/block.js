@@ -45,6 +45,7 @@ export const Block = ( {
 	deliveryOptions,
 	isDeliveryDaysEnabled,
 	onPriceChange = () => {},
+	isFreeShipping = false,
 } ) => {
 	const { setExtensionData } = checkoutExtensionData;
 
@@ -81,6 +82,8 @@ export const Block = ( {
 			deliveryDayType: saved.type || '',
 		};
 	} );
+
+	const [ isPending, setIsPending ] = useState( false );
 
 	// Sync with extension data when selection changes (debounced)
 	useEffect( () => {
@@ -129,6 +132,7 @@ export const Block = ( {
 				firstDelivery.options.length > 0
 			) {
 				const firstOption = firstDelivery.options[ 0 ];
+				// handleOptionChange already calls onPriceChange internally.
 				handleOptionChange(
 					`${ firstDelivery.date }_${ firstOption.from }-${ firstOption.to }_${ firstOption.price }`,
 					firstDelivery.date,
@@ -136,11 +140,25 @@ export const Block = ( {
 					firstOption.to,
 					firstOption.type || 'Unknown',
 					firstOption.price || 0,
-					firstOption.price_formatted || ''
+					firstOption.price_formatted || '',
+					firstOption.price_display || 0
 				);
-				onPriceChange( {
-					numeric: Number( firstOption.price || 0 ),
-					formatted: firstOption.price_formatted || '',
+			}
+		} else if ( isActive && selection.selectedOption ) {
+			const saved = getDeliveryDay();
+			onPriceChange( {
+				numeric: Number( saved.price || 0 ),
+				formatted: saved.priceFormatted || '',
+			} );
+			const { extensionCartUpdate } = window.wc?.blocksCheckout || {};
+			if ( typeof extensionCartUpdate === 'function' ) {
+				extensionCartUpdate( {
+					namespace: 'postnl',
+					data: {
+						action: 'update_delivery_fee',
+						price: saved.price || 0,
+						type: saved.type || 'Standard',
+					},
 				} );
 			}
 		}
@@ -153,7 +171,8 @@ export const Block = ( {
 		to,
 		type,
 		price,
-		priceFormatted = ''
+		priceFormatted = '',
+		priceDisplay = 0
 	) => {
 		const deliveryDayValue = `${ deliveryDate }_${ from }-${ to }_${ price }`;
 		const numericPrice = Number( price );
@@ -193,8 +212,8 @@ export const Block = ( {
 			type,
 		} );
 
-		// Notify parent of price change
-		onPriceChange( { numeric: numericPrice, formatted: priceFormatted } );
+		// Notify parent of price change — use tax-display-adjusted amount for tab label.
+		onPriceChange( { numeric: priceDisplay, formatted: priceFormatted } );
 
 		// Clear dropoff point data
 		clearDropoffPoint();
@@ -202,6 +221,7 @@ export const Block = ( {
 
 		// Update cart fees on backend
 		try {
+			setIsPending( true );
 			const { extensionCartUpdate } = window.wc?.blocksCheckout || {};
 			if ( typeof extensionCartUpdate === 'function' ) {
 				await extensionCartUpdate( {
@@ -215,6 +235,8 @@ export const Block = ( {
 			}
 		} catch ( error ) {
 			// Handle error silently
+		} finally {
+			setIsPending( false );
 		}
 	};
 
@@ -225,7 +247,10 @@ export const Block = ( {
 	return (
 		<div className="postnl-block-container">
 			{ deliveryOptions.length > 0 && (
-				<ul className="postnl_delivery_day_list postnl_list">
+				<ul
+					className={ `postnl_delivery_day_list postnl_list${ isPending ? ' postnl-updating' : '' }` }
+					aria-busy={ isPending }
+				>
 					{ deliveryOptions.map( ( delivery, index ) => {
 						return (
 							<li key={ index }>
@@ -245,6 +270,8 @@ export const Block = ( {
 											const optionType =
 												option.type || 'Unknown';
 											const price = option.price || 0;
+											const priceDisplay =
+												option.price_display || 0;
 											const priceDisplayFormatted =
 												option.price_formatted || '';
 											const value = `${ delivery.date }_${ from }-${ to }_${ price }`;
@@ -302,11 +329,13 @@ export const Block = ( {
 																	to,
 																	optionType,
 																	price,
-																	priceDisplayFormatted
+																	priceDisplayFormatted,
+																	priceDisplay
 																)
 															}
 														/>
-														{ priceDisplayFormatted &&
+														{ ! isFreeShipping &&
+															priceDisplayFormatted &&
 															price > 0 && (
 																<i>
 																	+

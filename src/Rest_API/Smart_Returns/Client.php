@@ -1,86 +1,19 @@
 <?php
 /**
- * Class Rest_API\Smart_Returns\Client
+ * Backward-compatibility shim for Rest_API\Smart_Returns\Client.
+ *
+ * The implementation has moved to Rest_API\Legacy\Smart_Returns\Client.
+ * This file registers a class alias so all existing callers that reference
+ * PostNLWooCommerce\Rest_API\Smart_Returns\Client continue to work unchanged.
  *
  * @package PostNLWooCommerce\Rest_API\Smart_Returns
  */
-
-namespace PostNLWooCommerce\Rest_API\Smart_Returns;
-
-use PostNLWooCommerce\Rest_API\Base;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-/**
- * Class Client
- *
- * @package PostNLWooCommerce\Rest_API\Smart_Returns
- */
-class Client extends Base {
-
-	/**
-	 * PostnL API Method.
-	 *
-	 * @var string
-	 */
-	public $method = 'POST';
-
-	/**
-	 * API Endpoint.
-	 *
-	 * @var string
-	 */
-	public $endpoint = '/shipment/v2_2/label/';
-
-	/**
-	 * Function for composing API request.
-	 */
-	public function compose_body_request() {
-		return array(
-			'Customer'  => array(
-				'Address'            => array(
-					'AddressType' => '02',
-					'City'        => $this->item_info->customer['city'],
-					'CompanyName' => $this->item_info->customer['company'],
-					'Countrycode' => $this->item_info->customer['country'],
-					'Country'     => $this->item_info->customer['country'],
-					'HouseNr'     => $this->item_info->customer['house_number'],
-					'Street'      => $this->item_info->customer['address_1'],
-					'Zipcode'     => $this->item_info->customer['postcode'],
-				),
-				'CollectionLocation' => $this->item_info->store['location_code'],
-				'CustomerCode'       => $this->item_info->store['customer_code'],
-				'CustomerNumber'     => $this->item_info->store['customer_number'],
-				'Email'              => $this->item_info->store['email'],
-			),
-			'Message'   => array(
-				'MessageID'        => $this->item_info->message['id'],
-				'MessageTimeStamp' => $this->item_info->message['time_stamp'],
-				'Printertype'      => $this->item_info->message['printer_type'],
-			),
-			'Shipments' => array(
-				'Addresses'           => array(
-					'AddressType' => '01',
-					'City'        => $this->item_info->customer['return_address_city'],
-					'CompanyName' => $this->item_info->store['company'],
-					'Countrycode' => $this->item_info->store['country'],
-					'HouseNr'     => $this->item_info->customer['return_address_2'],
-					'Street'      => $this->item_info->customer['return_address_1'],
-					'Zipcode'     => $this->item_info->customer['return_address_zip'],
-				),
-				'Contacts'            => array(
-					'ContactType' => '01',
-					'Email'       => $this->item_info->store['email'],
-				),
-				'ProductCodeDelivery' => $this->settings->is_return_to_home_enabled() ? '3285' : '2285',
-				'ProductOptions'      => array(
-					'Characteristic' => '152',
-					'Option'         => '025',
-				),
-				'Reference'           => 'cust order ref ' . $this->item_info->order_id,
-			),
-		);
-	}
-}
+class_alias(
+	'PostNLWooCommerce\\Rest_API\\Legacy\\Smart_Returns\\Client',
+	'PostNLWooCommerce\\Rest_API\\Smart_Returns\\Client'
+);

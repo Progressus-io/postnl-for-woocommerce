@@ -101,6 +101,11 @@ class Fill_In_With_Postnl_Handler {
 			exit;
 		}
 
+		// A genuine login is being processed. Drop any address cached from a
+		// previous PostNL account so a failed or abandoned attempt cannot leave
+		// the wrong account's data behind for the checkout autofill to replay.
+		WC()->session->__unset( POSTNL_SETTINGS_ID . self::$session_user_data_key );
+
 		$code     = sanitize_text_field( wp_unslash( $_GET['code'] ) );
 		$verifier = get_transient( 'postnl_' . self::$session_verifier_key );
 
@@ -185,7 +190,7 @@ class Fill_In_With_Postnl_Handler {
 		$person          = $user_data['person'];
 		$primary_address = $user_data['primaryAddress'];
 
-		$country_code = $this->get_country_code_by_name( $primary_address['countryName'] ?? '' ) ?? 'NL';
+		$country_code = $this->resolve_country_code( $primary_address );
 
 		$prepared_user_data = array(
 			'person'         => array(
@@ -208,6 +213,40 @@ class Fill_In_With_Postnl_Handler {
 		// Redirect to clean URL (remove callback and code).
 		wp_safe_redirect( remove_query_arg( array( 'code', 'state' ) ) );
 		exit;
+	}
+
+	/**
+	 * @param array $address PostNL primaryAddress array.
+	 * @return string Two-letter WooCommerce country code.
+	 */
+	private function resolve_country_code( array $address ): string {
+		if ( ! empty( $address['countryCode'] ) ) {
+			return strtoupper( $address['countryCode'] );
+		}
+
+		$name            = $address['countryName'] ?? '';
+		$known_countries = array(
+			'nederland'   => 'NL',
+			'netherlands' => 'NL',
+			'belgie'      => 'BE',
+			'belgië'      => 'BE',
+			'belgium'     => 'BE',
+			'belgique'    => 'BE',
+			'belgien'     => 'BE',
+		);
+		$normalized      = mb_strtolower( $name );
+		if ( isset( $known_countries[ $normalized ] ) ) {
+			return $known_countries[ $normalized ];
+		}
+
+		$found = $this->get_country_code_by_name( $name );
+		if ( $found ) {
+			return $found;
+		}
+
+		$this->logger->write( sprintf( 'PostNL: Unmapped country name "%s", defaulting to NL.', $name ) );
+
+		return 'NL';
 	}
 
 	/**

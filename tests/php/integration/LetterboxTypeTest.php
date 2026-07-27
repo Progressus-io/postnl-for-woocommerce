@@ -408,6 +408,54 @@ class LetterboxTypeTest extends IntegrationTestCase {
 	}
 
 	/**
+	 * @testdox The save context keeps the show_in_bulk = false Letterbox 48 field so a legacy bulk label does not revert to Standard.
+	 */
+	public function test_meta_box_fields_save_context_survives_bulk_display_trim(): void {
+		$handler = $this->make_order_handler();
+
+		$order = new \WC_Order();
+		$order->save();
+		$this->order_ids[] = $order->get_id();
+
+		// Reproduce the legacy orders-list bulk trim ( Bulk::additional_meta_box ): drop
+		// every show_in_bulk = false field, but for the 'display' context only. Before the
+		// fix, meta_box_fields() passed no context to the filter, so the save path was
+		// trimmed too and the injected Letterbox 48 selection was silently dropped, leaving
+		// the label engine to fall back to the Standard product.
+		$trim = static function ( $fields, $context = 'display' ) {
+			if ( 'save' === $context ) {
+				return $fields;
+			}
+
+			return array_filter(
+				$fields,
+				static function ( $field ) {
+					return ! empty( $field['show_in_bulk'] ) && true === $field['show_in_bulk'];
+				}
+			);
+		};
+		add_filter( 'postnl_order_meta_box_fields', $trim, 20, 2 );
+
+		try {
+			$display_ids = wp_list_pluck( $handler->meta_box_fields( $order, 'display' ), 'id' );
+			$save_ids    = wp_list_pluck( $handler->meta_box_fields( $order, 'save' ), 'id' );
+		} finally {
+			remove_filter( 'postnl_order_meta_box_fields', $trim, 20 );
+		}
+
+		$this->assertNotContains(
+			'postnl_letterbox_48',
+			$display_ids,
+			'The bulk modal (display) must still hide the 48h field.'
+		);
+		$this->assertContains(
+			'postnl_letterbox_48',
+			$save_ids,
+			'The save path must keep the 48h field so a bulk label keeps Letterbox 48 instead of reverting to Standard.'
+		);
+	}
+
+	/**
 	 * A minimal concrete Order\Base whose only dependencies are the settings
 	 * instance and the meta name. The constructor is overridden so the real one
 	 * does not register admin hooks, which would leak into sibling tests.

@@ -68,3 +68,11 @@ woo-postnl.zip
 
 .wp-env.override.json
 .wp-env-local/
+
+# Composer auth — never commit credentials
+auth.json
+auth.*.json
+
+# Environment files — may hold credentials
+.env
+.env.*

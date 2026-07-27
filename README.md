@@ -7,7 +7,7 @@
 * Tested up to: 6.9
 * WC requires at least: 10.2
 * WC tested up to: 10.5
-* Stable tag: 5.9.7
+* Stable tag: 5.9.10
 * License: GPLv2 or later
 * License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -27,8 +27,17 @@ PostNL’s official extension for WooCommerce on WordPress. Manage your national
 
 ## Changelog
 
-### 5.9.8
+### 5.9.11
 * Fix: Automatic letterbox assignment now correctly re-detects when the shipping country changes between the Netherlands and Belgium, in both classic and blocks checkout.
+
+### 5.9.10
+* Fix: Letterboxparcel 48-hour orders reverted to Standard Shipment when the label was generated with the bulk action on the classic orders list.
+
+### 5.9.9
+* Fix: Order edit page showed "Standard Shipment" as the delivery type for Letterboxparcel orders instead of the selected 24-hour or 48-hour variant.
+
+### 5.9.8
+* Add: Letterboxparcel 48 hours as a selectable option in the domestic default shipping option, the bulk Change Shipping Options action, and the Label & Tracking menu.
 
 ### 5.9.7
 * Remove: Removed the Shipment & Return return option, as PostNL is discontinuing it on 1 July 2026.

@@ -1,5 +1,5 @@
 {
-	"core": null,
+	"core": "WordPress/WordPress#7.0",
 	"phpVersion": "8.2",
 	"plugins": [
 		"https://downloads.wordpress.org/plugin/woocommerce.zip",
@@ -7,7 +7,6 @@
 	],
 	"port": 8979,
 	"testsPort": 8980,
-	"testsEnvironment": false,
 	"config": {
 		"WP_DEBUG": true,
 		"WP_DEBUG_LOG": true,

@@ -1,23 +1,19 @@
 <?php
 /**
- * Class Rest_API\Letterbox\Client file.
+ * Backward-compatibility shim for Rest_API\Letterbox\Client.
+ *
+ * The implementation has moved to Rest_API\Legacy\Letterbox\Client.
+ * This file registers a class alias so all existing callers that reference
+ * PostNLWooCommerce\Rest_API\Letterbox\Client continue to work unchanged.
  *
  * @package PostNLWooCommerce\Rest_API\Letterbox
  */
-
-namespace PostNLWooCommerce\Rest_API\Letterbox;
-
-use PostNLWooCommerce\Rest_API\Shipping;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-/**
- * Class Client
- *
- * @package PostNLWooCommerce\Rest_API\Letterbox
- */
-class Client extends Shipping\Client {
-
-}
+class_alias(
+	'PostNLWooCommerce\\Rest_API\\Legacy\\Letterbox\\Client',
+	'PostNLWooCommerce\\Rest_API\\Letterbox\\Client'
+);

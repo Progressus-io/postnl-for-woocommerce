@@ -96,6 +96,8 @@ global.testUtils = {
 					type: 'Morning',
 					price: 2.5,
 					price_formatted: '2,50',
+					price_display: 2.5,
+					price_display_formatted: '2,50',
 				},
 				{
 					from: '17:00',
@@ -103,6 +105,8 @@ global.testUtils = {
 					type: 'Evening',
 					price: 3.0,
 					price_formatted: '3,00',
+					price_display: 3.0,
+					price_display_formatted: '3,00',
 				},
 			],
 		} ) );

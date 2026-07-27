@@ -26,6 +26,9 @@
 	<!-- Exclude the Node Modules directory. -->
 	<exclude-pattern>/node_modules/*</exclude-pattern>
 
+	<!-- Exclude test infrastructure — uses PSR-4 file naming, not WP conventions. -->
+	<exclude-pattern>/tests/*</exclude-pattern>
+
 	<!-- Exclude minified Javascript files. -->
 	<exclude-pattern>*.min.js</exclude-pattern>
 
@@ -151,10 +154,10 @@
 	https://github.com/PHPCSStandards/PHP_CodeSniffer/wiki/Annotated-Ruleset
 	-->
 	<rule ref="WordPress.WP.GlobalVariablesOverride">
-		<exclude-pattern>/path/to/Tests/*Test\.php</exclude-pattern>
+		<exclude-pattern>/tests/*</exclude-pattern>
 	</rule>
 	<rule ref="WordPress.Files.FileName">
-		<exclude-pattern>/path/to/Tests/*Test\.php</exclude-pattern>
+		<exclude-pattern>/tests/*</exclude-pattern>
 	</rule>
 
 </ruleset>

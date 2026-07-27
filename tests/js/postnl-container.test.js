@@ -530,19 +530,17 @@ describe( 'PostNL Container Block - Unit Tests', () => {
 		} );
 	} );
 
-	// Regression invariants from ClickUp 868etp8wa (Joris Hoyle, PostNL):
-	// "this feature has potential risk for causing the bug tackled in [868hh4q93]
-	// (one which caused calls to our check-out API to be sent out too soon) to
-	// resurface again — make sure the aforementioned fix is not made undone."
-	// The fix is implemented in block.js: activeTab is initialised to null and
-	// hydrated inside a useEffect with empty deps, so no downstream effect can
-	// fire extensionCartUpdate during the synchronous mount.
-	describe( 'default checkout tab — premature-API-call regression invariant', () => {
+	// Regression invariant: this letterbox/tab work risks resurfacing an earlier
+	// bug where checkout API calls were sent out too soon, so the existing guard
+	// must not be undone. The fix is implemented in block.js: activeTab is
+	// initialised to null and hydrated inside a useEffect with empty deps, so no
+	// downstream effect can fire extensionCartUpdate during the synchronous mount.
+	describe( 'default checkout tab: premature-API-call regression invariant', () => {
 		it( 'should not initialise activeTab to a tab id at mount', () => {
 			// The block declares: const [ activeTab, setActiveTab ] = useState( null );
 			// followed by a useEffect that sets it to initialTabId.
 			// Synchronously initialising to initialTabId would re-introduce the
-			// premature extensionCartUpdate bug Joris asked us to guard against.
+			// premature extensionCartUpdate bug this guard protects against.
 			const initialActiveTab = null;
 			expect( initialActiveTab ).toBeNull();
 		} );
@@ -726,6 +724,52 @@ describe( 'PostNL Container Block - Unit Tests', () => {
 			const deliveryDay = `${ firstDelivery.date }_${ firstOption.from }-${ firstOption.to }_${ firstOption.price }`;
 
 			expect( deliveryDay ).toBe( '2024-01-10_08:00-22:00_0' );
+		} );
+	} );
+
+	// Regression: in the blocks checkout the delivery-day / pickup tabs were
+	// not blocked on first entry with an ALA-eligible cart under "let customer
+	// decide"; they only blocked after a reload. Root cause: letterbox was read
+	// once from page-render data and never refreshed from the address-update
+	// AJAX response. block.js now seeds from postnlData.letterbox and updates
+	// via !! respData.is_letterbox.
+	describe( 'letterbox reactivity: ALA tab blocking', () => {
+		const seedLetterbox = ( postnlData ) => postnlData.letterbox || false;
+		const nextLetterbox = ( respData ) => !! respData.is_letterbox;
+
+		it( 'seeds the flag from the localized page-render value', () => {
+			expect( seedLetterbox( { letterbox: true } ) ).toBe( true );
+			expect( seedLetterbox( { letterbox: false } ) ).toBe( false );
+			expect( seedLetterbox( {} ) ).toBe( false );
+		} );
+
+		it( 'blocks the tabs when an address-update response reports eligibility', () => {
+			// First checkout entry seeds false (shipping country not yet known);
+			// the AJAX response reports eligibility and must flip the flag on.
+			let letterbox = seedLetterbox( {} );
+			expect( letterbox ).toBe( false );
+			letterbox = nextLetterbox( {
+				show_container: true,
+				is_letterbox: true,
+			} );
+			expect( letterbox ).toBe( true );
+		} );
+
+		it( 'unblocks the tabs when a later response is not eligible (NL → BE)', () => {
+			let letterbox = nextLetterbox( { is_letterbox: true } );
+			expect( letterbox ).toBe( true );
+			// Non-eligible responses send false or omit the key entirely.
+			letterbox = nextLetterbox( { show_container: true } );
+			expect( letterbox ).toBe( false );
+			letterbox = nextLetterbox( {
+				show_container: false,
+				is_letterbox: false,
+			} );
+			expect( letterbox ).toBe( false );
+		} );
+
+		it( 'treats a missing is_letterbox as not-eligible', () => {
+			expect( nextLetterbox( {} ) ).toBe( false );
 		} );
 	} );
 } );

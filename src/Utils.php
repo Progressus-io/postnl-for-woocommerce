@@ -569,9 +569,29 @@ class Utils {
 		$selected_options   = array();
 
 		foreach ( $backend_data as $option_key => $value ) {
-			if ( isset( $options_to_display[ $option_key ] ) && 'yes' === $value ) {
-				$selected_options[] = $options_to_display[ $option_key ];
+			if ( 'yes' !== $value ) {
+				continue;
 			}
+
+			// Resolve either letterbox key to its 24h/48h label; 'letterbox_48' is
+			// not in the display map, so the recorded variant wins, else the key.
+			if ( 'letterbox' === $option_key || 'letterbox_48' === $option_key ) {
+				$order          = wc_get_order( $order_id );
+				$letterbox_type = ( $order instanceof \WC_Order ) ? $order->get_meta( '_postnl_letterbox_type' ) : '';
+
+				if ( ! in_array( $letterbox_type, array( 'letterbox', 'letterbox_48' ), true ) ) {
+					$letterbox_type = ( 'letterbox_48' === $option_key ) ? 'letterbox_48' : 'letterbox';
+				}
+
+				$selected_options[] = self::get_letterbox_admin_label( $letterbox_type );
+				continue;
+			}
+
+			if ( ! isset( $options_to_display[ $option_key ] ) ) {
+				continue;
+			}
+
+			$selected_options[] = $options_to_display[ $option_key ];
 		}
 
 		if ( empty( $selected_options ) ) {
@@ -845,6 +865,52 @@ class Utils {
 		$shipping_options = array_fill_keys( $shipping_options, 'yes' );
 
 		return $shipping_options;
+	}
+
+	/**
+	 * Normalize an admin letterbox selection into the generic feature + variant.
+	 *
+	 * Collapses the explicit 'letterbox_48' token onto the generic 'letterbox'
+	 * feature (which the label engine routes on) and reports the chosen 24h/48h
+	 * variant so the caller can persist it to '_postnl_letterbox_type'. When both
+	 * are selected, 48h wins.
+	 *
+	 * @since 5.9.8
+	 *
+	 * @param array $backend_options Backend option map ( feature => 'yes' ).
+	 *
+	 * @return array {
+	 *     @type array  $options Normalized options with only the generic 'letterbox' feature.
+	 *     @type string $type    Variant token: 'letterbox', 'letterbox_48', or '' when no letterbox is selected.
+	 * }
+	 */
+	public static function normalize_letterbox_options( $backend_options ) {
+		if ( ! is_array( $backend_options ) ) {
+			return array(
+				'options' => array(),
+				'type'    => '',
+			);
+		}
+
+		$type = '';
+
+		if ( 'yes' === ( $backend_options['letterbox_48'] ?? '' ) ) {
+			$type = 'letterbox_48';
+		} elseif ( 'yes' === ( $backend_options['letterbox'] ?? '' ) ) {
+			$type = 'letterbox';
+		}
+
+		// Carry the variant separately; downstream letterbox logic only knows the generic feature.
+		unset( $backend_options['letterbox_48'] );
+
+		if ( '' !== $type ) {
+			$backend_options['letterbox'] = 'yes';
+		}
+
+		return array(
+			'options' => $backend_options,
+			'type'    => $type,
+		);
 	}
 
 	/**
@@ -1187,4 +1253,44 @@ class Utils {
 		WC()->session->__unset( POSTNL_SETTINGS_ID . '_invalid_address_marker' );
 		WC()->session->__unset( POSTNL_SETTINGS_ID . '_validated_address' );
 	}
+
+	/**
+	 * Get the letterbox label for 24h.
+	 *
+	 * @since 5.9.6
+	 *
+	 * @return string
+	 */
+	public static function get_letterbox_label_24h() {
+		return esc_html__( 'Letterboxparcel (24h)', 'postnl-for-woocommerce' );
+	}
+
+	/**
+	 * Get the letterbox label for 48h.
+	 *
+	 * @since 5.9.6
+	 *
+	 * @return string
+	 */
+	public static function get_letterbox_label_48h() {
+		return esc_html__( 'Letterboxparcel (48h)', 'postnl-for-woocommerce' );
+	}
+
+	/**
+	 * Get the short admin label for a letterbox variant, used in the order
+	 * overview Shipping Options column.
+	 *
+	 * @since 5.9.6
+	 *
+	 * @param string $letterbox_type Variant token: 'letterbox' (24h) or 'letterbox_48' (48h).
+	 * @return string Human-readable label (e.g. "Letterbox 24" / "Letterbox 48").
+	 */
+	public static function get_letterbox_admin_label( $letterbox_type ) {
+		if ( 'letterbox_48' === $letterbox_type ) {
+			return esc_html__( 'Letterbox 48', 'postnl-for-woocommerce' );
+		}
+
+		return esc_html__( 'Letterbox 24', 'postnl-for-woocommerce' );
+	}
+
 }

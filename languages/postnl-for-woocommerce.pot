@@ -2,14 +2,14 @@
 # This file is distributed under the GPLv2 or later.
 msgid ""
 msgstr ""
-"Project-Id-Version: PostNL for WooCommerce 5.9.8\n"
+"Project-Id-Version: PostNL for WooCommerce 5.9.10\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/postnl-for-woocommerce\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-07-10T13:39:43+00:00\n"
+"POT-Creation-Date: 2026-07-27T16:59:56+02:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.11.0\n"
 "X-Domain: postnl-for-woocommerce\n"
@@ -40,14 +40,14 @@ msgid "https://postnl.post/"
 msgstr ""
 
 #: src/Checkout_Blocks/Extend_Block_Core.php:89
-#: src/Frontend/Container.php:489
+#: src/Frontend/Container.php:503
 msgid "This is not a valid address!"
 msgstr ""
 
 #: src/Checkout_Blocks/Extend_Block_Core.php:104
 #: src/Frontend/Checkout_Fields.php:65
 #: src/Frontend/Checkout_Fields.php:66
-#: src/Order/Single.php:548
+#: src/Order/Single.php:546
 msgid "House number"
 msgstr ""
 
@@ -76,12 +76,12 @@ msgid "Pick up at PostNL-point"
 msgstr ""
 
 #: src/Frontend/Base.php:171
-#: src/Order/Single.php:337
+#: src/Order/Single.php:335
 msgid "Date:"
 msgstr ""
 
 #: src/Frontend/Base.php:175
-#: src/Order/Single.php:341
+#: src/Order/Single.php:339
 msgid "Time:"
 msgstr ""
 
@@ -112,11 +112,11 @@ msgstr ""
 msgid "Street Name"
 msgstr ""
 
-#: src/Frontend/Container.php:120
+#: src/Frontend/Container.php:138
 msgid "Delivery Days"
 msgstr ""
 
-#: src/Frontend/Container.php:121
+#: src/Frontend/Container.php:139
 #: src/Frontend/Dropoff_Points.php:52
 #: build/postnl-container-frontend.js:1
 #: client/checkout/postnl-container/block.js:283
@@ -173,48 +173,48 @@ msgstr ""
 msgid "Incomplete user data."
 msgstr ""
 
-#: src/Helper/Mapping.php:30
+#: src/Helper/Mapping.php:32
 #: src/Shipping_Method/Settings.php:372
 msgid "Morning Delivery"
 msgstr ""
 
-#: src/Helper/Mapping.php:31
+#: src/Helper/Mapping.php:33
 msgid "Standard Shipment"
 msgstr ""
 
-#: src/Helper/Mapping.php:32
+#: src/Helper/Mapping.php:34
 #: src/Shipping_Method/Settings.php:390
 msgid "Evening Delivery"
 msgstr ""
 
-#: src/Helper/Mapping.php:35
+#: src/Helper/Mapping.php:37
 msgid "Pickup at PostNL Point"
 msgstr ""
 
-#: src/Helper/Mapping.php:40
+#: src/Helper/Mapping.php:42
 #: src/Shipping_Method/Settings.php:642
 #: src/Utils.php:622
 msgid "Standard Shipment Belgium"
 msgstr ""
 
-#: src/Helper/Mapping.php:43
+#: src/Helper/Mapping.php:45
 msgid "Pickup at PostNL Point Belgium"
 msgstr ""
 
-#: src/Helper/Mapping.php:46
-#: src/Helper/Mapping.php:51
-#: src/Helper/Mapping.php:52
-#: src/Order/Bulk.php:518
+#: src/Helper/Mapping.php:48
+#: src/Helper/Mapping.php:53
+#: src/Helper/Mapping.php:54
+#: src/Order/Bulk.php:526
 msgid "EU Parcel"
 msgstr ""
 
-#: src/Helper/Mapping.php:47
-#: src/Helper/Mapping.php:53
-#: src/Order/Bulk.php:519
+#: src/Helper/Mapping.php:49
+#: src/Helper/Mapping.php:55
+#: src/Order/Bulk.php:527
 msgid "Non-EU Shipment"
 msgstr ""
 
-#: src/Helper/Mapping.php:50
+#: src/Helper/Mapping.php:52
 msgid "Belgium Domestic"
 msgstr ""
 
@@ -238,141 +238,141 @@ msgstr ""
 msgid "Settings"
 msgstr ""
 
-#: src/Order/Base.php:223
+#: src/Order/Base.php:245
 msgid "ID Check (18+): "
 msgstr ""
 
-#: src/Order/Base.php:235
+#: src/Order/Base.php:257
 msgid "Insured Shipping: "
 msgstr ""
 
-#: src/Order/Base.php:247
+#: src/Order/Base.php:269
 msgid "Insured Plus: "
 msgstr ""
 
-#: src/Order/Base.php:259
+#: src/Order/Base.php:281
 msgid "Return if no answer: "
 msgstr ""
 
-#: src/Order/Base.php:271
+#: src/Order/Base.php:293
 msgid "Signature on Delivery: "
 msgstr ""
 
-#: src/Order/Base.php:283
+#: src/Order/Base.php:305
 msgid "Only Home Address: "
 msgstr ""
 
-#: src/Order/Base.php:295
+#: src/Order/Base.php:317
 #: src/Shipping_Method/Settings.php:624
 #: src/Shipping_Method/Settings.php:707
 msgid "Letterboxparcel Standard (24 hours)"
 msgstr ""
 
-#: src/Order/Base.php:307
+#: src/Order/Base.php:329
 #: src/Shipping_Method/Settings.php:625
 #: src/Shipping_Method/Settings.php:708
 msgid "Letterboxparcel 48 hours"
 msgstr ""
 
-#: src/Order/Base.php:319
+#: src/Order/Base.php:341
 msgid "Packets: "
 msgstr ""
 
-#: src/Order/Base.php:331
+#: src/Order/Base.php:353
 msgid "Mailbox Packet (International): "
 msgstr ""
 
-#: src/Order/Base.php:343
+#: src/Order/Base.php:365
 msgid "Track & Trace: "
 msgstr ""
 
-#: src/Order/Base.php:355
+#: src/Order/Base.php:377
 msgid "Delivery code at the door: "
 msgstr ""
 
-#: src/Order/Base.php:373
-#: src/Order/Bulk.php:436
+#: src/Order/Base.php:395
+#: src/Order/Bulk.php:444
 msgid "Number of Labels: "
 msgstr ""
 
-#: src/Order/Base.php:404
-#: src/Order/Bulk.php:455
+#: src/Order/Base.php:426
+#: src/Order/Bulk.php:463
 msgid "Create Return Label: "
 msgstr ""
 
-#: src/Order/Base.php:419
-#: src/Order/Bulk.php:467
+#: src/Order/Base.php:441
+#: src/Order/Bulk.php:475
 msgid "Start position printing label: "
 msgstr ""
 
-#: src/Order/Base.php:423
-#: src/Order/Bulk.php:473
+#: src/Order/Base.php:445
+#: src/Order/Bulk.php:481
 msgid "Top Left"
 msgstr ""
 
-#: src/Order/Base.php:424
-#: src/Order/Bulk.php:474
+#: src/Order/Base.php:446
+#: src/Order/Bulk.php:482
 msgid "Top Right"
 msgstr ""
 
-#: src/Order/Base.php:425
-#: src/Order/Bulk.php:475
+#: src/Order/Base.php:447
+#: src/Order/Bulk.php:483
 msgid "Bottom Left"
 msgstr ""
 
-#: src/Order/Base.php:426
-#: src/Order/Bulk.php:476
+#: src/Order/Base.php:448
+#: src/Order/Bulk.php:484
 msgid "Bottom Right"
 msgstr ""
 
-#: src/Order/Base.php:557
-#: src/Order/Base.php:750
-#: src/Order/Single.php:524
-#: src/Order/Single.php:629
-#: src/Order/Single.php:702
+#: src/Order/Base.php:580
+#: src/Order/Base.php:788
+#: src/Order/Single.php:522
+#: src/Order/Single.php:627
+#: src/Order/Single.php:698
 msgid "Order does not exist!"
 msgstr ""
 
-#: src/Order/Base.php:847
+#: src/Order/Base.php:883
 msgid "Cannot create the barcode."
 msgstr ""
 
-#: src/Order/Base.php:972
+#: src/Order/Base.php:1006
 msgid "Cannot create return barcode."
 msgstr ""
 
-#: src/Order/Base.php:1165
+#: src/Order/Base.php:1199
 msgid "There are no files to merge."
 msgstr ""
 
-#: src/Order/Base.php:1169
+#: src/Order/Base.php:1203
 msgid "\"Imagick\" must be installed on the server to merge png files."
 msgstr ""
 
-#: src/Order/Base.php:1254
-#: src/Order/Base.php:1353
+#: src/Order/Base.php:1306
+#: src/Order/Base.php:1437
 msgid "Cannot create the label. Label content is missing"
 msgstr ""
 
-#: src/Order/Base.php:1285
+#: src/Order/Base.php:1353
 msgid "Cannot create the return label. Label content is missing"
 msgstr ""
 
-#: src/Order/Base.php:1316
+#: src/Order/Base.php:1400
 msgid "Cannot create the letterbox. Label content is missing"
 msgstr ""
 
-#: src/Order/Base.php:1347
+#: src/Order/Base.php:1431
 msgid "Cannot create the label. Barcode data is missing"
 msgstr ""
 
 #. translators: %s the current service.
-#: src/Order/Base.php:1482
+#: src/Order/Base.php:1566
 msgid "%s Tracking Number: {tracking-link}"
 msgstr ""
 
 #: src/Order/Bulk.php:89
-#: src/Order/Bulk.php:648
+#: src/Order/Bulk.php:656
 msgid "PostNL Create Label"
 msgstr ""
 
@@ -399,50 +399,50 @@ msgstr ""
 msgid "Could not create bulk PostNL label file, download individually."
 msgstr ""
 
-#: src/Order/Bulk.php:419
+#: src/Order/Bulk.php:427
 msgid "Submit"
 msgstr ""
 
-#: src/Order/Bulk.php:512
+#: src/Order/Bulk.php:520
 msgid "Shipping zone"
 msgstr ""
 
-#: src/Order/Bulk.php:516
+#: src/Order/Bulk.php:524
 msgid "Domestic"
 msgstr ""
 
-#: src/Order/Bulk.php:517
-#: src/Order/Bulk.php:535
+#: src/Order/Bulk.php:525
+#: src/Order/Bulk.php:543
 msgid "Belgium"
 msgstr ""
 
-#: src/Order/Bulk.php:520
+#: src/Order/Bulk.php:528
 msgid "Pick-up at PostNL"
 msgstr ""
 
-#: src/Order/Bulk.php:526
+#: src/Order/Bulk.php:534
 #: src/Shipping_Method/Settings.php:611
 msgid "Shipping options domestic"
 msgstr ""
 
-#: src/Order/Bulk.php:544
+#: src/Order/Bulk.php:552
 #: src/Shipping_Method/Settings.php:654
 msgid "Shipping options EU"
 msgstr ""
 
-#: src/Order/Bulk.php:553
+#: src/Order/Bulk.php:561
 msgid "Shipping options non-EU"
 msgstr ""
 
-#: src/Order/Bulk.php:562
+#: src/Order/Bulk.php:570
 msgid "Shipping options for Pick-up at PostNL"
 msgstr ""
 
-#: src/Order/Bulk.php:642
+#: src/Order/Bulk.php:650
 msgid "PostNL Print Label"
 msgstr ""
 
-#: src/Order/Bulk.php:710
+#: src/Order/Bulk.php:718
 msgid "#%1$s : PostNL label has been created - %2$sdownload file%3$s"
 msgstr ""
 
@@ -470,97 +470,97 @@ msgstr ""
 msgid "Fits through letterbox"
 msgstr ""
 
-#: src/Order/Single.php:135
+#: src/Order/Single.php:131
 msgid "Label & Tracking"
 msgstr ""
 
-#: src/Order/Single.php:271
+#: src/Order/Single.php:267
 msgid "Delivery Type:"
 msgstr ""
 
-#: src/Order/Single.php:302
+#: src/Order/Single.php:298
 msgid "Delivery Date:"
 msgstr ""
 
-#: src/Order/Single.php:332
+#: src/Order/Single.php:330
 msgid "Pickup Address:"
 msgstr ""
 
-#: src/Order/Single.php:369
+#: src/Order/Single.php:367
 msgid "Activate return function"
 msgstr ""
 
-#: src/Order/Single.php:372
+#: src/Order/Single.php:370
 msgid "Return function is activated for this label"
 msgstr ""
 
-#: src/Order/Single.php:375
+#: src/Order/Single.php:373
 msgid "Click here to activate the return function of this label"
 msgstr ""
 
-#: src/Order/Single.php:393
+#: src/Order/Single.php:391
 msgid "Send email with Smart Return"
 msgstr ""
 
-#: src/Order/Single.php:431
+#: src/Order/Single.php:429
 msgid "Create Shipment"
 msgstr ""
 
-#: src/Order/Single.php:433
+#: src/Order/Single.php:431
 msgid "Print Label"
 msgstr ""
 
-#: src/Order/Single.php:435
+#: src/Order/Single.php:433
 msgid "Delete Label"
 msgstr ""
 
-#: src/Order/Single.php:441
+#: src/Order/Single.php:439
 msgid "Print Return Label"
 msgstr ""
 
-#: src/Order/Single.php:446
+#: src/Order/Single.php:444
 msgid "Print Letterbox"
 msgstr ""
 
-#: src/Order/Single.php:465
-#: src/Order/Single.php:510
-#: src/Order/Single.php:616
-#: src/Order/Single.php:689
+#: src/Order/Single.php:463
+#: src/Order/Single.php:508
+#: src/Order/Single.php:614
+#: src/Order/Single.php:685
 msgid "Cannot find nonce field!"
 msgstr ""
 
-#: src/Order/Single.php:471
-#: src/Order/Single.php:516
+#: src/Order/Single.php:469
+#: src/Order/Single.php:514
 msgid "Nonce is invalid!"
 msgstr ""
 
-#: src/Order/Single.php:621
-#: src/Order/Single.php:694
+#: src/Order/Single.php:619
+#: src/Order/Single.php:690
 msgid "Nonce is invalid"
 msgstr ""
 
-#: src/Order/Single.php:633
+#: src/Order/Single.php:631
 msgid "Already activated!"
 msgstr ""
 
-#: src/Order/Single.php:649
+#: src/Order/Single.php:645
 msgid "Unknown error."
 msgstr ""
 
 #. Translators: %s is the error message.
-#: src/Order/Single.php:673
+#: src/Order/Single.php:669
 msgid "Error: %s"
 msgstr ""
 
-#: src/Order/Single.php:729
+#: src/Order/Single.php:723
 msgid "PrintcodeLabel could not found"
 msgstr ""
 
-#: src/Order/Single.php:760
+#: src/Order/Single.php:754
 msgid "Email could not be send"
 msgstr ""
 
-#: src/Order/Single.php:791
+#: src/Order/Single.php:785
 msgid "18+ Adults Only"
 msgstr ""
 
@@ -673,21 +673,6 @@ msgstr ""
 msgid "“18+” and “Letterbox Parcel” cannot be enabled together. Letterbox has been disabled automatically."
 msgstr ""
 
-#: src/Rest_API/Barcode/Item_Info.php:66
-#: src/Rest_API/Shipping/Item_Info.php:140
-msgid "Order ID does not exist!"
-msgstr ""
-
-#: src/Rest_API/Barcode/Item_Info.php:136
-#: src/Rest_API/Shipping/Item_Info.php:356
-msgid "Customer Code is empty!"
-msgstr ""
-
-#: src/Rest_API/Barcode/Item_Info.php:139
-#: src/Rest_API/Shipping/Item_Info.php:359
-msgid "Customer Number is empty!"
-msgstr ""
-
 #: src/Rest_API/Base.php:273
 #: src/Rest_API/Base.php:282
 #: src/Rest_API/Base.php:290
@@ -709,8 +694,8 @@ msgid "Shipping \"City\" is empty!"
 msgstr ""
 
 #: src/Rest_API/Base_Info.php:182
-#: src/Rest_API/Checkout/Item_Info.php:260
-#: src/Rest_API/Postcode_Check/Item_Info.php:88
+#: src/Rest_API/Legacy/Checkout/Item_Info.php:260
+#: src/Rest_API/Legacy/Postcode_Check/Item_Info.php:88
 msgid "Shipping \"Postcode\" is empty!"
 msgstr ""
 
@@ -735,140 +720,155 @@ msgstr ""
 msgid "Store country is not configured!"
 msgstr ""
 
-#: src/Rest_API/Checkout/Item_Info.php:119
+#: src/Rest_API/Legacy/Barcode/Item_Info.php:66
+#: src/Rest_API/Legacy/Shipping/Item_Info.php:140
+msgid "Order ID does not exist!"
+msgstr ""
+
+#: src/Rest_API/Legacy/Barcode/Item_Info.php:136
+#: src/Rest_API/Legacy/Shipping/Item_Info.php:356
+msgid "Customer Code is empty!"
+msgstr ""
+
+#: src/Rest_API/Legacy/Barcode/Item_Info.php:139
+#: src/Rest_API/Legacy/Shipping/Item_Info.php:359
+msgid "Customer Number is empty!"
+msgstr ""
+
+#: src/Rest_API/Legacy/Checkout/Item_Info.php:119
 msgid "Order date is empty!"
 msgstr ""
 
-#: src/Rest_API/Checkout/Item_Info.php:123
+#: src/Rest_API/Legacy/Checkout/Item_Info.php:123
 msgid "Shipping duration is empty!"
 msgstr ""
 
-#: src/Rest_API/Checkout/Item_Info.php:131
+#: src/Rest_API/Legacy/Checkout/Item_Info.php:131
 msgid "Wrong format for cut off time!"
 msgstr ""
 
-#: src/Rest_API/Checkout/Item_Info.php:215
+#: src/Rest_API/Legacy/Checkout/Item_Info.php:215
 msgid "Locations value is not a number!"
 msgstr ""
 
-#: src/Rest_API/Postcode_Check/Item_Info.php:85
+#: src/Rest_API/Legacy/Postcode_Check/Item_Info.php:85
 msgid "Shipping \"House number\" is empty!"
 msgstr ""
 
-#: src/Rest_API/Shipment_and_Return/Item_Info.php:82
+#: src/Rest_API/Legacy/Shipment_and_Return/Item_Info.php:82
 msgid "Given id is not an Order"
 msgstr ""
 
-#: src/Rest_API/Shipment_and_Return/Item_Info.php:86
+#: src/Rest_API/Legacy/Shipment_and_Return/Item_Info.php:86
 msgid "Missing barcode"
 msgstr ""
 
-#: src/Rest_API/Shipping/Item_Info.php:353
+#: src/Rest_API/Legacy/Shipping/Item_Info.php:353
 msgid "Location Code is empty!"
 msgstr ""
 
-#: src/Rest_API/Shipping/Item_Info.php:368
+#: src/Rest_API/Legacy/Shipping/Item_Info.php:368
 msgid "Store email is empty!"
 msgstr ""
 
-#: src/Rest_API/Shipping/Item_Info.php:374
+#: src/Rest_API/Legacy/Shipping/Item_Info.php:374
 msgid "Wrong format for store email!"
 msgstr ""
 
-#: src/Rest_API/Shipping/Item_Info.php:429
+#: src/Rest_API/Legacy/Shipping/Item_Info.php:429
 msgid "Order ID is empty!"
 msgstr ""
 
-#: src/Rest_API/Shipping/Item_Info.php:432
+#: src/Rest_API/Legacy/Shipping/Item_Info.php:432
 msgid "Order number is empty!"
 msgstr ""
 
-#: src/Rest_API/Shipping/Item_Info.php:435
+#: src/Rest_API/Legacy/Shipping/Item_Info.php:435
 msgid "Barcode is empty!"
 msgstr ""
 
-#: src/Rest_API/Shipping/Item_Info.php:447
+#: src/Rest_API/Legacy/Shipping/Item_Info.php:447
 msgid "Product code is empty!"
 msgstr ""
 
-#: src/Rest_API/Shipping/Item_Info.php:451
+#: src/Rest_API/Legacy/Shipping/Item_Info.php:451
 msgid "Wrong format for product code!"
 msgstr ""
 
-#: src/Rest_API/Shipping/Item_Info.php:496
+#: src/Rest_API/Legacy/Shipping/Item_Info.php:496
 msgid "Total weight is empty!"
 msgstr ""
 
-#: src/Rest_API/Shipping/Item_Info.php:511
+#: src/Rest_API/Legacy/Shipping/Item_Info.php:511
 msgid "Customer email is not valid!"
 msgstr ""
 
-#: src/Rest_API/Shipping/Item_Info.php:541
+#: src/Rest_API/Legacy/Shipping/Item_Info.php:541
 msgid "Delivery day \"Date\" is empty!"
 msgstr ""
 
-#: src/Rest_API/Shipping/Item_Info.php:557
+#: src/Rest_API/Legacy/Shipping/Item_Info.php:557
 msgid "Delivery day \"From\" is empty!"
 msgstr ""
 
-#: src/Rest_API/Shipping/Item_Info.php:570
+#: src/Rest_API/Legacy/Shipping/Item_Info.php:570
 msgid "Delivery day \"To\" is empty!"
 msgstr ""
 
-#: src/Rest_API/Shipping/Item_Info.php:586
+#: src/Rest_API/Legacy/Shipping/Item_Info.php:586
 msgid "Delivery day \"Type\" is empty!"
 msgstr ""
 
-#: src/Rest_API/Shipping/Item_Info.php:610
+#: src/Rest_API/Legacy/Shipping/Item_Info.php:610
 msgid "Pickup \"Date\" is empty!"
 msgstr ""
 
-#: src/Rest_API/Shipping/Item_Info.php:626
+#: src/Rest_API/Legacy/Shipping/Item_Info.php:626
 msgid "Pickup \"Time\" is empty!"
 msgstr ""
 
-#: src/Rest_API/Shipping/Item_Info.php:638
+#: src/Rest_API/Legacy/Shipping/Item_Info.php:638
 msgid "Pickup \"Company name\" is empty!"
 msgstr ""
 
-#: src/Rest_API/Shipping/Item_Info.php:647
+#: src/Rest_API/Legacy/Shipping/Item_Info.php:647
 msgid "Pickup \"Address 1\" is empty!"
 msgstr ""
 
-#: src/Rest_API/Shipping/Item_Info.php:662
+#: src/Rest_API/Legacy/Shipping/Item_Info.php:662
 msgid "Pickup Point \"City\" is empty!"
 msgstr ""
 
-#: src/Rest_API/Shipping/Item_Info.php:671
+#: src/Rest_API/Legacy/Shipping/Item_Info.php:671
 msgid "Pickup Point \"Postcode\" is empty!"
 msgstr ""
 
-#: src/Rest_API/Shipping/Item_Info.php:683
+#: src/Rest_API/Legacy/Shipping/Item_Info.php:683
 msgid "Pickup Point \"Country\" is empty!"
 msgstr ""
 
-#: src/Rest_API/Shipping/Item_Info.php:817
+#: src/Rest_API/Legacy/Shipping/Item_Info.php:817
 msgid "Item HS Code must be between 6 and 20 characters long"
 msgstr ""
 
-#: src/Rest_API/Shipping/Item_Info.php:830
+#: src/Rest_API/Legacy/Shipping/Item_Info.php:830
 msgid "Item \"Product ID\" is empty!"
 msgstr ""
 
-#: src/Rest_API/Shipping/Item_Info.php:833
+#: src/Rest_API/Legacy/Shipping/Item_Info.php:833
 msgid "Item \"Product SKU\" is empty!"
 msgstr ""
 
-#: src/Rest_API/Shipping/Item_Info.php:850
+#: src/Rest_API/Legacy/Shipping/Item_Info.php:850
 msgid "Item quantity must be more than 1"
 msgstr ""
 
-#: src/Rest_API/Shipping/Item_Info.php:1096
+#: src/Rest_API/Legacy/Shipping/Item_Info.php:1096
 msgid "Max weight for Mailbox Packet is 2kg!"
 msgstr ""
 
 #. Translators: %s is the order total.
-#: src/Rest_API/Shipping/Item_Info.php:1119
+#: src/Rest_API/Legacy/Shipping/Item_Info.php:1119
 msgid "Insurance amount for EU shipments cannot exceed €5000. Your total is: %d"
 msgstr ""
 
@@ -1079,14 +1079,12 @@ msgstr ""
 #: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:349
 #: templates/checkout/postnl-fill-in-with-button.php:22
 #: templates/checkout/postnl-fill-in-with-button.php:25
-#: build/postnl-fill-in-with-frontend.js:1
 #: client/checkout/postnl-fill-in-with/block.js:161
 msgid "Autofill with PostNL"
 msgstr ""
 
 #: src/Shipping_Method/Fill_In_With_PostNL_Settings.php:352
 #: templates/checkout/postnl-fill-in-with-button.php:29
-#: build/postnl-fill-in-with-frontend.js:1
 #: client/checkout/postnl-fill-in-with/block.js:162
 msgid "Your shipping details are filled in automatically via your PostNL account. That saves time and hassle."
 msgstr ""
@@ -1950,6 +1948,14 @@ msgstr ""
 #: build/postnl-fill-in-with-frontend.js:1
 #: client/checkout/postnl-fill-in-with/block.js:88
 msgid "Failed to retrieve PostNL address. Please try again."
+msgstr ""
+
+#: build/postnl-fill-in-with-frontend.js:1
+msgid "Fill in with PostNL"
+msgstr ""
+
+#: build/postnl-fill-in-with-frontend.js:1
+msgid "Your name and address are automatically filled in via your PostNL account. That saves you from having to fill in the form!"
 msgstr ""
 
 #: build/postnl-fill-in-with-frontend.js:1

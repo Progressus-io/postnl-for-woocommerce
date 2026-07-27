@@ -7,10 +7,6 @@
 
 namespace PostNLWooCommerce\Order;
 
-use PostNLWooCommerce\Rest_API\Shipment_and_Return\Item_Info;
-use PostNLWooCommerce\Rest_API\Shipment_and_Return\Client;
-use PostNLWooCommerce\Rest_API\Smart_Returns\Item_Info as smart_info;
-use PostNLWooCommerce\Rest_API\Smart_Returns\Client as smart_client;
 use PostNLWooCommerce\Utils;
 use PostNLWooCommerce\Helper\Mapping;
 use WC_Order_Item;
@@ -302,9 +298,11 @@ class Single extends Base {
 			<label for="postnl_pickup_points"><?php esc_html_e( 'Delivery Date:', 'postnl-for-woocommerce' ); ?></label>
 			<?php
 			foreach ( $filtered_infos as $info_idx => $info_val ) {
-				// Convert to the Dutch date format
+				// Convert to the Dutch date format, falling back to the stored value
+				// when it does not parse as Y-m-d so a malformed date cannot fatal the
+				// whole order edit screen via date_format( false, ... ).
 				$date_obj   = date_create_from_format( 'Y-m-d', $info_val );
-				$dutch_date = date_format( $date_obj, 'd/m/Y' );
+				$dutch_date = ( false !== $date_obj ) ? date_format( $date_obj, 'd/m/Y' ) : $info_val;
 				?>
 				<div class="postnl-info <?php echo esc_attr( $info_idx ); ?>">
 					<?php echo esc_html( $dutch_date ); ?>
@@ -633,9 +631,7 @@ class Single extends Base {
 				throw new \Exception( esc_html__( 'Already activated!', 'postnl-for-woocommerce' ) );
 			}
 
-			$item_info = new Item_Info( $order_id );
-			$api_call  = new Client( $item_info );
-			$response  = $api_call->send_request();
+			$response = $this->service_factory()->return_label_service()->activate( (int) $order_id );
 
 			if ( ! empty( $response['successFulBarcodes'] ) && is_array( $response['successFulBarcodes'] ) ) {
 				$order->update_meta_data( $this->is_return_activated_meta, 'yes' );
@@ -702,9 +698,7 @@ class Single extends Base {
 				throw new \Exception( esc_html__( 'Order does not exist!', 'postnl-for-woocommerce' ) );
 			}
 
-			$item_info = new smart_info( $order );
-			$api_call  = new smart_client( $item_info );
-			$response  = $api_call->send_request();
+			$response = $this->service_factory()->smart_returns_service()->generate( $order );
 			if ( ! empty( $response ) ) {
 				$printcodeLabelContent = null;
 

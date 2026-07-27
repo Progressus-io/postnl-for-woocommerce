@@ -7,7 +7,7 @@
 * Tested up to: 6.9
 * WC requires at least: 10.2
 * WC tested up to: 10.5
-* Stable tag: 5.9.8
+* Stable tag: 5.9.10
 * License: GPLv2 or later
 * License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -27,7 +27,7 @@ PostNL’s official extension for WooCommerce on WordPress. Manage your national
 
 ## Changelog
 
-### 5.9.9
+### 5.9.11
 * Add: Independent button width controls (slider) for cart, checkout, and minicart locations in the Checkoutboosters settings.
 * Add: Global button corner radius control (slider) in the Checkoutboosters settings.
 * Add: Live button preview in the Checkoutboosters settings section that updates in real time as styling options are changed.
@@ -35,6 +35,12 @@ PostNL’s official extension for WooCommerce on WordPress. Manage your national
 * Tweak: Updated Fill in With PostNL button label to "Autofill with PostNL" and refreshed the description text shown below the button.
 * Tweak: Description text below the Fill in With PostNL button is now displayed at 80% font size and centred on the cart page.
 * Tweak: Button border now defaults to none on fresh installations; background colour defaults to PostNL orange.
+
+### 5.9.10
+* Fix: Letterboxparcel 48-hour orders reverted to Standard Shipment when the label was generated with the bulk action on the classic orders list.
+
+### 5.9.9
+* Fix: Order edit page showed "Standard Shipment" as the delivery type for Letterboxparcel orders instead of the selected 24-hour or 48-hour variant.
 
 ### 5.9.8
 * Add: Letterboxparcel 48 hours as a selectable option in the domestic default shipping option, the bulk Change Shipping Options action, and the Label & Tracking menu.

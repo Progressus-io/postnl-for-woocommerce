@@ -8,7 +8,7 @@
 namespace PostNLWooCommerce\Order;
 
 use PostNLWooCommerce\Utils;
-use PostNLWooCommerce\Rest_API\Barcode;
+use PostNLWooCommerce\Rest_API\Service_Factory;
 use PostNLWooCommerce\Rest_API\Shipping;
 use PostNLWooCommerce\Rest_API\Return_Label;
 use PostNLWooCommerce\Rest_API\Letterbox;
@@ -33,6 +33,13 @@ abstract class Base {
 	 * @var PostNLWooCommerce\Shipping_Method\Settings
 	 */
 	protected $settings;
+
+	/**
+	 * Lazy-initialised Service_Factory instance.
+	 *
+	 * @var Service_Factory|null
+	 */
+	private $service_factory_instance = null;
 
 	/**
 	 * Nonce key for ajax call.
@@ -85,13 +92,27 @@ abstract class Base {
 	abstract public function init_hooks();
 
 	/**
+	 * Return a lazy-initialised Service_Factory instance.
+	 *
+	 * @return Service_Factory
+	 */
+	protected function service_factory(): Service_Factory {
+		if ( null === $this->service_factory_instance ) {
+			$this->service_factory_instance = new Service_Factory( $this->settings );
+		}
+		return $this->service_factory_instance;
+	}
+
+	/**
 	 * Get nonce field.
 	 *
 	 * @return array
 	 */
 	public function get_nonce_fields() {
+		// Resolve from the 'save' field set: the nonce is a structural field the save/verify
+		// callers always need, so it must never be subject to the bulk-modal display trim.
 		return array_filter(
-			$this->meta_box_fields(),
+			$this->meta_box_fields( false, 'save' ),
 			function ( $field ) {
 				return ( ! empty( $field['nonce'] ) && true === $field['nonce'] );
 			}
@@ -211,9 +232,10 @@ abstract class Base {
 	/**
 	 * List of meta box fields.
 	 *
-	 * @param \WC_Order $order WooCommerce order ID.
+	 * @param \WC_Order $order   WooCommerce order ID.
+	 * @param string    $context 'display' (default) when rendering the admin UI, 'save' when persisting.
 	 */
-	public function meta_box_fields( $order = false ) {
+	public function meta_box_fields( $order = false, $context = 'display' ) {
 
 		$default_options = $this->get_shipping_options( $order );
 		$fields          = array(
@@ -435,7 +457,8 @@ abstract class Base {
 
 		return apply_filters(
 			'postnl_order_meta_box_fields',
-			$fields
+			$fields,
+			$context
 		);
 	}
 
@@ -571,7 +594,10 @@ abstract class Base {
 		$nonce_fields = array_values( $this->get_nonce_fields() );
 
 		// Loop through inputs within id 'shipment-postnl-label-form'.
-		foreach ( $this->meta_box_fields( $order_id ) as $field ) {
+		// Use the 'save' context so the bulk-modal display trim cannot drop a persisted
+		// field (e.g. Letterbox 48 / ID Check) when generating a label from the legacy
+		// orders list bulk action.
+		foreach ( $this->meta_box_fields( $order_id, 'save' ) as $field ) {
 			// Don't save nonce field.
 			if ( $nonce_fields[0]['id'] === $field['id'] ) {
 				continue;
@@ -712,6 +738,18 @@ abstract class Base {
 	 * @return String.
 	 */
 	public function get_delivery_type( $order ) {
+		// A letterbox order has no delivery-day or pickup type, so the frontend
+		// mapping below would fall through to the generic "Standard Shipment"
+		// label. Surface the resolved 24h/48h variant instead, mirroring the
+		// selected shipping option so the summary matches the checkbox.
+		$shipping_options = $this->get_shipping_options( $order );
+		if ( 'yes' === ( $shipping_options['letterbox_48'] ?? '' ) ) {
+			return Utils::get_letterbox_label_48h();
+		}
+		if ( 'yes' === ( $shipping_options['letterbox'] ?? '' ) ) {
+			return Utils::get_letterbox_label_24h();
+		}
+
 		$from_country      = Utils::get_base_country();
 		$to_country        = $order->get_shipping_country();
 		$to_state          = $order->get_shipping_state();
@@ -838,9 +876,7 @@ abstract class Base {
 			'saved_data' => $label_post_data['saved_data'],
 		);
 
-		$item_info = new Barcode\Item_Info( $data );
-		$barcode   = new Barcode\Client( $item_info );
-		$response  = $barcode->send_request();
+		$response = $this->service_factory()->barcode_service()->generate( $data );
 
 		if ( empty( $response['Barcode'] ) ) {
 			throw new \Exception(
@@ -963,9 +999,7 @@ abstract class Base {
 			'customer_code' => $return_code,
 		);
 
-		$item_info = new Barcode\Item_Info( $data );
-		$barcode   = new Barcode\Client( $item_info );
-		$response  = $barcode->send_request();
+		$response = $this->service_factory()->barcode_service()->generate( $data );
 
 		if ( empty( $response['Barcode'] ) ) {
 			throw new \Exception(
@@ -1239,6 +1273,24 @@ abstract class Base {
 	 * @throws \Exception Error when response has an error.
 	 */
 	public function create_label( $post_data ) {
+		return $this->service_factory()->label_service()->create( $post_data );
+	}
+
+	/**
+	 * Legacy pipeline for outbound shipping labels.
+	 *
+	 * Called exclusively by Legacy\Label_Service::create() to avoid recursion
+	 * (Label_Service extends Order_Base and inherits create_label(), so
+	 * Label_Service cannot safely call create_label() once it routes through
+	 * the factory).
+	 *
+	 * @param array $post_data Order post data.
+	 *
+	 * @return array
+	 *
+	 * @throws \Exception Error when response has an error.
+	 */
+	protected function create_label_pipeline( $post_data ) {
 		$order              = $post_data['order'];
 		$shipping_item_info = new Shipping\Item_Info( $post_data );
 		$shipping           = new Shipping\Client( $shipping_item_info );
@@ -1263,11 +1315,27 @@ abstract class Base {
 	 *
 	 * @param array $post_data Order post data.
 	 *
-	 * @return array|Boolean
+	 * @return array
 	 *
 	 * @throws \Exception Error when response has an error.
 	 */
 	public function maybe_create_return_label( $post_data ) {
+		return $this->service_factory()->return_label_service()->create( $post_data );
+	}
+
+	/**
+	 * Legacy pipeline for return labels.
+	 *
+	 * Called exclusively by Legacy\Return_Label_Service::create() to avoid
+	 * recursion (Return_Label_Service extends Order_Base).
+	 *
+	 * @param array $post_data Order post data.
+	 *
+	 * @return array
+	 *
+	 * @throws \Exception Error when response has an error.
+	 */
+	protected function maybe_create_return_label_pipeline( $post_data ) {
 		if ( 'yes' !== $post_data['saved_data']['backend']['create_return_label'] ) {
 			return array();
 		}
@@ -1290,15 +1358,31 @@ abstract class Base {
 	}
 
 	/**
-	 * Create PostNL return label for current order
+	 * Create PostNL letterbox label for current order
 	 *
 	 * @param array $post_data Order post data.
 	 *
-	 * @return array|Boolean
+	 * @return array
 	 *
 	 * @throws \Exception Error when response has an error.
 	 */
 	public function maybe_create_letterbox( $post_data ) {
+		return $this->service_factory()->letterbox_service()->create( $post_data );
+	}
+
+	/**
+	 * Legacy pipeline for letterbox labels.
+	 *
+	 * Called exclusively by Legacy\Letterbox_Service::create() to avoid
+	 * recursion (Letterbox_Service extends Order_Base).
+	 *
+	 * @param array $post_data Order post data.
+	 *
+	 * @return array
+	 *
+	 * @throws \Exception Error when response has an error.
+	 */
+	protected function maybe_create_letterbox_pipeline( $post_data ) {
 		if ( 'yes' !== $post_data['saved_data']['backend']['letterbox'] ) {
 			return array();
 		}

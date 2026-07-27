@@ -29,7 +29,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Transient keys are namespaced with a hash of the V4 API key so two stores on
  * shared hosting are extremely unlikely to read each other's cached responses.
  *
- * @since   5.9.9
+ * @since   6.0.0
  * @package PostNLWooCommerce\Rest_API\SDK
  */
 class Cache_Adapter extends AbstractCacheAdapter {
@@ -38,17 +38,26 @@ class Cache_Adapter extends AbstractCacheAdapter {
 	 * Default time-to-live, in seconds, before a cached response expires.
 	 * Public so consumers of the postnl_v4_cache_ttl filter (e.g. the V4
 	 * Timeframe service) share one source of truth for the default.
+	 *
+	 * @since 6.0.0
+	 * @var int
 	 */
 	public const DEFAULT_TTL = 600;
 
 	/**
 	 * Cacheable key prefix for the timeframe flow. Pass as the CachingPlugin
 	 * keyPrefix so the plugin's generated keys clear this adapter's allowlist.
+	 *
+	 * @since 6.0.0
+	 * @var string
 	 */
 	public const PREFIX_TIMEFRAME = 'timeframe';
 
 	/**
 	 * Cacheable key prefix for the pickup-locations flow.
+	 *
+	 * @since 6.0.0
+	 * @var string
 	 */
 	public const PREFIX_LOCATIONS = 'locations';
 
@@ -75,7 +84,7 @@ class Cache_Adapter extends AbstractCacheAdapter {
 		/**
 		 * Filters the TTL, in seconds, for cached V4 timeframe/locations responses.
 		 *
-		 * @since 5.9.9
+		 * @since 6.0.0
 		 *
 		 * @param int $ttl Default 600 seconds.
 		 */
@@ -229,7 +238,7 @@ class Cache_Adapter extends AbstractCacheAdapter {
 		/**
 		 * Filters the raw-key prefixes whose V4 responses may be cached.
 		 *
-		 * @since 5.9.9
+		 * @since 6.0.0
 		 *
 		 * @param string[] $prefixes Default: timeframe and locations.
 		 */

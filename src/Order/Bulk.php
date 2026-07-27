@@ -66,7 +66,7 @@ class Bulk extends Base {
 		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_bulk_assets' ) );
 		add_action( 'admin_footer', array( $this, 'modal_create_label' ) );
 		add_action( 'admin_footer', array( $this, 'modal_change_shipping_options' ) );
-		add_filter( 'postnl_order_meta_box_fields', array( $this, 'additional_meta_box' ), 10, 1 );
+		add_filter( 'postnl_order_meta_box_fields', array( $this, 'additional_meta_box' ), 10, 2 );
 
 		// Display admin notices for bulk actions.
 		add_action( 'admin_notices', array( $this, 'render_messages' ) );
@@ -368,9 +368,17 @@ class Bulk extends Base {
 	/**
 	 * Adding additional meta box in order admin page.
 	 *
-	 * @param array $fields List of fields for order admin page.
+	 * @param array  $fields  List of fields for order admin page.
+	 * @param string $context 'display' when rendering the admin UI, 'save' when persisting.
 	 */
-	public function additional_meta_box( $fields ) {
+	public function additional_meta_box( $fields, $context = 'display' ) {
+		// Trimming is a display concern only. During a save it would silently drop every
+		// show_in_bulk = false field (Letterbox 48, ID Check, ...), reverting the shipment
+		// to Standard when a label is generated from the legacy orders list bulk action.
+		if ( 'save' === $context ) {
+			return $fields;
+		}
+
 		$screen = get_current_screen();
 
 		if ( empty( $screen ) ) {

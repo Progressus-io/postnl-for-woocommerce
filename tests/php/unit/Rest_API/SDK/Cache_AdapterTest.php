@@ -15,6 +15,7 @@ use Mockery;
 use Postnl\Sdk\Cache\Exceptions\InvalidCacheArgumentException;
 use PostNLWooCommerce\Rest_API\SDK\Cache_Adapter;
 use PostNLWooCommerce\Tests\UnitTestCase;
+use Psr\Log\LoggerInterface;
 
 /**
  * @covers \PostNLWooCommerce\Rest_API\SDK\Cache_Adapter
@@ -197,9 +198,12 @@ class Cache_AdapterTest extends UnitTestCase {
 		global $wpdb;
 		$previous = $wpdb ?? null;
 
-		$captured_like = null;
-		$wpdb          = Mockery::mock();
-		$wpdb->options = 'wp_options';
+		Functions\when( 'wp_using_ext_object_cache' )->justReturn( false );
+
+		$captured_like    = null;
+		$wpdb             = Mockery::mock();
+		$wpdb->options    = 'wp_options';
+		$wpdb->last_error = '';
 		$wpdb->shouldReceive( 'esc_like' )->andReturnUsing( fn( $s ) => $s );
 		$wpdb->shouldReceive( 'prepare' )->andReturnUsing(
 			function ( $sql, $like ) use ( &$captured_like ) {
@@ -237,7 +241,56 @@ class Cache_AdapterTest extends UnitTestCase {
 		$previous = $wpdb ?? null;
 		$wpdb     = null;
 
+		Functions\when( 'wp_using_ext_object_cache' )->justReturn( false );
+
 		$this->assertFalse( ( new Cache_Adapter( 'tenant-key' ) )->clear() );
+
+		$wpdb = $previous;
+	}
+
+	/**
+	 * @testdox clear() reports failure under a persistent object cache instead of a success that cleared nothing
+	 */
+	public function test_clear_returns_false_under_persistent_object_cache(): void {
+		global $wpdb;
+		$previous = $wpdb ?? null;
+
+		Functions\when( 'wp_using_ext_object_cache' )->justReturn( true );
+
+		// Transients never reach the options table, so the namespace is not
+		// enumerable and no query may be attempted.
+		$wpdb = Mockery::mock();
+		$wpdb->shouldNotReceive( 'get_col' );
+
+		$this->assertFalse( ( new Cache_Adapter( 'tenant-key' ) )->clear() );
+
+		$wpdb = $previous;
+	}
+
+	/**
+	 * @testdox clear() reports failure and logs when the lookup query errors
+	 */
+	public function test_clear_returns_false_and_logs_on_query_error(): void {
+		global $wpdb;
+		$previous = $wpdb ?? null;
+
+		Functions\when( 'wp_using_ext_object_cache' )->justReturn( false );
+
+		$wpdb             = Mockery::mock();
+		$wpdb->options    = 'wp_options';
+		$wpdb->last_error = 'Table wp_options does not exist';
+		$wpdb->shouldReceive( 'esc_like' )->andReturnUsing( fn( $s ) => $s );
+		$wpdb->shouldReceive( 'prepare' )->andReturnUsing( fn( $sql ) => $sql );
+		// An errored get_col() yields an empty set, which is indistinguishable
+		// from "nothing cached" without consulting last_error.
+		$wpdb->shouldReceive( 'get_col' )->once()->andReturn( array() );
+
+		Functions\expect( 'delete_transient' )->never();
+
+		$logger = Mockery::mock( LoggerInterface::class );
+		$logger->shouldReceive( 'error' )->once()->with( Mockery::pattern( '/Table wp_options does not exist/' ) );
+
+		$this->assertFalse( ( new Cache_Adapter( 'tenant-key', $logger ) )->clear() );
 
 		$wpdb = $previous;
 	}

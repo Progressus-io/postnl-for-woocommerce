@@ -12,6 +12,7 @@ namespace PostNLWooCommerce\Rest_API\SDK;
 use DateInterval;
 use Postnl\Sdk\Cache\Adapter\AbstractCacheAdapter;
 use Psr\Log\LoggerInterface;
+use RuntimeException;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -149,13 +150,21 @@ class Cache_Adapter extends AbstractCacheAdapter {
 	 * table is queried to find this namespace's transients, then each is removed
 	 * via delete_transient() — which clears both the value and timeout rows and
 	 * invalidates the option cache (a raw DELETE would leave stale cache entries
-	 * readable within the same request). Object-cache-backed transients are not
-	 * enumerable by prefix and so are left to expire on their own TTL.
+	 * readable within the same request).
+	 *
+	 * Returns false whenever the namespace cannot be enumerated — under a
+	 * persistent object cache, where transients never reach the options table,
+	 * or when the lookup query fails — rather than reporting a success that
+	 * cleared nothing.
 	 *
 	 * @return bool
 	 */
 	public function clear(): bool {
 		global $wpdb;
+
+		if ( wp_using_ext_object_cache() ) {
+			return false;
+		}
 
 		if ( ! isset( $wpdb ) ) {
 			return false;
@@ -165,6 +174,12 @@ class Cache_Adapter extends AbstractCacheAdapter {
 		$names = $wpdb->get_col(
 			$wpdb->prepare( "SELECT option_name FROM {$wpdb->options} WHERE option_name LIKE %s", $like )
 		);
+
+		if ( ! empty( $wpdb->last_error ) ) {
+			$this->logError( 'clear', new RuntimeException( (string) $wpdb->last_error ) );
+
+			return false;
+		}
 
 		$success = true;
 		foreach ( (array) $names as $option_name ) {

@@ -23,8 +23,12 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * WordPress-transient-backed cache for the V4 SDK, implementing the SDK's
  * CacheAdapterInterface (PSR-16 plus isAvailable()). It is purpose-built for
- * the per-checkout-pageload timeframe/locations responses: only keys on the
- * allowlist are stored, so any other endpoint transparently bypasses the cache.
+ * the per-checkout-pageload timeframe/locations responses: only keys whose
+ * prefix is on the allowlist are stored, and anything else bypasses.
+ *
+ * The prefix is a label the caller chooses via the CachingPlugin keyPrefix, not
+ * the request URI. Deciding which endpoints may be cached is CachingPlugin's
+ * job, through its own allowedEndpoints list.
  *
  * Transient keys are namespaced with a hash of the V4 API key so two stores on
  * shared hosting are extremely unlikely to read each other's cached responses.
@@ -76,11 +80,14 @@ class Cache_Adapter extends AbstractCacheAdapter {
 	/**
 	 * Cache_Adapter constructor.
 	 *
+	 * The TTL filter is applied here, so a filter registered after the adapter
+	 * is built does not affect it.
+	 *
 	 * @param string               $v4_key PostNL V4 API key, hashed into the key namespace.
 	 * @param LoggerInterface|null $logger Optional PSR-3 logger for cache errors.
 	 * @param callable|null        $clock  Optional clock override for tests.
 	 */
-	public function __construct( string $v4_key = '', ?LoggerInterface $logger = null, ?callable $clock = null ) {
+	public function __construct( string $v4_key, ?LoggerInterface $logger = null, ?callable $clock = null ) {
 		/**
 		 * Filters the TTL, in seconds, for cached V4 timeframe/locations responses.
 		 *
@@ -105,6 +112,7 @@ class Cache_Adapter extends AbstractCacheAdapter {
 	 * @param string $key     Cache key.
 	 * @param mixed  $default Value returned when nothing is cached.
 	 * @return mixed
+	 * @throws \Postnl\Sdk\Cache\Exceptions\InvalidCacheArgumentException When the key contains a reserved character.
 	 */
 	public function get( string $key, mixed $default = null ): mixed { // phpcs:ignore Universal.NamingConventions.NoReservedKeywordParameterNames.defaultFound -- name is fixed by the PSR-16 CacheInterface.
 		$this->validateKey( $key );
@@ -123,6 +131,7 @@ class Cache_Adapter extends AbstractCacheAdapter {
 	 *
 	 * @param string $key Cache key.
 	 * @return bool
+	 * @throws \Postnl\Sdk\Cache\Exceptions\InvalidCacheArgumentException When the key contains a reserved character.
 	 */
 	public function has( string $key ): bool {
 		$this->validateKey( $key );
@@ -133,10 +142,15 @@ class Cache_Adapter extends AbstractCacheAdapter {
 	/**
 	 * Store a value. Non-allowlisted keys are not cached and return false.
 	 *
+	 * WordPress falls back to update_option(), which reports false when a live
+	 * entry is rewritten with an identical value, so a false return does not
+	 * always mean the write failed.
+	 *
 	 * @param string                $key   Cache key.
 	 * @param mixed                 $value Value to cache.
 	 * @param DateInterval|int|null $ttl   Lifetime; null/0/negative use the default.
 	 * @return bool
+	 * @throws \Postnl\Sdk\Cache\Exceptions\InvalidCacheArgumentException When the key contains a reserved character.
 	 */
 	public function set( string $key, mixed $value, DateInterval|int|null $ttl = null ): bool {
 		$this->validateKey( $key );
@@ -145,29 +159,33 @@ class Cache_Adapter extends AbstractCacheAdapter {
 			return false;
 		}
 
-		// normalizeTtlSeconds() maps a non-positive int to the default, but returns 0 for a
-		// zero or negative DateInterval. The SDK's own adapters turn that 0 into an absolute
-		// expiry of "now" and treat the entry as already expired, whereas set_transient()
-		// reads 0 as "no expiration" and would cache the response permanently. Fall back to
-		// the default so the two backends agree that a non-positive TTL never means forever.
 		$seconds = $this->normalizeTtlSeconds( $ttl );
 
 		// phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- name is fixed by the SDK's AbstractCacheAdapter.
 		$default_seconds = $this->defaultTtl;
 
+		// A zero or negative DateInterval normalizes to 0, which set_transient() reads as
+		// "never expires", so fall back to the default rather than cache permanently.
 		return set_transient( $this->transient_name( $key ), $value, $seconds > 0 ? $seconds : $default_seconds );
 	}
 
 	/**
 	 * Delete a cached value.
 	 *
+	 * An entry that was never stored makes delete_transient() report false,
+	 * which PSR-16 reserves for genuine errors, so an absent key is reported
+	 * as a successful delete.
+	 *
 	 * @param string $key Cache key.
 	 * @return bool
+	 * @throws \Postnl\Sdk\Cache\Exceptions\InvalidCacheArgumentException When the key contains a reserved character.
 	 */
 	public function delete( string $key ): bool {
 		$this->validateKey( $key );
 
-		return delete_transient( $this->transient_name( $key ) );
+		delete_transient( $this->transient_name( $key ) );
+
+		return true;
 	}
 
 	/**
@@ -175,14 +193,14 @@ class Cache_Adapter extends AbstractCacheAdapter {
 	 *
 	 * There is no WordPress API to delete transients by prefix, so the options
 	 * table is queried to find this namespace's transients, then each is removed
-	 * via delete_transient() — which clears both the value and timeout rows and
-	 * invalidates the option cache (a raw DELETE would leave stale cache entries
-	 * readable within the same request).
+	 * via delete_transient(). That clears both the value and timeout rows and
+	 * invalidates the option cache, whereas a raw DELETE would leave stale cache
+	 * entries readable within the same request.
 	 *
-	 * Returns false whenever the namespace cannot be enumerated — under a
-	 * persistent object cache, where transients never reach the options table,
-	 * or when the lookup query fails — rather than reporting a success that
-	 * cleared nothing.
+	 * Returns false whenever the namespace cannot be enumerated, rather than
+	 * reporting a success that cleared nothing: under a persistent object cache
+	 * transients never reach the options table, and a failed lookup query gives
+	 * back the same empty result as a namespace with nothing in it.
 	 *
 	 * @return bool
 	 */
@@ -208,19 +226,18 @@ class Cache_Adapter extends AbstractCacheAdapter {
 			return false;
 		}
 
-		$success = true;
 		foreach ( (array) $names as $option_name ) {
-			$transient = substr( (string) $option_name, strlen( '_transient_' ) );
-			if ( ! delete_transient( $transient ) ) {
-				$success = false;
-			}
+			// A row that expired between the lookup and here is already gone, and
+			// delete_transient() cannot tell that apart from a failure, so its
+			// return value carries no signal worth acting on.
+			delete_transient( substr( (string) $option_name, strlen( '_transient_' ) ) );
 		}
 
-		return $success;
+		return true;
 	}
 
 	/**
-	 * The transient backend is always available in a WordPress runtime.
+	 * Whether the transient API is loaded.
 	 *
 	 * @return bool
 	 */

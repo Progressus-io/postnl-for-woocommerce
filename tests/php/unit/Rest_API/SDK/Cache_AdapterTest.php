@@ -38,6 +38,13 @@ class Cache_AdapterTest extends UnitTestCase {
 	private int $now = 1000000;
 
 	/**
+	 * The $wpdb global as it stood before a test replaced it.
+	 *
+	 * @var mixed
+	 */
+	private $previous_wpdb = null;
+
+	/**
 	 * Wire get/set/delete_transient to the in-memory store so round-trips work.
 	 *
 	 * The store honours the TTL it is handed: WordPress drops an expired
@@ -87,7 +94,28 @@ class Cache_AdapterTest extends UnitTestCase {
 		$this->now += $seconds;
 	}
 
-	// ── Tests ────────────────────────────────────────────────────────────────
+	/**
+	 * Restore the $wpdb global after every test.
+	 *
+	 * The clear() tests replace it with a mock or null. Restoring inside each
+	 * test body would be skipped when an assertion throws, leaking the mock
+	 * into whatever runs next in the same process.
+	 */
+	protected function tearDown(): void {
+		$GLOBALS['wpdb'] = $this->previous_wpdb;
+
+		parent::tearDown();
+	}
+
+	/**
+	 * Swap in a stand-in for the $wpdb global for the duration of a test.
+	 *
+	 * @param mixed $wpdb Replacement value.
+	 */
+	private function with_wpdb( $wpdb ): void {
+		$this->previous_wpdb = $GLOBALS['wpdb'] ?? null;
+		$GLOBALS['wpdb']     = $wpdb;
+	}
 
 	/**
 	 * @testdox An allowlisted key round-trips through the transient store
@@ -101,6 +129,17 @@ class Cache_AdapterTest extends UnitTestCase {
 		$this->assertTrue( $adapter->has( 'timeframe_abc' ) );
 		$this->assertTrue( $adapter->delete( 'timeframe_abc' ) );
 		$this->assertNull( $adapter->get( 'timeframe_abc' ) );
+	}
+
+	/**
+	 * @testdox Deleting a key that was never cached reports success
+	 */
+	public function test_deleting_an_absent_key_reports_success(): void {
+		$this->with_transient_store();
+
+		// PSR-16 reserves a false return for an error, and there is nothing
+		// wrong with deleting something that is not there.
+		$this->assertTrue( ( new Cache_Adapter( 'tenant-key' ) )->delete( 'timeframe_never_stored' ) );
 	}
 
 	/**
@@ -264,9 +303,6 @@ class Cache_AdapterTest extends UnitTestCase {
 	 * @testdox clear() finds namespaced transients and removes each via delete_transient()
 	 */
 	public function test_clear_deletes_namespaced_transients(): void {
-		global $wpdb;
-		$previous = $wpdb ?? null;
-
 		Functions\when( 'wp_using_ext_object_cache' )->justReturn( false );
 
 		$captured_like    = null;
@@ -283,6 +319,7 @@ class Cache_AdapterTest extends UnitTestCase {
 		$wpdb->shouldReceive( 'get_col' )->once()->andReturn(
 			array( '_transient_postnl_v4_abc_one', '_transient_postnl_v4_abc_two' )
 		);
+		$this->with_wpdb( $wpdb );
 
 		$deleted = array();
 		Functions\when( 'delete_transient' )->alias(
@@ -298,51 +335,58 @@ class Cache_AdapterTest extends UnitTestCase {
 		$this->assertStringStartsWith( '_transient_postnl_v4_', $captured_like );
 		// The '_transient_' prefix is stripped so delete_transient() gets the bare key.
 		$this->assertSame( array( 'postnl_v4_abc_one', 'postnl_v4_abc_two' ), $deleted );
+	}
 
-		$wpdb = $previous;
+	/**
+	 * @testdox clear() succeeds even when a row expires between the lookup and the delete
+	 */
+	public function test_clear_succeeds_when_a_row_vanishes_before_deletion(): void {
+		Functions\when( 'wp_using_ext_object_cache' )->justReturn( false );
+
+		$wpdb             = Mockery::mock();
+		$wpdb->options    = 'wp_options';
+		$wpdb->last_error = '';
+		$wpdb->shouldReceive( 'esc_like' )->andReturnUsing( fn( $s ) => $s );
+		$wpdb->shouldReceive( 'prepare' )->andReturnUsing( fn( $sql ) => $sql );
+		$wpdb->shouldReceive( 'get_col' )->once()->andReturn( array( '_transient_postnl_v4_abc_gone' ) );
+		$this->with_wpdb( $wpdb );
+
+		// The row expired in between, so delete_transient() reports false for a
+		// transient that is already absent.
+		Functions\when( 'delete_transient' )->justReturn( false );
+
+		$this->assertTrue( ( new Cache_Adapter( 'tenant-key' ) )->clear() );
 	}
 
 	/**
 	 * @testdox clear() returns false when $wpdb is unavailable
 	 */
 	public function test_clear_returns_false_when_wpdb_unavailable(): void {
-		global $wpdb;
-		$previous = $wpdb ?? null;
-		$wpdb     = null;
-
 		Functions\when( 'wp_using_ext_object_cache' )->justReturn( false );
+		$this->with_wpdb( null );
 
 		$this->assertFalse( ( new Cache_Adapter( 'tenant-key' ) )->clear() );
-
-		$wpdb = $previous;
 	}
 
 	/**
 	 * @testdox clear() reports failure under a persistent object cache instead of a success that cleared nothing
 	 */
 	public function test_clear_returns_false_under_persistent_object_cache(): void {
-		global $wpdb;
-		$previous = $wpdb ?? null;
-
 		Functions\when( 'wp_using_ext_object_cache' )->justReturn( true );
 
 		// Transients never reach the options table, so the namespace is not
 		// enumerable and no query may be attempted.
 		$wpdb = Mockery::mock();
 		$wpdb->shouldNotReceive( 'get_col' );
+		$this->with_wpdb( $wpdb );
 
 		$this->assertFalse( ( new Cache_Adapter( 'tenant-key' ) )->clear() );
-
-		$wpdb = $previous;
 	}
 
 	/**
 	 * @testdox clear() reports failure and logs when the lookup query errors
 	 */
 	public function test_clear_returns_false_and_logs_on_query_error(): void {
-		global $wpdb;
-		$previous = $wpdb ?? null;
-
 		Functions\when( 'wp_using_ext_object_cache' )->justReturn( false );
 
 		$wpdb             = Mockery::mock();
@@ -353,6 +397,7 @@ class Cache_AdapterTest extends UnitTestCase {
 		// An errored get_col() yields an empty set, which is indistinguishable
 		// from "nothing cached" without consulting last_error.
 		$wpdb->shouldReceive( 'get_col' )->once()->andReturn( array() );
+		$this->with_wpdb( $wpdb );
 
 		Functions\expect( 'delete_transient' )->never();
 
@@ -360,8 +405,6 @@ class Cache_AdapterTest extends UnitTestCase {
 		$logger->shouldReceive( 'error' )->once()->with( Mockery::pattern( '/Table wp_options does not exist/' ) );
 
 		$this->assertFalse( ( new Cache_Adapter( 'tenant-key', $logger ) )->clear() );
-
-		$wpdb = $previous;
 	}
 
 	/**

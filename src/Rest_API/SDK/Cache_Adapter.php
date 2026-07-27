@@ -80,14 +80,31 @@ class Cache_Adapter extends AbstractCacheAdapter {
 	/**
 	 * Cache_Adapter constructor.
 	 *
-	 * The TTL filter is applied here, so a filter registered after the adapter
-	 * is built does not affect it.
+	 * The TTL is resolved here, so a filter registered after the adapter is
+	 * built does not affect it.
 	 *
 	 * @param string               $v4_key PostNL V4 API key, hashed into the key namespace.
-	 * @param LoggerInterface|null $logger Optional PSR-3 logger for cache errors.
-	 * @param callable|null        $clock  Optional clock override for tests.
+	 * @param LoggerInterface|null $logger Optional PSR-3 logger. Receives lookup-query
+	 *                                     failures, allowlist bypasses and rejected writes.
 	 */
-	public function __construct( string $v4_key, ?LoggerInterface $logger = null, ?callable $clock = null ) {
+	public function __construct( string $v4_key, ?LoggerInterface $logger = null ) {
+		$prefix = 'postnl_v4_' . substr( sha1( $v4_key ), 0, 8 ) . '_';
+
+		parent::__construct( $prefix, self::get_ttl(), $logger );
+	}
+
+	/**
+	 * Resolve the cache lifetime, in seconds, after filtering.
+	 *
+	 * Callers handing a TTL to CachingPlugin should use this rather than
+	 * applying the filter themselves. The plugin rejects a value of zero or
+	 * less by throwing, while this adapter falls back to the default, so the
+	 * guard has to live in one place for the two to agree.
+	 *
+	 * @since 6.0.0
+	 * @return int
+	 */
+	public static function get_ttl(): int {
 		/**
 		 * Filters the TTL, in seconds, for cached V4 timeframe/locations responses.
 		 *
@@ -97,9 +114,7 @@ class Cache_Adapter extends AbstractCacheAdapter {
 		 */
 		$ttl = (int) apply_filters( 'postnl_v4_cache_ttl', self::DEFAULT_TTL );
 
-		$prefix = 'postnl_v4_' . substr( sha1( $v4_key ), 0, 8 ) . '_';
-
-		parent::__construct( $prefix, $ttl > 0 ? $ttl : self::DEFAULT_TTL, $logger, $clock );
+		return $ttl > 0 ? $ttl : self::DEFAULT_TTL;
 	}
 
 	/**
@@ -166,7 +181,17 @@ class Cache_Adapter extends AbstractCacheAdapter {
 
 		// A zero or negative DateInterval normalizes to 0, which set_transient() reads as
 		// "never expires", so fall back to the default rather than cache permanently.
-		return set_transient( $this->transient_name( $key ), $value, $seconds > 0 ? $seconds : $default_seconds );
+		$stored = set_transient( $this->transient_name( $key ), $value, $seconds > 0 ? $seconds : $default_seconds );
+
+		if ( ! $stored && null !== $this->logger ) {
+			// Debug rather than warning: an unchanged rewrite reports false too,
+			// so this is a hint for someone already looking, not an alarm.
+			$this->logger->debug(
+				sprintf( 'PostNL V4 cache write was not stored for key "%s".', substr( $key, 0, 24 ) )
+			);
+		}
+
+		return $stored;
 	}
 
 	/**

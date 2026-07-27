@@ -547,6 +547,67 @@ class Cache_AdapterTest extends UnitTestCase {
 	}
 
 	/**
+	 * @testdox get_ttl() applies the filter and keeps the default when it is not positive
+	 */
+	public function test_get_ttl_applies_the_filter_and_guards_a_non_positive_value(): void {
+		Filters\expectApplied( 'postnl_v4_cache_allowed_prefixes' )->zeroOrMoreTimes();
+
+		Filters\expectApplied( 'postnl_v4_cache_ttl' )->once()->andReturn( 42 );
+		$this->assertSame( 42, Cache_Adapter::get_ttl() );
+	}
+
+	/**
+	 * @dataProvider non_positive_ttl_provider
+	 * @testdox get_ttl() falls back to the default rather than returning a value CachingPlugin would reject
+	 *
+	 * @param int $filtered Value returned by the filter.
+	 */
+	public function test_get_ttl_never_returns_a_value_caching_plugin_would_reject( int $filtered ): void {
+		Filters\expectApplied( 'postnl_v4_cache_ttl' )->andReturn( $filtered );
+
+		$this->assertSame( Cache_Adapter::DEFAULT_TTL, Cache_Adapter::get_ttl() );
+	}
+
+	/**
+	 * CachingPlugin throws InvalidArgumentSdkException on a TTL of zero or less,
+	 * so the shared accessor must never hand one back.
+	 *
+	 * @return array<string, array{int}>
+	 */
+	public static function non_positive_ttl_provider(): array {
+		return array(
+			'zero'     => array( 0 ),
+			'negative' => array( -30 ),
+		);
+	}
+
+	/**
+	 * @testdox A write that WordPress does not store is reported to the logger
+	 */
+	public function test_rejected_write_is_reported_to_the_logger(): void {
+		Functions\when( 'set_transient' )->justReturn( false );
+
+		$logger = Mockery::mock( LoggerInterface::class );
+		$logger->shouldReceive( 'debug' )->once()->with( Mockery::pattern( '/was not stored/' ) );
+
+		$adapter = new Cache_Adapter( 'tenant-key', $logger );
+
+		$this->assertFalse( $adapter->set( Cache_Adapter::PREFIX_TIMEFRAME . 'abc', 'v' ) );
+	}
+
+	/**
+	 * @testdox A stored write is not reported to the logger
+	 */
+	public function test_successful_write_is_not_reported_to_the_logger(): void {
+		$this->with_transient_store();
+
+		$logger = Mockery::mock( LoggerInterface::class );
+		$logger->shouldNotReceive( 'debug' );
+
+		( new Cache_Adapter( 'tenant-key', $logger ) )->set( Cache_Adapter::PREFIX_TIMEFRAME . 'abc', 'v' );
+	}
+
+	/**
 	 * @testdox A bypassed key is reported to the logger once per instance
 	 */
 	public function test_bypass_is_logged_once_per_instance(): void {

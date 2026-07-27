@@ -319,7 +319,37 @@ JS tests use Jest with `@testing-library/react`. Mocks in `tests/js/__mocks__/` 
 - `@wordpress/components`
 - `@woocommerce/settings`
 
-PHP has no unit test suite — only PHPCS linting. All PHP testing is manual.
+PHP has two PHPUnit suites, both run in CI (`.github/workflows/php-tests.yml`):
+
+- **Unit** (`tests/php/unit`, `phpunit-unit.xml.dist`) is pure PHP with no WordPress bootstrap, so it runs without wp-env. Run it with `npm run test:php:unit`.
+- **Integration** (`tests/php/integration`, `phpunit-integration.xml.dist`) needs a real WordPress and runs inside the wp-env `tests-cli` container. Run it with `npm run test:php:integration`.
+
+Both commands need dev dependencies installed first (`npm run test:php:setup`, or `composer install` on the host, since wp-env mounts `vendor/` into the container). Run both suites in wp-env rather than against a host PHP/MySQL, which avoids version and port conflicts.
+
+PHPCS still applies on top of the suites, via `composer run check-php`.
+
+### Review Triggers
+
+Two classes of change have shipped storage-mode and persistence bugs to production. Both are cheap to check once you know to look, so treat them as hard gates rather than judgment calls.
+
+**1. Code that branches on the current admin screen must be tested under both HPOS and legacy storage.**
+
+The orders list is a different screen in each mode, and that difference is invisible in the diff:
+
+| | Legacy (posts) | HPOS |
+|---|---|---|
+| `$screen->base` | `edit` | `woocommerce_page_wc-orders` |
+| `$screen->post_type` | `shop_order` | `''` (empty) |
+
+Any condition reading `get_current_screen()`, a screen ID, `post_type === 'shop_order'`, or hooking the orders list or its bulk actions will fire in one mode and not the other. Toggle storage with the `woocommerce_custom_orders_table_enabled` option and exercise the path in both. Do not assume the mode you happen to be running is the one the merchant uses.
+
+This does not mean every PR needs a storage matrix. It applies only when the change touches screen-dependent code.
+
+**2. A field list consumed by both rendering and persistence needs every consumer traced.**
+
+`Order\Base::meta_box_fields()` drives both the admin UI and `save_meta_value()`. A flag that reads as display-only, such as `show_in_bulk`, will silently govern what gets saved if a filter trims the list before the save path reads it. A dropped field is not an error, it is a blank value, so the failure is silent and shows up as a shipment reverting to a default.
+
+When adding a field or a filtering flag, list the callers of `meta_box_fields()` and confirm each one gets the set it expects. Persistence should read the untrimmed `save` context, never the display set.
 
 ### Pull Requests
 

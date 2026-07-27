@@ -109,8 +109,10 @@ abstract class Base {
 	 * @return array
 	 */
 	public function get_nonce_fields() {
+		// Resolve from the 'save' field set: the nonce is a structural field the save/verify
+		// callers always need, so it must never be subject to the bulk-modal display trim.
 		return array_filter(
-			$this->meta_box_fields(),
+			$this->meta_box_fields( false, 'save' ),
 			function ( $field ) {
 				return ( ! empty( $field['nonce'] ) && true === $field['nonce'] );
 			}
@@ -230,9 +232,10 @@ abstract class Base {
 	/**
 	 * List of meta box fields.
 	 *
-	 * @param \WC_Order $order WooCommerce order ID.
+	 * @param \WC_Order $order   WooCommerce order ID.
+	 * @param string    $context 'display' (default) when rendering the admin UI, 'save' when persisting.
 	 */
-	public function meta_box_fields( $order = false ) {
+	public function meta_box_fields( $order = false, $context = 'display' ) {
 
 		$default_options = $this->get_shipping_options( $order );
 		$fields          = array(
@@ -454,7 +457,8 @@ abstract class Base {
 
 		return apply_filters(
 			'postnl_order_meta_box_fields',
-			$fields
+			$fields,
+			$context
 		);
 	}
 
@@ -590,7 +594,10 @@ abstract class Base {
 		$nonce_fields = array_values( $this->get_nonce_fields() );
 
 		// Loop through inputs within id 'shipment-postnl-label-form'.
-		foreach ( $this->meta_box_fields( $order_id ) as $field ) {
+		// Use the 'save' context so the bulk-modal display trim cannot drop a persisted
+		// field (e.g. Letterbox 48 / ID Check) when generating a label from the legacy
+		// orders list bulk action.
+		foreach ( $this->meta_box_fields( $order_id, 'save' ) as $field ) {
 			// Don't save nonce field.
 			if ( $nonce_fields[0]['id'] === $field['id'] ) {
 				continue;
@@ -731,6 +738,18 @@ abstract class Base {
 	 * @return String.
 	 */
 	public function get_delivery_type( $order ) {
+		// A letterbox order has no delivery-day or pickup type, so the frontend
+		// mapping below would fall through to the generic "Standard Shipment"
+		// label. Surface the resolved 24h/48h variant instead, mirroring the
+		// selected shipping option so the summary matches the checkbox.
+		$shipping_options = $this->get_shipping_options( $order );
+		if ( 'yes' === ( $shipping_options['letterbox_48'] ?? '' ) ) {
+			return Utils::get_letterbox_label_48h();
+		}
+		if ( 'yes' === ( $shipping_options['letterbox'] ?? '' ) ) {
+			return Utils::get_letterbox_label_24h();
+		}
+
 		$from_country      = Utils::get_base_country();
 		$to_country        = $order->get_shipping_country();
 		$to_state          = $order->get_shipping_state();

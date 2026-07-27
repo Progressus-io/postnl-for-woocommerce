@@ -452,6 +452,58 @@ class Cache_AdapterTest extends UnitTestCase {
 	}
 
 	/**
+	 * @testdox A realistic SDK cache key round-trips a cached response
+	 */
+	public function test_realistic_sdk_key_round_trips_a_cached_response(): void {
+		$this->with_transient_store();
+		$adapter = new Cache_Adapter( 'tenant-key' );
+
+		// Key and payload shaped as CachingPlugin builds and stores them.
+		$key      = Cache_Adapter::PREFIX_TIMEFRAME . hash( 'sha256', 'post|https://api.postnl.nl/v4/timeframe/calculate|{"cd":"1234"}' );
+		$response = array(
+			'body'       => '{"Timeframes":[]}',
+			'statusCode' => 200,
+			'headers'    => array( 'Content-Type' => array( 'application/json' ) ),
+		);
+
+		$this->assertTrue( $adapter->set( $key, $response ) );
+		$this->assertSame( $response, $adapter->get( $key ) );
+		$this->assertTrue( $adapter->has( $key ) );
+		$this->assertTrue( $adapter->delete( $key ) );
+		$this->assertNull( $adapter->get( $key ) );
+	}
+
+	/**
+	 * The raw key is hashed into the transient name so the option_name stays
+	 * within WordPress's limit. option_name is VARCHAR(191) and transients
+	 * carry a companion _transient_timeout_ row, whose 19-character prefix
+	 * leaves 172 for the name itself. Dropping the hash in favour of the raw
+	 * key would silently truncate long keys and miss on every subsequent read.
+	 *
+	 * @testdox The transient name is a fixed length however long the key is
+	 */
+	public function test_transient_name_length_is_bounded_regardless_of_key_length(): void {
+		$names = array();
+		Functions\when( 'set_transient' )->alias(
+			function ( $key ) use ( &$names ) {
+				$names[] = $key;
+				return true;
+			}
+		);
+
+		$adapter = new Cache_Adapter( 'tenant-key' );
+		$adapter->set( Cache_Adapter::PREFIX_TIMEFRAME . 'a', 'v' );
+		$adapter->set( Cache_Adapter::PREFIX_TIMEFRAME . str_repeat( 'a', 5000 ), 'v' );
+
+		$this->assertCount( 2, $names );
+		$this->assertSame( strlen( $names[0] ), strlen( $names[1] ) );
+
+		foreach ( $names as $name ) {
+			$this->assertLessThanOrEqual( 172, strlen( $name ) );
+		}
+	}
+
+	/**
 	 * @testdox A bypassed key is reported to the logger once per instance
 	 */
 	public function test_bypass_is_logged_once_per_instance(): void {

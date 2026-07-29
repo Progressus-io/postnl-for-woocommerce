@@ -25,6 +25,7 @@ use PostNLWooCommerce\Rest_API\Legacy\Return_Label_Service as Legacy_Return_Labe
 use PostNLWooCommerce\Rest_API\Legacy\Smart_Returns_Service as Legacy_Smart_Returns_Service;
 use PostNLWooCommerce\Rest_API\V4\Label\Service as V4_Label_Service;
 use PostNLWooCommerce\Rest_API\V4\Returns\Service as V4_Returns_Service;
+use PostNLWooCommerce\Rest_API\V4\Returns\Smart_Returns_Service as V4_Smart_Returns_Service;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -240,7 +241,12 @@ class Service_Factory {
 	 * @return Smart_Returns_Service_Interface
 	 */
 	public function smart_returns_service(): Smart_Returns_Service_Interface {
-		if ( $this->should_use_v4( 'smart_returns' ) && isset( $this->v4_services['smart_returns'] ) ) {
+		if ( $this->should_use_v4( 'smart_returns' ) ) {
+			// A test double injected via inject_v4_service() wins; otherwise build the real V4 service,
+			// which handles the NL retailPrint Smart Return and falls back to the legacy pipeline for the rest.
+			if ( ! isset( $this->v4_services['smart_returns'] ) ) {
+				$this->v4_services['smart_returns'] = new V4_Smart_Returns_Service();
+			}
 			return $this->v4_services['smart_returns'];
 		}
 		if ( ! isset( $this->legacy_memos['smart_returns'] ) ) {

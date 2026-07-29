@@ -22,6 +22,7 @@ use PostNLWooCommerce\Rest_API\Legacy\Checkout_Service as Legacy_Checkout_Servic
 use PostNLWooCommerce\Rest_API\Legacy\Postcode_Check_Service as Legacy_Postcode_Check_Service;
 use PostNLWooCommerce\Rest_API\Legacy\Smart_Returns_Service as Legacy_Smart_Returns_Service;
 use PostNLWooCommerce\Rest_API\Service_Factory;
+use PostNLWooCommerce\Rest_API\V4\Returns\Smart_Returns_Service as V4_Smart_Returns_Service;
 use PostNLWooCommerce\Tests\UnitTestCase;
 
 /**
@@ -527,13 +528,17 @@ class Service_FactoryTest extends UnitTestCase {
 	}
 
 	/**
-	 * @testdox V4 key + flag but no stub: smart_returns_service() returns Legacy
+	 * @testdox V4 key + flag but no stub: smart_returns_service() self-instantiates the V4 service
+	 *
+	 * Unlike the Order\Base-extending label/return_label services, the V4 Smart
+	 * Returns service is zero-arg constructable, so the factory builds it directly
+	 * when the flow is enabled and no test double was injected.
 	 */
-	public function test_key_and_flag_but_no_stub_smart_returns_returns_legacy(): void {
+	public function test_key_and_flag_but_no_stub_smart_returns_returns_v4(): void {
 		Filters\expectApplied( 'postnl_sdk_enable_smart_returns' )->andReturn( true );
 
 		$factory = new Service_Factory( $this->settings_with_key() );
-		$this->assertInstanceOf( Legacy_Smart_Returns_Service::class, $factory->smart_returns_service() );
+		$this->assertInstanceOf( V4_Smart_Returns_Service::class, $factory->smart_returns_service() );
 	}
 
 	// -------------------------------------------------------------------------

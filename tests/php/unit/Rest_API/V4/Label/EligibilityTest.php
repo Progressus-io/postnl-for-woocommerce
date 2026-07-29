@@ -123,6 +123,77 @@ class EligibilityTest extends UnitTestCase {
 	}
 
 	/**
+	 * @testdox is_eligible() accepts a domestic NL letterbox (mailbox parcel 2928).
+	 */
+	public function test_letterbox_is_eligible(): void {
+		$signals = $this->signals(
+			array(
+				'mapped' => array(
+					'has_v4_equivalent' => true,
+					'shipmentType'      => 'letterbox',
+					'services'          => array(),
+					'deliveryLocation'  => array(),
+				),
+			)
+		);
+
+		$this->assertTrue( Eligibility::is_eligible( $signals ), 'A domestic NL letterbox should route to V4.' );
+	}
+
+	/**
+	 * @testdox is_eligible() rejects a letterbox shipment type for a non-domestic destination.
+	 *
+	 * Letterbox is a NL-only mailbox parcel; the mapper never yields it for an
+	 * international destination, and the gate must reject it even if one is forced.
+	 */
+	public function test_international_letterbox_is_ineligible(): void {
+		$signals = $this->signals(
+			array(
+				'destination' => 'EU',
+				'mapped'      => array(
+					'has_v4_equivalent' => true,
+					'shipmentType'      => 'letterbox',
+					'services'          => array(),
+					'deliveryLocation'  => array(),
+				),
+			)
+		);
+
+		$this->assertFalse( Eligibility::is_eligible( $signals ), 'An international letterbox must fall back to legacy.' );
+	}
+
+	/**
+	 * @testdox resolve_mapped() maps a 24h letterbox (2928) to the letterbox shipment type, eligible end-to-end.
+	 */
+	public function test_resolve_mapped_letterbox_is_eligible(): void {
+		$mapped = Eligibility::resolve_mapped( 'NL', 'NL', false, array( 'letterbox' => 'yes' ), '2928' );
+
+		$this->assertTrue( $mapped['has_v4_equivalent'] );
+		$this->assertSame( 'letterbox', $mapped['shipmentType'] );
+		$this->assertTrue(
+			Eligibility::is_eligible( $this->signals( array( 'mapped' => $mapped ) ) ),
+			'A 24h letterbox should route to V4.'
+		);
+	}
+
+	/**
+	 * @testdox resolve_mapped() keeps the 48h letterbox (2948) off V4 via the product-code mismatch guard.
+	 *
+	 * The 24h and 48h letterbox share the collapsed 'letterbox' option key, so the
+	 * matrix row resolves to product 2928; a 2948 order fails the mismatch guard
+	 * and must fall back to legacy rather than ship as a 24h letterbox.
+	 */
+	public function test_resolve_mapped_letterbox_48_falls_back(): void {
+		$mapped = Eligibility::resolve_mapped( 'NL', 'NL', false, array( 'letterbox' => 'yes' ), '2948' );
+
+		$this->assertFalse( $mapped['has_v4_equivalent'], 'A 48h letterbox (2948) must not resolve to a V4 equivalent.' );
+		$this->assertFalse(
+			Eligibility::is_eligible( $this->signals( array( 'mapped' => $mapped ) ) ),
+			'A 48h letterbox must fall back to the legacy path.'
+		);
+	}
+
+	/**
 	 * @testdox is_eligible() rejects orders outside the happy path.
 	 * @dataProvider ineligible_provider
 	 *
@@ -151,7 +222,7 @@ class EligibilityTest extends UnitTestCase {
 			'non-NL origin'              => array( array( 'origin' => 'BE' ), 'a non-NL origin' ),
 			'non-NL destination'         => array( array( 'destination' => 'BE' ), 'a non-NL destination' ),
 			'no v4 equivalent'           => array( array( 'mapped' => array( 'has_v4_equivalent' => false ) ), 'no V4 equivalent' ),
-			'non-parcel shipment type'   => array( array( 'mapped' => array( 'has_v4_equivalent' => true, 'shipmentType' => 'letterbox', 'services' => array() ) ), 'a letterbox shipment type' ),
+			'unsupported shipment type'  => array( array( 'mapped' => array( 'has_v4_equivalent' => true, 'shipmentType' => 'pallet', 'services' => array() ) ), 'an unsupported shipment type' ),
 			'mapped with pickup location' => array( array( 'mapped' => array( 'has_v4_equivalent' => true, 'shipmentType' => 'parcel', 'services' => array(), 'deliveryLocation' => array( 'pickupLocationId' => 'x' ) ) ), 'a pickup delivery location' ),
 		);
 	}

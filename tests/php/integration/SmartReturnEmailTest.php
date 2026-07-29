@@ -34,10 +34,25 @@ class SmartReturnEmailTest extends IntegrationTestCase {
 	}
 
 	/**
+	 * Build a fresh email instance.
+	 *
+	 * WC()->mailer() is called first so the lazily-loaded WC_Email base class is
+	 * available before the subclass is instantiated; a fresh instance per test
+	 * avoids the mailer singleton leaking printcode state between tests.
+	 *
+	 * @return WC_Email_Smart_Return
+	 */
+	private function make_email(): WC_Email_Smart_Return {
+		WC()->mailer();
+
+		return new WC_Email_Smart_Return();
+	}
+
+	/**
 	 * @testdox The V4 printcode renders inline (cid) in the body with no PDF attachment.
 	 */
 	public function test_v4_printcode_renders_inline_without_attachment(): void {
-		$email                    = new WC_Email_Smart_Return();
+		$email                    = $this->make_email();
 		$email->object            = $this->make_order();
 		$email->printcode_content = 'RAWPNGBYTES';
 		$email->printcode_mime    = 'image/png';
@@ -57,7 +72,7 @@ class SmartReturnEmailTest extends IntegrationTestCase {
 		$file = wp_tempnam( 'postnl-printcode' );
 		file_put_contents( $file, '%PDF-1.4 test' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents -- Test fixture file.
 
-		$email             = new WC_Email_Smart_Return();
+		$email             = $this->make_email();
 		$email->object     = $this->make_order();
 		$email->attachment = $file;
 
@@ -78,7 +93,7 @@ class SmartReturnEmailTest extends IntegrationTestCase {
 			require_once ABSPATH . WPINC . '/PHPMailer/Exception.php';
 		}
 
-		$email                    = new WC_Email_Smart_Return();
+		$email                    = $this->make_email();
 		$email->printcode_content = 'RAWPNGBYTES';
 		$email->printcode_mime    = 'image/png';
 

@@ -134,7 +134,7 @@ class Smart_Returns_Service implements Smart_Returns_Service_Interface {
 		}
 
 		throw new \Exception(
-			esc_html__( 'Cannot create the Smart Return. Printcode content is missing', 'postnl-for-woocommerce' )
+			esc_html__( 'Cannot create the Smart Return. Printcode content is missing.', 'postnl-for-woocommerce' )
 		);
 	}
 

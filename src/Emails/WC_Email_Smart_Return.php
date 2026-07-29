@@ -51,6 +51,14 @@ if ( ! class_exists( 'WC_Email_Smart_Return' ) ) :
 		public string $printcode_mime = '';
 
 		/**
+		 * Return barcode shown as text, a fallback when the inline image is blocked
+		 * or the email is rendered as plain text.
+		 *
+		 * @var string
+		 */
+		public string $printcode_barcode = '';
+
+		/**
 		 * Content-ID used to reference the embedded printcode image from the template.
 		 *
 		 * @var string
@@ -169,6 +177,7 @@ if ( ! class_exists( 'WC_Email_Smart_Return' ) ) :
 					'sent_to_admin'      => false,
 					'plain_text'         => false,
 					'printcode_cid'      => '' !== $this->printcode_content ? $this->printcode_cid : '',
+					'printcode_barcode'  => $this->printcode_barcode,
 					'email'              => $this,
 				),
 				'',
@@ -191,6 +200,7 @@ if ( ! class_exists( 'WC_Email_Smart_Return' ) ) :
 					'sent_to_admin'      => false,
 					'plain_text'         => true,
 					'printcode_cid'      => '' !== $this->printcode_content ? $this->printcode_cid : '',
+					'printcode_barcode'  => $this->printcode_barcode,
 					'email'              => $this,
 				),
 				'',

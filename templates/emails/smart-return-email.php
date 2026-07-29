@@ -35,6 +35,10 @@ do_action( 'woocommerce_email_header', $email_heading, $email ); ?>
 	</p>
 <?php endif; ?>
 
+<?php if ( ! empty( $printcode_barcode ) ) : ?>
+	<p style="text-align: center;"><?php echo esc_html__( 'Barcode:', 'postnl-for-woocommerce' ); ?> <strong><?php echo esc_html( $printcode_barcode ); ?></strong></p>
+<?php endif; ?>
+
 <?php
 
 /**

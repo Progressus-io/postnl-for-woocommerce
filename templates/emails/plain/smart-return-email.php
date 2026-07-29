@@ -26,6 +26,10 @@ echo sprintf( esc_html__( 'Hi %s,', 'woocommerce' ), esc_html( $order->get_billi
 /* translators: %s: Order number */
 echo esc_html__( 'In this email you will find the barcode you need to return your order. Scan this barcode at a PostNL point to print your return label. Please note, wait at least 10 minutes before scanning the barcode after receipt of this mail.', 'postnl-for-woocommerce' );
 
+if ( ! empty( $printcode_barcode ) ) {
+	echo "\n\n" . esc_html__( 'Barcode:', 'postnl-for-woocommerce' ) . ' ' . esc_html( $printcode_barcode );
+}
+
 echo "\n\n----------------------------------------\n\n";
 
 /**

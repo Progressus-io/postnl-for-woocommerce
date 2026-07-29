@@ -704,7 +704,7 @@ class Single extends Base {
 			$emails = WC()->mailer()->get_emails();
 
 			if ( empty( $emails ) || ! isset( $emails['WC_Smart_Return_Email'] ) ) {
-				throw new \Exception( esc_html__( 'Email could not be send', 'postnl-for-woocommerce' ) );
+				throw new \Exception( esc_html__( 'Email could not be sent', 'postnl-for-woocommerce' ) );
 			}
 
 			$email            = $emails['WC_Smart_Return_Email'];
@@ -718,6 +718,7 @@ class Single extends Base {
 
 				$email->printcode_content = $response['content'];
 				$email->printcode_mime    = $response['mime'] ?? 'image/png';
+				$email->printcode_barcode = (string) ( $response['barcode'] ?? '' );
 			} else {
 				// Legacy: pull the PrintcodeLabel PDF from the response and attach it.
 				$printcode_label_content = null;
@@ -738,7 +739,7 @@ class Single extends Base {
 				}
 
 				if ( ! $printcode_label_content ) {
-					throw new \Exception( esc_html__( 'PrintcodeLabel could not found', 'postnl-for-woocommerce' ) );
+					throw new \Exception( esc_html__( 'The Smart Return printcode could not be found.', 'postnl-for-woocommerce' ) );
 				}
 
 				$upload_dir = wp_upload_dir();
@@ -756,7 +757,7 @@ class Single extends Base {
 				wp_send_json_success( $to );
 			}
 
-			throw new \Exception( esc_html__( 'Email could not be send', 'postnl-for-woocommerce' ) );
+			throw new \Exception( esc_html__( 'Email could not be sent', 'postnl-for-woocommerce' ) );
 		} catch ( \Exception $e ) {
 			wp_send_json_error(
 				array( 'message' => $e->getMessage() ),

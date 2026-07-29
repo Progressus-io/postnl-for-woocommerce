@@ -41,10 +41,12 @@ class SmartReturnEmailTest extends IntegrationTestCase {
 		$email->object            = $this->make_order();
 		$email->printcode_content = 'RAWPNGBYTES';
 		$email->printcode_mime    = 'image/png';
+		$email->printcode_barcode = '3SDEVC12345678';
 
 		$html = $email->get_content_html();
 
 		$this->assertStringContainsString( 'cid:' . $email->printcode_cid, $html, 'The printcode image must be referenced inline in the body.' );
+		$this->assertStringContainsString( '3SDEVC12345678', $html, 'The barcode must be shown as a text fallback when the image is blocked.' );
 		$this->assertSame( array(), $email->get_attachments(), 'The V4 printcode path must not attach a PDF.' );
 	}
 

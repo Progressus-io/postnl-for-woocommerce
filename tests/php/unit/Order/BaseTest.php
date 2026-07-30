@@ -15,6 +15,7 @@ use ReflectionMethod;
 
 /**
  * @covers \PostNLWooCommerce\Order\Base::get_barcodes_from_labels
+ * @covers \PostNLWooCommerce\Order\Base::resolve_parent_barcode
  */
 class BaseTest extends UnitTestCase {
 
@@ -29,6 +30,19 @@ class BaseTest extends UnitTestCase {
 		$method = new ReflectionMethod( Base::class, 'get_barcodes_from_labels' );
 		$method->setAccessible( true );
 		return $method->invoke( null, $labels );
+	}
+
+	/**
+	 * Invoke the protected static parent-barcode resolver.
+	 *
+	 * @param mixed  $labels         Raw label records built from the API response.
+	 * @param string $parent_barcode Prefetched parent barcode, empty on the V4 path.
+	 * @return string
+	 */
+	private function resolve( $labels, string $parent_barcode ): string {
+		$method = new ReflectionMethod( Base::class, 'resolve_parent_barcode' );
+		$method->setAccessible( true );
+		return $method->invoke( null, $labels, $parent_barcode );
 	}
 
 	/** @testdox get_barcodes_from_labels() reads the barcode key out of each label record */
@@ -53,6 +67,53 @@ class BaseTest extends UnitTestCase {
 		);
 
 		$this->assertSame( array( '3SAAA', '3SBBB' ), $this->harvest( $labels ) );
+	}
+
+	/**
+	 * @testdox resolve_parent_barcode() keeps the prefetched barcode so the Legacy merge is unchanged.
+	 *
+	 * Legacy always passes main_barcode; the resolver must never override it.
+	 */
+	public function test_keeps_prefetched_parent_barcode(): void {
+		$labels = array(
+			array( 'barcode' => '3SFIRST' ),
+			array( 'barcode' => '3SSECOND' ),
+		);
+
+		$this->assertSame( '3SMAIN', $this->resolve( $labels, '3SMAIN' ) );
+	}
+
+	/**
+	 * @testdox resolve_parent_barcode() falls back to the first response barcode when none was prefetched.
+	 *
+	 * The V4 path has no prefetched barcode. Without this fallback maybe_merge_labels()
+	 * writes an empty barcode into the merged record for every non-A6 or multi-collo
+	 * order, so the harvest finds nothing and label generation throws.
+	 */
+	public function test_falls_back_to_first_response_barcode(): void {
+		$labels = array(
+			array( 'barcode' => '3SFIRST' ),
+			array( 'barcode' => '3SSECOND' ),
+		);
+
+		$this->assertSame( '3SFIRST', $this->resolve( $labels, '' ) );
+	}
+
+	/** @testdox resolve_parent_barcode() skips empty barcodes and tolerates non-arrays. */
+	public function test_resolver_skips_empty_and_tolerates_non_arrays(): void {
+		$this->assertSame( '', $this->resolve( 'not-an-array', '' ) );
+		$this->assertSame( '', $this->resolve( array(), '' ) );
+		$this->assertSame(
+			'3SONLY',
+			$this->resolve(
+				array(
+					array( 'type' => 'label' ),
+					array( 'barcode' => '' ),
+					array( 'barcode' => '3SONLY' ),
+				),
+				''
+			)
+		);
 	}
 
 	/** @testdox get_barcodes_from_labels() skips records with no barcode and tolerates non-arrays */

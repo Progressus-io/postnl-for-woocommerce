@@ -870,6 +870,10 @@ abstract class Base {
 			}
 		}
 
+		// Legacy passes the prefetched barcode through untouched; V4 has none, so fall
+		// back to the barcode the response already carried into the raw records.
+		$parent_barcode = self::resolve_parent_barcode( $labels, (string) $parent_barcode );
+
 		// if ( 'PDF' === $label_contents['OutputType'] ) {
 		$labels = $this->maybe_merge_labels( $labels, $order, $parent_barcode, $parent_label_type );
 
@@ -966,6 +970,39 @@ abstract class Base {
 		}
 
 		return $barcodes;
+	}
+
+	/**
+	 * Resolve the parent barcode used for the merged label record.
+	 *
+	 * Legacy prefetches it, so the passed-in value wins and the merge is unchanged.
+	 * V4 has no prefetch: without a fallback maybe_merge_labels() would stamp an
+	 * empty barcode onto the merged record for every non-A6 or multi-collo order,
+	 * leaving the harvest empty and the tracking URL blank.
+	 *
+	 * @param mixed  $labels         Raw label records built from the API response.
+	 * @param string $parent_barcode Prefetched parent barcode, empty on the V4 path.
+	 *
+	 * @return string
+	 *
+	 * @since 6.0.0
+	 */
+	protected static function resolve_parent_barcode( $labels, string $parent_barcode ) {
+		if ( '' !== $parent_barcode ) {
+			return $parent_barcode;
+		}
+
+		if ( ! is_array( $labels ) ) {
+			return '';
+		}
+
+		foreach ( $labels as $label ) {
+			if ( ! empty( $label['barcode'] ) ) {
+				return (string) $label['barcode'];
+			}
+		}
+
+		return '';
 	}
 
 	/**

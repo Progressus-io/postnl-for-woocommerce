@@ -16,6 +16,7 @@ namespace PostNLWooCommerce\Tests\Integration;
 
 use PostNLWooCommerce\Rest_API\Legacy\Shipping\Client as Legacy_Shipping_Client;
 use PostNLWooCommerce\Rest_API\Shipping;
+use PostNLWooCommerce\Rest_API\V4\Label\Request_Builder;
 use PostNLWooCommerce\Rest_API\V4\Label\Service as V4_Label_Service;
 use PostNLWooCommerce\Tests\IntegrationTestCase;
 
@@ -135,9 +136,9 @@ class FilterCarryForwardTest extends IntegrationTestCase {
 	}
 
 	/**
-	 * @testdox A postnl_shipment_addresses modification is honoured by the V4 label path.
+	 * @testdox A postnl_shipment_addresses modification reaches the V4 receiver fields.
 	 */
-	public function test_shipment_addresses_modification_is_returned(): void {
+	public function test_shipment_addresses_modification_reaches_the_receiver(): void {
 		$rewrite = function ( $addresses ) {
 			foreach ( $addresses as $index => $address ) {
 				if ( '01' === ( $address['AddressType'] ?? '' ) ) {
@@ -156,12 +157,19 @@ class FilterCarryForwardTest extends IntegrationTestCase {
 			remove_filter( 'postnl_shipment_addresses', $rewrite, 10 );
 		}
 
-		$recipient = $this->recipient_entry( $addresses );
-		$this->assertNotNull( $recipient );
+		// Compose the two calls create() makes — the filtered addresses through
+		// apply_filtered_receiver() — so the assertion proves the rewrite lands on
+		// the receiver fields the DTO consumes, not merely that add_filter mutated
+		// the array.
+		$receiver = Request_Builder::apply_filtered_receiver(
+			array( 'street' => 'Main Street' ),
+			$addresses
+		);
+
 		$this->assertSame(
 			'Rewritten Street',
-			$recipient['Street'],
-			'A third-party address rewrite must reach the V4 request, not be fired and ignored.'
+			$receiver['street'],
+			'A third-party address rewrite must reach the V4 receiver, not be fired and ignored.'
 		);
 	}
 

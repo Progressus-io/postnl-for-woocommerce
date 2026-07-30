@@ -42,6 +42,22 @@ merchants until a flow is turned on.
   They fire from `Order\Base` and `Logger`, which every service (legacy and V4)
   reuses unchanged, so they carry forward with no V4-specific work.
 
+## Known differences from legacy (in-scope)
+
+- **Only the recipient (AddressType `01`) entry is applied on V4.** V4 currently
+  handles only the happy-path domestic parcel — eligibility rejects pickup and
+  return — so `apply_filtered_receiver()` reads the first `01` entry and ignores
+  any `09` (pickup) / `08` (return) / second `01` entry a filter might add.
+  Legacy forwards every entry to the API. This is acceptable for the migrated
+  scope; when pickup/return migrate to V4 those entry types must be honoured too.
+
+- **The filter's `$client` argument is a fresh instance, not the request sender.**
+  The documented contract is to modify and return `$addresses`. A third party that
+  instead mutated the `$client` object would affect the outbound request on legacy
+  (same instance composes and sends it) but be a no-op on V4, where the client is
+  built only to fire the filter with the identical shape. No known consumer does
+  this.
+
 ## Verification
 
 - `tests/php/integration/FilterCarryForwardTest.php` asserts `postnl_order_weight`
@@ -51,4 +67,3 @@ merchants until a flow is turned on.
 - `tests/php/unit/Rest_API/V4/Label/Request_BuilderTest.php` covers
   `apply_filtered_receiver()` — the pure mapping of a filtered recipient address
   back onto the receiver field set.
-</content>

@@ -570,7 +570,7 @@ abstract class Base {
 	 * @param int   $order_id Order post ID.
 	 * @param array $meta_values PostNL meta values.
 	 *
-	 * @throws \Exception Throw error for invalid order id.
+	 * @throws \Exception When the order is invalid, or the V4 label response carries no barcode.
 	 */
 	public function save_meta_value( $order_id, $meta_values ) {
 
@@ -633,13 +633,7 @@ abstract class Base {
 			$label_post_data['is_return_activated'] = $this->is_return_function_activated( $order );
 
 			$labels   = $this->create_label( $label_post_data );
-			$barcodes = self::get_barcodes_from_labels( $labels );
-
-			// The prefetch path fails loudly when no barcode exists; the harvest path must too,
-			// or labels would be stored with an empty barcodes[] and no tracking URL.
-			if ( empty( $barcodes ) ) {
-				throw new \Exception( esc_html__( 'No barcode found in the label response!', 'postnl-for-woocommerce' ) );
-			}
+			$barcodes = $this->harvest_barcodes_or_fail( $labels );
 		} else {
 			$barcodes                        = $this->maybe_create_multi_barcodes( $label_post_data );
 			$label_post_data['main_barcode'] = $barcodes[0]; // for MainBarcode.
@@ -967,6 +961,35 @@ abstract class Base {
 			if ( ! empty( $label['barcode'] ) && ! in_array( $label['barcode'], $barcodes, true ) ) {
 				$barcodes[] = $label['barcode'];
 			}
+		}
+
+		return $barcodes;
+	}
+
+	/**
+	 * Harvest the barcodes from a fresh label response, discarding the files on failure.
+	 *
+	 * On the V4 path the label call has already written PDFs to disk before the
+	 * harvest runs. Throwing while keeping them would orphan those files behind a
+	 * retry that generates a fresh label, so they are removed before failing.
+	 *
+	 * @param array $labels Label records returned by create_label().
+	 *
+	 * @return array List of barcode strings.
+	 *
+	 * @throws \Exception When the label response carries no barcode.
+	 *
+	 * @since 6.0.0
+	 */
+	protected function harvest_barcodes_or_fail( $labels ) {
+		$barcodes = self::get_barcodes_from_labels( $labels );
+
+		if ( empty( $barcodes ) ) {
+			$this->delete_label( array( 'labels' => $labels ) );
+
+			throw new \Exception(
+				esc_html__( 'PostNL returned a label without a barcode. Please try generating the label again.', 'postnl-for-woocommerce' )
+			);
 		}
 
 		return $barcodes;

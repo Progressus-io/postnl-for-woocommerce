@@ -116,6 +116,27 @@ class BaseTest extends UnitTestCase {
 		);
 	}
 
+	/**
+	 * @testdox get_barcodes_from_labels() returns one barcode for a merged multi-collo record.
+	 *
+	 * Characterises the deferred parity gap: the merge collapses N collo into a
+	 * single record, so the harvest yields one barcode where the Legacy prefetch
+	 * records N. Recovering all N is part of the V4 multi-collo label work; this
+	 * fails loudly if the merge shape changes before that lands.
+	 */
+	public function test_merged_multi_collo_record_yields_single_barcode(): void {
+		$merged = array(
+			'label' => array(
+				'type'         => 'label',
+				'barcode'      => '3SCOLLO1',
+				'filepath'     => '/tmp/merged.pdf',
+				'merged_files' => array( '/tmp/a.pdf', '/tmp/b.pdf', '/tmp/c.pdf' ),
+			),
+		);
+
+		$this->assertSame( array( '3SCOLLO1' ), $this->harvest( $merged ) );
+	}
+
 	/** @testdox get_barcodes_from_labels() skips records with no barcode and tolerates non-arrays */
 	public function test_ignores_empty_and_non_array_input(): void {
 		$this->assertSame( array(), $this->harvest( array() ) );

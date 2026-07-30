@@ -20,19 +20,12 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * V4 barcode "service" — intentionally a no-op.
  *
- * PostNL confirmed (2026-05-21) that V4 has no standalone barcode endpoint: the
- * label call (/shipment/delivery/v4/labelconfirm) auto-issues the barcode based
- * on shipment type and destination and returns it in the label response. So the
- * prefetch that the Legacy transport performs against GET /shipment/v1_1/barcode
- * does not exist on V4; there is nothing for generate() to request.
+ * V4 has no standalone barcode endpoint: the label call auto-issues the barcode and
+ * returns it, so there is nothing for generate() to request. Order\Base takes the
+ * label-first branch on V4 and never calls generate(); this class exists only so
+ * Service_Factory can return a uniform Barcode_Service_Interface.
  *
- * On the V4 path, Order\Base reverses the ordering (label first, then reads the
- * barcode out of the label response) and never calls generate(). This class
- * exists only so Service_Factory can return a uniform Barcode_Service_Interface
- * for the barcode flow; generate() returns an empty array as a safe fallback if
- * it is ever reached.
- *
- * @since   5.9.6
+ * @since   6.0.0
  * @package PostNLWooCommerce\Rest_API\V4\Barcode
  */
 class Service implements Barcode_Service_Interface {
@@ -40,11 +33,14 @@ class Service implements Barcode_Service_Interface {
 	/**
 	 * No-op barcode generation.
 	 *
-	 * V4 issues the barcode from the label response, so no request is made here.
+	 * Returns an empty array, which create_barcode() rejects loudly — reaching this
+	 * method means the V4 path was mis-wired, not that a barcode is unavailable.
 	 *
 	 * @param array $post_data Post data (unused on V4).
 	 *
-	 * @return array Empty array — the barcode is harvested from the label response.
+	 * @return array Always empty; the barcode is harvested from the label response.
+	 *
+	 * @since 6.0.0
 	 */
 	public function generate( array $post_data ): array {
 		return array();

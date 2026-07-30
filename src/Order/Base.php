@@ -940,15 +940,19 @@ abstract class Base {
 	/**
 	 * Harvest the barcode(s) out of a label-generation response.
 	 *
-	 * On the V4 path the label call issues the barcode, so it arrives inside each
-	 * label record under the same 'barcode' key the Legacy pipeline already writes
-	 * (see put_label_content() and maybe_merge_labels()). Returned in the indexed
-	 * shape maybe_create_multi_barcodes() produces so the caller stores barcodes[]
-	 * identically to the prefetch path.
+	 * On V4 the label call issues the barcode, so it arrives under the same 'barcode'
+	 * key put_label_content() already writes. Returned in the indexed shape
+	 * maybe_create_multi_barcodes() produces.
 	 *
-	 * @param array $labels Label records returned by create_label().
+	 * Multi-collo parity is deferred to the V4 multi-collo label work: the merge
+	 * collapses N collo into one record, so this returns a single barcode where the
+	 * Legacy prefetch records N.
+	 *
+	 * @param mixed $labels Label records returned by create_label().
 	 *
 	 * @return array List of barcode strings.
+	 *
+	 * @since 6.0.0
 	 */
 	protected static function get_barcodes_from_labels( $labels ) {
 		$barcodes = array();

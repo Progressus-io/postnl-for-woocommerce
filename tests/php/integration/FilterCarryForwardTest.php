@@ -27,11 +27,11 @@ use PostNLWooCommerce\Tests\IntegrationTestCase;
 class FilterCarryForwardTest extends IntegrationTestCase {
 
 	/**
-	 * Backup of the woocommerce_default_country option.
+	 * Backups of the WC store-address options, restored on teardown.
 	 *
-	 * @var mixed
+	 * @var array<string, mixed>
 	 */
-	private $orig_country = null;
+	private $orig_options = array();
 
 	/**
 	 * IDs of orders created during a test, removed on teardown.
@@ -48,20 +48,32 @@ class FilterCarryForwardTest extends IntegrationTestCase {
 	private $product_ids = array();
 
 	/**
-	 * Put the store in NL so the shipper resolves to a domestic origin.
+	 * Configure a complete NL store address so the shipper resolves to a valid
+	 * domestic origin — Item_Info validation rejects an unconfigured store.
 	 */
 	protected function setUp(): void {
 		parent::setUp();
 
-		$this->orig_country = get_option( 'woocommerce_default_country' );
-		update_option( 'woocommerce_default_country', 'NL' );
+		$store = array(
+			'woocommerce_default_country' => 'NL',
+			'woocommerce_store_address'   => 'Siriusdreef',
+			'woocommerce_store_city'      => 'Hoofddorp',
+			'woocommerce_store_postcode'  => '2132WT',
+		);
+
+		foreach ( $store as $option => $value ) {
+			$this->orig_options[ $option ] = get_option( $option );
+			update_option( $option, $value );
+		}
 	}
 
 	/**
-	 * Restore the store country and remove the fixtures created by the test.
+	 * Restore the store options and remove the fixtures created by the test.
 	 */
 	protected function tearDown(): void {
-		update_option( 'woocommerce_default_country', $this->orig_country );
+		foreach ( $this->orig_options as $option => $value ) {
+			update_option( $option, $value );
+		}
 
 		foreach ( $this->order_ids as $order_id ) {
 			wp_delete_post( $order_id, true );

@@ -223,6 +223,8 @@ class FilterCarryForwardTest extends IntegrationTestCase {
 		$this->product_ids[] = $product->get_id();
 
 		$order = new \WC_Order();
+		$order->set_billing_email( 'buyer@example.com' );
+		$order->set_billing_phone( '0612345678' );
 		$order->set_shipping_first_name( 'Jan' );
 		$order->set_shipping_last_name( 'Jansen' );
 		$order->set_shipping_company( 'Buyer BV' );

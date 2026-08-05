@@ -353,44 +353,64 @@ class ServiceTest extends UnitTestCase {
 	}
 
 	/**
-	 * @testdox An order after the cut-off time is picked up the next day
+	 * @testdox An order before the cut-off time arrives the day after that day's handover
+	 *
+	 * pickupDate is when the parcel has to be at the location, not when the merchant
+	 * hands it over, so the baseline case is order day + 1 — the transit day PostNL
+	 * needs. Advertising the handover day would promise a same-day pickup for a
+	 * parcel that is still with the merchant.
 	 */
-	public function test_pickup_date_after_cutoff_shifts_a_day(): void {
-		$settings = $this->make_shipping_settings( '16:00', '1', array( 'mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun' ) );
-		$service  = $this->make_pickup_date_service( '2026-07-14 17:00:00', $settings );
+	public function test_pickup_date_is_the_day_after_handover(): void {
+		$settings = $this->make_shipping_settings( '16:00', '1', self::ALL_DROPOFF_DAYS );
+		$service  = $this->make_pickup_date_service( '2026-07-14 10:00:00', $settings );
 
 		$this->assertSame( '2026-07-15', $service->expose_pickup_date() );
+	}
+
+	/**
+	 * @testdox An order after the cut-off time is picked up a day later still
+	 */
+	public function test_pickup_date_after_cutoff_shifts_a_day(): void {
+		$settings = $this->make_shipping_settings( '16:00', '1', self::ALL_DROPOFF_DAYS );
+		$service  = $this->make_pickup_date_service( '2026-07-14 17:00:00', $settings );
+
+		$this->assertSame( '2026-07-16', $service->expose_pickup_date(), 'Handover slips to 07-15, arrival to 07-16.' );
 	}
 
 	/**
 	 * @testdox Each transit day beyond the first adds a preparation day
 	 */
 	public function test_pickup_date_adds_transit_days(): void {
-		$settings = $this->make_shipping_settings( '16:00', '3', array( 'mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun' ) );
+		$settings = $this->make_shipping_settings( '16:00', '3', self::ALL_DROPOFF_DAYS );
 		$service  = $this->make_pickup_date_service( '2026-07-14 10:00:00', $settings );
 
-		$this->assertSame( '2026-07-16', $service->expose_pickup_date() );
+		$this->assertSame( '2026-07-17', $service->expose_pickup_date(), 'Two preparation days put the handover on 07-16; arrival is 07-17.' );
 	}
 
 	/**
-	 * @testdox The pickup date lands on the next enabled drop-off day
+	 * @testdox The handover lands on the next enabled drop-off day and arrival follows it
+	 *
+	 * The trailing day is plain calendar arithmetic: Monday 07-20 is the first day the
+	 * merchant can hand over, and the parcel reaches the location on Tuesday 07-21.
+	 * Only the handover is walked onto a drop-off day — those say when the merchant
+	 * ships, not when PostNL delivers.
 	 */
 	public function test_pickup_date_skips_disabled_dropoff_days(): void {
 		// Friday 2026-07-17 after the 16:00 cut-off; weekends are not drop-off days.
 		$settings = $this->make_shipping_settings( '16:00', '1', array( 'mon', 'tue', 'wed', 'thu', 'fri' ) );
 		$service  = $this->make_pickup_date_service( '2026-07-17 17:00:00', $settings );
 
-		$this->assertSame( '2026-07-20', $service->expose_pickup_date() );
+		$this->assertSame( '2026-07-21', $service->expose_pickup_date() );
 	}
 
 	/**
 	 * @testdox A malformed cut-off setting falls back to the 23:00 default instead of failing
 	 */
 	public function test_pickup_date_tolerates_malformed_cutoff(): void {
-		$settings = $this->make_shipping_settings( 'not-a-time', '1', array( 'mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun' ) );
+		$settings = $this->make_shipping_settings( 'not-a-time', '1', self::ALL_DROPOFF_DAYS );
 		$service  = $this->make_pickup_date_service( '2026-07-14 22:00:00', $settings );
 
-		$this->assertSame( '2026-07-14', $service->expose_pickup_date() );
+		$this->assertSame( '2026-07-15', $service->expose_pickup_date() );
 	}
 
 	// ── Caching ──────────────────────────────────────────────────────────────

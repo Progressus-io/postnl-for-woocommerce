@@ -396,14 +396,24 @@ class Service implements Pickup_Location_Service_Interface {
 	}
 
 	/**
-	 * Pickup date (ISO 8601) the parcel is expected to reach the location.
+	 * Pickup date (ISO 8601): the date the parcel reaches the pickup location.
+	 *
+	 * The SDK documents pickupDate as "the date on which the parcel needs to be
+	 * delivered at the PickUpLocation" — an arrival date, not a handover date.
 	 *
 	 * The legacy checkout call sends OrderDate, ShippingDuration, and per-day
 	 * CutOffTimes and lets PostNL walk the calendar to the first shippable day;
-	 * the V4 near-address request only accepts a single pickupDate, so that walk
-	 * happens here: an order placed after the cut-off time hands over a day later,
-	 * each transit day beyond the first adds a preparation day, and the handover
-	 * then lands on the next enabled drop-off day.
+	 * the V4 near-address request accepts neither, so the walk happens here, on
+	 * the same model V4\Timeframe\Service::get_handover_date() uses: an order
+	 * placed after the cut-off time hands over a day later, each transit day
+	 * beyond the first adds a preparation day, and the handover then lands on the
+	 * next enabled drop-off day. Arrival is one network day after that handover —
+	 * the Transit Time setting promises delivery at order + t and the merchant
+	 * hands over at order + (t - 1), so the last day is PostNL's.
+	 *
+	 * That final day is plain calendar arithmetic, deliberately not re-walked onto
+	 * a drop-off day: drop-off days say when the merchant hands parcels to PostNL,
+	 * not which days PostNL delivers on.
 	 *
 	 * @return string
 	 */
@@ -433,7 +443,7 @@ class Service implements Pickup_Location_Service_Interface {
 			}
 		}
 
-		$this->pickup_date = $handover->format( 'Y-m-d' );
+		$this->pickup_date = $handover->modify( '+1 day' )->format( 'Y-m-d' );
 
 		return $this->pickup_date;
 	}

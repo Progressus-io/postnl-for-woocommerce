@@ -224,7 +224,7 @@ class ServiceTest extends UnitTestCase {
 		$this->assertSame(
 			array(
 				array(
-					'PickupDate' => '2026-07-14',
+					'PickupDate' => '14-07-2026',
 					'Locations'  => array(
 						array(
 							'LocationCode' => '176227',
@@ -455,6 +455,33 @@ class ServiceTest extends UnitTestCase {
 			),
 			$location['OpeningHours']
 		);
+	}
+
+	/**
+	 * @testdox The request carries the ISO pickup date while the mapped group carries d-m-Y
+	 *
+	 * The two dates have different consumers. PostNL wants ISO on the wire, but the
+	 * group's PickupDate is echoed straight into the pickup radio label
+	 * (templates/checkout/postnl-dropoff-points.php) and saved as dropoff_points_date
+	 * for the admin order box and the confirmation email, where every other date the
+	 * plugin shows is d-m-Y. Emitting ISO there shows the customer a date in a format
+	 * that appears nowhere else in the checkout.
+	 */
+	public function test_group_date_is_display_formatted_while_the_request_stays_iso(): void {
+		$this->with_transient_store();
+		Functions\when( 'current_datetime' )->justReturn( new \DateTimeImmutable( '2026-07-14 10:00:00' ) );
+
+		$http    = new Counting_Http_Client( $this->locations_response_body() );
+		$factory = new Spy_Pickup_Client_Factory( $this->make_settings(), $http );
+		$service = new Service( $factory, $this->make_settings(), self::V4_KEY, self::LOCATIONS, new NullLogger() );
+
+		$result = $service->get_pickup_locations( $this->nl_post_data() );
+
+		$this->assertNotNull( $http->last_request, 'The SDK must have sent a request.' );
+		$sent = json_decode( (string) $http->last_request->getBody(), true );
+
+		$this->assertSame( '2026-07-15', $sent['pickupDate'], 'PostNL is sent the ISO date.' );
+		$this->assertSame( '15-07-2026', $result['PickupOptions'][0]['PickupDate'], 'The customer is shown the same day, in the format the plugin uses everywhere else.' );
 	}
 
 	// ── Authentication ───────────────────────────────────────────────────────

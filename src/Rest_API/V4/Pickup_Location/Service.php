@@ -305,6 +305,13 @@ class Service implements Pickup_Location_Service_Interface {
 	 * date, so the whole list becomes a single group. An empty collection yields
 	 * an empty PickupOptions array, which hides the pickup tab.
 	 *
+	 * The group's PickupDate is the customer-facing one and is emitted as d-m-Y,
+	 * not the ISO date the request carries: Frontend\Dropoff_Points reads it into
+	 * the pickup radio label verbatim, and it is stored on the order as
+	 * dropoff_points_date for the admin order box and the confirmation email —
+	 * every date the plugin shows is d-m-Y. Both formats come from the one
+	 * memoised pickup date, so the request and the label can never disagree.
+	 *
 	 * @param PickUpLocationsCollection $collection SDK locations collection.
 	 *
 	 * @return array<int, array{PickupDate: string, Locations: array<int, array>}>
@@ -322,10 +329,32 @@ class Service implements Pickup_Location_Service_Interface {
 
 		return array(
 			array(
-				'PickupDate' => $this->get_pickup_date(),
+				'PickupDate' => $this->get_display_pickup_date(),
 				'Locations'  => $locations,
 			),
 		);
+	}
+
+	/**
+	 * The pickup date in the d-m-Y format the plugin shows customers.
+	 *
+	 * Derived from get_pickup_date() rather than computed separately so the date
+	 * on the request and the date on the radio label stay the same day.
+	 *
+	 * get_pickup_date() is a protected seam, so a subclass can hand this a string
+	 * that is not ISO; createFromFormat() then returns false and false->format()
+	 * would fatal the whole checkout lookup. Such a date is echoed unchanged
+	 * instead — the same choice Timeframe\Service makes for a delivery date it
+	 * cannot parse.
+	 *
+	 * @return string
+	 */
+	private function get_display_pickup_date(): string {
+		$iso = $this->get_pickup_date();
+
+		$date = \DateTimeImmutable::createFromFormat( '!Y-m-d', $iso );
+
+		return false === $date ? $iso : $date->format( 'd-m-Y' );
 	}
 
 	/**

@@ -278,8 +278,10 @@ class Service implements Pickup_Location_Service_Interface {
 	 * Build the SDK client with the locations caching plugin attached.
 	 *
 	 * The CachingPlugin only caches responses whose URI contains '/locations/',
-	 * and its key prefix ('locations') keeps the Cache_Adapter allowlist happy so
-	 * both gates agree on what may be cached.
+	 * and its key prefix is Cache_Adapter's own PREFIX_LOCATIONS so both gates
+	 * agree on what may be cached. Naming the constant rather than repeating the
+	 * literal is what makes a rename a compile error instead of a cache that
+	 * silently stores nothing.
 	 *
 	 * The adapter is handed the logger so its allowlist-bypass warning can fire: a
 	 * keyPrefix that stops matching caches nothing at all, which is otherwise
@@ -292,7 +294,7 @@ class Service implements Pickup_Location_Service_Interface {
 			cache: new Cache_Adapter( $this->v4_key, $this->logger ),
 			ttl: $this->cache_ttl(),
 			allowedEndpoints: array( '/locations/' ),
-			keyPrefix: 'locations'
+			keyPrefix: Cache_Adapter::PREFIX_LOCATIONS
 		);
 
 		return $this->client_factory->build_with_plugins( $this->v4_key, (bool) $this->settings->is_sandbox(), $caching_plugin );

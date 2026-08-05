@@ -29,6 +29,16 @@ do_action( 'woocommerce_email_header', $email_heading, $email ); ?>
 <?php /* translators: %s: Order number */ ?>
 <p><?php echo esc_html__( 'In this email you will find the barcode you need to return your order. Scan this barcode at a PostNL point to print your return label. Please note, wait at least 10 minutes before scanning the barcode after receipt of this mail.', 'postnl-for-woocommerce' ); ?></p>
 
+<?php if ( ! empty( $printcode_cid ) ) : ?>
+	<p style="text-align: center; margin: 24px 0;">
+		<img src="<?php echo esc_attr( 'cid:' . $printcode_cid ); ?>" alt="<?php esc_attr_e( 'PostNL Smart Return barcode', 'postnl-for-woocommerce' ); ?>" style="max-width: 100%; height: auto;" />
+	</p>
+<?php endif; ?>
+
+<?php if ( ! empty( $printcode_barcode ) ) : ?>
+	<p style="text-align: center;"><?php echo esc_html__( 'Barcode:', 'postnl-for-woocommerce' ); ?> <strong><?php echo esc_html( $printcode_barcode ); ?></strong></p>
+<?php endif; ?>
+
 <?php
 
 /**

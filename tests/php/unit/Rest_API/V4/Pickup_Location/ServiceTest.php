@@ -405,12 +405,32 @@ class ServiceTest extends UnitTestCase {
 
 	/**
 	 * @testdox A malformed cut-off setting falls back to the 23:00 default instead of failing
+	 *
+	 * The fixture is '16:0' rather than something obviously non-numeric on purpose:
+	 * the cut-off comparison is a string compare, so 'not-a-time' sorts above every
+	 * clock string and the handover stays put whether the validation runs or not.
+	 * '16:0' sorts below '22:00', so dropping the validation shifts the date a day
+	 * and this test notices.
 	 */
 	public function test_pickup_date_tolerates_malformed_cutoff(): void {
-		$settings = $this->make_shipping_settings( 'not-a-time', '1', self::ALL_DROPOFF_DAYS );
+		$settings = $this->make_shipping_settings( '16:0', '1', self::ALL_DROPOFF_DAYS );
 		$service  = $this->make_pickup_date_service( '2026-07-14 22:00:00', $settings );
 
 		$this->assertSame( '2026-07-15', $service->expose_pickup_date() );
+	}
+
+	/**
+	 * @testdox An order placed during the exact cut-off minute still hands over the same day
+	 *
+	 * Every other cut-off test sits well clear of the boundary, so widening the
+	 * comparison to >= would pass them all and quietly push each order that lands in
+	 * the cut-off minute itself a day out.
+	 */
+	public function test_pickup_date_at_exact_cutoff_minute_is_the_same_handover_day(): void {
+		$settings = $this->make_shipping_settings( '16:00', '1', self::ALL_DROPOFF_DAYS );
+		$service  = $this->make_pickup_date_service( '2026-07-14 16:00:59', $settings );
+
+		$this->assertSame( '2026-07-15', $service->expose_pickup_date(), 'The handover stays on 07-14, so arrival is 07-15.' );
 	}
 
 	// ── Caching ──────────────────────────────────────────────────────────────
@@ -482,6 +502,36 @@ class ServiceTest extends UnitTestCase {
 
 		$this->assertSame( '2026-07-15', $sent['pickupDate'], 'PostNL is sent the ISO date.' );
 		$this->assertSame( '15-07-2026', $result['PickupOptions'][0]['PickupDate'], 'The customer is shown the same day, in the format the plugin uses everywhere else.' );
+	}
+
+	/**
+	 * @testdox A lookup that straddles the cut-off minute still sends and shows one date
+	 *
+	 * The pickup date is read twice per lookup — once for the request, once for the
+	 * mapped group — and the clock advances between them. Without the memo an order
+	 * placed in the minute before the cut-off asks PostNL for one day and tells the
+	 * customer another, so the label promises a pickup the parcel will not make.
+	 *
+	 * The pinned times sit either side of the 23:00 cut-off precisely so the two
+	 * reads would disagree; a pair on the same side of it would assert nothing.
+	 */
+	public function test_pickup_date_is_memoised_across_the_request_and_the_mapped_group(): void {
+		$this->with_transient_store();
+
+		$http     = new Counting_Http_Client( $this->locations_response_body() );
+		$factory  = new Spy_Pickup_Client_Factory( $this->make_settings(), $http );
+		$settings = $this->make_settings( cut_off: '23:00' );
+		$service  = new Moving_Clock_Pickup_Service( $factory, $settings, self::V4_KEY, self::LOCATIONS, new NullLogger() );
+
+		$service->set_clock( '2026-07-14 22:59:00', '2026-07-14 23:01:00' );
+
+		$result = $service->get_pickup_locations( $this->nl_post_data() );
+
+		$this->assertNotNull( $http->last_request, 'The SDK must have sent a request.' );
+		$sent = json_decode( (string) $http->last_request->getBody(), true );
+
+		$this->assertSame( '2026-07-15', $sent['pickupDate'], 'The first read, before the cut-off, decides the date.' );
+		$this->assertSame( '15-07-2026', $result['PickupOptions'][0]['PickupDate'], 'The customer must be shown the day that was actually requested.' );
 	}
 
 	// ── Authentication ───────────────────────────────────────────────────────
@@ -727,6 +777,48 @@ class Pickup_Date_Service extends Service {
 	 */
 	public function expose_pickup_date(): string {
 		return $this->get_pickup_date();
+	}
+}
+
+/**
+ * A Service whose clock advances by one pinned time per now() call, so a test can
+ * observe what happens when the wall clock moves during a single lookup.
+ */
+class Moving_Clock_Pickup_Service extends Service {
+
+	/**
+	 * Remaining pinned times, consumed in order.
+	 *
+	 * @var string[]
+	 */
+	private array $times = array();
+
+	/**
+	 * Pin the times now() returns, in call order.
+	 *
+	 * @param string ...$times Site-timezone datetimes, e.g. '2026-07-14 22:59:00'.
+	 */
+	public function set_clock( string ...$times ): void {
+		$this->times = $times;
+	}
+
+	/**
+	 * The next pinned time.
+	 *
+	 * Running out throws rather than repeating the last value: a test that pins two
+	 * times is asserting the clock is read at most twice, and silently reusing one
+	 * would turn a lost memo into a passing test.
+	 *
+	 * @return \DateTimeImmutable
+	 */
+	protected function now(): \DateTimeImmutable {
+		$next = array_shift( $this->times );
+
+		if ( null === $next ) {
+			throw new \LogicException( 'now() was called more often than the test pinned times for.' );
+		}
+
+		return new \DateTimeImmutable( $next );
 	}
 }
 

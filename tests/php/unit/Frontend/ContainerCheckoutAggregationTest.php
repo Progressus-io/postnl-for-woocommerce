@@ -26,16 +26,17 @@ class ContainerCheckoutAggregationTest extends UnitTestCase {
 	 * touches the WooCommerce-dependent constructor or the POSTNL_SETTINGS_ID
 	 * constant (defining it here would leak into every later test in the run).
 	 *
-	 * @param Timeframe_Service_Interface       $timeframe Delivery-day service.
-	 * @param Pickup_Location_Service_Interface $pickup    Pickup-location service.
-	 * @param array                             $post_data Checkout post input.
+	 * @param Timeframe_Service_Interface       $timeframe       Delivery-day service.
+	 * @param Pickup_Location_Service_Interface $pickup          Pickup-location service.
+	 * @param array                             $post_data       Checkout post input.
+	 * @param bool                              $pickup_enabled  Whether the merchant enabled pickup points.
 	 * @return array
 	 */
-	private function aggregate( $timeframe, $pickup, array $post_data ): array {
+	private function aggregate( $timeframe, $pickup, array $post_data, bool $pickup_enabled = true ): array {
 		$method = new \ReflectionMethod( Container::class, 'aggregate_delivery_options' );
 		$method->setAccessible( true );
 
-		return $method->invoke( null, $timeframe, $pickup, $post_data );
+		return $method->invoke( null, $timeframe, $pickup, $post_data, $pickup_enabled );
 	}
 
 	/**
@@ -134,5 +135,37 @@ class ContainerCheckoutAggregationTest extends UnitTestCase {
 
 		$this->assertSame( array( array( 'DeliveryDate' => '03-01-2026' ) ), $result['DeliveryOptions'] );
 		$this->assertSame( array(), $result['PickupOptions'] );
+	}
+
+	/**
+	 * A merchant who switched pickup points off must not have the lookup fired at all,
+	 * and the response must carry no PickupOptions key — the same shape legacy produces
+	 * when the setting keeps 'Pickup' out of the request options.
+	 */
+	public function test_disabled_pickup_points_skip_the_lookup_entirely(): void {
+		$timeframe = new class() implements Timeframe_Service_Interface {
+			public int $calls = 0;
+
+			public function get_delivery_options( array $post_data ): array {
+				++$this->calls;
+				return array( 'DeliveryOptions' => array( array( 'DeliveryDate' => '04-01-2026' ) ) );
+			}
+		};
+
+		$pickup = new class() implements Pickup_Location_Service_Interface {
+			public int $calls = 0;
+
+			public function get_pickup_locations( array $post_data ): array {
+				++$this->calls;
+				return array( 'PickupOptions' => array( array( 'PickupDate' => '04-01-2026' ) ) );
+			}
+		};
+
+		$result = $this->aggregate( $timeframe, $pickup, $this->post_data(), false );
+
+		$this->assertSame( 0, $pickup->calls, 'A disabled setting must not issue the pickup request.' );
+		$this->assertArrayNotHasKey( 'PickupOptions', $result, 'A disabled setting must leave PickupOptions absent, as legacy does.' );
+		$this->assertSame( 1, $timeframe->calls );
+		$this->assertSame( array( array( 'DeliveryDate' => '04-01-2026' ) ), $result['DeliveryOptions'] );
 	}
 }

@@ -204,7 +204,8 @@ class Container {
 		$response  = self::aggregate_delivery_options(
 			$this->service_factory()->timeframe_service(),
 			$this->service_factory()->pickup_location_service(),
-			$post_data
+			$post_data,
+			$this->settings->is_pickup_points_enabled()
 		);
 		$letterbox = Utils::is_cart_eligible_auto_letterbox( \WC()->cart );
 
@@ -239,19 +240,29 @@ class Container {
 	 * whole lookup, so a failure never renders delivery days without pickup points or
 	 * vice versa.
 	 *
+	 * The pickup gate mirrors legacy as well. Rest_API\Base_Info sends the same
+	 * is_pickup_points_enabled() setting as pickup_points_enabled, and
+	 * Rest_API\Legacy\Checkout\Client only adds 'Pickup' to the request options when it
+	 * is set, so a merchant who disabled pickup points gets a response with no
+	 * PickupOptions key on either transport and the pickup tab stays hidden. Delivery
+	 * days deliberately have no matching gate: Base_Info hardcodes delivery_days_enabled
+	 * to true.
+	 *
 	 * @param Timeframe_Service_Interface       $timeframe_service Delivery-day service.
 	 * @param Pickup_Location_Service_Interface $pickup_service    Pickup-location service.
 	 * @param array                             $post_data         Checkout post input.
+	 * @param bool                              $pickup_enabled    Whether the merchant enabled pickup points.
 	 *
 	 * @return array Combined response carrying both DeliveryOptions and PickupOptions.
 	 * @throws \Exception If either underlying service request fails.
 	 */
-	protected static function aggregate_delivery_options( Timeframe_Service_Interface $timeframe_service, Pickup_Location_Service_Interface $pickup_service, $post_data ) {
+	protected static function aggregate_delivery_options( Timeframe_Service_Interface $timeframe_service, Pickup_Location_Service_Interface $pickup_service, $post_data, bool $pickup_enabled ) {
 		$response = $timeframe_service->get_delivery_options( $post_data );
 
 		// Legacy shares one instance across both flows; its single response already
 		// holds both halves, so a second call would only repeat the same request.
-		if ( $pickup_service === $timeframe_service ) {
+		// A disabled setting skips the lookup outright, leaving PickupOptions absent.
+		if ( $pickup_service === $timeframe_service || ! $pickup_enabled ) {
 			return $response;
 		}
 

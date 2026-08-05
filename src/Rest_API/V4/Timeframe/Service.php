@@ -21,6 +21,8 @@ use PostNLWooCommerce\Rest_API\Contracts\Timeframe_Service_Interface;
 use PostNLWooCommerce\Rest_API\SDK\Cache_Adapter;
 use PostNLWooCommerce\Rest_API\SDK\Client_Factory;
 use PostNLWooCommerce\Rest_API\SDK\Exception_Converter;
+use PostNLWooCommerce\Shipping_Method\Settings;
+use Psr\Log\LoggerInterface;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -40,7 +42,14 @@ if ( ! defined( 'ABSPATH' ) ) {
  * address, so the request is routed through the SDK CachingPlugin (backed by
  * Cache_Adapter / WP transients) with only /timeframe/ allowlisted.
  *
- * @since   5.9.6
+ * The PSR-3 logger is required, not optional: it is where a failed lookup's real
+ * cause survives (Exception_Converter hands the merchant a safe message and keeps
+ * the SDK's own only as the previous exception), and it is what Cache_Adapter
+ * reports a mis-wired cache through. Wiring passes a Logger_Adapter built on
+ * Main::get_logger(), so V4 entries land in the same WooCommerce log as the
+ * legacy path and honour the same "enable logging" setting.
+ *
+ * @since   6.0.0
  * @package PostNLWooCommerce\Rest_API\V4\Timeframe
  */
 class Service implements Timeframe_Service_Interface {
@@ -70,11 +79,6 @@ class Service implements Timeframe_Service_Interface {
 	);
 
 	/**
-	 * Look-ahead days used by the plugin today; overridable per instance.
-	 */
-	public const DEFAULT_DELIVERY_DAYS = 10;
-
-	/**
 	 * SDK client factory.
 	 *
 	 * @var Client_Factory
@@ -84,9 +88,16 @@ class Service implements Timeframe_Service_Interface {
 	/**
 	 * Plugin settings instance.
 	 *
-	 * @var object
+	 * @var Settings
 	 */
 	private $settings;
+
+	/**
+	 * PostNL V4 API key used to authenticate SDK requests.
+	 *
+	 * @var string
+	 */
+	private $v4_key;
 
 	/**
 	 * Number of look-ahead days to request, clamped to the V4 maximum.
@@ -96,16 +107,46 @@ class Service implements Timeframe_Service_Interface {
 	private $number_of_days;
 
 	/**
+	 * PSR-3 logger the failure path and the cache adapter report through.
+	 *
+	 * @var LoggerInterface
+	 */
+	private $logger;
+
+	/**
 	 * Service constructor.
 	 *
-	 * @param Client_Factory $client_factory SDK client factory.
-	 * @param object         $settings       Plugin settings instance.
-	 * @param int            $number_of_days Look-ahead days (default 10, capped at the V4 max of 14).
+	 * The API key, the look-ahead day count and the logger are all required
+	 * rather than defaulted: the key has no getter on Settings to fall back to, a
+	 * defaulted day count would silently ignore the merchant's configured value
+	 * if a caller forgot to pass Settings::get_number_delivery_days(), and a
+	 * defaulted NullLogger would let a caller wire the service up with logging
+	 * silently switched off — the exact gap this parameter closes.
+	 *
+	 * The key is marked SensitiveParameter so PHP redacts it from stack traces,
+	 * matching Client_Factory::build().
+	 *
+	 * @since 6.0.0 Added the required $logger parameter.
+	 *
+	 * @param Client_Factory  $client_factory SDK client factory.
+	 * @param Settings        $settings       Plugin settings instance.
+	 * @param string          $v4_key         PostNL V4 API key.
+	 * @param int             $number_of_days Look-ahead days, capped at the V4 max of 14 and floored at 1.
+	 * @param LoggerInterface $logger         PSR-3 logger; wiring passes a Logger_Adapter.
 	 */
-	public function __construct( Client_Factory $client_factory, object $settings, int $number_of_days = self::DEFAULT_DELIVERY_DAYS ) {
+	public function __construct(
+		Client_Factory $client_factory,
+		Settings $settings,
+		#[\SensitiveParameter]
+		string $v4_key,
+		int $number_of_days,
+		LoggerInterface $logger
+	) {
 		$this->client_factory = $client_factory;
 		$this->settings       = $settings;
+		$this->v4_key         = $v4_key;
 		$this->number_of_days = $this->clamp_days( $number_of_days );
+		$this->logger         = $logger;
 	}
 
 	/**
@@ -138,6 +179,20 @@ class Service implements Timeframe_Service_Interface {
 			// Exception_Converter returns a plugin-shaped \Exception; its message can
 			// carry raw API text (field errors, upstream messages) — escape on output.
 			$error = Exception_Converter::convert( $exception );
+
+			// The converted message is deliberately merchant-safe, and one of its
+			// variants tells the reader to check these very logs, so the original SDK
+			// failure has to be written here — nothing else reads getPrevious().
+			$this->logger->error(
+				sprintf(
+					'V4 timeframe lookup failed for destination "%1$s": %2$s (cause: %3$s: %4$s)',
+					$this->describe_destination( $post_data ),
+					$error->getMessage(),
+					get_class( $exception ),
+					$exception->getMessage()
+				)
+			);
+
 			throw $error;
 		}
 	}
@@ -193,6 +248,30 @@ class Service implements Timeframe_Service_Interface {
 	}
 
 	/**
+	 * Short, log-safe description of the destination a failed lookup was for.
+	 *
+	 * Legacy Rest_API\Base::send_request() writes the entire request body — street,
+	 * house number and city included — to the same WooCommerce log. This keeps only
+	 * what identifies which lookup failed and lets support reproduce it: the country
+	 * and the postcode's leading area digits. The parts that would pin the entry to a
+	 * household are dropped, since an error line is written whether or not anyone is
+	 * debugging, while the SDK's own request logging (which does carry the address,
+	 * PII-redacted) is what a merchant turns on deliberately.
+	 *
+	 * @param array $post_data Checkout POST data.
+	 *
+	 * @return string e.g. 'NL 1234'; empty when the payload carried no address.
+	 */
+	private function describe_destination( array $post_data ): string {
+		$post_data = Address_Utils::set_post_data_address( $post_data );
+
+		$country  = isset( $post_data['shipping_country'] ) ? (string) $post_data['shipping_country'] : '';
+		$postcode = isset( $post_data['shipping_postcode'] ) ? str_replace( ' ', '', (string) $post_data['shipping_postcode'] ) : '';
+
+		return trim( $country . ' ' . substr( $postcode, 0, 4 ) );
+	}
+
+	/**
 	 * Delivery-window services to request.
 	 *
 	 * @return DeliveryWindowService[]
@@ -214,19 +293,21 @@ class Service implements Timeframe_Service_Interface {
 	 * and its key prefix ('timeframe') keeps the Cache_Adapter allowlist happy so
 	 * both gates agree on what may be cached.
 	 *
+	 * The adapter is handed the logger so its allowlist-bypass warning can fire: a
+	 * keyPrefix that stops matching caches nothing at all, which is otherwise
+	 * indistinguishable from a permanently cold cache.
+	 *
 	 * @return \Postnl\Sdk\Client\PostnlClientInterface
 	 */
 	protected function build_client() {
-		$v4_key = $this->get_v4_key();
-
 		$caching_plugin = CachingPlugin::create(
-			cache: new Cache_Adapter( $v4_key ),
+			cache: new Cache_Adapter( $this->v4_key, $this->logger ),
 			ttl: $this->cache_ttl(),
 			allowedEndpoints: array( '/timeframe/' ),
 			keyPrefix: 'timeframe'
 		);
 
-		return $this->client_factory->build_with_plugins( $v4_key, (bool) $this->settings->is_sandbox(), $caching_plugin );
+		return $this->client_factory->build_with_plugins( $this->v4_key, (bool) $this->settings->is_sandbox(), $caching_plugin );
 	}
 
 	/**
@@ -235,16 +316,39 @@ class Service implements Timeframe_Service_Interface {
 	 * Available timeframes are grouped by delivery date; each window carries a
 	 * single legacy option code ('Daytime', 'Evening', or '08:00-12:00').
 	 *
+	 * Windows map_option() reports as not offered are dropped, and a date left
+	 * without any window is dropped with them: an entry with an empty Timeframe
+	 * array would render a delivery date heading above an empty radio group.
+	 *
+	 * Delivery dates the merchant cannot reach from an enabled drop-off day are
+	 * dropped here too — see is_reachable_delivery_date(). Filtering in the
+	 * mapping rather than the request keeps cached responses consistent: the SDK
+	 * CachingPlugin caches the raw HTTP response inside the transport, so this
+	 * mapping runs on cache hits exactly as it does on live responses.
+	 *
 	 * @param TimeframeMultipleServicesCollection $collection SDK timeframe collection.
 	 *
 	 * @return array<int, array{DeliveryDate: string, Timeframe: array<int, array{From: string, To: string, Options: string[]}>}>
 	 */
 	protected function map_response( TimeframeMultipleServicesCollection $collection ): array {
 		// phpcs:disable WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- Third-party SDK DTO properties are camelCase.
-		$by_date = array();
+		$by_date      = array();
+		$dropoff_days = $this->get_dropoff_days();
 
 		foreach ( $collection->filterAvailable()->all() as $timeframe ) {
 			if ( null === $timeframe->deliveryDate || null === $timeframe->timeFrame ) {
+				continue;
+			}
+
+			if ( ! $this->is_reachable_delivery_date( $timeframe->deliveryDate, $dropoff_days ) ) {
+				continue;
+			}
+
+			$option = $this->map_option( $timeframe );
+
+			// Skipped before the date entry is created, so a date whose every window
+			// was dropped never enters the result in the first place.
+			if ( null === $option ) {
 				continue;
 			}
 
@@ -260,7 +364,7 @@ class Service implements Timeframe_Service_Interface {
 			$by_date[ $date ]['Timeframe'][] = array(
 				'From'    => (string) $timeframe->timeFrame->from,
 				'To'      => (string) $timeframe->timeFrame->until,
-				'Options' => array( $this->map_option( $timeframe ) ),
+				'Options' => array( $option ),
 			);
 		}
 
@@ -270,24 +374,33 @@ class Service implements Timeframe_Service_Interface {
 	/**
 	 * Translate a V4 timeframe into the legacy option code the checkout expects.
 	 *
-	 * '08:00-12:00' is only emitted when the merchant enabled morning delivery,
-	 * so a disabled morning window collapses to a plain 'Daytime' option instead
-	 * of introducing a non-standard fee tab that the legacy path would not show.
+	 * Evening and morning windows are only offered when the merchant enabled that
+	 * delivery option; otherwise the window is dropped rather than relabelled to
+	 * 'Daytime'. Relabelling would put a window on the checkout that the legacy
+	 * path never showed: a second, identical 'Daytime' radio which — being
+	 * fee-free and first in the list — becomes the preselected default that gets
+	 * saved on the order (Frontend\Container::get_default_value()).
+	 *
+	 * The classification is deliberately separate from the toggles: PostNL returns
+	 * late windows under the 'daytime' service and TimeSlot::isEvening() only
+	 * checks from >= 17:00, so a 17:00-21:00 daytime window is an evening window
+	 * here and must disappear when evening delivery is off. A genuinely plain
+	 * window (e.g. 09:00-18:00) stays 'Daytime' whatever the toggles say.
 	 *
 	 * @param \Postnl\Sdk\ResponseData\V4\TimeFrame $timeframe SDK timeframe entry.
 	 *
-	 * @return string
+	 * @return string|null Legacy option code, or null when the window is not offered.
 	 */
-	protected function map_option( $timeframe ): string {
+	protected function map_option( $timeframe ): ?string {
 		$service = is_string( $timeframe->service ) ? strtolower( $timeframe->service ) : '';
 		$slot    = $timeframe->timeFrame;
 
 		if ( DeliveryWindowService::Evening->value === $service || ( null !== $slot && $slot->isEvening() ) ) {
-			return 'Evening';
+			return $this->is_evening_enabled() ? 'Evening' : null;
 		}
 
-		if ( $this->is_morning_enabled() && null !== $slot && $slot->isMorning() ) {
-			return '08:00-12:00';
+		if ( null !== $slot && $slot->isMorning() ) {
+			return $this->is_morning_enabled() ? '08:00-12:00' : null;
 		}
 
 		return 'Daytime';
@@ -332,6 +445,47 @@ class Service implements Timeframe_Service_Interface {
 	}
 
 	/**
+	 * Whether a delivery date can be reached from an enabled drop-off day.
+	 *
+	 * The legacy checkout call sent one CutOffTimes entry per excluded drop-off
+	 * day (Legacy\Checkout\Client::get_cutoff_times()) and PostNL withheld every
+	 * delivery date whose handover fell on one. The V4 request has no equivalent
+	 * field — it carries a single handoverDate — so get_handover_date() can only
+	 * place the *first* handover on a valid day; without this filter every later
+	 * date PostNL returns ignores drop-off days entirely, and a merchant shipping
+	 * Mondays and Thursdays would offer a Wednesday delivery that needs a Tuesday
+	 * handover they never do.
+	 *
+	 * The handover a date implies comes from get_handover_date()'s own model: an
+	 * order with transit time t hands over at order + (t - 1) preparation days and
+	 * the Transit Time setting promises delivery at order + t, so PostNL delivers
+	 * the day after handover and date D is reachable only when D - 1 day is an
+	 * enabled drop-off day.
+	 *
+	 * With every day enabled this is a no-op; with none enabled
+	 * get_delivery_options() has already short-circuited before mapping.
+	 *
+	 * @param string   $date         Delivery date in the d-m-Y format PostNL returns, e.g. '14-07-2026'.
+	 * @param string[] $dropoff_days Enabled drop-off weekday keys.
+	 *
+	 * @return bool
+	 */
+	private function is_reachable_delivery_date( string $date, array $dropoff_days ): bool {
+		$delivery = \DateTimeImmutable::createFromFormat( '!d-m-Y', $date );
+
+		// An unreadable date is kept rather than filtered away: if PostNL ever
+		// returns another format, dropping every date would leave the customer an
+		// empty delivery-day widget with nothing to explain it.
+		if ( false === $delivery ) {
+			return true;
+		}
+
+		$handover = $delivery->modify( '-1 day' );
+
+		return in_array( self::WEEKDAYS[ (int) $handover->format( 'N' ) ], $dropoff_days, true );
+	}
+
+	/**
 	 * Current site-timezone datetime; a seam for deterministic tests.
 	 *
 	 * @return \DateTimeImmutable
@@ -349,12 +503,10 @@ class Service implements Timeframe_Service_Interface {
 	 * @return string
 	 */
 	private function get_cut_off_time(): string {
-		if ( method_exists( $this->settings, 'get_cut_off_time' ) ) {
-			$cut_off = (string) $this->settings->get_cut_off_time();
+		$cut_off = (string) $this->settings->get_cut_off_time();
 
-			if ( 1 === preg_match( '/^(?:[01][0-9]|2[0-4]):[0-5][0-9]$/', $cut_off ) ) {
-				return $cut_off;
-			}
+		if ( 1 === preg_match( '/^(?:[01][0-9]|2[0-4]):[0-5][0-9]$/', $cut_off ) ) {
+			return $cut_off;
 		}
 
 		return self::DEFAULT_CUT_OFF_TIME;
@@ -366,44 +518,25 @@ class Service implements Timeframe_Service_Interface {
 	 * @return int
 	 */
 	private function get_shipping_duration(): int {
-		if ( ! method_exists( $this->settings, 'get_transit_time' ) ) {
-			return 1;
-		}
-
 		return max( 1, (int) $this->settings->get_transit_time() );
 	}
 
 	/**
-	 * Enabled drop-off weekday keys ('mon' … 'sun'); empty means no restriction.
+	 * Enabled drop-off weekday keys ('mon' … 'sun').
 	 *
 	 * @return string[]
 	 */
 	private function get_dropoff_days(): array {
-		if ( ! method_exists( $this->settings, 'get_dropoff_days' ) ) {
-			return array();
-		}
-
-		$days = $this->settings->get_dropoff_days();
-
-		return is_array( $days ) ? $days : array();
+		return $this->settings->get_dropoff_days();
 	}
 
 	/**
-	 * Whether the merchant explicitly disabled every drop-off day.
-	 *
-	 * Only true when the setting getter exists and returns an empty list; a
-	 * settings object without the getter means "no restriction", not "disabled".
+	 * Whether the merchant disabled every drop-off day.
 	 *
 	 * @return bool
 	 */
 	private function all_dropoff_days_disabled(): bool {
-		if ( ! method_exists( $this->settings, 'get_dropoff_days' ) ) {
-			return false;
-		}
-
-		$days = $this->settings->get_dropoff_days();
-
-		return is_array( $days ) && empty( $days );
+		return array() === $this->get_dropoff_days();
 	}
 
 	/**
@@ -418,7 +551,7 @@ class Service implements Timeframe_Service_Interface {
 		/**
 		 * Filters the TTL, in seconds, for cached V4 timeframe/locations responses.
 		 *
-		 * @since 5.9.6
+		 * @since 6.0.0
 		 *
 		 * @param int $ttl Default Cache_Adapter::DEFAULT_TTL (600 seconds).
 		 */
@@ -433,8 +566,7 @@ class Service implements Timeframe_Service_Interface {
 	 * @return bool
 	 */
 	private function is_evening_enabled(): bool {
-		return method_exists( $this->settings, 'is_evening_delivery_enabled' )
-			&& (bool) $this->settings->is_evening_delivery_enabled();
+		return (bool) $this->settings->is_evening_delivery_enabled();
 	}
 
 	/**
@@ -443,26 +575,7 @@ class Service implements Timeframe_Service_Interface {
 	 * @return bool
 	 */
 	private function is_morning_enabled(): bool {
-		return method_exists( $this->settings, 'is_morning_delivery_enabled' )
-			&& (bool) $this->settings->is_morning_delivery_enabled();
-	}
-
-	/**
-	 * Read the V4 API key from settings, tolerating settings without the getter.
-	 *
-	 * The V4 key field ships in a separate PR, so Service_Factory only routes here
-	 * once it exists; the method_exists guard keeps this class safe in isolation.
-	 *
-	 * @return string
-	 */
-	private function get_v4_key(): string {
-		if ( ! method_exists( $this->settings, 'get_v4_api_key' ) ) {
-			return '';
-		}
-
-		$key = $this->settings->get_v4_api_key();
-
-		return is_string( $key ) ? $key : '';
+		return (bool) $this->settings->is_morning_delivery_enabled();
 	}
 
 	/**

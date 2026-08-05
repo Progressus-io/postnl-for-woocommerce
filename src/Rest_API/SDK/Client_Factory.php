@@ -15,6 +15,7 @@ use Postnl\Sdk\Client\PostnlClientInterface;
 use Postnl\Sdk\Enums\Version;
 use Postnl\Sdk\Transport\HttpPluginInterface;
 use Postnl\Sdk\Transport\Retry\RetryConfig;
+use Psr\Log\LoggerInterface;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -57,12 +58,28 @@ class Client_Factory {
 	private $memo = array();
 
 	/**
+	 * PSR-3 logger handed to the SDK, or null to leave SDK logging off.
+	 *
+	 * @var LoggerInterface|null
+	 */
+	private $logger;
+
+	/**
 	 * Client_Factory constructor.
 	 *
-	 * @param object $settings Plugin settings instance.
+	 * The logger is optional because this factory is shared infrastructure that
+	 * every V4 service builds on, and a caller with nothing to log should not have
+	 * to construct a null object. Callers that do want SDK request/response
+	 * logging pass a Logger_Adapter.
+	 *
+	 * @since 6.0.0 Added the optional $logger parameter.
+	 *
+	 * @param object               $settings Plugin settings instance.
+	 * @param LoggerInterface|null $logger   PSR-3 logger for SDK request/response logging.
 	 */
-	public function __construct( object $settings ) {
+	public function __construct( object $settings, ?LoggerInterface $logger = null ) {
 		$this->settings = $settings;
+		$this->logger   = $logger;
 	}
 
 	/**
@@ -123,12 +140,24 @@ class Client_Factory {
 	 * assembled each call. The shared auth/version/customer/retry configuration
 	 * still comes from make_builder(), so callers add only the plugins they need.
 	 *
+	 * The key parameter is marked SensitiveParameter for the same reason build()
+	 * marks its own: this method throws, Exception_Converter keeps the original
+	 * as the previous exception, and an unredacted argument would ride the full
+	 * trace into debug.log and fatal-error emails.
+	 *
+	 * @since 6.0.0
+	 *
 	 * @param string              $v4_key     PostNL V4 API key.
 	 * @param bool                $is_sandbox Whether to target the sandbox environment.
 	 * @param HttpPluginInterface ...$plugins Transport plugins to attach in order.
 	 * @return PostnlClientInterface
 	 */
-	public function build_with_plugins( string $v4_key, bool $is_sandbox, HttpPluginInterface ...$plugins ): PostnlClientInterface {
+	public function build_with_plugins(
+		#[\SensitiveParameter]
+		string $v4_key,
+		bool $is_sandbox,
+		HttpPluginInterface ...$plugins
+	): PostnlClientInterface {
 		$builder = $this->make_builder(
 			$v4_key,
 			$is_sandbox,
@@ -150,6 +179,8 @@ class Client_Factory {
 	 * construction and inspect its configuration via reflection without
 	 * triggering a real network call.
 	 *
+	 * @since 6.0.0 Attaches the configured logger, when one was supplied.
+	 *
 	 * @param string $v4_key          PostNL V4 API key.
 	 * @param bool   $is_sandbox      Route requests to the sandbox environment.
 	 * @param string $customer_number PostNL customer number from settings.
@@ -165,12 +196,20 @@ class Client_Factory {
 	): ClientBuilder {
 		$builder = new ClientBuilder();
 
-		return $builder
+		$builder = $builder
 			->withApiVersion( Version::V4 )
 			->withAuth( Auth::apiKey( $v4_key ) )
 			->withSandbox( $is_sandbox )
 			->withSourceSystem( self::SOURCE_SYSTEM )
 			->withCustomerCredentials( $customer_number, $customer_code )
 			->withRetry( RetryConfig::exponentialBackoff() );
+
+		// Left unset without a logger: the SDK then installs its own NullLogger,
+		// so this must not hand it one that only looks configured.
+		if ( null !== $this->logger ) {
+			$builder = $builder->withLogger( $this->logger );
+		}
+
+		return $builder;
 	}
 }

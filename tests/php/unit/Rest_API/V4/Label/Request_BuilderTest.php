@@ -103,6 +103,38 @@ class Request_BuilderTest extends UnitTestCase {
 	}
 
 	/**
+	 * @testdox build() emits one item per collo with a shared reference and weight for a multi-collo shipment.
+	 */
+	public function test_builds_multi_collo_items(): void {
+		$fields             = $this->domestic_fields();
+		$fields['barcodes'] = array( '3SDEVC1', '3SDEVC2', '3SDEVC3' );
+
+		$payload = $this->payload( $fields );
+
+		$this->assertSame( 3, $payload['itemCount'], 'itemCount must equal the collo count.' );
+		$this->assertCount( 3, $payload['items'] );
+		$this->assertSame( '3SDEVC1', $payload['items'][0]['barcode'] );
+		$this->assertSame( '3SDEVC2', $payload['items'][1]['barcode'] );
+		$this->assertSame( '3SDEVC3', $payload['items'][2]['barcode'] );
+
+		foreach ( $payload['items'] as $item ) {
+			$this->assertSame( 'ORDER-1001', $item['customerReferences']['shipmentReference'] );
+			$this->assertSame( 2000, $item['dimensions']['weight'] );
+		}
+	}
+
+	/**
+	 * @testdox build() falls back to a single item built from barcode when no barcodes array is given.
+	 */
+	public function test_single_item_fallback_without_barcodes_array(): void {
+		$payload = $this->payload( $this->domestic_fields() );
+
+		$this->assertSame( 1, $payload['itemCount'] );
+		$this->assertCount( 1, $payload['items'] );
+		$this->assertSame( '3SDEVC1234567', $payload['items'][0]['barcode'] );
+	}
+
+	/**
 	 * @testdox build() never emits the V1-only CollectionLocation, MessageID, Customer or product-code fields.
 	 */
 	public function test_omits_v1_only_fields(): void {

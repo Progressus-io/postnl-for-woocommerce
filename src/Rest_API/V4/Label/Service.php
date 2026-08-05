@@ -35,9 +35,11 @@ if ( ! defined( 'ABSPATH' ) ) {
  * confirmation, stated-address-only, return-when-not-home and their
  * combinations — for domestic NL shipments, plus EU/ROW international parcels
  * (4907/4909) carrying an InternationalShipmentData bundle and customs
- * declaration. Everything else — pickup (DeliveryLocation), packet/mailbox
- * international products, returns, delivery-day/evening selection — falls back to
- * the untouched legacy pipeline until those flows are migrated. Because both
+ * declaration. The domestic NL 24h letterbox (mailbox parcel 2928) also falls
+ * out here as a ShipmentType::LetterBox variant. Everything else — pickup
+ * (DeliveryLocation), the 48h letterbox (2948), packet/mailbox international
+ * products, returns, delivery-day/evening selection — falls back to the
+ * untouched legacy pipeline until those flows are migrated. Because both
  * gates (a validated V4 key and the per-flow flag) default off, merging this
  * changes nothing for merchants.
  *

@@ -20,6 +20,8 @@ use PostNLWooCommerce\Rest_API\Contracts\Pickup_Location_Service_Interface;
 use PostNLWooCommerce\Rest_API\SDK\Cache_Adapter;
 use PostNLWooCommerce\Rest_API\SDK\Client_Factory;
 use PostNLWooCommerce\Rest_API\SDK\Exception_Converter;
+use PostNLWooCommerce\Shipping_Method\Settings;
+use Psr\Log\LoggerInterface;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -46,7 +48,14 @@ if ( ! defined( 'ABSPATH' ) ) {
  * address, so the request is routed through the SDK CachingPlugin (backed by
  * Cache_Adapter / WP transients) with only /locations/ allowlisted.
  *
- * @since   5.9.6
+ * The PSR-3 logger is required, not optional: it is where a failed lookup's real
+ * cause survives (Exception_Converter hands the merchant a safe message and keeps
+ * the SDK's own only as the previous exception), and it is what Cache_Adapter
+ * reports a mis-wired cache through. Wiring passes a Logger_Adapter built on
+ * Main::get_logger(), so V4 entries land in the same WooCommerce log as the
+ * legacy path and honour the same "enable logging" setting.
+ *
+ * @since   6.0.0
  * @package PostNLWooCommerce\Rest_API\V4\Pickup_Location
  */
 class Service implements Pickup_Location_Service_Interface {
@@ -76,11 +85,6 @@ class Service implements Pickup_Location_Service_Interface {
 	);
 
 	/**
-	 * Number of pickup locations the plugin requests today; overridable per instance.
-	 */
-	public const DEFAULT_LOCATIONS = 3;
-
-	/**
 	 * SDK client factory.
 	 *
 	 * @var Client_Factory
@@ -90,9 +94,16 @@ class Service implements Pickup_Location_Service_Interface {
 	/**
 	 * Plugin settings instance.
 	 *
-	 * @var object
+	 * @var Settings
 	 */
 	private $settings;
+
+	/**
+	 * PostNL V4 API key used to authenticate SDK requests.
+	 *
+	 * @var string
+	 */
+	private $v4_key;
 
 	/**
 	 * Number of locations to request, clamped to the V4 range.
@@ -100,6 +111,13 @@ class Service implements Pickup_Location_Service_Interface {
 	 * @var int
 	 */
 	private $number_of_locations;
+
+	/**
+	 * PSR-3 logger the failure path and the cache adapter report through.
+	 *
+	 * @var LoggerInterface
+	 */
+	private $logger;
 
 	/**
 	 * Memoised pickup date so the request and the mapped group always agree and
@@ -112,14 +130,35 @@ class Service implements Pickup_Location_Service_Interface {
 	/**
 	 * Service constructor.
 	 *
-	 * @param Client_Factory $client_factory      SDK client factory.
-	 * @param object         $settings            Plugin settings instance.
-	 * @param int            $number_of_locations Locations to request (default 3, capped at the V4 max of 10).
+	 * The API key, the location count and the logger are all required rather than
+	 * defaulted: the key has no getter on Settings to fall back to, a defaulted
+	 * count would silently ignore the merchant's configured value if a caller
+	 * forgot to pass Settings::get_number_pickup_points(), and a defaulted
+	 * NullLogger would let a caller wire the service up with logging silently
+	 * switched off — the exact gap this parameter closes.
+	 *
+	 * The key is marked SensitiveParameter so PHP redacts it from stack traces,
+	 * matching Client_Factory::build().
+	 *
+	 * @param Client_Factory  $client_factory      SDK client factory.
+	 * @param Settings        $settings            Plugin settings instance.
+	 * @param string          $v4_key              PostNL V4 API key.
+	 * @param int             $number_of_locations Locations to request, capped at the V4 max of 10 and floored at 1.
+	 * @param LoggerInterface $logger              PSR-3 logger; wiring passes a Logger_Adapter.
 	 */
-	public function __construct( Client_Factory $client_factory, object $settings, int $number_of_locations = self::DEFAULT_LOCATIONS ) {
+	public function __construct(
+		Client_Factory $client_factory,
+		Settings $settings,
+		#[\SensitiveParameter]
+		string $v4_key,
+		int $number_of_locations,
+		LoggerInterface $logger
+	) {
 		$this->client_factory      = $client_factory;
 		$this->settings            = $settings;
+		$this->v4_key              = $v4_key;
 		$this->number_of_locations = $this->clamp_locations( $number_of_locations );
+		$this->logger              = $logger;
 	}
 
 	/**
@@ -145,6 +184,20 @@ class Service implements Pickup_Location_Service_Interface {
 			// Exception_Converter returns a plugin-shaped \Exception; its message can
 			// carry raw API text (field errors, upstream messages) — escape on output.
 			$error = Exception_Converter::convert( $exception );
+
+			// The converted message is deliberately merchant-safe, and one of its
+			// variants tells the reader to check these very logs, so the original SDK
+			// failure has to be written here — nothing else reads getPrevious().
+			$this->logger->error(
+				sprintf(
+					'V4 pickup-location lookup failed for destination "%1$s": %2$s (cause: %3$s: %4$s)',
+					$this->describe_destination( $post_data ),
+					$error->getMessage(),
+					get_class( $exception ),
+					$exception->getMessage()
+				)
+			);
+
 			throw $error;
 		}
 	}
@@ -198,25 +251,51 @@ class Service implements Pickup_Location_Service_Interface {
 	}
 
 	/**
+	 * Short, log-safe description of the destination a failed lookup was for.
+	 *
+	 * Legacy Rest_API\Base::send_request() writes the entire request body — street,
+	 * house number and city included — to the same WooCommerce log. This keeps only
+	 * what identifies which lookup failed and lets support reproduce it: the country
+	 * and the postcode's leading area digits. The parts that would pin the entry to a
+	 * household are dropped, since an error line is written whether or not anyone is
+	 * debugging, while the SDK's own request logging (which does carry the address,
+	 * PII-redacted) is what a merchant turns on deliberately.
+	 *
+	 * @param array $post_data Checkout POST data.
+	 *
+	 * @return string e.g. 'NL 2521'; empty when the payload carried no address.
+	 */
+	private function describe_destination( array $post_data ): string {
+		$post_data = Address_Utils::set_post_data_address( $post_data );
+
+		$country  = isset( $post_data['shipping_country'] ) ? (string) $post_data['shipping_country'] : '';
+		$postcode = isset( $post_data['shipping_postcode'] ) ? str_replace( ' ', '', (string) $post_data['shipping_postcode'] ) : '';
+
+		return trim( $country . ' ' . substr( $postcode, 0, 4 ) );
+	}
+
+	/**
 	 * Build the SDK client with the locations caching plugin attached.
 	 *
 	 * The CachingPlugin only caches responses whose URI contains '/locations/',
 	 * and its key prefix ('locations') keeps the Cache_Adapter allowlist happy so
 	 * both gates agree on what may be cached.
 	 *
+	 * The adapter is handed the logger so its allowlist-bypass warning can fire: a
+	 * keyPrefix that stops matching caches nothing at all, which is otherwise
+	 * indistinguishable from a permanently cold cache.
+	 *
 	 * @return \Postnl\Sdk\Client\PostnlClientInterface
 	 */
 	protected function build_client() {
-		$v4_key = $this->get_v4_key();
-
 		$caching_plugin = CachingPlugin::create(
-			cache: new Cache_Adapter( $v4_key ),
+			cache: new Cache_Adapter( $this->v4_key, $this->logger ),
 			ttl: $this->cache_ttl(),
 			allowedEndpoints: array( '/locations/' ),
 			keyPrefix: 'locations'
 		);
 
-		return $this->client_factory->build_with_plugins( $v4_key, (bool) $this->settings->is_sandbox(), $caching_plugin );
+		return $this->client_factory->build_with_plugins( $this->v4_key, (bool) $this->settings->is_sandbox(), $caching_plugin );
 	}
 
 	/**
@@ -377,12 +456,10 @@ class Service implements Pickup_Location_Service_Interface {
 	 * @return string
 	 */
 	private function get_cut_off_time(): string {
-		if ( method_exists( $this->settings, 'get_cut_off_time' ) ) {
-			$cut_off = (string) $this->settings->get_cut_off_time();
+		$cut_off = (string) $this->settings->get_cut_off_time();
 
-			if ( 1 === preg_match( '/^(?:[01][0-9]|2[0-4]):[0-5][0-9]$/', $cut_off ) ) {
-				return $cut_off;
-			}
+		if ( 1 === preg_match( '/^(?:[01][0-9]|2[0-4]):[0-5][0-9]$/', $cut_off ) ) {
+			return $cut_off;
 		}
 
 		return self::DEFAULT_CUT_OFF_TIME;
@@ -394,10 +471,6 @@ class Service implements Pickup_Location_Service_Interface {
 	 * @return int
 	 */
 	private function get_shipping_duration(): int {
-		if ( ! method_exists( $this->settings, 'get_transit_time' ) ) {
-			return 1;
-		}
-
 		return max( 1, (int) $this->settings->get_transit_time() );
 	}
 
@@ -407,13 +480,7 @@ class Service implements Pickup_Location_Service_Interface {
 	 * @return string[]
 	 */
 	private function get_dropoff_days(): array {
-		if ( ! method_exists( $this->settings, 'get_dropoff_days' ) ) {
-			return array();
-		}
-
-		$days = $this->settings->get_dropoff_days();
-
-		return is_array( $days ) ? $days : array();
+		return $this->settings->get_dropoff_days();
 	}
 
 	/**
@@ -428,31 +495,13 @@ class Service implements Pickup_Location_Service_Interface {
 		/**
 		 * Filters the TTL, in seconds, for cached V4 timeframe/locations responses.
 		 *
-		 * @since 5.9.6
+		 * @since 6.0.0
 		 *
 		 * @param int $ttl Default Cache_Adapter::DEFAULT_TTL (600 seconds).
 		 */
 		$ttl = (int) apply_filters( 'postnl_v4_cache_ttl', Cache_Adapter::DEFAULT_TTL );
 
 		return $ttl > 0 ? $ttl : Cache_Adapter::DEFAULT_TTL;
-	}
-
-	/**
-	 * Read the V4 API key from settings, tolerating settings without the getter.
-	 *
-	 * The V4 key field ships in a separate PR, so Service_Factory only routes here
-	 * once it exists; the method_exists guard keeps this class safe in isolation.
-	 *
-	 * @return string
-	 */
-	private function get_v4_key(): string {
-		if ( ! method_exists( $this->settings, 'get_v4_api_key' ) ) {
-			return '';
-		}
-
-		$key = $this->settings->get_v4_api_key();
-
-		return is_string( $key ) ? $key : '';
 	}
 
 	/**

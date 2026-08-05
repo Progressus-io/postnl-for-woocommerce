@@ -22,6 +22,7 @@ use PostNLWooCommerce\Rest_API\SDK\Cache_Adapter;
 use PostNLWooCommerce\Rest_API\SDK\Client_Factory;
 use PostNLWooCommerce\Rest_API\SDK\Exception_Converter;
 use PostNLWooCommerce\Shipping_Method\Settings;
+use Psr\Log\LoggerInterface;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -40,6 +41,13 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Timeframe responses are the same on every checkout pageload for a given
  * address, so the request is routed through the SDK CachingPlugin (backed by
  * Cache_Adapter / WP transients) with only /timeframe/ allowlisted.
+ *
+ * The PSR-3 logger is required, not optional: it is where a failed lookup's real
+ * cause survives (Exception_Converter hands the merchant a safe message and keeps
+ * the SDK's own only as the previous exception), and it is what Cache_Adapter
+ * reports a mis-wired cache through. Wiring passes a Logger_Adapter built on
+ * Main::get_logger(), so V4 entries land in the same WooCommerce log as the
+ * legacy path and honour the same "enable logging" setting.
  *
  * @since   5.9.6
  * @package PostNLWooCommerce\Rest_API\V4\Timeframe
@@ -99,32 +107,46 @@ class Service implements Timeframe_Service_Interface {
 	private $number_of_days;
 
 	/**
+	 * PSR-3 logger the failure path and the cache adapter report through.
+	 *
+	 * @var LoggerInterface
+	 */
+	private $logger;
+
+	/**
 	 * Service constructor.
 	 *
-	 * Both the API key and the look-ahead day count are required rather than
-	 * defaulted: the key has no getter on Settings to fall back to, and a
+	 * The API key, the look-ahead day count and the logger are all required
+	 * rather than defaulted: the key has no getter on Settings to fall back to, a
 	 * defaulted day count would silently ignore the merchant's configured value
-	 * if a caller forgot to pass Settings::get_number_delivery_days().
+	 * if a caller forgot to pass Settings::get_number_delivery_days(), and a
+	 * defaulted NullLogger would let a caller wire the service up with logging
+	 * silently switched off — the exact gap this parameter closes.
 	 *
 	 * The key is marked SensitiveParameter so PHP redacts it from stack traces,
 	 * matching Client_Factory::build().
 	 *
-	 * @param Client_Factory $client_factory SDK client factory.
-	 * @param Settings       $settings       Plugin settings instance.
-	 * @param string         $v4_key         PostNL V4 API key.
-	 * @param int            $number_of_days Look-ahead days, capped at the V4 max of 14 and floored at 1.
+	 * @since 6.0.0 Added the required $logger parameter.
+	 *
+	 * @param Client_Factory  $client_factory SDK client factory.
+	 * @param Settings        $settings       Plugin settings instance.
+	 * @param string          $v4_key         PostNL V4 API key.
+	 * @param int             $number_of_days Look-ahead days, capped at the V4 max of 14 and floored at 1.
+	 * @param LoggerInterface $logger         PSR-3 logger; wiring passes a Logger_Adapter.
 	 */
 	public function __construct(
 		Client_Factory $client_factory,
 		Settings $settings,
 		#[\SensitiveParameter]
 		string $v4_key,
-		int $number_of_days
+		int $number_of_days,
+		LoggerInterface $logger
 	) {
 		$this->client_factory = $client_factory;
 		$this->settings       = $settings;
 		$this->v4_key         = $v4_key;
 		$this->number_of_days = $this->clamp_days( $number_of_days );
+		$this->logger         = $logger;
 	}
 
 	/**
@@ -157,6 +179,20 @@ class Service implements Timeframe_Service_Interface {
 			// Exception_Converter returns a plugin-shaped \Exception; its message can
 			// carry raw API text (field errors, upstream messages) — escape on output.
 			$error = Exception_Converter::convert( $exception );
+
+			// The converted message is deliberately merchant-safe, and one of its
+			// variants tells the reader to check these very logs, so the original SDK
+			// failure has to be written here — nothing else reads getPrevious().
+			$this->logger->error(
+				sprintf(
+					'V4 timeframe lookup failed for destination "%1$s": %2$s (cause: %3$s: %4$s)',
+					$this->describe_destination( $post_data ),
+					$error->getMessage(),
+					get_class( $exception ),
+					$exception->getMessage()
+				)
+			);
+
 			throw $error;
 		}
 	}
@@ -212,6 +248,30 @@ class Service implements Timeframe_Service_Interface {
 	}
 
 	/**
+	 * Short, log-safe description of the destination a failed lookup was for.
+	 *
+	 * Legacy Rest_API\Base::send_request() writes the entire request body — street,
+	 * house number and city included — to the same WooCommerce log. This keeps only
+	 * what identifies which lookup failed and lets support reproduce it: the country
+	 * and the postcode's leading area digits. The parts that would pin the entry to a
+	 * household are dropped, since an error line is written whether or not anyone is
+	 * debugging, while the SDK's own request logging (which does carry the address,
+	 * PII-redacted) is what a merchant turns on deliberately.
+	 *
+	 * @param array $post_data Checkout POST data.
+	 *
+	 * @return string e.g. 'NL 1234'; empty when the payload carried no address.
+	 */
+	private function describe_destination( array $post_data ): string {
+		$post_data = Address_Utils::set_post_data_address( $post_data );
+
+		$country  = isset( $post_data['shipping_country'] ) ? (string) $post_data['shipping_country'] : '';
+		$postcode = isset( $post_data['shipping_postcode'] ) ? str_replace( ' ', '', (string) $post_data['shipping_postcode'] ) : '';
+
+		return trim( $country . ' ' . substr( $postcode, 0, 4 ) );
+	}
+
+	/**
 	 * Delivery-window services to request.
 	 *
 	 * @return DeliveryWindowService[]
@@ -233,11 +293,15 @@ class Service implements Timeframe_Service_Interface {
 	 * and its key prefix ('timeframe') keeps the Cache_Adapter allowlist happy so
 	 * both gates agree on what may be cached.
 	 *
+	 * The adapter is handed the logger so its allowlist-bypass warning can fire: a
+	 * keyPrefix that stops matching caches nothing at all, which is otherwise
+	 * indistinguishable from a permanently cold cache.
+	 *
 	 * @return \Postnl\Sdk\Client\PostnlClientInterface
 	 */
 	protected function build_client() {
 		$caching_plugin = CachingPlugin::create(
-			cache: new Cache_Adapter( $this->v4_key ),
+			cache: new Cache_Adapter( $this->v4_key, $this->logger ),
 			ttl: $this->cache_ttl(),
 			allowedEndpoints: array( '/timeframe/' ),
 			keyPrefix: 'timeframe'

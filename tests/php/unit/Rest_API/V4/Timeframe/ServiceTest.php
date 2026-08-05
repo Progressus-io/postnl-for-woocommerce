@@ -25,6 +25,10 @@ use PostNLWooCommerce\Tests\UnitTestCase;
 use Psr\Http\Client\ClientInterface;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
+use Psr\Log\AbstractLogger;
+use Psr\Log\LoggerInterface;
+use Psr\Log\LogLevel;
+use Psr\Log\NullLogger;
 
 /**
  * @covers \PostNLWooCommerce\Rest_API\V4\Timeframe\Service
@@ -139,7 +143,7 @@ class ServiceTest extends UnitTestCase {
 	 * @testdox build_request() maps the checkout address and settings onto the SDK request
 	 */
 	public function test_build_request_maps_address_and_settings(): void {
-		$service = new Testable_Timeframe_Service( new Client_Factory( $this->make_settings() ), $this->make_settings(), self::V4_KEY, self::DAYS );
+		$service = new Testable_Timeframe_Service( new Client_Factory( $this->make_settings() ), $this->make_settings(), self::V4_KEY, self::DAYS, new NullLogger() );
 		$request = $service->expose_build_request( $this->nl_post_data() );
 
 		$this->assertSame( '2026-07-14', $request->handoverDate );
@@ -158,7 +162,7 @@ class ServiceTest extends UnitTestCase {
 	 * @testdox The billing address is used when the order does not ship to a different address
 	 */
 	public function test_build_request_falls_back_to_billing_address(): void {
-		$service = new Testable_Timeframe_Service( new Client_Factory( $this->make_settings() ), $this->make_settings(), self::V4_KEY, self::DAYS );
+		$service = new Testable_Timeframe_Service( new Client_Factory( $this->make_settings() ), $this->make_settings(), self::V4_KEY, self::DAYS, new NullLogger() );
 
 		$address = $service->expose_build_request(
 			array(
@@ -181,13 +185,13 @@ class ServiceTest extends UnitTestCase {
 	 * @testdox Evening is requested only when the setting is enabled
 	 */
 	public function test_build_request_services_follow_evening_setting(): void {
-		$with_evening = new Testable_Timeframe_Service( new Client_Factory( $this->make_settings( true ) ), $this->make_settings( true ), self::V4_KEY, self::DAYS );
+		$with_evening = new Testable_Timeframe_Service( new Client_Factory( $this->make_settings( true ) ), $this->make_settings( true ), self::V4_KEY, self::DAYS, new NullLogger() );
 		$this->assertSame(
 			array( DeliveryWindowService::Daytime, DeliveryWindowService::Evening ),
 			$with_evening->expose_build_request( $this->nl_post_data() )->services
 		);
 
-		$no_evening = new Testable_Timeframe_Service( new Client_Factory( $this->make_settings( false ) ), $this->make_settings( false ), self::V4_KEY, self::DAYS );
+		$no_evening = new Testable_Timeframe_Service( new Client_Factory( $this->make_settings( false ) ), $this->make_settings( false ), self::V4_KEY, self::DAYS, new NullLogger() );
 		$this->assertSame(
 			array( DeliveryWindowService::Daytime ),
 			$no_evening->expose_build_request( $this->nl_post_data() )->services
@@ -204,13 +208,13 @@ class ServiceTest extends UnitTestCase {
 
 		// 5 is neither the clamp floor nor the ceiling, so it only survives if the
 		// merchant's configured value is actually carried through to the request.
-		$configured = new Testable_Timeframe_Service( $factory, $settings, self::V4_KEY, 5 );
+		$configured = new Testable_Timeframe_Service( $factory, $settings, self::V4_KEY, 5, new NullLogger() );
 		$this->assertSame( 5, $configured->expose_build_request( $post )->numberOfDays, 'The configured value is used as-is.' );
 
-		$over = new Testable_Timeframe_Service( $factory, $settings, self::V4_KEY, 20 );
+		$over = new Testable_Timeframe_Service( $factory, $settings, self::V4_KEY, 20, new NullLogger() );
 		$this->assertSame( 14, $over->expose_build_request( $post )->numberOfDays, 'Capped at the V4 maximum of 14.' );
 
-		$under = new Testable_Timeframe_Service( $factory, $settings, self::V4_KEY, 0 );
+		$under = new Testable_Timeframe_Service( $factory, $settings, self::V4_KEY, 0, new NullLogger() );
 		$this->assertSame( 1, $under->expose_build_request( $post )->numberOfDays, 'Floored at 1.' );
 	}
 
@@ -220,7 +224,7 @@ class ServiceTest extends UnitTestCase {
 	 * @testdox map_response() groups available timeframes by date into the legacy shape
 	 */
 	public function test_map_response_produces_legacy_shape(): void {
-		$service = new Testable_Timeframe_Service( new Client_Factory( $this->make_settings( true, true ) ), $this->make_settings( true, true ), self::V4_KEY, self::DAYS );
+		$service = new Testable_Timeframe_Service( new Client_Factory( $this->make_settings( true, true ) ), $this->make_settings( true, true ), self::V4_KEY, self::DAYS, new NullLogger() );
 
 		$collection = new TimeframeMultipleServicesCollection(
 			array(
@@ -260,7 +264,7 @@ class ServiceTest extends UnitTestCase {
 	 * labelled Evening — an extra fee tab a merchant with evening delivery off never offers.
 	 */
 	public function test_evening_window_is_dropped_when_disabled(): void {
-		$service = new Testable_Timeframe_Service( new Client_Factory( $this->make_settings( false, false ) ), $this->make_settings( false, false ), self::V4_KEY, self::DAYS );
+		$service = new Testable_Timeframe_Service( new Client_Factory( $this->make_settings( false, false ) ), $this->make_settings( false, false ), self::V4_KEY, self::DAYS, new NullLogger() );
 
 		$collection = new TimeframeMultipleServicesCollection(
 			array(
@@ -295,7 +299,7 @@ class ServiceTest extends UnitTestCase {
 	 * that lands on the label (Frontend\Container::get_default_value()).
 	 */
 	public function test_morning_window_is_dropped_when_disabled(): void {
-		$service = new Testable_Timeframe_Service( new Client_Factory( $this->make_settings( true, false ) ), $this->make_settings( true, false ), self::V4_KEY, self::DAYS );
+		$service = new Testable_Timeframe_Service( new Client_Factory( $this->make_settings( true, false ) ), $this->make_settings( true, false ), self::V4_KEY, self::DAYS, new NullLogger() );
 
 		$collection = new TimeframeMultipleServicesCollection(
 			array(
@@ -328,7 +332,7 @@ class ServiceTest extends UnitTestCase {
 	 * options under a delivery date heading.
 	 */
 	public function test_date_with_only_disabled_windows_is_omitted(): void {
-		$service = new Testable_Timeframe_Service( new Client_Factory( $this->make_settings( false, false ) ), $this->make_settings( false, false ), self::V4_KEY, self::DAYS );
+		$service = new Testable_Timeframe_Service( new Client_Factory( $this->make_settings( false, false ) ), $this->make_settings( false, false ), self::V4_KEY, self::DAYS, new NullLogger() );
 
 		$collection = new TimeframeMultipleServicesCollection(
 			array(
@@ -384,7 +388,7 @@ class ServiceTest extends UnitTestCase {
 	 */
 	public function test_delivery_dates_unreachable_from_a_dropoff_day_are_dropped(): void {
 		$settings = $this->make_settings( dropoff: array( 'mon', 'thu' ) );
-		$service  = new Testable_Timeframe_Service( new Client_Factory( $settings ), $settings, self::V4_KEY, self::DAYS );
+		$service  = new Testable_Timeframe_Service( new Client_Factory( $settings ), $settings, self::V4_KEY, self::DAYS, new NullLogger() );
 
 		$this->assertSame(
 			array( '14-07-2026', '17-07-2026' ),
@@ -398,7 +402,7 @@ class ServiceTest extends UnitTestCase {
 	 */
 	public function test_all_dropoff_days_enabled_keeps_every_delivery_date(): void {
 		$settings = $this->make_settings( dropoff: self::ALL_DROPOFF_DAYS );
-		$service  = new Testable_Timeframe_Service( new Client_Factory( $settings ), $settings, self::V4_KEY, self::DAYS );
+		$service  = new Testable_Timeframe_Service( new Client_Factory( $settings ), $settings, self::V4_KEY, self::DAYS, new NullLogger() );
 
 		$this->assertSame(
 			array( '14-07-2026', '15-07-2026', '17-07-2026' ),
@@ -415,7 +419,7 @@ class ServiceTest extends UnitTestCase {
 	 */
 	public function test_unparseable_delivery_date_is_kept(): void {
 		$settings = $this->make_settings( dropoff: array( 'mon' ) );
-		$service  = new Testable_Timeframe_Service( new Client_Factory( $settings ), $settings, self::V4_KEY, self::DAYS );
+		$service  = new Testable_Timeframe_Service( new Client_Factory( $settings ), $settings, self::V4_KEY, self::DAYS, new NullLogger() );
 
 		$collection = new TimeframeMultipleServicesCollection(
 			array(
@@ -452,7 +456,7 @@ class ServiceTest extends UnitTestCase {
 	 * @return Handover_Timeframe_Service
 	 */
 	private function make_handover_service( string $now, Settings $settings ): Handover_Timeframe_Service {
-		$service = new Handover_Timeframe_Service( new Client_Factory( $settings ), $settings, self::V4_KEY, self::DAYS );
+		$service = new Handover_Timeframe_Service( new Client_Factory( $settings ), $settings, self::V4_KEY, self::DAYS, new NullLogger() );
 		$service->set_now( new \DateTimeImmutable( $now ) );
 
 		return $service;
@@ -534,7 +538,7 @@ class ServiceTest extends UnitTestCase {
 	 */
 	public function test_all_dropoff_days_disabled_returns_empty_options(): void {
 		$settings = $this->make_shipping_settings( '16:00', '1', array() );
-		$service  = new Service( new Client_Factory( $settings ), $settings, self::V4_KEY, self::DAYS );
+		$service  = new Service( new Client_Factory( $settings ), $settings, self::V4_KEY, self::DAYS, new NullLogger() );
 
 		$this->assertSame(
 			array( 'DeliveryOptions' => array() ),
@@ -558,7 +562,7 @@ class ServiceTest extends UnitTestCase {
 
 		$http    = new Counting_Http_Client( $this->timeframe_response_body() );
 		$factory = new Spy_Timeframe_Client_Factory( $this->make_settings(), $http );
-		$service = new Service( $factory, $this->make_settings(), self::V4_KEY, self::DAYS );
+		$service = new Service( $factory, $this->make_settings(), self::V4_KEY, self::DAYS, new NullLogger() );
 		$post    = $this->nl_post_data();
 
 		$first  = $service->get_delivery_options( $post );
@@ -586,7 +590,7 @@ class ServiceTest extends UnitTestCase {
 
 		$http    = new Counting_Http_Client( $this->timeframe_response_body() );
 		$factory = new Spy_Timeframe_Client_Factory( $this->make_settings(), $http );
-		$service = new Service( $factory, $this->make_settings(), self::V4_KEY, self::DAYS );
+		$service = new Service( $factory, $this->make_settings(), self::V4_KEY, self::DAYS, new NullLogger() );
 
 		$service->get_delivery_options( $this->nl_post_data() );
 
@@ -596,6 +600,79 @@ class ServiceTest extends UnitTestCase {
 			$http->last_request->getHeaderLine( 'apiKey' ),
 			'The SDK authenticates with the apiKey header; any other value means the client is not using the configured key.'
 		);
+	}
+
+	// ── Logging ──────────────────────────────────────────────────────────────
+
+	/**
+	 * @testdox A failed lookup is logged at error level with the original SDK cause
+	 *
+	 * Exception_Converter deliberately replaces the SDK message with a merchant-safe
+	 * one and keeps the original only as the previous exception, which nothing else
+	 * reads — and one of those safe messages tells the merchant to "check the PostNL
+	 * logs for details". Without this log line those logs are empty.
+	 */
+	public function test_failed_lookup_is_logged_with_the_original_cause(): void {
+		$this->with_transient_store();
+		Functions\when( 'current_datetime' )->justReturn( new \DateTimeImmutable( '2026-07-14 10:00:00' ) );
+
+		$logger  = new Spy_Logger();
+		$factory = new Spy_Timeframe_Client_Factory( $this->make_settings(), new Failing_Http_Client() );
+		$service = new Service( $factory, $this->make_settings(), self::V4_KEY, self::DAYS, $logger );
+
+		try {
+			$service->get_delivery_options( $this->nl_post_data() );
+			$this->fail( 'The converted SDK error must propagate.' );
+		} catch ( \Exception $error ) {
+			$cause = $error->getPrevious();
+		}
+
+		$this->assertNotNull( $cause, 'Exception_Converter must preserve the SDK exception as the cause.' );
+		$this->assertNotSame( '', $cause->getMessage(), 'A blank cause message would make the assertion below vacuous.' );
+
+		$errors = array_values(
+			array_filter( $logger->records, static fn( array $record ) => LogLevel::ERROR === $record['level'] )
+		);
+
+		$this->assertCount( 1, $errors, 'The failure must be logged exactly once, at error level.' );
+		$this->assertStringContainsString(
+			$cause->getMessage(),
+			$errors[0]['message'],
+			'The safe message alone is not actionable; the original SDK message has to reach the log.'
+		);
+		$this->assertStringContainsString( get_class( $cause ), $errors[0]['message'], 'The cause class identifies where the failure came from.' );
+	}
+
+	/**
+	 * @testdox A cache that silently stores nothing is reported through the logger
+	 *
+	 * Cache_Adapter warns once when a key clears no allowlisted prefix, which is the
+	 * only signal that a mis-wired CachingPlugin keyPrefix has turned caching off —
+	 * it is otherwise indistinguishable from a permanently cold cache. The warning
+	 * can only fire if the Service hands the adapter its logger.
+	 */
+	public function test_cache_bypass_is_reported_through_the_logger(): void {
+		$this->with_transient_store();
+		Functions\when( 'current_datetime' )->justReturn( new \DateTimeImmutable( '2026-07-14 10:00:00' ) );
+
+		// Empty the cacheable-prefix allowlist so every key bypasses, standing in for
+		// a keyPrefix that no longer matches.
+		Functions\when( 'apply_filters' )->alias(
+			fn( $tag, $value = null ) => 'postnl_v4_cache_allowed_prefixes' === $tag ? array() : $value
+		);
+
+		$logger  = new Spy_Logger();
+		$factory = new Spy_Timeframe_Client_Factory( $this->make_settings(), new Counting_Http_Client( $this->timeframe_response_body() ) );
+		$service = new Service( $factory, $this->make_settings(), self::V4_KEY, self::DAYS, $logger );
+
+		$service->get_delivery_options( $this->nl_post_data() );
+
+		$warnings = array_values(
+			array_filter( $logger->records, static fn( array $record ) => LogLevel::WARNING === $record['level'] )
+		);
+
+		$this->assertCount( 1, $warnings, 'Cache_Adapter must be able to report the bypass, and only once.' );
+		$this->assertStringContainsString( 'cache bypassed', $warnings[0]['message'] );
 	}
 
 	/**
@@ -816,5 +893,63 @@ class Counting_Http_Client implements ClientInterface {
 		++$this->count;
 		$this->last_request = $request;
 		return new Response( 200, array( 'Content-Type' => 'application/json' ), $this->body );
+	}
+}
+
+/**
+ * PSR-18 client that always answers with a PostNL problem+json error.
+ *
+ * 401 is chosen because the SDK's retry policy treats it as permanent, so the
+ * failure surfaces on the first attempt with no backoff sleeps in the test.
+ */
+class Failing_Http_Client implements ClientInterface {
+
+	/**
+	 * Return the canned error response.
+	 *
+	 * @param RequestInterface $request Outgoing request.
+	 * @return ResponseInterface
+	 */
+	public function sendRequest( RequestInterface $request ): ResponseInterface {
+		return new Response(
+			401,
+			array( 'Content-Type' => 'application/problem+json' ),
+			(string) json_encode(
+				array(
+					'title'   => 'Unauthorized',
+					'detail'  => 'apiKey header missing or invalid',
+					'traceId' => 'trace-abc',
+				)
+			)
+		);
+	}
+}
+
+/**
+ * PSR-3 logger that records every write for assertion.
+ */
+class Spy_Logger extends AbstractLogger {
+
+	/**
+	 * Recorded log calls, each as array{level: mixed, message: string, context: array}.
+	 *
+	 * @var array<int, array<string, mixed>>
+	 */
+	public array $records = array();
+
+	/**
+	 * Record the call.
+	 *
+	 * @param mixed              $level   PSR-3 level.
+	 * @param string|\Stringable $message Log message.
+	 * @param array              $context Context values.
+	 * @return void
+	 */
+	public function log( $level, string|\Stringable $message, array $context = array() ): void {
+		$this->records[] = array(
+			'level'   => $level,
+			'message' => (string) $message,
+			'context' => $context,
+		);
 	}
 }

@@ -252,6 +252,10 @@ class Service implements Timeframe_Service_Interface {
 	 * Available timeframes are grouped by delivery date; each window carries a
 	 * single legacy option code ('Daytime', 'Evening', or '08:00-12:00').
 	 *
+	 * Windows map_option() reports as not offered are dropped, and a date left
+	 * without any window is dropped with them: an entry with an empty Timeframe
+	 * array would render a delivery date heading above an empty radio group.
+	 *
 	 * @param TimeframeMultipleServicesCollection $collection SDK timeframe collection.
 	 *
 	 * @return array<int, array{DeliveryDate: string, Timeframe: array<int, array{From: string, To: string, Options: string[]}>}>
@@ -262,6 +266,14 @@ class Service implements Timeframe_Service_Interface {
 
 		foreach ( $collection->filterAvailable()->all() as $timeframe ) {
 			if ( null === $timeframe->deliveryDate || null === $timeframe->timeFrame ) {
+				continue;
+			}
+
+			$option = $this->map_option( $timeframe );
+
+			// Skipped before the date entry is created, so a date whose every window
+			// was dropped never enters the result in the first place.
+			if ( null === $option ) {
 				continue;
 			}
 
@@ -277,7 +289,7 @@ class Service implements Timeframe_Service_Interface {
 			$by_date[ $date ]['Timeframe'][] = array(
 				'From'    => (string) $timeframe->timeFrame->from,
 				'To'      => (string) $timeframe->timeFrame->until,
-				'Options' => array( $this->map_option( $timeframe ) ),
+				'Options' => array( $option ),
 			);
 		}
 
@@ -287,24 +299,33 @@ class Service implements Timeframe_Service_Interface {
 	/**
 	 * Translate a V4 timeframe into the legacy option code the checkout expects.
 	 *
-	 * '08:00-12:00' is only emitted when the merchant enabled morning delivery,
-	 * so a disabled morning window collapses to a plain 'Daytime' option instead
-	 * of introducing a non-standard fee tab that the legacy path would not show.
+	 * Evening and morning windows are only offered when the merchant enabled that
+	 * delivery option; otherwise the window is dropped rather than relabelled to
+	 * 'Daytime'. Relabelling would put a window on the checkout that the legacy
+	 * path never showed: a second, identical 'Daytime' radio which — being
+	 * fee-free and first in the list — becomes the preselected default that gets
+	 * saved on the order (Frontend\Container::get_default_value()).
+	 *
+	 * The classification is deliberately separate from the toggles: PostNL returns
+	 * late windows under the 'daytime' service and TimeSlot::isEvening() only
+	 * checks from >= 17:00, so a 17:00-21:00 daytime window is an evening window
+	 * here and must disappear when evening delivery is off. A genuinely plain
+	 * window (e.g. 09:00-18:00) stays 'Daytime' whatever the toggles say.
 	 *
 	 * @param \Postnl\Sdk\ResponseData\V4\TimeFrame $timeframe SDK timeframe entry.
 	 *
-	 * @return string
+	 * @return string|null Legacy option code, or null when the window is not offered.
 	 */
-	protected function map_option( $timeframe ): string {
+	protected function map_option( $timeframe ): ?string {
 		$service = is_string( $timeframe->service ) ? strtolower( $timeframe->service ) : '';
 		$slot    = $timeframe->timeFrame;
 
 		if ( DeliveryWindowService::Evening->value === $service || ( null !== $slot && $slot->isEvening() ) ) {
-			return 'Evening';
+			return $this->is_evening_enabled() ? 'Evening' : null;
 		}
 
-		if ( $this->is_morning_enabled() && null !== $slot && $slot->isMorning() ) {
-			return '08:00-12:00';
+		if ( null !== $slot && $slot->isMorning() ) {
+			return $this->is_morning_enabled() ? '08:00-12:00' : null;
 		}
 
 		return 'Daytime';

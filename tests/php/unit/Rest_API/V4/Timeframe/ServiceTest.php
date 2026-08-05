@@ -253,19 +253,106 @@ class ServiceTest extends UnitTestCase {
 	}
 
 	/**
-	 * @testdox A morning window becomes a plain Daytime option when morning delivery is disabled
+	 * @testdox An evening window is dropped, not relabelled, when evening delivery is disabled
+	 *
+	 * PostNL returns late windows under the 'daytime' service and TimeSlot::isEvening()
+	 * only checks from >= 17:00, so an 18:00-22:00 daytime window would otherwise be
+	 * labelled Evening — an extra fee tab a merchant with evening delivery off never offers.
 	 */
-	public function test_morning_window_is_daytime_when_disabled(): void {
+	public function test_evening_window_is_dropped_when_disabled(): void {
+		$service = new Testable_Timeframe_Service( new Client_Factory( $this->make_settings( false, false ) ), $this->make_settings( false, false ), self::V4_KEY, self::DAYS );
+
+		$collection = new TimeframeMultipleServicesCollection(
+			array(
+				new TimeFrame( deliveryDate: '14-07-2026', timeFrame: new TimeSlot( from: '18:00:00', until: '22:00:00' ), availability: true, service: 'daytime' ),
+				new TimeFrame( deliveryDate: '14-07-2026', timeFrame: new TimeSlot( from: '09:00:00', until: '18:00:00' ), availability: true, service: 'daytime' ),
+			)
+		);
+
+		$this->assertSame(
+			array(
+				array(
+					'DeliveryDate' => '14-07-2026',
+					'Timeframe'    => array(
+						array(
+							'From'    => '09:00:00',
+							'To'      => '18:00:00',
+							'Options' => array( 'Daytime' ),
+						),
+					),
+				),
+			),
+			$service->expose_map_response( $collection ),
+			'Only the plain daytime window survives; a plain window stays Daytime whatever the toggles say.'
+		);
+	}
+
+	/**
+	 * @testdox A morning window is dropped, not relabelled, when morning delivery is disabled
+	 *
+	 * Relabelling it to Daytime would render two identical Daytime radios and, being
+	 * fee-free and first in the list, make the morning window the preselected default
+	 * that lands on the label (Frontend\Container::get_default_value()).
+	 */
+	public function test_morning_window_is_dropped_when_disabled(): void {
+		$service = new Testable_Timeframe_Service( new Client_Factory( $this->make_settings( true, false ) ), $this->make_settings( true, false ), self::V4_KEY, self::DAYS );
+
+		$collection = new TimeframeMultipleServicesCollection(
+			array(
+				new TimeFrame( deliveryDate: '14-07-2026', timeFrame: new TimeSlot( from: '08:00:00', until: '12:00:00' ), availability: true, service: 'daytime' ),
+				new TimeFrame( deliveryDate: '14-07-2026', timeFrame: new TimeSlot( from: '09:00:00', until: '18:00:00' ), availability: true, service: 'daytime' ),
+			)
+		);
+
+		$this->assertSame(
+			array(
+				array(
+					'DeliveryDate' => '14-07-2026',
+					'Timeframe'    => array(
+						array(
+							'From'    => '09:00:00',
+							'To'      => '18:00:00',
+							'Options' => array( 'Daytime' ),
+						),
+					),
+				),
+			),
+			$service->expose_map_response( $collection )
+		);
+	}
+
+	/**
+	 * @testdox A date left with no windows after dropping disabled ones disappears entirely
+	 *
+	 * An entry with an empty Timeframe array would render a radio group with no
+	 * options under a delivery date heading.
+	 */
+	public function test_date_with_only_disabled_windows_is_omitted(): void {
 		$service = new Testable_Timeframe_Service( new Client_Factory( $this->make_settings( false, false ) ), $this->make_settings( false, false ), self::V4_KEY, self::DAYS );
 
 		$collection = new TimeframeMultipleServicesCollection(
 			array(
 				new TimeFrame( deliveryDate: '14-07-2026', timeFrame: new TimeSlot( from: '08:00:00', until: '12:00:00' ), availability: true, service: 'daytime' ),
+				new TimeFrame( deliveryDate: '15-07-2026', timeFrame: new TimeSlot( from: '09:00:00', until: '18:00:00' ), availability: true, service: 'daytime' ),
 			)
 		);
 
-		$mapped = $service->expose_map_response( $collection );
-		$this->assertSame( array( 'Daytime' ), $mapped[0]['Timeframe'][0]['Options'] );
+		$this->assertSame(
+			array(
+				array(
+					'DeliveryDate' => '15-07-2026',
+					'Timeframe'    => array(
+						array(
+							'From'    => '09:00:00',
+							'To'      => '18:00:00',
+							'Options' => array( 'Daytime' ),
+						),
+					),
+				),
+			),
+			$service->expose_map_response( $collection ),
+			'14-07-2026 has no offerable window left, so it must not appear at all.'
+		);
 	}
 
 	// ── Handover date ────────────────────────────────────────────────────────

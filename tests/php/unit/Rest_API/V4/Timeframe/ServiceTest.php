@@ -18,6 +18,7 @@ use Postnl\Sdk\Enums\Payload\ShipmentType;
 use Postnl\Sdk\ResponseData\V4\TimeFrame;
 use Postnl\Sdk\ResponseData\V4\TimeSlot;
 use Postnl\Sdk\Service\Timeframes\V4\Response\TimeframeMultipleServicesCollection;
+use PostNLWooCommerce\Rest_API\SDK\Cache_Adapter;
 use PostNLWooCommerce\Rest_API\SDK\Client_Factory;
 use PostNLWooCommerce\Rest_API\V4\Timeframe\Service;
 use PostNLWooCommerce\Shipping_Method\Settings;
@@ -433,6 +434,43 @@ class ServiceTest extends UnitTestCase {
 		);
 	}
 
+	/**
+	 * @testdox Entries without a delivery date or without a window are skipped
+	 *
+	 * Both fields are nullable on the SDK DTO, and a null date reaches a string
+	 * parameter while a null window is dereferenced for its From/To — so an
+	 * unguarded entry does not merely map badly, it fatals the checkout lookup.
+	 */
+	public function test_entries_missing_a_date_or_a_window_are_skipped(): void {
+		$settings = $this->make_settings();
+		$service  = new Testable_Timeframe_Service( new Client_Factory( $settings ), $settings, self::V4_KEY, self::DAYS, new NullLogger() );
+
+		$collection = new TimeframeMultipleServicesCollection(
+			array(
+				new TimeFrame( deliveryDate: null, timeFrame: new TimeSlot( from: '09:00:00', until: '18:00:00' ), availability: true, service: 'daytime' ),
+				new TimeFrame( deliveryDate: '14-07-2026', timeFrame: null, availability: true, service: 'daytime' ),
+				new TimeFrame( deliveryDate: '15-07-2026', timeFrame: new TimeSlot( from: '09:00:00', until: '18:00:00' ), availability: true, service: 'daytime' ),
+			)
+		);
+
+		$this->assertSame(
+			array(
+				array(
+					'DeliveryDate' => '15-07-2026',
+					'Timeframe'    => array(
+						array(
+							'From'    => '09:00:00',
+							'To'      => '18:00:00',
+							'Options' => array( 'Daytime' ),
+						),
+					),
+				),
+			),
+			$service->expose_map_response( $collection ),
+			'Only the complete entry survives; the incomplete ones must not reach the mapper.'
+		);
+	}
+
 	// ── Handover date ────────────────────────────────────────────────────────
 
 	/**
@@ -505,12 +543,33 @@ class ServiceTest extends UnitTestCase {
 
 	/**
 	 * @testdox A malformed cut-off setting falls back to the 23:00 default instead of failing
+	 *
+	 * The fixture is '16:0' rather than something obviously non-numeric on purpose:
+	 * the cut-off comparison is a string compare, so 'not-a-time' sorts above every
+	 * clock string and the handover stays put whether the validation runs or not.
+	 * '16:0' sorts below '22:00', so dropping the validation shifts the handover a
+	 * day and this test notices.
 	 */
 	public function test_handover_tolerates_malformed_cutoff(): void {
-		$settings = $this->make_shipping_settings( 'not-a-time', '1', array( 'mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun' ) );
+		$settings = $this->make_shipping_settings( '16:0', '1', array( 'mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun' ) );
 		$service  = $this->make_handover_service( '2026-07-14 22:00:00', $settings );
 
 		$this->assertSame( '2026-07-14', $service->expose_handover_date() );
+	}
+
+	/**
+	 * @testdox The drop-off walk reaches a day a full week away
+	 *
+	 * A merchant handing over only on Sundays needs six steps from a Monday order.
+	 * Every other handover test lands within a step or two, so a walk that gave up
+	 * early would still pass them and quietly return an unshippable Monday here.
+	 */
+	public function test_handover_walks_a_full_week_to_the_only_dropoff_day(): void {
+		// Monday 2026-07-13, before the cut-off, so the walk starts on the order day.
+		$settings = $this->make_shipping_settings( '16:00', '1', array( 'sun' ) );
+		$service  = $this->make_handover_service( '2026-07-13 10:00:00', $settings );
+
+		$this->assertSame( '2026-07-19', $service->expose_handover_date(), 'The following Sunday is six days out.' );
 	}
 
 	/**
@@ -571,7 +630,48 @@ class ServiceTest extends UnitTestCase {
 		$this->assertSame( 1, $http->count, 'Second identical lookup must be served from cache.' );
 		$this->assertSame( $first, $second );
 		$this->assertSame( '14-07-2026', $first['DeliveryOptions'][0]['DeliveryDate'] );
-		$this->assertSame( array( 'Daytime' ), $first['DeliveryOptions'][0]['Timeframe'][0]['Options'] );
+
+		// 'Evening', not 'Daytime': Daytime is map_option()'s fallback, so asserting it
+		// would pass even if the cached body were never parsed or mapped at all.
+		$this->assertSame( array( 'Evening' ), $first['DeliveryOptions'][0]['Timeframe'][0]['Options'] );
+	}
+
+	/**
+	 * @testdox A lookup for a different address is not served the previous address's response
+	 *
+	 * The cached payload is keyed on the request, so a cache that ignored keys
+	 * entirely would still satisfy the hit test above while handing every customer
+	 * the first customer's delivery days.
+	 */
+	public function test_a_different_address_misses_the_cache(): void {
+		$this->with_transient_store();
+		Functions\when( 'current_datetime' )->justReturn( new \DateTimeImmutable( '2026-07-14 10:00:00' ) );
+
+		$http    = new Counting_Http_Client( $this->timeframe_response_body() );
+		$factory = new Spy_Timeframe_Client_Factory( $this->make_settings(), $http );
+		$service = new Service( $factory, $this->make_settings(), self::V4_KEY, self::DAYS, new NullLogger() );
+
+		$service->get_delivery_options( $this->nl_post_data() );
+		$service->get_delivery_options( array_merge( $this->nl_post_data(), array( 'shipping_postcode' => '5678 CD' ) ) );
+
+		$this->assertSame( 2, $http->count, 'A different postcode is a different lookup and must reach PostNL.' );
+	}
+
+	/**
+	 * @testdox A filtered TTL of zero or less falls back to the default instead of reaching CachingPlugin
+	 *
+	 * CachingPlugin throws on a non-positive TTL, so passing a filtered zero through
+	 * would turn a stray filter into a fatal checkout lookup.
+	 */
+	public function test_cache_ttl_falls_back_to_the_default_on_a_non_positive_filter_value(): void {
+		Functions\when( 'apply_filters' )->alias(
+			fn( $tag, $value = null ) => 'postnl_v4_cache_ttl' === $tag ? 0 : $value
+		);
+
+		$settings = $this->make_settings();
+		$service  = new Testable_Timeframe_Service( new Client_Factory( $settings ), $settings, self::V4_KEY, self::DAYS, new NullLogger() );
+
+		$this->assertSame( Cache_Adapter::DEFAULT_TTL, $service->expose_cache_ttl() );
 	}
 
 	// ── Authentication ───────────────────────────────────────────────────────
@@ -600,6 +700,30 @@ class ServiceTest extends UnitTestCase {
 			$http->last_request->getHeaderLine( 'apiKey' ),
 			'The SDK authenticates with the apiKey header; any other value means the client is not using the configured key.'
 		);
+	}
+
+	// ── Error handling ───────────────────────────────────────────────────────
+
+	/**
+	 * @testdox An SDK failure surfaces as the converted, merchant-facing error
+	 *
+	 * Callers of the timeframe service handle errors the way they handle
+	 * Rest_API\Base::check_response_error() ones — they read getMessage() and show
+	 * it. Letting a raw SDK exception through would put SDK-internal wording in
+	 * front of the merchant and drop the HTTP status the converter preserves.
+	 */
+	public function test_sdk_failure_surfaces_as_the_converted_error(): void {
+		$this->with_transient_store();
+		Functions\when( 'current_datetime' )->justReturn( new \DateTimeImmutable( '2026-07-14 10:00:00' ) );
+
+		$factory = new Spy_Timeframe_Client_Factory( $this->make_settings(), new Failing_Http_Client() );
+		$service = new Service( $factory, $this->make_settings(), self::V4_KEY, self::DAYS, new NullLogger() );
+
+		$this->expectException( \Exception::class );
+		$this->expectExceptionMessage( 'Invalid PostNL API credentials. (traceId: trace-abc)' );
+		$this->expectExceptionCode( 401 );
+
+		$service->get_delivery_options( $this->nl_post_data() );
 	}
 
 	// ── Logging ──────────────────────────────────────────────────────────────
@@ -676,7 +800,14 @@ class ServiceTest extends UnitTestCase {
 	}
 
 	/**
-	 * Canned V4 timeframe response body with a single available daytime window.
+	 * Canned V4 timeframe response body with a single available evening window.
+	 *
+	 * An evening window rather than a daytime one so tests can assert on an option
+	 * code the mapper has to derive: 'Daytime' is map_option()'s fallback and would
+	 * come out right even if the response never made it through the mapper.
+	 *
+	 * Tuesday 14-07-2026 implies a Monday handover, which is an enabled drop-off day
+	 * under the default settings double, so the delivery-date filter keeps it.
 	 *
 	 * @return string
 	 */
@@ -688,11 +819,11 @@ class ServiceTest extends UnitTestCase {
 						'deliveryDate' => '14-07-2026',
 						'services'     => array(
 							array(
-								'service'      => 'daytime',
+								'service'      => 'evening',
 								'availability' => true,
 								'timeFrame'    => array(
-									'from'  => '09:00:00',
-									'until' => '18:00:00',
+									'from'  => '18:00:00',
+									'until' => '22:00:00',
 								),
 							),
 						),
@@ -757,6 +888,15 @@ class Testable_Timeframe_Service extends Service {
 	 */
 	public function expose_map_response( TimeframeMultipleServicesCollection $collection ): array {
 		return $this->map_response( $collection );
+	}
+
+	/**
+	 * Public wrapper for cache_ttl().
+	 *
+	 * @return int
+	 */
+	public function expose_cache_ttl(): int {
+		return $this->cache_ttl();
 	}
 
 	/**

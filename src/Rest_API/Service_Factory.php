@@ -140,6 +140,21 @@ class Service_Factory {
 	}
 
 	/**
+	 * Whether the barcode is issued by the label response instead of a standalone
+	 * barcode request.
+	 *
+	 * Gated on the same condition as label_service(), so the reorder can never select
+	 * a Legacy label service that still expects a prefetched barcode.
+	 *
+	 * @return bool
+	 *
+	 * @since 6.0.0
+	 */
+	public function barcode_from_label(): bool {
+		return $this->should_use_v4( 'label' ) && isset( $this->v4_services['label'] );
+	}
+
+	/**
 	 * Return the timeframe (delivery options) service for the current configuration.
 	 *
 	 * @return Timeframe_Service_Interface

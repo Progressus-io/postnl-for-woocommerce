@@ -570,7 +570,7 @@ abstract class Base {
 	 * @param int   $order_id Order post ID.
 	 * @param array $meta_values PostNL meta values.
 	 *
-	 * @throws \Exception Throw error for invalid order id.
+	 * @throws \Exception When the order is invalid, or the V4 label response carries no barcode.
 	 */
 	public function save_meta_value( $order_id, $meta_values ) {
 
@@ -626,17 +626,27 @@ abstract class Base {
 			'saved_data' => $saved_data,
 		);
 
-		$barcodes                        = $this->maybe_create_multi_barcodes( $label_post_data );
-		$label_post_data['main_barcode'] = $barcodes[0]; // for MainBarcode.
-		$label_post_data['barcodes']     = $barcodes;
+		if ( $this->service_factory()->barcode_from_label() ) {
+			// V4: the label call issues the barcode(s); there is no standalone barcode
+			// request. Generate the label first, then harvest the barcode(s) out of the
+			// label response into the same barcodes[] shape the prefetch path produces.
+			$label_post_data['is_return_activated'] = $this->is_return_function_activated( $order );
 
-		// Need to be refactored.
-		$shipping_item_info                         = new Shipping\Item_Info( $label_post_data );
-		$label_post_data['return_barcode']          = $this->maybe_create_return_barcode( $label_post_data, $shipping_item_info );
-		$label_post_data['shipping_return_barcode'] = $this->maybe_create_shipping_return_barcode( $label_post_data, $shipping_item_info );
-		$label_post_data['is_return_activated']     = $this->is_return_function_activated( $order );
+			$labels   = $this->create_label( $label_post_data );
+			$barcodes = $this->harvest_barcodes_or_fail( $labels );
+		} else {
+			$barcodes                        = $this->maybe_create_multi_barcodes( $label_post_data );
+			$label_post_data['main_barcode'] = $barcodes[0]; // for MainBarcode.
+			$label_post_data['barcodes']     = $barcodes;
 
-		$labels = $this->create_label( $label_post_data );
+			// Need to be refactored.
+			$shipping_item_info                         = new Shipping\Item_Info( $label_post_data );
+			$label_post_data['return_barcode']          = $this->maybe_create_return_barcode( $label_post_data, $shipping_item_info );
+			$label_post_data['shipping_return_barcode'] = $this->maybe_create_shipping_return_barcode( $label_post_data, $shipping_item_info );
+			$label_post_data['is_return_activated']     = $this->is_return_function_activated( $order );
+
+			$labels = $this->create_label( $label_post_data );
+		}
 
 		/*
 		Temporarily commented.
@@ -854,6 +864,10 @@ abstract class Base {
 			}
 		}
 
+		// Legacy passes the prefetched barcode through untouched; V4 has none, so fall
+		// back to the barcode the response already carried into the raw records.
+		$parent_barcode = self::resolve_parent_barcode( $labels, (string) $parent_barcode );
+
 		// if ( 'PDF' === $label_contents['OutputType'] ) {
 		$labels = $this->maybe_merge_labels( $labels, $order, $parent_barcode, $parent_label_type );
 
@@ -923,6 +937,100 @@ abstract class Base {
 		return $barcodes;
 	}
 
+	/**
+	 * Harvest the barcode(s) out of a label-generation response.
+	 *
+	 * On V4 the label call issues the barcode, so it arrives under the same 'barcode'
+	 * key put_label_content() already writes. Returned in the indexed shape
+	 * maybe_create_multi_barcodes() produces.
+	 *
+	 * Multi-collo parity is deferred to the V4 multi-collo label work: the merge
+	 * collapses N collo into one record, so this returns a single barcode where the
+	 * Legacy prefetch records N.
+	 *
+	 * @param mixed $labels Label records returned by create_label().
+	 *
+	 * @return array List of barcode strings.
+	 *
+	 * @since 6.0.0
+	 */
+	protected static function get_barcodes_from_labels( $labels ) {
+		$barcodes = array();
+
+		if ( ! is_array( $labels ) ) {
+			return $barcodes;
+		}
+
+		foreach ( $labels as $label ) {
+			if ( ! empty( $label['barcode'] ) && ! in_array( $label['barcode'], $barcodes, true ) ) {
+				$barcodes[] = $label['barcode'];
+			}
+		}
+
+		return $barcodes;
+	}
+
+	/**
+	 * Harvest the barcodes from a fresh label response, discarding the files on failure.
+	 *
+	 * On the V4 path the label call has already written PDFs to disk before the
+	 * harvest runs. Throwing while keeping them would orphan those files behind a
+	 * retry that generates a fresh label, so they are removed before failing.
+	 *
+	 * @param array $labels Label records returned by create_label().
+	 *
+	 * @return array List of barcode strings.
+	 *
+	 * @throws \Exception When the label response carries no barcode.
+	 *
+	 * @since 6.0.0
+	 */
+	protected function harvest_barcodes_or_fail( $labels ) {
+		$barcodes = self::get_barcodes_from_labels( $labels );
+
+		if ( empty( $barcodes ) ) {
+			$this->delete_label( array( 'labels' => $labels ) );
+
+			throw new \Exception(
+				esc_html__( 'PostNL returned a label without a barcode. Please try generating the label again.', 'postnl-for-woocommerce' )
+			);
+		}
+
+		return $barcodes;
+	}
+
+	/**
+	 * Resolve the parent barcode used for the merged label record.
+	 *
+	 * Legacy prefetches it, so the passed-in value wins and the merge is unchanged.
+	 * V4 has no prefetch: without a fallback maybe_merge_labels() would stamp an
+	 * empty barcode onto the merged record for every non-A6 or multi-collo order,
+	 * leaving the harvest empty and the tracking URL blank.
+	 *
+	 * @param mixed  $labels         Raw label records built from the API response.
+	 * @param string $parent_barcode Prefetched parent barcode, empty on the V4 path.
+	 *
+	 * @return string
+	 *
+	 * @since 6.0.0
+	 */
+	protected static function resolve_parent_barcode( $labels, string $parent_barcode ) {
+		if ( '' !== $parent_barcode ) {
+			return $parent_barcode;
+		}
+
+		if ( ! is_array( $labels ) ) {
+			return '';
+		}
+
+		foreach ( $labels as $label ) {
+			if ( ! empty( $label['barcode'] ) ) {
+				return (string) $label['barcode'];
+			}
+		}
+
+		return '';
+	}
 
 	/**
 	 * Create PostNL return barcode for current order

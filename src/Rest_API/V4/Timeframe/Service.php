@@ -49,7 +49,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Main::get_logger(), so V4 entries land in the same WooCommerce log as the
  * legacy path and honour the same "enable logging" setting.
  *
- * @since   5.9.6
+ * @since   6.0.0
  * @package PostNLWooCommerce\Rest_API\V4\Timeframe
  */
 class Service implements Timeframe_Service_Interface {
@@ -551,7 +551,7 @@ class Service implements Timeframe_Service_Interface {
 		/**
 		 * Filters the TTL, in seconds, for cached V4 timeframe/locations responses.
 		 *
-		 * @since 5.9.6
+		 * @since 6.0.0
 		 *
 		 * @param int $ttl Default Cache_Adapter::DEFAULT_TTL (600 seconds).
 		 */

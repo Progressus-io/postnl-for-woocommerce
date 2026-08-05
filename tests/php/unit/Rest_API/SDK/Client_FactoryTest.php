@@ -19,6 +19,7 @@ use PostNLWooCommerce\Tests\UnitTestCase;
 use Psr\Http\Client\ClientInterface;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
+use Psr\Log\NullLogger;
 use ReflectionProperty;
 
 /**
@@ -320,6 +321,35 @@ class Client_FactoryTest extends UnitTestCase {
 		$a       = $factory->build( 'key', true );
 		$b       = $factory->build( 'key', false );
 		$this->assertNotSame( $a, $b );
+	}
+
+	/**
+	 * @testdox A supplied logger is handed to the SDK builder so requests and responses are logged
+	 *
+	 * Without this the SDK falls back to its own NullLogger and the V4 path records
+	 * nothing, where the legacy Rest_API\Base::send_request() logs URL, arguments
+	 * and response.
+	 */
+	public function test_logger_is_attached_to_the_builder(): void {
+		$logger = new NullLogger();
+		$spy    = new Spy_Client_Factory( $this->make_settings(), $logger );
+		$spy->build( 'k', false );
+
+		$this->assertSame(
+			$logger,
+			$this->builder_prop( $spy->captured_builder, 'logger' ),
+			'The configured logger must reach ClientBuilder::withLogger().'
+		);
+	}
+
+	/**
+	 * @testdox Without a logger the builder is left unconfigured rather than handed a stand-in
+	 */
+	public function test_builder_logger_is_unset_when_no_logger_is_supplied(): void {
+		$spy = new Spy_Client_Factory( $this->make_settings() );
+		$spy->build( 'k', false );
+
+		$this->assertNull( $this->builder_prop( $spy->captured_builder, 'logger' ) );
 	}
 
 	/**

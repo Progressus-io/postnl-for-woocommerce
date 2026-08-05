@@ -125,15 +125,13 @@ class Fill_In_With_Postnl_Handler_SessionCacheTest extends UnitTestCase {
 
 	/**
 	 * The session key the handler reads and writes.
+	 *
+	 * Derived from the constant rather than spelled out, so it tracks the real
+	 * POSTNL_SETTINGS_ID (defined in bootstrap-unit.php from Main.php's
+	 * $settings_id) instead of a value this test picked for itself.
 	 */
-	private const USER_DATA_KEY = 'postnl_user_data';
-
-	protected function setUp(): void {
-		parent::setUp();
-
-		if ( ! defined( 'POSTNL_SETTINGS_ID' ) ) {
-			define( 'POSTNL_SETTINGS_ID', 'postnl_' );
-		}
+	private function user_data_key(): string {
+		return POSTNL_SETTINGS_ID . 'user_data';
 	}
 
 	protected function tearDown(): void {
@@ -243,7 +241,7 @@ class Fill_In_With_Postnl_Handler_SessionCacheTest extends UnitTestCase {
 		$session = new Fake_WC_Session();
 
 		// An NL account logged in earlier -> its data is cached.
-		$session->set( self::USER_DATA_KEY, $this->account_data( 'NL' ) );
+		$session->set( $this->user_data_key(), $this->account_data( 'NL' ) );
 
 		$handler = $this->make_handler( $session );
 
@@ -251,7 +249,7 @@ class Fill_In_With_Postnl_Handler_SessionCacheTest extends UnitTestCase {
 		$this->run_failed_callback( $handler );
 
 		$this->assertNull(
-			$session->get( self::USER_DATA_KEY ),
+			$session->get( $this->user_data_key() ),
 			'A new login attempt must drop the previous account data before processing.'
 		);
 	}
@@ -265,7 +263,7 @@ class Fill_In_With_Postnl_Handler_SessionCacheTest extends UnitTestCase {
 	 */
 	public function test_failed_be_login_does_not_serve_stale_nl_address(): void {
 		$session = new Fake_WC_Session();
-		$session->set( self::USER_DATA_KEY, $this->account_data( 'NL' ) );
+		$session->set( $this->user_data_key(), $this->account_data( 'NL' ) );
 
 		$handler = $this->make_handler( $session );
 

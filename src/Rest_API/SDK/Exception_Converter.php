@@ -32,7 +32,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * The original SDK exception is preserved as the previous exception so the full
  * cause chain stays available for logging.
  *
- * @since   5.9.6
+ * @since   6.0.0
  * @package PostNLWooCommerce\Rest_API\SDK
  */
 class Exception_Converter {
@@ -42,39 +42,68 @@ class Exception_Converter {
 	 *
 	 * Mapping (most specific first):
 	 *  - Authentication failures (HTTP 401/403 and pre-request credential/OAuth
-	 *    failures) collapse to a single "Invalid PostNL API credentials" message.
+	 *    failures) collapse to a single "Invalid PostNL API credentials." message.
 	 *  - Validation errors (400/422) surface the field-level errors PostNL
 	 *    reported so the merchant can correct the request.
-	 *  - Transient failures (429, 408, 5xx, network, retries exhausted) collapse
-	 *    to "PostNL is temporarily unavailable. Please try again." since a retry
-	 *    may succeed.
-	 *  - Any other HTTP error uses the exception's already-cleaned message.
-	 *  - Non-HTTP SDK/runtime errors pass their own message through unchanged.
+	 *  - Transient failures (429, 408, retryable 5xx, network, retries exhausted)
+	 *    collapse to "PostNL is temporarily unavailable." since a retry may succeed.
+	 *  - Any other HTTP error, including a permanent 5xx such as 501, uses the
+	 *    description PostNL returned in the response body.
+	 *  - Anything else is an SDK-internal or PHP error whose message describes
+	 *    plugin internals rather than the merchant's problem, so it is replaced
+	 *    with a generic one. The original stays available via getPrevious().
 	 *
 	 * When available, the PostNL traceId is appended for support correlation.
+	 *
+	 * @since 6.0.0
 	 *
 	 * @param \Throwable $exception SDK exception (or any throwable) to convert.
 	 * @return \Exception Plugin-shaped error with a preserved status code.
 	 */
 	public static function convert( \Throwable $exception ): \Exception {
 		if ( $exception instanceof AuthExceptionInterface ) {
-			return self::to_error( esc_html__( 'Invalid PostNL API credentials', 'postnl-for-woocommerce' ), $exception );
+			return self::to_error( __( 'Invalid PostNL API credentials.', 'postnl-for-woocommerce' ), $exception );
 		}
 
 		if ( $exception instanceof ValidationException ) {
 			return self::to_error( self::validation_message( $exception ), $exception );
 		}
 
-		if ( $exception instanceof RetryableExceptionInterface || $exception instanceof RetryExhaustedException ) {
-			return self::to_error( esc_html__( 'PostNL is temporarily unavailable. Please try again.', 'postnl-for-woocommerce' ), $exception );
+		if ( self::is_transient( $exception ) ) {
+			return self::to_error( __( 'PostNL is temporarily unavailable. Please try again.', 'postnl-for-woocommerce' ), $exception );
 		}
 
 		if ( $exception instanceof HttpSdkException ) {
-			// getMessage() is the SDK's already-cleaned message; it never leaks the raw "Unknown error" fallback.
+			// PostNL's own description of the failure, already cleaned by the SDK.
 			return self::to_error( $exception->getMessage(), $exception );
 		}
 
-		return self::to_error( $exception->getMessage(), $exception );
+		return self::to_error(
+			__( 'An unexpected error occurred while contacting PostNL. Check the PostNL logs for details.', 'postnl-for-woocommerce' ),
+			$exception
+		);
+	}
+
+	/**
+	 * Whether a retry could plausibly succeed.
+	 *
+	 * RetryableExceptionInterface only declares the capability, so the predicate
+	 * has to be asked rather than the type: ServerException implements it for
+	 * every 5xx but reports false for permanent ones such as 501. The SDK's own
+	 * retry policy gates on isRetryable() for the same reason.
+	 *
+	 * RetryExhaustedException does not implement the interface, so it is checked
+	 * separately; the policy only ever raises it after retryable failures.
+	 *
+	 * @param \Throwable $exception Original SDK exception being converted.
+	 * @return bool
+	 */
+	private static function is_transient( \Throwable $exception ): bool {
+		if ( $exception instanceof RetryExhaustedException ) {
+			return true;
+		}
+
+		return $exception instanceof RetryableExceptionInterface && $exception->isRetryable();
 	}
 
 	/**

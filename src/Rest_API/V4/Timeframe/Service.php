@@ -256,16 +256,27 @@ class Service implements Timeframe_Service_Interface {
 	 * without any window is dropped with them: an entry with an empty Timeframe
 	 * array would render a delivery date heading above an empty radio group.
 	 *
+	 * Delivery dates the merchant cannot reach from an enabled drop-off day are
+	 * dropped here too — see is_reachable_delivery_date(). Filtering in the
+	 * mapping rather than the request keeps cached responses consistent: the SDK
+	 * CachingPlugin caches the raw HTTP response inside the transport, so this
+	 * mapping runs on cache hits exactly as it does on live responses.
+	 *
 	 * @param TimeframeMultipleServicesCollection $collection SDK timeframe collection.
 	 *
 	 * @return array<int, array{DeliveryDate: string, Timeframe: array<int, array{From: string, To: string, Options: string[]}>}>
 	 */
 	protected function map_response( TimeframeMultipleServicesCollection $collection ): array {
 		// phpcs:disable WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- Third-party SDK DTO properties are camelCase.
-		$by_date = array();
+		$by_date      = array();
+		$dropoff_days = $this->get_dropoff_days();
 
 		foreach ( $collection->filterAvailable()->all() as $timeframe ) {
 			if ( null === $timeframe->deliveryDate || null === $timeframe->timeFrame ) {
+				continue;
+			}
+
+			if ( ! $this->is_reachable_delivery_date( $timeframe->deliveryDate, $dropoff_days ) ) {
 				continue;
 			}
 
@@ -367,6 +378,47 @@ class Service implements Timeframe_Service_Interface {
 		}
 
 		return $handover->format( 'Y-m-d' );
+	}
+
+	/**
+	 * Whether a delivery date can be reached from an enabled drop-off day.
+	 *
+	 * The legacy checkout call sent one CutOffTimes entry per excluded drop-off
+	 * day (Legacy\Checkout\Client::get_cutoff_times()) and PostNL withheld every
+	 * delivery date whose handover fell on one. The V4 request has no equivalent
+	 * field — it carries a single handoverDate — so get_handover_date() can only
+	 * place the *first* handover on a valid day; without this filter every later
+	 * date PostNL returns ignores drop-off days entirely, and a merchant shipping
+	 * Mondays and Thursdays would offer a Wednesday delivery that needs a Tuesday
+	 * handover they never do.
+	 *
+	 * The handover a date implies comes from get_handover_date()'s own model: an
+	 * order with transit time t hands over at order + (t - 1) preparation days and
+	 * the Transit Time setting promises delivery at order + t, so PostNL delivers
+	 * the day after handover and date D is reachable only when D - 1 day is an
+	 * enabled drop-off day.
+	 *
+	 * With every day enabled this is a no-op; with none enabled
+	 * get_delivery_options() has already short-circuited before mapping.
+	 *
+	 * @param string   $date         Delivery date in the d-m-Y format PostNL returns, e.g. '14-07-2026'.
+	 * @param string[] $dropoff_days Enabled drop-off weekday keys.
+	 *
+	 * @return bool
+	 */
+	private function is_reachable_delivery_date( string $date, array $dropoff_days ): bool {
+		$delivery = \DateTimeImmutable::createFromFormat( '!d-m-Y', $date );
+
+		// An unreadable date is kept rather than filtered away: if PostNL ever
+		// returns another format, dropping every date would leave the customer an
+		// empty delivery-day widget with nothing to explain it.
+		if ( false === $delivery ) {
+			return true;
+		}
+
+		$handover = $delivery->modify( '-1 day' );
+
+		return in_array( self::WEEKDAYS[ (int) $handover->format( 'N' ) ], $dropoff_days, true );
 	}
 
 	/**

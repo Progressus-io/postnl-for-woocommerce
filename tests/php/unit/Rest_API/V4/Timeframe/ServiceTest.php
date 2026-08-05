@@ -355,6 +355,80 @@ class ServiceTest extends UnitTestCase {
 		);
 	}
 
+	/**
+	 * One available daytime window on Tuesday 14-07, Wednesday 15-07 and Friday 17-07 2026.
+	 *
+	 * Their handover days (the day before each) are Monday, Tuesday and Thursday.
+	 *
+	 * @return TimeframeMultipleServicesCollection
+	 */
+	private function three_daytime_dates(): TimeframeMultipleServicesCollection {
+		return new TimeframeMultipleServicesCollection(
+			array(
+				new TimeFrame( deliveryDate: '14-07-2026', timeFrame: new TimeSlot( from: '09:00:00', until: '18:00:00' ), availability: true, service: 'daytime' ),
+				new TimeFrame( deliveryDate: '15-07-2026', timeFrame: new TimeSlot( from: '09:00:00', until: '18:00:00' ), availability: true, service: 'daytime' ),
+				new TimeFrame( deliveryDate: '17-07-2026', timeFrame: new TimeSlot( from: '09:00:00', until: '18:00:00' ), availability: true, service: 'daytime' ),
+			)
+		);
+	}
+
+	/**
+	 * @testdox Delivery dates whose handover falls on a disabled drop-off day are dropped
+	 *
+	 * The V4 request carries a single handoverDate and no excluded-days field, so
+	 * unlike the legacy call — which sent one CutOffTimes entry per excluded day and
+	 * let PostNL hide the unreachable dates — every date after the first ignores
+	 * drop-off days unless the mapping filters them. A merchant shipping Mon+Thu
+	 * only would otherwise be offering a Wednesday delivery that needs a Tuesday
+	 * handover they never do.
+	 */
+	public function test_delivery_dates_unreachable_from_a_dropoff_day_are_dropped(): void {
+		$settings = $this->make_settings( dropoff: array( 'mon', 'thu' ) );
+		$service  = new Testable_Timeframe_Service( new Client_Factory( $settings ), $settings, self::V4_KEY, self::DAYS );
+
+		$this->assertSame(
+			array( '14-07-2026', '17-07-2026' ),
+			array_column( $service->expose_map_response( $this->three_daytime_dates() ), 'DeliveryDate' ),
+			'Wednesday 15-07 needs a Tuesday handover, which is not a drop-off day.'
+		);
+	}
+
+	/**
+	 * @testdox With every drop-off day enabled the delivery-date filter is a no-op
+	 */
+	public function test_all_dropoff_days_enabled_keeps_every_delivery_date(): void {
+		$settings = $this->make_settings( dropoff: self::ALL_DROPOFF_DAYS );
+		$service  = new Testable_Timeframe_Service( new Client_Factory( $settings ), $settings, self::V4_KEY, self::DAYS );
+
+		$this->assertSame(
+			array( '14-07-2026', '15-07-2026', '17-07-2026' ),
+			array_column( $service->expose_map_response( $this->three_daytime_dates() ), 'DeliveryDate' )
+		);
+	}
+
+	/**
+	 * @testdox A delivery date in an unreadable format is kept rather than filtered away
+	 *
+	 * If PostNL ever returned something other than d-m-Y, treating unparseable dates
+	 * as unreachable would silently drop every option and leave the customer with an
+	 * empty delivery-day widget and no indication why.
+	 */
+	public function test_unparseable_delivery_date_is_kept(): void {
+		$settings = $this->make_settings( dropoff: array( 'mon' ) );
+		$service  = new Testable_Timeframe_Service( new Client_Factory( $settings ), $settings, self::V4_KEY, self::DAYS );
+
+		$collection = new TimeframeMultipleServicesCollection(
+			array(
+				new TimeFrame( deliveryDate: 'not-a-date', timeFrame: new TimeSlot( from: '09:00:00', until: '18:00:00' ), availability: true, service: 'daytime' ),
+			)
+		);
+
+		$this->assertSame(
+			array( 'not-a-date' ),
+			array_column( $service->expose_map_response( $collection ), 'DeliveryDate' )
+		);
+	}
+
 	// ── Handover date ────────────────────────────────────────────────────────
 
 	/**

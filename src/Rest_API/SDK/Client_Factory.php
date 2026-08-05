@@ -123,12 +123,24 @@ class Client_Factory {
 	 * assembled each call. The shared auth/version/customer/retry configuration
 	 * still comes from make_builder(), so callers add only the plugins they need.
 	 *
+	 * The key parameter is marked SensitiveParameter for the same reason build()
+	 * marks its own: this method throws, Exception_Converter keeps the original
+	 * as the previous exception, and an unredacted argument would ride the full
+	 * trace into debug.log and fatal-error emails.
+	 *
+	 * @since 6.0.0
+	 *
 	 * @param string              $v4_key     PostNL V4 API key.
 	 * @param bool                $is_sandbox Whether to target the sandbox environment.
 	 * @param HttpPluginInterface ...$plugins Transport plugins to attach in order.
 	 * @return PostnlClientInterface
 	 */
-	public function build_with_plugins( string $v4_key, bool $is_sandbox, HttpPluginInterface ...$plugins ): PostnlClientInterface {
+	public function build_with_plugins(
+		#[\SensitiveParameter]
+		string $v4_key,
+		bool $is_sandbox,
+		HttpPluginInterface ...$plugins
+	): PostnlClientInterface {
 		$builder = $this->make_builder(
 			$v4_key,
 			$is_sandbox,

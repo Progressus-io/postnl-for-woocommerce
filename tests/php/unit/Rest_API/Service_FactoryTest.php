@@ -537,6 +537,46 @@ class Service_FactoryTest extends UnitTestCase {
 	}
 
 	// -------------------------------------------------------------------------
+	// Scenario 8 — barcode_from_label(): gates the Order\Base reorder
+	// -------------------------------------------------------------------------
+
+	/** @testdox barcode_from_label() is false with no V4 key */
+	public function test_barcode_from_label_false_without_key(): void {
+		$factory = new Service_Factory( null );
+		$this->assertFalse( $factory->barcode_from_label() );
+	}
+
+	/** @testdox barcode_from_label() is false with a key but the label flag off */
+	public function test_barcode_from_label_false_when_label_flag_off(): void {
+		$factory = new Service_Factory( $this->settings_with_key() );
+		$this->assertFalse( $factory->barcode_from_label() );
+	}
+
+	/**
+	 * @testdox barcode_from_label() is false with key + label flag on but no V4 label service
+	 *
+	 * The safety gate: the reorder must stay dormant until a V4 label service exists,
+	 * so a Legacy label service is never asked to build a request without a prefetched
+	 * barcode.
+	 */
+	public function test_barcode_from_label_false_without_v4_label_service(): void {
+		Filters\expectApplied( 'postnl_sdk_enable_label' )->andReturn( true );
+
+		$factory = new Service_Factory( $this->settings_with_key() );
+		$this->assertFalse( $factory->barcode_from_label() );
+	}
+
+	/** @testdox barcode_from_label() is true with key + label flag on + a V4 label service */
+	public function test_barcode_from_label_true_with_v4_label_service(): void {
+		Filters\expectApplied( 'postnl_sdk_enable_label' )->andReturn( true );
+
+		$factory = new Service_Factory( $this->settings_with_key() );
+		$factory->inject_v4_service( 'label', $this->make_label_stub() );
+
+		$this->assertTrue( $factory->barcode_from_label() );
+	}
+
+	// -------------------------------------------------------------------------
 	// Memoisation — shared checkout service instance
 	// -------------------------------------------------------------------------
 

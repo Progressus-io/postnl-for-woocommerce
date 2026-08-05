@@ -21,6 +21,7 @@ use PostNLWooCommerce\Rest_API\Contracts\Timeframe_Service_Interface;
 use PostNLWooCommerce\Rest_API\SDK\Cache_Adapter;
 use PostNLWooCommerce\Rest_API\SDK\Client_Factory;
 use PostNLWooCommerce\Rest_API\SDK\Exception_Converter;
+use PostNLWooCommerce\Shipping_Method\Settings;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -70,11 +71,6 @@ class Service implements Timeframe_Service_Interface {
 	);
 
 	/**
-	 * Look-ahead days used by the plugin today; overridable per instance.
-	 */
-	public const DEFAULT_DELIVERY_DAYS = 10;
-
-	/**
 	 * SDK client factory.
 	 *
 	 * @var Client_Factory
@@ -84,9 +80,16 @@ class Service implements Timeframe_Service_Interface {
 	/**
 	 * Plugin settings instance.
 	 *
-	 * @var object
+	 * @var Settings
 	 */
 	private $settings;
+
+	/**
+	 * PostNL V4 API key used to authenticate SDK requests.
+	 *
+	 * @var string
+	 */
+	private $v4_key;
 
 	/**
 	 * Number of look-ahead days to request, clamped to the V4 maximum.
@@ -98,13 +101,29 @@ class Service implements Timeframe_Service_Interface {
 	/**
 	 * Service constructor.
 	 *
+	 * Both the API key and the look-ahead day count are required rather than
+	 * defaulted: the key has no getter on Settings to fall back to, and a
+	 * defaulted day count would silently ignore the merchant's configured value
+	 * if a caller forgot to pass Settings::get_number_delivery_days().
+	 *
+	 * The key is marked SensitiveParameter so PHP redacts it from stack traces,
+	 * matching Client_Factory::build().
+	 *
 	 * @param Client_Factory $client_factory SDK client factory.
-	 * @param object         $settings       Plugin settings instance.
-	 * @param int            $number_of_days Look-ahead days (default 10, capped at the V4 max of 14).
+	 * @param Settings       $settings       Plugin settings instance.
+	 * @param string         $v4_key         PostNL V4 API key.
+	 * @param int            $number_of_days Look-ahead days, capped at the V4 max of 14 and floored at 1.
 	 */
-	public function __construct( Client_Factory $client_factory, object $settings, int $number_of_days = self::DEFAULT_DELIVERY_DAYS ) {
+	public function __construct(
+		Client_Factory $client_factory,
+		Settings $settings,
+		#[\SensitiveParameter]
+		string $v4_key,
+		int $number_of_days
+	) {
 		$this->client_factory = $client_factory;
 		$this->settings       = $settings;
+		$this->v4_key         = $v4_key;
 		$this->number_of_days = $this->clamp_days( $number_of_days );
 	}
 
@@ -217,16 +236,14 @@ class Service implements Timeframe_Service_Interface {
 	 * @return \Postnl\Sdk\Client\PostnlClientInterface
 	 */
 	protected function build_client() {
-		$v4_key = $this->get_v4_key();
-
 		$caching_plugin = CachingPlugin::create(
-			cache: new Cache_Adapter( $v4_key ),
+			cache: new Cache_Adapter( $this->v4_key ),
 			ttl: $this->cache_ttl(),
 			allowedEndpoints: array( '/timeframe/' ),
 			keyPrefix: 'timeframe'
 		);
 
-		return $this->client_factory->build_with_plugins( $v4_key, (bool) $this->settings->is_sandbox(), $caching_plugin );
+		return $this->client_factory->build_with_plugins( $this->v4_key, (bool) $this->settings->is_sandbox(), $caching_plugin );
 	}
 
 	/**
@@ -349,12 +366,10 @@ class Service implements Timeframe_Service_Interface {
 	 * @return string
 	 */
 	private function get_cut_off_time(): string {
-		if ( method_exists( $this->settings, 'get_cut_off_time' ) ) {
-			$cut_off = (string) $this->settings->get_cut_off_time();
+		$cut_off = (string) $this->settings->get_cut_off_time();
 
-			if ( 1 === preg_match( '/^(?:[01][0-9]|2[0-4]):[0-5][0-9]$/', $cut_off ) ) {
-				return $cut_off;
-			}
+		if ( 1 === preg_match( '/^(?:[01][0-9]|2[0-4]):[0-5][0-9]$/', $cut_off ) ) {
+			return $cut_off;
 		}
 
 		return self::DEFAULT_CUT_OFF_TIME;
@@ -366,44 +381,25 @@ class Service implements Timeframe_Service_Interface {
 	 * @return int
 	 */
 	private function get_shipping_duration(): int {
-		if ( ! method_exists( $this->settings, 'get_transit_time' ) ) {
-			return 1;
-		}
-
 		return max( 1, (int) $this->settings->get_transit_time() );
 	}
 
 	/**
-	 * Enabled drop-off weekday keys ('mon' … 'sun'); empty means no restriction.
+	 * Enabled drop-off weekday keys ('mon' … 'sun').
 	 *
 	 * @return string[]
 	 */
 	private function get_dropoff_days(): array {
-		if ( ! method_exists( $this->settings, 'get_dropoff_days' ) ) {
-			return array();
-		}
-
-		$days = $this->settings->get_dropoff_days();
-
-		return is_array( $days ) ? $days : array();
+		return $this->settings->get_dropoff_days();
 	}
 
 	/**
-	 * Whether the merchant explicitly disabled every drop-off day.
-	 *
-	 * Only true when the setting getter exists and returns an empty list; a
-	 * settings object without the getter means "no restriction", not "disabled".
+	 * Whether the merchant disabled every drop-off day.
 	 *
 	 * @return bool
 	 */
 	private function all_dropoff_days_disabled(): bool {
-		if ( ! method_exists( $this->settings, 'get_dropoff_days' ) ) {
-			return false;
-		}
-
-		$days = $this->settings->get_dropoff_days();
-
-		return is_array( $days ) && empty( $days );
+		return array() === $this->get_dropoff_days();
 	}
 
 	/**
@@ -433,8 +429,7 @@ class Service implements Timeframe_Service_Interface {
 	 * @return bool
 	 */
 	private function is_evening_enabled(): bool {
-		return method_exists( $this->settings, 'is_evening_delivery_enabled' )
-			&& (bool) $this->settings->is_evening_delivery_enabled();
+		return (bool) $this->settings->is_evening_delivery_enabled();
 	}
 
 	/**
@@ -443,26 +438,7 @@ class Service implements Timeframe_Service_Interface {
 	 * @return bool
 	 */
 	private function is_morning_enabled(): bool {
-		return method_exists( $this->settings, 'is_morning_delivery_enabled' )
-			&& (bool) $this->settings->is_morning_delivery_enabled();
-	}
-
-	/**
-	 * Read the V4 API key from settings, tolerating settings without the getter.
-	 *
-	 * The V4 key field ships in a separate PR, so Service_Factory only routes here
-	 * once it exists; the method_exists guard keeps this class safe in isolation.
-	 *
-	 * @return string
-	 */
-	private function get_v4_key(): string {
-		if ( ! method_exists( $this->settings, 'get_v4_api_key' ) ) {
-			return '';
-		}
-
-		$key = $this->settings->get_v4_api_key();
-
-		return is_string( $key ) ? $key : '';
+		return (bool) $this->settings->is_morning_delivery_enabled();
 	}
 
 	/**

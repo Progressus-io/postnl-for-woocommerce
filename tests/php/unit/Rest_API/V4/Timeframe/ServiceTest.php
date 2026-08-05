@@ -20,6 +20,7 @@ use Postnl\Sdk\ResponseData\V4\TimeSlot;
 use Postnl\Sdk\Service\Timeframes\V4\Response\TimeframeMultipleServicesCollection;
 use PostNLWooCommerce\Rest_API\SDK\Client_Factory;
 use PostNLWooCommerce\Rest_API\V4\Timeframe\Service;
+use PostNLWooCommerce\Shipping_Method\Settings;
 use PostNLWooCommerce\Tests\UnitTestCase;
 use Psr\Http\Client\ClientInterface;
 use Psr\Http\Message\RequestInterface;
@@ -31,6 +32,21 @@ use Psr\Http\Message\ResponseInterface;
 class ServiceTest extends UnitTestCase {
 
 	/**
+	 * API key the Service is constructed with in these tests.
+	 */
+	private const V4_KEY = 'v4-secret';
+
+	/**
+	 * Look-ahead days the Service is constructed with unless a test varies it.
+	 */
+	private const DAYS = 10;
+
+	/**
+	 * Every weekday enabled for drop-off.
+	 */
+	private const ALL_DROPOFF_DAYS = array( 'mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun' );
+
+	/**
 	 * In-memory stand-in for the WP transient store.
 	 *
 	 * @var array<string, mixed>
@@ -38,17 +54,33 @@ class ServiceTest extends UnitTestCase {
 	private array $store = array();
 
 	/**
-	 * Build a settings stub exposing only what the Service reads.
+	 * Build a settings double overriding exactly the getters the Service reads.
 	 *
-	 * @param bool $evening Whether evening delivery is enabled.
-	 * @param bool $morning Whether morning delivery is enabled.
-	 * @return object
+	 * It extends the real Settings so it satisfies the Service's typed parameter;
+	 * every parent method is left unstubbed on purpose, so reaching one fatals
+	 * rather than quietly returning stub data.
+	 *
+	 * @param bool     $evening Whether evening delivery is enabled.
+	 * @param bool     $morning Whether morning delivery is enabled.
+	 * @param string   $cut_off Cut-off time (HH:MM).
+	 * @param string   $transit Transit time in days, as the setting stores it.
+	 * @param string[] $dropoff Enabled drop-off weekday keys.
+	 * @return Settings
 	 */
-	private function make_settings( bool $evening = true, bool $morning = false ): object {
-		return new class( $evening, $morning ) {
+	private function make_settings(
+		bool $evening = true,
+		bool $morning = false,
+		string $cut_off = '23:00',
+		string $transit = '1',
+		array $dropoff = self::ALL_DROPOFF_DAYS
+	): Settings {
+		return new class( $evening, $morning, $cut_off, $transit, $dropoff ) extends Settings {
 			public function __construct(
 				private bool $evening,
 				private bool $morning,
+				private string $cut_off,
+				private string $transit,
+				private array $dropoff,
 			) {}
 
 			public function get_customer_code() {
@@ -57,10 +89,6 @@ class ServiceTest extends UnitTestCase {
 
 			public function get_customer_num() {
 				return '11223344';
-			}
-
-			public function get_v4_api_key() {
-				return 'v4-secret';
 			}
 
 			public function is_sandbox() {
@@ -73,6 +101,18 @@ class ServiceTest extends UnitTestCase {
 
 			public function is_morning_delivery_enabled() {
 				return $this->morning;
+			}
+
+			public function get_cut_off_time() {
+				return $this->cut_off;
+			}
+
+			public function get_transit_time() {
+				return $this->transit;
+			}
+
+			public function get_dropoff_days() {
+				return $this->dropoff;
 			}
 		};
 	}
@@ -99,7 +139,7 @@ class ServiceTest extends UnitTestCase {
 	 * @testdox build_request() maps the checkout address and settings onto the SDK request
 	 */
 	public function test_build_request_maps_address_and_settings(): void {
-		$service = new Testable_Timeframe_Service( new Client_Factory( $this->make_settings() ), $this->make_settings() );
+		$service = new Testable_Timeframe_Service( new Client_Factory( $this->make_settings() ), $this->make_settings(), self::V4_KEY, self::DAYS );
 		$request = $service->expose_build_request( $this->nl_post_data() );
 
 		$this->assertSame( '2026-07-14', $request->handoverDate );
@@ -118,7 +158,7 @@ class ServiceTest extends UnitTestCase {
 	 * @testdox The billing address is used when the order does not ship to a different address
 	 */
 	public function test_build_request_falls_back_to_billing_address(): void {
-		$service = new Testable_Timeframe_Service( new Client_Factory( $this->make_settings() ), $this->make_settings() );
+		$service = new Testable_Timeframe_Service( new Client_Factory( $this->make_settings() ), $this->make_settings(), self::V4_KEY, self::DAYS );
 
 		$address = $service->expose_build_request(
 			array(
@@ -141,13 +181,13 @@ class ServiceTest extends UnitTestCase {
 	 * @testdox Evening is requested only when the setting is enabled
 	 */
 	public function test_build_request_services_follow_evening_setting(): void {
-		$with_evening = new Testable_Timeframe_Service( new Client_Factory( $this->make_settings( true ) ), $this->make_settings( true ) );
+		$with_evening = new Testable_Timeframe_Service( new Client_Factory( $this->make_settings( true ) ), $this->make_settings( true ), self::V4_KEY, self::DAYS );
 		$this->assertSame(
 			array( DeliveryWindowService::Daytime, DeliveryWindowService::Evening ),
 			$with_evening->expose_build_request( $this->nl_post_data() )->services
 		);
 
-		$no_evening = new Testable_Timeframe_Service( new Client_Factory( $this->make_settings( false ) ), $this->make_settings( false ) );
+		$no_evening = new Testable_Timeframe_Service( new Client_Factory( $this->make_settings( false ) ), $this->make_settings( false ), self::V4_KEY, self::DAYS );
 		$this->assertSame(
 			array( DeliveryWindowService::Daytime ),
 			$no_evening->expose_build_request( $this->nl_post_data() )->services
@@ -155,20 +195,22 @@ class ServiceTest extends UnitTestCase {
 	}
 
 	/**
-	 * @testdox numberOfDays defaults to 10 and is clamped to the V4 range [1, 14]
+	 * @testdox The configured numberOfDays is passed through and clamped to the V4 range [1, 14]
 	 */
 	public function test_number_of_days_is_clamped(): void {
 		$settings = $this->make_settings();
 		$factory  = new Client_Factory( $settings );
 		$post     = $this->nl_post_data();
 
-		$default = new Testable_Timeframe_Service( $factory, $settings );
-		$this->assertSame( 10, $default->expose_build_request( $post )->numberOfDays );
+		// 5 is neither the clamp floor nor the ceiling, so it only survives if the
+		// merchant's configured value is actually carried through to the request.
+		$configured = new Testable_Timeframe_Service( $factory, $settings, self::V4_KEY, 5 );
+		$this->assertSame( 5, $configured->expose_build_request( $post )->numberOfDays, 'The configured value is used as-is.' );
 
-		$over = new Testable_Timeframe_Service( $factory, $settings, 20 );
+		$over = new Testable_Timeframe_Service( $factory, $settings, self::V4_KEY, 20 );
 		$this->assertSame( 14, $over->expose_build_request( $post )->numberOfDays, 'Capped at the V4 maximum of 14.' );
 
-		$under = new Testable_Timeframe_Service( $factory, $settings, 0 );
+		$under = new Testable_Timeframe_Service( $factory, $settings, self::V4_KEY, 0 );
 		$this->assertSame( 1, $under->expose_build_request( $post )->numberOfDays, 'Floored at 1.' );
 	}
 
@@ -178,7 +220,7 @@ class ServiceTest extends UnitTestCase {
 	 * @testdox map_response() groups available timeframes by date into the legacy shape
 	 */
 	public function test_map_response_produces_legacy_shape(): void {
-		$service = new Testable_Timeframe_Service( new Client_Factory( $this->make_settings( true, true ) ), $this->make_settings( true, true ) );
+		$service = new Testable_Timeframe_Service( new Client_Factory( $this->make_settings( true, true ) ), $this->make_settings( true, true ), self::V4_KEY, self::DAYS );
 
 		$collection = new TimeframeMultipleServicesCollection(
 			array(
@@ -214,7 +256,7 @@ class ServiceTest extends UnitTestCase {
 	 * @testdox A morning window becomes a plain Daytime option when morning delivery is disabled
 	 */
 	public function test_morning_window_is_daytime_when_disabled(): void {
-		$service = new Testable_Timeframe_Service( new Client_Factory( $this->make_settings( false, false ) ), $this->make_settings( false, false ) );
+		$service = new Testable_Timeframe_Service( new Client_Factory( $this->make_settings( false, false ) ), $this->make_settings( false, false ), self::V4_KEY, self::DAYS );
 
 		$collection = new TimeframeMultipleServicesCollection(
 			array(
@@ -229,61 +271,27 @@ class ServiceTest extends UnitTestCase {
 	// ── Handover date ────────────────────────────────────────────────────────
 
 	/**
-	 * Build a settings stub that also exposes the shipping-day settings the
+	 * Build a settings double varying only the shipping-day settings the
 	 * handover-date walk reads (cut-off time, transit time, drop-off days).
 	 *
 	 * @param string   $cut_off Cut-off time (HH:MM).
 	 * @param string   $transit Transit time in days, as the setting stores it.
 	 * @param string[] $dropoff Enabled drop-off weekday keys.
-	 * @return object
+	 * @return Settings
 	 */
-	private function make_shipping_settings( string $cut_off, string $transit, array $dropoff ): object {
-		return new class( $cut_off, $transit, $dropoff ) {
-			public function __construct(
-				private string $cut_off,
-				private string $transit,
-				private array $dropoff,
-			) {}
-
-			public function get_customer_code() {
-				return 'DEVC';
-			}
-
-			public function get_customer_num() {
-				return '11223344';
-			}
-
-			public function get_v4_api_key() {
-				return 'v4-secret';
-			}
-
-			public function is_sandbox() {
-				return true;
-			}
-
-			public function get_cut_off_time() {
-				return $this->cut_off;
-			}
-
-			public function get_transit_time() {
-				return $this->transit;
-			}
-
-			public function get_dropoff_days() {
-				return $this->dropoff;
-			}
-		};
+	private function make_shipping_settings( string $cut_off, string $transit, array $dropoff ): Settings {
+		return $this->make_settings( cut_off: $cut_off, transit: $transit, dropoff: $dropoff );
 	}
 
 	/**
 	 * Build a handover-exposing service pinned to the given "now".
 	 *
-	 * @param string $now      Site-timezone datetime, e.g. '2026-07-14 10:00:00'.
-	 * @param object $settings Settings stub.
+	 * @param string   $now      Site-timezone datetime, e.g. '2026-07-14 10:00:00'.
+	 * @param Settings $settings Settings double.
 	 * @return Handover_Timeframe_Service
 	 */
-	private function make_handover_service( string $now, object $settings ): Handover_Timeframe_Service {
-		$service = new Handover_Timeframe_Service( new Client_Factory( $settings ), $settings );
+	private function make_handover_service( string $now, Settings $settings ): Handover_Timeframe_Service {
+		$service = new Handover_Timeframe_Service( new Client_Factory( $settings ), $settings, self::V4_KEY, self::DAYS );
 		$service->set_now( new \DateTimeImmutable( $now ) );
 
 		return $service;
@@ -331,15 +339,6 @@ class ServiceTest extends UnitTestCase {
 	}
 
 	/**
-	 * @testdox Settings without shipping-day getters fall back to same-day handover before 23:00
-	 */
-	public function test_handover_defaults_without_shipping_settings(): void {
-		$service = $this->make_handover_service( '2026-07-14 22:00:00', $this->make_settings() );
-
-		$this->assertSame( '2026-07-14', $service->expose_handover_date() );
-	}
-
-	/**
 	 * @testdox A malformed cut-off setting falls back to the 23:00 default instead of failing
 	 */
 	public function test_handover_tolerates_malformed_cutoff(): void {
@@ -374,7 +373,7 @@ class ServiceTest extends UnitTestCase {
 	 */
 	public function test_all_dropoff_days_disabled_returns_empty_options(): void {
 		$settings = $this->make_shipping_settings( '16:00', '1', array() );
-		$service  = new Service( new Client_Factory( $settings ), $settings );
+		$service  = new Service( new Client_Factory( $settings ), $settings, self::V4_KEY, self::DAYS );
 
 		$this->assertSame(
 			array( 'DeliveryOptions' => array() ),
@@ -396,7 +395,55 @@ class ServiceTest extends UnitTestCase {
 		$this->with_transient_store();
 		Functions\when( 'current_datetime' )->justReturn( new \DateTimeImmutable( '2026-07-14 10:00:00' ) );
 
-		$body = wp_json_encode(
+		$http    = new Counting_Http_Client( $this->timeframe_response_body() );
+		$factory = new Spy_Timeframe_Client_Factory( $this->make_settings(), $http );
+		$service = new Service( $factory, $this->make_settings(), self::V4_KEY, self::DAYS );
+		$post    = $this->nl_post_data();
+
+		$first  = $service->get_delivery_options( $post );
+		$second = $service->get_delivery_options( $post );
+
+		$this->assertSame( 1, $http->count, 'Second identical lookup must be served from cache.' );
+		$this->assertSame( $first, $second );
+		$this->assertSame( '14-07-2026', $first['DeliveryOptions'][0]['DeliveryDate'] );
+		$this->assertSame( array( 'Daytime' ), $first['DeliveryOptions'][0]['Timeframe'][0]['Options'] );
+	}
+
+	// ── Authentication ───────────────────────────────────────────────────────
+
+	/**
+	 * @testdox The outgoing request carries the configured V4 API key
+	 *
+	 * The key is not discoverable from the settings object — production Settings has
+	 * no V4-key getter — so it must be handed to the Service explicitly. Asserting on
+	 * the header the SDK actually puts on the wire is the only check that fails when
+	 * the key silently resolves to an empty string.
+	 */
+	public function test_request_carries_the_configured_api_key(): void {
+		$this->with_transient_store();
+		Functions\when( 'current_datetime' )->justReturn( new \DateTimeImmutable( '2026-07-14 10:00:00' ) );
+
+		$http    = new Counting_Http_Client( $this->timeframe_response_body() );
+		$factory = new Spy_Timeframe_Client_Factory( $this->make_settings(), $http );
+		$service = new Service( $factory, $this->make_settings(), self::V4_KEY, self::DAYS );
+
+		$service->get_delivery_options( $this->nl_post_data() );
+
+		$this->assertNotNull( $http->last_request, 'The SDK must have sent a request.' );
+		$this->assertSame(
+			'v4-secret',
+			$http->last_request->getHeaderLine( 'apiKey' ),
+			'The SDK authenticates with the apiKey header; any other value means the client is not using the configured key.'
+		);
+	}
+
+	/**
+	 * Canned V4 timeframe response body with a single available daytime window.
+	 *
+	 * @return string
+	 */
+	private function timeframe_response_body(): string {
+		return wp_json_encode(
 			array(
 				'deliveryDates' => array(
 					array(
@@ -415,19 +462,6 @@ class ServiceTest extends UnitTestCase {
 				),
 			)
 		);
-
-		$http    = new Counting_Http_Client( $body );
-		$factory = new Spy_Timeframe_Client_Factory( $this->make_settings(), $http );
-		$service = new Service( $factory, $this->make_settings() );
-		$post    = $this->nl_post_data();
-
-		$first  = $service->get_delivery_options( $post );
-		$second = $service->get_delivery_options( $post );
-
-		$this->assertSame( 1, $http->count, 'Second identical lookup must be served from cache.' );
-		$this->assertSame( $first, $second );
-		$this->assertSame( '14-07-2026', $first['DeliveryOptions'][0]['DeliveryDate'] );
-		$this->assertSame( array( 'Daytime' ), $first['DeliveryOptions'][0]['Timeframe'][0]['Options'] );
 	}
 
 	/**
@@ -435,6 +469,9 @@ class ServiceTest extends UnitTestCase {
 	 */
 	private function with_transient_store(): void {
 		$this->store = array();
+
+		// Exception_Converter translates its messages; surface them verbatim in failures.
+		Functions\when( '__' )->returnArg( 1 );
 
 		// Cache_Adapter reads its TTL and allowlist through filters; pass the default value through.
 		Functions\when( 'apply_filters' )->alias( fn( $tag, $value = null ) => $value );
@@ -586,6 +623,13 @@ class Counting_Http_Client implements ClientInterface {
 	public int $count = 0;
 
 	/**
+	 * The most recent outgoing request, captured for header assertions.
+	 *
+	 * @var RequestInterface|null
+	 */
+	public ?RequestInterface $last_request = null;
+
+	/**
 	 * Canned JSON response body.
 	 *
 	 * @var string
@@ -609,6 +653,7 @@ class Counting_Http_Client implements ClientInterface {
 	 */
 	public function sendRequest( RequestInterface $request ): ResponseInterface {
 		++$this->count;
+		$this->last_request = $request;
 		return new Response( 200, array( 'Content-Type' => 'application/json' ), $this->body );
 	}
 }

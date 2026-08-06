@@ -125,6 +125,28 @@ class Response_MapperTest extends UnitTestCase {
 	}
 
 	/**
+	 * @testdox decode_content() rejects malformed base64 instead of decoding it to garbage bytes.
+	 */
+	public function test_decode_content_rejects_malformed_base64(): void {
+		$malformed = '!!!not-base64!!!';
+		$label     = new Label( label: $malformed, outputType: LabelOutputType::PDF, labelType: 'Label' );
+
+		// Guard: non-strict decoding silently yields bytes, so the assertions below
+		// pin strict mode rather than merely restating what base64_decode() does.
+		$this->assertNotSame( '', (string) base64_decode( $malformed, false ) );
+
+		$this->assertNotEmpty(
+			Response_Mapper::get_labels( new ShipmentShippingItem( labels: new LabelsCollection( array( $label ) ) ) ),
+			'A malformed label still passes the isEmpty() filter, so strict decoding is the only guard.'
+		);
+		$this->assertSame(
+			'',
+			Response_Mapper::decode_content( $label ),
+			'Malformed content must decode to an empty string so the caller skips it rather than writing a corrupt label file.'
+		);
+	}
+
+	/**
 	 * @testdox to_label_record() builds a record in the legacy meta shape tagged as V4.
 	 */
 	public function test_to_label_record_shape(): void {

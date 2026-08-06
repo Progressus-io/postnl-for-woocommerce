@@ -22,6 +22,7 @@ use PostNLWooCommerce\Rest_API\Legacy\Checkout_Service as Legacy_Checkout_Servic
 use PostNLWooCommerce\Rest_API\Legacy\Postcode_Check_Service as Legacy_Postcode_Check_Service;
 use PostNLWooCommerce\Rest_API\Legacy\Smart_Returns_Service as Legacy_Smart_Returns_Service;
 use PostNLWooCommerce\Rest_API\Service_Factory;
+use PostNLWooCommerce\Rest_API\V4\Label\Service as V4_Label_Service;
 use PostNLWooCommerce\Tests\UnitTestCase;
 
 /**
@@ -63,6 +64,15 @@ class Service_FactoryTest extends UnitTestCase {
 			/** @return bool */
 			public function is_api_key_new_validated() {
 				return $this->validated;
+			}
+			/**
+			 * Read when the factory builds the logger it hands the self-built V4 label
+			 * service and its SDK client factory.
+			 *
+			 * @return bool
+			 */
+			public function is_logging_enabled() {
+				return false;
 			}
 			/** @return string */
 			public function get_api_key() {
@@ -617,5 +627,71 @@ class Service_FactoryTest extends UnitTestCase {
 				"{$getter}() must return the same memoized instance on repeated calls."
 			);
 		}
+	}
+
+	// -------------------------------------------------------------------------
+	// Scenario 9 — the self-built V4 label service must not masquerade as injected
+	// -------------------------------------------------------------------------
+
+	/**
+	 * @testdox label_service() returns the real V4 label service when the label flag is on
+	 */
+	public function test_label_service_builds_v4_service_when_flag_on(): void {
+		Filters\expectApplied( 'postnl_sdk_enable_label' )->andReturn( true );
+
+		$factory = new Service_Factory( $this->settings_with_key() );
+
+		$this->assertInstanceOf( V4_Label_Service::class, $factory->label_service() );
+	}
+
+	/**
+	 * @testdox label_service() memoizes the self-built V4 service across repeated calls
+	 */
+	public function test_label_service_memoizes_self_built_v4_service(): void {
+		Filters\expectApplied( 'postnl_sdk_enable_label' )->andReturn( true );
+
+		$factory = new Service_Factory( $this->settings_with_key() );
+
+		$this->assertSame( $factory->label_service(), $factory->label_service() );
+	}
+
+	/**
+	 * @testdox Calling label_service() does not flip barcode_from_label() to true
+	 *
+	 * Pins the bulk-run crash: barcode_from_label() answers "has a V4 label service been
+	 * deliberately injected", so a lazily self-built instance must never register as one.
+	 * If label_service() memoizes into the same store barcode_from_label() inspects, the
+	 * first order in a bulk run (check false) prefetches a barcode and builds the V4
+	 * service, and every later order on the same Order\Bulk instance (check now true)
+	 * skips the prefetch — leaving main_barcode absent and Shipping\Item_Info throwing
+	 * "Barcode is empty!".
+	 */
+	public function test_label_service_call_does_not_flip_barcode_from_label(): void {
+		Filters\expectApplied( 'postnl_sdk_enable_label' )->andReturn( true );
+
+		$factory = new Service_Factory( $this->settings_with_key() );
+
+		$this->assertFalse( $factory->barcode_from_label(), 'Precondition: nothing injected yet.' );
+
+		$factory->label_service();
+
+		$this->assertFalse(
+			$factory->barcode_from_label(),
+			'Self-building the V4 label service must not register it as an injected service.'
+		);
+	}
+
+	/**
+	 * @testdox An injected V4 label service wins over the self-built one and enables the reorder
+	 */
+	public function test_injected_v4_label_service_wins_and_enables_reorder(): void {
+		Filters\expectApplied( 'postnl_sdk_enable_label' )->andReturn( true );
+
+		$injected = $this->make_label_stub();
+		$factory  = new Service_Factory( $this->settings_with_key() );
+		$factory->inject_v4_service( 'label', $injected );
+
+		$this->assertSame( $injected, $factory->label_service() );
+		$this->assertTrue( $factory->barcode_from_label() );
 	}
 }

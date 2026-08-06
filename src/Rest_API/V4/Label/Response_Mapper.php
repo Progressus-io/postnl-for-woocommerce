@@ -25,7 +25,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * barcode capture can be asserted in isolation. File writing and merging stay
  * in the WooCommerce-bound service.
  *
- * @since   5.9.9
+ * @since   6.0.0
  * @package PostNLWooCommerce\Rest_API\V4\Label
  */
 class Response_Mapper {

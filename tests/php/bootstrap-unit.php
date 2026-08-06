@@ -27,6 +27,15 @@ if ( ! defined( 'POSTNL_SETTINGS_ID' ) ) {
 	define( 'POSTNL_SETTINGS_ID', 'postnl' );
 }
 
+/*
+ * Order\Base evaluates `protected $service = POSTNL_SERVICE_NAME;` at class-definition
+ * time, so any test that instantiates an Order\Base subclass (e.g. the V4 label service
+ * built by Service_Factory) needs the constant. Main.php defines it as its $service_name.
+ */
+if ( ! defined( 'POSTNL_SERVICE_NAME' ) ) {
+	define( 'POSTNL_SERVICE_NAME', 'PostNL' );
+}
+
 if ( ! class_exists( 'WC_Settings_API' ) ) {
 	/**
 	 * Minimal stand-in for the WooCommerce settings API base class.

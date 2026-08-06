@@ -45,7 +45,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * (ClientBuilder::withCustomerCredentials), so they are deliberately absent
  * here. CollectionLocation and MessageID are V1-only and never emitted.
  *
- * @since   5.9.9
+ * @since   6.0.0
  * @package PostNLWooCommerce\Rest_API\V4\Label
  */
 class Request_Builder {

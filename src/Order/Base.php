@@ -1194,6 +1194,11 @@ abstract class Base {
 					return $this->merge_jpg_files( $label_paths, $merge_filename, 'horizontal' );
 				case 'gif':
 					return $this->merge_graphic_labels( $label_paths, $merge_filename );
+				// Two spellings of the same Zebra label stream: Legacy names the file
+				// from the V1 response's OutputType, the V4 path from the SDK's
+				// LabelOutputType enum, whose Zebra case is the bare string 'zpl'.
+				// Both are plain text, so both concatenate.
+				case 'zpl':
 				case 'zpl_rle':
 					return $this->merge_text_files( $label_paths, $merge_filename );
 			}

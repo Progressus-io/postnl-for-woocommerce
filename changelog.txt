@@ -1,5 +1,8 @@
 *** PostNL for WooCommerce ***
 
+= 5.9.11 (2026-xx-xx) =
+* Add: Dynamic option pairing validation in the Label & Tracking widget. Incompatible shipping options are now disabled with a tooltip and inline hint, preventing invalid combinations from being silently dropped from the printed label.
+
 = 5.9.10 (2026-07-23) =
 * Fix: Letterboxparcel 48-hour orders reverted to Standard Shipment when the label was generated with the bulk action on the classic orders list.
 

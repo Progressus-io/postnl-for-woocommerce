@@ -9,6 +9,7 @@ declare( strict_types = 1 );
 
 namespace PostNLWooCommerce\Rest_API;
 
+use PostNLWooCommerce\Logger;
 use PostNLWooCommerce\Rest_API\Contracts\Barcode_Service_Interface;
 use PostNLWooCommerce\Rest_API\Contracts\Label_Service_Interface;
 use PostNLWooCommerce\Rest_API\Contracts\Pickup_Location_Service_Interface;
@@ -23,7 +24,10 @@ use PostNLWooCommerce\Rest_API\Legacy\Letterbox_Service as Legacy_Letterbox_Serv
 use PostNLWooCommerce\Rest_API\Legacy\Postcode_Check_Service as Legacy_Postcode_Check_Service;
 use PostNLWooCommerce\Rest_API\Legacy\Return_Label_Service as Legacy_Return_Label_Service;
 use PostNLWooCommerce\Rest_API\Legacy\Smart_Returns_Service as Legacy_Smart_Returns_Service;
+use PostNLWooCommerce\Rest_API\SDK\Client_Factory;
+use PostNLWooCommerce\Rest_API\SDK\Logger_Adapter;
 use PostNLWooCommerce\Rest_API\V4\Label\Service as V4_Label_Service;
+use Psr\Log\LoggerInterface;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -208,7 +212,12 @@ class Service_Factory {
 			// builds this service, and every later order on the same Order\Bulk instance
 			// would then skip the prefetch and hand Shipping\Item_Info no main_barcode.
 			if ( null === $this->label_v4_memo ) {
-				$this->label_v4_memo = new V4_Label_Service();
+				$logger              = $this->v4_logger();
+				$this->label_v4_memo = new V4_Label_Service(
+					new Client_Factory( $this->settings, $logger ),
+					(string) $this->settings->get_api_key_new(),
+					$logger
+				);
 			}
 			return $this->label_v4_memo;
 		}
@@ -292,6 +301,23 @@ class Service_Factory {
 			$this->legacy_memos['checkout'] = new Legacy_Checkout_Service();
 		}
 		return $this->legacy_memos['checkout'];
+	}
+
+	/**
+	 * Build the PSR-3 logger the V4 services and the SDK transport report through.
+	 *
+	 * Equivalent to Main::get_logger() wrapped in a Logger_Adapter — the wiring the
+	 * V4 services document — but built from the settings object this factory was
+	 * handed rather than reaching back for the Settings singleton, so the factory
+	 * has a single source of settings.
+	 *
+	 * Only called from a branch has_v4_key() already guarded, so $this->settings is
+	 * never null here.
+	 *
+	 * @return LoggerInterface
+	 */
+	private function v4_logger(): LoggerInterface {
+		return new Logger_Adapter( new Logger( (bool) $this->settings->is_logging_enabled() ) );
 	}
 
 	/**

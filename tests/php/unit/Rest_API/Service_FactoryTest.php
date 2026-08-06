@@ -65,6 +65,15 @@ class Service_FactoryTest extends UnitTestCase {
 			public function is_api_key_new_validated() {
 				return $this->validated;
 			}
+			/**
+			 * Read when the factory builds the logger it hands the self-built V4 label
+			 * service and its SDK client factory.
+			 *
+			 * @return bool
+			 */
+			public function is_logging_enabled() {
+				return false;
+			}
 			/** @return string */
 			public function get_api_key() {
 				return 'original-legacy-key';

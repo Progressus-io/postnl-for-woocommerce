@@ -8,6 +8,7 @@
 namespace PostNLWooCommerce\Rest_API\V4\Label;
 
 use Postnl\Sdk\Client\PostnlClientInterface;
+use Postnl\Sdk\RequestData\V4\ShipmentDelivery\ShipmentDeliveryRequest;
 use Postnl\Sdk\Service\ShipmentDelivery\V4\Response\LabelConfirmResponseInterface;
 use PostNLWooCommerce\Order\Base as Order_Base;
 use PostNLWooCommerce\Rest_API\Contracts\Label_Service_Interface;
@@ -15,6 +16,7 @@ use PostNLWooCommerce\Rest_API\SDK\Client_Factory;
 use PostNLWooCommerce\Rest_API\SDK\Exception_Converter;
 use PostNLWooCommerce\Rest_API\Shipping;
 use PostNLWooCommerce\Utils;
+use Psr\Log\LoggerInterface;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -46,26 +48,72 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Extends Order\Base to reuse put/merge helpers and the legacy pipeline for the
  * fallback, mirroring Legacy\Label_Service.
  *
+ * The PSR-3 logger is required, not optional, exactly as in V4\Timeframe\Service
+ * and V4\Pickup_Location\Service: it is where a failed label call's real cause
+ * survives (Exception_Converter hands the merchant a safe message and keeps the
+ * SDK's own only as the previous exception). Legacy label generation writes every
+ * request and response to the WooCommerce log via Rest_API\Base::send_request(),
+ * so without this the V4 path would be the only label flow that fails with no
+ * trail at all. Wiring passes a Logger_Adapter, so V4 entries land in the same
+ * WooCommerce log as the legacy path and honour the same "enable logging"
+ * setting.
+ *
  * @since   5.9.9
  * @package PostNLWooCommerce\Rest_API\V4\Label
  */
 class Service extends Order_Base implements Label_Service_Interface {
 
 	/**
-	 * SDK client factory. Injected in tests; built from settings otherwise.
+	 * SDK client factory.
 	 *
-	 * @var Client_Factory|null
+	 * @var Client_Factory
 	 */
 	private $client_factory;
 
 	/**
+	 * PostNL V4 API key used to authenticate SDK requests.
+	 *
+	 * @var string
+	 */
+	private $v4_key;
+
+	/**
+	 * PSR-3 logger the failure path reports through.
+	 *
+	 * @var LoggerInterface
+	 */
+	private $logger;
+
+	/**
 	 * Service constructor.
 	 *
-	 * @param Client_Factory|null $client_factory Optional SDK client factory.
+	 * The API key and the logger are both required rather than defaulted, matching
+	 * V4\Timeframe\Service and V4\Pickup_Location\Service: the key is resolved and
+	 * validated by the caller that already decides whether V4 may run at all
+	 * (Service_Factory::has_v4_key()), so re-deriving it here would duplicate that
+	 * decision behind a fallback that silently sends an empty key; and a defaulted
+	 * NullLogger would let a caller wire the service up with logging switched off —
+	 * the exact gap this parameter closes.
+	 *
+	 * The key is marked SensitiveParameter so PHP redacts it from stack traces,
+	 * matching Client_Factory::build().
+	 *
+	 * @since 6.0.0 Requires the resolved API key and a PSR-3 logger.
+	 *
+	 * @param Client_Factory  $client_factory SDK client factory.
+	 * @param string          $v4_key         PostNL V4 API key.
+	 * @param LoggerInterface $logger         PSR-3 logger; wiring passes a Logger_Adapter.
 	 */
-	public function __construct( ?Client_Factory $client_factory = null ) {
+	public function __construct(
+		Client_Factory $client_factory,
+		#[\SensitiveParameter]
+		string $v4_key,
+		LoggerInterface $logger
+	) {
 		parent::__construct();
 		$this->client_factory = $client_factory;
+		$this->v4_key         = $v4_key;
+		$this->logger         = $logger;
 	}
 
 	/**
@@ -97,18 +145,75 @@ class Service extends Order_Base implements Label_Service_Interface {
 			return $this->create_label_pipeline( $post_data );
 		}
 
-		$fields  = $this->extract_fields( $item_info, $signals['mapped'], $post_data );
-		$request = Request_Builder::build( $fields );
+		$fields   = $this->extract_fields( $item_info, $signals['mapped'], $post_data );
+		$request  = Request_Builder::build( $fields );
+		$response = $this->confirm_label( $request, $fields );
 
+		return $this->store_labels( $response, $post_data['order'], (string) $fields['barcode'] );
+	}
+
+	/**
+	 * Send the labelconfirm request, converting and logging any failure.
+	 *
+	 * @param ShipmentDeliveryRequest $request Built labelconfirm request.
+	 * @param array                   $fields  Flattened field set the request was built from.
+	 *
+	 * @return LabelConfirmResponseInterface
+	 *
+	 * @throws \Exception Converted SDK error when the request fails.
+	 */
+	protected function confirm_label( ShipmentDeliveryRequest $request, array $fields ): LabelConfirmResponseInterface {
 		try {
-			$response = $this->build_client()->shipmentDelivery()->labelConfirm( $request );
+			return $this->build_client()->shipmentDelivery()->labelConfirm( $request );
 		} catch ( \Throwable $exception ) {
+			// Exception_Converter returns a plugin-shaped \Exception; its message can
+			// carry raw API text (field errors, upstream messages) — escape on output.
 			$error = Exception_Converter::convert( $exception );
+
+			// The converted message is deliberately merchant-safe, and one of its
+			// variants tells the reader to check these very logs, so the original SDK
+			// failure has to be written here — nothing else reads getPrevious().
+			//
+			// The shipment reference is the merchant's own order number: it is what
+			// makes the entry traceable back to a shipment, and it is store-internal
+			// rather than customer-identifying, so it is kept where the address parts
+			// are not.
+			$this->logger->error(
+				sprintf(
+					'V4 label creation failed for order "%1$s" to "%2$s": %3$s (cause: %4$s: %5$s)',
+					(string) ( $fields['reference'] ?? '' ),
+					$this->describe_destination( $fields ),
+					$error->getMessage(),
+					get_class( $exception ),
+					$exception->getMessage()
+				)
+			);
+
 			// phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped -- Exception_Converter returns an already-escaped, translated message.
 			throw $error;
 		}
+	}
 
-		return $this->store_labels( $response, $post_data['order'], (string) $fields['barcode'] );
+	/**
+	 * Short, log-safe description of the destination a failed label was for.
+	 *
+	 * Mirrors V4\Timeframe\Service::describe_destination(): legacy
+	 * Rest_API\Base::send_request() writes the entire request body — recipient name,
+	 * street, house number, city, email and phone included — to the same WooCommerce
+	 * log, whereas this keeps only the country and the postcode's leading area
+	 * digits. An error line is written whether or not anyone is debugging, while the
+	 * SDK's own request logging (which does carry the address, PII-redacted) is what
+	 * a merchant turns on deliberately.
+	 *
+	 * @param array $fields Flattened field set.
+	 *
+	 * @return string e.g. 'NL 1234'; empty when the payload carried no address.
+	 */
+	private function describe_destination( array $fields ): string {
+		$country  = (string) ( $fields['receiver']['country'] ?? '' );
+		$postcode = str_replace( ' ', '', (string) ( $fields['receiver']['postcode'] ?? '' ) );
+
+		return trim( $country . ' ' . substr( $postcode, 0, 4 ) );
 	}
 
 	/**
@@ -214,13 +319,7 @@ class Service extends Order_Base implements Label_Service_Interface {
 	 * @return PostnlClientInterface
 	 */
 	private function build_client(): PostnlClientInterface {
-		$factory = $this->client_factory ?? new Client_Factory( $this->settings );
-
-		$v4_key = method_exists( $this->settings, 'get_api_key_new' )
-			? (string) $this->settings->get_api_key_new()
-			: '';
-
-		return $factory->build( $v4_key, (bool) $this->settings->is_sandbox() );
+		return $this->client_factory->build( $this->v4_key, (bool) $this->settings->is_sandbox() );
 	}
 
 	/**

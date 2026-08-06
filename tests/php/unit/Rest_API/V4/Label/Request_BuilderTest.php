@@ -92,6 +92,8 @@ class Request_BuilderTest extends UnitTestCase {
 		$this->assertSame( '9', $payload['receiver']['address']['houseNumber'] );
 		$this->assertSame( 'A', $payload['receiver']['address']['houseNumberAddition'] );
 		$this->assertSame( 'buyer@example.com', $payload['receiver']['contact']['email'] );
+		$this->assertSame( 'Jan', $payload['receiver']['contact']['firstName'], 'The given name must not land in lastName.' );
+		$this->assertSame( 'Jansen', $payload['receiver']['contact']['lastName'], 'The family name must not land in firstName.' );
 		$this->assertSame( 'consumer', $payload['receiver']['type'] );
 
 		$this->assertSame( 'pdf', $payload['labelSettings']['outputType'] );
@@ -156,6 +158,81 @@ class Request_BuilderTest extends UnitTestCase {
 		$this->assertSame( ShipmentType::Parcel->value, $payload['shipmentType'] );
 		$this->assertSame( LabelOutputType::PDF->value, $payload['labelSettings']['outputType'] );
 		$this->assertSame( LabelResolution::DPI_200->value, $payload['labelSettings']['resolution'] );
+	}
+
+	/**
+	 * @testdox build() upper-cases the country code and carries a non-NL destination through.
+	 */
+	public function test_receiver_country_is_upper_cased_and_carried_through(): void {
+		$fields                        = $this->domestic_fields();
+		$fields['receiver']['country'] = 'be';
+
+		$payload = $this->payload( $fields );
+
+		$this->assertSame( 'BE', $payload['receiver']['address']['countryIso'], 'A lower-case destination country must be normalized, not dropped to the NL default.' );
+		$this->assertSame( 'NL', $payload['sender']['address']['countryIso'], 'The sender country must be resolved independently of the receiver.' );
+	}
+
+	/**
+	 * @testdox build() falls back to NL when the country code is not a known ISO code.
+	 */
+	public function test_unknown_country_falls_back_to_nl(): void {
+		$fields                        = $this->domestic_fields();
+		$fields['receiver']['country'] = 'XX';
+
+		$payload = $this->payload( $fields );
+
+		$this->assertSame( 'NL', $payload['receiver']['address']['countryIso'] );
+	}
+
+	/**
+	 * @testdox build() carries a non-parcel shipment type through to the payload.
+	 */
+	public function test_shipment_type_is_carried_through(): void {
+		$fields                  = $this->domestic_fields();
+		$fields['shipment_type'] = 'letterbox';
+
+		$payload = $this->payload( $fields );
+
+		$this->assertSame( 'letterbox', $payload['shipmentType'], 'A non-parcel shipment type must survive the build, not collapse to the parcel default.' );
+	}
+
+	/**
+	 * @testdox build() carries the requested label output type and resolution through to the payload.
+	 * @dataProvider label_settings_provider
+	 *
+	 * @param string $output_type          Requested output type.
+	 * @param int    $resolution           Requested resolution.
+	 * @param string $expected_output_type Output type expected on the wire.
+	 * @param int    $expected_resolution  Resolution expected on the wire.
+	 */
+	public function test_label_settings_are_carried_through( string $output_type, int $resolution, string $expected_output_type, int $expected_resolution ): void {
+		$fields          = $this->domestic_fields();
+		$fields['label'] = array(
+			'output_type' => $output_type,
+			'resolution'  => $resolution,
+		);
+
+		$payload = $this->payload( $fields );
+
+		$this->assertSame( $expected_output_type, $payload['labelSettings']['outputType'] );
+		$this->assertSame( $expected_resolution, $payload['labelSettings']['resolution'] );
+	}
+
+	/**
+	 * Data provider for non-default label settings.
+	 *
+	 * Every case deliberately differs from the pdf/200 fallback, so a resolver
+	 * short-circuited to its default cannot pass.
+	 *
+	 * @return array
+	 */
+	public static function label_settings_provider(): array {
+		return array(
+			'ZPL at 600 dpi'                  => array( 'zpl', 600, 'zpl', 600 ),
+			'JPG at 300 dpi'                  => array( 'jpg', 300, 'jpg', 300 ),
+			'upper-case output is lowercased' => array( 'ZPL', 600, 'zpl', 600 ),
+		);
 	}
 
 	/**

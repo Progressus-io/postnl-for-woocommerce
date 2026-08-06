@@ -27,6 +27,9 @@ PostNL’s official extension for WooCommerce on WordPress. Manage your national
 
 ## Changelog
 
+### 5.9.11
+* Fix: Automatic letterbox assignment now correctly re-detects when the shipping country changes between the Netherlands and Belgium, in both classic and blocks checkout.
+
 ### 5.9.10
 * Fix: Letterboxparcel 48-hour orders reverted to Standard Shipment when the label was generated with the bulk action on the classic orders list.
 

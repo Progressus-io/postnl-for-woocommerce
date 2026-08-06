@@ -352,6 +352,34 @@ class LetterboxRatesTest extends IntegrationTestCase {
 	}
 
 	/**
+	 * @testdox ALA eligibility follows the shipping country: eligible for NL, not for BE, and flips back on switch.
+	 */
+	public function test_ala_eligibility_tracks_shipping_country(): void {
+		$this->make_cart_letterbox_eligible();
+
+		$this->assertTrue(
+			Utils::is_cart_eligible_auto_letterbox( WC()->cart ),
+			'An eligible cart shipping to NL must trigger ALA.'
+		);
+
+		// Belgium: ALA is NL>NL only, so it must not trigger.
+		WC()->customer->set_shipping_country( 'BE' );
+		$this->assertFalse(
+			Utils::is_cart_eligible_auto_letterbox( WC()->cart ),
+			'ALA must not trigger for a Belgian shipping address.'
+		);
+
+		// Switching back to NL must make it eligible again — the case the blocks
+		// AJAX handler now guarantees by syncing the shipping country before this
+		// check, and the classic checkout re-triggers via the new country handler.
+		WC()->customer->set_shipping_country( 'NL' );
+		$this->assertTrue(
+			Utils::is_cart_eligible_auto_letterbox( WC()->cart ),
+			'ALA must trigger again after switching back to NL.'
+		);
+	}
+
+	/**
 	 * Build an NL store + an eligible single-item letterbox cart.
 	 */
 	private function make_cart_letterbox_eligible(): void {

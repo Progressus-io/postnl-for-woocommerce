@@ -58,7 +58,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * WooCommerce log as the legacy path and honour the same "enable logging"
  * setting.
  *
- * @since   5.9.9
+ * @since   6.0.0
  * @package PostNLWooCommerce\Rest_API\V4\Label
  */
 class Service extends Order_Base implements Label_Service_Interface {

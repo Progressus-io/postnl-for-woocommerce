@@ -21,7 +21,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * the V4 label service handles. Kept free of WooCommerce and Order\Base so the
  * gate — the highest-risk part of the flow — can be asserted in isolation.
  *
- * @since   5.9.9
+ * @since   6.0.0
  * @package PostNLWooCommerce\Rest_API\V4\Label
  */
 class Eligibility {

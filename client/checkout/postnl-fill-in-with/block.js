@@ -158,9 +158,9 @@ export const FillBlock = ( { checkoutExtensionData } ) => {
 		return null;
 	}
 
-	const title = __( 'Fill in with PostNL', 'postnl-for-woocommerce' );
+	const title = __( 'Autofill with PostNL', 'postnl-for-woocommerce' );
 	const description = __(
-		'Your name and address are automatically filled in via your PostNL account. That saves you from having to fill in the form!',
+		'Your shipping details are filled in automatically via your PostNL account. That saves time and hassle.',
 		'postnl-for-woocommerce'
 	);
 	const postnl_logo =

@@ -25,6 +25,7 @@ class Fill_In_With_PostNL_Settings {
 		add_filter( 'woocommerce_get_settings_shipping', array( $this, 'add_settings_fields' ), 10, 2 );
 		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_admin_scripts' ) );
 		add_filter( 'woocommerce_admin_settings_sanitize_option', array( $this, 'maybe_prevent_saving_invalid_data' ), 10, 3 );
+		add_action( 'woocommerce_admin_field_postnl_preview', array( __CLASS__, 'render_preview_field' ) );
 	}
 
 	/**
@@ -35,7 +36,7 @@ class Fill_In_With_PostNL_Settings {
 	 * @return array
 	 */
 	public function add_settings_section( array $sections ): array {
-		$sections['fill-in-with-postnl'] = esc_html__( 'Fill in with PostNL', 'postnl-for-woocommerce' );
+		$sections['fill-in-with-postnl'] = esc_html__( 'Checkoutboosters', 'postnl-for-woocommerce' );
 		return $sections;
 	}
 
@@ -52,13 +53,15 @@ class Fill_In_With_PostNL_Settings {
 			return $settings;
 		}
 
-		$info_block = '<p>' . esc_html__( 'With this functionality your customers can easily and automatically fill in their shipping address via their PostNL account. This functionality is only available for consumers with a Dutch shipping address. Click the following link to activate the functionality:', 'postnl-for-woocommerce' ) . '</p>';
+		$activation_url = 'https://dil-business-portal.postnl.nl/checkout-prefill?referrer=wcplugin&url=' . site_url();
 
-		$info_block .= '<a href="https://dil-business-portal.postnl.nl/checkout-prefill?referrer=wcplugin&url=' . site_url() . '" target="_blank" style="margin-bottom: 10px;">https://dil-business-portal.postnl.nl/checkout-prefill?referrer=wcplugin&url=' . site_url() . '</a>';
+		$info_block  = '<p>' . esc_html__( 'Let customers autofill their shipping address in just a few clicks with their PostNL account. So customers don\'t have to manually enter their details anymore. Address details are securely prefilled with PostNL, reducing address errors, returns, and checkout drop-off.', 'postnl-for-woocommerce' ) . '</p>';
+		$info_block .= '<p>' . esc_html__( 'Available for all consumers with a PostNL account and a Dutch or Belgian shipping address.', 'postnl-for-woocommerce' ) . '</p>';
+		$info_block .= '<p>' . esc_html__( 'Activate PostNL autofill via this link:', 'postnl-for-woocommerce' ) . ' <a href="' . esc_url( $activation_url ) . '" target="_blank" rel="noopener noreferrer">' . esc_html( $activation_url ) . '</a></p>';
 
 		$settings = array(
 			array(
-				'title' => esc_html__( 'Fill in with PostNL', 'postnl-for-woocommerce' ),
+				'title' => esc_html__( 'Checkoutboosters', 'postnl-for-woocommerce' ),
 				'type'  => 'title',
 				'desc'  => $info_block,
 				'id'    => 'postnl_fill_in_with_title',
@@ -105,6 +108,22 @@ class Fill_In_With_PostNL_Settings {
 				),
 			),
 			array(
+				'title'             => esc_html__( 'Cart button width', 'postnl-for-woocommerce' ),
+				'desc'              => esc_html__( 'Set the button width as a percentage (1–100%).', 'postnl-for-woocommerce' ),
+				'desc_tip'          => true,
+				'id'                => 'postnl_cart_button_width',
+				'type'              => 'number',
+				'default'           => '100',
+				'css'               => 'width: 70px;',
+				'class'             => 'postnl-range-slider',
+				'custom_attributes' => array(
+					'min'       => '1',
+					'max'       => '100',
+					'step'      => '1',
+					'data-unit' => '%',
+				),
+			),
+			array(
 				'type' => 'sectionend',
 				'id'   => 'postnl_cart_button_section_end',
 			),
@@ -130,6 +149,22 @@ class Fill_In_With_PostNL_Settings {
 				'options' => array(
 					'before_customer_details' => esc_html__( 'Before Customer Details', 'postnl-for-woocommerce' ),
 					'after_customer_details'  => esc_html__( 'After Customer Details', 'postnl-for-woocommerce' ),
+				),
+			),
+			array(
+				'title'             => esc_html__( 'Checkout button width', 'postnl-for-woocommerce' ),
+				'desc'              => esc_html__( 'Set the button width as a percentage (1–100%).', 'postnl-for-woocommerce' ),
+				'desc_tip'          => true,
+				'id'                => 'postnl_checkout_button_width',
+				'type'              => 'number',
+				'default'           => '100',
+				'css'               => 'width: 70px;',
+				'class'             => 'postnl-range-slider',
+				'custom_attributes' => array(
+					'min'       => '1',
+					'max'       => '100',
+					'step'      => '1',
+					'data-unit' => '%',
 				),
 			),
 			array(
@@ -161,6 +196,22 @@ class Fill_In_With_PostNL_Settings {
 				),
 			),
 			array(
+				'title'             => esc_html__( 'Minicart button width', 'postnl-for-woocommerce' ),
+				'desc'              => esc_html__( 'Set the button width as a percentage (1–100%).', 'postnl-for-woocommerce' ),
+				'desc_tip'          => true,
+				'id'                => 'postnl_minicart_button_width',
+				'type'              => 'number',
+				'default'           => '100',
+				'css'               => 'width: 70px;',
+				'class'             => 'postnl-range-slider',
+				'custom_attributes' => array(
+					'min'       => '1',
+					'max'       => '100',
+					'step'      => '1',
+					'data-unit' => '%',
+				),
+			),
+			array(
 				'type' => 'sectionend',
 				'id'   => 'postnl_minicart_section_end',
 			),
@@ -186,7 +237,7 @@ class Fill_In_With_PostNL_Settings {
 				'desc_tip' => true,
 				'id'       => 'postnl_button_border',
 				'type'     => 'text',
-				'default'  => '1px solid #000000',
+				'default'  => 'none',
 				'css'      => 'width: 150px;',
 			),
 			array(
@@ -195,7 +246,7 @@ class Fill_In_With_PostNL_Settings {
 				'desc_tip' => true,
 				'id'       => 'postnl_button_alignment',
 				'type'     => 'select',
-				'default'  => 'left',
+				'default'  => 'center',
 				'options'  => array(
 					'left'   => esc_html__( 'Left', 'postnl-for-woocommerce' ),
 					'center' => esc_html__( 'Center', 'postnl-for-woocommerce' ),
@@ -210,6 +261,26 @@ class Fill_In_With_PostNL_Settings {
 				'type'     => 'color',
 				'default'  => '#e55500',
 				'css'      => 'width: 80px;',
+			),
+			array(
+				'title'             => esc_html__( 'Button corner radius', 'postnl-for-woocommerce' ),
+				'desc'              => esc_html__( 'Set the button corner roundness in pixels (0 = square, 50 = fully rounded).', 'postnl-for-woocommerce' ),
+				'desc_tip'          => true,
+				'id'                => 'postnl_button_border_radius',
+				'type'              => 'number',
+				'default'           => '4',
+				'css'               => 'width: 70px;',
+				'class'             => 'postnl-range-slider',
+				'custom_attributes' => array(
+					'min'       => '0',
+					'max'       => '50',
+					'step'      => '1',
+					'data-unit' => 'px',
+				),
+			),
+			array(
+				'type' => 'postnl_preview',
+				'id'   => 'postnl_button_preview',
 			),
 			array(
 				'type' => 'sectionend',
@@ -244,6 +315,46 @@ class Fill_In_With_PostNL_Settings {
 		);
 
 		return $settings;
+	}
+
+	/**
+	 * Render the live button preview field.
+	 *
+	 * Registered as a static callback so the hook survives this class being
+	 * instantiated more than once per request without rendering duplicates.
+	 *
+	 * @return void
+	 */
+	public static function render_preview_field(): void {
+		$background_color = sanitize_hex_color( get_option( 'postnl_button_background_color', '#ff6200' ) );
+		$border           = sanitize_text_field( get_option( 'postnl_button_border', 'none' ) );
+		$border_radius    = absint( get_option( 'postnl_button_border_radius', '4' ) );
+		$logo_url         = POSTNL_WC_PLUGIN_DIR_URL . '/assets/images/postnl-logo.svg';
+
+		// Built raw: the whole declaration list is escaped once at the point of output.
+		$button_style = 'background-color:' . $background_color . ';'
+			. 'border:' . $border . ';'
+			. 'border-radius:' . $border_radius . 'px;';
+		?>
+		<tr valign="top">
+			<th scope="row" class="titledesc"><?php esc_html_e( 'Button preview', 'postnl-for-woocommerce' ); ?></th>
+			<td class="forminp">
+				<div style="max-width:320px;">
+					<button
+						id="postnl-button-preview"
+						type="button"
+						style="<?php echo esc_attr( $button_style ); ?>min-height:35px;cursor:default;display:flex;align-items:center;justify-content:center;padding:5px 10px;color:#fff;font-size:16px;width:100%;box-sizing:border-box;transition:background-color 0.2s ease;"
+					>
+						<img src="<?php echo esc_url( $logo_url ); ?>" alt="" style="height:20px;margin-right:8px;vertical-align:middle;" />
+						<span><?php esc_html_e( 'Autofill with PostNL', 'postnl-for-woocommerce' ); ?></span>
+					</button>
+					<p style="font-size:0.85em;margin-top:6px;color:#646970;">
+						<?php esc_html_e( 'Your shipping details are filled in automatically via your PostNL account. That saves time and hassle.', 'postnl-for-woocommerce' ); ?>
+					</p>
+				</div>
+			</td>
+		</tr>
+		<?php
 	}
 
 	/**
@@ -290,7 +401,24 @@ class Fill_In_With_PostNL_Settings {
 			return $value;
 		}
 
-		// Only run once per settings save.
+		// Clamp numeric range options to their allowed bounds — the HTML "max"
+		// attribute is only a client-side hint and can be bypassed on save.
+		$numeric_ranges = array(
+			'postnl_cart_button_width'     => array( 1, 100 ),
+			'postnl_checkout_button_width' => array( 1, 100 ),
+			'postnl_minicart_button_width' => array( 1, 100 ),
+			'postnl_button_border_radius'  => array( 0, 50 ),
+		);
+
+		if ( isset( $numeric_ranges[ $option['id'] ] ) ) {
+			list( $min, $max ) = $numeric_ranges[ $option['id'] ];
+
+			// intval(), not absint(): absint() reflects a negative into range
+			// (-500 would become a 100% width) instead of clamping to $min.
+			return max( $min, min( $max, intval( $value ) ) );
+		}
+
+		// Only run the cross-field checks below once per settings save.
 		if ( $validation_done ) {
 			return $value;
 		}

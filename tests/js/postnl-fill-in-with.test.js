@@ -114,7 +114,7 @@ describe( 'PostNL Fill-in-with Block', () => {
 			renderComponent();
 
 			expect(
-				screen.getByText( 'Fill in with PostNL' )
+				screen.getByText( 'Autofill with PostNL' )
 			).toBeInTheDocument();
 		} );
 
@@ -133,7 +133,7 @@ describe( 'PostNL Fill-in-with Block', () => {
 			renderComponent();
 
 			expect(
-				screen.getByText( 'Fill in with PostNL' )
+				screen.getByText( 'Autofill with PostNL' )
 			).toBeInTheDocument();
 		} );
 
@@ -147,7 +147,7 @@ describe( 'PostNL Fill-in-with Block', () => {
 			renderComponent();
 
 			expect(
-				screen.queryByText( 'Fill in with PostNL' )
+				screen.queryByText( 'Autofill with PostNL' )
 			).not.toBeInTheDocument();
 		} );
 
@@ -166,7 +166,7 @@ describe( 'PostNL Fill-in-with Block', () => {
 			renderComponent();
 
 			expect(
-				screen.queryByText( 'Fill in with PostNL' )
+				screen.queryByText( 'Autofill with PostNL' )
 			).not.toBeInTheDocument();
 		} );
 
@@ -183,7 +183,7 @@ describe( 'PostNL Fill-in-with Block', () => {
 			renderComponent();
 
 			expect(
-				screen.getByText( 'Fill in with PostNL' )
+				screen.getByText( 'Autofill with PostNL' )
 			).toBeInTheDocument();
 		} );
 	} );
@@ -205,7 +205,7 @@ describe( 'PostNL Fill-in-with Block', () => {
 
 			expect(
 				screen.getByText(
-					/Your name and address are automatically filled in/i
+					/Your shipping details are filled in automatically/i
 				)
 			).toBeInTheDocument();
 		} );
@@ -214,7 +214,7 @@ describe( 'PostNL Fill-in-with Block', () => {
 			renderComponent();
 
 			const button = screen.getByRole( 'link', {
-				name: 'Fill in with PostNL',
+				name: 'Autofill with PostNL',
 			} );
 			expect( button ).toBeInTheDocument();
 		} );
@@ -225,7 +225,7 @@ describe( 'PostNL Fill-in-with Block', () => {
 			const user = userEvent.setup();
 			renderComponent();
 
-			await user.click( screen.getByText( 'Fill in with PostNL' ) );
+			await user.click( screen.getByText( 'Autofill with PostNL' ) );
 
 			expect( global.fetch ).toHaveBeenCalledWith(
 				'https://shop.example.com/wp-json/postnl/v1/oauth',
@@ -243,7 +243,7 @@ describe( 'PostNL Fill-in-with Block', () => {
 			const user = userEvent.setup();
 			renderComponent();
 
-			await user.click( screen.getByText( 'Fill in with PostNL' ) );
+			await user.click( screen.getByText( 'Autofill with PostNL' ) );
 
 			await waitFor( () => {
 				expect( window.location.href ).toBe(
@@ -264,7 +264,7 @@ describe( 'PostNL Fill-in-with Block', () => {
 			const user = userEvent.setup();
 			renderComponent();
 
-			await user.click( screen.getByText( 'Fill in with PostNL' ) );
+			await user.click( screen.getByText( 'Autofill with PostNL' ) );
 
 			await waitFor( () => {
 				expect( mockCreateErrorNotice ).toHaveBeenCalledWith(
@@ -283,7 +283,7 @@ describe( 'PostNL Fill-in-with Block', () => {
 			const user = userEvent.setup();
 			renderComponent();
 
-			await user.click( screen.getByText( 'Fill in with PostNL' ) );
+			await user.click( screen.getByText( 'Autofill with PostNL' ) );
 
 			await waitFor( () => {
 				expect( mockCreateErrorNotice ).toHaveBeenCalledWith(
@@ -305,7 +305,7 @@ describe( 'PostNL Fill-in-with Block', () => {
 			renderComponent();
 
 			const button = screen.getByRole( 'link', {
-				name: 'Fill in with PostNL',
+				name: 'Autofill with PostNL',
 			} );
 
 			await user.click( button );
@@ -547,7 +547,7 @@ describe( 'PostNL Fill-in-with Block', () => {
 			renderComponent();
 
 			expect(
-				screen.getByText( 'Fill in with PostNL' )
+				screen.getByText( 'Autofill with PostNL' )
 			).toBeInTheDocument();
 		} );
 

@@ -104,7 +104,10 @@ class EligibilityTest extends UnitTestCase {
 			'evening delivery'           => array( array( 'delivery_type' => 'Evening' ), 'evening delivery' ),
 			'non-NL origin'              => array( array( 'origin' => 'BE' ), 'a non-NL origin' ),
 			'non-NL destination'         => array( array( 'destination' => 'BE' ), 'a non-NL destination' ),
-			'no v4 equivalent'           => array( array( 'mapped' => array( 'has_v4_equivalent' => false ) ), 'no V4 equivalent' ),
+			// Identical to the eligible happy path except for the one flag under test.
+			// Leaving the other mapped keys out would let the shipmentType check reject
+			// this row first, so has_v4_equivalent itself would never be exercised.
+			'no v4 equivalent'           => array( array( 'mapped' => array( 'has_v4_equivalent' => false, 'shipmentType' => 'parcel', 'services' => array(), 'deliveryLocation' => array() ) ), 'no V4 equivalent' ),
 			'non-parcel shipment type'   => array( array( 'mapped' => array( 'has_v4_equivalent' => true, 'shipmentType' => 'letterbox', 'services' => array() ) ), 'a letterbox shipment type' ),
 			'mapped with pickup location' => array( array( 'mapped' => array( 'has_v4_equivalent' => true, 'shipmentType' => 'parcel', 'services' => array(), 'deliveryLocation' => array( 'pickupLocationId' => 'x' ) ) ), 'a pickup delivery location' ),
 		);

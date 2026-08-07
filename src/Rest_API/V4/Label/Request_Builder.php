@@ -70,8 +70,11 @@ class Request_Builder {
 	 *                                  and resolution (200|300|600).
 	 *     @type array  $services      Optional resolved service flags: deliveryConfirmation
 	 *                                  ('signature'|'deliverycode'), insuredValue (float),
-	 *                                  statedAddressOnly (bool), returnWhenNotHome (bool),
-	 *                                  minimalAgeCheck ('16+'|'18+').
+	 *                                  statedAddressOnly (bool), returnWhenNotHome (bool).
+	 *                                  minimalAgeCheck ('16+'|'18+') is accepted but no
+	 *                                  V4_Mapper row emits it yet — every id_check
+	 *                                  combination is still Legacy-only, so ID Check
+	 *                                  orders do not reach V4 at all.
 	 * }
 	 * @return ShipmentDeliveryRequest
 	 */
@@ -127,7 +130,8 @@ class Request_Builder {
 	private static function services( array $flags ): ?Services {
 		$confirmation = DeliveryConfirmation::tryFrom( (string) ( $flags['deliveryConfirmation'] ?? '' ) );
 		$age_check    = MinimalAgeCheck::tryFrom( (string) ( $flags['minimalAgeCheck'] ?? '' ) );
-		// isset (not ??) so a missing insured value stays null instead of coercing to 0.0.
+		// isset (not ! empty) so a legitimately zero insured value is still sent, matching
+		// the legacy Amounts block, which emits Value 0 rather than omitting the block.
 		$insured     = isset( $flags['insuredValue'] ) ? (float) $flags['insuredValue'] : null;
 		$stated_only = ! empty( $flags['statedAddressOnly'] ) ? true : null;
 		$return_home = ! empty( $flags['returnWhenNotHome'] ) ? true : null;

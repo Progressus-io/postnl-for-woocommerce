@@ -105,10 +105,11 @@ class Eligibility {
 	/**
 	 * Resolve the mapper's service placeholders into concrete request values.
 	 *
-	 * The matrix stores insuredValue as the '<order_total>' placeholder; it is
-	 * replaced here with the order's insured amount. All other flags
-	 * (deliveryConfirmation, statedAddressOnly, returnWhenNotHome, minimalAgeCheck)
-	 * pass through unchanged.
+	 * The matrix stores insuredValue as the '<order_total>' placeholder — a misnomer
+	 * kept for now to match V4_Mapper; the value substituted is the item subtotal, not
+	 * the order total. It is replaced here with the order's insured amount. All other
+	 * flags (deliveryConfirmation, statedAddressOnly, returnWhenNotHome) pass through
+	 * unchanged. minimalAgeCheck would too, but no matrix row emits it yet.
 	 *
 	 * The insured amount must remain the order item subtotal (WC_Order::get_subtotal),
 	 * matching the value the legacy Shipping\Client puts in the Amounts block. Do not

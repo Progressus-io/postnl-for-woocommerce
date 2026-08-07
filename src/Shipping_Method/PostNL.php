@@ -7,6 +7,7 @@
 
 namespace PostNLWooCommerce\Shipping_Method;
 
+use PostNLWooCommerce\Rest_API\Barcode\Key_Validator;
 use PostNLWooCommerce\Utils;
 use WC_Admin_Settings;
 
@@ -73,6 +74,74 @@ class PostNL extends \WC_Shipping_Flat_Rate {
 		if ( 'yes' !== $this->get_option( 'enable_pickup_points' ) ) {
 			$this->update_option( 'default_checkout_tab', 'delivery_day' );
 		}
+
+		$this->process_new_api_key_validation();
+	}
+
+	/**
+	 * Validate the "New API Key" field whenever settings are saved.
+	 *
+	 * Only runs in production mode. Performs a live Barcode API call with
+	 * the candidate key. Success flips the validated flag on so the plugin
+	 * starts routing traffic through the new key; failure leaves the old
+	 * key in use and surfaces an error to the merchant.
+	 */
+	protected function process_new_api_key_validation() {
+		$settings = Settings::get_instance();
+
+		$env = $this->get_option( 'environment_mode' );
+		if ( 'production' !== $env ) {
+			return;
+		}
+
+		$new_key  = trim( (string) $this->get_option( 'api_keys_new' ) );
+		$original = trim( (string) $this->get_option( 'api_keys' ) );
+
+		if ( '' === $new_key || $new_key === $original ) {
+			$settings->set_api_key_new_validated( false );
+			return;
+		}
+
+		// This exact key already passed validation; skip the live call so an
+		// unrelated settings save doesn't make a blocking request every time.
+		if ( $settings->is_api_key_new_validated_value( $new_key ) ) {
+			return;
+		}
+
+		$customer_code = $this->get_option( 'customer_code' );
+		$customer_num  = $this->get_option( 'customer_num' );
+
+		$result = Key_Validator::validate( $new_key, $customer_code, $customer_num );
+
+		if ( is_wp_error( $result ) ) {
+			$error_code = $result->get_error_code();
+
+			// Transport failures / 5xx mean we could not reach PostNL — this is
+			// not proof the key is bad, so leave any previously-validated state
+			// untouched rather than disabling a working key on a network blip.
+			if ( in_array( $error_code, array( 'postnl_key_http_error', 'postnl_key_http_status' ), true ) ) {
+				WC_Admin_Settings::add_error(
+					esc_html__( 'Could not reach PostNL to validate the new API key. Your previous settings were kept unchanged; please try saving again later.', 'postnl-for-woocommerce' )
+				);
+				return;
+			}
+
+			$settings->set_api_key_new_validated( false );
+
+			if ( 'postnl_missing_customer_data' === $error_code ) {
+				WC_Admin_Settings::add_error(
+					esc_html__( 'Please fill in Customer Code and Customer Number first to validate the new API key.', 'postnl-for-woocommerce' )
+				);
+				return;
+			}
+
+			WC_Admin_Settings::add_error(
+				esc_html__( 'The newly entered API key is invalid. Please check the key and enter it again.', 'postnl-for-woocommerce' )
+			);
+			return;
+		}
+
+		$settings->set_api_key_new_validated( true, $new_key );
 	}
 
 	/**

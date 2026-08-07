@@ -9,6 +9,8 @@ declare( strict_types = 1 );
 
 namespace PostNLWooCommerce\Tests\Unit\Helper\Product_Mapper;
 
+use Postnl\Sdk\Enums\Payload\DeliveryConfirmation;
+use Postnl\Sdk\Enums\Payload\MinimalAgeCheck;
 use PostNLWooCommerce\Helper\Product_Mapper\V1_Mapper;
 use PostNLWooCommerce\Helper\Product_Mapper\V4_Mapper;
 use PostNLWooCommerce\Tests\UnitTestCase;
@@ -1065,5 +1067,76 @@ class V4_MapperTest extends UnitTestCase {
 		// Total: NL→NL 21+4 + NL→BE 16+1 + NL→EU 9+1 + NL→ROW 8+1
 		//      + BE→BE 5+2  + BE→NL 7+2  + BE→EU 9   + BE→ROW 3 = 89
 		//      (NL→NL delivery_day includes row 89 letterbox_48)
+	}
+
+	/**
+	 * @testdox Every service string the matrix emits is a value the SDK enum accepts
+	 *
+	 * Request_Builder resolves these strings with DeliveryConfirmation::tryFrom() and
+	 * MinimalAgeCheck::tryFrom(), which return null for anything unrecognised. A null
+	 * there does not raise anything: if it is the row's only service the whole Services
+	 * block is dropped and the parcel ships without the service the customer paid for.
+	 *
+	 * The literals live in V4_Mapper and are hand-copied into two test files, with
+	 * nothing pointing at the enum that defines them. This is the one assertion that
+	 * fails loudly if the matrix and the SDK ever drift apart -- on a typo here, or on
+	 * an SDK bump that renames a case.
+	 */
+	public function test_matrix_service_strings_are_valid_sdk_enum_values(): void {
+		$checked = 0;
+
+		foreach ( self::combination_matrix_provider() as $name => $row ) {
+			$services = V4_Mapper::map( $row[0] )['services'] ?? array();
+
+			if ( isset( $services['deliveryConfirmation'] ) ) {
+				$value = $services['deliveryConfirmation'];
+				$this->assertNotNull(
+					DeliveryConfirmation::tryFrom( (string) $value ),
+					"Row '{$name}' emits deliveryConfirmation '{$value}', which DeliveryConfirmation does not accept."
+				);
+				$checked++;
+			}
+
+			if ( isset( $services['minimalAgeCheck'] ) ) {
+				$value = $services['minimalAgeCheck'];
+				$this->assertNotNull(
+					MinimalAgeCheck::tryFrom( (string) $value ),
+					"Row '{$name}' emits minimalAgeCheck '{$value}', which MinimalAgeCheck does not accept."
+				);
+				$checked++;
+			}
+		}
+
+		$this->assertGreaterThan(
+			0,
+			$checked,
+			'No service strings were checked at all -- the matrix or the provider changed shape and this test stopped testing anything.'
+		);
+	}
+
+	/**
+	 * @testdox No matrix row emits minimalAgeCheck yet, so ID Check still routes to legacy
+	 *
+	 * Request_Builder handles minimalAgeCheck and the PR description advertises 16+/18+
+	 * support, but every id_check combination is a legacy_result. Pinning the count at
+	 * zero means promoting an ID Check row to V4 without also confirming the age-check
+	 * mapping is a visible, deliberate test edit rather than a silent behaviour change.
+	 */
+	public function test_no_row_emits_minimal_age_check_yet(): void {
+		$emitting = array();
+
+		foreach ( self::combination_matrix_provider() as $name => $row ) {
+			$services = V4_Mapper::map( $row[0] )['services'] ?? array();
+
+			if ( isset( $services['minimalAgeCheck'] ) ) {
+				$emitting[] = $name;
+			}
+		}
+
+		$this->assertSame(
+			array(),
+			$emitting,
+			'A row now emits minimalAgeCheck. Confirm the age-check mapping against the portal, then update this test.'
+		);
 	}
 }

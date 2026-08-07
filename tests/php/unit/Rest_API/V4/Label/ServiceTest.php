@@ -13,6 +13,7 @@ use Brain\Monkey\Functions;
 use GuzzleHttp\Psr7\Response;
 use Postnl\Sdk\Client\ClientBuilder;
 use Postnl\Sdk\RequestData\V4\ShipmentDelivery\ShipmentDeliveryRequest;
+use PostNLWooCommerce\Rest_API\Legacy\Shipping;
 use PostNLWooCommerce\Rest_API\SDK\Client_Factory;
 use PostNLWooCommerce\Rest_API\V4\Label\Request_Builder;
 use PostNLWooCommerce\Rest_API\V4\Label\Service;
@@ -247,6 +248,105 @@ class ServiceTest extends UnitTestCase {
 	 * @param Spy_Logger $logger Spy logger to read.
 	 * @return array<int, array<string, mixed>>
 	 */
+	// ── Insured amount ───────────────────────────────────────────────────────
+
+	/**
+	 * @testdox The insured amount sent to PostNL is the order item subtotal
+	 *
+	 * This is the only number in the flow that becomes the declared value of the
+	 * shipment, and the wiring from shipment['subtotal'] through resolve_services()
+	 * was previously asserted nowhere -- replacing it with 0, or with any other key
+	 * on the shipment array, kept the whole suite green. The legacy Amounts block
+	 * uses WC_Order::get_subtotal() (Legacy/Shipping/Client.php), so anything that
+	 * adds tax or shipping here is a silent divergence from V1 that only shows up
+	 * when a merchant claims on a lost parcel.
+	 *
+	 * The fixture keeps subtotal, weight and zero as three distinct numbers so
+	 * reading the wrong key cannot coincidentally pass.
+	 */
+	public function test_insured_amount_is_the_order_item_subtotal(): void {
+		$service = new Testable_Label_Service(
+			new Spy_Label_Client_Factory( new Client_Factory_Settings(), new Failing_Http_Client() ),
+			self::V4_KEY,
+			new NullLogger()
+		);
+
+		$item_info = new Fake_Shipping_Item_Info(
+			array(
+				'subtotal'     => 42.00,
+				'total_weight' => 1500,
+				'order_number' => 'ORDER-1001',
+				'printer_type' => 'GraphicFile|PDF',
+				'currency'     => 'EUR',
+			)
+		);
+
+		$fields = $this->extract_fields(
+			$service,
+			$item_info,
+			array(
+				'shipmentType' => 'parcel',
+				'services'     => array(
+					'deliveryConfirmation' => 'signature',
+					'insuredValue'         => '<order_total>',
+				),
+			),
+			array( 'main_barcode' => '3SDEVC1234567' )
+		);
+
+		$this->assertSame(
+			42.00,
+			$fields['services']['insuredValue'],
+			'The insured amount must be the item subtotal, resolved from the mapper placeholder.'
+		);
+		$this->assertSame(
+			'signature',
+			$fields['services']['deliveryConfirmation'],
+			'Other service flags must pass through the placeholder substitution unchanged.'
+		);
+	}
+
+	/**
+	 * @testdox A parcel with no mapped services sends no service flags at all
+	 */
+	public function test_parcel_without_mapped_services_sends_none(): void {
+		$service = new Testable_Label_Service(
+			new Spy_Label_Client_Factory( new Client_Factory_Settings(), new Failing_Http_Client() ),
+			self::V4_KEY,
+			new NullLogger()
+		);
+
+		$fields = $this->extract_fields(
+			$service,
+			new Fake_Shipping_Item_Info( array( 'subtotal' => 42.00 ) ),
+			array( 'shipmentType' => 'parcel', 'services' => array() ),
+			array()
+		);
+
+		$this->assertSame( array(), $fields['services'] );
+	}
+
+	/**
+	 * Call Service::extract_fields(), which is private.
+	 *
+	 * Reflection rather than promoting the method to protected: the visibility on
+	 * the production class should describe what collaborators may call, not what a
+	 * test wants to look at. extract_fields() is a pure translation with no
+	 * collaborators, so nothing outside the class has a reason to reach it.
+	 *
+	 * @param Service            $service   Service under test.
+	 * @param Shipping\Item_Info $item_info Parsed legacy item info.
+	 * @param array              $mapped    V4_Mapper::map() result.
+	 * @param array              $post_data Label post data.
+	 * @return array
+	 */
+	private function extract_fields( Service $service, Shipping\Item_Info $item_info, array $mapped, array $post_data ): array {
+		$method = new \ReflectionMethod( Service::class, 'extract_fields' );
+		$method->setAccessible( true );
+
+		return $method->invoke( $service, $item_info, $mapped, $post_data );
+	}
+
 	private function error_records( Spy_Logger $logger ): array {
 		return array_values(
 			array_filter( $logger->records, static fn( array $record ) => LogLevel::ERROR === $record['level'] )
@@ -269,6 +369,25 @@ class Testable_Label_Service extends Service {
 	 */
 	public function expose_confirm_label( ShipmentDeliveryRequest $request, array $fields ) {
 		return $this->confirm_label( $request, $fields );
+	}
+
+}
+
+/**
+ * Item_Info stand-in that skips the real constructor, which needs a WooCommerce
+ * order. Only the public arrays extract_fields() reads are populated.
+ */
+class Fake_Shipping_Item_Info extends Shipping\Item_Info {
+
+	/**
+	 * @param array $shipment Parsed shipment data.
+	 */
+	// phpcs:ignore Generic.CodeAnalysis.UselessOverridingMethod.Found -- Deliberately skips the WooCommerce-bound parent constructor.
+	public function __construct( array $shipment ) {
+		$this->shipment     = $shipment;
+		$this->shipper      = array( 'country' => 'NL' );
+		$this->receiver     = array( 'country' => 'NL' );
+		$this->backend_data = array();
 	}
 }
 

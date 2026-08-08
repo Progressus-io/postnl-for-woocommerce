@@ -326,6 +326,94 @@ class ServiceTest extends UnitTestCase {
 		$this->assertSame( array(), $fields['services'] );
 	}
 
+	// ── Partner references after the merge ───────────────────────────────────
+
+	/**
+	 * @testdox Partner references survive the label merge that rebuilds the record
+	 *
+	 * Order\Base::maybe_merge_labels() returns the mapper's record untouched only
+	 * when there is exactly one label and the format is A6. Every other path -- and
+	 * a ROW response always takes one, since it returns four documents -- discards
+	 * the record and builds a fresh one holding type/barcode/created_at/filepath/
+	 * merged_files. The fixture below is exactly that rebuilt shape, so the partner
+	 * barcode and id captured off the labelconfirm response reach order meta only
+	 * if they are re-attached afterwards.
+	 *
+	 * The values are deliberately distinct from the barcode so reading the wrong
+	 * key cannot coincidentally pass.
+	 */
+	public function test_partner_references_survive_the_label_merge(): void {
+		$service = new Testable_Label_Service(
+			new Spy_Label_Client_Factory( new Client_Factory_Settings(), new Failing_Http_Client() ),
+			self::V4_KEY,
+			new NullLogger()
+		);
+
+		$labels = $this->finalize_label_records( $service, $this->merged_label_records(), 'CE123456789NL', 'PARTNER-77' );
+
+		$this->assertArrayHasKey( 'label', $labels );
+		$this->assertSame( 'v4', $labels['label']['api_version'], 'The rebuilt record must still be tagged as V4.' );
+		$this->assertSame( 'CE123456789NL', $labels['label']['partner_barcode'], 'The partner barcode must survive the merge.' );
+		$this->assertSame( 'PARTNER-77', $labels['label']['partner_id'], 'The partner id must survive the merge.' );
+	}
+
+	/**
+	 * @testdox A record with no partner references gains no empty partner keys
+	 *
+	 * Response_Mapper::to_label_record() omits both keys when the response carries
+	 * no partner data, so a domestic label record must not sprout them here either.
+	 */
+	public function test_absent_partner_references_add_no_partner_keys(): void {
+		$service = new Testable_Label_Service(
+			new Spy_Label_Client_Factory( new Client_Factory_Settings(), new Failing_Http_Client() ),
+			self::V4_KEY,
+			new NullLogger()
+		);
+
+		$labels = $this->finalize_label_records( $service, $this->merged_label_records(), '', '' );
+
+		$this->assertSame( 'v4', $labels['label']['api_version'], 'The V4 tag is unconditional.' );
+		$this->assertArrayNotHasKey( 'partner_barcode', $labels['label'] );
+		$this->assertArrayNotHasKey( 'partner_id', $labels['label'] );
+	}
+
+	/**
+	 * A label set in the shape Order\Base::maybe_merge_labels() rebuilds, i.e.
+	 * without the api_version and partner keys the mapper had put on the record.
+	 *
+	 * @return array
+	 */
+	private function merged_label_records(): array {
+		return array(
+			'label' => array(
+				'type'         => 'label',
+				'barcode'      => '3SDEVC1234567',
+				'created_at'   => 1700000000,
+				'filepath'     => '/uploads/postnl/merged.pdf',
+				'merged_files' => array( '/uploads/postnl/cn23.pdf', '/uploads/postnl/label.pdf' ),
+			),
+		);
+	}
+
+	/**
+	 * Call Service::finalize_label_records(), which is private.
+	 *
+	 * Reflection rather than promoting the method, for the same reason as
+	 * extract_fields() below: nothing outside the class calls it.
+	 *
+	 * @param Service $service         Service under test.
+	 * @param array   $labels          Merged label records.
+	 * @param string  $partner_barcode Partner barcode from the labelconfirm response.
+	 * @param string  $partner_id      Partner id from the labelconfirm response.
+	 * @return array
+	 */
+	private function finalize_label_records( Service $service, array $labels, string $partner_barcode, string $partner_id ): array {
+		$method = new \ReflectionMethod( Service::class, 'finalize_label_records' );
+		$method->setAccessible( true );
+
+		return $method->invoke( $service, $labels, $partner_barcode, $partner_id );
+	}
+
 	/**
 	 * Call Service::extract_fields(), which is private.
 	 *

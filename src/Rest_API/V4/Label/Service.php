@@ -390,7 +390,8 @@ class Service extends Order_Base implements Label_Service_Interface {
 	 * Write the labelconfirm response labels to disk and normalize them.
 	 *
 	 * Reuses Order\Base::maybe_merge_labels() so the A4/A6 handling matches the
-	 * legacy path, then re-tags the merged record as V4.
+	 * legacy path, then restores the V4-only keys that merge drops -- see
+	 * finalize_label_records().
 	 *
 	 * @param LabelConfirmResponseInterface $response         labelconfirm response.
 	 * @param \WC_Order                     $order            WooCommerce order.
@@ -446,10 +447,43 @@ class Service extends Order_Base implements Label_Service_Interface {
 			);
 		}
 
-		$labels = $this->maybe_merge_labels( $records, $order, $barcode, 'label' );
+		return $this->finalize_label_records(
+			$this->maybe_merge_labels( $records, $order, $barcode, 'label' ),
+			$partner_barcode,
+			$partner_id
+		);
+	}
 
+	/**
+	 * Restore the V4-only keys the merge drops from every label record.
+	 *
+	 * Order\Base::maybe_merge_labels() returns the mapper's record untouched only
+	 * when there is exactly one label and the format is A6; on every other path it
+	 * discards the record and builds a fresh one carrying just type, barcode,
+	 * created_at, filepath and merged_files. A ROW response always takes that path,
+	 * since it returns four documents, so the api_version tag and the partner
+	 * references captured off the labelconfirm response have to be put back here or
+	 * they never reach the order meta.
+	 *
+	 * Empty partner references add no keys at all, matching
+	 * Response_Mapper::to_label_record(): a domestic record carries neither.
+	 *
+	 * @param array  $labels          Merged label records, keyed by label type.
+	 * @param string $partner_barcode Partner barcode, or an empty string.
+	 * @param string $partner_id      Partner id, or an empty string.
+	 * @return array
+	 */
+	private function finalize_label_records( array $labels, string $partner_barcode, string $partner_id ): array {
 		foreach ( array_keys( $labels ) as $key ) {
 			$labels[ $key ]['api_version'] = 'v4';
+
+			if ( '' !== $partner_barcode ) {
+				$labels[ $key ]['partner_barcode'] = $partner_barcode;
+			}
+
+			if ( '' !== $partner_id ) {
+				$labels[ $key ]['partner_id'] = $partner_id;
+			}
 		}
 
 		return $labels;

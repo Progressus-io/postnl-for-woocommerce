@@ -335,7 +335,7 @@ class Request_BuilderTest extends UnitTestCase {
 		$fields['international']  = array(
 			'bundle'  => 'insured',
 			'customs' => array(
-				'currency'              => 'EUR',
+				'currency'              => 'eur',
 				'transaction_code'      => '11',
 				'associated_document'   => array(
 					'type'   => 'invoice',
@@ -348,7 +348,7 @@ class Request_BuilderTest extends UnitTestCase {
 						'quantity'          => 2,
 						'weight'            => 500,
 						'value'             => 19.95,
-						'country_of_origin' => 'NL',
+						'country_of_origin' => 'nl',
 						'hs_code'           => '610910',
 					),
 				),

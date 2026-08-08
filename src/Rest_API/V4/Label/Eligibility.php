@@ -17,9 +17,10 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Pure decision logic for whether an order is the happy-path domestic parcel
- * the V4 label service handles. Kept free of WooCommerce and Order\Base so the
- * gate — the highest-risk part of the flow — can be asserted in isolation.
+ * Pure decision logic for whether an order is a parcel the V4 label service
+ * handles — a domestic NL parcel or an EU/ROW international parcel from NL/BE.
+ * Kept free of WooCommerce and Order\Base so the gate — the highest-risk part
+ * of the flow — can be asserted in isolation.
  *
  * @since   6.0.0
  * @package PostNLWooCommerce\Rest_API\V4\Label
@@ -87,7 +88,16 @@ class Eligibility {
 			return false;
 		}
 
-		if ( 'NL' !== ( $signals['origin'] ?? '' ) || 'NL' !== ( $signals['destination'] ?? '' ) ) {
+		$origin      = (string) ( $signals['origin'] ?? '' );
+		$destination = (string) ( $signals['destination'] ?? '' );
+
+		// Domestic NL (tasks 18-19) or an EU/ROW international parcel from NL/BE
+		// (task 20). NL<->BE cross-border stays on legacy for now.
+		$is_domestic      = ( 'NL' === $origin && 'NL' === $destination );
+		$is_international = in_array( $origin, array( 'NL', 'BE' ), true )
+			&& in_array( $destination, array( 'EU', 'ROW' ), true );
+
+		if ( ! $is_domestic && ! $is_international ) {
 			return false;
 		}
 

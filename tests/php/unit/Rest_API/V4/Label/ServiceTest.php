@@ -326,6 +326,247 @@ class ServiceTest extends UnitTestCase {
 		$this->assertSame( array(), $fields['services'] );
 	}
 
+	// ── Partner references after the merge ───────────────────────────────────
+
+	/**
+	 * @testdox Partner references survive the label merge that rebuilds the record
+	 *
+	 * Order\Base::maybe_merge_labels() returns the mapper's record untouched only
+	 * when there is exactly one label and the format is A6. Every other path -- and
+	 * a ROW response always takes one, since it returns four documents -- discards
+	 * the record and builds a fresh one holding type/barcode/created_at/filepath/
+	 * merged_files. The fixture below is exactly that rebuilt shape, so the partner
+	 * barcode and id captured off the labelconfirm response reach order meta only
+	 * if they are re-attached afterwards.
+	 *
+	 * The values are deliberately distinct from the barcode so reading the wrong
+	 * key cannot coincidentally pass.
+	 */
+	public function test_partner_references_survive_the_label_merge(): void {
+		$service = new Testable_Label_Service(
+			new Spy_Label_Client_Factory( new Client_Factory_Settings(), new Failing_Http_Client() ),
+			self::V4_KEY,
+			new NullLogger()
+		);
+
+		$labels = $this->finalize_label_records( $service, $this->merged_label_records(), 'CE123456789NL', 'PARTNER-77' );
+
+		$this->assertArrayHasKey( 'label', $labels );
+		$this->assertSame( 'v4', $labels['label']['api_version'], 'The rebuilt record must still be tagged as V4.' );
+		$this->assertSame( 'CE123456789NL', $labels['label']['partner_barcode'], 'The partner barcode must survive the merge.' );
+		$this->assertSame( 'PARTNER-77', $labels['label']['partner_id'], 'The partner id must survive the merge.' );
+	}
+
+	/**
+	 * @testdox A record with no partner references gains no empty partner keys
+	 *
+	 * Response_Mapper::to_label_record() omits both keys when the response carries
+	 * no partner data, so a domestic label record must not sprout them here either.
+	 */
+	public function test_absent_partner_references_add_no_partner_keys(): void {
+		$service = new Testable_Label_Service(
+			new Spy_Label_Client_Factory( new Client_Factory_Settings(), new Failing_Http_Client() ),
+			self::V4_KEY,
+			new NullLogger()
+		);
+
+		$labels = $this->finalize_label_records( $service, $this->merged_label_records(), '', '' );
+
+		$this->assertSame( 'v4', $labels['label']['api_version'], 'The V4 tag is unconditional.' );
+		$this->assertArrayNotHasKey( 'partner_barcode', $labels['label'] );
+		$this->assertArrayNotHasKey( 'partner_id', $labels['label'] );
+	}
+
+	// ── Unmappable international enum values ─────────────────────────────────
+
+	/**
+	 * @testdox A customs currency the SDK enum does not carry is logged as a warning
+	 *
+	 * Request_Builder drops the currency silently when Currency::tryFrom misses, and
+	 * the SDK enum carries only thirteen currencies -- a store selling in HUF would
+	 * otherwise send a customs declaration with no currency at all and never find out.
+	 * The value is still handed to the builder unchanged: the builder owns the
+	 * omission, this class only reports it.
+	 */
+	public function test_unsupported_customs_currency_is_logged(): void {
+		$logger  = new Spy_Logger();
+		$service = $this->service_with_logger( $logger );
+
+		$fields = $this->extract_fields(
+			$service,
+			$this->international_item_info( 'HUF', 'nl' ),
+			$this->international_mapped(),
+			array()
+		);
+
+		$warnings = $this->warning_records( $logger );
+
+		$this->assertCount( 1, $warnings, 'Exactly one value fails to map, so exactly one warning is due.' );
+		$this->assertStringContainsString( 'currency', $warnings[0]['message'], 'The warning has to name the field that will be dropped.' );
+		$this->assertStringContainsString( 'HUF', $warnings[0]['message'], 'The raw value is what the merchant has to change.' );
+		$this->assertStringContainsString( 'ORDER-1001', $warnings[0]['message'], 'The order reference is what makes the entry traceable.' );
+
+		$this->assertSame(
+			'HUF',
+			$fields['international']['customs']['currency'],
+			'Service only reports the miss; dropping the field stays the builder decision.'
+		);
+	}
+
+	/**
+	 * @testdox A customs country of origin the SDK enum does not carry is logged as a warning
+	 *
+	 * Country::tryFrom takes the two-letter ISO code; a full country name saved on a
+	 * product ships a customs line with no origin, which is exactly the field customs
+	 * authorities hold a parcel over.
+	 */
+	public function test_unknown_customs_country_of_origin_is_logged(): void {
+		$logger  = new Spy_Logger();
+		$service = $this->service_with_logger( $logger );
+
+		$this->extract_fields(
+			$service,
+			$this->international_item_info( 'eur', 'Netherlands' ),
+			$this->international_mapped(),
+			array()
+		);
+
+		$warnings = $this->warning_records( $logger );
+
+		$this->assertCount( 1, $warnings, 'Only the country of origin fails to map here.' );
+		$this->assertStringContainsString( 'country of origin', $warnings[0]['message'], 'The warning has to name the field that will be dropped.' );
+		$this->assertStringContainsString( 'Netherlands', $warnings[0]['message'], 'The raw value is what the merchant has to change.' );
+		$this->assertStringContainsString( 'ORDER-1001', $warnings[0]['message'], 'The order reference is what makes the entry traceable.' );
+	}
+
+	/**
+	 * @testdox Values the builder maps after upper-casing produce no warning
+	 *
+	 * The check has to mirror Request_Builder's own normalization, not merely compare
+	 * against the enum: the builder upper-cases the currency and the country of origin
+	 * before tryFrom, so a lowercase 'eur' reaches PostNL perfectly well and warning
+	 * about it would train merchants to ignore the log.
+	 */
+	public function test_values_the_builder_normalizes_produce_no_warning(): void {
+		$logger  = new Spy_Logger();
+		$service = $this->service_with_logger( $logger );
+
+		$this->extract_fields(
+			$service,
+			$this->international_item_info( 'eur', 'nl' ),
+			$this->international_mapped(),
+			array()
+		);
+
+		$this->assertSame( array(), $this->warning_records( $logger ), 'A value the builder maps fine must not be reported as unmappable.' );
+	}
+
+	/**
+	 * A Service wired to the given logger, with the transport stubbed out.
+	 *
+	 * @param Spy_Logger $logger Logger to inject.
+	 * @return Testable_Label_Service
+	 */
+	private function service_with_logger( Spy_Logger $logger ): Testable_Label_Service {
+		return new Testable_Label_Service(
+			new Spy_Label_Client_Factory( new Client_Factory_Settings(), new Failing_Http_Client() ),
+			self::V4_KEY,
+			$logger
+		);
+	}
+
+	/**
+	 * A V4_Mapper result for an EU/ROW parcel, i.e. one carrying a service bundle.
+	 *
+	 * @return array
+	 */
+	private function international_mapped(): array {
+		return array(
+			'shipmentType'              => 'parcel',
+			'services'                  => array(),
+			'internationalShipmentData' => array( 'bundle' => 'insured' ),
+		);
+	}
+
+	/**
+	 * An international order with one customs line, parameterised on the two values
+	 * whose enum lookup can miss.
+	 *
+	 * @param string $currency Order currency as WooCommerce stores it.
+	 * @param string $origin   Country of origin as the product meta stores it.
+	 * @return Fake_Shipping_Item_Info
+	 */
+	private function international_item_info( string $currency, string $origin ): Fake_Shipping_Item_Info {
+		return new Fake_Shipping_Item_Info(
+			array(
+				'subtotal'     => 42.00,
+				'total_weight' => 1500,
+				'order_id'     => '5150',
+				'order_number' => 'ORDER-1001',
+				'currency'     => $currency,
+			),
+			array(
+				array(
+					'description' => 'Blue cotton t-shirt',
+					'qty'         => 2,
+					'weight'      => 500,
+					'value'       => 19.95,
+					'origin'      => $origin,
+					'hs_code'     => '610910',
+				),
+			)
+		);
+	}
+
+	/**
+	 * Warning-level records from a spy logger, re-indexed.
+	 *
+	 * @param Spy_Logger $logger Spy logger to read.
+	 * @return array<int, array<string, mixed>>
+	 */
+	private function warning_records( Spy_Logger $logger ): array {
+		return array_values(
+			array_filter( $logger->records, static fn( array $record ) => LogLevel::WARNING === $record['level'] )
+		);
+	}
+
+	/**
+	 * A label set in the shape Order\Base::maybe_merge_labels() rebuilds, i.e.
+	 * without the api_version and partner keys the mapper had put on the record.
+	 *
+	 * @return array
+	 */
+	private function merged_label_records(): array {
+		return array(
+			'label' => array(
+				'type'         => 'label',
+				'barcode'      => '3SDEVC1234567',
+				'created_at'   => 1700000000,
+				'filepath'     => '/uploads/postnl/merged.pdf',
+				'merged_files' => array( '/uploads/postnl/cn23.pdf', '/uploads/postnl/label.pdf' ),
+			),
+		);
+	}
+
+	/**
+	 * Call Service::finalize_label_records(), which is private.
+	 *
+	 * Reflection rather than promoting the method, for the same reason as
+	 * extract_fields() below: nothing outside the class calls it.
+	 *
+	 * @param Service $service         Service under test.
+	 * @param array   $labels          Merged label records.
+	 * @param string  $partner_barcode Partner barcode from the labelconfirm response.
+	 * @param string  $partner_id      Partner id from the labelconfirm response.
+	 * @return array
+	 */
+	private function finalize_label_records( Service $service, array $labels, string $partner_barcode, string $partner_id ): array {
+		$method = new \ReflectionMethod( Service::class, 'finalize_label_records' );
+		$method->setAccessible( true );
+
+		return $method->invoke( $service, $labels, $partner_barcode, $partner_id );
+	}
+
 	/**
 	 * Call Service::extract_fields(), which is private.
 	 *
@@ -381,10 +622,12 @@ class Fake_Shipping_Item_Info extends Shipping\Item_Info {
 
 	/**
 	 * @param array $shipment Parsed shipment data.
+	 * @param array $contents Parsed order line items, as the customs block reads them.
 	 */
 	// phpcs:ignore Generic.CodeAnalysis.UselessOverridingMethod.Found -- Deliberately skips the WooCommerce-bound parent constructor.
-	public function __construct( array $shipment ) {
+	public function __construct( array $shipment, array $contents = array() ) {
 		$this->shipment     = $shipment;
+		$this->contents     = $contents;
 		$this->shipper      = array( 'country' => 'NL' );
 		$this->receiver     = array( 'country' => 'NL' );
 		$this->backend_data = array();

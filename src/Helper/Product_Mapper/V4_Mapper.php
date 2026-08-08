@@ -189,6 +189,12 @@ class V4_Mapper {
 		$pickup = array( 'pickupLocationId' => '<from_selected_location>' );
 
 		// International service bundles carried on InternationalShipmentData->bundle (4907/4909).
+		// The V4 request carries only this flat bundle enum for international insurance —
+		// there is no declared value anywhere on the block, whereas V1 sent an Amounts entry
+		// (AmountType 02, currency, order subtotal) with every insured EU shipment. Whether the
+		// bundles are flat-coverage tiers or still expect a declared amount is an open question
+		// with PostNL, tracked as Q14 in docs/postnl-v4-migration/flip-checklist.md and a
+		// pre-flip gate for the label flow.
 		$track_trace  = array( 'bundle' => 'track_trace' );
 		$insured      = array( 'bundle' => 'insured' );
 		$insured_plus = array( 'bundle' => 'insured_plus' );

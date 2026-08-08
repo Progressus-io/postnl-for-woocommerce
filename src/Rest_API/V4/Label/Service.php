@@ -10,6 +10,9 @@ declare( strict_types = 1 );
 namespace PostNLWooCommerce\Rest_API\V4\Label;
 
 use Postnl\Sdk\Client\PostnlClientInterface;
+use Postnl\Sdk\Enums\Payload\Bundle;
+use Postnl\Sdk\Enums\Payload\Country;
+use Postnl\Sdk\Enums\Payload\Currency;
 use Postnl\Sdk\RequestData\V4\ShipmentDelivery\ShipmentDeliveryRequest;
 use Postnl\Sdk\Service\ShipmentDelivery\V4\Response\LabelConfirmResponseInterface;
 use PostNLWooCommerce\Order\Base as Order_Base;
@@ -333,10 +336,80 @@ class Service extends Order_Base implements Label_Service_Interface {
 			return array();
 		}
 
-		return array(
+		$fields = array(
 			'bundle'  => (string) ( $international['bundle'] ?? '' ),
 			'customs' => $this->extract_customs( $item_info ),
 		);
+
+		$this->warn_unmappable_international( $fields, (string) ( $item_info->shipment['order_number'] ?? '' ) );
+
+		return $fields;
+	}
+
+	/**
+	 * Report the international values Request_Builder will silently drop.
+	 *
+	 * The log lives here rather than in the builder because the builder is a pure
+	 * static translator — a flat array in, a DTO out, no collaborators — so giving it
+	 * a logger would mean threading one through every call site just to translate a
+	 * field. This is the last point where the logger, the raw values and the order
+	 * reference all exist together.
+	 *
+	 * Each check mirrors the builder's own normalization exactly: Bundle::tryFrom on
+	 * the raw string (the builder folds no case there), Currency::tryFrom and
+	 * Country::tryFrom on the upper-cased value. Anything looser would warn about
+	 * values that reach PostNL perfectly well — a lowercase 'eur' — and train
+	 * merchants to ignore the log. Empty values are omitted by the builder by design
+	 * and are not reported.
+	 *
+	 * Without this, an enum miss is invisible: the SDK Currency enum carries only
+	 * thirteen currencies, so a store selling in HUF sends a customs declaration with
+	 * no currency, and a mistyped mapper bundle ships an uninsured parcel. The order
+	 * number is the merchant's own reference, and currency/country codes carry no
+	 * personal data, so the whole line is safe to write unconditionally.
+	 *
+	 * @param array  $fields          Flattened international field set.
+	 * @param string $order_reference Merchant order number the shipment belongs to.
+	 * @return void
+	 */
+	private function warn_unmappable_international( array $fields, string $order_reference ): void {
+		$bundle = (string) ( $fields['bundle'] ?? '' );
+
+		if ( '' !== $bundle && null === Bundle::tryFrom( $bundle ) ) {
+			$this->logger->warning(
+				sprintf(
+					'V4 label for order "%1$s": unknown international service bundle "%2$s"; the shipment is sent without a bundle.',
+					$order_reference,
+					$bundle
+				)
+			);
+		}
+
+		$currency = (string) ( $fields['customs']['currency'] ?? '' );
+
+		if ( '' !== $currency && null === Currency::tryFrom( strtoupper( $currency ) ) ) {
+			$this->logger->warning(
+				sprintf(
+					'V4 label for order "%1$s": unsupported customs currency "%2$s"; the customs declaration is sent without a currency.',
+					$order_reference,
+					$currency
+				)
+			);
+		}
+
+		foreach ( (array) ( $fields['customs']['content'] ?? array() ) as $item ) {
+			$origin = (string) ( $item['country_of_origin'] ?? '' );
+
+			if ( '' !== $origin && null === Country::tryFrom( strtoupper( $origin ) ) ) {
+				$this->logger->warning(
+					sprintf(
+						'V4 label for order "%1$s": unknown customs country of origin "%2$s"; that item is declared without a country of origin.',
+						$order_reference,
+						$origin
+					)
+				);
+			}
+		}
 	}
 
 	/**

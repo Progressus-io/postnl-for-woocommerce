@@ -9,7 +9,10 @@ declare( strict_types = 1 );
 
 namespace PostNLWooCommerce\Rest_API\V4\Label;
 
+use Postnl\Sdk\Enums\Payload\AssociatedDocumentType;
+use Postnl\Sdk\Enums\Payload\Bundle;
 use Postnl\Sdk\Enums\Payload\Country;
+use Postnl\Sdk\Enums\Payload\Currency;
 use Postnl\Sdk\Enums\Payload\DeliveryConfirmation;
 use Postnl\Sdk\Enums\Payload\LabelOutputType;
 use Postnl\Sdk\Enums\Payload\LabelResolution;
@@ -20,6 +23,10 @@ use Postnl\Sdk\RequestData\V4\Address;
 use Postnl\Sdk\RequestData\V4\Contact;
 use Postnl\Sdk\RequestData\V4\CustomerReferences;
 use Postnl\Sdk\RequestData\V4\Dimensions;
+use Postnl\Sdk\RequestData\V4\InternationalShipment\AssociatedDocument;
+use Postnl\Sdk\RequestData\V4\InternationalShipment\Content;
+use Postnl\Sdk\RequestData\V4\InternationalShipment\Customs;
+use Postnl\Sdk\RequestData\V4\InternationalShipment\InternationalShipmentData;
 use Postnl\Sdk\RequestData\V4\LabelSettings;
 use Postnl\Sdk\RequestData\V4\Services;
 use Postnl\Sdk\RequestData\V4\ShipmentParty;
@@ -38,9 +45,11 @@ if ( ! defined( 'ABSPATH' ) ) {
  * endpoint. It performs no WooCommerce or settings access, so the DTO shape
  * can be asserted in isolation.
  *
- * Scope: single domestic parcel, single collo, optional delivery Services
+ * Scope: single parcel, single collo, optional delivery Services
  * (insurance, signature/delivery-code confirmation, stated-address-only,
- * return-when-not-home and their combinations). The customer number/code are
+ * return-when-not-home and their combinations) for domestic shipments, plus
+ * EU/ROW international shipments carrying an InternationalShipmentData block
+ * (service bundle + customs declaration). The customer number/code are
  * injected into the sender by the SDK client
  * (ClientBuilder::withCustomerCredentials), so they are deliberately absent
  * here. CollectionLocation and MessageID are V1-only and never emitted.
@@ -75,6 +84,11 @@ class Request_Builder {
 	 *                                  V4_Mapper row emits it yet — every id_check
 	 *                                  combination is still Legacy-only, so ID Check
 	 *                                  orders do not reach V4 at all.
+	 *     @type array  $international  Optional EU/ROW data: bundle ('track_trace'|'insured'|
+	 *                                  'insured_plus') and customs (currency, transaction_code,
+	 *                                  associated_document{type,number}, sender_identification,
+	 *                                  receiver_identification, content[]{description, quantity,
+	 *                                  weight, value, country_of_origin, hs_code}).
 	 * }
 	 * @return ShipmentDeliveryRequest
 	 */
@@ -114,7 +128,117 @@ class Request_Builder {
 			labelSettings: $label_settings,
 			shipmentType: self::shipment_type( (string) ( $fields['shipment_type'] ?? 'parcel' ) ),
 			services: self::services( $fields['services'] ?? array() ),
+			internationalShipmentData: self::international( $fields['international'] ?? array() ),
 			items: array( $item )
+		);
+	}
+
+	/**
+	 * Build the InternationalShipmentData block for an EU/ROW shipment.
+	 *
+	 * Returns null for a domestic shipment (no international data supplied), so
+	 * the request omits the block entirely. The service bundle is carried here —
+	 * not on Services, which has no bundle field — and the customs declaration is
+	 * attached when the shipment carries content items.
+	 *
+	 * @param array $data International data keyed as documented on build().
+	 * @return InternationalShipmentData|null
+	 */
+	private static function international( array $data ): ?InternationalShipmentData {
+		if ( empty( $data ) ) {
+			return null;
+		}
+
+		$bundle  = Bundle::tryFrom( (string) ( $data['bundle'] ?? '' ) );
+		$customs = self::customs( $data['customs'] ?? array() );
+
+		if ( null === $bundle && null === $customs ) {
+			return null;
+		}
+
+		return new InternationalShipmentData(
+			customs: $customs,
+			bundle: $bundle
+		);
+	}
+
+	/**
+	 * Build the Customs declaration from the shipment's customs fields.
+	 *
+	 * Returns null when there are no content items to declare, so a shipment
+	 * that needs no customs block omits it. Mirrors the legacy Customs block:
+	 * transactionCode 11 with an invoice associatedDocument, the order currency,
+	 * a trusted-shipper senderIdentification when the merchant supplied one, and
+	 * one Content entry per order line.
+	 *
+	 * @param array $data Customs fields keyed as documented on build().
+	 * @return Customs|null
+	 */
+	private static function customs( array $data ): ?Customs {
+		$content = self::customs_content( $data['content'] ?? array() );
+
+		if ( empty( $content ) ) {
+			return null;
+		}
+
+		return new Customs(
+			content: $content,
+			transactionCode: self::maybe_null( (string) ( $data['transaction_code'] ?? '' ) ),
+			currency: Currency::tryFrom( strtoupper( (string) ( $data['currency'] ?? '' ) ) ),
+			associatedDocument: self::associated_document( $data['associated_document'] ?? array() ),
+			senderIdentification: self::maybe_null( (string) ( $data['sender_identification'] ?? '' ) ),
+			receiverIdentification: self::maybe_null( (string) ( $data['receiver_identification'] ?? '' ) )
+		);
+	}
+
+	/**
+	 * Translate the per-line customs items into Content DTOs.
+	 *
+	 * @param array $items Customs content items keyed as documented on build().
+	 * @return Content[]
+	 */
+	private static function customs_content( array $items ): array {
+		$content = array();
+
+		foreach ( $items as $item ) {
+			if ( ! is_array( $item ) ) {
+				continue;
+			}
+
+			$content[] = new Content(
+				description: self::maybe_null( self::truncate( (string) ( $item['description'] ?? '' ), 35 ) ),
+				quantity: max( 1, (int) ( $item['quantity'] ?? 1 ) ),
+				weight: max( 1, (int) ( $item['weight'] ?? 0 ) ),
+				value: (float) ( $item['value'] ?? 0 ),
+				countryOfOrigin: Country::tryFrom( strtoupper( (string) ( $item['country_of_origin'] ?? '' ) ) ),
+				hsTariffNumber: self::maybe_null( (string) ( $item['hs_code'] ?? '' ) )
+			);
+		}
+
+		return $content;
+	}
+
+	/**
+	 * Build the customs associatedDocument, mandatory for transactionCode 11/21/32.
+	 *
+	 * @param array $data Associated-document fields: type and number.
+	 * @return AssociatedDocument|null
+	 */
+	private static function associated_document( array $data ): ?AssociatedDocument {
+		if ( empty( $data ) ) {
+			return null;
+		}
+
+		$type   = AssociatedDocumentType::tryFrom( (string) ( $data['type'] ?? '' ) );
+		$number = self::maybe_null( (string) ( $data['number'] ?? '' ) );
+
+		if ( null === $type && null === $number ) {
+			return null;
+		}
+
+		return new AssociatedDocument(
+			type: $type,
+			number: $number
 		);
 	}
 
@@ -262,5 +386,20 @@ class Request_Builder {
 	 */
 	private static function maybe_null( string $value ): ?string {
 		return '' === $value ? null : $value;
+	}
+
+	/**
+	 * Truncate a string to a maximum length, respecting multibyte characters.
+	 *
+	 * The customs Content description is capped at 35 characters by PostNL.
+	 *
+	 * @param string $value  Candidate value.
+	 * @param int    $length Maximum length.
+	 * @return string
+	 */
+	private static function truncate( string $value, int $length ): string {
+		return function_exists( 'mb_substr' )
+			? mb_substr( $value, 0, $length )
+			: substr( $value, 0, $length );
 	}
 }

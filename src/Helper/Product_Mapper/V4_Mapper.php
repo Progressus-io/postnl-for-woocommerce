@@ -23,11 +23,13 @@ if ( ! defined( 'ABSPATH' ) ) {
  *       'legacy_product_code' => optional string,
  *   )
  *
- * Runtime outcomes: has_v4_equivalent = true (28 rows) or false (61 rows).
+ * Runtime outcomes: has_v4_equivalent = true (42 rows) or false (47 rows).
  * needs_confirmation rows behave as Legacy-only at runtime until promoted to v4_mapped.
  *
  * Not-yet-available codes are always Legacy-only; see NOT_YET_AVAILABLE_CODES.
- * EU/ROW stay Legacy-only — see SDK_SERVICES_BUNDLE_GAP.
+ * EU/ROW parcels (4907/4909) map to V4 with an InternationalShipmentData bundle
+ * (see SDK_SERVICES_BUNDLE_GAP). EU/ROW packet/mailbox products and international
+ * pickup stay Legacy-only.
  *
  * Source: PostNL Product Overview documentation.
  */
@@ -51,7 +53,8 @@ class V4_Mapper {
 	const REASON_UNKNOWN_COMBINATION   = 'unknown_combination';
 	const REASON_PRODUCT_CODE_MISMATCH = 'product_code_mismatch';
 
-	// V4 Services DTO has no `bundle` property, so EU/ROW stay Legacy-only. Pending SDK update.
+	// The V4 Services DTO has no `bundle` property; the international service bundle
+	// lives on InternationalShipmentData->bundle instead, which is where EU/ROW parcels carry it.
 	const SDK_SERVICES_BUNDLE_GAP = 'sdk_v4_services_dto_missing_bundle_property';
 
 	/**
@@ -185,6 +188,17 @@ class V4_Mapper {
 		$nya    = self::REASON_NOT_YET_AVAILABLE;
 		$pickup = array( 'pickupLocationId' => '<from_selected_location>' );
 
+		// International service bundles carried on InternationalShipmentData->bundle (4907/4909).
+		// The V4 request carries only this flat bundle enum for international insurance —
+		// there is no declared value anywhere on the block, whereas V1 sent an Amounts entry
+		// (AmountType 02, currency, order subtotal) with every insured EU shipment. Whether the
+		// bundles are flat-coverage tiers or still expect a declared amount is an open question
+		// with PostNL, tracked as Q14 in docs/postnl-v4-migration/flip-checklist.md and a
+		// pre-flip gate for the label flow.
+		$track_trace  = array( 'bundle' => 'track_trace' );
+		$insured      = array( 'bundle' => 'insured' );
+		$insured_plus = array( 'bundle' => 'insured_plus' );
+
 		$cache = array(
 			'NL' => array(
 				'NL'  => array(
@@ -302,10 +316,10 @@ class V4_Mapper {
 				),
 				'EU'  => array(
 					'delivery_day'  => array(
-						'(base)'                           => self::legacy_result( 42, '4907', $nc ),
-						'track_and_trace'                  => self::legacy_result( 43, '4907', $nc ),
-						'insured_shipping+track_and_trace' => self::legacy_result( 44, '4907', $nc ),
-						'insured_plus+track_and_trace'     => self::legacy_result( 45, '4907', $nc ),
+						'(base)'                           => self::v4_result( 42, '4907', 'parcel', array(), array(), $track_trace ),
+						'track_and_trace'                  => self::v4_result( 43, '4907', 'parcel', array(), array(), $track_trace ),
+						'insured_shipping+track_and_trace' => self::v4_result( 44, '4907', 'parcel', array(), array(), $insured ),
+						'insured_plus+track_and_trace'     => self::v4_result( 45, '4907', 'parcel', array(), array(), $insured_plus ),
 						'mailboxpacket'                    => self::legacy_result( 46, '6440', $nc ),
 						'mailboxpacket+track_and_trace'    => self::legacy_result( 47, '6972', $nc ),
 						'packets'                          => self::legacy_result( 48, '6405', $nc ),
@@ -318,9 +332,9 @@ class V4_Mapper {
 				),
 				'ROW' => array(
 					'delivery_day'  => array(
-						'(base)'                        => self::legacy_result( 52, '4909', $nc ),
-						'track_and_trace'               => self::legacy_result( 53, '4909', $nc ),
-						'insured_plus+track_and_trace'  => self::legacy_result( 54, '4909', $nc ),
+						'(base)'                        => self::v4_result( 52, '4909', 'parcel', array(), array(), $track_trace ),
+						'track_and_trace'               => self::v4_result( 53, '4909', 'parcel', array(), array(), $track_trace ),
+						'insured_plus+track_and_trace'  => self::v4_result( 54, '4909', 'parcel', array(), array(), $insured_plus ),
 						'mailboxpacket'                 => self::legacy_result( 55, '6440', $nc ),
 						'mailboxpacket+track_and_trace' => self::legacy_result( 56, '6972', $nc ),
 						'packets'                       => self::legacy_result( 57, '6405', $nc ),
@@ -389,10 +403,10 @@ class V4_Mapper {
 				),
 				'EU'  => array(
 					'delivery_day' => array(
-						'(base)'                           => self::legacy_result( 77, '4907', $nc ),
-						'track_and_trace'                  => self::legacy_result( 78, '4907', $nc ),
-						'insured_shipping+track_and_trace' => self::legacy_result( 79, '4907', $nc ),
-						'insured_plus+track_and_trace'     => self::legacy_result( 80, '4907', $nc ),
+						'(base)'                           => self::v4_result( 77, '4907', 'parcel', array(), array(), $track_trace ),
+						'track_and_trace'                  => self::v4_result( 78, '4907', 'parcel', array(), array(), $track_trace ),
+						'insured_shipping+track_and_trace' => self::v4_result( 79, '4907', 'parcel', array(), array(), $insured ),
+						'insured_plus+track_and_trace'     => self::v4_result( 80, '4907', 'parcel', array(), array(), $insured_plus ),
 						'mailboxpacket'                    => self::legacy_result( 81, '6440', $nc ),
 						'mailboxpacket+track_and_trace'    => self::legacy_result( 82, '6972', $nc ),
 						'packets'                          => self::legacy_result( 83, '6405', $nc ),
@@ -402,9 +416,9 @@ class V4_Mapper {
 				),
 				'ROW' => array(
 					'delivery_day' => array(
-						'(base)'                       => self::legacy_result( 86, '4909', $nc ),
-						'track_and_trace'              => self::legacy_result( 87, '4909', $nc ),
-						'insured_plus+track_and_trace' => self::legacy_result( 88, '4909', $nc ),
+						'(base)'                       => self::v4_result( 86, '4909', 'parcel', array(), array(), $track_trace ),
+						'track_and_trace'              => self::v4_result( 87, '4909', 'parcel', array(), array(), $track_trace ),
+						'insured_plus+track_and_trace' => self::v4_result( 88, '4909', 'parcel', array(), array(), $insured_plus ),
 					),
 				),
 			),

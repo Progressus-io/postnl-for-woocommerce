@@ -12,7 +12,15 @@ namespace PostNLWooCommerce\Tests\Rest_API\V4\Label;
 use Brain\Monkey\Functions;
 use GuzzleHttp\Psr7\Response;
 use Postnl\Sdk\Client\ClientBuilder;
+use Postnl\Sdk\Client\ResponseMeta;
+use Postnl\Sdk\Enums\Payload\LabelOutputType;
 use Postnl\Sdk\RequestData\V4\ShipmentDelivery\ShipmentDeliveryRequest;
+use Postnl\Sdk\ResponseData\V4\Label;
+use Postnl\Sdk\ResponseData\V4\LabelsCollection;
+use Postnl\Sdk\ResponseData\V4\ShipmentShippingItem;
+use Postnl\Sdk\ResponseData\V4\ShipmentShippingItemsCollection;
+use Postnl\Sdk\ResponseData\V4\WarningsCollection;
+use Postnl\Sdk\Service\ShipmentDelivery\V4\Response\LabelConfirmResponseInterface;
 use PostNLWooCommerce\Rest_API\Legacy\Shipping;
 use PostNLWooCommerce\Rest_API\SDK\Client_Factory;
 use PostNLWooCommerce\Rest_API\V4\Label\Request_Builder;
@@ -45,8 +53,24 @@ class ServiceTest extends UnitTestCase {
 	}
 
 	protected function tearDown(): void {
+		$this->clear_uploads_dir();
 		$this->reset_settings_singleton();
 		parent::tearDown();
+	}
+
+	/**
+	 * Remove every label file a test wrote, so a filename reused by the next test
+	 * is written afresh rather than short-circuited by write_label_file()'s
+	 * "already on disk" guard.
+	 *
+	 * @return void
+	 */
+	private function clear_uploads_dir(): void {
+		foreach ( glob( POSTNL_UPLOADS_DIR . '*' ) ?: array() as $file ) {
+			if ( is_file( $file ) ) {
+				unlink( $file );
+			}
+		}
 	}
 
 	/**
@@ -353,6 +377,199 @@ class ServiceTest extends UnitTestCase {
 		$this->assertSame( '', $fields['barcode'] );
 	}
 
+	// ── Storing the labelconfirm response ────────────────────────────────────
+
+	/**
+	 * @testdox The merged label is keyed on the response barcode when none was pre-issued
+	 *
+	 * On the harvest path save_meta_value() calls create() with neither barcodes[]
+	 * nor main_barcode, so the fallback list is a single empty string. Keying the
+	 * merge on it stamps an empty barcode onto the record maybe_merge_labels()
+	 * rebuilds -- which is every path except exactly one label in A6 -- and
+	 * harvest_barcodes_or_fail() then deletes the labels just written and aborts
+	 * the whole save. The merge key has to come from the barcode the response
+	 * issued instead.
+	 */
+	public function test_merge_is_keyed_on_the_response_barcode_when_none_was_preissued(): void {
+		$service = $this->merge_spy_service();
+
+		$this->store_labels(
+			$service,
+			$this->label_response( $this->shipment_item( '3SRESP1' ), $this->shipment_item( '3SRESP2' ) ),
+			array( '' )
+		);
+
+		$this->assertSame(
+			'3SRESP1',
+			$service->merge_barcode,
+			'The merge must be keyed on the first response barcode; an empty key fails the barcode harvest.'
+		);
+	}
+
+	/**
+	 * @testdox A pre-issued parent barcode still wins as the merge key
+	 *
+	 * Legacy prefetches the barcodes and passes them in; that value is what the
+	 * persisted barcodes[] and the tracking URL are built from, so the response
+	 * barcode must not displace it.
+	 */
+	public function test_preissued_parent_barcode_remains_the_merge_key(): void {
+		$service = $this->merge_spy_service();
+
+		$this->store_labels(
+			$service,
+			$this->label_response( $this->shipment_item( '3SRESP1' ), $this->shipment_item( '3SRESP2' ) ),
+			array( '3SMAIN', '3SB2' )
+		);
+
+		$this->assertSame( '3SMAIN', $service->merge_barcode, 'The pre-issued parent barcode must survive untouched.' );
+	}
+
+	/**
+	 * @testdox Every collo in the response reaches the merge
+	 *
+	 * A multi-collo labelconfirm answers with one shipment item per collo, each
+	 * carrying its own label. Storing only the first would silently ship a single
+	 * sheet for a three-parcel order.
+	 */
+	public function test_every_response_collo_reaches_the_merge(): void {
+		$service = $this->merge_spy_service();
+
+		$this->store_labels(
+			$service,
+			$this->label_response(
+				$this->shipment_item( '3SRESP1' ),
+				$this->shipment_item( '3SRESP2' ),
+				$this->shipment_item( '3SRESP3' )
+			),
+			array( '' )
+		);
+
+		$this->assertCount( 3, $service->merge_records, 'Every collo contributes a label record to the merge.' );
+		$this->assertSame(
+			array( '3SRESP1', '3SRESP2', '3SRESP3' ),
+			array_column( $service->merge_records, 'barcode' ),
+			'Each record keeps its own collo barcode.'
+		);
+	}
+
+	/**
+	 * @testdox Each collo falls back to its own pre-issued barcode, not the parent's
+	 *
+	 * When the response omits the barcodes, the pre-issued list is the only thing
+	 * that tells the collos apart. Collapsing them onto the parent barcode would
+	 * persist one barcode three times and lose two of the three tracking numbers.
+	 */
+	public function test_each_collo_falls_back_to_its_own_preissued_barcode(): void {
+		$service = $this->merge_spy_service();
+
+		$this->store_labels(
+			$service,
+			$this->label_response(
+				$this->shipment_item( null ),
+				$this->shipment_item( null ),
+				$this->shipment_item( null )
+			),
+			array( '3SMAIN', '3SB2', '3SB3' )
+		);
+
+		$this->assertSame(
+			array( '3SMAIN', '3SB2', '3SB3' ),
+			array_column( $service->merge_records, 'barcode' ),
+			'Each collo record must carry the barcode pre-issued for its own index.'
+		);
+	}
+
+	/**
+	 * A Service whose merge step is spied on, with the transport stubbed out and
+	 * the WordPress helpers store_labels() reaches replaced.
+	 *
+	 * @return Merge_Spy_Label_Service
+	 */
+	private function merge_spy_service(): Merge_Spy_Label_Service {
+		$this->seed_label_write_stubs();
+
+		return new Merge_Spy_Label_Service(
+			new Spy_Label_Client_Factory( new Client_Factory_Settings(), new Failing_Http_Client() ),
+			self::V4_KEY,
+			new NullLogger()
+		);
+	}
+
+	/**
+	 * Stub the WordPress helpers the label write path calls.
+	 *
+	 * The directory creation and the file write stay real: store_labels() drops any
+	 * record whose file is missing afterwards, so a no-op writer would silently
+	 * turn every assertion below into a check on an empty array.
+	 *
+	 * @return void
+	 */
+	private function seed_label_write_stubs(): void {
+		Functions\when( 'trailingslashit' )->alias( static fn( $path ) => rtrim( (string) $path, '/\\' ) . '/' );
+		Functions\when( 'wp_mkdir_p' )->alias( static fn( $dir ) => is_dir( $dir ) || mkdir( $dir, 0777, true ) );
+		Functions\when( 'sanitize_title' )->alias( static fn( $title ) => strtolower( str_replace( ' ', '-', (string) $title ) ) );
+		Functions\when( 'current_time' )->justReturn( 1700000000 );
+	}
+
+	/**
+	 * One collo of a labelconfirm response, carrying a single PDF label.
+	 *
+	 * @param string|null $barcode Barcode the response issued for this collo, or null when it omits one.
+	 * @return ShipmentShippingItem
+	 */
+	private function shipment_item( ?string $barcode ): ShipmentShippingItem {
+		$label = new Label(
+			label: base64_encode( 'PDF-BYTES-' . (string) $barcode ),
+			outputType: LabelOutputType::PDF,
+			labelType: 'Label'
+		);
+
+		return new ShipmentShippingItem( barcode: $barcode, labels: new LabelsCollection( array( $label ) ) );
+	}
+
+	/**
+	 * Wrap shipment items in a stub labelconfirm response exposing items().
+	 *
+	 * @param ShipmentShippingItem ...$items Collo items to expose.
+	 * @return LabelConfirmResponseInterface
+	 */
+	private function label_response( ShipmentShippingItem ...$items ): LabelConfirmResponseInterface {
+		$collection = new ShipmentShippingItemsCollection( $items );
+
+		return new class( $collection ) implements LabelConfirmResponseInterface {
+			public function __construct( private ShipmentShippingItemsCollection $items ) {}
+
+			public function items(): ShipmentShippingItemsCollection {
+				return $this->items;
+			}
+
+			public function meta(): ResponseMeta {
+				throw new \LogicException( 'meta() is not exercised by these tests.' );
+			}
+
+			public function warnings(): WarningsCollection {
+				throw new \LogicException( 'warnings() is not exercised by these tests.' );
+			}
+		};
+	}
+
+	/**
+	 * Call Service::store_labels(), which is private, for the same reason as
+	 * extract_fields() below: nothing outside the class calls it.
+	 *
+	 * @param Service                       $service   Service under test.
+	 * @param LabelConfirmResponseInterface $response  Stub labelconfirm response.
+	 * @param array                         $fallbacks Pre-issued barcodes per collo.
+	 * @return array
+	 */
+	private function store_labels( Service $service, LabelConfirmResponseInterface $response, array $fallbacks ): array {
+		$method = new \ReflectionMethod( Service::class, 'store_labels' );
+		$method->setAccessible( true );
+
+		return $method->invoke( $service, $response, new Fake_Order( 5150 ), $fallbacks );
+	}
+
 	// ── Partner references after the merge ───────────────────────────────────
 
 	/**
@@ -639,6 +856,78 @@ class Testable_Label_Service extends Service {
 		return $this->confirm_label( $request, $fields );
 	}
 
+}
+
+/**
+ * Records what store_labels() hands the merge step, and answers with the exact
+ * shape Order\Base::maybe_merge_labels() rebuilds for a multi-record set: type,
+ * barcode, created_at, filepath and merged_files, and nothing else.
+ *
+ * The real merge is not exercised here on purpose -- it reads the label format
+ * off the settings, resolves the shipping zone off a WooCommerce order and drives
+ * the PDF merger. What this fix is about is the barcode the merge is keyed on,
+ * which is decided before any of that.
+ */
+class Merge_Spy_Label_Service extends Service {
+
+	/**
+	 * Barcode the merge was keyed on.
+	 *
+	 * @var string|null
+	 */
+	public ?string $merge_barcode = null;
+
+	/**
+	 * Label records handed to the merge.
+	 *
+	 * @var array
+	 */
+	public array $merge_records = array();
+
+	/**
+	 * Record the merge inputs and return the rebuilt record shape.
+	 *
+	 * @param array    $labels     Label records built from the response.
+	 * @param mixed    $order      Order object.
+	 * @param string   $barcode    Barcode the merged record is keyed on.
+	 * @param string   $label_type Parent label type.
+	 * @return array
+	 */
+	public function maybe_merge_labels( $labels, $order, $barcode, $label_type ) {
+		$this->merge_barcode = (string) $barcode;
+		$this->merge_records = (array) $labels;
+
+		return array(
+			$label_type => array(
+				'type'         => $label_type,
+				'barcode'      => $barcode,
+				'created_at'   => 1700000000,
+				'filepath'     => POSTNL_UPLOADS_DIR . 'merged.pdf',
+				'merged_files' => array_column( $this->merge_records, 'filepath' ),
+			),
+		);
+	}
+}
+
+/**
+ * Order stand-in for the label write path, which only asks for the order id to
+ * build the label filename.
+ */
+class Fake_Order {
+
+	/**
+	 * Constructor.
+	 *
+	 * @param int $id Order id.
+	 */
+	public function __construct( private int $id ) {}
+
+	/**
+	 * @return int
+	 */
+	public function get_id() {
+		return $this->id;
+	}
 }
 
 /**

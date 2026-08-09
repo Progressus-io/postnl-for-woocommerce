@@ -473,8 +473,10 @@ class Service extends Order_Base implements Label_Service_Interface {
 	 * one collo carrying its own barcode and label document(s). Every collo's
 	 * labels are written and then merged through Order\Base::maybe_merge_labels()
 	 * — which, for more than one collo, combines them into a single sheet keyed by
-	 * the parent (main) barcode, matching the legacy path — then handed to
-	 * finalize_label_records() to restore the V4-only keys the merge drops.
+	 * the parent barcode, matching the legacy path — then handed to
+	 * finalize_label_records() to restore the V4-only keys the merge drops. The
+	 * parent barcode is the pre-issued one when the caller had it, and otherwise
+	 * the one the response issued for the first collo.
 	 *
 	 * @param LabelConfirmResponseInterface $response  labelconfirm response.
 	 * @param \WC_Order                     $order     WooCommerce order.
@@ -509,6 +511,14 @@ class Service extends Order_Base implements Label_Service_Interface {
 				esc_html__( 'Cannot create the label. Label content is missing', 'postnl-for-woocommerce' )
 			);
 		}
+
+		// Legacy pre-issues the parent barcode and it wins untouched; the harvest path
+		// supplies an empty one, and maybe_merge_labels() stamps whatever it is handed
+		// onto the record it rebuilds, so fall back to the barcode the response issued.
+		// Keying the merge on '' leaves the merged record barcode-less, which
+		// Order\Base::harvest_barcodes_or_fail() answers by deleting the labels just
+		// written and aborting the save.
+		$parent_barcode = self::resolve_parent_barcode( $records, $parent_barcode );
 
 		// The merge helper rebuilds a fresh record for a multi-collo shipment, so
 		// re-attach the parent collo's international partner refs (both empty for a

@@ -36,6 +36,18 @@ if ( ! defined( 'POSTNL_SERVICE_NAME' ) ) {
 	define( 'POSTNL_SERVICE_NAME', 'PostNL' );
 }
 
+/*
+ * Rest_API\V4\Label\Service writes the labelconfirm documents to POSTNL_UPLOADS_DIR
+ * before it records them, so exercising store_labels() needs the constant Main.php
+ * normally derives from wp_upload_dir(). A temp directory keeps the write real —
+ * the service deliberately skips any record whose file is not on disk afterwards,
+ * which a stubbed-out writer could not reproduce — while touching nothing outside
+ * the system temp area. Tests that use it clean up after themselves.
+ */
+if ( ! defined( 'POSTNL_UPLOADS_DIR' ) ) {
+	define( 'POSTNL_UPLOADS_DIR', sys_get_temp_dir() . '/postnl-unit-uploads/' );
+}
+
 if ( ! class_exists( 'WC_Settings_API' ) ) {
 	/**
 	 * Minimal stand-in for the WooCommerce settings API base class.

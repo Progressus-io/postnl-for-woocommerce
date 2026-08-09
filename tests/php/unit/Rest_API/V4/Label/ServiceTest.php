@@ -377,6 +377,53 @@ class ServiceTest extends UnitTestCase {
 		$this->assertSame( '', $fields['barcode'] );
 	}
 
+	/**
+	 * @testdox Pre-issued barcodes beyond the parsed collo count are dropped
+	 *
+	 * The num_labels sanitizer clamps the merchant's entry to at most 10, and the V1
+	 * request loop iterates that clamped value, but Order\Base::maybe_create_multi_barcodes()
+	 * pre-issues barcodes straight off the raw backend value -- the meta-box number
+	 * field has a min and no max. Without the slice a merchant who types 15 would ship
+	 * 10 colli on V1 and 15 on V4, off an eligibility signal that only ever saw 10.
+	 * The fixture supplies more barcodes than the ceiling so the count cannot match
+	 * by accident.
+	 */
+	public function test_extract_fields_clamps_pre_issued_barcodes_to_the_collo_count(): void {
+		$service = new Testable_Label_Service(
+			new Spy_Label_Client_Factory( new Client_Factory_Settings(), new Failing_Http_Client() ),
+			self::V4_KEY,
+			new NullLogger()
+		);
+
+		$prefetched = array();
+		for ( $i = 1; $i <= 12; $i++ ) {
+			$prefetched[] = sprintf( '3SDEVC%02d', $i );
+		}
+
+		$fields = $this->extract_fields(
+			$service,
+			new Fake_Shipping_Item_Info( array(), array(), array( 'num_labels' => 10 ) ),
+			array( 'shipmentType' => 'parcel', 'services' => array() ),
+			array( 'barcodes' => $prefetched )
+		);
+
+		$this->assertCount( 10, $fields['barcodes'], 'The wire collo count must stop at the sanitizer ceiling legacy applies.' );
+		$this->assertSame( array_slice( $prefetched, 0, 10 ), $fields['barcodes'], 'The surviving barcodes are the first ten, in order.' );
+
+		$below_ceiling = $this->extract_fields(
+			$service,
+			new Fake_Shipping_Item_Info( array(), array(), array( 'num_labels' => 3 ) ),
+			array( 'shipmentType' => 'parcel', 'services' => array() ),
+			array( 'barcodes' => $prefetched )
+		);
+
+		$this->assertSame(
+			array_slice( $prefetched, 0, 3 ),
+			$below_ceiling['barcodes'],
+			'The cut follows the parsed collo count, not the sanitizer ceiling.'
+		);
+	}
+
 	// ── Storing the labelconfirm response ────────────────────────────────────
 
 	/**

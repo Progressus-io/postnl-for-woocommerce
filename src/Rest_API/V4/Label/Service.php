@@ -282,6 +282,17 @@ class Service extends Order_Base implements Label_Service_Interface {
 	 * @return array
 	 */
 	private function extract_fields( Shipping\Item_Info $item_info, array $mapped, array $post_data ): array {
+		$num_labels = (int) ( $item_info->backend_data['num_labels'] ?? 1 );
+
+		// Legacy caps the collo count it puts on the wire through the num_labels
+		// sanitizer (1-10), which the V1 request loop iterates; the barcode prefetch
+		// in Order\Base::maybe_create_multi_barcodes() reads the raw backend value and
+		// applies no cap, and the meta-box field has a min but no max. Slicing to the
+		// parsed count keeps V4 shipping the same colli V1 would -- surplus barcodes
+		// go unused, exactly as on V1.
+		$barcodes = array_values( array_filter( (array) ( $post_data['barcodes'] ?? array() ), 'is_scalar' ) );
+		$barcodes = array_slice( $barcodes, 0, $num_labels );
+
 		return array(
 			'sender'        => array(
 				'company'          => $item_info->shipper['company'] ?? '',
@@ -309,11 +320,11 @@ class Service extends Order_Base implements Label_Service_Interface {
 			'weight_gr'     => (int) ( $item_info->shipment['total_weight'] ?? 0 ),
 			'reference'     => (string) ( $item_info->shipment['order_number'] ?? '' ),
 			'barcode'       => (string) ( $post_data['main_barcode'] ?? '' ),
-			'barcodes'      => array_values( array_filter( (array) ( $post_data['barcodes'] ?? array() ), 'is_scalar' ) ),
+			'barcodes'      => $barcodes,
 			// The collo count is carried even when barcodes are pre-issued: it is the
 			// only record of it when the label call issues the barcodes instead, and
 			// Request_Builder ignores it whenever a barcode is supplied.
-			'num_labels'    => (int) ( $item_info->backend_data['num_labels'] ?? 1 ),
+			'num_labels'    => $num_labels,
 			'services'      => Eligibility::resolve_services(
 				$mapped['services'] ?? array(),
 				(float) ( $item_info->shipment['subtotal'] ?? 0 )

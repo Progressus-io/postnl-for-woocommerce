@@ -78,7 +78,10 @@ class Request_Builder {
 	 *                                  $barcodes is provided.
 	 *     @type array  $barcodes      Pre-issued barcodes, one per collo, for a
 	 *                                  multi-collo shipment. Falls back to a single
-	 *                                  item built from $barcode when absent.
+	 *                                  item built from $barcode when absent. Assumed
+	 *                                  already filtered to scalars and capped to
+	 *                                  $num_labels by Service::extract_fields(), which
+	 *                                  is where untrusted post_data enters.
 	 *     @type int    $num_labels    Collo count (1-10). Governs the item count only
 	 *                                  when neither $barcodes nor $barcode carries a
 	 *                                  pre-issued barcode; the barcodes win otherwise.
@@ -148,7 +151,7 @@ class Request_Builder {
 	 * @return ShippingItem[]
 	 */
 	private static function items( array $fields ): array {
-		$barcodes = array_values( array_filter( (array) ( $fields['barcodes'] ?? array() ), 'is_scalar' ) );
+		$barcodes = (array) ( $fields['barcodes'] ?? array() );
 
 		if ( empty( $barcodes ) ) {
 			$single      = (string) ( $fields['barcode'] ?? '' );

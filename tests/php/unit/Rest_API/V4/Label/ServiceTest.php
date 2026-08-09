@@ -654,6 +654,65 @@ class ServiceTest extends UnitTestCase {
 	}
 
 	/**
+	 * @testdox Every collo's partner references are kept on the merged record
+	 *
+	 * The flat partner_barcode/partner_id keys can hold one collo's refs, so the
+	 * merged record additionally lists every collo's own refs under
+	 * partner_references. Distinct fixtures per collo, so dropping a collo or
+	 * wiring the wrong one cannot coincidentally pass.
+	 */
+	public function test_every_collos_partner_references_are_kept_on_the_merged_record(): void {
+		$service = $this->merge_spy_service();
+
+		$labels = $this->store_labels(
+			$service,
+			$this->label_response(
+				$this->shipment_item( '3SRESP1', 'CE111111111NL', 'PARTNER-1' ),
+				$this->shipment_item( '3SRESP2', 'CE222222222NL', 'PARTNER-2' )
+			),
+			array( '3SMAIN', '3SB2' )
+		);
+
+		$this->assertSame(
+			array(
+				array(
+					'barcode'         => '3SRESP1',
+					'partner_barcode' => 'CE111111111NL',
+					'partner_id'      => 'PARTNER-1',
+				),
+				array(
+					'barcode'         => '3SRESP2',
+					'partner_barcode' => 'CE222222222NL',
+					'partner_id'      => 'PARTNER-2',
+				),
+			),
+			$labels['label']['partner_references'],
+			'The merged record must list every collo with its own partner references.'
+		);
+	}
+
+	/**
+	 * @testdox A shipment with no partner data gains no partner_references key
+	 *
+	 * Matches the flat keys' rule: a domestic record carries no partner keys at
+	 * all, so it must not sprout an empty partner_references list either.
+	 */
+	public function test_a_shipment_with_no_partner_data_gains_no_partner_references_key(): void {
+		$service = $this->merge_spy_service();
+
+		$labels = $this->store_labels(
+			$service,
+			$this->label_response(
+				$this->shipment_item( '3SRESP1' ),
+				$this->shipment_item( '3SRESP2' )
+			),
+			array( '3SMAIN', '3SB2' )
+		);
+
+		$this->assertArrayNotHasKey( 'partner_references', $labels['label'] );
+	}
+
+	/**
 	 * A Service whose merge step is spied on, with the transport stubbed out and
 	 * the WordPress helpers store_labels() reaches replaced.
 	 *

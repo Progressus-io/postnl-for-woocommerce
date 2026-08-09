@@ -506,12 +506,27 @@ class Service extends Order_Base implements Label_Service_Interface {
 
 		$this->warn_collo_count_mismatch( $fallbacks, count( $items ), $order );
 
-		$parent_barcode = (string) ( $fallbacks[0] ?? '' );
-		$records        = array();
+		$parent_barcode     = (string) ( $fallbacks[0] ?? '' );
+		$records            = array();
+		$partner_references = array();
 
 		foreach ( $items as $index => $item ) {
 			$fallback     = (string) ( $fallbacks[ $index ] ?? $parent_barcode );
 			$item_barcode = Response_Mapper::get_barcode( $item, $fallback );
+
+			$partner_barcode = Response_Mapper::get_partner_barcode( $item );
+			$partner_id      = Response_Mapper::get_partner_id( $item );
+
+			// One entry per collo that has partner data, so an international
+			// multi-collo order keeps every collo's partner tracking number, not
+			// just the parent's flat keys below.
+			if ( '' !== $partner_barcode || '' !== $partner_id ) {
+				$partner_references[] = array(
+					'barcode'         => $item_barcode,
+					'partner_barcode' => $partner_barcode,
+					'partner_id'      => $partner_id,
+				);
+			}
 
 			$records = array_merge(
 				$records,
@@ -534,18 +549,21 @@ class Service extends Order_Base implements Label_Service_Interface {
 		$parent_barcode = self::resolve_parent_barcode( $records, $parent_barcode );
 
 		// The merge helper rebuilds a fresh record for a multi-collo shipment, so
-		// re-attach the international partner refs (both empty for a domestic
-		// shipment) — the single-collo record already carries them.
+		// re-attach the international partner refs (all empty for a domestic
+		// shipment) — the single-collo record already carries the flat keys.
 		//
-		// Only the parent collo's survive. item_label_records() captures every
-		// collo's own partner barcode and id, but the merge collapses the whole set
-		// into one record holding just type/barcode/created_at/filepath/merged_files,
-		// so colli 2..N's refs are discarded and never reach order meta. That matches
-		// the single barcode the merged record is keyed on: one sheet, one set of refs.
+		// The flat partner_barcode/partner_id keys hold the parent collo's refs,
+		// matching the single barcode the merged sheet is keyed on. Every collo's
+		// own refs are kept under partner_references, collected above — the merge
+		// collapses the per-collo records into one holding just
+		// type/barcode/created_at/filepath/merged_files, so anything not put back
+		// here never reaches order meta. No code reads partner_references yet; it
+		// is stored so a later per-collo partner Track & Trace feature has the data.
 		return $this->finalize_label_records(
 			$this->maybe_merge_labels( $records, $order, $parent_barcode, 'label' ),
 			Response_Mapper::get_partner_barcode( $items[0] ),
-			Response_Mapper::get_partner_id( $items[0] )
+			Response_Mapper::get_partner_id( $items[0] ),
+			$partner_references
 		);
 	}
 
@@ -659,14 +677,16 @@ class Service extends Order_Base implements Label_Service_Interface {
 	 * back here or they never reach the order meta.
 	 *
 	 * Empty partner references add no keys at all, matching
-	 * Response_Mapper::to_label_record(): a domestic record carries neither.
+	 * Response_Mapper::to_label_record(): a domestic record carries neither the
+	 * flat keys nor a partner_references list.
 	 *
-	 * @param array  $labels          Merged label records, keyed by label type.
-	 * @param string $partner_barcode Partner barcode, or an empty string.
-	 * @param string $partner_id      Partner id, or an empty string.
+	 * @param array  $labels             Merged label records, keyed by label type.
+	 * @param string $partner_barcode    Parent collo's partner barcode, or an empty string.
+	 * @param string $partner_id         Parent collo's partner id, or an empty string.
+	 * @param array  $partner_references Per-collo partner data: barcode, partner_barcode, partner_id per entry.
 	 * @return array
 	 */
-	private function finalize_label_records( array $labels, string $partner_barcode, string $partner_id ): array {
+	private function finalize_label_records( array $labels, string $partner_barcode, string $partner_id, array $partner_references = array() ): array {
 		foreach ( array_keys( $labels ) as $key ) {
 			$labels[ $key ]['api_version'] = 'v4';
 
@@ -676,6 +696,10 @@ class Service extends Order_Base implements Label_Service_Interface {
 
 			if ( '' !== $partner_id ) {
 				$labels[ $key ]['partner_id'] = $partner_id;
+			}
+
+			if ( array() !== $partner_references ) {
+				$labels[ $key ]['partner_references'] = $partner_references;
 			}
 		}
 

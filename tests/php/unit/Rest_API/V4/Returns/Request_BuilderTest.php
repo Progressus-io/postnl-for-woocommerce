@@ -55,7 +55,10 @@ class Request_BuilderTest extends UnitTestCase {
 			'reference'    => 'ORDER-1001',
 			'weight_gr'    => 1500,
 			'label'        => array(
-				'output_type' => 'jpg',
+				// Deliberately uppercase: the builder lowercases before resolving, and an
+				// already-lowercase fixture would let that call be deleted unnoticed.
+				'output_type' => 'JPG',
+				'resolution'  => 600,
 			),
 		);
 	}
@@ -125,6 +128,74 @@ class Request_BuilderTest extends UnitTestCase {
 		$fields['print_method'] = 'nonsense';
 
 		$this->assertSame( LabelPrintMethod::Retail->value, $this->payload( $fields )['labelSettings']['printMethod'] );
+	}
+
+	/**
+	 * @testdox build() passes a recognised print method through instead of defaulting.
+	 *
+	 * Pairs with test_print_method_defaults_to_retail(). On its own that test proves
+	 * nothing, because the happy-path fixture also resolves to Retail — so a resolver
+	 * hardcoded to Retail would satisfy both. consumerPrint is the only other value
+	 * the SDK enum accepts, so this is what makes the fallback real.
+	 */
+	public function test_known_print_method_is_passed_through(): void {
+		$fields                 = $this->return_fields();
+		$fields['print_method'] = 'consumerPrint';
+
+		$this->assertSame( LabelPrintMethod::Consumer->value, $this->payload( $fields )['labelSettings']['printMethod'] );
+	}
+
+	/**
+	 * @testdox build() reads the country from the input and uppercases it.
+	 *
+	 * Every other fixture uses 'NL', which is also the fallback and is already
+	 * uppercase, so both the lookup and the uppercasing could be deleted without any
+	 * test noticing. A lowercase non-NL country exercises both at once.
+	 */
+	public function test_country_is_read_from_input_and_uppercased(): void {
+		$fields                       = $this->return_fields();
+		$fields['sender']['country']  = 'be';
+
+		$this->assertSame( 'BE', $this->payload( $fields )['sender']['address']['countryIso'] );
+	}
+
+	/**
+	 * @testdox build() sends the merchant's print resolution rather than the SDK default.
+	 *
+	 * The DPI setting offers 200, 300 and 600 and defaults to 600, while the SDK's
+	 * own LabelSettings default is 200. Omitting the field silently downgraded every
+	 * return label, so the fixture uses 600 to keep the two apart.
+	 */
+	public function test_resolution_is_sent(): void {
+		$this->assertSame( 600, $this->payload( $this->return_fields() )['labelSettings']['resolution'] );
+
+		$fields                        = $this->return_fields();
+		$fields['label']['resolution'] = 300;
+		$this->assertSame( 300, $this->payload( $fields )['labelSettings']['resolution'] );
+	}
+
+	/**
+	 * @testdox build() falls back to 200 DPI for a resolution the SDK does not accept.
+	 */
+	public function test_unknown_resolution_falls_back_to_200(): void {
+		$fields                        = $this->return_fields();
+		$fields['label']['resolution'] = 150;
+
+		$this->assertSame( 200, $this->payload( $fields )['labelSettings']['resolution'] );
+	}
+
+	/**
+	 * @testdox build() carries every consumer contact field, not just the email.
+	 *
+	 * These reach the return label and drive track-and-trace notifications. Only the
+	 * email was asserted, so the other three could be dropped silently.
+	 */
+	public function test_sender_contact_carries_every_field(): void {
+		$contact = $this->payload( $this->return_fields() )['sender']['contact'];
+
+		$this->assertSame( 'Jan', $contact['firstName'] );
+		$this->assertSame( 'Jansen', $contact['lastName'] );
+		$this->assertSame( '0612345678', $contact['mobileNumber'] );
 	}
 
 	/**

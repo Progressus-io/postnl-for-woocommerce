@@ -31,6 +31,7 @@ use Psr\Http\Client\ClientInterface;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Log\AbstractLogger;
+use Psr\Log\LoggerInterface;
 use Psr\Log\LogLevel;
 use Psr\Log\NullLogger;
 
@@ -527,19 +528,145 @@ class ServiceTest extends UnitTestCase {
 		);
 	}
 
+	// ── Collo count mismatch between the request and the response ────────────
+
+	/**
+	 * @testdox Fewer response items than pre-issued barcodes is logged as a warning
+	 *
+	 * Order\Base::save_meta_value() persists every prefetched barcode to order meta
+	 * regardless of what the label call answered, so a short response leaves the
+	 * merchant with three tracking numbers and a two-label sheet, and the third
+	 * barcode never confirmed. Storing what came back is still the right move --
+	 * partial labels beat none -- but it must not happen in silence.
+	 */
+	public function test_fewer_response_items_than_preissued_barcodes_is_logged(): void {
+		$logger  = new Spy_Logger();
+		$service = $this->merge_spy_service( $logger );
+
+		$this->store_labels(
+			$service,
+			$this->label_response( $this->shipment_item( '3SRESP1' ), $this->shipment_item( '3SRESP2' ) ),
+			array( '3SMAIN', '3SB2', '3SB3' )
+		);
+
+		$warnings = $this->warning_records( $logger );
+
+		$this->assertCount( 1, $warnings, 'A collo count mismatch is worth exactly one warning.' );
+		$this->assertStringContainsString( '3', $warnings[0]['message'], 'The warning has to carry the count that was expected.' );
+		$this->assertStringContainsString( '2', $warnings[0]['message'], 'The warning has to carry the count that came back.' );
+		$this->assertStringContainsString( 'ORDER-5150', $warnings[0]['message'], 'The order reference is what makes the entry traceable.' );
+	}
+
+	/**
+	 * @testdox More response items than pre-issued barcodes is logged as a warning
+	 *
+	 * The surplus direction is just as wrong and just as silent: the extra collo's
+	 * label is written and merged, but no barcode for it is ever persisted, so the
+	 * sheet carries a parcel the order meta does not know about.
+	 */
+	public function test_more_response_items_than_preissued_barcodes_is_logged(): void {
+		$logger  = new Spy_Logger();
+		$service = $this->merge_spy_service( $logger );
+
+		$this->store_labels(
+			$service,
+			$this->label_response(
+				$this->shipment_item( '3SRESP1' ),
+				$this->shipment_item( '3SRESP2' ),
+				$this->shipment_item( '3SRESP3' )
+			),
+			array( '3SMAIN', '3SB2' )
+		);
+
+		$this->assertCount( 1, $this->warning_records( $logger ), 'A surplus of response items is a mismatch too.' );
+	}
+
+	/**
+	 * @testdox Matching collo counts log nothing
+	 */
+	public function test_matching_collo_counts_log_nothing(): void {
+		$logger  = new Spy_Logger();
+		$service = $this->merge_spy_service( $logger );
+
+		$this->store_labels(
+			$service,
+			$this->label_response(
+				$this->shipment_item( '3SRESP1' ),
+				$this->shipment_item( '3SRESP2' ),
+				$this->shipment_item( '3SRESP3' )
+			),
+			array( '3SMAIN', '3SB2', '3SB3' )
+		);
+
+		$this->assertSame( array(), $this->warning_records( $logger ), 'One response item per pre-issued barcode is the healthy case.' );
+	}
+
+	/**
+	 * @testdox The harvest path, which pre-issues no barcodes, is never a mismatch
+	 *
+	 * create() hands store_labels() a single empty string when nothing was
+	 * pre-issued, and the label call then issues one barcode per collo. A
+	 * three-item response against that one-element list is correct, so comparing
+	 * the raw list length would warn on every multi-collo harvest and train
+	 * merchants to ignore the log.
+	 */
+	public function test_the_harvest_path_is_never_a_collo_count_mismatch(): void {
+		$logger  = new Spy_Logger();
+		$service = $this->merge_spy_service( $logger );
+
+		$this->store_labels(
+			$service,
+			$this->label_response(
+				$this->shipment_item( '3SRESP1' ),
+				$this->shipment_item( '3SRESP2' ),
+				$this->shipment_item( '3SRESP3' )
+			),
+			array( '' )
+		);
+
+		$this->assertSame( array(), $this->warning_records( $logger ), 'No barcode was pre-issued, so there is no count to disagree with.' );
+	}
+
+	/**
+	 * @testdox The merged record carries the parent collo's partner references
+	 *
+	 * item_label_records() captures each collo's own partner barcode and id, but
+	 * maybe_merge_labels() rebuilds one record from the whole set and keeps only
+	 * type/barcode/created_at/filepath/merged_files -- so exactly one collo's refs
+	 * can survive, and it has to be the parent's, the one the merged sheet is keyed
+	 * on. The fixture gives every collo distinct refs, so wiring a later collo's
+	 * values by mistake cannot coincidentally pass.
+	 */
+	public function test_the_merged_record_carries_the_parent_collos_partner_references(): void {
+		$service = $this->merge_spy_service();
+
+		$labels = $this->store_labels(
+			$service,
+			$this->label_response(
+				$this->shipment_item( '3SRESP1', 'CE111111111NL', 'PARTNER-1' ),
+				$this->shipment_item( '3SRESP2', 'CE222222222NL', 'PARTNER-2' )
+			),
+			array( '3SMAIN', '3SB2' )
+		);
+
+		$this->assertSame( 'CE111111111NL', $labels['label']['partner_barcode'], 'The merged sheet must carry the parent collo partner barcode.' );
+		$this->assertSame( 'PARTNER-1', $labels['label']['partner_id'], 'The merged sheet must carry the parent collo partner id.' );
+	}
+
 	/**
 	 * A Service whose merge step is spied on, with the transport stubbed out and
 	 * the WordPress helpers store_labels() reaches replaced.
 	 *
+	 * @param LoggerInterface|null $logger Logger to inject; defaults to a silent one.
 	 * @return Merge_Spy_Label_Service
 	 */
-	private function merge_spy_service(): Merge_Spy_Label_Service {
+	private function merge_spy_service( ?LoggerInterface $logger = null ): Merge_Spy_Label_Service {
 		$this->seed_label_write_stubs();
 
 		return new Merge_Spy_Label_Service(
 			new Spy_Label_Client_Factory( new Client_Factory_Settings(), new Failing_Http_Client() ),
 			self::V4_KEY,
-			new NullLogger()
+			$logger ?? new NullLogger()
 		);
 	}
 
@@ -562,17 +689,24 @@ class ServiceTest extends UnitTestCase {
 	/**
 	 * One collo of a labelconfirm response, carrying a single PDF label.
 	 *
-	 * @param string|null $barcode Barcode the response issued for this collo, or null when it omits one.
+	 * @param string|null $barcode         Barcode the response issued for this collo, or null when it omits one.
+	 * @param string|null $partner_barcode International partner barcode for this collo, or null for a domestic one.
+	 * @param string|null $partner_id      International partner id for this collo, or null for a domestic one.
 	 * @return ShipmentShippingItem
 	 */
-	private function shipment_item( ?string $barcode ): ShipmentShippingItem {
+	private function shipment_item( ?string $barcode, ?string $partner_barcode = null, ?string $partner_id = null ): ShipmentShippingItem {
 		$label = new Label(
 			label: base64_encode( 'PDF-BYTES-' . (string) $barcode ),
 			outputType: LabelOutputType::PDF,
 			labelType: 'Label'
 		);
 
-		return new ShipmentShippingItem( barcode: $barcode, labels: new LabelsCollection( array( $label ) ) );
+		return new ShipmentShippingItem(
+			barcode: $barcode,
+			labels: new LabelsCollection( array( $label ) ),
+			partnerId: $partner_id,
+			partnerBarcode: $partner_barcode
+		);
 	}
 
 	/**
@@ -957,8 +1091,8 @@ class Merge_Spy_Label_Service extends Service {
 }
 
 /**
- * Order stand-in for the label write path, which only asks for the order id to
- * build the label filename.
+ * Order stand-in for the label write path, which asks for the order id to build
+ * the label filename and for the order number to make a log line traceable.
  */
 class Fake_Order {
 
@@ -974,6 +1108,13 @@ class Fake_Order {
 	 */
 	public function get_id() {
 		return $this->id;
+	}
+
+	/**
+	 * @return string
+	 */
+	public function get_order_number() {
+		return 'ORDER-' . $this->id;
 	}
 }
 

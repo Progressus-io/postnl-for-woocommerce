@@ -504,6 +504,8 @@ class Service extends Order_Base implements Label_Service_Interface {
 			);
 		}
 
+		$this->warn_collo_count_mismatch( $fallbacks, count( $items ), $order );
+
 		$parent_barcode = (string) ( $fallbacks[0] ?? '' );
 		$records        = array();
 
@@ -532,12 +534,71 @@ class Service extends Order_Base implements Label_Service_Interface {
 		$parent_barcode = self::resolve_parent_barcode( $records, $parent_barcode );
 
 		// The merge helper rebuilds a fresh record for a multi-collo shipment, so
-		// re-attach the parent collo's international partner refs (both empty for a
-		// domestic shipment) — the single-collo record already carries them.
+		// re-attach the international partner refs (both empty for a domestic
+		// shipment) — the single-collo record already carries them.
+		//
+		// Only the parent collo's survive. item_label_records() captures every
+		// collo's own partner barcode and id, but the merge collapses the whole set
+		// into one record holding just type/barcode/created_at/filepath/merged_files,
+		// so colli 2..N's refs are discarded and never reach order meta. That matches
+		// the single barcode the merged record is keyed on: one sheet, one set of refs.
 		return $this->finalize_label_records(
 			$this->maybe_merge_labels( $records, $order, $parent_barcode, 'label' ),
 			Response_Mapper::get_partner_barcode( $items[0] ),
 			Response_Mapper::get_partner_id( $items[0] )
+		);
+	}
+
+	/**
+	 * Report a labelconfirm response that answered with a different number of colli
+	 * than the caller pre-issued barcodes for.
+	 *
+	 * The mismatch is otherwise entirely silent, and it is silent on both sides of
+	 * the boundary: this method stores one label per returned item, while
+	 * Order\Base::save_meta_value() persists every prefetched barcode whatever the
+	 * response said. A short response therefore leaves the merchant reading three
+	 * tracking numbers off an order whose label sheet holds two parcels, with the
+	 * third barcode never confirmed with PostNL; a long one writes and merges a label
+	 * for a collo no persisted barcode covers. Neither raises an error anywhere.
+	 *
+	 * Storing what came back is still right — a partial sheet beats none, and the
+	 * merchant can reprint — so this only reports; it does not abort.
+	 *
+	 * Only non-empty barcodes count. create() supplies array( '' ) on the harvest
+	 * path, where nothing was pre-issued and the label call issues one barcode per
+	 * collo, so a three-item response against that single placeholder is correct and
+	 * must not be reported. Comparing the raw list length would warn on every
+	 * multi-collo harvest and train merchants to ignore the log.
+	 *
+	 * The order number is the merchant's own reference and the counts carry no
+	 * personal data, so the whole line is safe to write unconditionally.
+	 *
+	 * @param array     $fallbacks  Pre-issued barcodes per collo, as create() built them.
+	 * @param int       $item_count Number of shipment items the response returned.
+	 * @param \WC_Order $order      WooCommerce order the label belongs to.
+	 * @return void
+	 */
+	private function warn_collo_count_mismatch( array $fallbacks, int $item_count, $order ): void {
+		$expected = count(
+			array_filter(
+				$fallbacks,
+				static function ( $barcode ): bool {
+					return is_string( $barcode ) && '' !== $barcode;
+				}
+			)
+		);
+
+		if ( 0 === $expected || $expected === $item_count ) {
+			return;
+		}
+
+		$this->logger->warning(
+			sprintf(
+				'V4 label for order "%1$s": %2$d collo barcodes were pre-issued but the labelconfirm response returned %3$d shipment item(s); one label is stored per returned item, so the persisted barcodes and the label sheet do not line up.',
+				(string) $order->get_order_number(),
+				$expected,
+				$item_count
+			)
 		);
 	}
 

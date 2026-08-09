@@ -27,6 +27,7 @@ use PostNLWooCommerce\Rest_API\Legacy\Smart_Returns_Service as Legacy_Smart_Retu
 use PostNLWooCommerce\Rest_API\SDK\Client_Factory;
 use PostNLWooCommerce\Rest_API\SDK\Logger_Adapter;
 use PostNLWooCommerce\Rest_API\V4\Label\Service as V4_Label_Service;
+use PostNLWooCommerce\Rest_API\V4\Returns\Service as V4_Returns_Service;
 use Psr\Log\LoggerInterface;
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -98,6 +99,17 @@ class Service_Factory {
 	 * @var V4_Label_Service|null
 	 */
 	private $label_v4_memo = null;
+
+	/**
+	 * Memoised self-built V4 returns service.
+	 *
+	 * Kept out of $v4_services for the same reason as $label_v4_memo: that array
+	 * means "a V4 service was explicitly injected for this flow", and giving it a
+	 * second meaning is how a later predicate reading it gets a wrong answer.
+	 *
+	 * @var V4_Returns_Service|null
+	 */
+	private $return_label_v4_memo = null;
 
 	/**
 	 * Service_Factory constructor.
@@ -248,8 +260,26 @@ class Service_Factory {
 	 * @return Return_Label_Service_Interface
 	 */
 	public function return_label_service(): Return_Label_Service_Interface {
-		if ( $this->should_use_v4( 'return_label' ) && isset( $this->v4_services['return_label'] ) ) {
-			return $this->v4_services['return_label'];
+		if ( $this->should_use_v4( 'return_label' ) ) {
+			// A service injected via inject_v4_service() wins; otherwise build the real V4
+			// service, which handles the NL retailPrint return and falls back to the legacy
+			// pipeline for the rest.
+			if ( isset( $this->v4_services['return_label'] ) ) {
+				return $this->v4_services['return_label'];
+			}
+			// Memoised apart from $v4_services for the same reason as label_service():
+			// that array means "deliberately injected", and barcode_from_label() reads it.
+			// Caching a self-built instance there would give the array two meanings, and
+			// the next predicate written against it would silently get the wrong answer.
+			if ( null === $this->return_label_v4_memo ) {
+				$logger                     = $this->v4_logger();
+				$this->return_label_v4_memo = new V4_Returns_Service(
+					new Client_Factory( $this->settings, $logger ),
+					(string) $this->settings->get_api_key_new(),
+					$logger
+				);
+			}
+			return $this->return_label_v4_memo;
 		}
 		if ( ! isset( $this->legacy_memos['return_label'] ) ) {
 			$this->legacy_memos['return_label'] = new Legacy_Return_Label_Service();

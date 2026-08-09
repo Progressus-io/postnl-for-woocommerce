@@ -23,6 +23,7 @@ use PostNLWooCommerce\Rest_API\Legacy\Postcode_Check_Service as Legacy_Postcode_
 use PostNLWooCommerce\Rest_API\Legacy\Smart_Returns_Service as Legacy_Smart_Returns_Service;
 use PostNLWooCommerce\Rest_API\Service_Factory;
 use PostNLWooCommerce\Rest_API\V4\Label\Service as V4_Label_Service;
+use PostNLWooCommerce\Rest_API\V4\Returns\Service as V4_Returns_Service;
 use PostNLWooCommerce\Tests\UnitTestCase;
 
 /**
@@ -693,5 +694,72 @@ class Service_FactoryTest extends UnitTestCase {
 
 		$this->assertSame( $injected, $factory->label_service() );
 		$this->assertTrue( $factory->barcode_from_label() );
+	}
+
+	// -------------------------------------------------------------------------
+	// Scenario 10 — the self-built V4 returns service must not masquerade as injected
+	// -------------------------------------------------------------------------
+
+	/**
+	 * @testdox return_label_service() returns the real V4 returns service when the flag is on
+	 */
+	public function test_return_label_service_builds_v4_service_when_flag_on(): void {
+		Filters\expectApplied( 'postnl_sdk_enable_return_label' )->andReturn( true );
+
+		$factory = new Service_Factory( $this->settings_with_key() );
+
+		$this->assertInstanceOf( V4_Returns_Service::class, $factory->return_label_service() );
+	}
+
+	/**
+	 * @testdox return_label_service() memoizes the self-built V4 service across repeated calls
+	 */
+	public function test_return_label_service_memoizes_self_built_v4_service(): void {
+		Filters\expectApplied( 'postnl_sdk_enable_return_label' )->andReturn( true );
+
+		$factory = new Service_Factory( $this->settings_with_key() );
+
+		$this->assertSame( $factory->return_label_service(), $factory->return_label_service() );
+	}
+
+	/**
+	 * @testdox Calling return_label_service() leaves the injected-service store untouched
+	 *
+	 * $v4_services means "a V4 service was deliberately injected for this flow", and
+	 * barcode_from_label() reads it to decide whether Order\Base may skip the barcode
+	 * prefetch. Writing a lazily self-built instance into that array gives it a second
+	 * meaning, which is how the label flow crashed bulk runs from the second order on.
+	 * The returns service keeps its own memo for the same reason.
+	 */
+	public function test_return_label_service_call_does_not_register_as_injected(): void {
+		Filters\expectApplied( 'postnl_sdk_enable_return_label' )->andReturn( true );
+
+		$factory = new Service_Factory( $this->settings_with_key() );
+		$factory->return_label_service();
+
+		$store = new \ReflectionProperty( Service_Factory::class, 'v4_services' );
+		$store->setAccessible( true );
+
+		$this->assertArrayNotHasKey(
+			'return_label',
+			$store->getValue( $factory ),
+			'Self-building the V4 returns service must not register it as an injected service.'
+		);
+	}
+
+	/**
+	 * @testdox An injected V4 returns service still wins after the self-built one was created
+	 */
+	public function test_injected_v4_returns_service_wins_after_self_build(): void {
+		Filters\expectApplied( 'postnl_sdk_enable_return_label' )->andReturn( true );
+
+		$factory   = new Service_Factory( $this->settings_with_key() );
+		$self_built = $factory->return_label_service();
+
+		$injected = $this->make_return_label_stub();
+		$factory->inject_v4_service( 'return_label', $injected );
+
+		$this->assertNotSame( $self_built, $factory->return_label_service() );
+		$this->assertSame( $injected, $factory->return_label_service() );
 	}
 }

@@ -69,6 +69,19 @@ class Response_MapperTest extends UnitTestCase {
 	}
 
 	/**
+	 * @testdox first_return_item() returns the first item, not the last.
+	 *
+	 * Every other test builds a response holding exactly one item, where first and
+	 * last are the same object, so reading the wrong end could not be detected.
+	 */
+	public function test_first_return_item_returns_the_first_of_several(): void {
+		$first  = new ReturnShippingItem( barcode: '3SDEVCRET1' );
+		$second = new ReturnShippingItem( barcode: '3SDEVCRET2' );
+
+		$this->assertSame( $first, Response_Mapper::first_return_item( $this->response( $first, $second ) ) );
+	}
+
+	/**
 	 * @testdox get_barcode() prefers the item barcode.
 	 */
 	public function test_get_barcode_prefers_item_barcode(): void {
@@ -96,16 +109,6 @@ class Response_MapperTest extends UnitTestCase {
 	}
 
 	/**
-	 * @testdox get_partner_barcode()/get_partner_id() capture the international partner refs.
-	 */
-	public function test_partner_refs_captured(): void {
-		$item = new ReturnShippingItem( barcode: '3SDEVCRET1', partnerId: 'DHL', partnerBarcode: 'CD123456785NL' );
-
-		$this->assertSame( 'CD123456785NL', Response_Mapper::get_partner_barcode( $item ) );
-		$this->assertSame( 'DHL', Response_Mapper::get_partner_id( $item ) );
-	}
-
-	/**
 	 * @testdox get_labels() returns only non-empty labels.
 	 */
 	public function test_get_labels_filters_empty(): void {
@@ -126,6 +129,21 @@ class Response_MapperTest extends UnitTestCase {
 		$label = new Label( label: base64_encode( 'PDF-BYTES' ), outputType: LabelOutputType::PDF );
 
 		$this->assertSame( 'PDF-BYTES', Response_Mapper::decode_content( $label ) );
+	}
+
+	/**
+	 * @testdox decode_content() returns an empty string for content that is not valid base64.
+	 *
+	 * The decode runs in strict mode so a corrupt payload is rejected outright.
+	 * Without that, PHP skips the invalid characters and returns garbage, which
+	 * Service::store_labels() would then write to disk as a broken label file
+	 * instead of skipping it. Both existing fixtures are valid base64, so dropping
+	 * the strict flag changed nothing that any test could see.
+	 */
+	public function test_decode_content_rejects_invalid_base64(): void {
+		$label = new Label( label: 'not!!valid!!base64', outputType: LabelOutputType::PDF );
+
+		$this->assertSame( '', Response_Mapper::decode_content( $label ) );
 	}
 
 	/**

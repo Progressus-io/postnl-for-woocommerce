@@ -67,28 +67,6 @@ class Response_Mapper {
 	}
 
 	/**
-	 * Return the international partner barcode issued for a return item.
-	 *
-	 * @param ReturnShippingItem $item Return item from the response.
-	 * @return string
-	 */
-	public static function get_partner_barcode( ReturnShippingItem $item ): string {
-		// phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- Third-party SDK DTO property.
-		return null !== $item->partnerBarcode ? $item->partnerBarcode : '';
-	}
-
-	/**
-	 * Return the international partner id issued for a return item.
-	 *
-	 * @param ReturnShippingItem $item Return item from the response.
-	 * @return string
-	 */
-	public static function get_partner_id( ReturnShippingItem $item ): string {
-		// phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- Third-party SDK DTO property.
-		return null !== $item->partnerId ? $item->partnerId : '';
-	}
-
-	/**
 	 * Return the non-empty Label objects attached to a return item.
 	 *
 	 * @param ReturnShippingItem $item Return item from the response.

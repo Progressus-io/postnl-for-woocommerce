@@ -12,6 +12,7 @@ namespace PostNLWooCommerce\Rest_API\V4\Returns;
 use Postnl\Sdk\Enums\Payload\Country;
 use Postnl\Sdk\Enums\Payload\LabelOutputType;
 use Postnl\Sdk\Enums\Payload\LabelPrintMethod;
+use Postnl\Sdk\Enums\Payload\LabelResolution;
 use Postnl\Sdk\Enums\Payload\ShipmentType;
 use Postnl\Sdk\RequestData\V4\Address;
 use Postnl\Sdk\RequestData\V4\Contact;
@@ -68,7 +69,8 @@ class Request_Builder {
 	 *                                company, street, house_number, house_number_ext,
 	 *                                postcode, city, country.
 	 *     @type string $print_method LabelPrintMethod value, e.g. 'retailPrint'.
-	 *     @type array  $label        Label output: output_type (pdf|zpl|jpg|gif|png).
+	 *     @type array  $label        Label output: output_type (pdf|zpl|jpg|gif|png)
+	 *                                and resolution (200|300|600).
 	 *     @type string $barcode      Pre-issued return barcode to confirm; empty to let
 	 *                                the endpoint auto-issue one.
 	 *     @type string $reference    Merchant shipment reference (order number).
@@ -92,6 +94,7 @@ class Request_Builder {
 
 		$label_settings = new LabelSettings(
 			outputType: self::output_type( (string) ( $label_fields['output_type'] ?? 'pdf' ) ),
+			resolution: self::resolution( (int) ( $label_fields['resolution'] ?? 200 ) ),
 			printMethod: self::print_method( (string) ( $fields['print_method'] ?? 'retailPrint' ) )
 		);
 
@@ -178,6 +181,20 @@ class Request_Builder {
 	 */
 	private static function output_type( string $output_type ): LabelOutputType {
 		return LabelOutputType::tryFrom( strtolower( $output_type ) ) ?? LabelOutputType::PDF;
+	}
+
+	/**
+	 * Resolve a resolution integer into the SDK LabelResolution enum.
+	 *
+	 * The merchant's DPI setting offers 200, 300 and 600 and defaults to 600. The
+	 * SDK's own default is 200, so leaving this unset silently downgraded every
+	 * return label.
+	 *
+	 * @param int $resolution Print resolution in DPI.
+	 * @return LabelResolution
+	 */
+	private static function resolution( int $resolution ): LabelResolution {
+		return LabelResolution::tryFrom( $resolution ) ?? LabelResolution::DPI_200;
 	}
 
 	/**

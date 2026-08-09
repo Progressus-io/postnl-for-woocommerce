@@ -10,6 +10,7 @@ declare( strict_types = 1 );
 namespace PostNLWooCommerce\Rest_API\V4\Returns;
 
 use Postnl\Sdk\Client\PostnlClientInterface;
+use Postnl\Sdk\Service\ReturnShipment\V4\Request\ReturnShipmentRequest;
 use Postnl\Sdk\Service\ReturnShipment\V4\Response\GenerateReturnResponseInterface;
 use PostNLWooCommerce\Order\Base as Order_Base;
 use PostNLWooCommerce\Rest_API\Contracts\Return_Label_Service_Interface;
@@ -17,7 +18,9 @@ use PostNLWooCommerce\Rest_API\Legacy\Return_Label\Item_Info;
 use PostNLWooCommerce\Rest_API\Legacy\Return_Label_Service as Legacy_Return_Label_Service;
 use PostNLWooCommerce\Rest_API\SDK\Client_Factory;
 use PostNLWooCommerce\Rest_API\SDK\Exception_Converter;
+use PostNLWooCommerce\Rest_API\V4\Label\Request_Builder as Label_Request_Builder;
 use PostNLWooCommerce\Utils;
+use Psr\Log\LoggerInterface;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -31,9 +34,11 @@ if ( ! defined( 'ABSPATH' ) ) {
  * result in the same _postnl_order_metadata['labels']['return-label'] shape as
  * the legacy path, tagged api_version = v4.
  *
- * Scope: the retailPrint NL flow (the live NL return mechanism). A non-NL origin
- * — consumerPrint is a BE-origin follow-on — falls back to the untouched legacy
- * pipeline. activate() is unchanged: it still calls the V1
+ * Scope: the retailPrint NL flow (the live NL return mechanism). The print method
+ * follows the country the parcel is handed in from, which is the customer's, so a
+ * return from a Belgian customer is a consumerPrint return; that is a follow-on and
+ * is not implemented, and those orders fall back to the untouched legacy pipeline.
+ * activate() is unchanged: it still calls the V1
  * /parcels/v1/shipment/activatereturn endpoint via the legacy service, since
  * that operation is not part of the return/generate migration. Because both
  * gates (a validated V4 key and the per-flow flag) default off, merging this
@@ -48,20 +53,56 @@ if ( ! defined( 'ABSPATH' ) ) {
 class Service extends Order_Base implements Return_Label_Service_Interface {
 
 	/**
-	 * SDK client factory. Injected in tests; built from settings otherwise.
+	 * SDK client factory.
 	 *
-	 * @var Client_Factory|null
+	 * @var Client_Factory
 	 */
 	private $client_factory;
 
 	/**
+	 * Resolved PostNL V4 API key.
+	 *
+	 * @var string
+	 */
+	private $v4_key;
+
+	/**
+	 * PSR-3 logger.
+	 *
+	 * @var LoggerInterface
+	 */
+	private $logger;
+
+	/**
 	 * Service constructor.
 	 *
-	 * @param Client_Factory|null $client_factory Optional SDK client factory.
+	 * The API key and the logger are both required rather than defaulted, matching
+	 * V4\Label\Service, V4\Timeframe\Service and V4\Pickup_Location\Service: the key
+	 * is resolved and validated by the caller that already decides whether V4 may run
+	 * at all (Service_Factory::has_v4_key()), so re-deriving it here would duplicate
+	 * that decision behind a fallback that silently sends an empty key; and a
+	 * defaulted NullLogger would let a caller wire the service up with logging
+	 * switched off — the exact gap this parameter closes.
+	 *
+	 * The key is marked SensitiveParameter so PHP redacts it from stack traces,
+	 * matching Client_Factory::build().
+	 *
+	 * @since 6.0.0 Requires the resolved API key and a PSR-3 logger.
+	 *
+	 * @param Client_Factory  $client_factory SDK client factory.
+	 * @param string          $v4_key         PostNL V4 API key.
+	 * @param LoggerInterface $logger         PSR-3 logger; wiring passes a Logger_Adapter.
 	 */
-	public function __construct( ?Client_Factory $client_factory = null ) {
+	public function __construct(
+		Client_Factory $client_factory,
+		#[\SensitiveParameter]
+		string $v4_key,
+		LoggerInterface $logger
+	) {
 		parent::__construct();
 		$this->client_factory = $client_factory;
+		$this->v4_key         = $v4_key;
+		$this->logger         = $logger;
 	}
 
 	/**
@@ -86,27 +127,71 @@ class Service extends Order_Base implements Return_Label_Service_Interface {
 	 * @throws \Exception If the SDK request fails (converted to the legacy error shape).
 	 */
 	public function create( array $post_data ): array {
-		$item_info = new Item_Info( $post_data );
-
-		// Mirror the legacy pipeline guard: a return label is only created when the
-		// merchant selected it. The pipeline returns an empty array in that case.
-		if ( 'yes' !== ( $post_data['saved_data']['backend']['create_return_label'] ?? '' )
-			|| ! $this->is_eligible( $item_info ) ) {
+		// Checked before Item_Info is built, matching the legacy pipeline
+		// (Order\Base::maybe_create_return_label_pipeline()). Item_Info extends
+		// Shipping\Item_Info, which lists main_barcode as required with no default and
+		// throws "Barcode is empty!" when it is absent — and main_barcode is never set
+		// on the harvest path, where the label response issues the barcode. Building it
+		// first would turn "the merchant did not ask for a return label" into an error
+		// about barcodes on an ordinary save.
+		if ( 'yes' !== ( $post_data['saved_data']['backend']['create_return_label'] ?? '' ) ) {
 			return $this->maybe_create_return_label_pipeline( $post_data );
 		}
 
-		$fields  = $this->extract_fields( $item_info, $post_data );
-		$request = Request_Builder::build( $fields );
+		$item_info = new Item_Info( $post_data );
 
+		if ( ! $this->is_eligible( $item_info ) ) {
+			return $this->maybe_create_return_label_pipeline( $post_data );
+		}
+
+		$fields   = $this->extract_fields( $item_info, $post_data );
+		$request  = Request_Builder::build( $fields );
+		$response = $this->generate_return( $request, $fields );
+
+		return $this->store_labels( $response, $post_data['order'], (string) $fields['barcode'] );
+	}
+
+	/**
+	 * Send the return/generate request, converting and logging any SDK failure.
+	 *
+	 * Kept apart from create() so the transport and its error handling can be
+	 * exercised without a WooCommerce order, matching V4\Label\Service::confirm_label().
+	 *
+	 * @param ReturnShipmentRequest $request Built request DTO.
+	 * @param array                 $fields  Flattened fields, read for the log reference.
+	 *
+	 * @return GenerateReturnResponseInterface
+	 *
+	 * @throws \Exception Converted SDK error when the request fails.
+	 */
+	protected function generate_return( ReturnShipmentRequest $request, array $fields ): GenerateReturnResponseInterface {
 		try {
-			$response = $this->build_client()->returns()->generateReturn( $request );
+			return $this->build_client()->returns()->generateReturn( $request );
 		} catch ( \Throwable $exception ) {
+			// Exception_Converter returns a plugin-shaped \Exception; its message can
+			// carry raw API text (field errors, upstream messages) — escape on output.
 			$error = Exception_Converter::convert( $exception );
+
+			// The converted message is deliberately merchant-safe, and one of its
+			// variants tells the reader to check these very logs, so the original SDK
+			// failure has to be written here — nothing else reads getPrevious().
+			//
+			// The shipment reference is the merchant's own order number: it is what
+			// makes the entry traceable back to an order, and it is store-internal
+			// rather than customer-identifying, so it is kept where the address is not.
+			$this->logger->error(
+				sprintf(
+					'V4 return label creation failed for order "%1$s": %2$s (cause: %3$s: %4$s)',
+					(string) ( $fields['reference'] ?? '' ),
+					$error->getMessage(),
+					get_class( $exception ),
+					$exception->getMessage()
+				)
+			);
+
 			// phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped -- Exception_Converter returns an already-escaped, translated message.
 			throw $error;
 		}
-
-		return $this->store_labels( $response, $post_data['order'], (string) $fields['barcode'] );
 	}
 
 	/**
@@ -126,14 +211,28 @@ class Service extends Order_Base implements Return_Label_Service_Interface {
 	/**
 	 * Decide whether an order's return is the NL retailPrint flow this service handles.
 	 *
-	 * Only NL-origin returns use retailPrint; a BE origin (consumerPrint) is not
-	 * yet implemented and falls back to legacy.
+	 * The print method depends on where the parcel is handed in, which is the
+	 * customer's country, not the store's. The SDK states it on LabelPrintMethod:
+	 * "Sending the return from BE means only consumer is available. Sending from NL
+	 * means only retail is available." So a Dutch store shipping to a Belgian
+	 * customer is a consumerPrint return, and consumerPrint is a follow-on that is
+	 * not implemented — those fall back to the untouched legacy pipeline.
+	 *
+	 * Reading the store address here instead would always be true, because the
+	 * plugin refuses to run unless the store is in NL or BE. Mapping::
+	 * option_available_list() does offer create_return_label for NL to BE, so
+	 * Belgian customers reach this method in practice.
+	 *
+	 * Restricting to NL customers also keeps the merge step safe: the stored record
+	 * is typed 'return-label', and Mapping::label_type_list() only lists that type
+	 * for NL to NL and NL to BE, so an EU or ROW destination would leave
+	 * Order\Base::maybe_merge_labels() with no files to merge.
 	 *
 	 * @param Item_Info $item_info Parsed legacy return item info.
 	 * @return bool
 	 */
 	private function is_eligible( Item_Info $item_info ): bool {
-		return 'NL' === (string) ( $item_info->shipper['country'] ?? '' );
+		return 'NL' === (string) ( $item_info->receiver['country'] ?? '' );
 	}
 
 	/**
@@ -176,29 +275,14 @@ class Service extends Order_Base implements Return_Label_Service_Interface {
 			'barcode'      => (string) ( $post_data['return_barcode'] ?? '' ),
 			'reference'    => (string) ( $item_info->shipment['order_number'] ?? '' ),
 			'weight_gr'    => (int) ( $item_info->shipment['total_weight'] ?? 0 ),
-			'label'        => array(
-				'output_type' => $this->resolve_output_type( (string) ( $item_info->shipment['printer_type'] ?? '' ) ),
+			// Shared with the outbound label path on purpose. The merchant's setting is
+			// one combined string such as 'Zebra|Generic ZPL II 600 dpi', and V4 wants
+			// the format and the resolution as separate fields. Splitting it here as
+			// well would drop the dpi half, which is what this method used to do.
+			'label'        => Label_Request_Builder::printer_type_to_label_settings(
+				(string) ( $item_info->shipment['printer_type'] ?? '' )
 			),
 		);
-	}
-
-	/**
-	 * Resolve the merchant's combined printer-type string to a discrete output type.
-	 *
-	 * PostNL advises PNG/JPG for retailPrint, but the merchant's configured format
-	 * is respected; PDF is the fallback.
-	 *
-	 * @param string $printer_type Legacy combined printer-type string.
-	 * @return string
-	 */
-	private function resolve_output_type( string $printer_type ): string {
-		foreach ( array( 'zpl', 'jpg', 'gif', 'png', 'pdf' ) as $candidate ) {
-			if ( false !== stripos( $printer_type, $candidate ) ) {
-				return $candidate;
-			}
-		}
-
-		return 'pdf';
 	}
 
 	/**
@@ -207,13 +291,7 @@ class Service extends Order_Base implements Return_Label_Service_Interface {
 	 * @return PostnlClientInterface
 	 */
 	private function build_client(): PostnlClientInterface {
-		$factory = $this->client_factory ?? new Client_Factory( $this->settings );
-
-		$v4_key = method_exists( $this->settings, 'get_api_key_new' )
-			? (string) $this->settings->get_api_key_new()
-			: '';
-
-		return $factory->build( $v4_key, (bool) $this->settings->is_sandbox() );
+		return $this->client_factory->build( $this->v4_key, (bool) $this->settings->is_sandbox() );
 	}
 
 	/**

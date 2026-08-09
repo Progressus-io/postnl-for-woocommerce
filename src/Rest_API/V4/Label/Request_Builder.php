@@ -74,7 +74,17 @@ class Request_Builder {
 	 *     @type int    $weight_gr     Total shipment weight in grams.
 	 *     @type string $reference     Merchant shipment reference (order number).
 	 *     @type string $barcode       Pre-issued barcode to confirm; empty to let
-	 *                                  labelconfirm auto-issue one.
+	 *                                  labelconfirm auto-issue one. Ignored when
+	 *                                  $barcodes is provided.
+	 *     @type array  $barcodes      Pre-issued barcodes, one per collo, for a
+	 *                                  multi-collo shipment. Falls back to a single
+	 *                                  item built from $barcode when absent. Assumed
+	 *                                  already filtered to scalars and capped to
+	 *                                  $num_labels by Service::extract_fields(), which
+	 *                                  is where untrusted post_data enters.
+	 *     @type int    $num_labels    Collo count (1-10). Governs the item count only
+	 *                                  when neither $barcodes nor $barcode carries a
+	 *                                  pre-issued barcode; the barcodes win otherwise.
 	 *     @type array  $label         Label output: output_type (pdf|zpl|jpg|gif|png)
 	 *                                  and resolution (200|300|600).
 	 *     @type array  $services      Optional resolved service flags: deliveryConfirmation
@@ -112,16 +122,6 @@ class Request_Builder {
 			resolution: self::resolution( (int) ( $label_fields['resolution'] ?? 200 ) )
 		);
 
-		$item = new ShippingItem(
-			barcode: self::maybe_null( (string) ( $fields['barcode'] ?? '' ) ),
-			customerReferences: new CustomerReferences(
-				shipmentReference: self::maybe_null( (string) ( $fields['reference'] ?? '' ) )
-			),
-			dimensions: new Dimensions(
-				weightGr: max( 1, (int) ( $fields['weight_gr'] ?? 0 ) )
-			)
-		);
-
 		return new ShipmentDeliveryRequest(
 			sender: $sender,
 			receiver: $receiver,
@@ -129,8 +129,53 @@ class Request_Builder {
 			shipmentType: self::shipment_type( (string) ( $fields['shipment_type'] ?? 'parcel' ) ),
 			services: self::services( $fields['services'] ?? array() ),
 			internationalShipmentData: self::international( $fields['international'] ?? array() ),
-			items: array( $item )
+			items: self::items( $fields )
 		);
+	}
+
+	/**
+	 * Build one ShippingItem per collo.
+	 *
+	 * A multi-collo shipment sends one item per barcode in a single request; the
+	 * SDK derives itemCount from the item count. Each collo carries the same
+	 * shipment reference and weight, matching the legacy per-shipment payload.
+	 *
+	 * When no barcode is pre-issued the count comes from num_labels instead, so an
+	 * order that lets labelconfirm issue its barcodes is not collapsed into one
+	 * collo. That labelconfirm auto-issues a barcode per barcode-less item is an
+	 * API assumption the SDK docs do not cover (flip-checklist Q15c); if it is
+	 * unsupported the request fails loudly, which is the point — the silent
+	 * single-collo collapse is what this replaces.
+	 *
+	 * @param array $fields Builder input keyed as documented on build().
+	 * @return ShippingItem[]
+	 */
+	private static function items( array $fields ): array {
+		$barcodes = (array) ( $fields['barcodes'] ?? array() );
+
+		if ( empty( $barcodes ) ) {
+			$single      = (string) ( $fields['barcode'] ?? '' );
+			$collo_count = ( '' === $single ) ? max( 1, (int) ( $fields['num_labels'] ?? 1 ) ) : 1;
+			$barcodes    = array_fill( 0, $collo_count, $single );
+		}
+
+		$reference = self::maybe_null( (string) ( $fields['reference'] ?? '' ) );
+		$weight_gr = max( 1, (int) ( $fields['weight_gr'] ?? 0 ) );
+
+		$items = array();
+		foreach ( $barcodes as $barcode ) {
+			$items[] = new ShippingItem(
+				barcode: self::maybe_null( (string) $barcode ),
+				customerReferences: new CustomerReferences(
+					shipmentReference: $reference
+				),
+				dimensions: new Dimensions(
+					weightGr: $weight_gr
+				)
+			);
+		}
+
+		return $items;
 	}
 
 	/**

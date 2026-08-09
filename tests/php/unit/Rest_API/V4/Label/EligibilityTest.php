@@ -77,6 +77,13 @@ class EligibilityTest extends UnitTestCase {
 	}
 
 	/**
+	 * @testdox is_eligible() accepts a multi-collo domestic parcel.
+	 */
+	public function test_multi_collo_parcel_is_eligible(): void {
+		$this->assertTrue( Eligibility::is_eligible( $this->signals( array( 'num_labels' => 3 ) ) ) );
+	}
+
+	/**
 	 * @testdox is_eligible() accepts an EU/ROW international parcel from NL or BE.
 	 * @dataProvider international_provider
 	 *
@@ -136,7 +143,7 @@ class EligibilityTest extends UnitTestCase {
 	 */
 	public static function ineligible_provider(): array {
 		return array(
-			'multi-collo'                => array( array( 'num_labels' => 2 ), 'more than one collo' ),
+			'zero collo'                 => array( array( 'num_labels' => 0 ), 'an invalid collo count' ),
 			'delivery-day selected'      => array( array( 'is_delivery_day' => true ), 'a delivery-day option' ),
 			'pickup selected'            => array( array( 'is_pickup' => true ), 'a pickup point' ),
 			'return involved'            => array( array( 'has_return' => true ), 'a return label' ),

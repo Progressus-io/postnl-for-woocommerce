@@ -45,6 +45,19 @@ class Response_Mapper {
 	}
 
 	/**
+	 * Return every shipment item from the response, in order.
+	 *
+	 * A multi-collo shipment yields one item per collo, each with its own barcode
+	 * and label document(s).
+	 *
+	 * @param LabelConfirmResponseInterface $response Response from labelconfirm.
+	 * @return ShipmentShippingItem[]
+	 */
+	public static function all_shipment_items( LabelConfirmResponseInterface $response ): array {
+		return array_values( $response->items()->all() );
+	}
+
+	/**
 	 * Return the barcode issued for a shipment item.
 	 *
 	 * The labelconfirm endpoint auto-issues the barcode and echoes it back on

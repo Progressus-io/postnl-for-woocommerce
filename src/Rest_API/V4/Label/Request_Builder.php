@@ -79,6 +79,9 @@ class Request_Builder {
 	 *     @type array  $barcodes      Pre-issued barcodes, one per collo, for a
 	 *                                  multi-collo shipment. Falls back to a single
 	 *                                  item built from $barcode when absent.
+	 *     @type int    $num_labels    Collo count (1-10). Governs the item count only
+	 *                                  when neither $barcodes nor $barcode carries a
+	 *                                  pre-issued barcode; the barcodes win otherwise.
 	 *     @type array  $label         Label output: output_type (pdf|zpl|jpg|gif|png)
 	 *                                  and resolution (200|300|600).
 	 *     @type array  $services      Optional resolved service flags: deliveryConfirmation
@@ -134,6 +137,13 @@ class Request_Builder {
 	 * SDK derives itemCount from the item count. Each collo carries the same
 	 * shipment reference and weight, matching the legacy per-shipment payload.
 	 *
+	 * When no barcode is pre-issued the count comes from num_labels instead, so an
+	 * order that lets labelconfirm issue its barcodes is not collapsed into one
+	 * collo. That labelconfirm auto-issues a barcode per barcode-less item is an
+	 * API assumption the SDK docs do not cover (flip-checklist Q15c); if it is
+	 * unsupported the request fails loudly, which is the point — the silent
+	 * single-collo collapse is what this replaces.
+	 *
 	 * @param array $fields Builder input keyed as documented on build().
 	 * @return ShippingItem[]
 	 */
@@ -141,7 +151,9 @@ class Request_Builder {
 		$barcodes = array_values( array_filter( (array) ( $fields['barcodes'] ?? array() ), 'is_scalar' ) );
 
 		if ( empty( $barcodes ) ) {
-			$barcodes = array( (string) ( $fields['barcode'] ?? '' ) );
+			$single      = (string) ( $fields['barcode'] ?? '' );
+			$collo_count = ( '' === $single ) ? max( 1, (int) ( $fields['num_labels'] ?? 1 ) ) : 1;
+			$barcodes    = array_fill( 0, $collo_count, $single );
 		}
 
 		$reference = self::maybe_null( (string) ( $fields['reference'] ?? '' ) );

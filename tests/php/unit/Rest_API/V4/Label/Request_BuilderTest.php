@@ -137,6 +137,50 @@ class Request_BuilderTest extends UnitTestCase {
 	}
 
 	/**
+	 * @testdox build() emits one barcode-less item per collo when no barcode is pre-issued.
+	 *
+	 * On the harvest path the label call issues the barcodes, so the request carries
+	 * none and num_labels is the only surviving record of the collo count. Ignoring it
+	 * would send a three-collo order as a single parcel with nothing reporting a fault.
+	 */
+	public function test_builds_one_barcode_less_item_per_collo(): void {
+		$fields               = $this->domestic_fields();
+		$fields['barcode']    = '';
+		$fields['num_labels'] = 3;
+
+		$payload = $this->payload( $fields );
+
+		$this->assertSame( 3, $payload['itemCount'], 'itemCount must equal num_labels when no barcode is pre-issued.' );
+		$this->assertCount( 3, $payload['items'] );
+
+		foreach ( $payload['items'] as $item ) {
+			$this->assertArrayNotHasKey( 'barcode', $item, 'A barcode-less collo must not send a blank barcode.' );
+			$this->assertSame( 'ORDER-1001', $item['customerReferences']['shipmentReference'] );
+			$this->assertSame( 2000, $item['dimensions']['weight'] );
+		}
+	}
+
+	/**
+	 * @testdox build() keeps the pre-issued barcodes as the collo count and ignores num_labels.
+	 *
+	 * The prefetch path issues one barcode per collo up front, so the barcodes are the
+	 * authority; a stale or disagreeing num_labels must not add barcode-less items to a
+	 * shipment whose barcodes are already persisted against the order.
+	 */
+	public function test_pre_issued_barcodes_win_over_num_labels(): void {
+		$fields               = $this->domestic_fields();
+		$fields['barcodes']   = array( '3SDEVC1', '3SDEVC2' );
+		$fields['num_labels'] = 5;
+
+		$payload = $this->payload( $fields );
+
+		$this->assertSame( 2, $payload['itemCount'] );
+		$this->assertCount( 2, $payload['items'] );
+		$this->assertSame( '3SDEVC1', $payload['items'][0]['barcode'] );
+		$this->assertSame( '3SDEVC2', $payload['items'][1]['barcode'] );
+	}
+
+	/**
 	 * @testdox build() never emits the V1-only CollectionLocation, MessageID, Customer or product-code fields.
 	 */
 	public function test_omits_v1_only_fields(): void {

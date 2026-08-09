@@ -326,6 +326,33 @@ class ServiceTest extends UnitTestCase {
 		$this->assertSame( array(), $fields['services'] );
 	}
 
+	/**
+	 * @testdox The collo count reaches the builder even when no barcodes are supplied
+	 *
+	 * The harvest path calls create() with neither barcodes[] nor main_barcode, so
+	 * num_labels is the only thing left that tells Request_Builder how many items to
+	 * emit. The fixture uses a count other than the schema default of 1 so the
+	 * assertion cannot pass on the fallback.
+	 */
+	public function test_extract_fields_carries_the_collo_count(): void {
+		$service = new Testable_Label_Service(
+			new Spy_Label_Client_Factory( new Client_Factory_Settings(), new Failing_Http_Client() ),
+			self::V4_KEY,
+			new NullLogger()
+		);
+
+		$fields = $this->extract_fields(
+			$service,
+			new Fake_Shipping_Item_Info( array(), array(), array( 'num_labels' => 3 ) ),
+			array( 'shipmentType' => 'parcel', 'services' => array() ),
+			array()
+		);
+
+		$this->assertSame( 3, $fields['num_labels'] );
+		$this->assertSame( array(), $fields['barcodes'], 'The harvest path supplies no pre-issued barcodes.' );
+		$this->assertSame( '', $fields['barcode'] );
+	}
+
 	// ── Partner references after the merge ───────────────────────────────────
 
 	/**
@@ -621,16 +648,17 @@ class Testable_Label_Service extends Service {
 class Fake_Shipping_Item_Info extends Shipping\Item_Info {
 
 	/**
-	 * @param array $shipment Parsed shipment data.
-	 * @param array $contents Parsed order line items, as the customs block reads them.
+	 * @param array $shipment     Parsed shipment data.
+	 * @param array $contents     Parsed order line items, as the customs block reads them.
+	 * @param array $backend_data Parsed merchant meta-box choices, e.g. num_labels.
 	 */
 	// phpcs:ignore Generic.CodeAnalysis.UselessOverridingMethod.Found -- Deliberately skips the WooCommerce-bound parent constructor.
-	public function __construct( array $shipment, array $contents = array() ) {
+	public function __construct( array $shipment, array $contents = array(), array $backend_data = array() ) {
 		$this->shipment     = $shipment;
 		$this->contents     = $contents;
 		$this->shipper      = array( 'country' => 'NL' );
 		$this->receiver     = array( 'country' => 'NL' );
-		$this->backend_data = array();
+		$this->backend_data = $backend_data;
 	}
 }
 

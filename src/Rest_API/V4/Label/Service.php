@@ -310,6 +310,10 @@ class Service extends Order_Base implements Label_Service_Interface {
 			'reference'     => (string) ( $item_info->shipment['order_number'] ?? '' ),
 			'barcode'       => (string) ( $post_data['main_barcode'] ?? '' ),
 			'barcodes'      => array_values( array_filter( (array) ( $post_data['barcodes'] ?? array() ), 'is_scalar' ) ),
+			// The collo count is carried even when barcodes are pre-issued: it is the
+			// only record of it when the label call issues the barcodes instead, and
+			// Request_Builder ignores it whenever a barcode is supplied.
+			'num_labels'    => (int) ( $item_info->backend_data['num_labels'] ?? 1 ),
 			'services'      => Eligibility::resolve_services(
 				$mapped['services'] ?? array(),
 				(float) ( $item_info->shipment['subtotal'] ?? 0 )

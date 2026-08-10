@@ -113,6 +113,17 @@ class Service_Factory {
 	private $return_label_v4_memo = null;
 
 	/**
+	 * Memoised self-built V4 smart-returns service.
+	 *
+	 * Kept out of $v4_services for the same reason as $label_v4_memo: that array
+	 * means "a V4 service was explicitly injected for this flow", and giving it a
+	 * second meaning is how a later predicate reading it gets a wrong answer.
+	 *
+	 * @var V4_Smart_Returns_Service|null
+	 */
+	private $smart_returns_v4_memo = null;
+
+	/**
 	 * Service_Factory constructor.
 	 *
 	 * @param object|null $settings Plugin settings instance, or null when unavailable.
@@ -310,12 +321,25 @@ class Service_Factory {
 	 */
 	public function smart_returns_service(): Smart_Returns_Service_Interface {
 		if ( $this->should_use_v4( 'smart_returns' ) ) {
-			// A test double injected via inject_v4_service() wins; otherwise build the real V4 service,
-			// which handles the NL retailPrint Smart Return and falls back to the legacy pipeline for the rest.
-			if ( ! isset( $this->v4_services['smart_returns'] ) ) {
-				$this->v4_services['smart_returns'] = new V4_Smart_Returns_Service();
+			// A service injected via inject_v4_service() wins; otherwise build the real V4
+			// service, which handles the NL retailPrint Smart Return and falls back to the
+			// legacy pipeline for the rest.
+			if ( isset( $this->v4_services['smart_returns'] ) ) {
+				return $this->v4_services['smart_returns'];
 			}
-			return $this->v4_services['smart_returns'];
+			// Memoised apart from $v4_services for the same reason as label_service():
+			// that array means "deliberately injected", and barcode_from_label() reads it.
+			// Caching a self-built instance there would give the array two meanings, and
+			// the next predicate written against it would silently get the wrong answer.
+			if ( null === $this->smart_returns_v4_memo ) {
+				$logger                      = $this->v4_logger();
+				$this->smart_returns_v4_memo = new V4_Smart_Returns_Service(
+					new Client_Factory( $this->settings, $logger ),
+					(string) $this->settings->get_api_key_new(),
+					$logger
+				);
+			}
+			return $this->smart_returns_v4_memo;
 		}
 		if ( ! isset( $this->legacy_memos['smart_returns'] ) ) {
 			$this->legacy_memos['smart_returns'] = new Legacy_Smart_Returns_Service();

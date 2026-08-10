@@ -11,12 +11,15 @@ namespace PostNLWooCommerce\Rest_API\V4\Returns;
 
 use Postnl\Sdk\Client\PostnlClientInterface;
 use Postnl\Sdk\ResponseData\V4\Label;
+use Postnl\Sdk\Service\ReturnShipment\V4\Request\ReturnShipmentRequest;
+use Postnl\Sdk\Service\ReturnShipment\V4\Response\GenerateReturnResponseInterface;
 use PostNLWooCommerce\Rest_API\Contracts\Smart_Returns_Service_Interface;
 use PostNLWooCommerce\Rest_API\Legacy\Smart_Returns\Item_Info;
 use PostNLWooCommerce\Rest_API\Legacy\Smart_Returns_Service as Legacy_Smart_Returns_Service;
 use PostNLWooCommerce\Rest_API\SDK\Client_Factory;
 use PostNLWooCommerce\Rest_API\SDK\Exception_Converter;
 use PostNLWooCommerce\Shipping_Method\Settings;
+use Psr\Log\LoggerInterface;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -44,25 +47,69 @@ if ( ! defined( 'ABSPATH' ) ) {
  * as the legacy Smart Returns path did (it wrote a throwaway printcode file just
  * to attach it).
  *
- * @since   5.9.10
+ * @since   6.0.0
  * @package PostNLWooCommerce\Rest_API\V4\Returns
  */
 class Smart_Returns_Service implements Smart_Returns_Service_Interface {
 
 	/**
-	 * SDK client factory. Injected in tests; built from settings otherwise.
+	 * Output types the printcode email can embed, mapped to their MIME types.
 	 *
-	 * @var Client_Factory|null
+	 * Deliberately image-only: the consumer email renders the printcode with an
+	 * <img> tag, and PostNL's instruction for this flow is "only the printcode,
+	 * not a PDF". A response in any other format is rejected loudly in
+	 * create_printcode() instead of being mailed as an unusable attachment.
+	 *
+	 * @var array<string, string>
+	 */
+	private const PRINTCODE_MIME_TYPES = array(
+		'png' => 'image/png',
+		'jpg' => 'image/jpeg',
+		'gif' => 'image/gif',
+	);
+
+	/**
+	 * SDK client factory.
+	 *
+	 * @var Client_Factory
 	 */
 	private $client_factory;
 
 	/**
+	 * PostNL V4 API key.
+	 *
+	 * @var string
+	 */
+	private $v4_key;
+
+	/**
+	 * PSR-3 logger for request failures and suspect responses.
+	 *
+	 * @var LoggerInterface
+	 */
+	private $logger;
+
+	/**
 	 * Service constructor.
 	 *
-	 * @param Client_Factory|null $client_factory Optional SDK client factory.
+	 * The key is marked SensitiveParameter so PHP redacts it from stack traces,
+	 * matching Client_Factory::build().
+	 *
+	 * @since 6.0.0 Requires the resolved API key and a PSR-3 logger.
+	 *
+	 * @param Client_Factory  $client_factory SDK client factory.
+	 * @param string          $v4_key         PostNL V4 API key.
+	 * @param LoggerInterface $logger         PSR-3 logger; wiring passes a Logger_Adapter.
 	 */
-	public function __construct( ?Client_Factory $client_factory = null ) {
+	public function __construct(
+		Client_Factory $client_factory,
+		#[\SensitiveParameter]
+		string $v4_key,
+		LoggerInterface $logger
+	) {
 		$this->client_factory = $client_factory;
+		$this->v4_key         = $v4_key;
+		$this->logger         = $logger;
 	}
 
 	/**
@@ -77,14 +124,15 @@ class Smart_Returns_Service implements Smart_Returns_Service_Interface {
 	 *
 	 * @return array Normalized V4 result (api_version = v4) or the legacy response array.
 	 *
-	 * @throws \Exception If the SDK request fails (converted to the legacy error shape).
+	 * @throws \Exception If the SDK request fails (converted to the legacy error shape),
+	 *                    or the response carries no usable printcode image.
 	 */
 	public function generate( \WC_Order $order ): array {
 		if ( 'NL' !== $order->get_shipping_country() ) {
-			return ( new Legacy_Smart_Returns_Service() )->generate( $order );
+			return $this->legacy_service()->generate( $order );
 		}
 
-		$item_info = new Item_Info( $order );
+		$item_info = $this->item_info( $order );
 		$fields    = self::map_fields(
 			$item_info->customer,
 			$item_info->store,
@@ -99,13 +147,27 @@ class Smart_Returns_Service implements Smart_Returns_Service_Interface {
 
 		$request = Request_Builder::build( $fields );
 
-		try {
-			$response = $this->build_client()->returns()->generateReturn( $request );
-		} catch ( \Throwable $exception ) {
-			$error = Exception_Converter::convert( $exception );
-			// phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped -- Exception_Converter returns an already-escaped, translated message.
-			throw $error;
-		}
+		return $this->create_printcode( $request, (string) $order->get_order_number() );
+	}
+
+	/**
+	 * Send the request and normalize the response into the printcode array.
+	 *
+	 * The response is only accepted when it carries an image the consumer email
+	 * can embed (see PRINTCODE_MIME_TYPES): PostNL's instruction for retailPrint
+	 * is to send the consumer the printcode, never a PDF, so an unexpected format
+	 * fails loudly here instead of reaching the customer as a broken image with
+	 * the document attached.
+	 *
+	 * @param ReturnShipmentRequest $request      Built return/generate request.
+	 * @param string                $order_number Merchant order number, used in log entries.
+	 *
+	 * @return array Normalized printcode result (api_version = v4).
+	 *
+	 * @throws \Exception If the SDK request fails or the response has no usable image.
+	 */
+	protected function create_printcode( ReturnShipmentRequest $request, string $order_number ): array {
+		$response = $this->generate_smart_return( $request, $order_number );
 
 		$item = Response_Mapper::first_return_item( $response );
 
@@ -115,27 +177,134 @@ class Smart_Returns_Service implements Smart_Returns_Service_Interface {
 			);
 		}
 
-		foreach ( Response_Mapper::get_labels( $item ) as $label ) {
-			$content = Response_Mapper::decode_content( $label );
+		$candidates = array();
+		$rejected   = array();
 
-			if ( '' === $content ) {
+		foreach ( Response_Mapper::get_labels( $item ) as $label ) {
+			if ( '' === Response_Mapper::decode_content( $label ) ) {
 				continue;
 			}
 
 			$output_type = self::label_output_type( $label );
 
-			return array(
-				'api_version' => 'v4',
-				'barcode'     => Response_Mapper::get_barcode( $item ),
-				'content'     => $content,
-				'output_type' => $output_type,
-				'mime'        => self::output_type_to_mime( $output_type ),
+			if ( isset( self::PRINTCODE_MIME_TYPES[ $output_type ] ) ) {
+				$candidates[] = $label;
+			} else {
+				$rejected[] = $output_type;
+			}
+		}
+
+		if ( empty( $candidates ) ) {
+			if ( ! empty( $rejected ) ) {
+				$this->logger->error(
+					sprintf(
+						'V4 smart return for order "%1$s" answered with no embeddable printcode image; returned output type(s): %2$s. The consumer email was not sent.',
+						$order_number,
+						implode( ', ', $rejected )
+					)
+				);
+				throw new \Exception(
+					esc_html__( 'Cannot create the Smart Return. PostNL returned the printcode in a format that cannot be shown in the customer email. Check the PostNL logs for details.', 'postnl-for-woocommerce' )
+				);
+			}
+
+			throw new \Exception(
+				esc_html__( 'Cannot create the Smart Return. Printcode content is missing.', 'postnl-for-woocommerce' )
 			);
 		}
 
-		throw new \Exception(
-			esc_html__( 'Cannot create the Smart Return. Printcode content is missing.', 'postnl-for-woocommerce' )
+		if ( count( $candidates ) > 1 || ! empty( $rejected ) ) {
+			// Which document combinations return/generate can produce is still a
+			// sandbox question (flip checklist); record what arrived so a wrong
+			// pick is traceable instead of invisible.
+			$this->logger->warning(
+				sprintf(
+					'V4 smart return for order "%1$s" returned %2$d usable label(s) (types: %3$s)%4$s; the first usable one was emailed.',
+					$order_number,
+					count( $candidates ),
+					implode( ', ', array_map( array( __CLASS__, 'describe_label' ), $candidates ) ),
+					empty( $rejected ) ? '' : ' plus rejected type(s): ' . implode( ', ', $rejected )
+				)
+			);
+		}
+
+		$chosen      = $candidates[0];
+		$output_type = self::label_output_type( $chosen );
+		$barcode     = Response_Mapper::get_barcode( $item );
+
+		if ( '' === $barcode ) {
+			$this->logger->warning(
+				sprintf(
+					'V4 smart return for order "%1$s" returned no barcode number; the email will carry the printcode image without the text fallback.',
+					$order_number
+				)
+			);
+		}
+
+		return array(
+			'api_version' => 'v4',
+			'barcode'     => $barcode,
+			'content'     => Response_Mapper::decode_content( $chosen ),
+			'output_type' => $output_type,
+			'mime'        => self::PRINTCODE_MIME_TYPES[ $output_type ],
 		);
+	}
+
+	/**
+	 * Send the return/generate request, logging and converting any failure.
+	 *
+	 * The converted message is merchant-safe and one of its variants tells the
+	 * reader to check these very logs, so the original SDK failure has to be
+	 * written here — nothing else reads getPrevious(). The order number is the
+	 * merchant's own reference: it makes the entry traceable to an order and is
+	 * store-internal rather than customer-identifying.
+	 *
+	 * @param ReturnShipmentRequest $request      Built return/generate request.
+	 * @param string                $order_number Merchant order number, used in log entries.
+	 *
+	 * @return GenerateReturnResponseInterface
+	 *
+	 * @throws \Exception The converted, merchant-facing error.
+	 */
+	protected function generate_smart_return( ReturnShipmentRequest $request, string $order_number ): GenerateReturnResponseInterface {
+		try {
+			return $this->build_client()->returns()->generateReturn( $request );
+		} catch ( \Throwable $exception ) {
+			$error = Exception_Converter::convert( $exception );
+
+			$this->logger->error(
+				sprintf(
+					'V4 smart return creation failed for order "%1$s": %2$s (cause: %3$s: %4$s)',
+					$order_number,
+					$error->getMessage(),
+					get_class( $exception ),
+					$exception->getMessage()
+				)
+			);
+
+			// phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped -- Exception_Converter returns an already-escaped, translated message.
+			throw $error;
+		}
+	}
+
+	/**
+	 * Build the legacy fallback service for a non-NL order.
+	 *
+	 * @return Smart_Returns_Service_Interface
+	 */
+	protected function legacy_service(): Smart_Returns_Service_Interface {
+		return new Legacy_Smart_Returns_Service();
+	}
+
+	/**
+	 * Parse the order into the legacy Smart Returns item info.
+	 *
+	 * @param \WC_Order $order WooCommerce order object.
+	 *
+	 * @return Item_Info
+	 */
+	protected function item_info( \WC_Order $order ): Item_Info {
+		return new Item_Info( $order );
 	}
 
 	/**
@@ -199,24 +368,24 @@ class Smart_Returns_Service implements Smart_Returns_Service_Interface {
 	 */
 	private static function label_output_type( Label $label ): string {
 		// phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- Third-party SDK DTO property.
-		return null !== $label->outputType ? $label->outputType->value : 'png';
+		return null !== $label->outputType ? strtolower( $label->outputType->value ) : 'png';
 	}
 
 	/**
-	 * Map a label output type to the image MIME type used to embed it in the email.
+	 * Describe a label for a log entry: its labelType, or its output type when
+	 * the response does not name the document.
 	 *
-	 * @param string $output_type One of png|jpg|gif|pdf.
+	 * @param Label $label Label object from the response.
 	 * @return string
 	 */
-	private static function output_type_to_mime( string $output_type ): string {
-		$map = array(
-			'png' => 'image/png',
-			'jpg' => 'image/jpeg',
-			'gif' => 'image/gif',
-			'pdf' => 'application/pdf',
-		);
+	private static function describe_label( Label $label ): string {
+		// phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- Third-party SDK DTO property.
+		if ( null !== $label->labelType && '' !== $label->labelType ) {
+			// phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- Third-party SDK DTO property.
+			return $label->labelType;
+		}
 
-		return $map[ strtolower( $output_type ) ] ?? 'image/png';
+		return self::label_output_type( $label );
 	}
 
 	/**
@@ -225,13 +394,6 @@ class Smart_Returns_Service implements Smart_Returns_Service_Interface {
 	 * @return PostnlClientInterface
 	 */
 	private function build_client(): PostnlClientInterface {
-		$settings = Settings::get_instance();
-		$factory  = $this->client_factory ?? new Client_Factory( $settings );
-
-		$v4_key = method_exists( $settings, 'get_api_key_new' )
-			? (string) $settings->get_api_key_new()
-			: '';
-
-		return $factory->build( $v4_key, (bool) $settings->is_sandbox() );
+		return $this->client_factory->build( $this->v4_key, (bool) Settings::get_instance()->is_sandbox() );
 	}
 }

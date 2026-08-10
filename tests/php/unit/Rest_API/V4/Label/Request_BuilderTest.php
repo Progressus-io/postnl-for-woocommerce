@@ -312,6 +312,18 @@ class Request_BuilderTest extends UnitTestCase {
 	}
 
 	/**
+	 * @testdox build() maps the letterbox shipment type to ShipmentType::LetterBox.
+	 */
+	public function test_letterbox_shipment_type(): void {
+		$fields                  = $this->domestic_fields();
+		$fields['shipment_type'] = 'letterbox';
+
+		$payload = $this->payload( $fields );
+
+		$this->assertSame( ShipmentType::LetterBox->value, $payload['shipmentType'] );
+	}
+
+	/**
 	 * @testdox build() omits the Services block for a plain parcel with no service flags.
 	 */
 	public function test_services_omitted_when_empty(): void {

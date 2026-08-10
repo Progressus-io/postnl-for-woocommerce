@@ -17,10 +17,11 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Pure decision logic for whether an order is a parcel the V4 label service
- * handles — a domestic NL parcel or an EU/ROW international parcel from NL/BE.
- * Kept free of WooCommerce and Order\Base so the gate — the highest-risk part
- * of the flow — can be asserted in isolation.
+ * Pure decision logic for whether an order is a shipment the V4 label service
+ * handles — a domestic NL parcel, a domestic NL letterbox (mailbox parcel), or
+ * an EU/ROW international parcel from NL/BE. Kept free of WooCommerce and
+ * Order\Base so the gate — the highest-risk part of the flow — can be asserted
+ * in isolation.
  *
  * @since   6.0.0
  * @package PostNLWooCommerce\Rest_API\V4\Label
@@ -55,8 +56,9 @@ class Eligibility {
 	}
 
 	/**
-	 * Decide whether the collected signals describe a parcel the V4 service handles
-	 * — a domestic NL or EU/ROW international parcel, single- or multi-collo.
+	 * Decide whether the collected signals describe a shipment the V4 service
+	 * handles — a domestic NL or EU/ROW international parcel (single- or
+	 * multi-collo), or a domestic NL letterbox (mailbox parcel 2928).
 	 *
 	 * @param array $signals {
 	 *     Signal set assembled by Service::gather_signals().
@@ -108,11 +110,23 @@ class Eligibility {
 		// equivalent, its services array is the full V4 representation of every
 		// selected option, so no separate product-option gate is needed. Only a
 		// pickup DeliveryLocation is excluded here — that variant lands separately.
-		$mapped = $signals['mapped'] ?? array();
+		$mapped        = $signals['mapped'] ?? array();
+		$shipment_type = (string) ( $mapped['shipmentType'] ?? '' );
 
-		return ! empty( $mapped['has_v4_equivalent'] )
-			&& 'parcel' === ( $mapped['shipmentType'] ?? '' )
-			&& empty( $mapped['deliveryLocation'] );
+		if ( empty( $mapped['has_v4_equivalent'] ) || ! empty( $mapped['deliveryLocation'] ) ) {
+			return false;
+		}
+
+		// Letterbox (mailbox parcel 2928) is a domestic-NL-only variant. The 48h
+		// variant (2948) never reaches here: it collapses onto the same 'letterbox'
+		// option key but keeps product code 2948, so the mapper's product-code
+		// mismatch guard drops it to has_v4_equivalent = false above. A parcel may
+		// be domestic or EU/ROW international.
+		if ( 'letterbox' === $shipment_type ) {
+			return $is_domestic;
+		}
+
+		return 'parcel' === $shipment_type;
 	}
 
 	/**

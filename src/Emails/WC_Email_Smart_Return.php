@@ -31,7 +31,39 @@ if ( ! class_exists( 'WC_Email_Smart_Return' ) ) :
 		 *
 		 * @var string
 		 */
-		public string $attachment;
+		public $attachment = '';
+
+		/**
+		 * Raw (decoded) printcode image bytes to embed inline in the email body.
+		 *
+		 * Set for the V4 retailPrint Smart Return, whose printcode is shown in the
+		 * body instead of a PDF attachment. Empty for the legacy PDF path.
+		 *
+		 * @var string
+		 */
+		public $printcode_content = '';
+
+		/**
+		 * MIME type of the inline printcode image (e.g. image/png).
+		 *
+		 * @var string
+		 */
+		public $printcode_mime = '';
+
+		/**
+		 * Return barcode shown as text, a fallback when the inline image is blocked
+		 * or the email is rendered as plain text.
+		 *
+		 * @var string
+		 */
+		public $printcode_barcode = '';
+
+		/**
+		 * Content-ID used to reference the embedded printcode image from the template.
+		 *
+		 * @var string
+		 */
+		public $printcode_cid = 'postnl_smart_return_printcode';
 
 		/**
 		 * Constructor.
@@ -85,10 +117,48 @@ if ( ! class_exists( 'WC_Email_Smart_Return' ) ) :
 			}
 
 			$this->setup_locale();
+
+			// Embed the retailPrint printcode image inline (via cid) for the V4 path so
+			// the consumer sees the barcode in the body — PostNL asks for the printcode,
+			// not a PDF. The hook is scoped to this send only.
+			$embed_printcode = '' !== $this->printcode_content;
+			if ( $embed_printcode ) {
+				add_action( 'phpmailer_init', array( $this, 'embed_printcode_image' ) );
+			}
+
 			$sent = $this->send( $this->get_recipient(), $this->get_subject(), $this->get_content(), $this->get_headers(), $this->get_attachments() );
+
+			if ( $embed_printcode ) {
+				remove_action( 'phpmailer_init', array( $this, 'embed_printcode_image' ) );
+			}
+
 			$this->restore_locale();
 
 			return $sent;
+		}
+
+		/**
+		 * Embed the printcode image into the outgoing message as an inline (cid) attachment.
+		 *
+		 * Hooked onto phpmailer_init only while a V4 printcode is being sent, so the
+		 * template's <img src="cid:..."> renders in the body across mail clients that
+		 * strip data-URI images.
+		 *
+		 * @param \PHPMailer\PHPMailer\PHPMailer $phpmailer The mailer instance used by wp_mail().
+		 * @return void
+		 */
+		public function embed_printcode_image( $phpmailer ) {
+			if ( '' === $this->printcode_content ) {
+				return;
+			}
+
+			$phpmailer->addStringEmbeddedImage(
+				$this->printcode_content,
+				$this->printcode_cid,
+				'postnl-smart-return-printcode',
+				'base64',
+				$this->printcode_mime
+			);
 		}
 
 
@@ -106,6 +176,8 @@ if ( ! class_exists( 'WC_Email_Smart_Return' ) ) :
 					'additional_content' => $this->get_additional_content(),
 					'sent_to_admin'      => false,
 					'plain_text'         => false,
+					'printcode_cid'      => '' !== $this->printcode_content ? $this->printcode_cid : '',
+					'printcode_barcode'  => $this->printcode_barcode,
 					'email'              => $this,
 				),
 				'',
@@ -127,6 +199,8 @@ if ( ! class_exists( 'WC_Email_Smart_Return' ) ) :
 					'additional_content' => $this->get_additional_content(),
 					'sent_to_admin'      => false,
 					'plain_text'         => true,
+					'printcode_cid'      => '' !== $this->printcode_content ? $this->printcode_cid : '',
+					'printcode_barcode'  => $this->printcode_barcode,
 					'email'              => $this,
 				),
 				'',

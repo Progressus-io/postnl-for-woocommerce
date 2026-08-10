@@ -55,4 +55,59 @@ if ( ! class_exists( 'WC_Settings_API' ) ) {
 	class WC_Settings_API {} // phpcs:ignore Generic.Files.OneObjectStructurePerFile.MultipleFound
 }
 
+if ( ! class_exists( 'WC_Order' ) ) {
+	/**
+	 * Minimal stand-in for a WooCommerce order: a data bag exposing exactly the
+	 * getters the V4 Smart Returns service reads. Getters are explicit so that a
+	 * typo'd or newly-added getter fatals in a test instead of quietly returning
+	 * a default.
+	 */
+	class WC_Order { // phpcs:ignore Generic.Files.OneObjectStructurePerFile.MultipleFound
+
+		/**
+		 * Fixture values keyed by getter suffix.
+		 *
+		 * @var array<string, string>
+		 */
+		private $data;
+
+		/**
+		 * @param array<string, string> $data Fixture values.
+		 */
+		public function __construct( array $data = array() ) {
+			$this->data = $data;
+		}
+
+		/** @return string */
+		public function get_shipping_country() {
+			return $this->data['shipping_country'] ?? '';
+		}
+
+		/** @return string */
+		public function get_shipping_first_name() {
+			return $this->data['shipping_first_name'] ?? '';
+		}
+
+		/** @return string */
+		public function get_shipping_last_name() {
+			return $this->data['shipping_last_name'] ?? '';
+		}
+
+		/** @return string */
+		public function get_billing_email() {
+			return $this->data['billing_email'] ?? '';
+		}
+
+		/** @return string */
+		public function get_billing_phone() {
+			return $this->data['billing_phone'] ?? '';
+		}
+
+		/** @return string */
+		public function get_order_number() {
+			return $this->data['order_number'] ?? '';
+		}
+	}
+}
+
 require_once dirname( __DIR__, 2 ) . '/vendor/autoload.php';

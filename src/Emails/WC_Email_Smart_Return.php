@@ -31,7 +31,7 @@ if ( ! class_exists( 'WC_Email_Smart_Return' ) ) :
 		 *
 		 * @var string
 		 */
-		public string $attachment = '';
+		public $attachment = '';
 
 		/**
 		 * Raw (decoded) printcode image bytes to embed inline in the email body.
@@ -41,14 +41,14 @@ if ( ! class_exists( 'WC_Email_Smart_Return' ) ) :
 		 *
 		 * @var string
 		 */
-		public string $printcode_content = '';
+		public $printcode_content = '';
 
 		/**
 		 * MIME type of the inline printcode image (e.g. image/png).
 		 *
 		 * @var string
 		 */
-		public string $printcode_mime = '';
+		public $printcode_mime = '';
 
 		/**
 		 * Return barcode shown as text, a fallback when the inline image is blocked
@@ -56,14 +56,14 @@ if ( ! class_exists( 'WC_Email_Smart_Return' ) ) :
 		 *
 		 * @var string
 		 */
-		public string $printcode_barcode = '';
+		public $printcode_barcode = '';
 
 		/**
 		 * Content-ID used to reference the embedded printcode image from the template.
 		 *
 		 * @var string
 		 */
-		public string $printcode_cid = 'postnl_smart_return_printcode';
+		public $printcode_cid = 'postnl_smart_return_printcode';
 
 		/**
 		 * Constructor.

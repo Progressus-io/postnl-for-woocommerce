@@ -154,11 +154,10 @@ class Base {
 	 * Set API key value.
 	 */
 	public function set_api_key() {
-		if ( true === $this->is_sandbox ) {
-			$this->api_key = $this->settings->get_api_key_sandbox();
-			return;
-		}
-
+		// get_effective_api_key() is environment-aware and falls back to the
+		// original key for the active environment, so the sandbox path no longer
+		// needs its own branch: it resolves the validated new sandbox key when one
+		// exists and the legacy sandbox key otherwise.
 		$this->api_key = $this->settings->get_effective_api_key();
 	}
 

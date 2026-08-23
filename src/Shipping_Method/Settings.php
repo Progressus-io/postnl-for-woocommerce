@@ -115,6 +115,14 @@ class Settings extends \WC_Settings_API {
 				'default'     => '',
 				'placeholder' => '',
 			),
+			'api_keys_sandbox_new'            => array(
+				'title'       => esc_html__( 'New Sandbox API Key', 'postnl-for-woocommerce' ),
+				'type'        => 'text',
+				'description' => esc_html__( 'Enter the new sandbox API key here, required to access the new APIs when these have been released in the plug-in.', 'postnl-for-woocommerce' ),
+				'desc_tip'    => true,
+				'default'     => '',
+				'placeholder' => '',
+			),
 			'enable_logging'                  => array(
 				'title'       => esc_html__( 'Logging', 'postnl-for-woocommerce' ),
 				'type'        => 'checkbox',
@@ -851,17 +859,66 @@ class Settings extends \WC_Settings_API {
 	const NEW_API_KEY_VALIDATED_HASH_OPTION = 'postnl_api_keys_new_validated_hash';
 
 	/**
-	 * Get the raw value of the new API key as entered by the merchant.
+	 * Get the raw value of the new sandbox API key as entered by the merchant.
+	 *
+	 * @return string
+	 */
+	public function get_api_key_sandbox_new() {
+		return trim( (string) $this->get_country_option( 'api_keys_sandbox_new', '' ) );
+	}
+
+	/**
+	 * Get the raw value of the new API key for the current environment.
+	 *
+	 * PostNL issues environment-scoped keys, so sandbox and production each have
+	 * their own new-key field. Returning the field that matches the active
+	 * environment keeps every V4 consumer (Service_Factory, the adoption header,
+	 * the effective-key fallback) pointed at the right key without each caller
+	 * having to branch on the environment itself.
 	 *
 	 * @return string
 	 */
 	public function get_api_key_new() {
+		if ( $this->is_sandbox() ) {
+			return $this->get_api_key_sandbox_new();
+		}
+
 		return trim( (string) $this->get_country_option( 'api_keys_new', '' ) );
 	}
 
 	/**
+	 * The original (pre-migration) API key for the current environment.
+	 *
+	 * @return string
+	 */
+	public function get_original_api_key() {
+		return $this->is_sandbox()
+			? trim( (string) $this->get_api_key_sandbox() )
+			: trim( (string) $this->get_api_key() );
+	}
+
+	/**
+	 * Name of the option storing the validated-key hash for a given environment.
+	 *
+	 * The validated flag is environment-scoped: a key validated in production must
+	 * not be treated as validated in sandbox (and vice versa), otherwise the V4
+	 * gate would route a production key against the sandbox host, or the reverse.
+	 * A single option cannot hold both, since validating one environment would
+	 * overwrite the other, so each environment gets its own option.
+	 *
+	 * @param bool|null $is_sandbox Environment to scope to, or null for the current one.
+	 *
+	 * @return string
+	 */
+	protected function validated_hash_option_name( $is_sandbox = null ) {
+		$is_sandbox = ( null === $is_sandbox ) ? $this->is_sandbox() : (bool) $is_sandbox;
+
+		return self::NEW_API_KEY_VALIDATED_HASH_OPTION . ( $is_sandbox ? '_sandbox' : '' );
+	}
+
+	/**
 	 * Whether the currently-entered new API key matches the key that last
-	 * passed validation against the PostNL API.
+	 * passed validation against the PostNL API for the current environment.
 	 *
 	 * @return bool
 	 */
@@ -875,17 +932,18 @@ class Settings extends \WC_Settings_API {
 	 * handler) can check the freshly-entered key without relying on the
 	 * settings object's in-memory cache being up to date.
 	 *
-	 * @param string $key Candidate key value.
+	 * @param string    $key        Candidate key value.
+	 * @param bool|null $is_sandbox Environment to check, or null for the current one.
 	 *
 	 * @return bool
 	 */
-	public function is_api_key_new_validated_value( $key ) {
+	public function is_api_key_new_validated_value( $key, $is_sandbox = null ) {
 		$key = trim( (string) $key );
 		if ( '' === $key ) {
 			return false;
 		}
 
-		$stored = (string) get_option( self::NEW_API_KEY_VALIDATED_HASH_OPTION, '' );
+		$stored = (string) get_option( $this->validated_hash_option_name( $is_sandbox ), '' );
 		if ( '' === $stored ) {
 			return false;
 		}
@@ -896,39 +954,42 @@ class Settings extends \WC_Settings_API {
 	/**
 	 * Record that the currently-entered new API key has passed validation,
 	 * or clear the flag entirely. The hash binds the flag to the exact key
-	 * value the merchant just successfully tested.
+	 * value the merchant just successfully tested, scoped to its environment.
 	 *
-	 * @param bool        $validated Validation outcome.
-	 * @param string|null $key       The exact key value that was validated. When
-	 *                               omitted, falls back to the stored setting —
-	 *                               but callers running mid-save should pass the
-	 *                               freshly-entered value to avoid hashing a
-	 *                               stale cached value.
+	 * @param bool        $validated  Validation outcome.
+	 * @param string|null $key        The exact key value that was validated. When
+	 *                                omitted, falls back to the stored setting —
+	 *                                but callers running mid-save should pass the
+	 *                                freshly-entered value to avoid hashing a
+	 *                                stale cached value.
+	 * @param bool|null   $is_sandbox Environment to scope to, or null for the current one.
 	 */
-	public function set_api_key_new_validated( $validated, $key = null ) {
+	public function set_api_key_new_validated( $validated, $key = null, $is_sandbox = null ) {
+		$option = $this->validated_hash_option_name( $is_sandbox );
+
 		if ( ! $validated ) {
-			delete_option( self::NEW_API_KEY_VALIDATED_HASH_OPTION );
+			delete_option( $option );
 			return;
 		}
 
 		$key = trim( (string) ( null === $key ? $this->get_api_key_new() : $key ) );
 		if ( '' === $key ) {
-			delete_option( self::NEW_API_KEY_VALIDATED_HASH_OPTION );
+			delete_option( $option );
 			return;
 		}
 
-		update_option( self::NEW_API_KEY_VALIDATED_HASH_OPTION, hash( 'sha256', $key ) );
+		update_option( $option, hash( 'sha256', $key ) );
 	}
 
 	/**
-	 * Return the API key the plugin should actually send to PostNL for
-	 * production traffic. Falls back to the original key whenever the new
+	 * Return the API key the plugin should actually send to PostNL for the
+	 * current environment. Falls back to the original key whenever the new
 	 * key is empty, identical, or has not been validated.
 	 *
 	 * @return string
 	 */
 	public function get_effective_api_key() {
-		$original = trim( (string) $this->get_api_key() );
+		$original = $this->get_original_api_key();
 		$new_key  = $this->get_api_key_new();
 
 		if ( '' === $new_key ) {
@@ -950,14 +1011,14 @@ class Settings extends \WC_Settings_API {
 	 * Value for the NewKey header sent on every outgoing API call. Used by
 	 * PostNL to track adoption of the new key ahead of the API migration.
 	 *
-	 *  - "No"   : the new-key field is empty.
+	 *  - "No"   : the new-key field is empty, or the entered key has not passed validation.
 	 *  - "Same" : the new-key field matches the original key.
-	 *  - "Yes"  : a distinct new key has been entered.
+	 *  - "Yes"  : a distinct new key has been entered and validated.
 	 *
-	 * Reports "Yes" as soon as the merchant has typed in a key that is
-	 * different from the original, regardless of whether our save-time
-	 * validation has passed yet. The actual key swap (production traffic
-	 * using the new key) is gated separately by is_api_key_new_validated().
+	 * "Yes" is gated on validation because the requirements define it as a key
+	 * that "works" — reporting adoption for a key that failed our own validation
+	 * would tell PostNL a merchant is ready to migrate when they are not. The
+	 * comparison uses the current environment's key fields.
 	 *
 	 * @return string
 	 */
@@ -967,9 +1028,12 @@ class Settings extends \WC_Settings_API {
 			return 'No';
 		}
 
-		$original = trim( (string) $this->get_api_key() );
-		if ( $new_key === $original ) {
+		if ( $new_key === $this->get_original_api_key() ) {
 			return 'Same';
+		}
+
+		if ( ! $this->is_api_key_new_validated() ) {
+			return 'No';
 		}
 
 		return 'Yes';

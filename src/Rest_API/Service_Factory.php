@@ -9,6 +9,7 @@ declare( strict_types = 1 );
 
 namespace PostNLWooCommerce\Rest_API;
 
+use PostNLWooCommerce\Logger;
 use PostNLWooCommerce\Rest_API\Contracts\Barcode_Service_Interface;
 use PostNLWooCommerce\Rest_API\Contracts\Label_Service_Interface;
 use PostNLWooCommerce\Rest_API\Contracts\Pickup_Location_Service_Interface;
@@ -23,6 +24,12 @@ use PostNLWooCommerce\Rest_API\Legacy\Letterbox_Service as Legacy_Letterbox_Serv
 use PostNLWooCommerce\Rest_API\Legacy\Postcode_Check_Service as Legacy_Postcode_Check_Service;
 use PostNLWooCommerce\Rest_API\Legacy\Return_Label_Service as Legacy_Return_Label_Service;
 use PostNLWooCommerce\Rest_API\Legacy\Smart_Returns_Service as Legacy_Smart_Returns_Service;
+use PostNLWooCommerce\Rest_API\SDK\Client_Factory;
+use PostNLWooCommerce\Rest_API\SDK\Logger_Adapter;
+use PostNLWooCommerce\Rest_API\V4\Label\Service as V4_Label_Service;
+use PostNLWooCommerce\Rest_API\V4\Returns\Service as V4_Returns_Service;
+use PostNLWooCommerce\Rest_API\V4\Returns\Smart_Returns_Service as V4_Smart_Returns_Service;
+use Psr\Log\LoggerInterface;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -84,6 +91,39 @@ class Service_Factory {
 	private $legacy_memos = array();
 
 	/**
+	 * Memoised self-built V4 label service.
+	 *
+	 * Deliberately kept out of $v4_services so that array keeps its single meaning —
+	 * "a V4 service was explicitly injected for this flow" — which barcode_from_label()
+	 * depends on.
+	 *
+	 * @var V4_Label_Service|null
+	 */
+	private $label_v4_memo = null;
+
+	/**
+	 * Memoised self-built V4 returns service.
+	 *
+	 * Kept out of $v4_services for the same reason as $label_v4_memo: that array
+	 * means "a V4 service was explicitly injected for this flow", and giving it a
+	 * second meaning is how a later predicate reading it gets a wrong answer.
+	 *
+	 * @var V4_Returns_Service|null
+	 */
+	private $return_label_v4_memo = null;
+
+	/**
+	 * Memoised self-built V4 smart-returns service.
+	 *
+	 * Kept out of $v4_services for the same reason as $label_v4_memo: that array
+	 * means "a V4 service was explicitly injected for this flow", and giving it a
+	 * second meaning is how a later predicate reading it gets a wrong answer.
+	 *
+	 * @var V4_Smart_Returns_Service|null
+	 */
+	private $smart_returns_v4_memo = null;
+
+	/**
 	 * Service_Factory constructor.
 	 *
 	 * @param object|null $settings Plugin settings instance, or null when unavailable.
@@ -138,6 +178,21 @@ class Service_Factory {
 	}
 
 	/**
+	 * Whether the barcode is issued by the label response instead of a standalone
+	 * barcode request.
+	 *
+	 * Gated on the same condition as label_service(), so the reorder can never select
+	 * a Legacy label service that still expects a prefetched barcode.
+	 *
+	 * @return bool
+	 *
+	 * @since 6.0.0
+	 */
+	public function barcode_from_label(): bool {
+		return $this->should_use_v4( 'label' ) && isset( $this->v4_services['label'] );
+	}
+
+	/**
 	 * Return the timeframe (delivery options) service for the current configuration.
 	 *
 	 * @return Timeframe_Service_Interface
@@ -167,8 +222,28 @@ class Service_Factory {
 	 * @return Label_Service_Interface
 	 */
 	public function label_service(): Label_Service_Interface {
-		if ( $this->should_use_v4( 'label' ) && isset( $this->v4_services['label'] ) ) {
-			return $this->v4_services['label'];
+		if ( $this->should_use_v4( 'label' ) ) {
+			// A service injected via inject_v4_service() wins; otherwise build the real V4 service.
+			// The per-combination V4_Mapper gate lives inside the service, which falls back to the
+			// legacy pipeline for anything outside the happy-path domestic parcel.
+			if ( isset( $this->v4_services['label'] ) ) {
+				return $this->v4_services['label'];
+			}
+			// Memoised apart from $v4_services on purpose. That array means "deliberately
+			// injected", and barcode_from_label() reads it to decide whether Order\Base may
+			// skip the barcode prefetch. Caching a self-built instance there would flip that
+			// answer mid-request: in a bulk run the first order prefetches a barcode and
+			// builds this service, and every later order on the same Order\Bulk instance
+			// would then skip the prefetch and hand Shipping\Item_Info no main_barcode.
+			if ( null === $this->label_v4_memo ) {
+				$logger              = $this->v4_logger();
+				$this->label_v4_memo = new V4_Label_Service(
+					new Client_Factory( $this->settings, $logger ),
+					(string) $this->settings->get_api_key_new(),
+					$logger
+				);
+			}
+			return $this->label_v4_memo;
 		}
 		if ( ! isset( $this->legacy_memos['label'] ) ) {
 			$this->legacy_memos['label'] = new Legacy_Label_Service();
@@ -197,8 +272,26 @@ class Service_Factory {
 	 * @return Return_Label_Service_Interface
 	 */
 	public function return_label_service(): Return_Label_Service_Interface {
-		if ( $this->should_use_v4( 'return_label' ) && isset( $this->v4_services['return_label'] ) ) {
-			return $this->v4_services['return_label'];
+		if ( $this->should_use_v4( 'return_label' ) ) {
+			// A service injected via inject_v4_service() wins; otherwise build the real V4
+			// service, which handles the NL retailPrint return and falls back to the legacy
+			// pipeline for the rest.
+			if ( isset( $this->v4_services['return_label'] ) ) {
+				return $this->v4_services['return_label'];
+			}
+			// Memoised apart from $v4_services for the same reason as label_service():
+			// that array means "deliberately injected", and barcode_from_label() reads it.
+			// Caching a self-built instance there would give the array two meanings, and
+			// the next predicate written against it would silently get the wrong answer.
+			if ( null === $this->return_label_v4_memo ) {
+				$logger                     = $this->v4_logger();
+				$this->return_label_v4_memo = new V4_Returns_Service(
+					new Client_Factory( $this->settings, $logger ),
+					(string) $this->settings->get_api_key_new(),
+					$logger
+				);
+			}
+			return $this->return_label_v4_memo;
 		}
 		if ( ! isset( $this->legacy_memos['return_label'] ) ) {
 			$this->legacy_memos['return_label'] = new Legacy_Return_Label_Service();
@@ -227,8 +320,26 @@ class Service_Factory {
 	 * @return Smart_Returns_Service_Interface
 	 */
 	public function smart_returns_service(): Smart_Returns_Service_Interface {
-		if ( $this->should_use_v4( 'smart_returns' ) && isset( $this->v4_services['smart_returns'] ) ) {
-			return $this->v4_services['smart_returns'];
+		if ( $this->should_use_v4( 'smart_returns' ) ) {
+			// A service injected via inject_v4_service() wins; otherwise build the real V4
+			// service, which handles the NL retailPrint Smart Return and falls back to the
+			// legacy pipeline for the rest.
+			if ( isset( $this->v4_services['smart_returns'] ) ) {
+				return $this->v4_services['smart_returns'];
+			}
+			// Memoised apart from $v4_services for the same reason as label_service():
+			// that array means "deliberately injected", and barcode_from_label() reads it.
+			// Caching a self-built instance there would give the array two meanings, and
+			// the next predicate written against it would silently get the wrong answer.
+			if ( null === $this->smart_returns_v4_memo ) {
+				$logger                      = $this->v4_logger();
+				$this->smart_returns_v4_memo = new V4_Smart_Returns_Service(
+					new Client_Factory( $this->settings, $logger ),
+					(string) $this->settings->get_api_key_new(),
+					$logger
+				);
+			}
+			return $this->smart_returns_v4_memo;
 		}
 		if ( ! isset( $this->legacy_memos['smart_returns'] ) ) {
 			$this->legacy_memos['smart_returns'] = new Legacy_Smart_Returns_Service();
@@ -250,6 +361,23 @@ class Service_Factory {
 			$this->legacy_memos['checkout'] = new Legacy_Checkout_Service();
 		}
 		return $this->legacy_memos['checkout'];
+	}
+
+	/**
+	 * Build the PSR-3 logger the V4 services and the SDK transport report through.
+	 *
+	 * Equivalent to Main::get_logger() wrapped in a Logger_Adapter — the wiring the
+	 * V4 services document — but built from the settings object this factory was
+	 * handed rather than reaching back for the Settings singleton, so the factory
+	 * has a single source of settings.
+	 *
+	 * Only called from a branch has_v4_key() already guarded, so $this->settings is
+	 * never null here.
+	 *
+	 * @return LoggerInterface
+	 */
+	private function v4_logger(): LoggerInterface {
+		return new Logger_Adapter( new Logger( (bool) $this->settings->is_logging_enabled() ) );
 	}
 
 	/**

@@ -1,8 +1,9 @@
 <?php
 /**
  * Unit tests for the "New API Key" logic on Shipping_Method\Settings: the
- * NewKey header value, the effective-key selection, and the validated-key hash
- * binding that gates the save-time key switch.
+ * NewKey header value, the effective-key selection, the environment-aware
+ * new-key resolution, and the validated-key hash binding that gates the
+ * save-time key switch.
  *
  * @package PostNLWooCommerce\Tests\Shipping_Method
  */
@@ -41,44 +42,61 @@ class SettingsNewApiKeyTest extends UnitTestCase {
 	}
 
 	/**
-	 * @testdox get_new_key_header_value reports No, Same or Yes from the entered key.
+	 * @testdox get_new_key_header_value reports No, Same or Yes from the entered, distinct and validated state.
 	 * @dataProvider new_key_header_provider
 	 */
-	public function test_get_new_key_header_value( string $new_key, string $original, string $expected ): void {
+	public function test_get_new_key_header_value( string $new_key, string $original, bool $validated, string $expected ): void {
 		$this->sut->shouldReceive( 'get_api_key_new' )->andReturn( $new_key );
-		$this->sut->shouldReceive( 'get_api_key' )->andReturn( $original );
+		$this->sut->shouldReceive( 'get_original_api_key' )->andReturn( $original );
+		$this->sut->shouldReceive( 'is_api_key_new_validated' )->andReturn( $validated );
 
 		$this->assertSame(
 			$expected,
 			$this->sut->get_new_key_header_value(),
-			"Expected '{$expected}' for new='{$new_key}', original='{$original}'."
+			"Expected '{$expected}' for new='{$new_key}', original='{$original}', validated=" . ( $validated ? 'true' : 'false' ) . '.'
 		);
 	}
 
 	/**
-	 * @return array<string, array{string, string, string}>
+	 * @return array<string, array{string, string, bool, string}>
 	 */
 	public static function new_key_header_provider(): array {
 		return array(
-			'empty new key'           => array( '', 'ORIGINAL', 'No' ),
-			'new key equals original' => array( 'SAMEKEY', 'SAMEKEY', 'Same' ),
-			'distinct new key'        => array( 'NEWKEY', 'ORIGINAL', 'Yes' ),
+			'empty new key'                     => array( '', 'ORIGINAL', false, 'No' ),
+			'new key equals original'           => array( 'SAMEKEY', 'SAMEKEY', false, 'Same' ),
+			'distinct but unvalidated'          => array( 'NEWKEY', 'ORIGINAL', false, 'No' ),
+			'distinct and validated'            => array( 'NEWKEY', 'ORIGINAL', true, 'Yes' ),
 		);
 	}
 
 	/**
-	 * Pins the deliberate behaviour (still unconfirmed with PostNL) that a
-	 * distinct key reports "Yes" for adoption tracking before the save-time
-	 * validation has run. If product confirms "Yes" must mean "validated", this
-	 * is the expectation to flip.
+	 * "Yes" means the key works, so an entered-but-unvalidated key must not report
+	 * adoption to PostNL — otherwise a merchant whose key failed our validation
+	 * would be counted as migrated.
 	 *
-	 * @testdox A distinct new key reports Yes even when it has not been validated.
+	 * @testdox A distinct new key reports No until it has been validated.
 	 */
-	public function test_distinct_new_key_reports_yes_without_validation(): void {
+	public function test_distinct_new_key_reports_no_without_validation(): void {
 		$this->sut->shouldReceive( 'get_api_key_new' )->andReturn( 'NEWKEY' );
-		$this->sut->shouldReceive( 'get_api_key' )->andReturn( 'ORIGINAL' );
+		$this->sut->shouldReceive( 'get_original_api_key' )->andReturn( 'ORIGINAL' );
+		$this->sut->shouldReceive( 'is_api_key_new_validated' )->andReturn( false );
 
-		$this->assertSame( 'Yes', $this->sut->get_new_key_header_value() );
+		$this->assertSame( 'No', $this->sut->get_new_key_header_value() );
+	}
+
+	/**
+	 * @testdox get_api_key_new returns the environment-appropriate new-key field.
+	 */
+	public function test_get_api_key_new_is_environment_aware(): void {
+		$sandbox = Mockery::mock( Settings::class )->makePartial();
+		$sandbox->shouldReceive( 'is_sandbox' )->andReturn( true );
+		$sandbox->shouldReceive( 'get_api_key_sandbox_new' )->andReturn( 'SANDBOX_NEW' );
+		$this->assertSame( 'SANDBOX_NEW', $sandbox->get_api_key_new() );
+
+		$production = Mockery::mock( Settings::class )->makePartial();
+		$production->shouldReceive( 'is_sandbox' )->andReturn( false );
+		$production->shouldReceive( 'get_country_option' )->with( 'api_keys_new', '' )->andReturn( 'PROD_NEW' );
+		$this->assertSame( 'PROD_NEW', $production->get_api_key_new() );
 	}
 
 	/**
@@ -86,7 +104,7 @@ class SettingsNewApiKeyTest extends UnitTestCase {
 	 * @dataProvider effective_key_provider
 	 */
 	public function test_get_effective_api_key( string $original, string $new_key, bool $validated, string $expected ): void {
-		$this->sut->shouldReceive( 'get_api_key' )->andReturn( $original );
+		$this->sut->shouldReceive( 'get_original_api_key' )->andReturn( $original );
 		$this->sut->shouldReceive( 'get_api_key_new' )->andReturn( $new_key );
 		$this->sut->shouldReceive( 'is_api_key_new_validated' )->andReturn( $validated );
 
@@ -113,7 +131,7 @@ class SettingsNewApiKeyTest extends UnitTestCase {
 	 * @testdox is_api_key_new_validated_value returns false for an empty key.
 	 */
 	public function test_validated_value_false_for_empty_key(): void {
-		$this->assertFalse( $this->sut->is_api_key_new_validated_value( '' ) );
+		$this->assertFalse( $this->sut->is_api_key_new_validated_value( '', false ) );
 	}
 
 	/**
@@ -122,7 +140,7 @@ class SettingsNewApiKeyTest extends UnitTestCase {
 	public function test_validated_value_false_when_no_hash_stored(): void {
 		Functions\when( 'get_option' )->justReturn( '' );
 
-		$this->assertFalse( $this->sut->is_api_key_new_validated_value( 'NEWKEY' ) );
+		$this->assertFalse( $this->sut->is_api_key_new_validated_value( 'NEWKEY', false ) );
 	}
 
 	/**
@@ -132,12 +150,37 @@ class SettingsNewApiKeyTest extends UnitTestCase {
 		Functions\when( 'get_option' )->justReturn( hash( 'sha256', 'NEWKEY' ) );
 
 		$this->assertTrue(
-			$this->sut->is_api_key_new_validated_value( 'NEWKEY' ),
+			$this->sut->is_api_key_new_validated_value( 'NEWKEY', false ),
 			'The key whose hash is stored must validate.'
 		);
 		$this->assertFalse(
-			$this->sut->is_api_key_new_validated_value( 'DIFFERENT' ),
+			$this->sut->is_api_key_new_validated_value( 'DIFFERENT', false ),
 			'A different key must not validate against the stored hash.'
+		);
+	}
+
+	/**
+	 * Guards item 5 of the review: the validated flag is environment-scoped, so a
+	 * key validated in production is not treated as validated in sandbox.
+	 *
+	 * @testdox The validated hash is stored per environment.
+	 */
+	public function test_validated_flag_is_environment_scoped(): void {
+		Functions\when( 'get_option' )->alias(
+			static function ( $name, $default = '' ) {
+				return Settings::NEW_API_KEY_VALIDATED_HASH_OPTION === $name
+					? hash( 'sha256', 'PRODKEY' )
+					: $default;
+			}
+		);
+
+		$this->assertTrue(
+			$this->sut->is_api_key_new_validated_value( 'PRODKEY', false ),
+			'The production key validates against the production hash.'
+		);
+		$this->assertFalse(
+			$this->sut->is_api_key_new_validated_value( 'PRODKEY', true ),
+			'The production key must not validate against the (empty) sandbox hash.'
 		);
 	}
 
@@ -153,7 +196,19 @@ class SettingsNewApiKeyTest extends UnitTestCase {
 			->with( Settings::NEW_API_KEY_VALIDATED_HASH_OPTION, hash( 'sha256', 'NEWKEY' ) )
 			->andReturn( true );
 
-		$this->sut->set_api_key_new_validated( true, 'NEWKEY' );
+		$this->sut->set_api_key_new_validated( true, 'NEWKEY', false );
+	}
+
+	/**
+	 * @testdox set_api_key_new_validated stores the sandbox key under the sandbox-scoped option.
+	 */
+	public function test_set_validated_uses_sandbox_option_in_sandbox(): void {
+		Functions\expect( 'update_option' )
+			->once()
+			->with( Settings::NEW_API_KEY_VALIDATED_HASH_OPTION . '_sandbox', hash( 'sha256', 'SANDBOXKEY' ) )
+			->andReturn( true );
+
+		$this->sut->set_api_key_new_validated( true, 'SANDBOXKEY', true );
 	}
 
 	/**
@@ -165,7 +220,7 @@ class SettingsNewApiKeyTest extends UnitTestCase {
 			->with( Settings::NEW_API_KEY_VALIDATED_HASH_OPTION )
 			->andReturn( true );
 
-		$this->sut->set_api_key_new_validated( false );
+		$this->sut->set_api_key_new_validated( false, null, false );
 	}
 
 	/**
@@ -177,6 +232,6 @@ class SettingsNewApiKeyTest extends UnitTestCase {
 			->with( Settings::NEW_API_KEY_VALIDATED_HASH_OPTION )
 			->andReturn( true );
 
-		$this->sut->set_api_key_new_validated( true, '' );
+		$this->sut->set_api_key_new_validated( true, '', false );
 	}
 }

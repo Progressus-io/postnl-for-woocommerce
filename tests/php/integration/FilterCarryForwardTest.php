@@ -214,6 +214,16 @@ class FilterCarryForwardTest extends IntegrationTestCase {
 	 */
 	private function make_service(): V4_Label_Service {
 		return new class() extends V4_Label_Service {
+			/**
+			 * Skip the V4 Service constructor.
+			 *
+			 * It requires the SDK client factory, resolved key and logger, but this
+			 * seam exercises only filter_shipment_addresses(), which builds its own
+			 * Legacy\Shipping\Client from the Item_Info and needs none of them.
+			 */
+			public function __construct() {
+			}
+
 			public function expose_filter_addresses( array $post_data ): array {
 				return $this->filter_shipment_addresses( new Shipping\Item_Info( $post_data ) );
 			}

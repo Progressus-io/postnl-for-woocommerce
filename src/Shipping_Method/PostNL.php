@@ -81,37 +81,39 @@ class PostNL extends \WC_Shipping_Flat_Rate {
 	/**
 	 * Validate the "New API Key" field whenever settings are saved.
 	 *
-	 * Only runs in production mode. Performs a live Barcode API call with
-	 * the candidate key. Success flips the validated flag on so the plugin
-	 * starts routing traffic through the new key; failure leaves the old
+	 * Runs in both environments so the V4 path can be exercised in sandbox as
+	 * well as production. Performs a live V4 Barcode API call with the candidate
+	 * key for the active environment. Success flips the validated flag on so the
+	 * plugin starts routing traffic through the new key; failure leaves the old
 	 * key in use and surfaces an error to the merchant.
 	 */
 	protected function process_new_api_key_validation() {
 		$settings = Settings::get_instance();
 
-		$env = $this->get_option( 'environment_mode' );
-		if ( 'production' !== $env ) {
-			return;
-		}
+		// The environment is read from the freshly-posted value on $this rather
+		// than the settings singleton, which may still hold the pre-save value.
+		$is_sandbox = ( 'production' !== $this->get_option( 'environment_mode' ) );
+		$new_field  = $is_sandbox ? 'api_keys_sandbox_new' : 'api_keys_new';
+		$orig_field = $is_sandbox ? 'api_keys_sandbox' : 'api_keys';
 
-		$new_key  = trim( (string) $this->get_option( 'api_keys_new' ) );
-		$original = trim( (string) $this->get_option( 'api_keys' ) );
+		$new_key  = trim( (string) $this->get_option( $new_field ) );
+		$original = trim( (string) $this->get_option( $orig_field ) );
 
 		if ( '' === $new_key || $new_key === $original ) {
-			$settings->set_api_key_new_validated( false );
+			$settings->set_api_key_new_validated( false, null, $is_sandbox );
 			return;
 		}
 
 		// This exact key already passed validation; skip the live call so an
 		// unrelated settings save doesn't make a blocking request every time.
-		if ( $settings->is_api_key_new_validated_value( $new_key ) ) {
+		if ( $settings->is_api_key_new_validated_value( $new_key, $is_sandbox ) ) {
 			return;
 		}
 
 		$customer_code = $this->get_option( 'customer_code' );
 		$customer_num  = $this->get_option( 'customer_num' );
 
-		$result = Key_Validator::validate( $new_key, $customer_code, $customer_num );
+		$result = Key_Validator::validate( $new_key, $customer_code, $customer_num, $is_sandbox );
 
 		if ( is_wp_error( $result ) ) {
 			$error_code = $result->get_error_code();
@@ -126,7 +128,7 @@ class PostNL extends \WC_Shipping_Flat_Rate {
 				return;
 			}
 
-			$settings->set_api_key_new_validated( false );
+			$settings->set_api_key_new_validated( false, null, $is_sandbox );
 
 			if ( 'postnl_missing_customer_data' === $error_code ) {
 				WC_Admin_Settings::add_error(
@@ -141,7 +143,7 @@ class PostNL extends \WC_Shipping_Flat_Rate {
 			return;
 		}
 
-		$settings->set_api_key_new_validated( true, $new_key );
+		$settings->set_api_key_new_validated( true, $new_key, $is_sandbox );
 	}
 
 	/**

@@ -424,6 +424,51 @@ class Request_Builder {
 	}
 
 	/**
+	 * Overlay the filtered recipient address onto the receiver field set.
+	 *
+	 * The postnl_shipment_addresses filter operates on the legacy-shaped address
+	 * array (AddressType keys, CompanyName/HouseNr/… fields). This maps the
+	 * recipient entry (AddressType '01') — after any third-party modification —
+	 * back onto the flat receiver fields build() consumes, so a filter that
+	 * rewrites the address changes the V4 request too. Only the address fields are
+	 * touched; the contact fields (email, phone) live in the Contacts block, not
+	 * the address, and are left untouched.
+	 *
+	 * @param array $receiver  Receiver fields as extracted from the order.
+	 * @param array $addresses Legacy-shaped address array returned by the filter.
+	 * @return array Receiver fields with the filtered recipient address applied.
+	 */
+	public static function apply_filtered_receiver( array $receiver, array $addresses ): array {
+		$map = array(
+			'company'          => 'CompanyName',
+			'first_name'       => 'FirstName',
+			'last_name'        => 'Name',
+			'street'           => 'Street',
+			'house_number'     => 'HouseNr',
+			'house_number_ext' => 'HouseNrExt',
+			'postcode'         => 'Zipcode',
+			'city'             => 'City',
+			'country'          => 'Countrycode',
+		);
+
+		foreach ( $addresses as $address ) {
+			if ( '01' !== ( $address['AddressType'] ?? '' ) ) {
+				continue;
+			}
+
+			foreach ( $map as $field => $legacy_key ) {
+				if ( array_key_exists( $legacy_key, $address ) ) {
+					$receiver[ $field ] = (string) $address[ $legacy_key ];
+				}
+			}
+
+			break;
+		}
+
+		return $receiver;
+	}
+
+	/**
 	 * Return null for an empty string so the DTO omits the field entirely.
 	 *
 	 * @param string $value Candidate value.

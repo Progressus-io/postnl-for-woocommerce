@@ -560,4 +560,82 @@ class Request_BuilderTest extends UnitTestCase {
 			'Empty string defaults to PDF'  => array( '', 'pdf', 200 ),
 		);
 	}
+
+	/**
+	 * A recipient (AddressType 01) entry in the legacy address shape.
+	 *
+	 * @param array $overrides Fields to override on the base recipient entry.
+	 * @return array
+	 */
+	private function recipient_address( array $overrides = array() ): array {
+		return array_merge(
+			array(
+				'AddressType' => '01',
+				'CompanyName' => '',
+				'City'        => 'Amsterdam',
+				'Countrycode' => 'NL',
+				'FirstName'   => 'Jan',
+				'HouseNr'     => '9',
+				'HouseNrExt'  => 'A',
+				'Name'        => 'Jansen',
+				'Street'      => 'Main Street',
+				'Zipcode'     => '1234AB',
+			),
+			$overrides
+		);
+	}
+
+	/**
+	 * @testdox apply_filtered_receiver() overlays a rewritten recipient address onto the receiver.
+	 */
+	public function test_apply_filtered_receiver_overlays_modified_address(): void {
+		$receiver = $this->domestic_fields()['receiver'];
+		$filtered = array(
+			$this->recipient_address(
+				array(
+					'Street'  => 'Rewritten Street',
+					'HouseNr' => '77',
+					'City'    => 'Rotterdam',
+					'Zipcode' => '3000AA',
+				)
+			),
+		);
+
+		$result = Request_Builder::apply_filtered_receiver( $receiver, $filtered );
+
+		$this->assertSame( 'Rewritten Street', $result['street'] );
+		$this->assertSame( '77', $result['house_number'] );
+		$this->assertSame( 'Rotterdam', $result['city'] );
+		$this->assertSame( '3000AA', $result['postcode'] );
+	}
+
+	/**
+	 * @testdox apply_filtered_receiver() leaves the contact fields untouched — they live in Contacts, not the address.
+	 */
+	public function test_apply_filtered_receiver_preserves_contact_fields(): void {
+		$receiver = $this->domestic_fields()['receiver'];
+
+		$result = Request_Builder::apply_filtered_receiver( $receiver, array( $this->recipient_address() ) );
+
+		$this->assertSame( 'buyer@example.com', $result['email'] );
+		$this->assertSame( '0612345678', $result['phone'] );
+	}
+
+	/**
+	 * @testdox apply_filtered_receiver() returns the receiver unchanged when no recipient (01) address is present.
+	 */
+	public function test_apply_filtered_receiver_without_recipient_entry(): void {
+		$receiver = $this->domestic_fields()['receiver'];
+		$filtered = array(
+			array(
+				'AddressType' => '09',
+				'City'        => 'Utrecht',
+				'Street'      => 'Pickup Street',
+			),
+		);
+
+		$result = Request_Builder::apply_filtered_receiver( $receiver, $filtered );
+
+		$this->assertSame( $receiver, $result, 'A non-recipient address entry must not alter the receiver.' );
+	}
 }

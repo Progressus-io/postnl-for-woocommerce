@@ -86,13 +86,17 @@ class Settings extends \WC_Settings_API {
 				'placeholder' => '',
 			),
 			'api_keys'                        => array(
-				'title'       => esc_html__( 'Production API Key', 'postnl-for-woocommerce' ),
-				'type'        => 'text',
+				'title'             => esc_html__( 'Production API Key', 'postnl-for-woocommerce' ),
+				'type'              => 'text',
 				// translators: %1$s & %2$s is replaced with <a> tag.
-				'description' => sprintf( __( 'Insert your PostNL production API-key. You can find your API-key on Mijn %1$sPostNL%2$s under "My Account".', 'postnl-for-woocommerce' ), '<a href="https://mijn.postnl.nl/c/BP2_Mod_Login.app" target="_blank">', '</a>' ),
-				'desc_tip'    => true,
-				'default'     => '',
-				'placeholder' => '',
+				'description'       => sprintf( __( 'Insert your PostNL production API-key. You can find your API-key on Mijn %1$sPostNL%2$s under "My Account".', 'postnl-for-woocommerce' ), '<a href="https://mijn.postnl.nl/c/BP2_Mod_Login.app" target="_blank">', '</a>' ),
+				'desc_tip'          => true,
+				'default'           => '',
+				'placeholder'       => '',
+				// Locked ahead of the API migration: merchants enter the new key in
+				// the "New API Key" field instead, so a fresh install can only use the
+				// new key and never trips the "Same" adoption-header value.
+				'custom_attributes' => array( 'readonly' => 'readonly' ),
 			),
 			'api_keys_sandbox'                => array(
 				'title'       => esc_html__( 'Sandbox API Key', 'postnl-for-woocommerce' ),

@@ -92,9 +92,8 @@ class Settings extends \WC_Settings_API {
 			'api_keys'                        => array(
 				'title'             => esc_html__( 'Old API Key', 'postnl-for-woocommerce' ),
 				'type'              => 'text',
-				// translators: %1$s & %2$s is replaced with <a> tag.
-				'description'       => sprintf( __( 'Insert your PostNL production API-key. You can find your API-key on Mijn %1$sPostNL%2$s under "My Account".', 'postnl-for-woocommerce' ), '<a href="https://mijn.postnl.nl/c/BP2_Mod_Login.app" target="_blank">', '</a>' ),
-				'desc_tip'          => true,
+				'description'       => esc_html__( 'The key you were using before. It is locked because new keys go in the field below.', 'postnl-for-woocommerce' ),
+				'desc_tip'          => false,
 				'default'           => '',
 				'placeholder'       => '',
 				'custom_attributes' => array( 'readonly' => 'readonly' ),
@@ -102,8 +101,8 @@ class Settings extends \WC_Settings_API {
 			'api_keys_new'                    => array(
 				'title'       => esc_html__( 'API Key', 'postnl-for-woocommerce' ),
 				'type'        => 'text',
-				'description' => esc_html__( 'Enter the new API key here, required to access the new APIs when these have been released in the plug-in.', 'postnl-for-woocommerce' ),
-				'desc_tip'    => true,
+				'description' => esc_html__( 'Enter your PostNL API key here. You can get it from the Self Service module on the PostNL Business Portal.', 'postnl-for-woocommerce' ),
+				'desc_tip'    => false,
 				'default'     => '',
 				'placeholder' => '',
 			),
@@ -114,9 +113,8 @@ class Settings extends \WC_Settings_API {
 			'api_keys_sandbox'                => array(
 				'title'             => esc_html__( 'Old Sandbox API Key', 'postnl-for-woocommerce' ),
 				'type'              => 'text',
-				// translators: %1$s & %2$s is replaced with <a> tag.
-				'description'       => sprintf( __( 'Insert your PostNL staging API-key. You can find your API-key on Mijn %1$sPostNL%2$s under "My Account".', 'postnl-for-woocommerce' ), '<a href="https://mijn.postnl.nl/c/BP2_Mod_Login.app" target="_blank">', '</a>' ),
-				'desc_tip'          => true,
+				'description'       => esc_html__( 'The sandbox key you were using before. It is locked because new keys go in the field below.', 'postnl-for-woocommerce' ),
+				'desc_tip'          => false,
 				'default'           => '',
 				'placeholder'       => '',
 				'custom_attributes' => array( 'readonly' => 'readonly' ),
@@ -124,8 +122,8 @@ class Settings extends \WC_Settings_API {
 			'api_keys_sandbox_new'            => array(
 				'title'       => esc_html__( 'Sandbox API Key', 'postnl-for-woocommerce' ),
 				'type'        => 'text',
-				'description' => esc_html__( 'Enter the new sandbox API key here, required to access the new APIs when these have been released in the plug-in.', 'postnl-for-woocommerce' ),
-				'desc_tip'    => true,
+				'description' => esc_html__( 'Enter your PostNL sandbox API key here. You can get it from the Self Service module on the PostNL Business Portal.', 'postnl-for-woocommerce' ),
+				'desc_tip'    => false,
 				'default'     => '',
 				'placeholder' => '',
 			),
@@ -1108,14 +1106,36 @@ class Settings extends \WC_Settings_API {
 	}
 
 	/**
-	 * Resolve the status of the new key for a given environment: the header
-	 * value plus a colour, label and sentence for the settings status row. The
-	 * label and colour derive from the same header value the API calls send, so
-	 * the screen and PostNL's adoption count can never contradict each other.
+	 * Placeholder Self Service (SSAM) portal URL used in the new-key guidance.
+	 * PostNL still has to confirm the real Self Service URL before release; the
+	 * mockup points at mijn.postnl.nl, so that is used until then.
+	 */
+	const SELF_SERVICE_URL = 'https://mijn.postnl.nl/';
+
+	/**
+	 * Link to the PostNL Business Portal Self Service module, reused across the
+	 * status row and the migration banner.
+	 *
+	 * @return string
+	 */
+	public function self_service_link() {
+		return sprintf(
+			'<a href="%1$s" target="_blank" rel="noopener noreferrer">%2$s</a>',
+			esc_url( self::SELF_SERVICE_URL ),
+			esc_html__( 'Self Service module on the PostNL Business Portal', 'postnl-for-woocommerce' )
+		);
+	}
+
+	/**
+	 * Resolve the status of the new key for a given environment: the header value
+	 * plus a colour, label, a one-line summary and a "what to do next" paragraph
+	 * for the settings status row. The label and colour derive from the same
+	 * header value the API calls send, so the screen and PostNL's adoption count
+	 * can never contradict each other.
 	 *
 	 * @param bool|null $is_sandbox Environment to describe, or null for the current one.
 	 *
-	 * @return array{header:string,label:string,color:string,description:string}
+	 * @return array{header:string,label:string,color:string,summary:string,description:string}
 	 */
 	public function get_new_key_status( $is_sandbox = null ) {
 		$is_sandbox = $this->resolve_is_sandbox( $is_sandbox );
@@ -1124,6 +1144,7 @@ class Settings extends \WC_Settings_API {
 		$original  = $is_sandbox ? trim( (string) $this->get_api_key_sandbox() ) : trim( (string) $this->get_api_key() );
 		$validated = $this->is_api_key_new_validated_value( $new_key, $is_sandbox );
 		$header    = $this->derive_new_key_header_value( $new_key, $original, $validated );
+		$link      = $this->self_service_link();
 
 		switch ( $header ) {
 			case 'Yes':
@@ -1131,7 +1152,8 @@ class Settings extends \WC_Settings_API {
 					'header'      => $header,
 					'label'       => __( 'Valid', 'postnl-for-woocommerce' ),
 					'color'       => '#008a20',
-					'description' => __( 'This key is active and used for all requests to PostNL.', 'postnl-for-woocommerce' ),
+					'summary'     => __( 'Your API key is working and will be used for the new PostNL APIs.', 'postnl-for-woocommerce' ),
+					'description' => '',
 				);
 
 			case 'Same':
@@ -1139,15 +1161,19 @@ class Settings extends \WC_Settings_API {
 					'header'      => $header,
 					'label'       => __( 'Same as old key', 'postnl-for-woocommerce' ),
 					'color'       => '#dba617',
-					'description' => __( 'This matches your old key. Enter the new API key issued by PostNL to prepare for the migration.', 'postnl-for-woocommerce' ),
+					'summary'     => __( 'This is the key you already had, not a new one.', 'postnl-for-woocommerce' ),
+					// translators: %s is a link to the PostNL Business Portal Self Service module.
+					'description' => sprintf( __( 'You need a separate key. Request one from the %s, then paste it into the field above.', 'postnl-for-woocommerce' ), $link ),
 				);
 
 			case 'Entered':
-				return array(
-					'header'      => $header,
-					'label'       => __( 'Not valid', 'postnl-for-woocommerce' ),
-					'color'       => '#d63638',
-					'description' => $this->get_new_key_invalid_description( $is_sandbox ),
+				return array_merge(
+					array(
+						'header' => $header,
+						'label'  => __( 'Not valid', 'postnl-for-woocommerce' ),
+						'color'  => '#d63638',
+					),
+					$this->get_new_key_invalid_copy( $is_sandbox, $link )
 				);
 
 			default:
@@ -1155,34 +1181,43 @@ class Settings extends \WC_Settings_API {
 					'header'      => $header,
 					'label'       => __( 'Not set', 'postnl-for-woocommerce' ),
 					'color'       => '#757575',
-					'description' => __( 'Enter your new PostNL API key to prepare for the upcoming API migration.', 'postnl-for-woocommerce' ),
+					'summary'     => __( 'You have not entered your API key yet.', 'postnl-for-woocommerce' ),
+					// translators: %s is a link to the PostNL Business Portal Self Service module.
+					'description' => sprintf( __( 'Request your key from the %s and enter it above. You will need it before the new PostNL APIs are switched on.', 'postnl-for-woocommerce' ), $link ),
 				);
 		}
 	}
 
 	/**
-	 * Sentence for the "Not valid" status. A rejected key, unreachable PostNL and
-	 * missing customer details all land here but need different wording — telling
-	 * a merchant their key is invalid when we simply could not check it is a
-	 * support ticket. Missing customer details is derived live; the other reasons
-	 * come from the flag persisted at save time.
+	 * Summary and description for the "Not valid" status. A genuine rejection is
+	 * the only case we can be sure the key is bad, so it gets the "wrong key"
+	 * copy. Missing customer details and an unreachable PostNL both mean we could
+	 * not actually check the key, so they share the softer "could not check"
+	 * wording — telling a merchant their key is invalid when we never verified it
+	 * is a support ticket. Missing details is derived live; a rejection or an
+	 * unreachable host comes from the flag persisted at save time.
 	 *
-	 * @param bool $is_sandbox Environment to describe.
+	 * @param bool   $is_sandbox Environment to describe.
+	 * @param string $link       Self Service link markup.
 	 *
-	 * @return string
+	 * @return array{summary:string,description:string}
 	 */
-	protected function get_new_key_invalid_description( $is_sandbox ) {
-		if ( '' === trim( (string) $this->get_customer_code() ) || '' === trim( (string) $this->get_customer_num() ) ) {
-			return __( 'Fill in Customer Code and Customer Number, then save again to validate this key.', 'postnl-for-woocommerce' );
+	protected function get_new_key_invalid_copy( $is_sandbox, $link ) {
+		$missing = '' === trim( (string) $this->get_customer_code() ) || '' === trim( (string) $this->get_customer_num() );
+		$reason  = (string) get_option( self::NEW_API_KEY_STATUS_OPTION . ( $is_sandbox ? '_sandbox' : '' ), '' );
+
+		if ( ! $missing && 'invalid' === $reason ) {
+			return array(
+				'summary'     => __( 'PostNL rejected this key, so the plug-in is still using your old key.', 'postnl-for-woocommerce' ),
+				// translators: %s is a link to the PostNL Business Portal Self Service module.
+				'description' => sprintf( __( 'Check that you copied the whole key with no extra spaces, then save again. If it keeps failing, request a new key from the %s.', 'postnl-for-woocommerce' ), $link ),
+			);
 		}
 
-		$reason = (string) get_option( self::NEW_API_KEY_STATUS_OPTION . ( $is_sandbox ? '_sandbox' : '' ), '' );
-
-		if ( 'unreachable' === $reason ) {
-			return __( 'PostNL could not be reached to verify this key. The key may be correct; save again later to check.', 'postnl-for-woocommerce' );
-		}
-
-		return __( 'This key was not accepted by PostNL. Check the key and enter it again.', 'postnl-for-woocommerce' );
+		return array(
+			'summary'     => __( 'We could not check this key yet, so the plug-in is still using your old key.', 'postnl-for-woocommerce' ),
+			'description' => __( 'Fill in your Customer Code and Customer Number, then save again. If they are already filled in, PostNL could not be reached just now and saving again later should sort it.', 'postnl-for-woocommerce' ),
+		);
 	}
 
 	/**

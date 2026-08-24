@@ -130,17 +130,24 @@ class Api_Key_Banner {
 			return;
 		}
 
-		$nonce = wp_create_nonce( self::NONCE_ACTION );
+		$nonce       = wp_create_nonce( self::NONCE_ACTION );
+		$has_old_key = '' !== trim( (string) Settings::get_instance()->get_original_api_key() );
+
+		// Existing merchants (who already have a key) get the amber "warning"
+		// banner; a fresh install gets the blue "info" one, matching the mockup.
+		$notice_class = $has_old_key ? 'notice-warning' : 'notice-info';
 		?>
-		<div class="notice notice-warning postnl-new-api-key-banner" data-nonce="<?php echo esc_attr( $nonce ); ?>">
-			<p><strong><?php esc_html_e( 'PostNL: New API Key required', 'postnl-for-woocommerce' ); ?></strong></p>
-			<p><?php echo esc_html( $this->get_message() ); ?></p>
+		<div class="notice <?php echo esc_attr( $notice_class ); ?> postnl-new-api-key-banner" data-nonce="<?php echo esc_attr( $nonce ); ?>">
+			<p><strong><?php esc_html_e( 'PostNL:', 'postnl-for-woocommerce' ); ?></strong> <?php echo esc_html( $this->get_message( $has_old_key ) ); ?></p>
 			<p>
+				<a href="<?php echo esc_url( Settings::SELF_SERVICE_URL ); ?>" target="_blank" rel="noopener noreferrer" class="button button-primary">
+					<?php esc_html_e( 'Get your API key', 'postnl-for-woocommerce' ); ?>
+				</a>
 				<button type="button" class="button button-secondary postnl-new-api-key-remind">
 					<?php esc_html_e( 'Remind me later', 'postnl-for-woocommerce' ); ?>
 				</button>
-				<button type="button" class="button-link postnl-new-api-key-dismiss">
-					<?php esc_html_e( 'Dismiss permanently', 'postnl-for-woocommerce' ); ?>
+				<button type="button" class="button button-secondary postnl-new-api-key-dismiss">
+					<?php esc_html_e( 'Dismiss', 'postnl-for-woocommerce' ); ?>
 				</button>
 			</p>
 		</div>
@@ -151,11 +158,11 @@ class Api_Key_Banner {
 	 * Banner body text. Existing merchants (who already have a legacy key stored)
 	 * are told an extra field was added; a fresh install, which never had an old
 	 * key, is simply asked to enter its key. The copy here is placeholder pending
-	 * final wording.
+	 * final wording from Rick.
+	 *
+	 * @param bool $has_old_key Whether a legacy key is already stored.
 	 */
-	protected function get_message() {
-		$has_old_key = '' !== trim( (string) Settings::get_instance()->get_original_api_key() );
-
+	protected function get_message( $has_old_key ) {
 		if ( $has_old_key ) {
 			return __(
 				'Important: In the latest update of the plug-in, an additional API key field has been added to the account configuration of the PostNL plug-in. This field must be filled in with the new API key that can be obtained via the Self Service module on the PostNL Business Portal. This API key is required to gain access to the new APIs that will be rolled out in a future update of the plug-in. It is very important that this key is entered before the relevant update is performed; otherwise, no connection can be made to the new PostNL APIs, and it will not be possible to create labels or use checkout features such as delivery days and pickup points.',

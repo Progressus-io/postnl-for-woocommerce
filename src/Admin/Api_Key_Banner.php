@@ -148,11 +148,23 @@ class Api_Key_Banner {
 	}
 
 	/**
-	 * Banner body text.
+	 * Banner body text. Existing merchants (who already have a legacy key stored)
+	 * are told an extra field was added; a fresh install, which never had an old
+	 * key, is simply asked to enter its key. The copy here is placeholder pending
+	 * final wording.
 	 */
 	protected function get_message() {
+		$has_old_key = '' !== trim( (string) Settings::get_instance()->get_original_api_key() );
+
+		if ( $has_old_key ) {
+			return __(
+				'Important: In the latest update of the plug-in, an additional API key field has been added to the account configuration of the PostNL plug-in. This field must be filled in with the new API key that can be obtained via the Self Service module on the PostNL Business Portal. This API key is required to gain access to the new APIs that will be rolled out in a future update of the plug-in. It is very important that this key is entered before the relevant update is performed; otherwise, no connection can be made to the new PostNL APIs, and it will not be possible to create labels or use checkout features such as delivery days and pickup points.',
+				'postnl-for-woocommerce'
+			);
+		}
+
 		return __(
-			'Important: In the latest update of the plug-in, an additional API key field has been added to the account configuration of the PostNL plug-in. This field must be filled in with the new API key that can be obtained via the Self Service module on the PostNL Business Portal. This API key is required to gain access to the new APIs that will be rolled out in a future update of the plug-in. It is very important that this key is entered before the relevant update is performed; otherwise, no connection can be made to the new PostNL APIs, and it will not be possible to create labels or use checkout features such as delivery days and pickup points.',
+			'Important: Enter your PostNL API key, which can be obtained via the Self Service module on the PostNL Business Portal, in the account configuration of the PostNL plug-in. This key is required to connect to the PostNL APIs; without it you cannot create labels or use checkout features such as delivery days and pickup points.',
 			'postnl-for-woocommerce'
 		);
 	}

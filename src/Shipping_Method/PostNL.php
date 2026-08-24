@@ -101,6 +101,7 @@ class PostNL extends \WC_Shipping_Flat_Rate {
 
 		if ( '' === $new_key || $new_key === $original ) {
 			$settings->set_api_key_new_validated( false, null, $is_sandbox );
+			$settings->set_new_key_status_reason( '', $is_sandbox );
 			return;
 		}
 
@@ -122,6 +123,7 @@ class PostNL extends \WC_Shipping_Flat_Rate {
 			// not proof the key is bad, so leave any previously-validated state
 			// untouched rather than disabling a working key on a network blip.
 			if ( in_array( $error_code, array( 'postnl_key_http_error', 'postnl_key_http_status' ), true ) ) {
+				$settings->set_new_key_status_reason( 'unreachable', $is_sandbox );
 				WC_Admin_Settings::add_error(
 					esc_html__( 'Could not reach PostNL to validate the new API key. Your previous settings were kept unchanged; please try saving again later.', 'postnl-for-woocommerce' )
 				);
@@ -131,12 +133,14 @@ class PostNL extends \WC_Shipping_Flat_Rate {
 			$settings->set_api_key_new_validated( false, null, $is_sandbox );
 
 			if ( 'postnl_missing_customer_data' === $error_code ) {
+				$settings->set_new_key_status_reason( 'missing', $is_sandbox );
 				WC_Admin_Settings::add_error(
 					esc_html__( 'Please fill in Customer Code and Customer Number first to validate the new API key.', 'postnl-for-woocommerce' )
 				);
 				return;
 			}
 
+			$settings->set_new_key_status_reason( 'invalid', $is_sandbox );
 			WC_Admin_Settings::add_error(
 				esc_html__( 'The newly entered API key is invalid. Please check the key and enter it again.', 'postnl-for-woocommerce' )
 			);
@@ -144,6 +148,37 @@ class PostNL extends \WC_Shipping_Flat_Rate {
 		}
 
 		$settings->set_api_key_new_validated( true, $new_key, $is_sandbox );
+		$settings->set_new_key_status_reason( '', $is_sandbox );
+	}
+
+	/**
+	 * Render the status row shown beneath the API Key field: a coloured label,
+	 * an em dash and a plain sentence describing the new key's state, driven by
+	 * the same value sent in the NewKey header. Hidden by the settings JS for
+	 * whichever environment is not currently selected.
+	 *
+	 * @param string $key  Field key.
+	 * @param array  $data Field data (expects an 'environment' of 'sandbox' or 'production').
+	 *
+	 * @return string
+	 */
+	public function generate_postnl_new_key_status_html( $key, $data ) {
+		$is_sandbox = ( isset( $data['environment'] ) && 'sandbox' === $data['environment'] );
+		$status     = Settings::get_instance()->get_new_key_status( $is_sandbox );
+
+		ob_start();
+		?>
+		<tr valign="top" class="postnl-new-key-status-row" data-postnl-env="<?php echo esc_attr( $is_sandbox ? 'sandbox' : 'production' ); ?>">
+			<th scope="row" class="titledesc"><?php esc_html_e( 'Status', 'postnl-for-woocommerce' ); ?></th>
+			<td class="forminp">
+				<p style="margin-top:0;">
+					<strong style="color:<?php echo esc_attr( $status['color'] ); ?>;"><?php echo esc_html( $status['label'] ); ?></strong>
+					&mdash; <?php echo esc_html( $status['description'] ); ?>
+				</p>
+			</td>
+		</tr>
+		<?php
+		return ob_get_clean();
 	}
 
 	/**

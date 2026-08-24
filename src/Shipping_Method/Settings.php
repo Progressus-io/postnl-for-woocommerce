@@ -57,7 +57,7 @@ class Settings extends \WC_Settings_API {
 	 * @return array
 	 */
 	public function get_setting_fields() {
-		return array(
+		$fields = array(
 			// Manual.
 			'user_manual'                     => array(
 				'title'       => esc_html__( 'Manual', 'postnl-for-woocommerce' ),
@@ -85,43 +85,53 @@ class Settings extends \WC_Settings_API {
 				'default'     => 'production',
 				'placeholder' => '',
 			),
+			// Legacy production key. Renamed to "Old API Key" and only rendered when
+			// a value is already stored (see the gating in get_setting_fields()); a
+			// fresh install shows the "API Key" field alone. Kept read-only so
+			// merchants enter their key in the new field ahead of the API migration.
 			'api_keys'                        => array(
-				'title'             => esc_html__( 'Production API Key', 'postnl-for-woocommerce' ),
+				'title'             => esc_html__( 'Old API Key', 'postnl-for-woocommerce' ),
 				'type'              => 'text',
 				// translators: %1$s & %2$s is replaced with <a> tag.
 				'description'       => sprintf( __( 'Insert your PostNL production API-key. You can find your API-key on Mijn %1$sPostNL%2$s under "My Account".', 'postnl-for-woocommerce' ), '<a href="https://mijn.postnl.nl/c/BP2_Mod_Login.app" target="_blank">', '</a>' ),
 				'desc_tip'          => true,
 				'default'           => '',
 				'placeholder'       => '',
-				// Locked ahead of the API migration: merchants enter the new key in
-				// the "New API Key" field instead, so a fresh install can only use the
-				// new key and never trips the "Same" adoption-header value.
 				'custom_attributes' => array( 'readonly' => 'readonly' ),
 			),
-			'api_keys_sandbox'                => array(
-				'title'       => esc_html__( 'Sandbox API Key', 'postnl-for-woocommerce' ),
-				'type'        => 'text',
-				// translators: %1$s & %2$s is replaced with <a> tag.
-				'description' => sprintf( __( 'Insert your PostNL staging API-key. You can find your API-key on Mijn %1$sPostNL%2$s under "My Account".', 'postnl-for-woocommerce' ), '<a href="https://mijn.postnl.nl/c/BP2_Mod_Login.app" target="_blank">', '</a>' ),
-				'desc_tip'    => true,
-				'default'     => '',
-				'placeholder' => '',
-			),
 			'api_keys_new'                    => array(
-				'title'       => esc_html__( 'New API Key', 'postnl-for-woocommerce' ),
+				'title'       => esc_html__( 'API Key', 'postnl-for-woocommerce' ),
 				'type'        => 'text',
 				'description' => esc_html__( 'Enter the new API key here, required to access the new APIs when these have been released in the plug-in.', 'postnl-for-woocommerce' ),
 				'desc_tip'    => true,
 				'default'     => '',
 				'placeholder' => '',
 			),
+			'api_keys_new_status'             => array(
+				'type'        => 'postnl_new_key_status',
+				'environment' => 'production',
+			),
+			'api_keys_sandbox'                => array(
+				'title'             => esc_html__( 'Old Sandbox API Key', 'postnl-for-woocommerce' ),
+				'type'              => 'text',
+				// translators: %1$s & %2$s is replaced with <a> tag.
+				'description'       => sprintf( __( 'Insert your PostNL staging API-key. You can find your API-key on Mijn %1$sPostNL%2$s under "My Account".', 'postnl-for-woocommerce' ), '<a href="https://mijn.postnl.nl/c/BP2_Mod_Login.app" target="_blank">', '</a>' ),
+				'desc_tip'          => true,
+				'default'           => '',
+				'placeholder'       => '',
+				'custom_attributes' => array( 'readonly' => 'readonly' ),
+			),
 			'api_keys_sandbox_new'            => array(
-				'title'       => esc_html__( 'New Sandbox API Key', 'postnl-for-woocommerce' ),
+				'title'       => esc_html__( 'Sandbox API Key', 'postnl-for-woocommerce' ),
 				'type'        => 'text',
 				'description' => esc_html__( 'Enter the new sandbox API key here, required to access the new APIs when these have been released in the plug-in.', 'postnl-for-woocommerce' ),
 				'desc_tip'    => true,
 				'default'     => '',
 				'placeholder' => '',
+			),
+			'api_keys_sandbox_new_status'     => array(
+				'type'        => 'postnl_new_key_status',
+				'environment' => 'sandbox',
 			),
 			'enable_logging'                  => array(
 				'title'       => esc_html__( 'Logging', 'postnl-for-woocommerce' ),
@@ -740,6 +750,21 @@ class Settings extends \WC_Settings_API {
 			),
 
 		);
+
+		// The legacy key fields are shown only when a key is already stored: a
+		// fresh install enters its key in the new "API Key" field alone. The
+		// decision is made on the saved value (not the posted one) so a failed
+		// save does not make the field flicker in and out. Reading the raw option
+		// directly avoids recursing through get_country_option()/filter_setting_fields().
+		if ( '' === trim( (string) $this->get_option( 'api_keys' ) ) ) {
+			unset( $fields['api_keys'] );
+		}
+
+		if ( '' === trim( (string) $this->get_option( 'api_keys_sandbox' ) ) ) {
+			unset( $fields['api_keys_sandbox'] );
+		}
+
+		return $fields;
 	}
 
 	/**
@@ -1008,35 +1033,167 @@ class Settings extends \WC_Settings_API {
 	}
 
 	/**
-	 * Value for the NewKey header sent on every outgoing API call. Used by
-	 * PostNL to track adoption of the new key ahead of the API migration.
+	 * Option storing the reason the new key last failed validation, so the
+	 * settings status row can tell "key rejected" apart from "could not reach
+	 * PostNL" or "customer details missing" — all of which report the same
+	 * "Entered" header value. Only consulted when the header value is "Entered".
+	 */
+	const NEW_API_KEY_STATUS_OPTION = 'postnl_api_keys_new_status';
+
+	/**
+	 * Map the new-key state to its NewKey header value. Kept as one pure method
+	 * so the outgoing header and the settings status row can never disagree.
 	 *
-	 *  - "No"   : the new-key field is empty, or the entered key has not passed validation.
-	 *  - "Same" : the new-key field matches the original key.
-	 *  - "Yes"  : a distinct new key has been entered and validated.
+	 *  - "No"      : the new-key field is empty.
+	 *  - "Same"    : the new-key field matches the original key.
+	 *  - "Entered" : a distinct key was entered but has not passed validation.
+	 *  - "Yes"     : a distinct new key has been entered and validated.
 	 *
-	 * "Yes" is gated on validation because the requirements define it as a key
-	 * that "works" — reporting adoption for a key that failed our own validation
-	 * would tell PostNL a merchant is ready to migrate when they are not. The
-	 * comparison uses the current environment's key fields.
+	 * "Yes" is gated on validation because PostNL defines it as a key that
+	 * "works"; a key that failed our validation reports "Entered" so PostNL does
+	 * not count the merchant as ready to migrate.
+	 *
+	 * @param string $new_key   The entered new key.
+	 * @param string $original  The original (pre-migration) key.
+	 * @param bool   $validated Whether the new key passed validation.
 	 *
 	 * @return string
 	 */
-	public function get_new_key_header_value() {
-		$new_key = $this->get_api_key_new();
+	protected function derive_new_key_header_value( $new_key, $original, $validated ) {
 		if ( '' === $new_key ) {
 			return 'No';
 		}
 
-		if ( $new_key === $this->get_original_api_key() ) {
+		if ( $new_key === $original ) {
 			return 'Same';
 		}
 
-		if ( ! $this->is_api_key_new_validated() ) {
-			return 'No';
+		if ( ! $validated ) {
+			return 'Entered';
 		}
 
 		return 'Yes';
+	}
+
+	/**
+	 * Value for the NewKey header sent on every outgoing API call, computed for
+	 * the current environment.
+	 *
+	 * @return string
+	 */
+	public function get_new_key_header_value() {
+		return $this->derive_new_key_header_value(
+			$this->get_api_key_new(),
+			$this->get_original_api_key(),
+			$this->is_api_key_new_validated()
+		);
+	}
+
+	/**
+	 * Persist (or clear) the reason the new key last failed validation, scoped
+	 * to the given environment.
+	 *
+	 * @param string    $reason     One of 'invalid', 'unreachable', 'missing', or '' to clear.
+	 * @param bool|null $is_sandbox Environment to scope to, or null for the current one.
+	 */
+	public function set_new_key_status_reason( $reason, $is_sandbox = null ) {
+		$option = self::NEW_API_KEY_STATUS_OPTION . ( $this->resolve_is_sandbox( $is_sandbox ) ? '_sandbox' : '' );
+
+		if ( '' === $reason ) {
+			delete_option( $option );
+			return;
+		}
+
+		update_option( $option, $reason );
+	}
+
+	/**
+	 * Resolve the status of the new key for a given environment: the header
+	 * value plus a colour, label and sentence for the settings status row. The
+	 * label and colour derive from the same header value the API calls send, so
+	 * the screen and PostNL's adoption count can never contradict each other.
+	 *
+	 * @param bool|null $is_sandbox Environment to describe, or null for the current one.
+	 *
+	 * @return array{header:string,label:string,color:string,description:string}
+	 */
+	public function get_new_key_status( $is_sandbox = null ) {
+		$is_sandbox = $this->resolve_is_sandbox( $is_sandbox );
+
+		$new_key   = $is_sandbox ? $this->get_api_key_sandbox_new() : trim( (string) $this->get_country_option( 'api_keys_new', '' ) );
+		$original  = $is_sandbox ? trim( (string) $this->get_api_key_sandbox() ) : trim( (string) $this->get_api_key() );
+		$validated = $this->is_api_key_new_validated_value( $new_key, $is_sandbox );
+		$header    = $this->derive_new_key_header_value( $new_key, $original, $validated );
+
+		switch ( $header ) {
+			case 'Yes':
+				return array(
+					'header'      => $header,
+					'label'       => __( 'Valid', 'postnl-for-woocommerce' ),
+					'color'       => '#008a20',
+					'description' => __( 'This key is active and used for all requests to PostNL.', 'postnl-for-woocommerce' ),
+				);
+
+			case 'Same':
+				return array(
+					'header'      => $header,
+					'label'       => __( 'Same as old key', 'postnl-for-woocommerce' ),
+					'color'       => '#dba617',
+					'description' => __( 'This matches your old key. Enter the new API key issued by PostNL to prepare for the migration.', 'postnl-for-woocommerce' ),
+				);
+
+			case 'Entered':
+				return array(
+					'header'      => $header,
+					'label'       => __( 'Not valid', 'postnl-for-woocommerce' ),
+					'color'       => '#d63638',
+					'description' => $this->get_new_key_invalid_description( $is_sandbox ),
+				);
+
+			default:
+				return array(
+					'header'      => $header,
+					'label'       => __( 'Not set', 'postnl-for-woocommerce' ),
+					'color'       => '#757575',
+					'description' => __( 'Enter your new PostNL API key to prepare for the upcoming API migration.', 'postnl-for-woocommerce' ),
+				);
+		}
+	}
+
+	/**
+	 * Sentence for the "Not valid" status. A rejected key, unreachable PostNL and
+	 * missing customer details all land here but need different wording — telling
+	 * a merchant their key is invalid when we simply could not check it is a
+	 * support ticket. Missing customer details is derived live; the other reasons
+	 * come from the flag persisted at save time.
+	 *
+	 * @param bool $is_sandbox Environment to describe.
+	 *
+	 * @return string
+	 */
+	protected function get_new_key_invalid_description( $is_sandbox ) {
+		if ( '' === trim( (string) $this->get_customer_code() ) || '' === trim( (string) $this->get_customer_num() ) ) {
+			return __( 'Fill in Customer Code and Customer Number, then save again to validate this key.', 'postnl-for-woocommerce' );
+		}
+
+		$reason = (string) get_option( self::NEW_API_KEY_STATUS_OPTION . ( $is_sandbox ? '_sandbox' : '' ), '' );
+
+		if ( 'unreachable' === $reason ) {
+			return __( 'PostNL could not be reached to verify this key. The key may be correct; save again later to check.', 'postnl-for-woocommerce' );
+		}
+
+		return __( 'This key was not accepted by PostNL. Check the key and enter it again.', 'postnl-for-woocommerce' );
+	}
+
+	/**
+	 * Normalise a nullable environment flag to the current environment.
+	 *
+	 * @param bool|null $is_sandbox Environment flag, or null for the current one.
+	 *
+	 * @return bool
+	 */
+	protected function resolve_is_sandbox( $is_sandbox ) {
+		return ( null === $is_sandbox ) ? $this->is_sandbox() : (bool) $is_sandbox;
 	}
 
 	/**

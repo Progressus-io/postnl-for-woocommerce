@@ -48,16 +48,19 @@
 
 		display_api_key_field: function() {
 			var value = jQuery( '#woocommerce_postnl_environment_mode' ).val();
+			var productionRows = jQuery( '#woocommerce_postnl_api_keys' ).closest( 'tr' )
+				.add( jQuery( '#woocommerce_postnl_api_keys_new' ).closest( 'tr' ) )
+				.add( jQuery( '.postnl-new-key-status-row[data-postnl-env="production"]' ) );
+			var sandboxRows = jQuery( '#woocommerce_postnl_api_keys_sandbox' ).closest( 'tr' )
+				.add( jQuery( '#woocommerce_postnl_api_keys_sandbox_new' ).closest( 'tr' ) )
+				.add( jQuery( '.postnl-new-key-status-row[data-postnl-env="sandbox"]' ) );
+
 			if ( 'production' === value ) {
-				jQuery('#woocommerce_postnl_api_keys').closest('tr').show();
-				jQuery('#woocommerce_postnl_api_keys_new').closest('tr').show();
-				jQuery('#woocommerce_postnl_api_keys_sandbox').closest('tr').hide();
-				jQuery('#woocommerce_postnl_api_keys_sandbox_new').closest('tr').hide();
+				productionRows.show();
+				sandboxRows.hide();
 			} else {
-				jQuery('#woocommerce_postnl_api_keys').closest('tr').hide();
-				jQuery('#woocommerce_postnl_api_keys_new').closest('tr').hide();
-				jQuery('#woocommerce_postnl_api_keys_sandbox').closest('tr').show();
-				jQuery('#woocommerce_postnl_api_keys_sandbox_new').closest('tr').show();
+				productionRows.hide();
+				sandboxRows.show();
 			}
 		},
 

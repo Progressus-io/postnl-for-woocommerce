@@ -42,7 +42,7 @@ class SettingsNewApiKeyTest extends UnitTestCase {
 	}
 
 	/**
-	 * @testdox get_new_key_header_value reports No, Same or Yes from the entered, distinct and validated state.
+	 * @testdox get_new_key_header_value reports No, Same, Entered or Yes from the entered, distinct and validated state.
 	 * @dataProvider new_key_header_provider
 	 */
 	public function test_get_new_key_header_value( string $new_key, string $original, bool $validated, string $expected ): void {
@@ -64,24 +64,24 @@ class SettingsNewApiKeyTest extends UnitTestCase {
 		return array(
 			'empty new key'                     => array( '', 'ORIGINAL', false, 'No' ),
 			'new key equals original'           => array( 'SAMEKEY', 'SAMEKEY', false, 'Same' ),
-			'distinct but unvalidated'          => array( 'NEWKEY', 'ORIGINAL', false, 'No' ),
+			'distinct but unvalidated'          => array( 'NEWKEY', 'ORIGINAL', false, 'Entered' ),
 			'distinct and validated'            => array( 'NEWKEY', 'ORIGINAL', true, 'Yes' ),
 		);
 	}
 
 	/**
 	 * "Yes" means the key works, so an entered-but-unvalidated key must not report
-	 * adoption to PostNL — otherwise a merchant whose key failed our validation
-	 * would be counted as migrated.
+	 * adoption to PostNL — it reports "Entered" instead, so a merchant whose key
+	 * failed our validation is not counted as migrated.
 	 *
-	 * @testdox A distinct new key reports No until it has been validated.
+	 * @testdox A distinct new key reports Entered until it has been validated.
 	 */
-	public function test_distinct_new_key_reports_no_without_validation(): void {
+	public function test_distinct_new_key_reports_entered_without_validation(): void {
 		$this->sut->shouldReceive( 'get_api_key_new' )->andReturn( 'NEWKEY' );
 		$this->sut->shouldReceive( 'get_original_api_key' )->andReturn( 'ORIGINAL' );
 		$this->sut->shouldReceive( 'is_api_key_new_validated' )->andReturn( false );
 
-		$this->assertSame( 'No', $this->sut->get_new_key_header_value() );
+		$this->assertSame( 'Entered', $this->sut->get_new_key_header_value() );
 	}
 
 	/**

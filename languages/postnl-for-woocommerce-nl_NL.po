@@ -1965,8 +1965,12 @@ msgid "Fill in address with PostNL account"
 msgstr ""
 
 #: src/Shipping_Method/Settings.php
-msgid "New API Key"
-msgstr "Nieuwe API Key"
+msgid "Old API Key"
+msgstr "Oude API Key"
+
+#: src/Shipping_Method/Settings.php
+msgid "Old Sandbox API Key"
+msgstr "Oude Sandbox API Key"
 
 #: src/Shipping_Method/Settings.php
 msgid "Enter the new API key here, required to access the new APIs when these have been released in the plug-in."

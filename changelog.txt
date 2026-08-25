@@ -1,5 +1,8 @@
 *** PostNL for WooCommerce ***
 
+= 5.9.11 (2026-08-26) =
+* Tweak: WordPress 7.1 and WooCommerce 11.1 compatibility.
+
 = 5.9.10 (2026-07-23) =
 * Fix: Letterboxparcel 48-hour orders reverted to Standard Shipment when the label was generated with the bulk action on the classic orders list.
 

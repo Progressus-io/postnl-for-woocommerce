@@ -7,7 +7,7 @@ Requires at least: 6.7
 Tested up to: 7.1
 WC requires at least: 10.2
 WC tested up to: 11.1
-Stable tag: 5.9.10
+Stable tag: 5.9.11
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -80,6 +80,9 @@ Follow these instructions (https://www.postnl.nl/Images/aanvragen-api-key-stappe
 5. PostNL information on the order details page
 
 == Changelog ==
+
+= 5.9.11 (2026-08-26) =
+* Tweak: WordPress 7.1 and WooCommerce 11.1 compatibility.
 
 = 5.9.10 (2026-07-23) =
 * Fix: Letterboxparcel 48-hour orders reverted to Standard Shipment when the label was generated with the bulk action on the classic orders list.

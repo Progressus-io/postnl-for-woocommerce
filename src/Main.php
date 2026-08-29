@@ -227,6 +227,7 @@ class Main {
 
 		if ( is_admin() ) {
 			new Admin\Api_Key_Banner();
+			new Admin\Api_Key_Check();
 		}
 	}
 

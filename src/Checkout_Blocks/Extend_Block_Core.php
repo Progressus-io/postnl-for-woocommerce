@@ -564,6 +564,23 @@ class Extend_Block_Core {
 			$carrier_base_cost = 0.0;
 		}
 
+		// postnl_method_gate: mirror the classic checkout, which hides the widget when
+		// the chosen shipping method is not one PostNL is linked to.
+		$chosen_methods = WC()->session ? WC()->session->get( 'chosen_shipping_methods', array() ) : array();
+		if ( ! empty( array_filter( $chosen_methods ) ) && ! $this->is_postnl_method_chosen() ) {
+			Utils::clear_postnl_checkout_session();
+			wp_send_json_success(
+				array(
+					'message'          => 'Chosen shipping method is not linked to PostNL.',
+					'show_container'   => false,
+					'delivery_options' => array(),
+					'dropoff_options'  => array(),
+				),
+				200
+			);
+			wp_die();
+		}
+
 		// **Letterbox is Eligible**
 		if ( $letterbox ) {
 			wp_send_json_success(

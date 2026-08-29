@@ -27,6 +27,9 @@ PostNL’s official extension for WooCommerce on WordPress. Manage your national
 
 ## Changelog
 
+### 5.9.11
+* Add: New API Key field for the upcoming PostNL API migration. Enter the key from the PostNL Business Portal Self Service module; the plugin checks it with PostNL when you save, shows whether it is valid, and a banner reminds you until it is entered.
+
 ### 5.9.10
 * Fix: Letterboxparcel 48-hour orders reverted to Standard Shipment when the label was generated with the bulk action on the classic orders list.
 

@@ -68,6 +68,14 @@ class PostNL extends \WC_Shipping_Flat_Rate {
 	 */
 	public function process_admin_options() {
 		parent::process_admin_options();
+
+		// parent::process_admin_options() writes the new values to the DB but only
+		// updates this method object's cache; the Settings singleton still holds
+		// the pre-save values, and the status row, the NewKey header and the
+		// effective-key selection all read through it for the rest of the request.
+		// Refresh it so the screen that comes back reflects what was just saved.
+		Settings::get_instance()->init_settings();
+
 		$this->process_merchant_codes();
 
 		// When pickup is disabled, reset the default checkout tab to its default value.
@@ -81,11 +89,11 @@ class PostNL extends \WC_Shipping_Flat_Rate {
 	/**
 	 * Validate the "New API Key" field whenever settings are saved.
 	 *
-	 * Runs in both environments so the V4 path can be exercised in sandbox as
-	 * well as production. Performs a live V4 Barcode API call with the candidate
-	 * key for the active environment. Success flips the validated flag on so the
-	 * plugin starts routing traffic through the new key; failure leaves the old
-	 * key in use and surfaces an error to the merchant.
+	 * Runs in both environments so the key can be checked in sandbox as well as
+	 * production. Performs a live Barcode API call with the candidate key for the
+	 * active environment. Success flips the validated flag on so the plugin starts
+	 * routing traffic through the new key; failure leaves the old key in use,
+	 * records why, and surfaces the reason to the merchant.
 	 */
 	protected function process_new_api_key_validation() {
 		$settings = Settings::get_instance();
@@ -111,44 +119,30 @@ class PostNL extends \WC_Shipping_Flat_Rate {
 			return;
 		}
 
-		$customer_code = $this->get_option( 'customer_code' );
-		$customer_num  = $this->get_option( 'customer_num' );
+		$result = Key_Validator::validate(
+			$new_key,
+			$this->get_option( 'customer_code' ),
+			$this->get_option( 'customer_num' ),
+			$is_sandbox
+		);
 
-		$result = Key_Validator::validate( $new_key, $customer_code, $customer_num, $is_sandbox );
-
-		if ( is_wp_error( $result ) ) {
-			$error_code = $result->get_error_code();
-
-			// Transport failures / 5xx mean we could not reach PostNL — this is
-			// not proof the key is bad, so leave any previously-validated state
-			// untouched rather than disabling a working key on a network blip.
-			if ( in_array( $error_code, array( 'postnl_key_http_error', 'postnl_key_http_status' ), true ) ) {
-				$settings->set_new_key_status_reason( 'unreachable', $is_sandbox );
-				WC_Admin_Settings::add_error(
-					esc_html__( 'Could not reach PostNL to validate the new API key. Your previous settings were kept unchanged; please try saving again later.', 'postnl-for-woocommerce' )
-				);
-				return;
-			}
-
-			$settings->set_api_key_new_validated( false, null, $is_sandbox );
-
-			if ( 'postnl_missing_customer_data' === $error_code ) {
-				$settings->set_new_key_status_reason( 'missing', $is_sandbox );
-				WC_Admin_Settings::add_error(
-					esc_html__( 'Please fill in Customer Code and Customer Number first to validate the new API key.', 'postnl-for-woocommerce' )
-				);
-				return;
-			}
-
-			$settings->set_new_key_status_reason( 'invalid', $is_sandbox );
-			WC_Admin_Settings::add_error(
-				esc_html__( 'The newly entered API key is invalid. Please check the key and enter it again.', 'postnl-for-woocommerce' )
-			);
+		if ( true === $result ) {
+			$settings->set_api_key_new_validated( true, $new_key, $is_sandbox );
+			$settings->set_new_key_status_reason( '', $is_sandbox );
 			return;
 		}
 
-		$settings->set_api_key_new_validated( true, $new_key, $is_sandbox );
-		$settings->set_new_key_status_reason( '', $is_sandbox );
+		$reason = $result->get_error_code();
+
+		// "unreachable" means PostNL never returned a verdict, so we cannot say the
+		// key is bad — leave any previously-validated state as it was rather than
+		// showing a false red. Every other reason is a definite "not usable yet".
+		if ( Key_Validator::REASON_UNREACHABLE !== $reason ) {
+			$settings->set_api_key_new_validated( false, null, $is_sandbox );
+		}
+
+		$settings->set_new_key_status_reason( $reason, $is_sandbox );
+		WC_Admin_Settings::add_error( esc_html( Key_Validator::reason_message( $reason ) ) );
 	}
 
 	/**
@@ -172,12 +166,10 @@ class PostNL extends \WC_Shipping_Flat_Rate {
 			<th scope="row" class="titledesc"><?php esc_html_e( 'API Key Status', 'postnl-for-woocommerce' ); ?></th>
 			<td class="forminp">
 				<p style="margin-top:0;">
-					<strong style="color:<?php echo esc_attr( $status['color'] ); ?>;"><?php echo esc_html( $status['label'] ); ?></strong>
-					&mdash; <?php echo esc_html( $status['summary'] ); ?>
+					<strong class="postnl-new-key-status-label" style="color:<?php echo esc_attr( $status['color'] ); ?>;"><?php echo esc_html( $status['label'] ); ?></strong>
+					&mdash; <span class="postnl-new-key-status-summary"><?php echo esc_html( $status['summary'] ); ?></span>
 				</p>
-				<?php if ( ! empty( $status['description'] ) ) : ?>
-					<p class="description" style="margin-top:4px;"><?php echo wp_kses_post( $status['description'] ); ?></p>
-				<?php endif; ?>
+				<p class="description postnl-new-key-status-desc" style="margin-top:4px;<?php echo empty( $status['description'] ) ? 'display:none;' : ''; ?>"><?php echo wp_kses_post( $status['description'] ); ?></p>
 			</td>
 		</tr>
 		<?php
@@ -264,6 +256,16 @@ class PostNL extends \WC_Shipping_Flat_Rate {
 				array( 'jquery' ),
 				POSTNL_WC_VERSION,
 				true
+			);
+
+			wp_localize_script(
+				'postnl-admin-settings',
+				'postnlApiKeyCheck',
+				array(
+					'ajaxUrl' => admin_url( 'admin-ajax.php' ),
+					'action'  => \PostNLWooCommerce\Admin\Api_Key_Check::AJAX_ACTION,
+					'nonce'   => wp_create_nonce( \PostNLWooCommerce\Admin\Api_Key_Check::NONCE_ACTION ),
+				)
 			);
 		}
 	}

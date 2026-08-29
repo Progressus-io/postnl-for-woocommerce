@@ -81,7 +81,7 @@ Follow these instructions (https://www.postnl.nl/Images/aanvragen-api-key-stappe
 
 == Changelog ==
 
-= 5.9.11 (2026-08-26) =
+= 5.9.11 (2026-08-29) =
 * Tweak: WordPress 7.1 and WooCommerce 11.1 compatibility.
 
 = 5.9.10 (2026-07-23) =

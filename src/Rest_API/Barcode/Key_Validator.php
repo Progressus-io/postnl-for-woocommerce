@@ -31,6 +31,17 @@ if ( ! defined( 'ABSPATH' ) ) {
 class Key_Validator {
 
 	/**
+	 * Validation reasons. A single value describes the outcome so the save path
+	 * and the AJAX endpoint classify a response identically and can never tell a
+	 * merchant two different things about the same call.
+	 */
+	const REASON_VALID       = 'valid';
+	const REASON_MISSING     = 'missing';
+	const REASON_INVALID     = 'invalid';
+	const REASON_UNREACHABLE = 'unreachable';
+	const REASON_REJECTED    = 'rejected';
+
+	/**
 	 * Validate an API key by calling the PostNL Barcode endpoint.
 	 *
 	 * The environment is taken from the caller rather than the stored setting so
@@ -42,22 +53,20 @@ class Key_Validator {
 	 * @param string $customer_num  Customer number from settings.
 	 * @param bool   $is_sandbox    Whether to test against the sandbox environment.
 	 *
-	 * @return true|\WP_Error True on success, WP_Error on failure.
+	 * @return true|\WP_Error True when the key is valid, otherwise a WP_Error whose
+	 *                        code is one of the REASON_* slugs.
 	 */
 	public static function validate( $api_key, $customer_code, $customer_num, $is_sandbox = false ) {
 		$api_key       = trim( (string) $api_key );
 		$customer_code = trim( (string) $customer_code );
 		$customer_num  = trim( (string) $customer_num );
 
-		if ( '' === $api_key ) {
-			return new \WP_Error( 'postnl_empty_key', __( 'API key is empty.', 'postnl-for-woocommerce' ) );
+		if ( '' === $customer_code || '' === $customer_num ) {
+			return self::error( self::REASON_MISSING );
 		}
 
-		if ( '' === $customer_code || '' === $customer_num ) {
-			return new \WP_Error(
-				'postnl_missing_customer_data',
-				__( 'Customer Code and Customer Number are required to validate the new API key.', 'postnl-for-woocommerce' )
-			);
+		if ( '' === $api_key ) {
+			return self::error( self::REASON_INVALID );
 		}
 
 		$base     = $is_sandbox ? POSTNL_WC_SANDBOX_API_URL : POSTNL_WC_PROD_API_URL;
@@ -94,43 +103,93 @@ class Key_Validator {
 			$logger->write( 'PostNL new API key validation request (V1 barcode).' );
 		}
 
+		$reason = self::classify( $response );
+
+		return self::REASON_VALID === $reason ? true : self::error( $reason );
+	}
+
+	/**
+	 * Classify a Barcode API response into a reason.
+	 *
+	 * The HTTP status code decides first; the body is consulted only to tell a
+	 * genuine rejection (a fault or Errors payload returned on a 2xx) apart from
+	 * a real barcode. Reading the body first is what made a 429 or 503 carrying
+	 * an Apigee fault look like a bad key, so status wins here.
+	 *
+	 * @param array|\WP_Error $response Result of wp_remote_get().
+	 *
+	 * @return string One of the REASON_* slugs.
+	 */
+	protected static function classify( $response ) {
 		if ( is_wp_error( $response ) ) {
-			return new \WP_Error( 'postnl_key_http_error', $response->get_error_message() );
+			return self::REASON_UNREACHABLE;
 		}
 
 		$code = (int) wp_remote_retrieve_response_code( $response );
-		$body = wp_remote_retrieve_body( $response );
-		$data = json_decode( $body, true );
+		$data = json_decode( wp_remote_retrieve_body( $response ), true );
 
 		if ( 401 === $code || 403 === $code ) {
-			return new \WP_Error( 'postnl_key_unauthorized', __( 'The API key was rejected by PostNL.', 'postnl-for-woocommerce' ) );
+			return self::REASON_INVALID;
 		}
 
-		if ( is_array( $data ) ) {
-			if ( ! empty( $data['fault'] ) ) {
-				return new \WP_Error( 'postnl_key_fault', $data['fault']['faultstring'] ?? __( 'Unknown API fault.', 'postnl-for-woocommerce' ) );
+		if ( $code >= 200 && $code < 300 ) {
+			if ( is_array( $data ) && ( ! empty( $data['fault'] ) || ! empty( $data['Errors'] ) || ! empty( $data['Error'] ) ) ) {
+				return self::REASON_INVALID;
 			}
-			if ( ! empty( $data['Errors'] ) ) {
-				$first = array_shift( $data['Errors'] );
-				return new \WP_Error( 'postnl_key_error', $first['Description'] ?? $first['ErrorMsg'] ?? __( 'Unknown API error.', 'postnl-for-woocommerce' ) );
+
+			if ( is_array( $data ) && isset( $data['Barcode'] ) ) {
+				return self::REASON_VALID;
 			}
-			if ( ! empty( $data['Error'] ) ) {
-				return new \WP_Error( 'postnl_key_error', $data['Error']['ErrorMessage'] ?? __( 'Unknown API error.', 'postnl-for-woocommerce' ) );
-			}
+
+			// A 2xx with no barcode means PostNL never actually minted one, so we
+			// have no proof the key works — treat it as "could not check", not bad.
+			return self::REASON_UNREACHABLE;
 		}
 
-		if ( $code < 200 || $code >= 300 ) {
-			return new \WP_Error(
-				'postnl_key_http_status',
-				// translators: %d is the HTTP status code returned by PostNL.
-				sprintf( __( 'Unexpected HTTP status %d from PostNL.', 'postnl-for-woocommerce' ), $code )
-			);
+		if ( 429 === $code || $code >= 500 ) {
+			return self::REASON_UNREACHABLE;
 		}
 
-		if ( is_array( $data ) && isset( $data['Barcode'] ) ) {
-			return true;
-		}
+		// Any other 4xx: PostNL understood the request and refused it, most often
+		// because the Customer Code or Number does not go with this key.
+		return self::REASON_REJECTED;
+	}
 
-		return new \WP_Error( 'postnl_key_unexpected', __( 'Unexpected response from PostNL Barcode API.', 'postnl-for-woocommerce' ) );
+	/**
+	 * Build the WP_Error for a non-valid reason, carrying the reason as its code
+	 * and the merchant-facing sentence as its message.
+	 *
+	 * @param string $reason One of the REASON_* slugs.
+	 *
+	 * @return \WP_Error
+	 */
+	protected static function error( $reason ) {
+		return new \WP_Error( $reason, self::reason_message( $reason ) );
+	}
+
+	/**
+	 * Merchant-facing sentence for a validation reason. Kept as the single source
+	 * so the save-time notice and the on-blur endpoint word the same outcome the
+	 * same way.
+	 *
+	 * @param string $reason One of the REASON_* slugs.
+	 *
+	 * @return string
+	 */
+	public static function reason_message( $reason ) {
+		switch ( $reason ) {
+			case self::REASON_MISSING:
+				return __( 'Fill in your Customer Code and Customer Number first, then check the key again.', 'postnl-for-woocommerce' );
+
+			case self::REASON_REJECTED:
+				return __( 'PostNL could not process the check. This usually means the Customer Code or Customer Number does not match this key.', 'postnl-for-woocommerce' );
+
+			case self::REASON_UNREACHABLE:
+				return __( 'We could not reach PostNL to check the key. Please try again in a few minutes.', 'postnl-for-woocommerce' );
+
+			case self::REASON_INVALID:
+			default:
+				return __( 'The newly entered API key is invalid. Please check the key and enter it again.', 'postnl-for-woocommerce' );
+		}
 	}
 }

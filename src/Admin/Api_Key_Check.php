@@ -32,8 +32,10 @@ class Api_Key_Check {
 	const AJAX_ACTION  = 'postnl_check_new_api_key';
 
 	/**
-	 * Most checks a single user may run inside RATE_LIMIT_WINDOW seconds. Each
-	 * check that reaches PostNL mints a barcode, so this bounds the volume.
+	 * Most checks a single user may run inside a rolling RATE_LIMIT_WINDOW-second
+	 * window. Each check that reaches PostNL mints a barcode, so this bounds the
+	 * volume; the counter's TTL is refreshed on every hit, so sustained checking
+	 * stays capped rather than resetting.
 	 */
 	const RATE_LIMIT_MAX    = 10;
 	const RATE_LIMIT_WINDOW = 60;
@@ -74,6 +76,14 @@ class Api_Key_Check {
 		// a barcode on them.
 		if ( '' === $new_key || $new_key === $original ) {
 			wp_send_json_success( $settings->build_new_key_status( $new_key, $original, false, $is_sandbox, false ) );
+		}
+
+		// This exact key already passed validation and is saved, so report the
+		// green "Valid" state without spending another barcode. Without this, a
+		// merchant who just focuses and blurs the pre-filled field would mint a
+		// barcode and see the row drop to amber (or red during an outage).
+		if ( $settings->is_api_key_new_validated_value( $new_key, $is_sandbox ) ) {
+			wp_send_json_success( $settings->build_new_key_status( $new_key, $original, true, $is_sandbox, true ) );
 		}
 
 		if ( ! $this->within_rate_limit() ) {

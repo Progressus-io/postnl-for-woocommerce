@@ -50,9 +50,12 @@
 			var key       = jQuery.trim( $field.val() );
 			var oldField  = isSandbox ? '#woocommerce_postnl_api_keys_sandbox' : '#woocommerce_postnl_api_keys';
 			var oldKey    = jQuery.trim( jQuery( oldField ).val() || '' );
+			// The value the field was rendered with, i.e. the saved key. Blurring
+			// it unchanged must not fire a check — the row already shows its state.
+			var savedKey  = jQuery.trim( $field.prop( 'defaultValue' ) || '' );
 
-			// Nothing distinct to check: leave the row as the saved state rendered it.
-			if ( '' === key || key === oldKey ) {
+			// Nothing distinct or unsaved to check: leave the row as rendered.
+			if ( '' === key || key === oldKey || key === savedKey ) {
 				return;
 			}
 

@@ -331,28 +331,33 @@ class SettingsNewApiKeyTest extends UnitTestCase {
 	 * Item 3: an outage must read as "could not reach", not "invalid", so the
 	 * entered-key copy varies by reason.
 	 *
-	 * @testdox build_new_key_status entered copy varies by failure reason.
+	 * Only a genuine rejection is red "Not valid"; an outage, a mismatch or missing
+	 * details are amber "could not check", so an outage never reads as invalid.
+	 *
+	 * @testdox build_new_key_status entered copy and colour vary by failure reason.
 	 * @dataProvider entered_reason_provider
 	 *
-	 * @param string $reason   Persisted failure reason.
-	 * @param string $needle   Text the summary must contain.
+	 * @param string $reason Persisted failure reason.
+	 * @param string $needle Text the summary must contain.
+	 * @param string $color  Expected colour for the reason.
 	 */
-	public function test_build_status_entered_copy_by_reason( string $reason, string $needle ): void {
+	public function test_build_status_entered_copy_by_reason( string $reason, string $needle, string $color ): void {
 		$status = $this->sut->build_new_key_status( 'NEWKEY', 'OLDKEY', false, false, true, $reason );
 
 		$this->assertSame( 'Entered', $status['header'] );
 		$this->assertStringContainsStringIgnoringCase( $needle, $status['summary'] );
+		$this->assertSame( $color, $status['color'], "Reason '{$reason}' must map to colour {$color}." );
 	}
 
 	/**
-	 * @return array<string, array{string, string}>
+	 * @return array<string, array{string, string, string}>
 	 */
 	public static function entered_reason_provider(): array {
 		return array(
-			'invalid key rejected'      => array( 'invalid', 'rejected' ),
-			'unreachable host'          => array( 'unreachable', 'could not reach' ),
-			'missing customer details'  => array( 'missing', 'not checked' ),
-			'rejected on customer data' => array( 'rejected', 'could not process' ),
+			'invalid key rejected'      => array( 'invalid', 'rejected', '#d63638' ),
+			'unreachable host'          => array( 'unreachable', 'could not reach', '#dba617' ),
+			'missing customer details'  => array( 'missing', 'not checked', '#dba617' ),
+			'rejected on customer data' => array( 'rejected', 'could not process', '#dba617' ),
 		);
 	}
 }

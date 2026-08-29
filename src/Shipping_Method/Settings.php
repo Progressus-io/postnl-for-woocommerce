@@ -1092,7 +1092,7 @@ class Settings extends \WC_Settings_API {
 	 * Persist (or clear) the reason the new key last failed validation, scoped
 	 * to the given environment.
 	 *
-	 * @param string    $reason     One of 'invalid', 'unreachable', 'missing', or '' to clear.
+	 * @param string    $reason     One of 'invalid', 'rejected', 'unreachable', 'missing', or '' to clear.
 	 * @param bool|null $is_sandbox Environment to scope to, or null for the current one.
 	 */
 	public function set_new_key_status_reason( $reason, $is_sandbox = null ) {
@@ -1207,11 +1207,7 @@ class Settings extends \WC_Settings_API {
 
 			case 'Entered':
 				return array_merge(
-					array(
-						'header' => $header,
-						'label'  => __( 'Not valid', 'postnl-for-woocommerce' ),
-						'color'  => '#d63638',
-					),
+					array( 'header' => $header ),
 					$this->get_new_key_invalid_copy( $reason, $has_old, $link )
 				);
 
@@ -1248,16 +1244,18 @@ class Settings extends \WC_Settings_API {
 	}
 
 	/**
-	 * Summary and description for the "Not valid" status, per reason. Whether an
-	 * old key is still carrying the plugin is passed in rather than re-read, so
-	 * the copy is correct on a fresh install (where nothing is in use) and does
-	 * not read the wrong environment while both rows render.
+	 * Label, colour, summary and description for an entered key that is not in
+	 * use, per reason. Only a genuine rejection is red "Not valid"; an outage, a
+	 * mismatch or missing details read as amber "could not check", so an outage
+	 * never tells the merchant their key is invalid. Whether an old key is still
+	 * carrying the plugin is passed in rather than re-read, so the copy is correct
+	 * on a fresh install (where nothing is in use).
 	 *
 	 * @param string $reason  One of the Key_Validator REASON_* slugs.
 	 * @param bool   $has_old Whether a usable old key is still stored.
 	 * @param string $link    Self Service link markup.
 	 *
-	 * @return array{summary:string,description:string}
+	 * @return array{label:string,color:string,summary:string,description:string}
 	 */
 	protected function get_new_key_invalid_copy( $reason, $has_old, $link ) {
 		$tail = $has_old
@@ -1267,18 +1265,24 @@ class Settings extends \WC_Settings_API {
 		switch ( $reason ) {
 			case Key_Validator::REASON_REJECTED:
 				return array(
+					'label'       => __( 'Could not check', 'postnl-for-woocommerce' ),
+					'color'       => '#dba617',
 					'summary'     => __( 'PostNL could not process the check.', 'postnl-for-woocommerce' ) . $tail,
 					'description' => __( 'This usually means the Customer Code or Customer Number does not match this key. Check them and save again.', 'postnl-for-woocommerce' ),
 				);
 
 			case Key_Validator::REASON_MISSING:
 				return array(
+					'label'       => __( 'Not checked', 'postnl-for-woocommerce' ),
+					'color'       => '#dba617',
 					'summary'     => __( 'We have not checked this key yet.', 'postnl-for-woocommerce' ) . $tail,
 					'description' => __( 'Fill in your Customer Code and Customer Number, then save again.', 'postnl-for-woocommerce' ),
 				);
 
 			case Key_Validator::REASON_UNREACHABLE:
 				return array(
+					'label'       => __( 'Could not check', 'postnl-for-woocommerce' ),
+					'color'       => '#dba617',
 					'summary'     => __( 'We could not reach PostNL to check this key.', 'postnl-for-woocommerce' ) . $tail,
 					'description' => __( 'This is usually temporary. Save again in a few minutes.', 'postnl-for-woocommerce' ),
 				);
@@ -1286,6 +1290,8 @@ class Settings extends \WC_Settings_API {
 			case Key_Validator::REASON_INVALID:
 			default:
 				return array(
+					'label'       => __( 'Not valid', 'postnl-for-woocommerce' ),
+					'color'       => '#d63638',
 					'summary'     => __( 'PostNL rejected this key.', 'postnl-for-woocommerce' ) . $tail,
 					// translators: %s is a link to the PostNL Business Portal Self Service module.
 					'description' => sprintf( __( 'Check that you copied the whole key with no extra spaces, then save again. If it keeps failing, request a new key from the %s.', 'postnl-for-woocommerce' ), $link ),

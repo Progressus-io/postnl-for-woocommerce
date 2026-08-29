@@ -36,6 +36,10 @@ class SettingsNewApiKeyTest extends UnitTestCase {
 			define( 'POSTNL_SETTINGS_ID', 'postnl' );
 		}
 
+		// The status-copy methods run for real, so give them return-first-arg
+		// stand-ins for the escaping and translation helpers.
+		Functions\stubs( array( '__', 'esc_html', 'esc_html__', 'esc_url', 'esc_attr' ) );
+
 		// Partial mock so the real decision methods run while the low-level key
 		// accessors are stubbed per test.
 		$this->sut = Mockery::mock( Settings::class )->makePartial();
@@ -66,6 +70,11 @@ class SettingsNewApiKeyTest extends UnitTestCase {
 			'new key equals original'           => array( 'SAMEKEY', 'SAMEKEY', false, 'Same' ),
 			'distinct but unvalidated'          => array( 'NEWKEY', 'ORIGINAL', false, 'Entered' ),
 			'distinct and validated'            => array( 'NEWKEY', 'ORIGINAL', true, 'Yes' ),
+			// With no old key stored, a key can never resolve to "Same" — the case
+			// Dustin asked to pin, since "Same" implies comparing against an old key.
+			'distinct with no old key'          => array( 'NEWKEY', '', false, 'Entered' ),
+			'validated with no old key'         => array( 'NEWKEY', '', true, 'Yes' ),
+			'empty with no old key'             => array( '', '', false, 'No' ),
 		);
 	}
 
@@ -233,5 +242,117 @@ class SettingsNewApiKeyTest extends UnitTestCase {
 			->andReturn( true );
 
 		$this->sut->set_api_key_new_validated( true, '', false );
+	}
+
+	/**
+	 * @testdox build_new_key_status shows green Valid for a saved, validated key.
+	 */
+	public function test_build_status_saved_validated_is_green_valid(): void {
+		$status = $this->sut->build_new_key_status( 'NEWKEY', 'OLDKEY', true, false, true, '' );
+
+		$this->assertSame( 'Yes', $status['header'] );
+		$this->assertSame( '#008a20', $status['color'] );
+		$this->assertStringContainsStringIgnoringCase( 'working', $status['summary'] );
+	}
+
+	/**
+	 * The amber "works, not saved yet" state is the new state item 2 asked for: a
+	 * key that checks out on blur but has not been saved must not read as green.
+	 *
+	 * @testdox build_new_key_status shows amber Works-not-saved for a validated but unsaved key.
+	 */
+	public function test_build_status_validated_but_unsaved_is_amber(): void {
+		$status = $this->sut->build_new_key_status( 'NEWKEY', 'OLDKEY', true, false, false, '' );
+
+		$this->assertSame( '#dba617', $status['color'] );
+		$this->assertStringContainsStringIgnoringCase( 'not saved', $status['label'] );
+	}
+
+	/**
+	 * @testdox build_new_key_status shows the Same-as-old amber state.
+	 */
+	public function test_build_status_same_as_old(): void {
+		$status = $this->sut->build_new_key_status( 'SAMEKEY', 'SAMEKEY', false, false, true, '' );
+
+		$this->assertSame( 'Same', $status['header'] );
+		$this->assertStringContainsStringIgnoringCase( 'already had', $status['summary'] );
+	}
+
+	/**
+	 * Item 4: on a fresh install nothing is in use, so the "Not set" copy must not
+	 * imply an old key is carrying the plugin.
+	 *
+	 * @testdox build_new_key_status "Not set" copy does not assume an old key on a fresh install.
+	 */
+	public function test_build_status_not_set_without_old_key(): void {
+		$status = $this->sut->build_new_key_status( '', '', false, false, true, '' );
+
+		$this->assertSame( 'No', $status['header'] );
+		$this->assertStringNotContainsStringIgnoringCase( 'old key', $status['description'] );
+		$this->assertStringNotContainsStringIgnoringCase( 'switched on', $status['description'] );
+		$this->assertStringContainsStringIgnoringCase( 'connect', $status['description'] );
+	}
+
+	/**
+	 * @testdox build_new_key_status "Not set" copy nudges an existing merchant to switch keys.
+	 */
+	public function test_build_status_not_set_with_old_key(): void {
+		$status = $this->sut->build_new_key_status( '', 'OLDKEY', false, false, true, '' );
+
+		$this->assertSame( 'No', $status['header'] );
+		$this->assertStringContainsStringIgnoringCase( 'old key', $status['description'] );
+	}
+
+	/**
+	 * @testdox build_new_key_status invalid copy names the old key when one is in use.
+	 */
+	public function test_build_status_invalid_with_old_key(): void {
+		$status = $this->sut->build_new_key_status( 'NEWKEY', 'OLDKEY', false, false, true, 'invalid' );
+
+		$this->assertSame( 'Entered', $status['header'] );
+		$this->assertStringContainsStringIgnoringCase( 'rejected', $status['summary'] );
+		$this->assertStringContainsStringIgnoringCase( 'still using your old key', $status['summary'] );
+	}
+
+	/**
+	 * Item 4: the same rejection with no old key must admit nothing is connected,
+	 * rather than claiming an old key is still in use.
+	 *
+	 * @testdox build_new_key_status invalid copy admits no working key on a fresh install.
+	 */
+	public function test_build_status_invalid_without_old_key(): void {
+		$status = $this->sut->build_new_key_status( 'NEWKEY', '', false, false, true, 'invalid' );
+
+		$this->assertStringContainsStringIgnoringCase( 'no working key', $status['summary'] );
+		$this->assertStringNotContainsStringIgnoringCase( 'old key', $status['summary'] );
+	}
+
+	/**
+	 * Item 3: an outage must read as "could not reach", not "invalid", so the
+	 * entered-key copy varies by reason.
+	 *
+	 * @testdox build_new_key_status entered copy varies by failure reason.
+	 * @dataProvider entered_reason_provider
+	 *
+	 * @param string $reason   Persisted failure reason.
+	 * @param string $needle   Text the summary must contain.
+	 */
+	public function test_build_status_entered_copy_by_reason( string $reason, string $needle ): void {
+		$status = $this->sut->build_new_key_status( 'NEWKEY', 'OLDKEY', false, false, true, $reason );
+
+		$this->assertSame( 'Entered', $status['header'] );
+		$this->assertStringContainsStringIgnoringCase( $needle, $status['summary'] );
+	}
+
+	/**
+	 * @return array<string, array{string, string}>
+	 */
+	public static function entered_reason_provider(): array {
+		return array(
+			'invalid key rejected'      => array( 'invalid', 'rejected' ),
+			'unreachable host'          => array( 'unreachable', 'could not reach' ),
+			'missing customer details'  => array( 'missing', 'not checked' ),
+			'rejected on customer data' => array( 'rejected', 'could not process' ),
+		);
 	}
 }

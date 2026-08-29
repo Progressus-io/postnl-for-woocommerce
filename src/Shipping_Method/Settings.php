@@ -7,6 +7,7 @@
 
 namespace PostNLWooCommerce\Shipping_Method;
 
+use PostNLWooCommerce\Rest_API\Barcode\Key_Validator;
 use PostNLWooCommerce\Utils;
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -1143,11 +1144,49 @@ class Settings extends \WC_Settings_API {
 		$new_key   = $is_sandbox ? $this->get_api_key_sandbox_new() : trim( (string) $this->get_country_option( 'api_keys_new', '' ) );
 		$original  = $is_sandbox ? trim( (string) $this->get_api_key_sandbox() ) : trim( (string) $this->get_api_key() );
 		$validated = $this->is_api_key_new_validated_value( $new_key, $is_sandbox );
-		$header    = $this->derive_new_key_header_value( $new_key, $original, $validated );
-		$link      = $this->self_service_link();
+
+		// The rendered row describes what is actually stored, so the validated
+		// state it shows is a saved one.
+		return $this->build_new_key_status( $new_key, $original, $validated, $is_sandbox, true, $this->resolve_new_key_status_reason( $is_sandbox ) );
+	}
+
+	/**
+	 * Map a new-key state to the status row's colour, label, one-line summary and
+	 * "what to do next" paragraph. Pure: every input is passed in, so the settings
+	 * render path and the on-blur endpoint produce identical copy for the same
+	 * state and cannot drift. The label and colour follow the same header value
+	 * the API calls send, so the screen and PostNL's adoption count agree.
+	 *
+	 * @param string $new_key    The entered new key.
+	 * @param string $original   The original (pre-migration) key; '' on a fresh install.
+	 * @param bool   $validated  Whether the new key has passed validation.
+	 * @param bool   $is_sandbox Environment being described.
+	 * @param bool   $saved      Whether $validated reflects a saved state. A key that
+	 *                           validates on blur but has not been saved yet gets the
+	 *                           amber "works, not saved" state instead of green.
+	 * @param string $reason     Persisted/derived failure reason for an entered key.
+	 *
+	 * @return array{header:string,label:string,color:string,summary:string,description:string}
+	 */
+	public function build_new_key_status( $new_key, $original, $validated, $is_sandbox, $saved, $reason = '' ) {
+		unset( $is_sandbox );
+
+		$header  = $this->derive_new_key_header_value( $new_key, $original, $validated );
+		$link    = $this->self_service_link();
+		$has_old = '' !== trim( (string) $original );
 
 		switch ( $header ) {
 			case 'Yes':
+				if ( ! $saved ) {
+					return array(
+						'header'      => $header,
+						'label'       => __( 'Works, not saved yet', 'postnl-for-woocommerce' ),
+						'color'       => '#dba617',
+						'summary'     => __( 'This key works. Save changes to start using it.', 'postnl-for-woocommerce' ),
+						'description' => '',
+					);
+				}
+
 				return array(
 					'header'      => $header,
 					'label'       => __( 'Valid', 'postnl-for-woocommerce' ),
@@ -1173,7 +1212,7 @@ class Settings extends \WC_Settings_API {
 						'label'  => __( 'Not valid', 'postnl-for-woocommerce' ),
 						'color'  => '#d63638',
 					),
-					$this->get_new_key_invalid_copy( $is_sandbox, $link )
+					$this->get_new_key_invalid_copy( $reason, $has_old, $link )
 				);
 
 			default:
@@ -1182,42 +1221,76 @@ class Settings extends \WC_Settings_API {
 					'label'       => __( 'Not set', 'postnl-for-woocommerce' ),
 					'color'       => '#757575',
 					'summary'     => __( 'You have not entered your API key yet.', 'postnl-for-woocommerce' ),
-					// translators: %s is a link to the PostNL Business Portal Self Service module.
-					'description' => sprintf( __( 'Request your key from the %s and enter it above. You will need it before the new PostNL APIs are switched on.', 'postnl-for-woocommerce' ), $link ),
+					'description' => $has_old
+						// translators: %s is a link to the PostNL Business Portal Self Service module.
+						? sprintf( __( 'Request your new key from the %s and enter it above to switch over from your old key.', 'postnl-for-woocommerce' ), $link )
+						// translators: %s is a link to the PostNL Business Portal Self Service module.
+						: sprintf( __( 'Request your key from the %s and enter it above — the plug-in needs it to connect to PostNL.', 'postnl-for-woocommerce' ), $link ),
 				);
 		}
 	}
 
 	/**
-	 * Summary and description for the "Not valid" status. A genuine rejection is
-	 * the only case we can be sure the key is bad, so it gets the "wrong key"
-	 * copy. Missing customer details and an unreachable PostNL both mean we could
-	 * not actually check the key, so they share the softer "could not check"
-	 * wording — telling a merchant their key is invalid when we never verified it
-	 * is a support ticket. Missing details is derived live; a rejection or an
-	 * unreachable host comes from the flag persisted at save time.
+	 * The failure reason to describe in the status row. Missing customer details
+	 * is decided live — if they are blank now, that is the reason whatever the
+	 * last save recorded — otherwise the reason persisted at save time is used.
 	 *
-	 * @param bool   $is_sandbox Environment to describe.
-	 * @param string $link       Self Service link markup.
+	 * @param bool $is_sandbox Environment to resolve for.
+	 *
+	 * @return string One of the Key_Validator REASON_* slugs, or ''.
+	 */
+	protected function resolve_new_key_status_reason( $is_sandbox ) {
+		if ( '' === trim( (string) $this->get_customer_code() ) || '' === trim( (string) $this->get_customer_num() ) ) {
+			return Key_Validator::REASON_MISSING;
+		}
+
+		return (string) get_option( self::NEW_API_KEY_STATUS_OPTION . ( $is_sandbox ? '_sandbox' : '' ), '' );
+	}
+
+	/**
+	 * Summary and description for the "Not valid" status, per reason. Whether an
+	 * old key is still carrying the plugin is passed in rather than re-read, so
+	 * the copy is correct on a fresh install (where nothing is in use) and does
+	 * not read the wrong environment while both rows render.
+	 *
+	 * @param string $reason  One of the Key_Validator REASON_* slugs.
+	 * @param bool   $has_old Whether a usable old key is still stored.
+	 * @param string $link    Self Service link markup.
 	 *
 	 * @return array{summary:string,description:string}
 	 */
-	protected function get_new_key_invalid_copy( $is_sandbox, $link ) {
-		$missing = '' === trim( (string) $this->get_customer_code() ) || '' === trim( (string) $this->get_customer_num() );
-		$reason  = (string) get_option( self::NEW_API_KEY_STATUS_OPTION . ( $is_sandbox ? '_sandbox' : '' ), '' );
+	protected function get_new_key_invalid_copy( $reason, $has_old, $link ) {
+		$tail = $has_old
+			? __( ' The plug-in is still using your old key.', 'postnl-for-woocommerce' )
+			: __( ' The plug-in has no working key to connect with yet.', 'postnl-for-woocommerce' );
 
-		if ( ! $missing && 'invalid' === $reason ) {
-			return array(
-				'summary'     => __( 'PostNL rejected this key, so the plug-in is still using your old key.', 'postnl-for-woocommerce' ),
-				// translators: %s is a link to the PostNL Business Portal Self Service module.
-				'description' => sprintf( __( 'Check that you copied the whole key with no extra spaces, then save again. If it keeps failing, request a new key from the %s.', 'postnl-for-woocommerce' ), $link ),
-			);
+		switch ( $reason ) {
+			case Key_Validator::REASON_REJECTED:
+				return array(
+					'summary'     => __( 'PostNL could not process the check.', 'postnl-for-woocommerce' ) . $tail,
+					'description' => __( 'This usually means the Customer Code or Customer Number does not match this key. Check them and save again.', 'postnl-for-woocommerce' ),
+				);
+
+			case Key_Validator::REASON_MISSING:
+				return array(
+					'summary'     => __( 'We have not checked this key yet.', 'postnl-for-woocommerce' ) . $tail,
+					'description' => __( 'Fill in your Customer Code and Customer Number, then save again.', 'postnl-for-woocommerce' ),
+				);
+
+			case Key_Validator::REASON_UNREACHABLE:
+				return array(
+					'summary'     => __( 'We could not reach PostNL to check this key.', 'postnl-for-woocommerce' ) . $tail,
+					'description' => __( 'This is usually temporary. Save again in a few minutes.', 'postnl-for-woocommerce' ),
+				);
+
+			case Key_Validator::REASON_INVALID:
+			default:
+				return array(
+					'summary'     => __( 'PostNL rejected this key.', 'postnl-for-woocommerce' ) . $tail,
+					// translators: %s is a link to the PostNL Business Portal Self Service module.
+					'description' => sprintf( __( 'Check that you copied the whole key with no extra spaces, then save again. If it keeps failing, request a new key from the %s.', 'postnl-for-woocommerce' ), $link ),
+				);
 		}
-
-		return array(
-			'summary'     => __( 'We could not check this key yet, so the plug-in is still using your old key.', 'postnl-for-woocommerce' ),
-			'description' => __( 'Fill in your Customer Code and Customer Number, then save again. If they are already filled in, PostNL could not be reached just now and saving again later should sort it.', 'postnl-for-woocommerce' ),
-		);
 	}
 
 	/**

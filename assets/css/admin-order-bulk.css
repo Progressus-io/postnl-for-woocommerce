@@ -40,6 +40,19 @@
 .postnl-action-download-label:after {
 	background: url(../images/post-download-label.png) no-repeat center center;
 }
+a.postnl-action-print-label:after {
+	content: "\f193";
+}
+.postnl-bulk-spinner {
+	margin-bottom: 8px;
+	font-style: italic;
+	color: #666;
+}
+.postnl-bulk-error {
+	margin-bottom: 8px;
+	color: #cc0000;
+	font-weight: 700;
+}
 .postnl_eligible_auto_letterbox {
 	font-size: 18px;
 }

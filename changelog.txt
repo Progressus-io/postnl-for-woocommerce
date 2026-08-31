@@ -1,6 +1,6 @@
 *** PostNL for WooCommerce ***
 
-= 5.9.11 (2026-xx-xx) =
+= 5.9.11 (2026-08-31) =
 * Tweak: WordPress 7.1 and WooCommerce 11.1 compatibility.
 
 = 5.9.10 (2026-07-23) =

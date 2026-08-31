@@ -71,7 +71,7 @@ if [ ! -f "$PLATFORM_CHECK" ]; then
   echo "::error::[$LABEL] vendor/composer/platform_check.php missing — cannot verify the production PHP floor!"
   FAIL=1
 else
-  PHP_FLOOR=$(grep -oP 'PHP_VERSION_ID >= \K[0-9]+' "$PLATFORM_CHECK" | head -1)
+  PHP_FLOOR=$(grep -oE 'PHP_VERSION_ID >= [0-9]+' "$PLATFORM_CHECK" | grep -oE '[0-9]+' | head -1)
   if [ -z "$PHP_FLOOR" ]; then
     echo "::error::[$LABEL] could not parse the PHP floor from platform_check.php — the Composer format may have changed!"
     FAIL=1

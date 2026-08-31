@@ -4,10 +4,10 @@ Tags: woocommerce, PostNL, Labels, Shipping
 Requires Plugins: woocommerce
 Requires PHP: 7.4
 Requires at least: 6.7
-Tested up to: 6.9
+Tested up to: 7.1
 WC requires at least: 10.2
-WC tested up to: 10.5
-Stable tag: 5.9.10
+WC tested up to: 11.1
+Stable tag: 5.9.11
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -81,8 +81,11 @@ Follow these instructions (https://www.postnl.nl/Images/aanvragen-api-key-stappe
 
 == Changelog ==
 
-= 5.9.11 (2026-xx-xx) =
+= 5.9.12 (2026-xx-xx) =
 * Add: New API Key field for the upcoming PostNL API migration. Enter the key from the PostNL Business Portal Self Service module; the plugin checks it with PostNL when you save, shows whether it is valid, and a banner reminds you until it is entered.
+
+= 5.9.11 (2026-08-31) =
+* Tweak: WordPress 7.1 and WooCommerce 11.1 compatibility.
 
 = 5.9.10 (2026-07-23) =
 * Fix: Letterboxparcel 48-hour orders reverted to Standard Shipment when the label was generated with the bulk action on the classic orders list.

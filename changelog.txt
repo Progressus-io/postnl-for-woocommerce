@@ -1,7 +1,10 @@
 *** PostNL for WooCommerce ***
 
-= 5.9.11 (2026-xx-xx) =
+= 5.9.12 (2026-xx-xx) =
 * Add: New API Key field for the upcoming PostNL API migration. Enter the key from the PostNL Business Portal Self Service module; the plugin checks it with PostNL when you save, shows whether it is valid, and a banner reminds you until it is entered.
+
+= 5.9.11 (2026-08-31) =
+* Tweak: WordPress 7.1 and WooCommerce 11.1 compatibility.
 
 = 5.9.10 (2026-07-23) =
 * Fix: Letterboxparcel 48-hour orders reverted to Standard Shipment when the label was generated with the bulk action on the classic orders list.

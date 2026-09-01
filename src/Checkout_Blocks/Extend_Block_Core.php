@@ -344,11 +344,18 @@ class Extend_Block_Core {
 			),
 		);
 
-		if ( ! empty( $drop_data['frontend']['dropoff_points'] ) ) {
-			$order->update_meta_data( '_postnl_order_metadata', $drop_data );
-		} elseif ( ! empty( $delivery_day_data['frontend']['delivery_day'] ) ) {
-			// Save Delivery Day Data
-			$order->update_meta_data( '_postnl_order_metadata', $delivery_day_data );
+		// Mirror the classic checkout: only persist PostNL delivery/pickup metadata
+		// when the chosen shipping method is one PostNL is linked to. The frontend
+		// clears this data when the widget hides, but a race between switching
+		// carrier and placing the order could otherwise leave stale data on a
+		// non-PostNL order. This is the reliable server-side gate.
+		if ( $this->order_has_supported_shipping_method( $order ) ) {
+			if ( ! empty( $drop_data['frontend']['dropoff_points'] ) ) {
+				$order->update_meta_data( '_postnl_order_metadata', $drop_data );
+			} elseif ( ! empty( $delivery_day_data['frontend']['delivery_day'] ) ) {
+				// Save Delivery Day Data
+				$order->update_meta_data( '_postnl_order_metadata', $delivery_day_data );
+			}
 		}
 
 		// Save letterbox type from shipping method selection.
@@ -387,6 +394,30 @@ class Extend_Block_Core {
 				return;
 			}
 		}
+	}
+
+	/**
+	 * Whether the order's chosen shipping method is one PostNL is linked to.
+	 *
+	 * @param \WC_Order $order Order object.
+	 *
+	 * @return bool
+	 */
+	private function order_has_supported_shipping_method( \WC_Order $order ): bool {
+		$shipping_methods = $order->get_shipping_methods();
+		if ( empty( $shipping_methods ) ) {
+			return false;
+		}
+
+		$supported = $this->settings->get_supported_shipping_methods();
+
+		foreach ( $shipping_methods as $shipping_item ) {
+			if ( in_array( $shipping_item->get_method_id(), $supported, true ) ) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	/**

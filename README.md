@@ -4,10 +4,10 @@
 * Tags: woocommerce, PostNL, Labels, Shipping
 * Requires PHP: 7.4
 * Requires at least: 6.7
-* Tested up to: 6.9
+* Tested up to: 7.1
 * WC requires at least: 10.2
-* WC tested up to: 10.5
-* Stable tag: 5.9.10
+* WC tested up to: 11.1
+* Stable tag: 5.9.11
 * License: GPLv2 or later
 * License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -26,6 +26,9 @@ PostNL’s official extension for WooCommerce on WordPress. Manage your national
 3. Go to WooCommerce–>Settings->Shipping and Click the "PostNL" to configure the plugin.
 
 ## Changelog
+
+### 5.9.11
+* Tweak: WordPress 7.1 and WooCommerce 11.1 compatibility.
 
 ### 5.9.10
 * Fix: Letterboxparcel 48-hour orders reverted to Standard Shipment when the label was generated with the bulk action on the classic orders list.

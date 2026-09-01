@@ -796,60 +796,65 @@ class Single extends Base {
 			}
 
 			$response = $this->service_factory()->smart_returns_service()->generate( $order );
-			if ( ! empty( $response ) ) {
-				$printcodeLabelContent = null;
 
-				// Iterate through the ResponseShipments
-				if ( isset( $response['ResponseShipments'] ) ) {
+			$to     = $order->get_billing_email();
+			$emails = WC()->mailer()->get_emails();
+
+			if ( empty( $emails ) || ! isset( $emails['WC_Smart_Return_Email'] ) ) {
+				throw new \Exception( esc_html__( 'Email could not be sent', 'postnl-for-woocommerce' ) );
+			}
+
+			$email            = $emails['WC_Smart_Return_Email'];
+			$email->recipient = $to;
+
+			if ( 'v4' === ( $response['api_version'] ?? '' ) ) {
+				// V4 retailPrint: show the printcode/barcode image in the email body, no PDF attachment.
+				if ( empty( $response['content'] ) ) {
+					throw new \Exception( esc_html__( 'Printcode could not be found', 'postnl-for-woocommerce' ) );
+				}
+
+				$email->printcode_content = $response['content'];
+				$email->printcode_mime    = $response['mime'] ?? 'image/png';
+				$email->printcode_barcode = (string) ( $response['barcode'] ?? '' );
+			} else {
+				// Legacy: pull the PrintcodeLabel PDF from the response and attach it.
+				$printcode_label_content = null;
+
+				if ( ! empty( $response['ResponseShipments'] ) ) {
 					foreach ( $response['ResponseShipments'] as $shipment ) {
-						// Iterate through the Labels
-						if ( isset( $shipment['Labels'] ) ) {
-							foreach ( $shipment['Labels'] as $label ) {
-								// Check if the Labeltype is "PrintcodeLabel"
-								if ( isset( $label['Labeltype'] ) && $label['Labeltype'] === 'PrintcodeLabel' ) {
-									// Save the Content to a PHP variable
-									$printcodeLabelContent = $label['Content'];
-									break 2; // Exit both loops once the label is found
-								}
+						if ( empty( $shipment['Labels'] ) ) {
+							continue;
+						}
+
+						foreach ( $shipment['Labels'] as $label ) {
+							if ( isset( $label['Labeltype'] ) && 'PrintcodeLabel' === $label['Labeltype'] ) {
+								$printcode_label_content = $label['Content'];
+								break 2;
 							}
 						}
 					}
 				}
-				// wp_send_json_success($printcodeLabelContent);
-			} else {
-				throw new \Exception( esc_html__( 'PrintcodeLabel could not found', 'postnl-for-woocommerce' ) );
-			}
-			if ( $printcodeLabelContent ) {
-				$pdf_content = base64_decode( $printcodeLabelContent );
 
-				// Save the PDF content to a file
+				if ( ! $printcode_label_content ) {
+					throw new \Exception( esc_html__( 'The Smart Return printcode could not be found.', 'postnl-for-woocommerce' ) );
+				}
+
 				$upload_dir = wp_upload_dir();
 				$file_path  = $upload_dir['path'] . '/printcode_label.pdf';
 
-				// Write the content to the file
-				file_put_contents( $file_path, $pdf_content );
+				// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents, WordPress.PHP.DiscouragedPHPFunctions.obfuscation_base64_decode -- Writing the PostNL printcode PDF returned base64-encoded by the API.
+				file_put_contents( $file_path, base64_decode( $printcode_label_content ) );
+
+				$email->attachment = $file_path;
 			}
 
-			$to            = $order->get_billing_email();
-			$is_successful = false;
-			$emails        = WC()->mailer()->get_emails();
-
-			if ( ! empty( $emails ) && isset( $emails['WC_Smart_Return_Email'] ) ) {
-				$emails['WC_Smart_Return_Email']->recipient = $to;
-
-				// Set the attachment path property
-				$emails['WC_Smart_Return_Email']->attachment = $file_path;
-
-				// Trigger the email
-				$is_successful = $emails['WC_Smart_Return_Email']->trigger( $order_id );
-			}
+			$is_successful = $email->trigger( $order_id );
 
 			if ( $is_successful ) {
 				wp_send_json_success( $to );
-			} else {
-
-				throw new \Exception( esc_html__( 'Email could not be send', 'postnl-for-woocommerce' ) );
 			}
+
+			throw new \Exception( esc_html__( 'Email could not be sent', 'postnl-for-woocommerce' ) );
 		} catch ( \Exception $e ) {
 			wp_send_json_error(
 				array( 'message' => $e->getMessage() ),

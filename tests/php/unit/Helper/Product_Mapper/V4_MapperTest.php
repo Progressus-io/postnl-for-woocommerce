@@ -9,6 +9,8 @@ declare( strict_types = 1 );
 
 namespace PostNLWooCommerce\Tests\Unit\Helper\Product_Mapper;
 
+use Postnl\Sdk\Enums\Payload\DeliveryConfirmation;
+use Postnl\Sdk\Enums\Payload\MinimalAgeCheck;
 use PostNLWooCommerce\Helper\Product_Mapper\V1_Mapper;
 use PostNLWooCommerce\Helper\Product_Mapper\V4_Mapper;
 use PostNLWooCommerce\Tests\UnitTestCase;
@@ -18,8 +20,8 @@ use PostNLWooCommerce\Tests\UnitTestCase;
  *
  * Coverage:
  *  - Total row count = 89 (from provider data and from runtime calls)
- *  - has_v4_equivalent true  count = 28 (provider + runtime)
- *  - has_v4_equivalent false count = 61 (provider + runtime)
+ *  - has_v4_equivalent true  count = 42 (provider + runtime)
+ *  - has_v4_equivalent false count = 47 (provider + runtime)
  *  - All v4_mapped rows: expected shipmentType / services / deliveryLocation / internationalShipmentData
  *  - All legacy_only rows: reason = not_yet_available_in_v4
  *  - All needs_confirmation rows: reason = needs_confirmation
@@ -48,7 +50,7 @@ class V4_MapperTest extends UnitTestCase {
 	}
 
 	/**
-	 * @testdox Provider expected data: has_v4_equivalent true count = 28
+	 * @testdox Provider expected data: has_v4_equivalent true count = 42
 	 */
 	public function test_provider_v4_equivalent_true_count(): void {
 		$count = 0;
@@ -57,11 +59,11 @@ class V4_MapperTest extends UnitTestCase {
 				$count++;
 			}
 		}
-		$this->assertSame( 28, $count, 'Exactly 28 rows must be marked has_v4_equivalent=true.' );
+		$this->assertSame( 42, $count, 'Exactly 42 rows must be marked has_v4_equivalent=true.' );
 	}
 
 	/**
-	 * @testdox Provider expected data: has_v4_equivalent false count = 61
+	 * @testdox Provider expected data: has_v4_equivalent false count = 47
 	 */
 	public function test_provider_v4_equivalent_false_count(): void {
 		$count = 0;
@@ -70,7 +72,7 @@ class V4_MapperTest extends UnitTestCase {
 				$count++;
 			}
 		}
-		$this->assertSame( 61, $count, 'Exactly 61 rows must be marked has_v4_equivalent=false.' );
+		$this->assertSame( 47, $count, 'Exactly 47 rows must be marked has_v4_equivalent=false.' );
 	}
 
 	// =========================================================================
@@ -78,7 +80,7 @@ class V4_MapperTest extends UnitTestCase {
 	// =========================================================================
 
 	/**
-	 * @testdox Runtime: V4_Mapper::has_v4_equivalent() returns true for exactly 28 provider inputs
+	 * @testdox Runtime: V4_Mapper::has_v4_equivalent() returns true for exactly 42 provider inputs
 	 */
 	public function test_runtime_v4_equivalent_true_count(): void {
 		$count = 0;
@@ -87,11 +89,11 @@ class V4_MapperTest extends UnitTestCase {
 				$count++;
 			}
 		}
-		$this->assertSame( 28, $count );
+		$this->assertSame( 42, $count );
 	}
 
 	/**
-	 * @testdox Runtime: V4_Mapper::has_v4_equivalent() returns false for exactly 61 provider inputs
+	 * @testdox Runtime: V4_Mapper::has_v4_equivalent() returns false for exactly 47 provider inputs
 	 */
 	public function test_runtime_v4_equivalent_false_count(): void {
 		$count = 0;
@@ -100,7 +102,7 @@ class V4_MapperTest extends UnitTestCase {
 				$count++;
 			}
 		}
-		$this->assertSame( 61, $count );
+		$this->assertSame( 47, $count );
 	}
 
 	// =========================================================================
@@ -421,31 +423,44 @@ class V4_MapperTest extends UnitTestCase {
 	}
 
 	/**
-	 * @testdox No mapped row emits services.bundle or internationalShipmentData (the SDK gap is honoured)
+	 * @testdox The service bundle is carried on internationalShipmentData, never on services (the SDK gap is honoured)
 	 */
-	public function test_no_row_emits_bundle_or_international_data(): void {
+	public function test_bundle_never_emitted_on_services(): void {
 		foreach ( self::combination_matrix_provider() as $name => $row ) {
 			$result = V4_Mapper::map( $row[0] );
 			if ( ! $result['has_v4_equivalent'] ) {
 				continue;
 			}
 			$this->assertArrayNotHasKey( 'bundle', $result['services'], "services.bundle must not be emitted ({$name})" );
-			$this->assertSame( array(), $result['internationalShipmentData'], "internationalShipmentData must stay empty ({$name})" );
 		}
 	}
 
 	/**
-	 * @testdox All EU/ROW combinations stay Legacy-only (international deferred on the SDK bundle gap)
+	 * @testdox EU/ROW parcels (4907/4909) map to V4 with a bundle; packet/mailbox and international pickup stay Legacy-only
 	 */
-	public function test_all_international_combinations_stay_legacy(): void {
+	public function test_international_parcels_map_to_v4_with_bundle(): void {
+		$parcel_codes = array( '4907', '4909' );
+
 		foreach ( self::v1_combinations() as $combination ) {
 			if ( ! in_array( $combination['destination'], array( 'EU', 'ROW' ), true ) ) {
 				continue;
 			}
-			$this->assertFalse(
-				V4_Mapper::has_v4_equivalent( $combination ),
-				sprintf( 'International %s→%s must stay Legacy-only', $combination['origin'], $combination['destination'] )
-			);
+
+			$result = V4_Mapper::map( $combination );
+			$label  = sprintf( '%s→%s [%s]', $combination['origin'], $combination['destination'], implode( ',', $combination['options'] ) ?: '(base)' );
+
+			// Only the delivery_day parcel products (4907/4909) migrate; packets,
+			// mailbox products and international pickup remain on legacy.
+			$is_parcel = 'delivery_day' === $combination['flow'] && in_array( $result['legacy_product_code'], $parcel_codes, true );
+
+			if ( $is_parcel ) {
+				$this->assertTrue( $result['has_v4_equivalent'], "International parcel must map to V4: {$label}" );
+				$this->assertSame( 'parcel', $result['shipmentType'], $label );
+				$this->assertArrayHasKey( 'bundle', $result['internationalShipmentData'], "International parcel must carry a bundle: {$label}" );
+				$this->assertContains( $result['internationalShipmentData']['bundle'], array( 'track_trace', 'insured', 'insured_plus' ), $label );
+			} else {
+				$this->assertFalse( $result['has_v4_equivalent'], "Non-parcel international must stay Legacy-only: {$label}" );
+			}
 		}
 	}
 
@@ -515,6 +530,10 @@ class V4_MapperTest extends UnitTestCase {
 		$nc  = V4_Mapper::REASON_NEEDS_CONFIRMATION;
 		$nya = V4_Mapper::REASON_NOT_YET_AVAILABLE;
 		$pickup = array( 'pickupLocationId' => '<from_selected_location>' );
+
+		$track_trace  = array( 'bundle' => 'track_trace' );
+		$insured      = array( 'bundle' => 'insured' );
+		$insured_plus = array( 'bundle' => 'insured_plus' );
 
 		$v4 = static function (
 			int $row_id,
@@ -777,28 +796,28 @@ class V4_MapperTest extends UnitTestCase {
 				),
 
 			// -----------------------------------------------------------------
-			// NL → EU / delivery_day  (9 rows — all needs_confirmation)
+			// NL → EU / delivery_day  (9 rows — 4 parcel v4, 5 packet/mailbox legacy)
 			// -----------------------------------------------------------------
 
 			'NL→EU/dd row 42: (base)'
 				=> array(
 					array( 'origin' => 'NL', 'destination' => 'EU', 'flow' => 'delivery_day', 'options' => array() ),
-					$leg( 42, '4907', $nc ),
+					$v4( 42, '4907', 'parcel', array(), array(), $track_trace ),
 				),
 			'NL→EU/dd row 43: [track_and_trace]'
 				=> array(
 					array( 'origin' => 'NL', 'destination' => 'EU', 'flow' => 'delivery_day', 'options' => array( 'track_and_trace' ) ),
-					$leg( 43, '4907', $nc ),
+					$v4( 43, '4907', 'parcel', array(), array(), $track_trace ),
 				),
 			'NL→EU/dd row 44: [track_and_trace,insured_shipping]'
 				=> array(
 					array( 'origin' => 'NL', 'destination' => 'EU', 'flow' => 'delivery_day', 'options' => array( 'track_and_trace', 'insured_shipping' ) ),
-					$leg( 44, '4907', $nc ),
+					$v4( 44, '4907', 'parcel', array(), array(), $insured ),
 				),
 			'NL→EU/dd row 45: [track_and_trace,insured_plus]'
 				=> array(
 					array( 'origin' => 'NL', 'destination' => 'EU', 'flow' => 'delivery_day', 'options' => array( 'track_and_trace', 'insured_plus' ) ),
-					$leg( 45, '4907', $nc ),
+					$v4( 45, '4907', 'parcel', array(), array(), $insured_plus ),
 				),
 			'NL→EU/dd row 46: [mailboxpacket]'
 				=> array(
@@ -837,23 +856,23 @@ class V4_MapperTest extends UnitTestCase {
 				),
 
 			// -----------------------------------------------------------------
-			// NL → ROW / delivery_day  (8 rows — all needs_confirmation)
+			// NL → ROW / delivery_day  (8 rows — 3 parcel v4, 5 packet/mailbox legacy)
 			// -----------------------------------------------------------------
 
 			'NL→ROW/dd row 52: (base)'
 				=> array(
 					array( 'origin' => 'NL', 'destination' => 'ROW', 'flow' => 'delivery_day', 'options' => array() ),
-					$leg( 52, '4909', $nc ),
+					$v4( 52, '4909', 'parcel', array(), array(), $track_trace ),
 				),
 			'NL→ROW/dd row 53: [track_and_trace]'
 				=> array(
 					array( 'origin' => 'NL', 'destination' => 'ROW', 'flow' => 'delivery_day', 'options' => array( 'track_and_trace' ) ),
-					$leg( 53, '4909', $nc ),
+					$v4( 53, '4909', 'parcel', array(), array(), $track_trace ),
 				),
 			'NL→ROW/dd row 54: [track_and_trace,insured_plus]'
 				=> array(
 					array( 'origin' => 'NL', 'destination' => 'ROW', 'flow' => 'delivery_day', 'options' => array( 'track_and_trace', 'insured_plus' ) ),
-					$leg( 54, '4909', $nc ),
+					$v4( 54, '4909', 'parcel', array(), array(), $insured_plus ),
 				),
 			'NL→ROW/dd row 55: [mailboxpacket]'
 				=> array(
@@ -992,28 +1011,28 @@ class V4_MapperTest extends UnitTestCase {
 				),
 
 			// -----------------------------------------------------------------
-			// BE → EU / delivery_day  (9 rows — all needs_confirmation)
+			// BE → EU / delivery_day  (9 rows — 4 parcel v4, 5 packet/mailbox legacy)
 			// -----------------------------------------------------------------
 
 			'BE→EU/dd row 77: (base)'
 				=> array(
 					array( 'origin' => 'BE', 'destination' => 'EU', 'flow' => 'delivery_day', 'options' => array() ),
-					$leg( 77, '4907', $nc ),
+					$v4( 77, '4907', 'parcel', array(), array(), $track_trace ),
 				),
 			'BE→EU/dd row 78: [track_and_trace]'
 				=> array(
 					array( 'origin' => 'BE', 'destination' => 'EU', 'flow' => 'delivery_day', 'options' => array( 'track_and_trace' ) ),
-					$leg( 78, '4907', $nc ),
+					$v4( 78, '4907', 'parcel', array(), array(), $track_trace ),
 				),
 			'BE→EU/dd row 79: [track_and_trace,insured_shipping]'
 				=> array(
 					array( 'origin' => 'BE', 'destination' => 'EU', 'flow' => 'delivery_day', 'options' => array( 'track_and_trace', 'insured_shipping' ) ),
-					$leg( 79, '4907', $nc ),
+					$v4( 79, '4907', 'parcel', array(), array(), $insured ),
 				),
 			'BE→EU/dd row 80: [track_and_trace,insured_plus]'
 				=> array(
 					array( 'origin' => 'BE', 'destination' => 'EU', 'flow' => 'delivery_day', 'options' => array( 'track_and_trace', 'insured_plus' ) ),
-					$leg( 80, '4907', $nc ),
+					$v4( 80, '4907', 'parcel', array(), array(), $insured_plus ),
 				),
 			'BE→EU/dd row 81: [mailboxpacket]'
 				=> array(
@@ -1042,28 +1061,99 @@ class V4_MapperTest extends UnitTestCase {
 				),
 
 			// -----------------------------------------------------------------
-			// BE → ROW / delivery_day  (3 rows — all needs_confirmation)
+			// BE → ROW / delivery_day  (3 rows — all parcel v4)
 			// -----------------------------------------------------------------
 
 			'BE→ROW/dd row 86: (base)'
 				=> array(
 					array( 'origin' => 'BE', 'destination' => 'ROW', 'flow' => 'delivery_day', 'options' => array() ),
-					$leg( 86, '4909', $nc ),
+					$v4( 86, '4909', 'parcel', array(), array(), $track_trace ),
 				),
 			'BE→ROW/dd row 87: [track_and_trace]'
 				=> array(
 					array( 'origin' => 'BE', 'destination' => 'ROW', 'flow' => 'delivery_day', 'options' => array( 'track_and_trace' ) ),
-					$leg( 87, '4909', $nc ),
+					$v4( 87, '4909', 'parcel', array(), array(), $track_trace ),
 				),
 			'BE→ROW/dd row 88: [track_and_trace,insured_plus]'
 				=> array(
 					array( 'origin' => 'BE', 'destination' => 'ROW', 'flow' => 'delivery_day', 'options' => array( 'track_and_trace', 'insured_plus' ) ),
-					$leg( 88, '4909', $nc ),
+					$v4( 88, '4909', 'parcel', array(), array(), $insured_plus ),
 				),
 
 		);
 		// Total: NL→NL 21+4 + NL→BE 16+1 + NL→EU 9+1 + NL→ROW 8+1
 		//      + BE→BE 5+2  + BE→NL 7+2  + BE→EU 9   + BE→ROW 3 = 89
 		//      (NL→NL delivery_day includes row 89 letterbox_48)
+	}
+
+	/**
+	 * @testdox Every service string the matrix emits is a value the SDK enum accepts
+	 *
+	 * Request_Builder resolves these strings with DeliveryConfirmation::tryFrom() and
+	 * MinimalAgeCheck::tryFrom(), which return null for anything unrecognised. A null
+	 * there does not raise anything: if it is the row's only service the whole Services
+	 * block is dropped and the parcel ships without the service the customer paid for.
+	 *
+	 * The literals live in V4_Mapper and are hand-copied into two test files, with
+	 * nothing pointing at the enum that defines them. This is the one assertion that
+	 * fails loudly if the matrix and the SDK ever drift apart -- on a typo here, or on
+	 * an SDK bump that renames a case.
+	 */
+	public function test_matrix_service_strings_are_valid_sdk_enum_values(): void {
+		$checked = 0;
+
+		foreach ( self::combination_matrix_provider() as $name => $row ) {
+			$services = V4_Mapper::map( $row[0] )['services'] ?? array();
+
+			if ( isset( $services['deliveryConfirmation'] ) ) {
+				$value = $services['deliveryConfirmation'];
+				$this->assertNotNull(
+					DeliveryConfirmation::tryFrom( (string) $value ),
+					"Row '{$name}' emits deliveryConfirmation '{$value}', which DeliveryConfirmation does not accept."
+				);
+				$checked++;
+			}
+
+			if ( isset( $services['minimalAgeCheck'] ) ) {
+				$value = $services['minimalAgeCheck'];
+				$this->assertNotNull(
+					MinimalAgeCheck::tryFrom( (string) $value ),
+					"Row '{$name}' emits minimalAgeCheck '{$value}', which MinimalAgeCheck does not accept."
+				);
+				$checked++;
+			}
+		}
+
+		$this->assertGreaterThan(
+			0,
+			$checked,
+			'No service strings were checked at all -- the matrix or the provider changed shape and this test stopped testing anything.'
+		);
+	}
+
+	/**
+	 * @testdox No matrix row emits minimalAgeCheck yet, so ID Check still routes to legacy
+	 *
+	 * Request_Builder handles minimalAgeCheck and the PR description advertises 16+/18+
+	 * support, but every id_check combination is a legacy_result. Pinning the count at
+	 * zero means promoting an ID Check row to V4 without also confirming the age-check
+	 * mapping is a visible, deliberate test edit rather than a silent behaviour change.
+	 */
+	public function test_no_row_emits_minimal_age_check_yet(): void {
+		$emitting = array();
+
+		foreach ( self::combination_matrix_provider() as $name => $row ) {
+			$services = V4_Mapper::map( $row[0] )['services'] ?? array();
+
+			if ( isset( $services['minimalAgeCheck'] ) ) {
+				$emitting[] = $name;
+			}
+		}
+
+		$this->assertSame(
+			array(),
+			$emitting,
+			'A row now emits minimalAgeCheck. Confirm the age-check mapping against the portal, then update this test.'
+		);
 	}
 }

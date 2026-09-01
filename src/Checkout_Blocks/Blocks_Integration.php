@@ -243,6 +243,7 @@ class Blocks_Integration implements IntegrationInterface {
 			'nonce'                        => wp_create_nonce( 'postnl_delivery_day_nonce' ),
 			'letterbox'                    => $letterbox,
 			'supported_countries'          => Utils::get_available_country(),
+			'supported_shipping_methods'   => $settings->get_supported_shipping_methods(),
 			'is_nl_address_enabled'        => $settings->is_reorder_nl_address_enabled(),
 			'is_pickup_points_enabled'     => $settings->is_pickup_points_enabled(),
 			'fill_in_with_postnl_settings' => array(

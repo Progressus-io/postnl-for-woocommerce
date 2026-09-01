@@ -180,11 +180,37 @@ class Service extends Order_Base implements Label_Service_Interface {
 	 * (possibly modified) addresses are overlaid back onto the receiver by the
 	 * caller so third-party edits actually reach the request.
 	 *
+	 * A filter callback that forgets to return (the most common filter mistake)
+	 * hands back null. Left alone, the : array return type turns that into a
+	 * TypeError, which is an \Error, not an \Exception — the AJAX handlers in
+	 * Order\Single and Order\Bulk catch only \Exception, and admin-order-single.js
+	 * has no .fail() handler, so the merchant would see the label form greyed out
+	 * with no message. Legacy sends the broken value to PostNL and shows PostNL's
+	 * rejection; here the failure is named directly and thrown as the plain
+	 * \Exception the existing catch blocks already display.
+	 *
 	 * @param Shipping\Item_Info $item_info Parsed legacy item info.
 	 * @return array Filtered legacy-shaped address array.
+	 *
+	 * @throws \Exception When a filter callback returns something other than an array.
 	 */
 	protected function filter_shipment_addresses( Shipping\Item_Info $item_info ): array {
-		return ( new Legacy_Shipping_Client( $item_info ) )->get_shipment_addresses();
+		$addresses = ( new Legacy_Shipping_Client( $item_info ) )->get_shipment_addresses();
+
+		if ( ! is_array( $addresses ) ) {
+			$this->logger->error(
+				sprintf(
+					'A postnl_shipment_addresses callback returned %s instead of an array; V4 label creation aborted.',
+					gettype( $addresses )
+				)
+			);
+
+			throw new \Exception(
+				esc_html__( 'A plugin hooked into postnl_shipment_addresses returned an invalid address list.', 'postnl-for-woocommerce' )
+			);
+		}
+
+		return $addresses;
 	}
 
 	/**

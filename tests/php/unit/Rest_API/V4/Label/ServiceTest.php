@@ -26,6 +26,9 @@ use PostNLWooCommerce\Rest_API\SDK\Client_Factory;
 use PostNLWooCommerce\Rest_API\V4\Label\Request_Builder;
 use PostNLWooCommerce\Rest_API\V4\Label\Service;
 use PostNLWooCommerce\Shipping_Method\Settings;
+use PostNLWooCommerce\Tests\Support\Client_Factory_Settings;
+use PostNLWooCommerce\Tests\Support\Failing_Http_Client;
+use PostNLWooCommerce\Tests\Support\Spy_Label_Client_Factory;
 use PostNLWooCommerce\Tests\UnitTestCase;
 use Psr\Http\Client\ClientInterface;
 use Psr\Http\Message\RequestInterface;
@@ -1195,104 +1198,6 @@ class Fake_Shipping_Item_Info extends Shipping\Item_Info {
 		$this->shipper      = array( 'country' => 'NL' );
 		$this->receiver     = array( 'country' => 'NL' );
 		$this->backend_data = $backend_data;
-	}
-}
-
-/**
- * Minimal settings stand-in for Client_Factory, which only reads the customer
- * credentials off the object it is handed.
- */
-class Client_Factory_Settings {
-
-	/**
-	 * @return string
-	 */
-	public function get_customer_num() {
-		return '11223344';
-	}
-
-	/**
-	 * @return string
-	 */
-	public function get_customer_code() {
-		return 'DEVC';
-	}
-}
-
-/**
- * Client_Factory whose SDK builder is wired to a fake HTTP client so no network
- * call is made, while the production client configuration stays intact.
- */
-class Spy_Label_Client_Factory extends Client_Factory {
-
-	/**
-	 * Fake HTTP client injected into every built SDK client.
-	 *
-	 * @var ClientInterface
-	 */
-	private ClientInterface $http_client;
-
-	/**
-	 * Constructor.
-	 *
-	 * @param object          $settings    Settings stub.
-	 * @param ClientInterface $http_client Fake HTTP client.
-	 */
-	public function __construct( object $settings, ClientInterface $http_client ) {
-		parent::__construct( $settings );
-		$this->http_client = $http_client;
-	}
-
-	/**
-	 * Attach the fake HTTP client to the configured builder.
-	 *
-	 * @param string $v4_key          V4 API key.
-	 * @param bool   $is_sandbox      Sandbox flag.
-	 * @param string $customer_number PostNL customer number.
-	 * @param string $customer_code   PostNL customer code.
-	 * @return ClientBuilder
-	 */
-	protected function make_builder( string $v4_key, bool $is_sandbox, string $customer_number, string $customer_code ): ClientBuilder {
-		return parent::make_builder( $v4_key, $is_sandbox, $customer_number, $customer_code )
-			->withHttpClient( $this->http_client );
-	}
-}
-
-/**
- * PSR-18 client that always answers with a PostNL problem+json error.
- *
- * 401 is chosen because the SDK's retry policy treats it as permanent, so the
- * failure surfaces on the first attempt with no backoff sleeps in the test.
- */
-class Failing_Http_Client implements ClientInterface {
-
-	/**
-	 * The most recent outgoing request, captured for header assertions.
-	 *
-	 * @var RequestInterface|null
-	 */
-	public ?RequestInterface $last_request = null;
-
-	/**
-	 * Return the canned error response.
-	 *
-	 * @param RequestInterface $request Outgoing request.
-	 * @return ResponseInterface
-	 */
-	public function sendRequest( RequestInterface $request ): ResponseInterface {
-		$this->last_request = $request;
-
-		return new Response(
-			401,
-			array( 'Content-Type' => 'application/problem+json' ),
-			(string) json_encode(
-				array(
-					'title'   => 'Unauthorized',
-					'detail'  => 'apiKey header missing or invalid',
-					'traceId' => 'trace-abc',
-				)
-			)
-		);
 	}
 }
 

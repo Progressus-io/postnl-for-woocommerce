@@ -9,6 +9,7 @@ declare( strict_types = 1 );
 
 namespace PostNLWooCommerce\Tests\Rest_API\V4\Label;
 
+use Brain\Monkey\Functions;
 use Postnl\Sdk\Enums\Payload\LabelOutputType;
 use Postnl\Sdk\Enums\Payload\LabelResolution;
 use Postnl\Sdk\Enums\Payload\ShipmentType;
@@ -21,6 +22,15 @@ use PostNLWooCommerce\Tests\UnitTestCase;
  * @covers \PostNLWooCommerce\Rest_API\V4\Label\Request_Builder
  */
 class Request_BuilderTest extends UnitTestCase {
+
+	protected function setUp(): void {
+		parent::setUp();
+
+		// apply_filtered_receiver() names the offending key in a translated,
+		// escaped message; surface it verbatim in failures.
+		Functions\stubTranslationFunctions();
+		Functions\stubEscapeFunctions();
+	}
 
 	/**
 	 * A representative happy-path domestic parcel field set.
@@ -559,5 +569,146 @@ class Request_BuilderTest extends UnitTestCase {
 			'GIF 200 dpi'                   => array( 'GraphicFile|GIF 200 dpi', 'gif', 200 ),
 			'Empty string defaults to PDF'  => array( '', 'pdf', 200 ),
 		);
+	}
+
+	/**
+	 * A rewritten recipient (AddressType 01) entry in the legacy address shape.
+	 *
+	 * Every field deliberately differs from domestic_fields()['receiver'], so
+	 * overlaying it is observable on all nine mapped fields. A fixture equal to
+	 * the receiver would make the overlay indistinguishable from a no-op.
+	 *
+	 * @param array $overrides Fields to override on the base recipient entry.
+	 * @return array
+	 */
+	private function recipient_address( array $overrides = array() ): array {
+		return array_merge(
+			array(
+				'AddressType' => '01',
+				'CompanyName' => 'Rewritten BV',
+				'City'        => 'Rotterdam',
+				'Countrycode' => 'BE',
+				'FirstName'   => 'Piet',
+				'HouseNr'     => '77',
+				'HouseNrExt'  => 'bis',
+				'Name'        => 'Pietersen',
+				'Street'      => 'Rewritten Street',
+				'Zipcode'     => '3000AA',
+			),
+			$overrides
+		);
+	}
+
+	/**
+	 * @testdox apply_filtered_receiver() overlays every rewritten recipient field onto the receiver.
+	 */
+	public function test_apply_filtered_receiver_overlays_modified_address(): void {
+		$receiver = $this->domestic_fields()['receiver'];
+
+		$result = Request_Builder::apply_filtered_receiver( $receiver, array( $this->recipient_address() ) );
+
+		$this->assertSame( 'Rewritten BV', $result['company'] );
+		$this->assertSame( 'Piet', $result['first_name'] );
+		$this->assertSame( 'Pietersen', $result['last_name'] );
+		$this->assertSame( 'Rewritten Street', $result['street'] );
+		$this->assertSame( '77', $result['house_number'] );
+		$this->assertSame( 'bis', $result['house_number_ext'] );
+		$this->assertSame( '3000AA', $result['postcode'] );
+		$this->assertSame( 'Rotterdam', $result['city'] );
+		$this->assertSame( 'BE', $result['country'] );
+	}
+
+	/**
+	 * @testdox apply_filtered_receiver() leaves the contact fields untouched — they live in Contacts, not the address.
+	 */
+	public function test_apply_filtered_receiver_preserves_contact_fields(): void {
+		$receiver = $this->domestic_fields()['receiver'];
+
+		$result = Request_Builder::apply_filtered_receiver( $receiver, array( $this->recipient_address() ) );
+
+		$this->assertSame( 'buyer@example.com', $result['email'] );
+		$this->assertSame( '0612345678', $result['phone'] );
+	}
+
+	/**
+	 * @testdox apply_filtered_receiver() applies the first recipient (01) entry when a filter adds a second.
+	 */
+	public function test_apply_filtered_receiver_uses_the_first_recipient_entry(): void {
+		$receiver = $this->domestic_fields()['receiver'];
+		$filtered = array(
+			$this->recipient_address(),
+			$this->recipient_address( array( 'Street' => 'Second Street', 'City' => 'Utrecht' ) ),
+		);
+
+		$result = Request_Builder::apply_filtered_receiver( $receiver, $filtered );
+
+		$this->assertSame( 'Rewritten Street', $result['street'] );
+		$this->assertSame( 'Rotterdam', $result['city'] );
+	}
+
+	/**
+	 * @testdox apply_filtered_receiver() turns a null field into an empty string and casts other scalars to string.
+	 */
+	public function test_apply_filtered_receiver_normalizes_null_and_scalar_values(): void {
+		$receiver = $this->domestic_fields()['receiver'];
+		$filtered = array(
+			$this->recipient_address(
+				array(
+					'Street'  => null,
+					'HouseNr' => 77,
+				)
+			),
+		);
+
+		$result = Request_Builder::apply_filtered_receiver( $receiver, $filtered );
+
+		$this->assertSame( '', $result['street'], 'A key present with a null value must clear the field, not keep the order value.' );
+		$this->assertSame( '77', $result['house_number'], 'An integer from the filter must reach build() as the string it expects.' );
+		$this->assertSame( 'Rotterdam', $result['city'], 'The other fields must still be applied.' );
+	}
+
+	/**
+	 * @testdox apply_filtered_receiver() leaves a field alone when the filter dropped its key.
+	 */
+	public function test_apply_filtered_receiver_keeps_fields_the_filter_omitted(): void {
+		$receiver = $this->domestic_fields()['receiver'];
+		$address  = $this->recipient_address();
+		unset( $address['Street'] );
+
+		$result = Request_Builder::apply_filtered_receiver( $receiver, array( $address ) );
+
+		$this->assertSame( 'Main Street', $result['street'] );
+		$this->assertSame( 'Rotterdam', $result['city'] );
+	}
+
+	/**
+	 * @testdox apply_filtered_receiver() rejects a non-scalar field with an exception naming the key.
+	 */
+	public function test_apply_filtered_receiver_rejects_non_scalar_value(): void {
+		$receiver = $this->domestic_fields()['receiver'];
+		$filtered = array( $this->recipient_address( array( 'Street' => array( 'Nested', 'Street' ) ) ) );
+
+		$this->expectException( \Exception::class );
+		$this->expectExceptionMessage( 'Street' );
+
+		Request_Builder::apply_filtered_receiver( $receiver, $filtered );
+	}
+
+	/**
+	 * @testdox apply_filtered_receiver() returns the receiver unchanged when no recipient (01) address is present.
+	 */
+	public function test_apply_filtered_receiver_without_recipient_entry(): void {
+		$receiver = $this->domestic_fields()['receiver'];
+		$filtered = array(
+			array(
+				'AddressType' => '09',
+				'City'        => 'Utrecht',
+				'Street'      => 'Pickup Street',
+			),
+		);
+
+		$result = Request_Builder::apply_filtered_receiver( $receiver, $filtered );
+
+		$this->assertSame( $receiver, $result, 'A non-recipient address entry must not alter the receiver.' );
 	}
 }

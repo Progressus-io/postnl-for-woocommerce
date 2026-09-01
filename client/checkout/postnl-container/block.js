@@ -485,12 +485,10 @@ export const Block = ( { checkoutExtensionData } ) => {
 		}
 
 		// Check if the shipping address has changed. A carrier switch also
-		// requires a refresh even when the address is untouched.
-		const rateChanged = previousRateId.current !== selectedRateId;
-		if (
-			! rateChanged &&
-			isAddressEqual( previousShippingAddress.current, shippingAddress )
-		) {
+		// forces a refresh even when the address is untouched: the sibling
+		// effect above nulls previousShippingAddress on a rate change, so the
+		// comparison below fails and the fetch proceeds.
+		if ( isAddressEqual( previousShippingAddress.current, shippingAddress ) ) {
 			return;
 		}
 

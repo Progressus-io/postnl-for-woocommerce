@@ -27,6 +27,7 @@ import {
 	clearDropoffPointExtensionData,
 	isCountrySupported,
 } from '../../utils/extension-data-helper';
+import { isSupportedShippingMethod } from '../../utils/shipping-method-helper';
 
 /**
  * Format a decimal amount as a WooCommerce-style price string using the
@@ -99,6 +100,29 @@ export const Block = ( { checkoutExtensionData } ) => {
 		postnlData.letterbox || false
 	);
 	const { CART_STORE_KEY, CHECKOUT_STORE_KEY } = window.wc.wcBlocksData;
+
+	// The chosen shipping rate. The delivery options must be re-fetched when the
+	// shopper switches carrier, not only when the address changes, so that the
+	// container hides for a method PostNL is not linked to.
+	const selectedRateId = useSelect(
+		( select ) => {
+			const store = select( CART_STORE_KEY );
+			if ( ! store || ! store.getCartData ) {
+				return '';
+			}
+			const packages = store.getCartData().shippingRates || [];
+			for ( const pkg of packages ) {
+				const chosen = ( pkg.shipping_rates || [] ).find(
+					( rate ) => rate && rate.selected
+				);
+				if ( chosen ) {
+					return chosen.rate_id || '';
+				}
+			}
+			return '';
+		},
+		[ CART_STORE_KEY ]
+	);
 
 	const selectedShippingFee = useSelect(
 		( select ) => {
@@ -356,6 +380,8 @@ export const Block = ( { checkoutExtensionData } ) => {
 
 	// Ref to store the previous shipping address
 	const previousShippingAddress = useRef( null );
+	const previousRateId = useRef( null );
+	const [ rateRefreshToken, setRateRefreshToken ] = useState( 0 );
 
 	/**
 	 * Clear all PostNL data: session, extension data, and backend cart fee.
@@ -382,6 +408,27 @@ export const Block = ( { checkoutExtensionData } ) => {
 	// Track previous country to detect transitions to unsupported countries
 	const previousCountry = useRef( shippingAddress?.country || '' );
 	const supportedCountries = postnlData.supported_countries || [];
+	const supportedShippingMethods = useMemo(
+		() => postnlData.supported_shipping_methods || [],
+		[ postnlData.supported_shipping_methods ]
+	);
+
+	// A carrier switch must re-run the delivery-options fetch even though the
+	// address is unchanged, so the container can hide for a method PostNL is
+	// not linked to. Resetting the address ref defeats the unchanged-address guard.
+	useEffect( () => {
+		if ( previousRateId.current === null ) {
+			previousRateId.current = selectedRateId;
+			return;
+		}
+		if ( previousRateId.current === selectedRateId ) {
+			return;
+		}
+		previousRateId.current = selectedRateId;
+		previousShippingAddress.current = null;
+		isUpdatingAddress.current = false;
+		setRateRefreshToken( ( token ) => token + 1 );
+	}, [ selectedRateId ] );
 
 	// Fetch data shipping address
 	useEffect( () => {
@@ -406,6 +453,20 @@ export const Block = ( { checkoutExtensionData } ) => {
 			return;
 		}
 
+		// Client-side gate mirroring the classic checkout: hide the widget and
+		// clear PostNL session/extension data as soon as the shopper selects a
+		// shipping method PostNL is not linked to, without a server round-trip.
+		if (
+			selectedRateId &&
+			! isSupportedShippingMethod( selectedRateId, supportedShippingMethods )
+		) {
+			setShowContainer( false );
+			setDeliveryOptions( [] );
+			setDropoffOptions( [] );
+			clearAllPostNLData();
+			return;
+		}
+
 		if (
 			! shippingAddress ||
 			isEmpty( shippingAddress.postcode ) ||
@@ -423,10 +484,11 @@ export const Block = ( { checkoutExtensionData } ) => {
 			return;
 		}
 
-		// Check if the shipping address has changed
-		if (
-			isAddressEqual( previousShippingAddress.current, shippingAddress )
-		) {
+		// Check if the shipping address has changed. A carrier switch also
+		// forces a refresh even when the address is untouched: the sibling
+		// effect above nulls previousShippingAddress on a rate change, so the
+		// comparison below fails and the fetch proceeds.
+		if ( isAddressEqual( previousShippingAddress.current, shippingAddress ) ) {
 			return;
 		}
 
@@ -434,6 +496,7 @@ export const Block = ( { checkoutExtensionData } ) => {
 		const handler = setTimeout( () => {
 			// Update the previous shipping address
 			previousShippingAddress.current = { ...shippingAddress };
+			previousRateId.current = selectedRateId;
 
 			const data = {
 				shipping_country: shippingAddress.country || '',
@@ -567,6 +630,8 @@ export const Block = ( { checkoutExtensionData } ) => {
 		return () => clearTimeout( handler );
 	}, [
 		shippingAddress,
+		selectedRateId,
+		rateRefreshToken,
 		postnlData.ajax_url,
 		postnlData.nonce,
 		postnlData.is_nl_address_enabled,
@@ -574,6 +639,7 @@ export const Block = ( { checkoutExtensionData } ) => {
 		updateCustomerData,
 		clearAllPostNLData,
 		supportedCountries,
+		supportedShippingMethods,
 	] );
 
 	// Clear local data if checkout is complete or letterbox.

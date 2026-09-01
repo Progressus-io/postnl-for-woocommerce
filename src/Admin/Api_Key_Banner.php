@@ -138,7 +138,7 @@ class Api_Key_Banner {
 		$notice_class = $has_old_key ? 'notice-warning' : 'notice-info';
 		?>
 		<div class="notice <?php echo esc_attr( $notice_class ); ?> postnl-new-api-key-banner" data-nonce="<?php echo esc_attr( $nonce ); ?>">
-			<p><strong><?php esc_html_e( 'PostNL:', 'postnl-for-woocommerce' ); ?></strong> <?php echo esc_html( $this->get_message( $has_old_key ) ); ?></p>
+			<p><strong><?php esc_html_e( 'PostNL:', 'postnl-for-woocommerce' ); ?></strong> <?php echo wp_kses_post( $this->get_message( $has_old_key ) ); ?></p>
 			<p>
 				<a href="<?php echo esc_url( Settings::SELF_SERVICE_URL ); ?>" target="_blank" rel="noopener noreferrer" class="button button-primary">
 					<?php esc_html_e( 'Get your API key', 'postnl-for-woocommerce' ); ?>
@@ -155,10 +155,11 @@ class Api_Key_Banner {
 	}
 
 	/**
-	 * Banner body text. Existing merchants (who already have a legacy key stored)
-	 * are told an extra field was added; a fresh install, which never had an old
-	 * key, is simply asked to enter its key. The copy here is placeholder pending
-	 * final wording from Rick.
+	 * Banner body text (final copy supplied by PostNL). Existing merchants (who
+	 * already have a legacy key stored) are told an extra field was added; a fresh
+	 * install, which may still hold a pre-migration v2 key, is pointed at the
+	 * developer portal to request a v4 key. The fresh-install variant carries an
+	 * inline link, so the caller renders the message with wp_kses_post().
 	 *
 	 * @param bool $has_old_key Whether a legacy key is already stored.
 	 */
@@ -170,9 +171,16 @@ class Api_Key_Banner {
 			);
 		}
 
-		return __(
-			'Important: Enter your PostNL API key, which can be obtained via the Self Service module on the PostNL Business Portal, in the account configuration of the PostNL plug-in. This key is required to connect to the PostNL APIs; without it you cannot create labels or use checkout features such as delivery days and pickup points.',
-			'postnl-for-woocommerce'
+		$link = sprintf(
+			'<a href="%s" target="_blank" rel="noopener noreferrer">%s</a>',
+			esc_url( Settings::SELF_SERVICE_URL ),
+			esc_html__( 'Request a new API key here', 'postnl-for-woocommerce' )
+		);
+
+		return sprintf(
+			/* translators: %s is a link reading "Request a new API key here". */
+			__( 'Important: PostNL is migrating to the new Future-proof API v4. Don\'t you have an API key yet, or do you have an API key issued before September 14, 2026? %s. Enter your PostNL API key in the account configuration of the PostNL plug-in. This key is required to connect to the PostNL APIs. Without it you cannot create labels or use checkout features such as delivery days and pickup points.', 'postnl-for-woocommerce' ),
+			$link
 		);
 	}
 

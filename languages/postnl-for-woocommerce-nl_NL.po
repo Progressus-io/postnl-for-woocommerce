@@ -1964,7 +1964,7 @@ msgstr "Kan PostNL niet bereiken om de nieuwe API key te valideren. Je vorige in
 
 #: src/Admin/Api_Key_Banner.php:167
 msgid "Important: In the latest update of the plug-in, an additional API key field has been added to the account configuration of the PostNL plug-in. This field must be filled in with the new API key that can be obtained via the Self Service module on the PostNL Business Portal. This API key is required to gain access to the new APIs that will be rolled out in a future update of the plug-in. It is very important that this key is entered before the relevant update is performed; otherwise, no connection can be made to the new PostNL APIs, and it will not be possible to create labels or use checkout features such as delivery days and pickup points."
-msgstr "Let op: er is in de laatste update van de plug-in een extra API key veld toegevoegd aan de accountconfiguratie van de PostNL plug-in. In dit veld moet de nieuwe API key ingevuld worden die je via de Self Service module op het Business Portal van PostNL kunt verkrijgen. Deze API key is nodig om toegang te krijgen tot de nieuwe APIs die zullen worden uitgerold in een toekomstige update van de plug-in. Het is van groot belang dat deze key ingevuld wordt voordat de betreffende update wordt uitgevoerd, omdat er anders geen verbinding gemaakt kan worden met de nieuwe PostNL APIs en er dus geen labels aangemaakt kunnen worden of gebruik gemaakt kan worden van de check-out functies zoals bezorgdagen en afhaalpunten."
+msgstr "Let op: er is in de laatste update van de app een extra API key veld toegevoegd aan de accountconfiguratie van de PostNL plug-in. In dit veld moet de nieuwe API key ingevuld worden die je via de Self Service module in Mijn PostNL Zakelijk kunt verkrijgen. Deze API key is nodig om toegang te krijgen tot de nieuwe API's die zullen worden uitgerold in een toekomstige update van de plug-in. Het is van groot belang dat deze key ingevuld wordt omdat er anders geen verbinding gemaakt kan worden met de nieuwe PostNL API's en er dus geen labels aangemaakt kunnen worden of gebruik gemaakt kan worden van de check-out functies zoals bezorgdagen en afhaalpunten."
 
 #: src/Admin/Api_Key_Banner.php:147
 msgid "Remind me later"
@@ -1982,9 +1982,13 @@ msgstr ""
 msgid "Get your API key"
 msgstr ""
 
-#: src/Admin/Api_Key_Banner.php:173
-msgid "Important: Enter your PostNL API key, which can be obtained via the Self Service module on the PostNL Business Portal, in the account configuration of the PostNL plug-in. This key is required to connect to the PostNL APIs; without it you cannot create labels or use checkout features such as delivery days and pickup points."
-msgstr ""
+#: src/Admin/Api_Key_Banner.php:178
+msgid "Request a new API key here"
+msgstr "Vraag dan hier een nieuwe API key aan"
+
+#: src/Admin/Api_Key_Banner.php:183
+msgid "Important: PostNL is migrating to the new Future-proof API v4. Don't you have an API key yet, or do you have an API key issued before September 14, 2026? %s. Enter your PostNL API key in the account configuration of the PostNL plug-in. This key is required to connect to the PostNL APIs. Without it you cannot create labels or use checkout features such as delivery days and pickup points."
+msgstr "PostNL stapt over op de nieuwe Future-proof API v4. Heb je nog geen API key of een API key van vóór 14 september 2026? %s. Voer je PostNL API key in bij de accountconfiguratie van de PostNL-plug-in. Deze API key is vereist om verbinding te maken met de PostNL-API's. Zonder deze API key kun je geen verzendlabels aanmaken en geen gebruikmaken van checkout-functies zoals bezorgdagen en afhaalpunten."
 
 #: src/Order/Base.php:995
 msgid "PostNL returned a label without a barcode. Please try generating the label again."

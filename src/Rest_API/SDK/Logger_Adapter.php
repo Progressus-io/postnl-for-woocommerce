@@ -26,11 +26,17 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * The SDK redacts label binary, PII, and credentials via its
  * RedactionRegistry::forProduction() (on by default) before a message ever
- * reaches this adapter, so the adapter writes what it receives verbatim — it
- * deliberately does not re-run the legacy Logger::check_pdf_content() scan.
- * The V4 label binary travels under the label, mergedLabel and labelSignature
- * keys, all three of which the SDK registry omits; the legacy Labels[].Content
- * shape never reaches this adapter.
+ * reaches this adapter, so the adapter does not re-run the legacy
+ * Logger::check_pdf_content() scan. The V4 label binary travels under the
+ * label, mergedLabel and labelSignature keys, all three of which the SDK
+ * registry omits; the legacy Labels[].Content shape never reaches this adapter.
+ *
+ * The public postnl_logger_write_message filter, which Logger::write() applies
+ * to every legacy log line, is applied here too — to the finished, tagged line,
+ * right before it is written — so a third party that redacts or rewrites PostNL
+ * log output sees V4 entries as well. The filter is applied here rather than by
+ * delegating to Logger::write() because that method writes at a single level
+ * with no context, and this adapter's job is to keep the PSR-3 level and context.
  *
  * PSR-3 context is forwarded to WC_Logger alongside the source, per WooCommerce
  * logging standards: the file handler strips source, JSON-encodes whatever
@@ -117,6 +123,22 @@ class Logger_Adapter extends AbstractLogger {
 		try {
 			$level   = $this->normalize_level( $level );
 			$message = self::TAG . ' ' . $this->interpolate( (string) $message, $context );
+
+			/**
+			 * Filter the finished V4 log line before it is written.
+			 *
+			 * Same public filter, same single-argument shape as Logger::write(). Legacy
+			 * accepts an array or object back and print_r()s it, so the same is done here.
+			 *
+			 * @since 6.0.0 Applied to V4 lines; Logger::write() has applied it to legacy lines.
+			 *
+			 * @param string $message The tagged, interpolated log line.
+			 */
+			$message = apply_filters( 'postnl_logger_write_message', $message );
+			if ( is_array( $message ) || is_object( $message ) ) {
+				$message = print_r( $message, true ); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_print_r -- Mirrors Logger::write().
+			}
+			$message = (string) $message;
 
 			// Source is merged last so incoming context can never redirect the
 			// entry away from the plugin's shared WC log channel.

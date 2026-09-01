@@ -27,8 +27,11 @@ use PostNLWooCommerce\Rest_API\Legacy\Smart_Returns_Service as Legacy_Smart_Retu
 use PostNLWooCommerce\Rest_API\SDK\Client_Factory;
 use PostNLWooCommerce\Rest_API\SDK\Logger_Adapter;
 use PostNLWooCommerce\Rest_API\V4\Label\Service as V4_Label_Service;
+use PostNLWooCommerce\Rest_API\V4\Pickup_Location\Service as V4_Pickup_Location_Service;
 use PostNLWooCommerce\Rest_API\V4\Returns\Service as V4_Returns_Service;
 use PostNLWooCommerce\Rest_API\V4\Returns\Smart_Returns_Service as V4_Smart_Returns_Service;
+use PostNLWooCommerce\Rest_API\V4\Timeframe\Service as V4_Timeframe_Service;
+use PostNLWooCommerce\Shipping_Method\Settings;
 use Psr\Log\LoggerInterface;
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -39,10 +42,14 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Class Service_Factory
  *
  * Single factory that resolves the correct service implementation per flow.
- * Every method returns the Legacy service unless all three conditions hold:
- *   (a) a validated "New API Key" is present on the settings object,
- *   (b) Router::sdk_enabled_for() returns true for the flow, and
- *   (c) a V4 service has been registered for that flow via inject_v4_service().
+ * Every method returns the Legacy service unless both of these hold:
+ *   (a) a validated "New API Key" is present on the settings object, and
+ *   (b) Router::sdk_enabled_for() returns true for the flow.
+ *
+ * With those met, a flow resolves to a V4 service registered via
+ * inject_v4_service(), or to one the factory builds itself where it can:
+ * label, return_label, smart_returns, timeframe and pickup_location. The
+ * remaining flows (barcode, letterbox) still require injection.
  *
  * postcode_check_service() is permanently wired to Legacy because postcode_check
  * is intentionally absent from Router::SUPPORTED_FLOWS.
@@ -52,8 +59,10 @@ if ( ! defined( 'ABSPATH' ) ) {
  * its interface when that flow is migrated.
  *
  * The 'checkout' SUPPORTED_FLOW is never queried directly; the checkout endpoint
- * is split here into the 'timeframe' and 'pickup_location' flows, both backed by
- * the shared Legacy\Checkout_Service.
+ * is split here into the 'timeframe' and 'pickup_location' flows. On the legacy
+ * path both are backed by the shared Legacy\Checkout_Service, whose single
+ * response carries delivery days and pickup points together; on V4 they are two
+ * endpoints and so two services, which Frontend\Container recombines.
  *
  * Legacy services are created lazily on first access and memoised so repeated
  * calls within a request are cheap.
@@ -122,6 +131,26 @@ class Service_Factory {
 	 * @var V4_Smart_Returns_Service|null
 	 */
 	private $smart_returns_v4_memo = null;
+
+	/**
+	 * Memoised self-built V4 timeframe service.
+	 *
+	 * Kept out of $v4_services for the same reason as $label_v4_memo. Memoising also
+	 * keeps one SDK client — and so one response cache — across both checkout halves
+	 * within a request.
+	 *
+	 * @var V4_Timeframe_Service|null
+	 */
+	private $timeframe_v4_memo = null;
+
+	/**
+	 * Memoised self-built V4 pickup-location service.
+	 *
+	 * Kept out of $v4_services for the same reason as $label_v4_memo.
+	 *
+	 * @var V4_Pickup_Location_Service|null
+	 */
+	private $pickup_location_v4_memo = null;
 
 	/**
 	 * Service_Factory constructor.
@@ -198,8 +227,14 @@ class Service_Factory {
 	 * @return Timeframe_Service_Interface
 	 */
 	public function timeframe_service(): Timeframe_Service_Interface {
-		if ( $this->should_use_v4( 'timeframe' ) && isset( $this->v4_services['timeframe'] ) ) {
-			return $this->v4_services['timeframe'];
+		if ( $this->should_use_v4( 'timeframe' ) ) {
+			if ( isset( $this->v4_services['timeframe'] ) ) {
+				return $this->v4_services['timeframe'];
+			}
+			$v4 = $this->build_v4_timeframe_service();
+			if ( null !== $v4 ) {
+				return $v4;
+			}
 		}
 		return $this->legacy_checkout_service();
 	}
@@ -210,8 +245,14 @@ class Service_Factory {
 	 * @return Pickup_Location_Service_Interface
 	 */
 	public function pickup_location_service(): Pickup_Location_Service_Interface {
-		if ( $this->should_use_v4( 'pickup_location' ) && isset( $this->v4_services['pickup_location'] ) ) {
-			return $this->v4_services['pickup_location'];
+		if ( $this->should_use_v4( 'pickup_location' ) ) {
+			if ( isset( $this->v4_services['pickup_location'] ) ) {
+				return $this->v4_services['pickup_location'];
+			}
+			$v4 = $this->build_v4_pickup_location_service();
+			if ( null !== $v4 ) {
+				return $v4;
+			}
 		}
 		return $this->legacy_checkout_service();
 	}
@@ -345,6 +386,66 @@ class Service_Factory {
 			$this->legacy_memos['smart_returns'] = new Legacy_Smart_Returns_Service();
 		}
 		return $this->legacy_memos['smart_returns'];
+	}
+
+	/**
+	 * Build the V4 timeframe service, or null when this factory cannot.
+	 *
+	 * Unlike the label and returns services, the V4 checkout services type-hint the
+	 * concrete Settings because they read a dozen shipping settings to build their
+	 * requests. A factory handed anything else therefore falls back to Legacy rather
+	 * than fatalling on the type. In production both call sites (Frontend\Container
+	 * and Order\Base) pass Settings::get_instance(), so the guard never trips there.
+	 *
+	 * @return V4_Timeframe_Service|null
+	 *
+	 * @since 6.0.0
+	 */
+	private function build_v4_timeframe_service(): ?V4_Timeframe_Service {
+		if ( ! $this->settings instanceof Settings ) {
+			return null;
+		}
+
+		if ( null === $this->timeframe_v4_memo ) {
+			$logger                  = $this->v4_logger();
+			$this->timeframe_v4_memo = new V4_Timeframe_Service(
+				new Client_Factory( $this->settings, $logger ),
+				$this->settings,
+				(string) $this->settings->get_api_key_new(),
+				(int) $this->settings->get_number_delivery_days(),
+				$logger
+			);
+		}
+
+		return $this->timeframe_v4_memo;
+	}
+
+	/**
+	 * Build the V4 pickup-location service, or null when this factory cannot.
+	 *
+	 * Same Settings type constraint as build_v4_timeframe_service().
+	 *
+	 * @return V4_Pickup_Location_Service|null
+	 *
+	 * @since 6.0.0
+	 */
+	private function build_v4_pickup_location_service(): ?V4_Pickup_Location_Service {
+		if ( ! $this->settings instanceof Settings ) {
+			return null;
+		}
+
+		if ( null === $this->pickup_location_v4_memo ) {
+			$logger                        = $this->v4_logger();
+			$this->pickup_location_v4_memo = new V4_Pickup_Location_Service(
+				new Client_Factory( $this->settings, $logger ),
+				$this->settings,
+				(string) $this->settings->get_api_key_new(),
+				(int) $this->settings->get_number_pickup_points(),
+				$logger
+			);
+		}
+
+		return $this->pickup_location_v4_memo;
 	}
 
 	/**

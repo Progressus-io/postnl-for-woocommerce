@@ -27,6 +27,7 @@ import {
 	clearDropoffPointExtensionData,
 	isCountrySupported,
 } from '../../utils/extension-data-helper';
+import { isSupportedShippingMethod } from '../../utils/shipping-method-helper';
 
 /**
  * Format a decimal amount as a WooCommerce-style price string using the
@@ -407,6 +408,10 @@ export const Block = ( { checkoutExtensionData } ) => {
 	// Track previous country to detect transitions to unsupported countries
 	const previousCountry = useRef( shippingAddress?.country || '' );
 	const supportedCountries = postnlData.supported_countries || [];
+	const supportedShippingMethods = useMemo(
+		() => postnlData.supported_shipping_methods || [],
+		[ postnlData.supported_shipping_methods ]
+	);
 
 	// A carrier switch must re-run the delivery-options fetch even though the
 	// address is unchanged, so the container can hide for a method PostNL is
@@ -445,6 +450,20 @@ export const Block = ( { checkoutExtensionData } ) => {
 				setDropoffOptions( [] );
 				clearAllPostNLData();
 			}
+			return;
+		}
+
+		// Client-side gate mirroring the classic checkout: hide the widget and
+		// clear PostNL session/extension data as soon as the shopper selects a
+		// shipping method PostNL is not linked to, without a server round-trip.
+		if (
+			selectedRateId &&
+			! isSupportedShippingMethod( selectedRateId, supportedShippingMethods )
+		) {
+			setShowContainer( false );
+			setDeliveryOptions( [] );
+			setDropoffOptions( [] );
+			clearAllPostNLData();
 			return;
 		}
 
@@ -622,6 +641,7 @@ export const Block = ( { checkoutExtensionData } ) => {
 		updateCustomerData,
 		clearAllPostNLData,
 		supportedCountries,
+		supportedShippingMethods,
 	] );
 
 	// Clear local data if checkout is complete or letterbox.

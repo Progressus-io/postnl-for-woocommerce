@@ -154,7 +154,11 @@ class Base {
 	 * Set API key value.
 	 */
 	public function set_api_key() {
-		$this->api_key = ( true === $this->is_sandbox ) ? $this->settings->get_api_key_sandbox() : $this->settings->get_api_key();
+		// get_effective_api_key() is environment-aware and falls back to the
+		// original key for the active environment, so the sandbox path no longer
+		// needs its own branch: it resolves the validated new sandbox key when one
+		// exists and the legacy sandbox key otherwise.
+		$this->api_key = $this->settings->get_effective_api_key();
 	}
 
 	/**
@@ -178,6 +182,7 @@ class Base {
 	public function get_basic_headers_args() {
 		return array(
 			'apikey'       => $this->get_api_key(),
+			'NewKey'       => $this->settings->get_new_key_header_value(),
 			'accept'       => 'application/json',
 			'Content-Type' => 'application/json',
 			'SourceSystem' => '35',

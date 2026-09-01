@@ -1107,11 +1107,13 @@ class Settings extends \WC_Settings_API {
 	}
 
 	/**
-	 * Placeholder Self Service (SSAM) portal URL used in the new-key guidance.
-	 * PostNL still has to confirm the real Self Service URL before release; the
-	 * mockup points at mijn.postnl.nl, so that is used until then.
+	 * PostNL developer portal page for the API migration. It explains how to
+	 * upgrade PHP, how to request a new API key via the Self Service (SSAM)
+	 * module, and when to update the plug-in for API v4. Confirmed by PostNL as
+	 * the destination for the migration banners (in place of the Self Service
+	 * portal directly), so customers get the full step-by-step instructions first.
 	 */
-	const SELF_SERVICE_URL = 'https://mijn.postnl.nl/';
+	const SELF_SERVICE_URL = 'https://developer.postnl.nl/integration-with-postnl/api-overview/future-proof-api-s/plug-ins/';
 
 	/**
 	 * Link to the PostNL Business Portal Self Service module, reused across the

@@ -23,8 +23,11 @@ use PostNLWooCommerce\Rest_API\Legacy\Postcode_Check_Service as Legacy_Postcode_
 use PostNLWooCommerce\Rest_API\Legacy\Smart_Returns_Service as Legacy_Smart_Returns_Service;
 use PostNLWooCommerce\Rest_API\Service_Factory;
 use PostNLWooCommerce\Rest_API\V4\Label\Service as V4_Label_Service;
+use PostNLWooCommerce\Rest_API\V4\Pickup_Location\Service as V4_Pickup_Location_Service;
 use PostNLWooCommerce\Rest_API\V4\Returns\Service as V4_Returns_Service;
 use PostNLWooCommerce\Rest_API\V4\Returns\Smart_Returns_Service as V4_Smart_Returns_Service;
+use PostNLWooCommerce\Rest_API\V4\Timeframe\Service as V4_Timeframe_Service;
+use PostNLWooCommerce\Shipping_Method\Settings;
 use PostNLWooCommerce\Tests\UnitTestCase;
 
 /**
@@ -120,6 +123,61 @@ class Service_FactoryTest extends UnitTestCase {
 	}
 
 	/**
+	 * Return a settings double that extends the real Settings class.
+	 *
+	 * The V4 timeframe and pickup-location services type-hint the concrete
+	 * Settings, so the factory only self-builds them when it was handed one.
+	 * Only the getters the factory reads while building are overridden; the
+	 * parent constructor is skipped so no WooCommerce option lookup runs.
+	 *
+	 * @param string $key       New API key value.
+	 * @param bool   $validated Whether the key passed save-time validation.
+	 * @return Settings
+	 */
+	private function real_settings_with_key( string $key = 'test-v4-key', bool $validated = true ): Settings {
+		return new class( $key, $validated ) extends Settings {
+			/** @var string */
+			private $api_key_new;
+			/** @var bool */
+			private $validated;
+
+			/**
+			 * @param string $k New API key value.
+			 * @param bool   $v Whether the key passed validation.
+			 */
+			public function __construct( string $k, bool $v ) {
+				$this->api_key_new = $k;
+				$this->validated   = $v;
+			}
+
+			/** @return string */
+			public function get_api_key_new() {
+				return trim( (string) $this->api_key_new );
+			}
+
+			/** @return bool */
+			public function is_api_key_new_validated() {
+				return $this->validated;
+			}
+
+			/** @return bool */
+			public function is_logging_enabled() {
+				return false;
+			}
+
+			/** @return string */
+			public function get_number_delivery_days() {
+				return '5';
+			}
+
+			/** @return string */
+			public function get_number_pickup_points() {
+				return '3';
+			}
+		};
+	}
+
+	/**
 	 * Return a minimal Barcode_Service_Interface stub for V4 injection.
 	 *
 	 * @return Barcode_Service_Interface
@@ -131,6 +189,40 @@ class Service_FactoryTest extends UnitTestCase {
 			 * @return array
 			 */
 			public function generate( array $post_data ): array {
+				return array();
+			}
+		};
+	}
+
+	/**
+	 * Return a minimal Timeframe_Service_Interface stub for V4 injection.
+	 *
+	 * @return Timeframe_Service_Interface
+	 */
+	private function v4_timeframe_stub(): Timeframe_Service_Interface {
+		return new class implements Timeframe_Service_Interface {
+			/**
+			 * @param array $post_data Post data.
+			 * @return array
+			 */
+			public function get_delivery_options( array $post_data ): array {
+				return array();
+			}
+		};
+	}
+
+	/**
+	 * Return a minimal Pickup_Location_Service_Interface stub for V4 injection.
+	 *
+	 * @return Pickup_Location_Service_Interface
+	 */
+	private function v4_pickup_location_stub(): Pickup_Location_Service_Interface {
+		return new class implements Pickup_Location_Service_Interface {
+			/**
+			 * @param array $post_data Post data.
+			 * @return array
+			 */
+			public function get_pickup_locations( array $post_data ): array {
 				return array();
 			}
 		};
@@ -529,7 +621,11 @@ class Service_FactoryTest extends UnitTestCase {
 	}
 
 	/**
-	 * @testdox V4 key + flag but no stub: timeframe_service() returns Legacy
+	 * @testdox V4 key + flag but a duck-typed settings object: timeframe_service() returns Legacy
+	 *
+	 * The factory self-builds the V4 timeframe service, so what keeps this case on
+	 * Legacy is the settings object, not the missing stub: the V4 service type-hints
+	 * the concrete Settings. See scenario 11 for the self-build itself.
 	 */
 	public function test_key_and_flag_but_no_stub_timeframe_returns_legacy(): void {
 		Filters\expectApplied( 'postnl_sdk_enable_timeframe' )->andReturn( true );
@@ -766,5 +862,143 @@ class Service_FactoryTest extends UnitTestCase {
 
 		$this->assertNotSame( $self_built, $factory->return_label_service() );
 		$this->assertSame( $injected, $factory->return_label_service() );
+	}
+
+	// -------------------------------------------------------------------------
+	// Scenario 11 — the V4 checkout services the factory builds for itself
+	// -------------------------------------------------------------------------
+
+	/**
+	 * @testdox timeframe_service() returns the real V4 timeframe service when the flag is on
+	 */
+	public function test_timeframe_service_builds_v4_service_when_flag_on(): void {
+		Filters\expectApplied( 'postnl_sdk_enable_timeframe' )->andReturn( true );
+
+		$factory = new Service_Factory( $this->real_settings_with_key() );
+
+		$this->assertInstanceOf( V4_Timeframe_Service::class, $factory->timeframe_service() );
+	}
+
+	/**
+	 * @testdox pickup_location_service() returns the real V4 pickup service when the flag is on
+	 */
+	public function test_pickup_location_service_builds_v4_service_when_flag_on(): void {
+		Filters\expectApplied( 'postnl_sdk_enable_pickup_location' )->andReturn( true );
+
+		$factory = new Service_Factory( $this->real_settings_with_key() );
+
+		$this->assertInstanceOf( V4_Pickup_Location_Service::class, $factory->pickup_location_service() );
+	}
+
+	/**
+	 * @testdox timeframe_service() memoizes the self-built V4 service across repeated calls
+	 */
+	public function test_timeframe_service_memoizes_self_built_v4_service(): void {
+		Filters\expectApplied( 'postnl_sdk_enable_timeframe' )->andReturn( true );
+
+		$factory = new Service_Factory( $this->real_settings_with_key() );
+
+		$this->assertSame( $factory->timeframe_service(), $factory->timeframe_service() );
+	}
+
+	/**
+	 * @testdox pickup_location_service() memoizes the self-built V4 service across repeated calls
+	 */
+	public function test_pickup_location_service_memoizes_self_built_v4_service(): void {
+		Filters\expectApplied( 'postnl_sdk_enable_pickup_location' )->andReturn( true );
+
+		$factory = new Service_Factory( $this->real_settings_with_key() );
+
+		$this->assertSame( $factory->pickup_location_service(), $factory->pickup_location_service() );
+	}
+
+	/**
+	 * @testdox Enabling timeframe alone leaves pickup_location on the Legacy checkout service
+	 *
+	 * The two halves of the legacy /shipment/v1/checkout response are separate
+	 * endpoints in V4, so each must be switchable on its own. Container composes
+	 * whatever pair it is handed, which is what lets a merchant run one flow on V4
+	 * while the other stays on the legacy path.
+	 */
+	public function test_timeframe_flag_does_not_switch_pickup_location(): void {
+		Filters\expectApplied( 'postnl_sdk_enable_timeframe' )->andReturn( true );
+		Filters\expectApplied( 'postnl_sdk_enable_pickup_location' )->andReturn( false );
+
+		$factory = new Service_Factory( $this->real_settings_with_key() );
+
+		$this->assertInstanceOf( V4_Timeframe_Service::class, $factory->timeframe_service() );
+		$this->assertInstanceOf( Legacy_Checkout_Service::class, $factory->pickup_location_service() );
+	}
+
+	/**
+	 * @testdox Self-building the V4 checkout services leaves the injected-service store untouched
+	 *
+	 * $v4_services means "a V4 service was deliberately injected for this flow".
+	 * The checkout services keep their own memos for the same reason the label and
+	 * returns services do: a second meaning in that array is how a later predicate
+	 * reading it gets a wrong answer.
+	 */
+	public function test_checkout_services_do_not_register_as_injected(): void {
+		Filters\expectApplied( 'postnl_sdk_enable_timeframe' )->andReturn( true );
+		Filters\expectApplied( 'postnl_sdk_enable_pickup_location' )->andReturn( true );
+
+		$factory = new Service_Factory( $this->real_settings_with_key() );
+		$factory->timeframe_service();
+		$factory->pickup_location_service();
+
+		$store = new \ReflectionProperty( Service_Factory::class, 'v4_services' );
+		$store->setAccessible( true );
+		$injected = $store->getValue( $factory );
+
+		$this->assertArrayNotHasKey( 'timeframe', $injected );
+		$this->assertArrayNotHasKey( 'pickup_location', $injected );
+	}
+
+	/**
+	 * @testdox An injected V4 timeframe service wins over the self-built one
+	 */
+	public function test_injected_v4_timeframe_service_wins_over_self_built(): void {
+		Filters\expectApplied( 'postnl_sdk_enable_timeframe' )->andReturn( true );
+
+		$factory    = new Service_Factory( $this->real_settings_with_key() );
+		$self_built = $factory->timeframe_service();
+
+		$injected = $this->v4_timeframe_stub();
+		$factory->inject_v4_service( 'timeframe', $injected );
+
+		$this->assertNotSame( $self_built, $factory->timeframe_service() );
+		$this->assertSame( $injected, $factory->timeframe_service() );
+	}
+
+	/**
+	 * @testdox An injected V4 pickup service wins over the self-built one
+	 */
+	public function test_injected_v4_pickup_location_service_wins_over_self_built(): void {
+		Filters\expectApplied( 'postnl_sdk_enable_pickup_location' )->andReturn( true );
+
+		$factory    = new Service_Factory( $this->real_settings_with_key() );
+		$self_built = $factory->pickup_location_service();
+
+		$injected = $this->v4_pickup_location_stub();
+		$factory->inject_v4_service( 'pickup_location', $injected );
+
+		$this->assertNotSame( $self_built, $factory->pickup_location_service() );
+		$this->assertSame( $injected, $factory->pickup_location_service() );
+	}
+
+	/**
+	 * @testdox Key + flag but a duck-typed settings object: the checkout flows stay Legacy
+	 *
+	 * The V4 checkout services type-hint the concrete Settings, so the factory can
+	 * only build them from a real one. Anything else falls back rather than fatals.
+	 */
+	public function test_checkout_flows_stay_legacy_without_a_real_settings_object(): void {
+		Filters\expectApplied( 'postnl_sdk_enable_timeframe' )->andReturn( true );
+		Filters\expectApplied( 'postnl_sdk_enable_pickup_location' )->andReturn( true );
+
+		$factory = new Service_Factory( $this->settings_with_key() );
+
+		$this->assertInstanceOf( Legacy_Checkout_Service::class, $factory->timeframe_service() );
+		$this->assertInstanceOf( Legacy_Checkout_Service::class, $factory->pickup_location_service() );
 	}
 }

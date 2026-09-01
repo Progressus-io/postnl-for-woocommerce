@@ -27,6 +27,9 @@ PostNL’s official extension for WooCommerce on WordPress. Manage your national
 
 ## Changelog
 
+### 6.0.0
+* Fix: PostNL delivery and pickup options showed in the blocks checkout, and were saved to the order, even when a non-PostNL shipping method was selected.
+
 ### 5.9.11
 * Tweak: WordPress 7.1 and WooCommerce 11.1 compatibility.
 

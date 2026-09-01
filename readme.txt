@@ -81,6 +81,9 @@ Follow these instructions (https://www.postnl.nl/Images/aanvragen-api-key-stappe
 
 == Changelog ==
 
+= 6.0.0 (2026-xx-xx) =
+* Fix: PostNL delivery and pickup options showed in the blocks checkout, and were saved to the order, even when a non-PostNL shipping method was selected.
+
 = 5.9.11 (2026-08-31) =
 * Tweak: WordPress 7.1 and WooCommerce 11.1 compatibility.
 

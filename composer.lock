@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "406b01d6c34e0be97217ff56906cf672",
+    "content-hash": "be2f62935e466c11eff4e9b44f2e4ad6",
     "packages": [
         {
             "name": "clegginabox/pdf-merger",
@@ -2322,17 +2322,11 @@
         },
         {
             "name": "postnl/api-client-sdk",
-            "version": "dev-main",
-            "source": {
-                "type": "git",
-                "url": "git@github.com:Postnl-Production/api-client-sdk.git",
-                "reference": "5a064dd"
-            },
+            "version": "v3.0.0",
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/Postnl-Production/api-client-sdk/zipball/5a064dd",
-                "reference": "5a064dd",
-                "shasum": "",
+                "url": "https://postnl.repo.packagist.com/progressus/dists/postnl/api-client-sdk/3.0.0.0/5107cb06a65727aee71df3b069c9decae76070fc.zip",
+                "reference": "5107cb06a65727aee71df3b069c9decae76070fc",
                 "mirrors": [
                     {
                         "url": "https://postnl.repo.packagist.com/progressus/dists/%package%/%version%/r%reference%.%type%",
@@ -2342,7 +2336,7 @@
             },
             "require": {
                 "ext-mbstring": "*",
-                "php": ">=8.2 <8.5",
+                "php": ">=8.2 <8.6",
                 "php-http/discovery": "^1.17",
                 "psr/http-client": "^1.0",
                 "psr/http-client-implementation": "^1.0",
@@ -2357,9 +2351,10 @@
                 "fakerphp/faker": "^1.24",
                 "friendsofphp/php-cs-fixer": "^3.93.1",
                 "guzzlehttp/guzzle": "^7.12.1",
-                "phpstan/phpstan": "^1.11",
+                "infection/infection": "^0.32.6",
+                "phpstan/phpstan": "^2.2",
                 "phpunit/phpunit": "^10.5.63",
-                "rector/rector": "^1.2",
+                "rector/rector": "^2.5.8",
                 "symfony/process": "^7.4.5",
                 "symfony/yaml": "^7.4.12"
             },
@@ -2367,7 +2362,6 @@
                 "ext-redis": "Required for Redis cache backend (phpredis extension)",
                 "guzzlehttp/guzzle": "^7.12.1 - For convenient HTTP client when using withGuzzleOptions()"
             },
-            "default-branch": true,
             "type": "library",
             "extra": {
                 "branch-alias": {
@@ -2381,12 +2375,7 @@
             },
             "autoload-dev": {
                 "psr-4": {
-                    "Tests\\Unit\\": "tests/Unit",
-                    "Tests\\Feature\\": "tests/Feature",
-                    "Tests\\Support\\": "tests/Support",
-                    "Tests\\E2E\\": "tests/E2E",
-                    "Tests\\SchemaValidation\\": "tests/SchemaValidation",
-                    "Tests\\Integration\\": "tests/Integration",
+                    "Tests\\": "tests/",
                     "Postnl\\Sdk\\PHPStan\\": "phpstan/",
                     "Scripts\\": "scripts/"
                 }
@@ -2400,13 +2389,13 @@
                     "composer audit --locked"
                 ],
                 "lint:cs": [
-                    "vendor/bin/php-cs-fixer fix --config=.php-cs-fixer.dist.php --dry-run --diff"
+                    "XDEBUG_MODE=off vendor/bin/php-cs-fixer fix --config=.php-cs-fixer.dist.php --dry-run --diff"
                 ],
                 "lint:stan": [
-                    "vendor/bin/phpstan analyse --configuration=phpstan.neon"
+                    "XDEBUG_MODE=off vendor/bin/phpstan analyse --configuration=phpstan.neon"
                 ],
                 "lint:rector": [
-                    "vendor/bin/rector process --config=rector.php --dry-run"
+                    "XDEBUG_MODE=off vendor/bin/rector process --config=rector.php --dry-run"
                 ],
                 "test:unit": [
                     "vendor/bin/phpunit --configuration=phpunit.xml --testsuite=CoreTests --no-coverage --display-warnings"
@@ -2470,20 +2459,26 @@
                     "@fix:cs",
                     "echo '🔧 Fixing Rector findings (automated refactoring check)...'",
                     "@fix:rector"
+                ],
+                "infection": [
+                    "vendor/bin/infection --configuration=infection.json.dist"
+                ],
+                "infection:ci": [
+                    "vendor/bin/infection --configuration=infection.json.dist --no-progress --no-interaction"
                 ]
             },
             "license": [
-                "MIT"
+                "proprietary"
             ],
             "authors": [
                 {
                     "name": "PostNL SDK Team",
-                    "email": "postnl@example.com",
+                    "email": "developer@postnl.nl",
                     "role": "Developer"
                 }
             ],
             "description": "Official PHP SDK for PostNL APIs.",
-            "homepage": "https://github.com/Postnl-Production/api-client-sdk",
+            "homepage": "https://developer.postnl.nl/docs/#/http/future-proof-api-s-how-to-get-started/php-sdk",
             "keywords": [
                 "api",
                 "http-client",
@@ -2495,10 +2490,11 @@
                 "sdk"
             ],
             "support": {
-                "issues": "https://github.com/Postnl-Production/api-client-sdk/issues",
-                "source": "https://github.com/Postnl-Production/api-client-sdk"
+                "email": "developer@postnl.nl",
+                "source": "https://github.com/Postnl-Production/api-client-sdk/tree/v3.0.0",
+                "issues": "https://github.com/Postnl-Production/api-client-sdk/issues"
             },
-            "time": "2026-07-20T06:58:40+00:00"
+            "time": "2026-08-31T14:12:29+00:00"
         },
         {
             "name": "psr/http-client",
@@ -4536,14 +4532,13 @@
     "aliases": [],
     "minimum-stability": "stable",
     "stability-flags": {
-        "clegginabox/pdf-merger": 20,
-        "postnl/api-client-sdk": 20
+        "clegginabox/pdf-merger": 20
     },
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
         "php": ">=7.4"
     },
-    "platform-dev": {},
-    "plugin-api-version": "2.9.0"
+    "platform-dev": [],
+    "plugin-api-version": "2.3.0"
 }

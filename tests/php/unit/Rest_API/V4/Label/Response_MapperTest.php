@@ -14,10 +14,10 @@ use Postnl\Sdk\Client\ResponseMeta;
 use Postnl\Sdk\Enums\Payload\LabelOutputType;
 use Postnl\Sdk\ResponseData\V4\Label;
 use Postnl\Sdk\ResponseData\V4\LabelsCollection;
-use Postnl\Sdk\ResponseData\V4\ShipmentShippingItem;
-use Postnl\Sdk\ResponseData\V4\ShipmentShippingItemsCollection;
 use Postnl\Sdk\ResponseData\V4\WarningsCollection;
-use Postnl\Sdk\Service\ShipmentDelivery\V4\Response\LabelConfirmResponseInterface;
+use Postnl\Sdk\Service\ShipmentDelivery\Response\ShipmentDeliveryResponseInterface;
+use Postnl\Sdk\Service\ShipmentDelivery\Response\ShipmentDeliveryResponseItem;
+use Postnl\Sdk\Service\ShipmentDelivery\Response\ShipmentDeliveryResponseItemsCollection;
 use PostNLWooCommerce\Rest_API\V4\Label\Response_Mapper;
 use PostNLWooCommerce\Tests\UnitTestCase;
 
@@ -29,16 +29,16 @@ class Response_MapperTest extends UnitTestCase {
 	/**
 	 * Wrap shipment items in a stub labelconfirm response exposing items().
 	 *
-	 * @param ShipmentShippingItem ...$items Items to expose.
-	 * @return LabelConfirmResponseInterface
+	 * @param ShipmentDeliveryResponseItem ...$items Items to expose.
+	 * @return ShipmentDeliveryResponseInterface
 	 */
-	private function response( ShipmentShippingItem ...$items ): LabelConfirmResponseInterface {
-		$collection = new ShipmentShippingItemsCollection( $items );
+	private function response( ShipmentDeliveryResponseItem ...$items ): ShipmentDeliveryResponseInterface {
+		$collection = new ShipmentDeliveryResponseItemsCollection( $items );
 
-		return new class( $collection ) implements LabelConfirmResponseInterface {
-			public function __construct( private ShipmentShippingItemsCollection $items ) {}
+		return new class( $collection ) implements ShipmentDeliveryResponseInterface {
+			public function __construct( private ShipmentDeliveryResponseItemsCollection $items ) {}
 
-			public function items(): ShipmentShippingItemsCollection {
+			public function items(): ShipmentDeliveryResponseItemsCollection {
 				return $this->items;
 			}
 
@@ -56,7 +56,7 @@ class Response_MapperTest extends UnitTestCase {
 	 * @testdox first_shipment_item() returns the single shipment item from the response.
 	 */
 	public function test_first_shipment_item_returns_item(): void {
-		$item     = new ShipmentShippingItem( barcode: '3SDEVC1' );
+		$item     = new ShipmentDeliveryResponseItem( barcode: '3SDEVC1' );
 		$response = $this->response( $item );
 
 		$this->assertSame( $item, Response_Mapper::first_shipment_item( $response ) );
@@ -73,9 +73,9 @@ class Response_MapperTest extends UnitTestCase {
 	 * @testdox all_shipment_items() returns every collo item in order for a multi-collo shipment.
 	 */
 	public function test_all_shipment_items_returns_all_collos(): void {
-		$first  = new ShipmentShippingItem( barcode: '3SDEVC1' );
-		$second = new ShipmentShippingItem( barcode: '3SDEVC2' );
-		$third  = new ShipmentShippingItem( barcode: '3SDEVC3' );
+		$first  = new ShipmentDeliveryResponseItem( barcode: '3SDEVC1' );
+		$second = new ShipmentDeliveryResponseItem( barcode: '3SDEVC2' );
+		$third  = new ShipmentDeliveryResponseItem( barcode: '3SDEVC3' );
 
 		$items = Response_Mapper::all_shipment_items( $this->response( $first, $second, $third ) );
 
@@ -95,7 +95,7 @@ class Response_MapperTest extends UnitTestCase {
 	 * @testdox get_barcode() captures the barcode auto-issued on the response item.
 	 */
 	public function test_get_barcode_captured_from_response(): void {
-		$item = new ShipmentShippingItem( barcode: '3SDEVC9876543' );
+		$item = new ShipmentDeliveryResponseItem( barcode: '3SDEVC9876543' );
 
 		$this->assertSame( '3SDEVC9876543', Response_Mapper::get_barcode( $item, 'fallback' ) );
 	}
@@ -104,7 +104,7 @@ class Response_MapperTest extends UnitTestCase {
 	 * @testdox get_barcode() falls back when the response item has no barcode.
 	 */
 	public function test_get_barcode_uses_fallback_when_missing(): void {
-		$item = new ShipmentShippingItem( barcode: null );
+		$item = new ShipmentDeliveryResponseItem( barcode: null );
 
 		$this->assertSame( 'fallback-barcode', Response_Mapper::get_barcode( $item, 'fallback-barcode' ) );
 	}
@@ -115,7 +115,7 @@ class Response_MapperTest extends UnitTestCase {
 	public function test_get_labels_filters_empty(): void {
 		$full  = new Label( label: base64_encode( 'PDF-BYTES' ), outputType: LabelOutputType::PDF, labelType: 'Label' );
 		$empty = new Label( label: null );
-		$item  = new ShipmentShippingItem( labels: new LabelsCollection( array( $full, $empty ) ) );
+		$item  = new ShipmentDeliveryResponseItem( labels: new LabelsCollection( array( $full, $empty ) ) );
 
 		$labels = Response_Mapper::get_labels( $item );
 
@@ -127,7 +127,7 @@ class Response_MapperTest extends UnitTestCase {
 	 * @testdox get_labels() returns an empty array when the item has no labels.
 	 */
 	public function test_get_labels_empty_when_no_labels(): void {
-		$this->assertSame( array(), Response_Mapper::get_labels( new ShipmentShippingItem() ) );
+		$this->assertSame( array(), Response_Mapper::get_labels( new ShipmentDeliveryResponseItem() ) );
 	}
 
 	/**
@@ -158,7 +158,7 @@ class Response_MapperTest extends UnitTestCase {
 		$this->assertNotSame( '', (string) base64_decode( $malformed, false ) );
 
 		$this->assertNotEmpty(
-			Response_Mapper::get_labels( new ShipmentShippingItem( labels: new LabelsCollection( array( $label ) ) ) ),
+			Response_Mapper::get_labels( new ShipmentDeliveryResponseItem( labels: new LabelsCollection( array( $label ) ) ) ),
 			'A malformed label still passes the isEmpty() filter, so strict decoding is the only guard.'
 		);
 		$this->assertSame(
@@ -172,7 +172,7 @@ class Response_MapperTest extends UnitTestCase {
 	 * @testdox get_partner_barcode() and get_partner_id() capture the international partner refs.
 	 */
 	public function test_partner_refs_captured_from_response(): void {
-		$item = new ShipmentShippingItem( barcode: '3SDEVC1', partnerId: 'DHL', partnerBarcode: 'CD123456785NL' );
+		$item = new ShipmentDeliveryResponseItem( barcode: '3SDEVC1', partnerId: 'DHL', partnerBarcode: 'CD123456785NL' );
 
 		$this->assertSame( 'CD123456785NL', Response_Mapper::get_partner_barcode( $item ) );
 		$this->assertSame( 'DHL', Response_Mapper::get_partner_id( $item ) );
@@ -182,7 +182,7 @@ class Response_MapperTest extends UnitTestCase {
 	 * @testdox get_partner_barcode() and get_partner_id() return empty strings for a domestic item.
 	 */
 	public function test_partner_refs_empty_for_domestic(): void {
-		$item = new ShipmentShippingItem( barcode: '3SDEVC1' );
+		$item = new ShipmentDeliveryResponseItem( barcode: '3SDEVC1' );
 
 		$this->assertSame( '', Response_Mapper::get_partner_barcode( $item ) );
 		$this->assertSame( '', Response_Mapper::get_partner_id( $item ) );

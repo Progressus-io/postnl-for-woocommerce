@@ -17,10 +17,10 @@ use Postnl\Sdk\Enums\Payload\LabelOutputType;
 use Postnl\Sdk\RequestData\V4\ShipmentDelivery\ShipmentDeliveryRequest;
 use Postnl\Sdk\ResponseData\V4\Label;
 use Postnl\Sdk\ResponseData\V4\LabelsCollection;
-use Postnl\Sdk\ResponseData\V4\ShipmentShippingItem;
-use Postnl\Sdk\ResponseData\V4\ShipmentShippingItemsCollection;
 use Postnl\Sdk\ResponseData\V4\WarningsCollection;
-use Postnl\Sdk\Service\ShipmentDelivery\V4\Response\LabelConfirmResponseInterface;
+use Postnl\Sdk\Service\ShipmentDelivery\Response\ShipmentDeliveryResponseInterface;
+use Postnl\Sdk\Service\ShipmentDelivery\Response\ShipmentDeliveryResponseItem;
+use Postnl\Sdk\Service\ShipmentDelivery\Response\ShipmentDeliveryResponseItemsCollection;
 use PostNLWooCommerce\Rest_API\Legacy\Shipping;
 use PostNLWooCommerce\Rest_API\SDK\Client_Factory;
 use PostNLWooCommerce\Rest_API\V4\Label\Request_Builder;
@@ -751,16 +751,16 @@ class ServiceTest extends UnitTestCase {
 	 * @param string|null $barcode         Barcode the response issued for this collo, or null when it omits one.
 	 * @param string|null $partner_barcode International partner barcode for this collo, or null for a domestic one.
 	 * @param string|null $partner_id      International partner id for this collo, or null for a domestic one.
-	 * @return ShipmentShippingItem
+	 * @return ShipmentDeliveryResponseItem
 	 */
-	private function shipment_item( ?string $barcode, ?string $partner_barcode = null, ?string $partner_id = null ): ShipmentShippingItem {
+	private function shipment_item( ?string $barcode, ?string $partner_barcode = null, ?string $partner_id = null ): ShipmentDeliveryResponseItem {
 		$label = new Label(
 			label: base64_encode( 'PDF-BYTES-' . (string) $barcode ),
 			outputType: LabelOutputType::PDF,
 			labelType: 'Label'
 		);
 
-		return new ShipmentShippingItem(
+		return new ShipmentDeliveryResponseItem(
 			barcode: $barcode,
 			labels: new LabelsCollection( array( $label ) ),
 			partnerId: $partner_id,
@@ -771,16 +771,16 @@ class ServiceTest extends UnitTestCase {
 	/**
 	 * Wrap shipment items in a stub labelconfirm response exposing items().
 	 *
-	 * @param ShipmentShippingItem ...$items Collo items to expose.
-	 * @return LabelConfirmResponseInterface
+	 * @param ShipmentDeliveryResponseItem ...$items Collo items to expose.
+	 * @return ShipmentDeliveryResponseInterface
 	 */
-	private function label_response( ShipmentShippingItem ...$items ): LabelConfirmResponseInterface {
-		$collection = new ShipmentShippingItemsCollection( $items );
+	private function label_response( ShipmentDeliveryResponseItem ...$items ): ShipmentDeliveryResponseInterface {
+		$collection = new ShipmentDeliveryResponseItemsCollection( $items );
 
-		return new class( $collection ) implements LabelConfirmResponseInterface {
-			public function __construct( private ShipmentShippingItemsCollection $items ) {}
+		return new class( $collection ) implements ShipmentDeliveryResponseInterface {
+			public function __construct( private ShipmentDeliveryResponseItemsCollection $items ) {}
 
-			public function items(): ShipmentShippingItemsCollection {
+			public function items(): ShipmentDeliveryResponseItemsCollection {
 				return $this->items;
 			}
 
@@ -799,11 +799,11 @@ class ServiceTest extends UnitTestCase {
 	 * extract_fields() below: nothing outside the class calls it.
 	 *
 	 * @param Service                       $service   Service under test.
-	 * @param LabelConfirmResponseInterface $response  Stub labelconfirm response.
+	 * @param ShipmentDeliveryResponseInterface $response  Stub labelconfirm response.
 	 * @param array                         $fallbacks Pre-issued barcodes per collo.
 	 * @return array
 	 */
-	private function store_labels( Service $service, LabelConfirmResponseInterface $response, array $fallbacks ): array {
+	private function store_labels( Service $service, ShipmentDeliveryResponseInterface $response, array $fallbacks ): array {
 		$method = new \ReflectionMethod( Service::class, 'store_labels' );
 		$method->setAccessible( true );
 
@@ -1090,7 +1090,7 @@ class Testable_Label_Service extends Service {
 	 *
 	 * @param ShipmentDeliveryRequest $request Built labelconfirm request.
 	 * @param array                   $fields  Field set the request was built from.
-	 * @return \Postnl\Sdk\Service\ShipmentDelivery\V4\Response\LabelConfirmResponseInterface
+	 * @return \Postnl\Sdk\Service\ShipmentDelivery\V4\Response\ShipmentDeliveryResponseInterface
 	 */
 	public function expose_confirm_label( ShipmentDeliveryRequest $request, array $fields ) {
 		return $this->confirm_label( $request, $fields );

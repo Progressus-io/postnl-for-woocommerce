@@ -26,9 +26,9 @@ if ( ! defined( 'ABSPATH' ) ) {
  * the per-checkout-pageload timeframe/locations responses: only keys whose
  * prefix is on the allowlist are stored, and anything else bypasses.
  *
- * The prefix is a label the caller chooses via the CachingPlugin keyPrefix, not
- * the request URI. Deciding which endpoints may be cached is CachingPlugin's
- * job, through its own allowedEndpoints list.
+ * The prefix is a label the calling service chooses for its own cache keys, so
+ * deciding which flow's responses may be cached stays with the service that
+ * builds the key, not this adapter.
  *
  * Transient keys are namespaced with a hash of the V4 API key so two stores on
  * shared hosting are extremely unlikely to read each other's cached responses.
@@ -49,8 +49,8 @@ class Cache_Adapter extends AbstractCacheAdapter {
 	public const DEFAULT_TTL = 600;
 
 	/**
-	 * Cacheable key prefix for the timeframe flow. Pass as the CachingPlugin
-	 * keyPrefix so the plugin's generated keys clear this adapter's allowlist.
+	 * Cacheable key prefix for the timeframe flow. Prefix service cache keys with
+	 * this so they clear this adapter's allowlist.
 	 *
 	 * @since 6.0.0
 	 * @var string
@@ -96,10 +96,8 @@ class Cache_Adapter extends AbstractCacheAdapter {
 	/**
 	 * Resolve the cache lifetime, in seconds, after filtering.
 	 *
-	 * Callers handing a TTL to CachingPlugin should use this rather than
-	 * applying the filter themselves. The plugin rejects a value of zero or
-	 * less by throwing, while this adapter falls back to the default, so the
-	 * guard has to live in one place for the two to agree.
+	 * Callers resolving a TTL should use this rather than applying the filter
+	 * themselves, so the default and the zero-or-less fallback live in one place.
 	 *
 	 * @since 6.0.0
 	 * @return int
@@ -305,7 +303,7 @@ class Cache_Adapter extends AbstractCacheAdapter {
 	/**
 	 * Warn once per instance that a key fell outside the allowlist.
 	 *
-	 * A CachingPlugin built without a matching keyPrefix caches nothing at all,
+	 * A service key built without a matching prefix caches nothing at all,
 	 * which is otherwise indistinguishable from a cold cache. Reporting it once
 	 * surfaces the mis-wiring without flooding the log on every request.
 	 *
@@ -322,7 +320,7 @@ class Cache_Adapter extends AbstractCacheAdapter {
 
 		$this->logger->warning(
 			sprintf(
-				'PostNL V4 cache bypassed: key "%s" matches no allowed prefix (%s). Check the CachingPlugin keyPrefix.',
+				'PostNL V4 cache bypassed: key "%s" matches no allowed prefix (%s). Check the service cache-key prefix.',
 				substr( $key, 0, 24 ),
 				implode( ', ', array_map( 'strval', $allowed ) )
 			)

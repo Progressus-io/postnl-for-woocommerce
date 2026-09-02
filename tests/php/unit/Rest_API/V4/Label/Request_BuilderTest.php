@@ -97,7 +97,7 @@ class Request_BuilderTest extends UnitTestCase {
 		$this->assertSame( 'consumer', $payload['receiver']['type'] );
 
 		$this->assertSame( 'pdf', $payload['labelSettings']['outputType'] );
-		$this->assertSame( 200, $payload['labelSettings']['resolution'] );
+		$this->assertSame( '200', $payload['labelSettings']['resolution'] );
 
 		$this->assertSame( '3SDEVC1234567', $payload['items'][0]['barcode'] );
 		$this->assertSame( 'ORDER-1001', $payload['items'][0]['customerReferences']['shipmentReference'] );
@@ -292,7 +292,7 @@ class Request_BuilderTest extends UnitTestCase {
 		$payload = $this->payload( $fields );
 
 		$this->assertSame( $expected_output_type, $payload['labelSettings']['outputType'] );
-		$this->assertSame( $expected_resolution, $payload['labelSettings']['resolution'] );
+		$this->assertSame( (string) $expected_resolution, $payload['labelSettings']['resolution'] );
 	}
 
 	/**

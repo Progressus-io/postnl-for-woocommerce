@@ -12,9 +12,8 @@ namespace PostNLWooCommerce\Rest_API\V4\Pickup_Location;
 use Postnl\Sdk\Enums\Payload\Country;
 use Postnl\Sdk\Enums\Payload\PickUpLocationType;
 use Postnl\Sdk\RequestData\V4\Address;
-use Postnl\Sdk\ResponseData\V4\Locations\PickUpLocationsCollection;
+use Postnl\Sdk\Service\PickupLocations\Response\PickUpLocationsCollection;
 use Postnl\Sdk\Service\PickupLocations\V4\Request\PickUpNearAddressRequest;
-use Postnl\Sdk\Transport\Cache\CachingPlugin;
 use PostNLWooCommerce\Address_Utils;
 use PostNLWooCommerce\Rest_API\Contracts\Pickup_Location_Service_Interface;
 use PostNLWooCommerce\Rest_API\SDK\Cache_Adapter;
@@ -45,8 +44,10 @@ if ( ! defined( 'ABSPATH' ) ) {
  * are reconciled where the two checkout halves are aggregated (task 17), not here.
  *
  * Locations responses are the same on every checkout pageload for a given
- * address, so the request is routed through the SDK CachingPlugin (backed by
- * Cache_Adapter / WP transients) with only /locations/ allowlisted.
+ * address, so the mapped result is cached at the service level (Cache_Adapter /
+ * WP transients), keyed by the address and the settings that shape the pickup
+ * date. The SDK's HTTP-layer CachingPlugin was removed in v3.0.0, so caching
+ * lives here on the one read-only operation that is safe to cache.
  *
  * The PSR-3 logger is required, not optional: it is where a failed lookup's real
  * cause survives (Exception_Converter hands the merchant a safe message and keeps
@@ -174,12 +175,24 @@ class Service implements Pickup_Location_Service_Interface {
 	 * @throws \Exception Converted SDK error when the request fails.
 	 */
 	public function get_pickup_locations( array $post_data ): array {
+		$cache     = new Cache_Adapter( $this->v4_key, $this->logger );
+		$cache_key = $this->cache_key( $post_data );
+
+		$cached = $cache->get( $cache_key );
+		if ( is_array( $cached ) ) {
+			return $cached;
+		}
+
 		try {
 			$request  = $this->build_request( $post_data );
 			$client   = $this->build_client();
 			$response = $client->pickupLocations()->nearAddress( $request );
 
-			return array( 'PickupOptions' => $this->map_response( $response->locationsCollection() ) );
+			$result = array( 'PickupOptions' => $this->map_response( $response->locations() ) );
+
+			$cache->set( $cache_key, $result, $this->cache_ttl() );
+
+			return $result;
 		} catch ( \Throwable $exception ) {
 			// Exception_Converter returns a plugin-shaped \Exception; its message can
 			// carry raw API text (field errors, upstream messages) — escape on output.
@@ -275,29 +288,46 @@ class Service implements Pickup_Location_Service_Interface {
 	}
 
 	/**
-	 * Build the SDK client with the locations caching plugin attached.
+	 * Build the SDK client for the pickup-location lookup.
 	 *
-	 * The CachingPlugin only caches responses whose URI contains '/locations/',
-	 * and its key prefix is Cache_Adapter's own PREFIX_LOCATIONS so both gates
-	 * agree on what may be cached. Naming the constant rather than repeating the
-	 * literal is what makes a rename a compile error instead of a cache that
-	 * silently stores nothing.
-	 *
-	 * The adapter is handed the logger so its allowlist-bypass warning can fire: a
-	 * keyPrefix that stops matching caches nothing at all, which is otherwise
-	 * indistinguishable from a permanently cold cache.
+	 * Caching is handled at the service level (see get_pickup_locations), not in
+	 * the transport, so the client needs no cache plugin.
 	 *
 	 * @return \Postnl\Sdk\Client\PostnlClientInterface
 	 */
 	protected function build_client() {
-		$caching_plugin = CachingPlugin::create(
-			cache: new Cache_Adapter( $this->v4_key, $this->logger ),
-			ttl: $this->cache_ttl(),
-			allowedEndpoints: array( '/locations/' ),
-			keyPrefix: Cache_Adapter::PREFIX_LOCATIONS
+		return $this->client_factory->build( $this->v4_key, (bool) $this->settings->is_sandbox() );
+	}
+
+	/**
+	 * Cache key for a checkout address's mapped pickup options.
+	 *
+	 * Covers everything that changes the result: the receiver address, the number
+	 * of locations requested, and the settings that drive the pickup date (cut-off
+	 * time, transit time, drop-off days). A settings change therefore yields a new
+	 * key — a miss that recomputes immediately — rather than serving a stale list.
+	 * Prefixed with PREFIX_LOCATIONS so it clears Cache_Adapter's allowlist.
+	 *
+	 * @param array $post_data Checkout POST data.
+	 *
+	 * @return string
+	 */
+	protected function cache_key( array $post_data ): string {
+		$post_data = Address_Utils::set_post_data_address( $post_data );
+
+		$parts = array(
+			(string) ( $post_data['shipping_country'] ?? '' ),
+			str_replace( ' ', '', (string) ( $post_data['shipping_postcode'] ?? '' ) ),
+			(string) ( $post_data['shipping_address_2'] ?? '' ),
+			(string) ( $post_data['shipping_address_1'] ?? '' ),
+			(string) ( $post_data['shipping_city'] ?? '' ),
+			(string) $this->number_of_locations,
+			$this->get_pickup_date(),
+			(string) $this->settings->get_customer_code(),
+			(string) $this->settings->get_customer_num(),
 		);
 
-		return $this->client_factory->build_with_plugins( $this->v4_key, (bool) $this->settings->is_sandbox(), $caching_plugin );
+		return Cache_Adapter::PREFIX_LOCATIONS . '_' . md5( implode( '|', $parts ) );
 	}
 
 	/**
@@ -366,7 +396,7 @@ class Service implements Pickup_Location_Service_Interface {
 	 * as Address.CompanyName so the classic Frontend\Dropoff_Points reader, which
 	 * takes the company from the address block, resolves the same value.
 	 *
-	 * @param \Postnl\Sdk\ResponseData\V4\Locations\Location\PickupLocation $location SDK location entry.
+	 * @param \Postnl\Sdk\Service\PickupLocations\Response\Location\PickupLocation $location SDK location entry.
 	 *
 	 * @return array
 	 */
@@ -394,7 +424,7 @@ class Service implements Pickup_Location_Service_Interface {
 	/**
 	 * Flatten the SDK opening-times object into a day => [ { From, To } ] array.
 	 *
-	 * @param \Postnl\Sdk\ResponseData\V4\Locations\Location\LocationOpeningHours|null $opening_hours SDK opening-hours object.
+	 * @param \Postnl\Sdk\Service\PickupLocations\Response\Location\LocationOpeningHours|null $opening_hours SDK opening-hours object.
 	 *
 	 * @return array<int, array{Day: string, Times: array<int, array{From: string, To: string}>}>
 	 */
@@ -528,7 +558,7 @@ class Service implements Pickup_Location_Service_Interface {
 	 * TTL, in seconds, for cached locations responses.
 	 *
 	 * Reads the same filter as Cache_Adapter so both agree, and never returns a
-	 * value <= 0 since CachingPlugin rejects one.
+	 * value <= 0.
 	 *
 	 * @return int
 	 */

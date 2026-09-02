@@ -14,8 +14,7 @@ use Postnl\Sdk\Enums\Payload\DeliveryWindowService;
 use Postnl\Sdk\Enums\Payload\ShipmentType;
 use Postnl\Sdk\RequestData\V4\Address;
 use Postnl\Sdk\Service\Timeframes\V4\Request\MultipleServicesTimeframeRequest;
-use Postnl\Sdk\Service\Timeframes\V4\Response\TimeframeMultipleServicesCollection;
-use Postnl\Sdk\Transport\Cache\CachingPlugin;
+use Postnl\Sdk\Service\Timeframes\Response\MultipleServicesTimeframeCollection;
 use PostNLWooCommerce\Address_Utils;
 use PostNLWooCommerce\Rest_API\Contracts\Timeframe_Service_Interface;
 use PostNLWooCommerce\Rest_API\SDK\Cache_Adapter;
@@ -39,8 +38,10 @@ if ( ! defined( 'ABSPATH' ) ) {
  * so callers cannot tell V4 from the legacy /shipment/v1/checkout path.
  *
  * Timeframe responses are the same on every checkout pageload for a given
- * address, so the request is routed through the SDK CachingPlugin (backed by
- * Cache_Adapter / WP transients) with only /timeframe/ allowlisted.
+ * address, so the mapped result is cached at the service level (Cache_Adapter /
+ * WP transients), keyed by the address and the settings that shape the mapping.
+ * The SDK's HTTP-layer CachingPlugin was removed in v3.0.0, so caching lives
+ * here on the one read-only operation that is safe to cache.
  *
  * The PSR-3 logger is required, not optional: it is where a failed lookup's real
  * cause survives (Exception_Converter hands the merchant a safe message and keeps
@@ -169,12 +170,24 @@ class Service implements Timeframe_Service_Interface {
 			return array( 'DeliveryOptions' => array() );
 		}
 
+		$cache     = new Cache_Adapter( $this->v4_key, $this->logger );
+		$cache_key = $this->cache_key( $post_data );
+
+		$cached = $cache->get( $cache_key );
+		if ( is_array( $cached ) ) {
+			return $cached;
+		}
+
 		try {
 			$request  = $this->build_request( $post_data );
 			$client   = $this->build_client();
 			$response = $client->timeframes()->forMultipleServices( $request );
 
-			return array( 'DeliveryOptions' => $this->map_response( $response->timeframes() ) );
+			$result = array( 'DeliveryOptions' => $this->map_response( $response->timeframes() ) );
+
+			$cache->set( $cache_key, $result, $this->cache_ttl() );
+
+			return $result;
 		} catch ( \Throwable $exception ) {
 			// Exception_Converter returns a plugin-shaped \Exception; its message can
 			// carry raw API text (field errors, upstream messages) — escape on output.
@@ -287,27 +300,51 @@ class Service implements Timeframe_Service_Interface {
 	}
 
 	/**
-	 * Build the SDK client with the timeframe caching plugin attached.
+	 * Build the SDK client for the timeframe lookup.
 	 *
-	 * The CachingPlugin only caches responses whose URI contains '/timeframe/',
-	 * and its key prefix ('timeframe') keeps the Cache_Adapter allowlist happy so
-	 * both gates agree on what may be cached.
-	 *
-	 * The adapter is handed the logger so its allowlist-bypass warning can fire: a
-	 * keyPrefix that stops matching caches nothing at all, which is otherwise
-	 * indistinguishable from a permanently cold cache.
+	 * Caching is handled at the service level (see get_delivery_options), not in
+	 * the transport, so the client needs no cache plugin.
 	 *
 	 * @return \Postnl\Sdk\Client\PostnlClientInterface
 	 */
 	protected function build_client() {
-		$caching_plugin = CachingPlugin::create(
-			cache: new Cache_Adapter( $this->v4_key, $this->logger ),
-			ttl: $this->cache_ttl(),
-			allowedEndpoints: array( '/timeframe/' ),
-			keyPrefix: 'timeframe'
+		return $this->client_factory->build( $this->v4_key, (bool) $this->settings->is_sandbox() );
+	}
+
+	/**
+	 * Cache key for a checkout address's mapped delivery options.
+	 *
+	 * Covers everything that changes the result: the receiver address, the
+	 * handover date, the requested services and day count, and the settings the
+	 * mapping reads (drop-off days, evening/morning toggles). A settings change
+	 * therefore yields a new key — a miss that recomputes immediately — rather
+	 * than serving a stale mapping. Prefixed with PREFIX_TIMEFRAME so it clears
+	 * Cache_Adapter's allowlist.
+	 *
+	 * @param array $post_data Checkout POST data.
+	 *
+	 * @return string
+	 */
+	protected function cache_key( array $post_data ): string {
+		$post_data = Address_Utils::set_post_data_address( $post_data );
+
+		$parts = array(
+			(string) ( $post_data['shipping_country'] ?? '' ),
+			str_replace( ' ', '', (string) ( $post_data['shipping_postcode'] ?? '' ) ),
+			(string) ( $post_data['shipping_address_2'] ?? '' ),
+			(string) ( $post_data['shipping_address_1'] ?? '' ),
+			(string) ( $post_data['shipping_city'] ?? '' ),
+			$this->get_handover_date()->format( 'Y-m-d' ),
+			(string) $this->number_of_days,
+			implode( ',', array_map( static fn( DeliveryWindowService $service ): string => $service->value, $this->build_services() ) ),
+			implode( ',', $this->get_dropoff_days() ),
+			$this->is_evening_enabled() ? 'e1' : 'e0',
+			$this->is_morning_enabled() ? 'm1' : 'm0',
+			(string) $this->settings->get_customer_code(),
+			(string) $this->settings->get_customer_num(),
 		);
 
-		return $this->client_factory->build_with_plugins( $this->v4_key, (bool) $this->settings->is_sandbox(), $caching_plugin );
+		return Cache_Adapter::PREFIX_TIMEFRAME . '_' . md5( implode( '|', $parts ) );
 	}
 
 	/**
@@ -321,16 +358,16 @@ class Service implements Timeframe_Service_Interface {
 	 * array would render a delivery date heading above an empty radio group.
 	 *
 	 * Delivery dates the merchant cannot reach from an enabled drop-off day are
-	 * dropped here too — see is_reachable_delivery_date(). Filtering in the
-	 * mapping rather than the request keeps cached responses consistent: the SDK
-	 * CachingPlugin caches the raw HTTP response inside the transport, so this
-	 * mapping runs on cache hits exactly as it does on live responses.
+	 * dropped here too — see is_reachable_delivery_date(). The mapped result is
+	 * what gets cached (see get_delivery_options), and the drop-off days that
+	 * drive this filtering are part of the cache key, so a settings change
+	 * recomputes rather than serving a stale mapping.
 	 *
-	 * @param TimeframeMultipleServicesCollection $collection SDK timeframe collection.
+	 * @param MultipleServicesTimeframeCollection $collection SDK timeframe collection.
 	 *
 	 * @return array<int, array{DeliveryDate: string, Timeframe: array<int, array{From: string, To: string, Options: string[]}>}>
 	 */
-	protected function map_response( TimeframeMultipleServicesCollection $collection ): array {
+	protected function map_response( MultipleServicesTimeframeCollection $collection ): array {
 		// phpcs:disable WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- Third-party SDK DTO properties are camelCase.
 		$by_date      = array();
 		$dropoff_days = $this->get_dropoff_days();
@@ -387,7 +424,7 @@ class Service implements Timeframe_Service_Interface {
 	 * here and must disappear when evening delivery is off. A genuinely plain
 	 * window (e.g. 09:00-18:00) stays 'Daytime' whatever the toggles say.
 	 *
-	 * @param \Postnl\Sdk\ResponseData\V4\TimeFrame $timeframe SDK timeframe entry.
+	 * @param \Postnl\Sdk\Service\Timeframes\Response\Timeframe $timeframe SDK timeframe entry.
 	 *
 	 * @return string|null Legacy option code, or null when the window is not offered.
 	 */
@@ -417,9 +454,13 @@ class Service implements Timeframe_Service_Interface {
 	 * later, each transit day beyond the first adds a preparation day, and the
 	 * handover then lands on the next enabled drop-off day.
 	 *
-	 * @return string
+	 * The SDK request accepts a DateTimeInterface and formats it as yyyy-MM-dd
+	 * from the object's own timezone, so the date is built in the site timezone
+	 * (via now()) and returned as-is rather than pre-formatted to a string.
+	 *
+	 * @return \DateTimeImmutable
 	 */
-	protected function get_handover_date(): string {
+	protected function get_handover_date(): \DateTimeImmutable {
 		$now      = $this->now();
 		$handover = $now;
 
@@ -441,7 +482,7 @@ class Service implements Timeframe_Service_Interface {
 			}
 		}
 
-		return $handover->format( 'Y-m-d' );
+		return $handover;
 	}
 
 	/**
@@ -543,7 +584,7 @@ class Service implements Timeframe_Service_Interface {
 	 * TTL, in seconds, for cached timeframe responses.
 	 *
 	 * Reads the same filter as Cache_Adapter so both agree, and never returns a
-	 * value <= 0 since CachingPlugin rejects one.
+	 * value <= 0.
 	 *
 	 * @return int
 	 */

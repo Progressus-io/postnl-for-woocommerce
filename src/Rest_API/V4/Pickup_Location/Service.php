@@ -308,6 +308,8 @@ class Service implements Pickup_Location_Service_Interface {
 	 * key — a miss that recomputes immediately — rather than serving a stale list.
 	 * Prefixed with PREFIX_LOCATIONS so it clears Cache_Adapter's allowlist.
 	 *
+	 * @since 6.0.0
+	 *
 	 * @param array $post_data Checkout POST data.
 	 *
 	 * @return string

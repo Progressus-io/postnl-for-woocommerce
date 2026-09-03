@@ -321,6 +321,8 @@ class Service implements Timeframe_Service_Interface {
 	 * than serving a stale mapping. Prefixed with PREFIX_TIMEFRAME so it clears
 	 * Cache_Adapter's allowlist.
 	 *
+	 * @since 6.0.0
+	 *
 	 * @param array $post_data Checkout POST data.
 	 *
 	 * @return string

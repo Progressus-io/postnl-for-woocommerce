@@ -15,11 +15,11 @@ use Postnl\Sdk\Client\ClientBuilder;
 use Postnl\Sdk\Enums\Payload\Country;
 use Postnl\Sdk\Enums\Payload\PickUpLocationType;
 use Postnl\Sdk\RequestData\V4\Address;
-use Postnl\Sdk\ResponseData\V4\Locations\Location\DayOpeningTimes;
-use Postnl\Sdk\ResponseData\V4\Locations\Location\LocationOpeningHours;
-use Postnl\Sdk\ResponseData\V4\Locations\Location\PickupLocation;
-use Postnl\Sdk\ResponseData\V4\Locations\PickUpLocationsCollection;
 use Postnl\Sdk\ResponseData\V4\TimeSlot;
+use Postnl\Sdk\Service\PickupLocations\Response\Location\DayOpeningTimes;
+use Postnl\Sdk\Service\PickupLocations\Response\Location\LocationOpeningHours;
+use Postnl\Sdk\Service\PickupLocations\Response\Location\PickupLocation;
+use Postnl\Sdk\Service\PickupLocations\Response\PickUpLocationsCollection;
 use PostNLWooCommerce\Rest_API\SDK\Client_Factory;
 use PostNLWooCommerce\Rest_API\V4\Pickup_Location\Service;
 use PostNLWooCommerce\Shipping_Method\Settings;
@@ -438,9 +438,9 @@ class ServiceTest extends UnitTestCase {
 	/**
 	 * @testdox An identical second lookup is served from cache without a second HTTP call
 	 *
-	 * Drives the real Service through the SDK CachingPlugin + Cache_Adapter with an
+	 * Drives the real Service through the service-level Cache_Adapter with an
 	 * in-memory transient store and a call-counting HTTP client, proving the
-	 * /locations/ response is cached across identical requests within a request cycle.
+	 * locations response is cached across identical requests within a request cycle.
 	 */
 	public function test_second_identical_call_hits_cache(): void {
 		$this->with_transient_store();
@@ -607,7 +607,7 @@ class ServiceTest extends UnitTestCase {
 	 * @testdox A cache that silently stores nothing is reported through the logger
 	 *
 	 * Cache_Adapter warns once when a key clears no allowlisted prefix, which is the
-	 * only signal that a mis-wired CachingPlugin keyPrefix has turned caching off —
+	 * only signal that a mis-wired cache-key prefix has turned caching off —
 	 * it is otherwise indistinguishable from a permanently cold cache. The warning
 	 * can only fire if the Service hands the adapter its logger.
 	 */

@@ -15,9 +15,9 @@ use Postnl\Sdk\Client\ClientBuilder;
 use Postnl\Sdk\Enums\Payload\Country;
 use Postnl\Sdk\Enums\Payload\DeliveryWindowService;
 use Postnl\Sdk\Enums\Payload\ShipmentType;
-use Postnl\Sdk\ResponseData\V4\TimeFrame;
 use Postnl\Sdk\ResponseData\V4\TimeSlot;
-use Postnl\Sdk\Service\Timeframes\V4\Response\TimeframeMultipleServicesCollection;
+use Postnl\Sdk\Service\Timeframes\Response\MultipleServicesTimeframeCollection;
+use Postnl\Sdk\Service\Timeframes\Response\Timeframe;
 use PostNLWooCommerce\Rest_API\SDK\Cache_Adapter;
 use PostNLWooCommerce\Rest_API\SDK\Client_Factory;
 use PostNLWooCommerce\Rest_API\V4\Timeframe\Service;
@@ -147,7 +147,7 @@ class ServiceTest extends UnitTestCase {
 		$service = new Testable_Timeframe_Service( new Client_Factory( $this->make_settings() ), $this->make_settings(), self::V4_KEY, self::DAYS, new NullLogger() );
 		$request = $service->expose_build_request( $this->nl_post_data() );
 
-		$this->assertSame( '2026-07-14', $request->handoverDate );
+		$this->assertSame( '2026-07-14', $request->handoverDate->format( 'Y-m-d' ) );
 		$this->assertSame( ShipmentType::Parcel, $request->shipmentType );
 		$this->assertSame( '11223344', $request->customerNumber );
 		$this->assertSame( 'DEVC', $request->customerCode );
@@ -227,11 +227,11 @@ class ServiceTest extends UnitTestCase {
 	public function test_map_response_produces_legacy_shape(): void {
 		$service = new Testable_Timeframe_Service( new Client_Factory( $this->make_settings( true, true ) ), $this->make_settings( true, true ), self::V4_KEY, self::DAYS, new NullLogger() );
 
-		$collection = new TimeframeMultipleServicesCollection(
+		$collection = new MultipleServicesTimeframeCollection(
 			array(
-				new TimeFrame( deliveryDate: '14-07-2026', timeFrame: new TimeSlot( from: '08:00:00', until: '12:00:00' ), availability: true, service: 'daytime' ),
-				new TimeFrame( deliveryDate: '14-07-2026', timeFrame: new TimeSlot( from: '18:00:00', until: '22:00:00' ), availability: true, service: 'evening' ),
-				new TimeFrame( deliveryDate: '15-07-2026', timeFrame: new TimeSlot( from: '09:00:00', until: '18:00:00' ), availability: false, service: 'daytime' ),
+				new Timeframe( deliveryDate: '14-07-2026', timeFrame: new TimeSlot( from: '08:00:00', until: '12:00:00' ), availability: true, service: 'daytime' ),
+				new Timeframe( deliveryDate: '14-07-2026', timeFrame: new TimeSlot( from: '18:00:00', until: '22:00:00' ), availability: true, service: 'evening' ),
+				new Timeframe( deliveryDate: '15-07-2026', timeFrame: new TimeSlot( from: '09:00:00', until: '18:00:00' ), availability: false, service: 'daytime' ),
 			)
 		);
 
@@ -267,10 +267,10 @@ class ServiceTest extends UnitTestCase {
 	public function test_evening_window_is_dropped_when_disabled(): void {
 		$service = new Testable_Timeframe_Service( new Client_Factory( $this->make_settings( false, false ) ), $this->make_settings( false, false ), self::V4_KEY, self::DAYS, new NullLogger() );
 
-		$collection = new TimeframeMultipleServicesCollection(
+		$collection = new MultipleServicesTimeframeCollection(
 			array(
-				new TimeFrame( deliveryDate: '14-07-2026', timeFrame: new TimeSlot( from: '18:00:00', until: '22:00:00' ), availability: true, service: 'daytime' ),
-				new TimeFrame( deliveryDate: '14-07-2026', timeFrame: new TimeSlot( from: '09:00:00', until: '18:00:00' ), availability: true, service: 'daytime' ),
+				new Timeframe( deliveryDate: '14-07-2026', timeFrame: new TimeSlot( from: '18:00:00', until: '22:00:00' ), availability: true, service: 'daytime' ),
+				new Timeframe( deliveryDate: '14-07-2026', timeFrame: new TimeSlot( from: '09:00:00', until: '18:00:00' ), availability: true, service: 'daytime' ),
 			)
 		);
 
@@ -302,10 +302,10 @@ class ServiceTest extends UnitTestCase {
 	public function test_morning_window_is_dropped_when_disabled(): void {
 		$service = new Testable_Timeframe_Service( new Client_Factory( $this->make_settings( true, false ) ), $this->make_settings( true, false ), self::V4_KEY, self::DAYS, new NullLogger() );
 
-		$collection = new TimeframeMultipleServicesCollection(
+		$collection = new MultipleServicesTimeframeCollection(
 			array(
-				new TimeFrame( deliveryDate: '14-07-2026', timeFrame: new TimeSlot( from: '08:00:00', until: '12:00:00' ), availability: true, service: 'daytime' ),
-				new TimeFrame( deliveryDate: '14-07-2026', timeFrame: new TimeSlot( from: '09:00:00', until: '18:00:00' ), availability: true, service: 'daytime' ),
+				new Timeframe( deliveryDate: '14-07-2026', timeFrame: new TimeSlot( from: '08:00:00', until: '12:00:00' ), availability: true, service: 'daytime' ),
+				new Timeframe( deliveryDate: '14-07-2026', timeFrame: new TimeSlot( from: '09:00:00', until: '18:00:00' ), availability: true, service: 'daytime' ),
 			)
 		);
 
@@ -335,10 +335,10 @@ class ServiceTest extends UnitTestCase {
 	public function test_date_with_only_disabled_windows_is_omitted(): void {
 		$service = new Testable_Timeframe_Service( new Client_Factory( $this->make_settings( false, false ) ), $this->make_settings( false, false ), self::V4_KEY, self::DAYS, new NullLogger() );
 
-		$collection = new TimeframeMultipleServicesCollection(
+		$collection = new MultipleServicesTimeframeCollection(
 			array(
-				new TimeFrame( deliveryDate: '14-07-2026', timeFrame: new TimeSlot( from: '08:00:00', until: '12:00:00' ), availability: true, service: 'daytime' ),
-				new TimeFrame( deliveryDate: '15-07-2026', timeFrame: new TimeSlot( from: '09:00:00', until: '18:00:00' ), availability: true, service: 'daytime' ),
+				new Timeframe( deliveryDate: '14-07-2026', timeFrame: new TimeSlot( from: '08:00:00', until: '12:00:00' ), availability: true, service: 'daytime' ),
+				new Timeframe( deliveryDate: '15-07-2026', timeFrame: new TimeSlot( from: '09:00:00', until: '18:00:00' ), availability: true, service: 'daytime' ),
 			)
 		);
 
@@ -365,14 +365,14 @@ class ServiceTest extends UnitTestCase {
 	 *
 	 * Their handover days (the day before each) are Monday, Tuesday and Thursday.
 	 *
-	 * @return TimeframeMultipleServicesCollection
+	 * @return MultipleServicesTimeframeCollection
 	 */
-	private function three_daytime_dates(): TimeframeMultipleServicesCollection {
-		return new TimeframeMultipleServicesCollection(
+	private function three_daytime_dates(): MultipleServicesTimeframeCollection {
+		return new MultipleServicesTimeframeCollection(
 			array(
-				new TimeFrame( deliveryDate: '14-07-2026', timeFrame: new TimeSlot( from: '09:00:00', until: '18:00:00' ), availability: true, service: 'daytime' ),
-				new TimeFrame( deliveryDate: '15-07-2026', timeFrame: new TimeSlot( from: '09:00:00', until: '18:00:00' ), availability: true, service: 'daytime' ),
-				new TimeFrame( deliveryDate: '17-07-2026', timeFrame: new TimeSlot( from: '09:00:00', until: '18:00:00' ), availability: true, service: 'daytime' ),
+				new Timeframe( deliveryDate: '14-07-2026', timeFrame: new TimeSlot( from: '09:00:00', until: '18:00:00' ), availability: true, service: 'daytime' ),
+				new Timeframe( deliveryDate: '15-07-2026', timeFrame: new TimeSlot( from: '09:00:00', until: '18:00:00' ), availability: true, service: 'daytime' ),
+				new Timeframe( deliveryDate: '17-07-2026', timeFrame: new TimeSlot( from: '09:00:00', until: '18:00:00' ), availability: true, service: 'daytime' ),
 			)
 		);
 	}
@@ -422,9 +422,9 @@ class ServiceTest extends UnitTestCase {
 		$settings = $this->make_settings( dropoff: array( 'mon' ) );
 		$service  = new Testable_Timeframe_Service( new Client_Factory( $settings ), $settings, self::V4_KEY, self::DAYS, new NullLogger() );
 
-		$collection = new TimeframeMultipleServicesCollection(
+		$collection = new MultipleServicesTimeframeCollection(
 			array(
-				new TimeFrame( deliveryDate: 'not-a-date', timeFrame: new TimeSlot( from: '09:00:00', until: '18:00:00' ), availability: true, service: 'daytime' ),
+				new Timeframe( deliveryDate: 'not-a-date', timeFrame: new TimeSlot( from: '09:00:00', until: '18:00:00' ), availability: true, service: 'daytime' ),
 			)
 		);
 
@@ -445,11 +445,11 @@ class ServiceTest extends UnitTestCase {
 		$settings = $this->make_settings();
 		$service  = new Testable_Timeframe_Service( new Client_Factory( $settings ), $settings, self::V4_KEY, self::DAYS, new NullLogger() );
 
-		$collection = new TimeframeMultipleServicesCollection(
+		$collection = new MultipleServicesTimeframeCollection(
 			array(
-				new TimeFrame( deliveryDate: null, timeFrame: new TimeSlot( from: '09:00:00', until: '18:00:00' ), availability: true, service: 'daytime' ),
-				new TimeFrame( deliveryDate: '14-07-2026', timeFrame: null, availability: true, service: 'daytime' ),
-				new TimeFrame( deliveryDate: '15-07-2026', timeFrame: new TimeSlot( from: '09:00:00', until: '18:00:00' ), availability: true, service: 'daytime' ),
+				new Timeframe( deliveryDate: null, timeFrame: new TimeSlot( from: '09:00:00', until: '18:00:00' ), availability: true, service: 'daytime' ),
+				new Timeframe( deliveryDate: '14-07-2026', timeFrame: null, availability: true, service: 'daytime' ),
+				new Timeframe( deliveryDate: '15-07-2026', timeFrame: new TimeSlot( from: '09:00:00', until: '18:00:00' ), availability: true, service: 'daytime' ),
 			)
 		);
 
@@ -611,9 +611,9 @@ class ServiceTest extends UnitTestCase {
 	/**
 	 * @testdox An identical second lookup is served from cache without a second HTTP call
 	 *
-	 * Drives the real Service through the SDK CachingPlugin + Cache_Adapter with an
+	 * Drives the real Service through the service-level Cache_Adapter with an
 	 * in-memory transient store and a call-counting HTTP client, proving the
-	 * /timeframe/ response is cached across identical requests within a request cycle.
+	 * timeframe response is cached across identical requests within a request cycle.
 	 */
 	public function test_second_identical_call_hits_cache(): void {
 		$this->with_transient_store();
@@ -655,23 +655,6 @@ class ServiceTest extends UnitTestCase {
 		$service->get_delivery_options( array_merge( $this->nl_post_data(), array( 'shipping_postcode' => '5678 CD' ) ) );
 
 		$this->assertSame( 2, $http->count, 'A different postcode is a different lookup and must reach PostNL.' );
-	}
-
-	/**
-	 * @testdox A filtered TTL of zero or less falls back to the default instead of reaching CachingPlugin
-	 *
-	 * CachingPlugin throws on a non-positive TTL, so passing a filtered zero through
-	 * would turn a stray filter into a fatal checkout lookup.
-	 */
-	public function test_cache_ttl_falls_back_to_the_default_on_a_non_positive_filter_value(): void {
-		Functions\when( 'apply_filters' )->alias(
-			fn( $tag, $value = null ) => 'postnl_v4_cache_ttl' === $tag ? 0 : $value
-		);
-
-		$settings = $this->make_settings();
-		$service  = new Testable_Timeframe_Service( new Client_Factory( $settings ), $settings, self::V4_KEY, self::DAYS, new NullLogger() );
-
-		$this->assertSame( Cache_Adapter::DEFAULT_TTL, $service->expose_cache_ttl() );
 	}
 
 	// ── Authentication ───────────────────────────────────────────────────────
@@ -771,7 +754,7 @@ class ServiceTest extends UnitTestCase {
 	 * @testdox A cache that silently stores nothing is reported through the logger
 	 *
 	 * Cache_Adapter warns once when a key clears no allowlisted prefix, which is the
-	 * only signal that a mis-wired CachingPlugin keyPrefix has turned caching off —
+	 * only signal that a mis-wired cache-key prefix has turned caching off —
 	 * it is otherwise indistinguishable from a permanently cold cache. The warning
 	 * can only fire if the Service hands the adapter its logger.
 	 */
@@ -883,29 +866,21 @@ class Testable_Timeframe_Service extends Service {
 	/**
 	 * Public wrapper for map_response().
 	 *
-	 * @param TimeframeMultipleServicesCollection $collection SDK timeframe collection.
+	 * @param MultipleServicesTimeframeCollection $collection SDK timeframe collection.
 	 * @return array
 	 */
-	public function expose_map_response( TimeframeMultipleServicesCollection $collection ): array {
+	public function expose_map_response( MultipleServicesTimeframeCollection $collection ): array {
 		return $this->map_response( $collection );
 	}
 
-	/**
-	 * Public wrapper for cache_ttl().
-	 *
-	 * @return int
-	 */
-	public function expose_cache_ttl(): int {
-		return $this->cache_ttl();
-	}
 
 	/**
 	 * Pin the handover date so request assertions are deterministic.
 	 *
-	 * @return string
+	 * @return \DateTimeImmutable
 	 */
-	protected function get_handover_date(): string {
-		return '2026-07-14';
+	protected function get_handover_date(): \DateTimeImmutable {
+		return new \DateTimeImmutable( '2026-07-14' );
 	}
 }
 
@@ -945,7 +920,7 @@ class Handover_Timeframe_Service extends Service {
 	 * @return string
 	 */
 	public function expose_handover_date(): string {
-		return $this->get_handover_date();
+		return $this->get_handover_date()->format( 'Y-m-d' );
 	}
 }
 

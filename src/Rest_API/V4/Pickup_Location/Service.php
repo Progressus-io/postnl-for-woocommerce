@@ -190,7 +190,8 @@ class Service implements Pickup_Location_Service_Interface {
 
 			$result = array( 'PickupOptions' => $this->map_response( $response->locations() ) );
 
-			$cache->set( $cache_key, $result, $this->cache_ttl() );
+			// TTL is owned by Cache_Adapter (resolved from postnl_v4_cache_ttl at construction).
+			$cache->set( $cache_key, $result );
 
 			return $result;
 		} catch ( \Throwable $exception ) {
@@ -554,27 +555,6 @@ class Service implements Pickup_Location_Service_Interface {
 	 */
 	private function get_dropoff_days(): array {
 		return $this->settings->get_dropoff_days();
-	}
-
-	/**
-	 * TTL, in seconds, for cached locations responses.
-	 *
-	 * Reads the same filter as Cache_Adapter so both agree, and never returns a
-	 * value <= 0.
-	 *
-	 * @return int
-	 */
-	protected function cache_ttl(): int {
-		/**
-		 * Filters the TTL, in seconds, for cached V4 timeframe/locations responses.
-		 *
-		 * @since 6.0.0
-		 *
-		 * @param int $ttl Default Cache_Adapter::DEFAULT_TTL (600 seconds).
-		 */
-		$ttl = (int) apply_filters( 'postnl_v4_cache_ttl', Cache_Adapter::DEFAULT_TTL );
-
-		return $ttl > 0 ? $ttl : Cache_Adapter::DEFAULT_TTL;
 	}
 
 	/**

@@ -657,23 +657,6 @@ class ServiceTest extends UnitTestCase {
 		$this->assertSame( 2, $http->count, 'A different postcode is a different lookup and must reach PostNL.' );
 	}
 
-	/**
-	 * @testdox A filtered TTL of zero or less falls back to the default
-	 *
-	 * set_transient() reads a non-positive TTL as "never expires", so passing a
-	 * filtered zero straight through would cache the response permanently.
-	 */
-	public function test_cache_ttl_falls_back_to_the_default_on_a_non_positive_filter_value(): void {
-		Functions\when( 'apply_filters' )->alias(
-			fn( $tag, $value = null ) => 'postnl_v4_cache_ttl' === $tag ? 0 : $value
-		);
-
-		$settings = $this->make_settings();
-		$service  = new Testable_Timeframe_Service( new Client_Factory( $settings ), $settings, self::V4_KEY, self::DAYS, new NullLogger() );
-
-		$this->assertSame( Cache_Adapter::DEFAULT_TTL, $service->expose_cache_ttl() );
-	}
-
 	// ── Authentication ───────────────────────────────────────────────────────
 
 	/**
@@ -890,14 +873,6 @@ class Testable_Timeframe_Service extends Service {
 		return $this->map_response( $collection );
 	}
 
-	/**
-	 * Public wrapper for cache_ttl().
-	 *
-	 * @return int
-	 */
-	public function expose_cache_ttl(): int {
-		return $this->cache_ttl();
-	}
 
 	/**
 	 * Pin the handover date so request assertions are deterministic.

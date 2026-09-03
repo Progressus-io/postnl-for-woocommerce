@@ -1090,7 +1090,7 @@ class Testable_Label_Service extends Service {
 	 *
 	 * @param ShipmentDeliveryRequest $request Built labelconfirm request.
 	 * @param array                   $fields  Field set the request was built from.
-	 * @return \Postnl\Sdk\Service\ShipmentDelivery\V4\Response\ShipmentDeliveryResponseInterface
+	 * @return \Postnl\Sdk\Service\ShipmentDelivery\Response\ShipmentDeliveryResponseInterface
 	 */
 	public function expose_confirm_label( ShipmentDeliveryRequest $request, array $fields ) {
 		return $this->confirm_label( $request, $fields );

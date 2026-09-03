@@ -611,9 +611,9 @@ class ServiceTest extends UnitTestCase {
 	/**
 	 * @testdox An identical second lookup is served from cache without a second HTTP call
 	 *
-	 * Drives the real Service through the SDK CachingPlugin + Cache_Adapter with an
+	 * Drives the real Service through the service-level Cache_Adapter with an
 	 * in-memory transient store and a call-counting HTTP client, proving the
-	 * /timeframe/ response is cached across identical requests within a request cycle.
+	 * timeframe response is cached across identical requests within a request cycle.
 	 */
 	public function test_second_identical_call_hits_cache(): void {
 		$this->with_transient_store();
@@ -658,10 +658,10 @@ class ServiceTest extends UnitTestCase {
 	}
 
 	/**
-	 * @testdox A filtered TTL of zero or less falls back to the default instead of reaching CachingPlugin
+	 * @testdox A filtered TTL of zero or less falls back to the default
 	 *
-	 * CachingPlugin throws on a non-positive TTL, so passing a filtered zero through
-	 * would turn a stray filter into a fatal checkout lookup.
+	 * set_transient() reads a non-positive TTL as "never expires", so passing a
+	 * filtered zero straight through would cache the response permanently.
 	 */
 	public function test_cache_ttl_falls_back_to_the_default_on_a_non_positive_filter_value(): void {
 		Functions\when( 'apply_filters' )->alias(
@@ -771,7 +771,7 @@ class ServiceTest extends UnitTestCase {
 	 * @testdox A cache that silently stores nothing is reported through the logger
 	 *
 	 * Cache_Adapter warns once when a key clears no allowlisted prefix, which is the
-	 * only signal that a mis-wired CachingPlugin keyPrefix has turned caching off —
+	 * only signal that a mis-wired cache-key prefix has turned caching off —
 	 * it is otherwise indistinguishable from a permanently cold cache. The warning
 	 * can only fire if the Service hands the adapter its logger.
 	 */

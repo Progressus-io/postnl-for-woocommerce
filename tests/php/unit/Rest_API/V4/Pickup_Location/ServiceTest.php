@@ -438,9 +438,9 @@ class ServiceTest extends UnitTestCase {
 	/**
 	 * @testdox An identical second lookup is served from cache without a second HTTP call
 	 *
-	 * Drives the real Service through the SDK CachingPlugin + Cache_Adapter with an
+	 * Drives the real Service through the service-level Cache_Adapter with an
 	 * in-memory transient store and a call-counting HTTP client, proving the
-	 * /locations/ response is cached across identical requests within a request cycle.
+	 * locations response is cached across identical requests within a request cycle.
 	 */
 	public function test_second_identical_call_hits_cache(): void {
 		$this->with_transient_store();
@@ -607,7 +607,7 @@ class ServiceTest extends UnitTestCase {
 	 * @testdox A cache that silently stores nothing is reported through the logger
 	 *
 	 * Cache_Adapter warns once when a key clears no allowlisted prefix, which is the
-	 * only signal that a mis-wired CachingPlugin keyPrefix has turned caching off —
+	 * only signal that a mis-wired cache-key prefix has turned caching off —
 	 * it is otherwise indistinguishable from a permanently cold cache. The warning
 	 * can only fire if the Service hands the adapter its logger.
 	 */

@@ -154,9 +154,12 @@ class ServiceTest extends UnitTestCase {
 
 		$this->assertSame( Country::NL, $request->receiverAddress->countryIso );
 		$this->assertSame( '1234AB', $request->receiverAddress->postalCode, 'Postcode spaces are stripped.' );
-		$this->assertSame( '10', $request->receiverAddress->houseNumber );
-		$this->assertSame( 'Main Street', $request->receiverAddress->street );
-		$this->assertSame( 'Amsterdam', $request->receiverAddress->city );
+		// The V4 timeframe contract accepts only country and postcode; houseNumber,
+		// street and city are left unset so the SDK omits them — sending them makes
+		// the API reject the call ("receiverAddress.houseNumber is not part of API contract").
+		$this->assertNull( $request->receiverAddress->houseNumber );
+		$this->assertNull( $request->receiverAddress->street );
+		$this->assertNull( $request->receiverAddress->city );
 	}
 
 	/**
@@ -177,9 +180,10 @@ class ServiceTest extends UnitTestCase {
 
 		$this->assertSame( Country::NL, $address->countryIso );
 		$this->assertSame( '2500CD', $address->postalCode );
-		$this->assertSame( '42', $address->houseNumber );
-		$this->assertSame( 'Church Road', $address->street );
-		$this->assertSame( 'Den Haag', $address->city );
+		// Only country and postcode are carried; see the mapping test above.
+		$this->assertNull( $address->houseNumber );
+		$this->assertNull( $address->street );
+		$this->assertNull( $address->city );
 	}
 
 	/**

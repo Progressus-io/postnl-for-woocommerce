@@ -237,10 +237,17 @@ class Service implements Timeframe_Service_Interface {
 	/**
 	 * Build the receiver Address from the shipping_* POST fields.
 	 *
-	 * Matches Legacy\Checkout\Item_Info::convert_data_to_args(): the raw POST data
-	 * is first run through Address_Utils::set_post_data_address() to resolve the
-	 * billing→shipping fallback and house-number extraction, then address_1 is the
-	 * street and address_2 the house number.
+	 * The V4 timeframe endpoint's receiverAddress contract accepts only the
+	 * country and postcode — that pair is what determines the delivery windows
+	 * (see the SDK's own MultipleServicesTimeframeRequest example). Sending any of
+	 * houseNumber, street or city makes the API reject the call with
+	 * "The field 'receiverAddress.houseNumber' is not part of API contract", which
+	 * surfaces as a 500 on the checkout delivery-options lookup. They are therefore
+	 * left unset so the SDK omits them from the payload (null fields are dropped by
+	 * PayloadNormalizer); an empty string would still be serialised and rejected.
+	 *
+	 * set_post_data_address() is still applied to resolve the billing→shipping
+	 * fallback before the country and postcode are read.
 	 *
 	 * @param array $post_data Checkout POST data.
 	 *
@@ -254,10 +261,7 @@ class Service implements Timeframe_Service_Interface {
 
 		return new Address(
 			countryIso: Country::fromValue( $country ),
-			houseNumber: isset( $post_data['shipping_address_2'] ) ? (string) $post_data['shipping_address_2'] : '',
-			postalCode: $postcode,
-			street: isset( $post_data['shipping_address_1'] ) ? (string) $post_data['shipping_address_1'] : '',
-			city: isset( $post_data['shipping_city'] ) ? (string) $post_data['shipping_city'] : ''
+			postalCode: $postcode
 		);
 	}
 

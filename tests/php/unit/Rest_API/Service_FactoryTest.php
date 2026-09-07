@@ -355,6 +355,26 @@ class Service_FactoryTest extends UnitTestCase {
 		$this->assertSame( $stub, $factory->barcode_service() );
 	}
 
+	/**
+	 * @testdox SDK not installed: V4 flows fall back to Legacy even with key + flag + stub
+	 *
+	 * The SDK is a require-dev dependency stripped from a normal --no-dev build, so a
+	 * site can have an API key and a flow flag on with no bundled SDK. should_use_v4()
+	 * must then stay on Legacy rather than routing to a V4 service that fatals on a
+	 * missing SDK class the moment a flow builds its request. Overriding the protected
+	 * sdk_available() seam simulates the SDK being absent.
+	 */
+	public function test_missing_sdk_falls_back_to_legacy(): void {
+		$factory = new class( $this->settings_with_key() ) extends Service_Factory {
+			protected static function sdk_available(): bool {
+				return false;
+			}
+		};
+		$factory->inject_v4_service( 'barcode', $this->v4_barcode_stub() );
+
+		$this->assertInstanceOf( Legacy_Barcode_Service::class, $factory->barcode_service() );
+	}
+
 	// -------------------------------------------------------------------------
 	// Scenario 3 — V4 key present but feature flag disabled → Legacy
 	// -------------------------------------------------------------------------

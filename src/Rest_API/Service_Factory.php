@@ -497,7 +497,28 @@ class Service_Factory {
 	 * @return bool
 	 */
 	private function should_use_v4( string $flow ): bool {
-		return $this->has_v4_key() && Router::sdk_enabled_for( $flow );
+		return $this->has_v4_key() && static::sdk_available() && Router::sdk_enabled_for( $flow );
+	}
+
+	/**
+	 * Whether the PostNL PHP SDK is actually installed and loadable.
+	 *
+	 * The SDK is a require-dev dependency, so a normal `--no-dev` release build (and
+	 * anything built without the dedicated V4 build step) ships without it. Without
+	 * this guard, a site that has an API key and a flow flag on but no bundled SDK
+	 * would pass has_v4_key(), route to a V4 service, and then fatal with
+	 * "Class ...\\MultipleServicesTimeframeRequest not found" the moment a flow builds
+	 * its SDK request. Checking a core SDK class here keeps such a site on the Legacy
+	 * path instead, so a missing SDK degrades to legacy rather than crashing checkout.
+	 *
+	 * ClientBuilder is the entry point every V4 service reaches through Client_Factory,
+	 * so its absence means no V4 flow can work. `::class` only resolves the name at
+	 * compile time (it never loads the class), so this is safe when the SDK is absent.
+	 *
+	 * @return bool
+	 */
+	protected static function sdk_available(): bool {
+		return class_exists( \Postnl\Sdk\Client\ClientBuilder::class );
 	}
 
 	/**

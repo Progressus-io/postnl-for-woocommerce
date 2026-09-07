@@ -40,35 +40,34 @@ class Service_FactoryTest extends UnitTestCase {
 	// -------------------------------------------------------------------------
 
 	/**
-	 * Return an anonymous settings object exposing the new-key accessors that the
-	 * "New API Key" field adds, mirroring their real signatures so has_v4_key()
-	 * is exercised against the same contract it meets in production.
+	 * Return an anonymous settings object carrying a production API key, exercising
+	 * has_v4_key() against the same accessors it reads in production
+	 * (is_sandbox / get_api_key / get_api_key_sandbox).
 	 *
-	 * @param string $key       New API key value (default non-empty).
-	 * @param bool   $validated Whether the key passed save-time validation.
+	 * @param string $key Production API key value (default non-empty).
 	 * @return object
 	 */
-	private function settings_with_key( string $key = 'test-v4-key', bool $validated = true ): object {
-		return new class( $key, $validated ) {
+	private function settings_with_key( string $key = 'test-v4-key' ): object {
+		return new class( $key ) {
 			/** @var string */
-			private $api_key_new;
-			/** @var bool */
-			private $validated;
+			private $api_key;
 			/**
-			 * @param string $k New API key value.
-			 * @param bool   $v Whether the key passed validation.
+			 * @param string $k Production API key value.
 			 */
-			public function __construct( string $k, bool $v ) {
-				$this->api_key_new = $k;
-				$this->validated   = $v;
-			}
-			/** @return string */
-			public function get_api_key_new() {
-				return trim( (string) $this->api_key_new );
+			public function __construct( string $k ) {
+				$this->api_key = $k;
 			}
 			/** @return bool */
-			public function is_api_key_new_validated() {
-				return $this->validated;
+			public function is_sandbox() {
+				return false;
+			}
+			/** @return string */
+			public function get_api_key() {
+				return $this->api_key;
+			}
+			/** @return string */
+			public function get_api_key_sandbox() {
+				return '';
 			}
 			/**
 			 * Read when the factory builds the logger it hands the self-built V4 label
@@ -79,22 +78,13 @@ class Service_FactoryTest extends UnitTestCase {
 			public function is_logging_enabled() {
 				return false;
 			}
-			/** @return string */
-			public function get_api_key() {
-				return 'original-legacy-key';
-			}
-			/** @return string */
-			public function get_effective_api_key() {
-				return '' !== $this->get_api_key_new() && $this->validated
-					? $this->get_api_key_new()
-					: $this->get_api_key();
-			}
 		};
 	}
 
 	/**
-	 * Return an anonymous settings object without the new-key accessors.
-	 * Simulates the Settings class before the "New API Key" field PR is merged.
+	 * Return an anonymous settings object missing the key accessors, so
+	 * current_api_key() yields '' and every flow falls back to Legacy. Stands in for
+	 * a null or incomplete settings object handed to the factory during bootstrap.
 	 *
 	 * @return object
 	 */
@@ -108,21 +98,6 @@ class Service_FactoryTest extends UnitTestCase {
 	}
 
 	/**
-	 * Return an anonymous settings object exposing only get_api_key_new(), without
-	 * is_api_key_new_validated(). Guards against a half-present new-key API.
-	 *
-	 * @return object
-	 */
-	private function settings_with_partial_new_key_api(): object {
-		return new class {
-			/** @return string */
-			public function get_api_key_new() {
-				return 'test-v4-key';
-			}
-		};
-	}
-
-	/**
 	 * Return a settings double that extends the real Settings class.
 	 *
 	 * The V4 timeframe and pickup-location services type-hint the concrete
@@ -130,34 +105,34 @@ class Service_FactoryTest extends UnitTestCase {
 	 * Only the getters the factory reads while building are overridden; the
 	 * parent constructor is skipped so no WooCommerce option lookup runs.
 	 *
-	 * @param string $key       New API key value.
-	 * @param bool   $validated Whether the key passed save-time validation.
+	 * @param string $key Production API key value.
 	 * @return Settings
 	 */
-	private function real_settings_with_key( string $key = 'test-v4-key', bool $validated = true ): Settings {
-		return new class( $key, $validated ) extends Settings {
+	private function real_settings_with_key( string $key = 'test-v4-key' ): Settings {
+		return new class( $key ) extends Settings {
 			/** @var string */
-			private $api_key_new;
-			/** @var bool */
-			private $validated;
+			private $api_key;
 
 			/**
-			 * @param string $k New API key value.
-			 * @param bool   $v Whether the key passed validation.
+			 * @param string $k Production API key value.
 			 */
-			public function __construct( string $k, bool $v ) {
-				$this->api_key_new = $k;
-				$this->validated   = $v;
-			}
-
-			/** @return string */
-			public function get_api_key_new() {
-				return trim( (string) $this->api_key_new );
+			public function __construct( string $k ) {
+				$this->api_key = $k;
 			}
 
 			/** @return bool */
-			public function is_api_key_new_validated() {
-				return $this->validated;
+			public function is_sandbox() {
+				return false;
+			}
+
+			/** @return string */
+			public function get_api_key() {
+				return trim( (string) $this->api_key );
+			}
+
+			/** @return string */
+			public function get_api_key_sandbox() {
+				return '';
 			}
 
 			/** @return bool */
@@ -360,51 +335,21 @@ class Service_FactoryTest extends UnitTestCase {
 		$this->assertInstanceOf( Legacy_Postcode_Check_Service::class, $factory->postcode_check_service() );
 	}
 
-	/**
-	 * @testdox Settings exposing get_api_key_new() but not is_api_key_new_validated(): returns Legacy
-	 *
-	 * A half-present new-key API must not be treated as a usable V4 key, since the
-	 * validated state cannot be established.
-	 */
-	public function test_settings_with_partial_new_key_api_returns_legacy(): void {
-		Filters\expectApplied( 'postnl_sdk_enable_barcode' )->andReturn( true );
-
-		$factory = new Service_Factory( $this->settings_with_partial_new_key_api() );
-		$factory->inject_v4_service( 'barcode', $this->v4_barcode_stub() );
-
-		$this->assertInstanceOf( Legacy_Barcode_Service::class, $factory->barcode_service() );
-	}
-
 	// -------------------------------------------------------------------------
-	// Scenario 2b — New key entered but not validated → Legacy
+	// Scenario 2b — API key present + flag + stub → routes to V4
 	// -------------------------------------------------------------------------
 
 	/**
-	 * @testdox New key entered but not validated: barcode_service() returns Legacy
+	 * @testdox API key present + flag + stub: barcode_service() routes to V4
 	 *
-	 * The new key is only usable once the save-time validation call confirms it, so an
-	 * entered-but-unvalidated key must never route traffic to V4.
+	 * Proves key presence plus the flag is the deciding gate, not an always-false
+	 * check. V4 authenticates with the same single API key the legacy path uses.
 	 */
-	public function test_unvalidated_new_key_returns_legacy(): void {
-		Filters\expectApplied( 'postnl_sdk_enable_barcode' )->andReturn( true );
-
-		$factory = new Service_Factory( $this->settings_with_key( 'test-v4-key', false ) );
-		$factory->inject_v4_service( 'barcode', $this->v4_barcode_stub() );
-
-		$this->assertInstanceOf( Legacy_Barcode_Service::class, $factory->barcode_service() );
-	}
-
-	/**
-	 * @testdox Validated new key + flag + stub: barcode_service() routes to V4
-	 *
-	 * The positive counterpart to the unvalidated case, so the validation gate is
-	 * proven to be the deciding factor rather than an always-false check.
-	 */
-	public function test_validated_new_key_routes_to_v4(): void {
+	public function test_api_key_present_routes_to_v4(): void {
 		Filters\expectApplied( 'postnl_sdk_enable_barcode' )->andReturn( true );
 
 		$stub    = $this->v4_barcode_stub();
-		$factory = new Service_Factory( $this->settings_with_key( 'test-v4-key', true ) );
+		$factory = new Service_Factory( $this->settings_with_key() );
 		$factory->inject_v4_service( 'barcode', $stub );
 
 		$this->assertSame( $stub, $factory->barcode_service() );

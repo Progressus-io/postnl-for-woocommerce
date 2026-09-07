@@ -43,7 +43,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * Single factory that resolves the correct service implementation per flow.
  * Every method returns the Legacy service unless both of these hold:
- *   (a) a validated "New API Key" is present on the settings object, and
+ *   (a) an API key is present on the settings object, and
  *   (b) Router::sdk_enabled_for() returns true for the flow.
  *
  * With those met, a flow resolves to a V4 service registered via
@@ -280,7 +280,7 @@ class Service_Factory {
 				$logger              = $this->v4_logger();
 				$this->label_v4_memo = new V4_Label_Service(
 					new Client_Factory( $this->settings, $logger ),
-					(string) $this->settings->get_api_key_new(),
+					$this->current_api_key(),
 					$logger
 				);
 			}
@@ -328,7 +328,7 @@ class Service_Factory {
 				$logger                     = $this->v4_logger();
 				$this->return_label_v4_memo = new V4_Returns_Service(
 					new Client_Factory( $this->settings, $logger ),
-					(string) $this->settings->get_api_key_new(),
+					$this->current_api_key(),
 					$logger
 				);
 			}
@@ -376,7 +376,7 @@ class Service_Factory {
 				$logger                      = $this->v4_logger();
 				$this->smart_returns_v4_memo = new V4_Smart_Returns_Service(
 					new Client_Factory( $this->settings, $logger ),
-					(string) $this->settings->get_api_key_new(),
+					$this->current_api_key(),
 					$logger
 				);
 			}
@@ -411,7 +411,7 @@ class Service_Factory {
 			$this->timeframe_v4_memo = new V4_Timeframe_Service(
 				new Client_Factory( $this->settings, $logger ),
 				$this->settings,
-				(string) $this->settings->get_api_key_new(),
+				$this->current_api_key(),
 				(int) $this->settings->get_number_delivery_days(),
 				$logger
 			);
@@ -439,7 +439,7 @@ class Service_Factory {
 			$this->pickup_location_v4_memo = new V4_Pickup_Location_Service(
 				new Client_Factory( $this->settings, $logger ),
 				$this->settings,
-				(string) $this->settings->get_api_key_new(),
+				$this->current_api_key(),
 				(int) $this->settings->get_number_pickup_points(),
 				$logger
 			);
@@ -501,37 +501,43 @@ class Service_Factory {
 	}
 
 	/**
-	 * Return whether a validated V4-capable API key is available on the settings object.
+	 * Return whether an API key is present to authenticate V4 requests.
 	 *
-	 * The V4-capable key is the separate "New API Key" field, not the original key.
-	 * It only becomes usable once a save-time validation call has confirmed it, so an
-	 * entered-but-unvalidated key must never route traffic to V4.
-	 *
-	 * get_effective_api_key() is deliberately not used here: it answers "which key do
-	 * we send" and falls back to the original key, so it is never empty and would
-	 * report a V4 key on every site.
-	 *
-	 * Returns false when: no settings object was injected; the settings object does not
-	 * yet expose the new-key accessors (that field ships in its own in-progress PR); the
-	 * key is empty or whitespace-only; or the entered key has not passed validation.
+	 * V4 is gated on the same single API key the legacy path uses — not on the
+	 * separate "New API Key" migration field (that is a distinct concern and may be
+	 * removed before the V4 release). As the migration design notes, one key
+	 * authenticates both the old and new APIs, so key presence plus the per-flow flag
+	 * is the whole gate; Router::sdk_enabled_for() supplies the flag half, and the
+	 * flag defaults off, so a merchant who simply has a key is never routed to V4.
 	 *
 	 * @return bool
 	 */
 	private function has_v4_key(): bool {
-		if ( null === $this->settings ) {
-			return false;
-		}
-		if ( ! method_exists( $this->settings, 'get_api_key_new' )
-			|| ! method_exists( $this->settings, 'is_api_key_new_validated' ) ) {
-			return false;
+		return '' !== $this->current_api_key();
+	}
+
+	/**
+	 * Resolve the environment-aware API key used to authenticate V4 requests.
+	 *
+	 * Mirrors Rest_API\Base::set_api_key(): the sandbox key in sandbox mode, the
+	 * production key otherwise. Each accessor is guarded so a null or duck-typed
+	 * settings object (as used in unit tests, and during early bootstrap) yields an
+	 * empty key and routes to Legacy rather than fatalling on a missing method.
+	 *
+	 * @return string Trimmed API key, or '' when unavailable.
+	 */
+	private function current_api_key(): string {
+		if ( ! is_object( $this->settings )
+			|| ! method_exists( $this->settings, 'is_sandbox' )
+			|| ! method_exists( $this->settings, 'get_api_key' )
+			|| ! method_exists( $this->settings, 'get_api_key_sandbox' ) ) {
+			return '';
 		}
 
-		$key = $this->settings->get_api_key_new();
+		$key = $this->settings->is_sandbox()
+			? $this->settings->get_api_key_sandbox()
+			: $this->settings->get_api_key();
 
-		if ( ! is_string( $key ) || '' === trim( $key ) ) {
-			return false;
-		}
-
-		return true === $this->settings->is_api_key_new_validated();
+		return is_string( $key ) ? trim( $key ) : '';
 	}
 }

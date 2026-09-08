@@ -610,6 +610,36 @@ class ServiceTest extends UnitTestCase {
 		);
 	}
 
+	/**
+	 * @testdox A non-NL destination short-circuits to an empty DeliveryOptions result
+	 *
+	 * V4 delivery timeframes are NL-only; the endpoint rejects a Belgian receiver.
+	 * Returning empty here rather than letting the SDK call fail keeps a Belgian
+	 * checkout from aborting the whole lookup and hiding the pickup points Belgium
+	 * does have. The failing HTTP client proves no request is made — reaching it
+	 * would surface as the converted 401.
+	 */
+	public function test_non_nl_destination_returns_empty_options(): void {
+		$settings = $this->make_settings();
+		$factory  = new Spy_Timeframe_Client_Factory( $settings, new Failing_Http_Client() );
+		$service  = new Service( $factory, $settings, self::V4_KEY, self::DAYS, new NullLogger() );
+
+		$be_post_data = array_merge(
+			$this->nl_post_data(),
+			array(
+				'shipping_country'  => 'BE',
+				'shipping_postcode' => '1000',
+				'shipping_city'     => 'Brussels',
+			)
+		);
+
+		$this->assertSame(
+			array( 'DeliveryOptions' => array() ),
+			$service->get_delivery_options( $be_post_data ),
+			'No SDK request must be made for a destination without V4 timeframes.'
+		);
+	}
+
 	// ── Caching ──────────────────────────────────────────────────────────────
 
 	/**

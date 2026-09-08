@@ -163,6 +163,16 @@ class Service implements Timeframe_Service_Interface {
 	 * @throws \Exception Converted SDK error when the request fails.
 	 */
 	public function get_delivery_options( array $post_data ): array {
+		// V4 delivery timeframes exist for NL destinations only: the endpoint has no
+		// Belgian delivery windows and rejects a non-NL receiver outright. The legacy
+		// combined checkout call simply returned no delivery days for such a
+		// destination, so mirror that with an empty result rather than a failed lookup
+		// — which, thrown, would abort the whole checkout and take the pickup points
+		// (which Belgium does have) down with it.
+		if ( ! $this->is_nl_destination( $post_data ) ) {
+			return array( 'DeliveryOptions' => array() );
+		}
+
 		// A merchant who disabled every drop-off day never hands parcels over; the
 		// legacy path marks all days unavailable so PostNL returns nothing — mirror
 		// that with an empty result instead of asking for undeliverable days.
@@ -287,6 +297,23 @@ class Service implements Timeframe_Service_Interface {
 		$postcode = isset( $post_data['shipping_postcode'] ) ? str_replace( ' ', '', (string) $post_data['shipping_postcode'] ) : '';
 
 		return trim( $country . ' ' . substr( $postcode, 0, 4 ) );
+	}
+
+	/**
+	 * Whether the checkout destination is a Netherlands address.
+	 *
+	 * Resolved through the same Address_Utils::set_post_data_address() the request
+	 * builder uses, so the billing→shipping fallback is honoured and the gate reads
+	 * the country the request would actually be sent for.
+	 *
+	 * @param array $post_data Checkout POST data.
+	 *
+	 * @return bool
+	 */
+	private function is_nl_destination( array $post_data ): bool {
+		$post_data = Address_Utils::set_post_data_address( $post_data );
+
+		return isset( $post_data['shipping_country'] ) && 'NL' === $post_data['shipping_country'];
 	}
 
 	/**

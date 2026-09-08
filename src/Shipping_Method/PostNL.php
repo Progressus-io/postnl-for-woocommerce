@@ -7,6 +7,7 @@
 
 namespace PostNLWooCommerce\Shipping_Method;
 
+use PostNLWooCommerce\Rest_API\Barcode\Key_Validator;
 use PostNLWooCommerce\Utils;
 use WC_Admin_Settings;
 
@@ -67,12 +68,112 @@ class PostNL extends \WC_Shipping_Flat_Rate {
 	 */
 	public function process_admin_options() {
 		parent::process_admin_options();
+
+		// parent::process_admin_options() writes the new values to the DB but only
+		// updates this method object's cache; the Settings singleton still holds
+		// the pre-save values, and the status row, the NewKey header and the
+		// effective-key selection all read through it for the rest of the request.
+		// Refresh it so the screen that comes back reflects what was just saved.
+		Settings::get_instance()->init_settings();
+
 		$this->process_merchant_codes();
 
 		// When pickup is disabled, reset the default checkout tab to its default value.
 		if ( 'yes' !== $this->get_option( 'enable_pickup_points' ) ) {
 			$this->update_option( 'default_checkout_tab', 'delivery_day' );
 		}
+
+		$this->process_new_api_key_validation();
+	}
+
+	/**
+	 * Validate the "New API Key" field whenever settings are saved.
+	 *
+	 * Runs in both environments so the key can be checked in sandbox as well as
+	 * production. Performs a live Barcode API call with the candidate key for the
+	 * active environment. Success flips the validated flag on so the plugin starts
+	 * routing traffic through the new key; failure leaves the old key in use,
+	 * records why, and surfaces the reason to the merchant.
+	 */
+	protected function process_new_api_key_validation() {
+		$settings = Settings::get_instance();
+
+		// The environment is read from the freshly-posted value on $this rather
+		// than the settings singleton, which may still hold the pre-save value.
+		$is_sandbox = ( 'production' !== $this->get_option( 'environment_mode' ) );
+		$new_field  = $is_sandbox ? 'api_keys_sandbox_new' : 'api_keys_new';
+		$orig_field = $is_sandbox ? 'api_keys_sandbox' : 'api_keys';
+
+		$new_key  = trim( (string) $this->get_option( $new_field ) );
+		$original = trim( (string) $this->get_option( $orig_field ) );
+
+		if ( '' === $new_key || $new_key === $original ) {
+			$settings->set_api_key_new_validated( false, null, $is_sandbox );
+			$settings->set_new_key_status_reason( '', $is_sandbox );
+			return;
+		}
+
+		// This exact key already passed validation; skip the live call so an
+		// unrelated settings save doesn't make a blocking request every time.
+		if ( $settings->is_api_key_new_validated_value( $new_key, $is_sandbox ) ) {
+			return;
+		}
+
+		$result = Key_Validator::validate(
+			$new_key,
+			$this->get_option( 'customer_code' ),
+			$this->get_option( 'customer_num' ),
+			$is_sandbox
+		);
+
+		if ( true === $result ) {
+			$settings->set_api_key_new_validated( true, $new_key, $is_sandbox );
+			$settings->set_new_key_status_reason( '', $is_sandbox );
+			return;
+		}
+
+		$reason = $result->get_error_code();
+
+		// "unreachable" means PostNL never returned a verdict, so we cannot say the
+		// key is bad — leave any previously-validated state as it was rather than
+		// showing a false red. Every other reason is a definite "not usable yet".
+		if ( Key_Validator::REASON_UNREACHABLE !== $reason ) {
+			$settings->set_api_key_new_validated( false, null, $is_sandbox );
+		}
+
+		$settings->set_new_key_status_reason( $reason, $is_sandbox );
+		WC_Admin_Settings::add_error( esc_html( Key_Validator::reason_message( $reason ) ) );
+	}
+
+	/**
+	 * Render the status row shown beneath the API Key field: a coloured label,
+	 * an em dash and a plain sentence describing the new key's state, driven by
+	 * the same value sent in the NewKey header. Hidden by the settings JS for
+	 * whichever environment is not currently selected.
+	 *
+	 * @param string $key  Field key.
+	 * @param array  $data Field data (expects an 'environment' of 'sandbox' or 'production').
+	 *
+	 * @return string
+	 */
+	public function generate_postnl_new_key_status_html( $key, $data ) {
+		$is_sandbox = ( isset( $data['environment'] ) && 'sandbox' === $data['environment'] );
+		$status     = Settings::get_instance()->get_new_key_status( $is_sandbox );
+
+		ob_start();
+		?>
+		<tr valign="top" class="postnl-new-key-status-row" data-postnl-env="<?php echo esc_attr( $is_sandbox ? 'sandbox' : 'production' ); ?>">
+			<th scope="row" class="titledesc"><?php esc_html_e( 'API Key Status', 'postnl-for-woocommerce' ); ?></th>
+			<td class="forminp">
+				<p style="margin-top:0;">
+					<strong class="postnl-new-key-status-label" style="color:<?php echo esc_attr( $status['color'] ); ?>;"><?php echo esc_html( $status['label'] ); ?></strong>
+					&mdash; <span class="postnl-new-key-status-summary"><?php echo esc_html( $status['summary'] ); ?></span>
+				</p>
+				<p class="description postnl-new-key-status-desc" style="margin-top:4px;<?php echo empty( $status['description'] ) ? 'display:none;' : ''; ?>"><?php echo wp_kses_post( $status['description'] ); ?></p>
+			</td>
+		</tr>
+		<?php
+		return ob_get_clean();
 	}
 
 	/**
@@ -155,6 +256,16 @@ class PostNL extends \WC_Shipping_Flat_Rate {
 				array( 'jquery' ),
 				POSTNL_WC_VERSION,
 				true
+			);
+
+			wp_localize_script(
+				'postnl-admin-settings',
+				'postnlApiKeyCheck',
+				array(
+					'ajaxUrl' => admin_url( 'admin-ajax.php' ),
+					'action'  => \PostNLWooCommerce\Admin\Api_Key_Check::AJAX_ACTION,
+					'nonce'   => wp_create_nonce( \PostNLWooCommerce\Admin\Api_Key_Check::NONCE_ACTION ),
+				)
 			);
 		}
 	}

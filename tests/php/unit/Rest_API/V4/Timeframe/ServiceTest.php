@@ -187,6 +187,34 @@ class ServiceTest extends UnitTestCase {
 	}
 
 	/**
+	 * @testdox A Belgian destination additionally carries street and city, but never houseNumber
+	 *
+	 * The V4 timeframe contract is country-dependent: BE rejects the call without
+	 * street + city ("The city/street field is required when countryIso is BE"),
+	 * while still rejecting houseNumber. Verified against the live PostNL API.
+	 */
+	public function test_build_request_belgium_carries_street_and_city(): void {
+		$service = new Testable_Timeframe_Service( new Client_Factory( $this->make_settings() ), $this->make_settings(), self::V4_KEY, self::DAYS, new NullLogger() );
+
+		$address = $service->expose_build_request(
+			array(
+				'ship_to_different_address' => '1',
+				'shipping_country'          => 'BE',
+				'shipping_postcode'         => '1000',
+				'shipping_address_1'        => 'Rue Neuve',
+				'shipping_address_2'        => '1',
+				'shipping_city'             => 'Brussels',
+			)
+		)->receiverAddress;
+
+		$this->assertSame( Country::BE, $address->countryIso );
+		$this->assertSame( '1000', $address->postalCode );
+		$this->assertSame( 'Rue Neuve', $address->street );
+		$this->assertSame( 'Brussels', $address->city );
+		$this->assertNull( $address->houseNumber, 'houseNumber is not part of the timeframe contract for BE either.' );
+	}
+
+	/**
 	 * @testdox Evening is requested only when the setting is enabled
 	 */
 	public function test_build_request_services_follow_evening_setting(): void {
@@ -607,36 +635,6 @@ class ServiceTest extends UnitTestCase {
 			array( 'DeliveryOptions' => array() ),
 			$service->get_delivery_options( $this->nl_post_data() ),
 			'No SDK request must be made when the merchant never hands over parcels.'
-		);
-	}
-
-	/**
-	 * @testdox A non-NL destination short-circuits to an empty DeliveryOptions result
-	 *
-	 * V4 delivery timeframes are NL-only; the endpoint rejects a Belgian receiver.
-	 * Returning empty here rather than letting the SDK call fail keeps a Belgian
-	 * checkout from aborting the whole lookup and hiding the pickup points Belgium
-	 * does have. The failing HTTP client proves no request is made — reaching it
-	 * would surface as the converted 401.
-	 */
-	public function test_non_nl_destination_returns_empty_options(): void {
-		$settings = $this->make_settings();
-		$factory  = new Spy_Timeframe_Client_Factory( $settings, new Failing_Http_Client() );
-		$service  = new Service( $factory, $settings, self::V4_KEY, self::DAYS, new NullLogger() );
-
-		$be_post_data = array_merge(
-			$this->nl_post_data(),
-			array(
-				'shipping_country'  => 'BE',
-				'shipping_postcode' => '1000',
-				'shipping_city'     => 'Brussels',
-			)
-		);
-
-		$this->assertSame(
-			array( 'DeliveryOptions' => array() ),
-			$service->get_delivery_options( $be_post_data ),
-			'No SDK request must be made for a destination without V4 timeframes.'
 		);
 	}
 

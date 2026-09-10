@@ -163,16 +163,6 @@ class Service implements Timeframe_Service_Interface {
 	 * @throws \Exception Converted SDK error when the request fails.
 	 */
 	public function get_delivery_options( array $post_data ): array {
-		// V4 delivery timeframes exist for NL destinations only: the endpoint has no
-		// Belgian delivery windows and rejects a non-NL receiver outright. The legacy
-		// combined checkout call simply returned no delivery days for such a
-		// destination, so mirror that with an empty result rather than a failed lookup
-		// — which, thrown, would abort the whole checkout and take the pickup points
-		// (which Belgium does have) down with it.
-		if ( ! $this->is_nl_destination( $post_data ) ) {
-			return array( 'DeliveryOptions' => array() );
-		}
-
 		// A merchant who disabled every drop-off day never hands parcels over; the
 		// legacy path marks all days unavailable so PostNL returns nothing — mirror
 		// that with an empty result instead of asking for undeliverable days.
@@ -247,17 +237,19 @@ class Service implements Timeframe_Service_Interface {
 	/**
 	 * Build the receiver Address from the shipping_* POST fields.
 	 *
-	 * The V4 timeframe endpoint's receiverAddress contract accepts only the
-	 * country and postcode — that pair is what determines the delivery windows
-	 * (see the SDK's own MultipleServicesTimeframeRequest example). Sending any of
-	 * houseNumber, street or city makes the API reject the call with
-	 * "The field 'receiverAddress.houseNumber' is not part of API contract", which
-	 * surfaces as a 500 on the checkout delivery-options lookup. They are therefore
-	 * left unset so the SDK omits them from the payload (null fields are dropped by
-	 * PayloadNormalizer); an empty string would still be serialised and rejected.
+	 * The V4 timeframe endpoint's receiverAddress contract is country-dependent:
+	 *   - NL requires country + postcode ONLY. Sending houseNumber, street or city
+	 *     is rejected with "The field 'receiverAddress.<field>' is not part of API
+	 *     contract".
+	 *   - BE requires country + postcode + street + city ("The city/street field is
+	 *     required when countryIso is BE"), but still rejects houseNumber.
+	 * houseNumber is therefore never sent for either country. Verified against the
+	 * live PostNL API (NL → 10 delivery days, BE → 10 with street+city, BE without
+	 * → HTTP 400). null fields are dropped by the SDK PayloadNormalizer; an empty
+	 * string would still be serialised and rejected, so BE fields must be non-empty.
 	 *
 	 * set_post_data_address() is still applied to resolve the billing→shipping
-	 * fallback before the country and postcode are read.
+	 * fallback before the fields are read.
 	 *
 	 * @param array $post_data Checkout POST data.
 	 *
@@ -269,9 +261,20 @@ class Service implements Timeframe_Service_Interface {
 		$country  = isset( $post_data['shipping_country'] ) ? (string) $post_data['shipping_country'] : '';
 		$postcode = isset( $post_data['shipping_postcode'] ) ? str_replace( ' ', '', (string) $post_data['shipping_postcode'] ) : '';
 
+		// NL takes only country + postcode; other countries (BE) additionally require
+		// street + city. houseNumber is not part of this endpoint's contract for either.
+		if ( 'NL' === $country ) {
+			return new Address(
+				countryIso: Country::fromValue( $country ),
+				postalCode: $postcode
+			);
+		}
+
 		return new Address(
 			countryIso: Country::fromValue( $country ),
-			postalCode: $postcode
+			postalCode: $postcode,
+			street: isset( $post_data['shipping_address_1'] ) ? (string) $post_data['shipping_address_1'] : '',
+			city: isset( $post_data['shipping_city'] ) ? (string) $post_data['shipping_city'] : ''
 		);
 	}
 
@@ -297,23 +300,6 @@ class Service implements Timeframe_Service_Interface {
 		$postcode = isset( $post_data['shipping_postcode'] ) ? str_replace( ' ', '', (string) $post_data['shipping_postcode'] ) : '';
 
 		return trim( $country . ' ' . substr( $postcode, 0, 4 ) );
-	}
-
-	/**
-	 * Whether the checkout destination is a Netherlands address.
-	 *
-	 * Resolved through the same Address_Utils::set_post_data_address() the request
-	 * builder uses, so the billing→shipping fallback is honoured and the gate reads
-	 * the country the request would actually be sent for.
-	 *
-	 * @param array $post_data Checkout POST data.
-	 *
-	 * @return bool
-	 */
-	private function is_nl_destination( array $post_data ): bool {
-		$post_data = Address_Utils::set_post_data_address( $post_data );
-
-		return isset( $post_data['shipping_country'] ) && 'NL' === $post_data['shipping_country'];
 	}
 
 	/**

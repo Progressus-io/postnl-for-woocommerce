@@ -240,17 +240,19 @@ class Service implements Pickup_Location_Service_Interface {
 	/**
 	 * Build the receiver Address from the shipping_* POST fields.
 	 *
-	 * The V4 near-address endpoint's receiverAddress contract accepts only the
-	 * country and postcode — that pair is what locates nearby pickup points (see
-	 * the SDK's own PickUpNearAddressRequest example). Sending any of houseNumber,
-	 * street or city makes the API reject the call with "The field
-	 * 'receiverAddress.houseNumber' is not part of API contract". They are
-	 * therefore left unset so the SDK omits them from the payload (null fields are
-	 * dropped by PayloadNormalizer); an empty string would still be serialised and
-	 * rejected.
+	 * The V4 near-address endpoint's receiverAddress contract is country-dependent,
+	 * exactly like the timeframe endpoint:
+	 *   - NL requires country + postcode ONLY (houseNumber/street/city rejected as
+	 *     "not part of API contract").
+	 *   - BE requires country + postcode + street + city ("The city/street field is
+	 *     required when countryIso is BE"), but still rejects houseNumber.
+	 * houseNumber is therefore never sent. Verified against the live PostNL API
+	 * (NL → 3 locations, BE → 3 with street+city, BE without → HTTP 400). null
+	 * fields are dropped by the SDK PayloadNormalizer; an empty string would still
+	 * be serialised and rejected, so BE fields must be non-empty.
 	 *
 	 * set_post_data_address() is still applied to resolve the billing→shipping
-	 * fallback before the country and postcode are read.
+	 * fallback before the fields are read.
 	 *
 	 * @param array $post_data Checkout POST data.
 	 *
@@ -262,9 +264,20 @@ class Service implements Pickup_Location_Service_Interface {
 		$country  = isset( $post_data['shipping_country'] ) ? (string) $post_data['shipping_country'] : '';
 		$postcode = isset( $post_data['shipping_postcode'] ) ? str_replace( ' ', '', (string) $post_data['shipping_postcode'] ) : '';
 
+		// NL takes only country + postcode; other countries (BE) additionally require
+		// street + city. houseNumber is not part of this endpoint's contract for either.
+		if ( 'NL' === $country ) {
+			return new Address(
+				countryIso: Country::fromValue( $country ),
+				postalCode: $postcode
+			);
+		}
+
 		return new Address(
 			countryIso: Country::fromValue( $country ),
-			postalCode: $postcode
+			postalCode: $postcode,
+			street: isset( $post_data['shipping_address_1'] ) ? (string) $post_data['shipping_address_1'] : '',
+			city: isset( $post_data['shipping_city'] ) ? (string) $post_data['shipping_city'] : ''
 		);
 	}
 

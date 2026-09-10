@@ -175,6 +175,34 @@ class ServiceTest extends UnitTestCase {
 	}
 
 	/**
+	 * @testdox A Belgian destination additionally carries street and city, but never houseNumber
+	 *
+	 * The V4 near-address contract is country-dependent: BE rejects the call without
+	 * street + city ("The city/street field is required when countryIso is BE"),
+	 * while still rejecting houseNumber. Verified against the live PostNL API.
+	 */
+	public function test_build_request_belgium_carries_street_and_city(): void {
+		$service = new Testable_Pickup_Service( new Client_Factory( $this->make_settings() ), $this->make_settings(), self::V4_KEY, self::LOCATIONS, new NullLogger() );
+
+		$address = $service->expose_build_request(
+			array(
+				'ship_to_different_address' => '1',
+				'shipping_country'          => 'BE',
+				'shipping_postcode'         => '1000',
+				'shipping_address_1'        => 'Rue Neuve',
+				'shipping_address_2'        => '1',
+				'shipping_city'             => 'Brussels',
+			)
+		)->receiverAddress;
+
+		$this->assertSame( Country::BE, $address->countryIso );
+		$this->assertSame( '1000', $address->postalCode );
+		$this->assertSame( 'Rue Neuve', $address->street );
+		$this->assertSame( 'Brussels', $address->city );
+		$this->assertNull( $address->houseNumber, 'houseNumber is not part of the near-address contract for BE either.' );
+	}
+
+	/**
 	 * @testdox The configured numberOfLocations is passed through and clamped to the V4 range [1, 10]
 	 */
 	public function test_number_of_locations_is_clamped(): void {

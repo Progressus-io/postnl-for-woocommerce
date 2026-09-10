@@ -49,7 +49,7 @@
 		]
 	},
 	"require-dev": {
-		"postnl/api-client-sdk": "dev-main#5a064dd",
+		"postnl/api-client-sdk": "^3.0",
 		"wp-cli/i18n-command": "^2.6",
 		"squizlabs/php_codesniffer": "*",
 		"dealerdirect/phpcodesniffer-composer-installer": "*",

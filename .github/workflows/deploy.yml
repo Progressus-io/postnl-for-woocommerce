@@ -205,15 +205,18 @@ jobs:
           PLUGIN_DIR="$RUNNER_TEMP/zip_staging/woo-postnl"
           mkdir -p "$PLUGIN_DIR"
           rsync -rc --exclude-from="$GITHUB_WORKSPACE/.distignore" \
-            --delete "$GITHUB_WORKSPACE/" "$PLUGIN_DIR/"
+            --delete --delete-excluded "$GITHUB_WORKSPACE/" "$PLUGIN_DIR/"
           ZIP_PATH="$RUNNER_TEMP/woo-postnl-${TAG}.zip"
           cd "$RUNNER_TEMP/zip_staging"
           zip -r "$ZIP_PATH" woo-postnl/
           echo "zip-path=$ZIP_PATH" >> "$GITHUB_OUTPUT"
 
-      # All paths: assert no credential files slipped in AND the production
-      # PHP floor is intact (the SDK must stay out of the shipped build)
-      - name: Verify ZIP credentials, SDK absence and PHP floor
+      # All paths: assert the release ZIP is clean — no credential files, the
+      # V4 SDK stays out of the shipped build, the PHP floor is intact, and no
+      # internal/dev files or stray vendors slipped in. The exact same gate runs
+      # against the SVN trunk/tag working copy before commit (see below), so
+      # trunk can never publish a file the ZIP would not ship.
+      - name: Verify ZIP — credentials, SDK, PHP floor and forbidden paths
         shell: bash
         run: |
           ZIP_PATH="${{ steps.build_zip.outputs.zip-path }}"
@@ -221,41 +224,8 @@ jobs:
           mkdir -p "$VERIFY_DIR"
           unzip -q "$ZIP_PATH" -d "$VERIFY_DIR"
 
-          # Negative: no credential files
-          if find "$VERIFY_DIR" \( -name "auth.json" -o -name "auth.*.json" \) 2>/dev/null | grep -q .; then
-            echo "::error::Composer auth credential file found in ZIP — credentials must not ship!"
-            find "$VERIFY_DIR" \( -name "auth.json" -o -name "auth.*.json" \) 2>/dev/null
-            exit 1
-          fi
-          echo "Credential check passed — no auth credential files found in ZIP."
-
-          # Negative: the PostNL SDK must NOT ship. It declares php >=8.2, which
-          # raises the whole package floor and makes Composer generate a
-          # platform_check.php that fatals every request on PHP below 8.2. The
-          # SDK stays in require-dev until the V4 API ships.
-          if [ -d "$VERIFY_DIR/woo-postnl/vendor/postnl/api-client-sdk" ]; then
-            echo "::error::vendor/postnl/api-client-sdk found in ZIP — the SDK is dev-only until V4 ships; shipping it raises the PHP floor to 8.2 and fatals PHP 7.4 sites!"
-            exit 1
-          fi
-          echo "SDK check passed — vendor/postnl/api-client-sdk correctly absent from ZIP."
-
-          # Positive: the generated platform check must not exceed the 7.4 floor
-          # declared in composer.json and the plugin header.
-          PLATFORM_CHECK="$VERIFY_DIR/woo-postnl/vendor/composer/platform_check.php"
-          if [ ! -f "$PLATFORM_CHECK" ]; then
-            echo "::error::vendor/composer/platform_check.php missing from ZIP — cannot verify the production PHP floor!"
-            exit 1
-          fi
-          PHP_FLOOR=$(grep -oP 'PHP_VERSION_ID >= \K[0-9]+' "$PLATFORM_CHECK" | head -1)
-          if [ -z "$PHP_FLOOR" ]; then
-            echo "::error::Could not parse the PHP floor out of platform_check.php — the Composer format may have changed!"
-            exit 1
-          fi
-          if [ "$PHP_FLOOR" -gt 70400 ]; then
-            echo "::error::Production build requires PHP_VERSION_ID >= $PHP_FLOOR, above the declared 7.4 floor (70400) — a dependency raised the platform requirement!"
-            exit 1
-          fi
-          echo "PHP floor check passed — platform_check.php requires PHP_VERSION_ID >= $PHP_FLOOR."
+          bash "$GITHUB_WORKSPACE/.github/scripts/verify-plugin-tree.sh" \
+            "$VERIFY_DIR/woo-postnl" "release ZIP"
 
           rm -rf "$VERIFY_DIR"
 
@@ -330,7 +300,7 @@ jobs:
         run: |
           echo "--- SVN dry run: files that would be deployed to trunk ---"
           rsync -rc --exclude-from="$GITHUB_WORKSPACE/.distignore" \
-            --delete --dry-run --itemize-changes \
+            --delete --delete-excluded --dry-run --itemize-changes \
             "$GITHUB_WORKSPACE/" /tmp/svn-preview/
 
       # Dry run only: preview which WordPress.org assets would be synced
@@ -370,14 +340,23 @@ jobs:
             --username "$SVN_USERNAME" --password "$SVN_PASSWORD" \
             --no-auth-cache --non-interactive
 
-          # Sync built files into trunk
+          # Sync built files into trunk. --delete-excluded also removes files
+          # already in trunk that .distignore excludes; without it, anything
+          # committed before its .distignore entry lingered forever and every
+          # `svn copy` tag carried it forward.
           rsync -rc --exclude-from="$GITHUB_WORKSPACE/.distignore" \
-            --delete "$GITHUB_WORKSPACE/" "$SVN_DIR/trunk/"
+            --delete --delete-excluded "$GITHUB_WORKSPACE/" "$SVN_DIR/trunk/"
 
           # Stage new files; remove deleted files
           svn add "$SVN_DIR/trunk" --force --no-auth-cache --non-interactive
           svn status "$SVN_DIR/trunk" | grep '^!' | awk '{print $2}' | \
             xargs -r svn rm --force
+
+          # Gate: the trunk working copy must pass the exact same check as the
+          # release ZIP before anything is committed. Fails the deploy loudly if
+          # a forbidden/dev file or stray vendor is still present in trunk.
+          bash "$GITHUB_WORKSPACE/.github/scripts/verify-plugin-tree.sh" \
+            "$SVN_DIR/trunk" "SVN trunk working copy"
 
           # Commit trunk
           svn commit "$SVN_DIR/trunk" \
@@ -418,12 +397,17 @@ jobs:
           # Create and populate the new tag directory
           mkdir -p "$SVN_DIR/tags/$TAG"
           rsync -rc --exclude-from="$GITHUB_WORKSPACE/.distignore" \
-            --delete "$GITHUB_WORKSPACE/" "$SVN_DIR/tags/$TAG/"
+            --delete --delete-excluded "$GITHUB_WORKSPACE/" "$SVN_DIR/tags/$TAG/"
 
           # Stage new files; remove deleted files
           svn add "$SVN_DIR/tags/$TAG" --force --no-auth-cache --non-interactive
           svn status "$SVN_DIR/tags/$TAG" | grep '^!' | awk '{print $2}' | \
             xargs -r svn rm --force
+
+          # Gate: the tag working copy must pass the exact same check as the
+          # release ZIP before anything is committed.
+          bash "$GITHUB_WORKSPACE/.github/scripts/verify-plugin-tree.sh" \
+            "$SVN_DIR/tags/$TAG" "SVN dev tag working copy"
 
           # Commit only the tag subtree (trunk is never touched)
           svn commit "$SVN_DIR/tags/$TAG" \

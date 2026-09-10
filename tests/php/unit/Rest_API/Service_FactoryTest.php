@@ -23,8 +23,11 @@ use PostNLWooCommerce\Rest_API\Legacy\Postcode_Check_Service as Legacy_Postcode_
 use PostNLWooCommerce\Rest_API\Legacy\Smart_Returns_Service as Legacy_Smart_Returns_Service;
 use PostNLWooCommerce\Rest_API\Service_Factory;
 use PostNLWooCommerce\Rest_API\V4\Label\Service as V4_Label_Service;
+use PostNLWooCommerce\Rest_API\V4\Pickup_Location\Service as V4_Pickup_Location_Service;
 use PostNLWooCommerce\Rest_API\V4\Returns\Service as V4_Returns_Service;
 use PostNLWooCommerce\Rest_API\V4\Returns\Smart_Returns_Service as V4_Smart_Returns_Service;
+use PostNLWooCommerce\Rest_API\V4\Timeframe\Service as V4_Timeframe_Service;
+use PostNLWooCommerce\Shipping_Method\Settings;
 use PostNLWooCommerce\Tests\UnitTestCase;
 
 /**
@@ -37,35 +40,34 @@ class Service_FactoryTest extends UnitTestCase {
 	// -------------------------------------------------------------------------
 
 	/**
-	 * Return an anonymous settings object exposing the new-key accessors that the
-	 * "New API Key" field adds, mirroring their real signatures so has_v4_key()
-	 * is exercised against the same contract it meets in production.
+	 * Return an anonymous settings object carrying a production API key, exercising
+	 * has_v4_key() against the same accessors it reads in production
+	 * (is_sandbox / get_api_key / get_api_key_sandbox).
 	 *
-	 * @param string $key       New API key value (default non-empty).
-	 * @param bool   $validated Whether the key passed save-time validation.
+	 * @param string $key Production API key value (default non-empty).
 	 * @return object
 	 */
-	private function settings_with_key( string $key = 'test-v4-key', bool $validated = true ): object {
-		return new class( $key, $validated ) {
+	private function settings_with_key( string $key = 'test-v4-key' ): object {
+		return new class( $key ) {
 			/** @var string */
-			private $api_key_new;
-			/** @var bool */
-			private $validated;
+			private $api_key;
 			/**
-			 * @param string $k New API key value.
-			 * @param bool   $v Whether the key passed validation.
+			 * @param string $k Production API key value.
 			 */
-			public function __construct( string $k, bool $v ) {
-				$this->api_key_new = $k;
-				$this->validated   = $v;
-			}
-			/** @return string */
-			public function get_api_key_new() {
-				return trim( (string) $this->api_key_new );
+			public function __construct( string $k ) {
+				$this->api_key = $k;
 			}
 			/** @return bool */
-			public function is_api_key_new_validated() {
-				return $this->validated;
+			public function is_sandbox() {
+				return false;
+			}
+			/** @return string */
+			public function get_api_key() {
+				return $this->api_key;
+			}
+			/** @return string */
+			public function get_api_key_sandbox() {
+				return '';
 			}
 			/**
 			 * Read when the factory builds the logger it hands the self-built V4 label
@@ -76,22 +78,13 @@ class Service_FactoryTest extends UnitTestCase {
 			public function is_logging_enabled() {
 				return false;
 			}
-			/** @return string */
-			public function get_api_key() {
-				return 'original-legacy-key';
-			}
-			/** @return string */
-			public function get_effective_api_key() {
-				return '' !== $this->get_api_key_new() && $this->validated
-					? $this->get_api_key_new()
-					: $this->get_api_key();
-			}
 		};
 	}
 
 	/**
-	 * Return an anonymous settings object without the new-key accessors.
-	 * Simulates the Settings class before the "New API Key" field PR is merged.
+	 * Return an anonymous settings object missing the key accessors, so
+	 * current_api_key() yields '' and every flow falls back to Legacy. Stands in for
+	 * a null or incomplete settings object handed to the factory during bootstrap.
 	 *
 	 * @return object
 	 */
@@ -105,16 +98,56 @@ class Service_FactoryTest extends UnitTestCase {
 	}
 
 	/**
-	 * Return an anonymous settings object exposing only get_api_key_new(), without
-	 * is_api_key_new_validated(). Guards against a half-present new-key API.
+	 * Return a settings double that extends the real Settings class.
 	 *
-	 * @return object
+	 * The V4 timeframe and pickup-location services type-hint the concrete
+	 * Settings, so the factory only self-builds them when it was handed one.
+	 * Only the getters the factory reads while building are overridden; the
+	 * parent constructor is skipped so no WooCommerce option lookup runs.
+	 *
+	 * @param string $key Production API key value.
+	 * @return Settings
 	 */
-	private function settings_with_partial_new_key_api(): object {
-		return new class {
+	private function real_settings_with_key( string $key = 'test-v4-key' ): Settings {
+		return new class( $key ) extends Settings {
+			/** @var string */
+			private $api_key;
+
+			/**
+			 * @param string $k Production API key value.
+			 */
+			public function __construct( string $k ) {
+				$this->api_key = $k;
+			}
+
+			/** @return bool */
+			public function is_sandbox() {
+				return false;
+			}
+
 			/** @return string */
-			public function get_api_key_new() {
-				return 'test-v4-key';
+			public function get_api_key() {
+				return trim( (string) $this->api_key );
+			}
+
+			/** @return string */
+			public function get_api_key_sandbox() {
+				return '';
+			}
+
+			/** @return bool */
+			public function is_logging_enabled() {
+				return false;
+			}
+
+			/** @return string */
+			public function get_number_delivery_days() {
+				return '5';
+			}
+
+			/** @return string */
+			public function get_number_pickup_points() {
+				return '3';
 			}
 		};
 	}
@@ -131,6 +164,40 @@ class Service_FactoryTest extends UnitTestCase {
 			 * @return array
 			 */
 			public function generate( array $post_data ): array {
+				return array();
+			}
+		};
+	}
+
+	/**
+	 * Return a minimal Timeframe_Service_Interface stub for V4 injection.
+	 *
+	 * @return Timeframe_Service_Interface
+	 */
+	private function v4_timeframe_stub(): Timeframe_Service_Interface {
+		return new class implements Timeframe_Service_Interface {
+			/**
+			 * @param array $post_data Post data.
+			 * @return array
+			 */
+			public function get_delivery_options( array $post_data ): array {
+				return array();
+			}
+		};
+	}
+
+	/**
+	 * Return a minimal Pickup_Location_Service_Interface stub for V4 injection.
+	 *
+	 * @return Pickup_Location_Service_Interface
+	 */
+	private function v4_pickup_location_stub(): Pickup_Location_Service_Interface {
+		return new class implements Pickup_Location_Service_Interface {
+			/**
+			 * @param array $post_data Post data.
+			 * @return array
+			 */
+			public function get_pickup_locations( array $post_data ): array {
 				return array();
 			}
 		};
@@ -268,54 +335,44 @@ class Service_FactoryTest extends UnitTestCase {
 		$this->assertInstanceOf( Legacy_Postcode_Check_Service::class, $factory->postcode_check_service() );
 	}
 
-	/**
-	 * @testdox Settings exposing get_api_key_new() but not is_api_key_new_validated(): returns Legacy
-	 *
-	 * A half-present new-key API must not be treated as a usable V4 key, since the
-	 * validated state cannot be established.
-	 */
-	public function test_settings_with_partial_new_key_api_returns_legacy(): void {
-		Filters\expectApplied( 'postnl_sdk_enable_barcode' )->andReturn( true );
-
-		$factory = new Service_Factory( $this->settings_with_partial_new_key_api() );
-		$factory->inject_v4_service( 'barcode', $this->v4_barcode_stub() );
-
-		$this->assertInstanceOf( Legacy_Barcode_Service::class, $factory->barcode_service() );
-	}
-
 	// -------------------------------------------------------------------------
-	// Scenario 2b — New key entered but not validated → Legacy
+	// Scenario 2b — API key present + flag + stub → routes to V4
 	// -------------------------------------------------------------------------
 
 	/**
-	 * @testdox New key entered but not validated: barcode_service() returns Legacy
+	 * @testdox API key present + flag + stub: barcode_service() routes to V4
 	 *
-	 * The new key is only usable once the save-time validation call confirms it, so an
-	 * entered-but-unvalidated key must never route traffic to V4.
+	 * Proves key presence plus the flag is the deciding gate, not an always-false
+	 * check. V4 authenticates with the same single API key the legacy path uses.
 	 */
-	public function test_unvalidated_new_key_returns_legacy(): void {
-		Filters\expectApplied( 'postnl_sdk_enable_barcode' )->andReturn( true );
-
-		$factory = new Service_Factory( $this->settings_with_key( 'test-v4-key', false ) );
-		$factory->inject_v4_service( 'barcode', $this->v4_barcode_stub() );
-
-		$this->assertInstanceOf( Legacy_Barcode_Service::class, $factory->barcode_service() );
-	}
-
-	/**
-	 * @testdox Validated new key + flag + stub: barcode_service() routes to V4
-	 *
-	 * The positive counterpart to the unvalidated case, so the validation gate is
-	 * proven to be the deciding factor rather than an always-false check.
-	 */
-	public function test_validated_new_key_routes_to_v4(): void {
+	public function test_api_key_present_routes_to_v4(): void {
 		Filters\expectApplied( 'postnl_sdk_enable_barcode' )->andReturn( true );
 
 		$stub    = $this->v4_barcode_stub();
-		$factory = new Service_Factory( $this->settings_with_key( 'test-v4-key', true ) );
+		$factory = new Service_Factory( $this->settings_with_key() );
 		$factory->inject_v4_service( 'barcode', $stub );
 
 		$this->assertSame( $stub, $factory->barcode_service() );
+	}
+
+	/**
+	 * @testdox SDK not installed: V4 flows fall back to Legacy even with key + flag + stub
+	 *
+	 * The SDK is a require-dev dependency stripped from a normal --no-dev build, so a
+	 * site can have an API key and a flow flag on with no bundled SDK. should_use_v4()
+	 * must then stay on Legacy rather than routing to a V4 service that fatals on a
+	 * missing SDK class the moment a flow builds its request. Overriding the protected
+	 * sdk_available() seam simulates the SDK being absent.
+	 */
+	public function test_missing_sdk_falls_back_to_legacy(): void {
+		$factory = new class( $this->settings_with_key() ) extends Service_Factory {
+			protected static function sdk_available(): bool {
+				return false;
+			}
+		};
+		$factory->inject_v4_service( 'barcode', $this->v4_barcode_stub() );
+
+		$this->assertInstanceOf( Legacy_Barcode_Service::class, $factory->barcode_service() );
 	}
 
 	// -------------------------------------------------------------------------
@@ -529,7 +586,11 @@ class Service_FactoryTest extends UnitTestCase {
 	}
 
 	/**
-	 * @testdox V4 key + flag but no stub: timeframe_service() returns Legacy
+	 * @testdox V4 key + flag but a duck-typed settings object: timeframe_service() returns Legacy
+	 *
+	 * The factory self-builds the V4 timeframe service, so what keeps this case on
+	 * Legacy is the settings object, not the missing stub: the V4 service type-hints
+	 * the concrete Settings. See scenario 11 for the self-build itself.
 	 */
 	public function test_key_and_flag_but_no_stub_timeframe_returns_legacy(): void {
 		Filters\expectApplied( 'postnl_sdk_enable_timeframe' )->andReturn( true );
@@ -766,5 +827,143 @@ class Service_FactoryTest extends UnitTestCase {
 
 		$this->assertNotSame( $self_built, $factory->return_label_service() );
 		$this->assertSame( $injected, $factory->return_label_service() );
+	}
+
+	// -------------------------------------------------------------------------
+	// Scenario 11 — the V4 checkout services the factory builds for itself
+	// -------------------------------------------------------------------------
+
+	/**
+	 * @testdox timeframe_service() returns the real V4 timeframe service when the flag is on
+	 */
+	public function test_timeframe_service_builds_v4_service_when_flag_on(): void {
+		Filters\expectApplied( 'postnl_sdk_enable_timeframe' )->andReturn( true );
+
+		$factory = new Service_Factory( $this->real_settings_with_key() );
+
+		$this->assertInstanceOf( V4_Timeframe_Service::class, $factory->timeframe_service() );
+	}
+
+	/**
+	 * @testdox pickup_location_service() returns the real V4 pickup service when the flag is on
+	 */
+	public function test_pickup_location_service_builds_v4_service_when_flag_on(): void {
+		Filters\expectApplied( 'postnl_sdk_enable_pickup_location' )->andReturn( true );
+
+		$factory = new Service_Factory( $this->real_settings_with_key() );
+
+		$this->assertInstanceOf( V4_Pickup_Location_Service::class, $factory->pickup_location_service() );
+	}
+
+	/**
+	 * @testdox timeframe_service() memoizes the self-built V4 service across repeated calls
+	 */
+	public function test_timeframe_service_memoizes_self_built_v4_service(): void {
+		Filters\expectApplied( 'postnl_sdk_enable_timeframe' )->andReturn( true );
+
+		$factory = new Service_Factory( $this->real_settings_with_key() );
+
+		$this->assertSame( $factory->timeframe_service(), $factory->timeframe_service() );
+	}
+
+	/**
+	 * @testdox pickup_location_service() memoizes the self-built V4 service across repeated calls
+	 */
+	public function test_pickup_location_service_memoizes_self_built_v4_service(): void {
+		Filters\expectApplied( 'postnl_sdk_enable_pickup_location' )->andReturn( true );
+
+		$factory = new Service_Factory( $this->real_settings_with_key() );
+
+		$this->assertSame( $factory->pickup_location_service(), $factory->pickup_location_service() );
+	}
+
+	/**
+	 * @testdox Enabling timeframe alone leaves pickup_location on the Legacy checkout service
+	 *
+	 * The two halves of the legacy /shipment/v1/checkout response are separate
+	 * endpoints in V4, so each must be switchable on its own. Container composes
+	 * whatever pair it is handed, which is what lets a merchant run one flow on V4
+	 * while the other stays on the legacy path.
+	 */
+	public function test_timeframe_flag_does_not_switch_pickup_location(): void {
+		Filters\expectApplied( 'postnl_sdk_enable_timeframe' )->andReturn( true );
+		Filters\expectApplied( 'postnl_sdk_enable_pickup_location' )->andReturn( false );
+
+		$factory = new Service_Factory( $this->real_settings_with_key() );
+
+		$this->assertInstanceOf( V4_Timeframe_Service::class, $factory->timeframe_service() );
+		$this->assertInstanceOf( Legacy_Checkout_Service::class, $factory->pickup_location_service() );
+	}
+
+	/**
+	 * @testdox Self-building the V4 checkout services leaves the injected-service store untouched
+	 *
+	 * $v4_services means "a V4 service was deliberately injected for this flow".
+	 * The checkout services keep their own memos for the same reason the label and
+	 * returns services do: a second meaning in that array is how a later predicate
+	 * reading it gets a wrong answer.
+	 */
+	public function test_checkout_services_do_not_register_as_injected(): void {
+		Filters\expectApplied( 'postnl_sdk_enable_timeframe' )->andReturn( true );
+		Filters\expectApplied( 'postnl_sdk_enable_pickup_location' )->andReturn( true );
+
+		$factory = new Service_Factory( $this->real_settings_with_key() );
+		$factory->timeframe_service();
+		$factory->pickup_location_service();
+
+		$store = new \ReflectionProperty( Service_Factory::class, 'v4_services' );
+		$store->setAccessible( true );
+		$injected = $store->getValue( $factory );
+
+		$this->assertArrayNotHasKey( 'timeframe', $injected );
+		$this->assertArrayNotHasKey( 'pickup_location', $injected );
+	}
+
+	/**
+	 * @testdox An injected V4 timeframe service wins over the self-built one
+	 */
+	public function test_injected_v4_timeframe_service_wins_over_self_built(): void {
+		Filters\expectApplied( 'postnl_sdk_enable_timeframe' )->andReturn( true );
+
+		$factory    = new Service_Factory( $this->real_settings_with_key() );
+		$self_built = $factory->timeframe_service();
+
+		$injected = $this->v4_timeframe_stub();
+		$factory->inject_v4_service( 'timeframe', $injected );
+
+		$this->assertNotSame( $self_built, $factory->timeframe_service() );
+		$this->assertSame( $injected, $factory->timeframe_service() );
+	}
+
+	/**
+	 * @testdox An injected V4 pickup service wins over the self-built one
+	 */
+	public function test_injected_v4_pickup_location_service_wins_over_self_built(): void {
+		Filters\expectApplied( 'postnl_sdk_enable_pickup_location' )->andReturn( true );
+
+		$factory    = new Service_Factory( $this->real_settings_with_key() );
+		$self_built = $factory->pickup_location_service();
+
+		$injected = $this->v4_pickup_location_stub();
+		$factory->inject_v4_service( 'pickup_location', $injected );
+
+		$this->assertNotSame( $self_built, $factory->pickup_location_service() );
+		$this->assertSame( $injected, $factory->pickup_location_service() );
+	}
+
+	/**
+	 * @testdox Key + flag but a duck-typed settings object: the checkout flows stay Legacy
+	 *
+	 * The V4 checkout services type-hint the concrete Settings, so the factory can
+	 * only build them from a real one. Anything else falls back rather than fatals.
+	 */
+	public function test_checkout_flows_stay_legacy_without_a_real_settings_object(): void {
+		Filters\expectApplied( 'postnl_sdk_enable_timeframe' )->andReturn( true );
+		Filters\expectApplied( 'postnl_sdk_enable_pickup_location' )->andReturn( true );
+
+		$factory = new Service_Factory( $this->settings_with_key() );
+
+		$this->assertInstanceOf( Legacy_Checkout_Service::class, $factory->timeframe_service() );
+		$this->assertInstanceOf( Legacy_Checkout_Service::class, $factory->pickup_location_service() );
 	}
 }

@@ -14,7 +14,7 @@ use Postnl\Sdk\Enums\Payload\Bundle;
 use Postnl\Sdk\Enums\Payload\Country;
 use Postnl\Sdk\Enums\Payload\Currency;
 use Postnl\Sdk\RequestData\V4\ShipmentDelivery\ShipmentDeliveryRequest;
-use Postnl\Sdk\Service\ShipmentDelivery\V4\Response\LabelConfirmResponseInterface;
+use Postnl\Sdk\Service\ShipmentDelivery\Response\ShipmentDeliveryResponseInterface;
 use PostNLWooCommerce\Order\Base as Order_Base;
 use PostNLWooCommerce\Rest_API\Contracts\Label_Service_Interface;
 use PostNLWooCommerce\Rest_API\SDK\Client_Factory;
@@ -170,11 +170,11 @@ class Service extends Order_Base implements Label_Service_Interface {
 	 * @param ShipmentDeliveryRequest $request Built labelconfirm request.
 	 * @param array                   $fields  Flattened field set the request was built from.
 	 *
-	 * @return LabelConfirmResponseInterface
+	 * @return ShipmentDeliveryResponseInterface
 	 *
 	 * @throws \Exception Converted SDK error when the request fails.
 	 */
-	protected function confirm_label( ShipmentDeliveryRequest $request, array $fields ): LabelConfirmResponseInterface {
+	protected function confirm_label( ShipmentDeliveryRequest $request, array $fields ): ShipmentDeliveryResponseInterface {
 		try {
 			return $this->build_client()->shipmentDelivery()->labelConfirm( $request );
 		} catch ( \Throwable $exception ) {
@@ -491,13 +491,13 @@ class Service extends Order_Base implements Label_Service_Interface {
 	 * parent barcode is the pre-issued one when the caller had it, and otherwise
 	 * the one the response issued for the first collo.
 	 *
-	 * @param LabelConfirmResponseInterface $response  labelconfirm response.
-	 * @param \WC_Order                     $order     WooCommerce order.
-	 * @param array                         $fallbacks Pre-issued barcodes per collo; [0] is the parent/main barcode.
+	 * @param ShipmentDeliveryResponseInterface $response  labelconfirm response.
+	 * @param \WC_Order                         $order     WooCommerce order.
+	 * @param array                             $fallbacks Pre-issued barcodes per collo; [0] is the parent/main barcode.
 	 * @return array
 	 * @throws \Exception When the response carries no shipment or no label content.
 	 */
-	private function store_labels( LabelConfirmResponseInterface $response, $order, array $fallbacks ): array {
+	private function store_labels( ShipmentDeliveryResponseInterface $response, $order, array $fallbacks ): array {
 		$items = Response_Mapper::all_shipment_items( $response );
 
 		if ( empty( $items ) ) {
@@ -625,9 +625,9 @@ class Service extends Order_Base implements Label_Service_Interface {
 	/**
 	 * Write one collo's label document(s) to disk and return their meta records.
 	 *
-	 * @param \Postnl\Sdk\ResponseData\V4\ShipmentShippingItem $item        Shipment item (one collo).
-	 * @param \WC_Order                                        $order       WooCommerce order.
-	 * @param string                                           $item_barcode Barcode for this collo.
+	 * @param \Postnl\Sdk\Service\ShipmentDelivery\Response\ShipmentDeliveryResponseItem $item Shipment item (one collo).
+	 * @param \WC_Order                                                                  $order       WooCommerce order.
+	 * @param string                                                                     $item_barcode Barcode for this collo.
 	 * @return array
 	 */
 	private function item_label_records( $item, $order, string $item_barcode ): array {

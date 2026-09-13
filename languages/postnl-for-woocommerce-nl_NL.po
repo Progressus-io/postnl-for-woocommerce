@@ -1972,16 +1972,11 @@ msgstr ""
 
 #: src/Admin/Api_Key_Banner.php:144
 msgid "Get your API key"
-msgstr ""
+msgstr "Vraag API-key aan"
 
-#: src/Admin/Api_Key_Banner.php:177
-msgid "Request a new API key here"
-msgstr "Vraag dan hier een nieuwe API key aan"
-
-#. translators: %s is a link reading "Request a new API key here".
-#: src/Admin/Api_Key_Banner.php:182
-msgid "Important: PostNL is migrating to the new Future-proof API v4. Don't you have an API key yet, or do you have an API key issued before September 14, 2026? %s. Enter your PostNL API key in the account configuration of the PostNL plug-in. This key is required to connect to the PostNL APIs. Without it you cannot create labels or use checkout features such as delivery days and pickup points."
-msgstr "PostNL stapt over op de nieuwe Future-proof API v4. Heb je nog geen API key of een API key van vóór 14 september 2026? %s. Voer je PostNL API key in bij de accountconfiguratie van de PostNL-plug-in. Deze API key is vereist om verbinding te maken met de PostNL-API's. Zonder deze API key kun je geen verzendlabels aanmaken en geen gebruikmaken van checkout-functies zoals bezorgdagen en afhaalpunten."
+#: src/Admin/Api_Key_Banner.php:174
+msgid "Important: PostNL is migrating to the new Future-proof API v4. Don't you have an API key yet, or do you have an API key issued before September 14, 2026? Request a new API key below. Enter your PostNL API key in the account configuration of the PostNL plug-in. This key is required to connect to the PostNL APIs. Without it you cannot create labels or use checkout features such as delivery days and pickup points."
+msgstr "PostNL stapt over op de nieuwe Future-proof API v4. Heb je nog geen API key of een API key van vóór 14 september 2026? Vraag dan hieronder een nieuwe API-key aan. Voer je PostNL API key in bij de accountconfiguratie van de PostNL-plug-in. Deze API key is vereist om verbinding te maken met de PostNL-API's. Zonder deze API key kun je geen verzendlabels aanmaken en geen gebruikmaken van checkout-functies zoals bezorgdagen en afhaalpunten."
 
 #: src/Order/Base.php:995
 msgid "PostNL returned a label without a barcode. Please try generating the label again."
@@ -2033,8 +2028,8 @@ msgid "Cannot create the Smart Return. Printcode content is missing."
 msgstr ""
 
 #: src/Shipping_Method/PostNL.php:166
-msgid "API Key Status"
-msgstr ""
+msgid "API key status"
+msgstr "API key-status"
 
 #: src/Shipping_Method/Settings.php:96
 msgid "The key you were using before. It is locked because new keys go in the field below."

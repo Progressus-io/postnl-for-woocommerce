@@ -59,13 +59,8 @@ msgstr ""
 msgid "Important: In the latest update of the plug-in, an additional API key field has been added to the account configuration of the PostNL plug-in. This field must be filled in with the new API key that can be obtained via the Self Service module on the PostNL Business Portal. This API key is required to gain access to the new APIs that will be rolled out in a future update of the plug-in. It is very important that this key is entered before the relevant update is performed; otherwise, no connection can be made to the new PostNL APIs, and it will not be possible to create labels or use checkout features such as delivery days and pickup points."
 msgstr ""
 
-#: src/Admin/Api_Key_Banner.php:177
-msgid "Request a new API key here"
-msgstr ""
-
-#. translators: %s is a link reading "Request a new API key here".
-#: src/Admin/Api_Key_Banner.php:182
-msgid "Important: PostNL is migrating to the new Future-proof API v4. Don't you have an API key yet, or do you have an API key issued before September 14, 2026? %s. Enter your PostNL API key in the account configuration of the PostNL plug-in. This key is required to connect to the PostNL APIs. Without it you cannot create labels or use checkout features such as delivery days and pickup points."
+#: src/Admin/Api_Key_Banner.php:174
+msgid "Important: PostNL is migrating to the new Future-proof API v4. Don't you have an API key yet, or do you have an API key issued before September 14, 2026? Request a new API key below. Enter your PostNL API key in the account configuration of the PostNL plug-in. This key is required to connect to the PostNL APIs. Without it you cannot create labels or use checkout features such as delivery days and pickup points."
 msgstr ""
 
 #: src/Admin/Api_Key_Check.php:55
@@ -1148,7 +1143,7 @@ msgid "Below you will find all functions for controlling, preparing and processi
 msgstr ""
 
 #: src/Shipping_Method/PostNL.php:166
-msgid "API Key Status"
+msgid "API key status"
 msgstr ""
 
 #. Translators: %s is the currency symbol.

@@ -57,7 +57,10 @@ class Key_Validator {
 	 *                        code is one of the REASON_* slugs.
 	 */
 	public static function validate( $api_key, $customer_code, $customer_num, $is_sandbox = false ) {
-		$api_key       = trim( (string) $api_key );
+		// Strip control characters (incl. CR/LF) before the value is used as an
+		// HTTP header, so a crafted on-blur request cannot attempt header
+		// manipulation. Real keys never contain them, so this only cleans junk.
+		$api_key       = (string) preg_replace( '/[\x00-\x1F\x7F]+/', '', trim( (string) $api_key ) );
 		$customer_code = trim( (string) $customer_code );
 		$customer_num  = trim( (string) $customer_num );
 

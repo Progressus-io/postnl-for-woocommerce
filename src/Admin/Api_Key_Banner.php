@@ -157,9 +157,9 @@ class Api_Key_Banner {
 	/**
 	 * Banner body text (final copy supplied by PostNL). Existing merchants (who
 	 * already have a legacy key stored) are told an extra field was added; a fresh
-	 * install, which may still hold a pre-migration v2 key, is pointed at the
-	 * developer portal to request a v4 key. The fresh-install variant carries an
-	 * inline link, so the caller renders the message with wp_kses_post().
+	 * install, which may still hold a pre-migration v2 key, is pointed at the "Get
+	 * your API key" button below to request a v4 key. Neither variant carries an
+	 * inline link (the button below is the single call to action).
 	 *
 	 * @param bool $has_old_key Whether a legacy key is already stored.
 	 */
@@ -171,16 +171,9 @@ class Api_Key_Banner {
 			);
 		}
 
-		$link = sprintf(
-			'<a href="%s" target="_blank" rel="noopener noreferrer">%s</a>',
-			esc_url( Settings::SELF_SERVICE_URL ),
-			esc_html__( 'Request a new API key here', 'postnl-for-woocommerce' )
-		);
-
-		return sprintf(
-			/* translators: %s is a link reading "Request a new API key here". */
-			__( 'Important: PostNL is migrating to the new Future-proof API v4. Don\'t you have an API key yet, or do you have an API key issued before September 14, 2026? %s. Enter your PostNL API key in the account configuration of the PostNL plug-in. This key is required to connect to the PostNL APIs. Without it you cannot create labels or use checkout features such as delivery days and pickup points.', 'postnl-for-woocommerce' ),
-			$link
+		return __(
+			'Important: PostNL is migrating to the new Future-proof API v4. Don\'t you have an API key yet, or do you have an API key issued before September 14, 2026? Request a new API key below. Enter your PostNL API key in the account configuration of the PostNL plug-in. This key is required to connect to the PostNL APIs. Without it you cannot create labels or use checkout features such as delivery days and pickup points.',
+			'postnl-for-woocommerce'
 		);
 	}
 

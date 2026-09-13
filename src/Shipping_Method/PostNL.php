@@ -163,7 +163,7 @@ class PostNL extends \WC_Shipping_Flat_Rate {
 		ob_start();
 		?>
 		<tr valign="top" class="postnl-new-key-status-row" data-postnl-env="<?php echo esc_attr( $is_sandbox ? 'sandbox' : 'production' ); ?>">
-			<th scope="row" class="titledesc"><?php esc_html_e( 'API Key Status', 'postnl-for-woocommerce' ); ?></th>
+			<th scope="row" class="titledesc"><?php esc_html_e( 'API key status', 'postnl-for-woocommerce' ); ?></th>
 			<td class="forminp">
 				<p style="margin-top:0;">
 					<strong class="postnl-new-key-status-label" style="color:<?php echo esc_attr( $status['color'] ); ?>;"><?php echo esc_html( $status['label'] ); ?></strong>

@@ -49,7 +49,6 @@
 		]
 	},
 	"require-dev": {
-		"postnl/api-client-sdk": "dev-main#5a064dd",
 		"wp-cli/i18n-command": "^2.6",
 		"squizlabs/php_codesniffer": "*",
 		"dealerdirect/phpcodesniffer-composer-installer": "*",
@@ -93,11 +92,5 @@
 			"sh -c './vendor/bin/phpcs . --ignore=$(composer config phpcs-ignore) --standard=./.phpcs.l18n.xml --report-full --report-summary --colors -s'"
 		],
 		"test": [ "composer config name"]
-	},
-	"repositories": {
-		"private-packagist": {
-			"type": "composer",
-			"url": "https://postnl.repo.packagist.com/progressus/"
-		}
 	}
 }

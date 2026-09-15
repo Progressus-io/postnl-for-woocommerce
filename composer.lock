@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "406b01d6c34e0be97217ff56906cf672",
+    "content-hash": "512c4666993184005c89805f3a762fb1",
     "packages": [
         {
             "name": "clegginabox/pdf-merger",
@@ -1442,85 +1442,6 @@
             "time": "2022-02-21T01:04:05+00:00"
         },
         {
-            "name": "php-http/discovery",
-            "version": "1.20.0",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/php-http/discovery.git",
-                "reference": "82fe4c73ef3363caed49ff8dd1539ba06044910d"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/php-http/discovery/zipball/82fe4c73ef3363caed49ff8dd1539ba06044910d",
-                "reference": "82fe4c73ef3363caed49ff8dd1539ba06044910d",
-                "shasum": ""
-            },
-            "require": {
-                "composer-plugin-api": "^1.0|^2.0",
-                "php": "^7.1 || ^8.0"
-            },
-            "conflict": {
-                "nyholm/psr7": "<1.0",
-                "zendframework/zend-diactoros": "*"
-            },
-            "provide": {
-                "php-http/async-client-implementation": "*",
-                "php-http/client-implementation": "*",
-                "psr/http-client-implementation": "*",
-                "psr/http-factory-implementation": "*",
-                "psr/http-message-implementation": "*"
-            },
-            "require-dev": {
-                "composer/composer": "^1.0.2|^2.0",
-                "graham-campbell/phpspec-skip-example-extension": "^5.0",
-                "php-http/httplug": "^1.0 || ^2.0",
-                "php-http/message-factory": "^1.0",
-                "phpspec/phpspec": "^5.1 || ^6.1 || ^7.3",
-                "sebastian/comparator": "^3.0.5 || ^4.0.8",
-                "symfony/phpunit-bridge": "^6.4.4 || ^7.0.1"
-            },
-            "type": "composer-plugin",
-            "extra": {
-                "class": "Http\\Discovery\\Composer\\Plugin",
-                "plugin-optional": true
-            },
-            "autoload": {
-                "psr-4": {
-                    "Http\\Discovery\\": "src/"
-                },
-                "exclude-from-classmap": [
-                    "src/Composer/Plugin.php"
-                ]
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Márk Sági-Kazár",
-                    "email": "mark.sagikazar@gmail.com"
-                }
-            ],
-            "description": "Finds and installs PSR-7, PSR-17, PSR-18 and HTTPlug implementations",
-            "homepage": "http://php-http.org",
-            "keywords": [
-                "adapter",
-                "client",
-                "discovery",
-                "factory",
-                "http",
-                "message",
-                "psr17",
-                "psr7"
-            ],
-            "support": {
-                "issues": "https://github.com/php-http/discovery/issues",
-                "source": "https://github.com/php-http/discovery/tree/1.20.0"
-            },
-            "time": "2024-10-02T11:20:13+00:00"
-        },
-        {
             "name": "phpcompatibility/php-compatibility",
             "version": "9.3.5",
             "source": {
@@ -2321,186 +2242,6 @@
             "time": "2026-01-27T05:48:37+00:00"
         },
         {
-            "name": "postnl/api-client-sdk",
-            "version": "dev-main",
-            "source": {
-                "type": "git",
-                "url": "git@github.com:Postnl-Production/api-client-sdk.git",
-                "reference": "5a064dd"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/Postnl-Production/api-client-sdk/zipball/5a064dd",
-                "reference": "5a064dd",
-                "shasum": "",
-                "mirrors": [
-                    {
-                        "url": "https://postnl.repo.packagist.com/progressus/dists/%package%/%version%/r%reference%.%type%",
-                        "preferred": true
-                    }
-                ]
-            },
-            "require": {
-                "ext-mbstring": "*",
-                "php": ">=8.2 <8.5",
-                "php-http/discovery": "^1.17",
-                "psr/http-client": "^1.0",
-                "psr/http-client-implementation": "^1.0",
-                "psr/http-factory": "^1.0",
-                "psr/http-factory-implementation": "^1.0",
-                "psr/http-message": "^2.0",
-                "psr/log": "^3.0",
-                "psr/simple-cache": "^3.0"
-            },
-            "require-dev": {
-                "cebe/php-openapi": "^1.7",
-                "fakerphp/faker": "^1.24",
-                "friendsofphp/php-cs-fixer": "^3.93.1",
-                "guzzlehttp/guzzle": "^7.12.1",
-                "phpstan/phpstan": "^1.11",
-                "phpunit/phpunit": "^10.5.63",
-                "rector/rector": "^1.2",
-                "symfony/process": "^7.4.5",
-                "symfony/yaml": "^7.4.12"
-            },
-            "suggest": {
-                "ext-redis": "Required for Redis cache backend (phpredis extension)",
-                "guzzlehttp/guzzle": "^7.12.1 - For convenient HTTP client when using withGuzzleOptions()"
-            },
-            "default-branch": true,
-            "type": "library",
-            "extra": {
-                "branch-alias": {
-                    "dev-main": "1.x-dev"
-                }
-            },
-            "autoload": {
-                "psr-4": {
-                    "Postnl\\Sdk\\": "src/"
-                }
-            },
-            "autoload-dev": {
-                "psr-4": {
-                    "Tests\\Unit\\": "tests/Unit",
-                    "Tests\\Feature\\": "tests/Feature",
-                    "Tests\\Support\\": "tests/Support",
-                    "Tests\\E2E\\": "tests/E2E",
-                    "Tests\\SchemaValidation\\": "tests/SchemaValidation",
-                    "Tests\\Integration\\": "tests/Integration",
-                    "Postnl\\Sdk\\PHPStan\\": "phpstan/",
-                    "Scripts\\": "scripts/"
-                }
-            },
-            "notification-url": "https://postnl.repo.packagist.com/progressus/downloads/",
-            "scripts": {
-                "lint:composer": [
-                    "composer validate --strict"
-                ],
-                "security:audit": [
-                    "composer audit --locked"
-                ],
-                "lint:cs": [
-                    "vendor/bin/php-cs-fixer fix --config=.php-cs-fixer.dist.php --dry-run --diff"
-                ],
-                "lint:stan": [
-                    "vendor/bin/phpstan analyse --configuration=phpstan.neon"
-                ],
-                "lint:rector": [
-                    "vendor/bin/rector process --config=rector.php --dry-run"
-                ],
-                "test:unit": [
-                    "vendor/bin/phpunit --configuration=phpunit.xml --testsuite=CoreTests --no-coverage --display-warnings"
-                ],
-                "test:coverage": [
-                    "vendor/bin/phpunit --configuration=phpunit.xml --testsuite=CoreTests"
-                ],
-                "test:coverage:check": [
-                    "@test:coverage",
-                    "php scripts/check-coverage.php"
-                ],
-                "test:integration": [
-                    "vendor/bin/phpunit --configuration=phpunit.xml --testsuite=Integration --no-coverage --display-warnings"
-                ],
-                "test:e2e": [
-                    "vendor/bin/phpunit --configuration=phpunit.e2e.xml --testsuite=e2e --no-coverage --testdox --display-warnings"
-                ],
-                "test:schema": [
-                    "vendor/bin/phpunit --configuration=phpunit.xml --testsuite=SchemaValidation --no-coverage  --display-warnings"
-                ],
-                "ci": [
-                    "echo '🔎 Validating composer.json...'",
-                    "@lint:composer",
-                    "echo '🛡️  Auditing dependencies...'",
-                    "@security:audit",
-                    "echo '🎨 Checking code style (PHP CS Fixer)...'",
-                    "@lint:cs",
-                    "echo '🧠 Running static analysis (PHPStan)...'",
-                    "@lint:stan",
-                    "echo '🔧 Running Rector (automated refactoring check)...'",
-                    "@lint:rector",
-                    "echo '🧪 Running integration tests (PHPUnit)...'",
-                    "@test:integration",
-                    "echo '🧪 Running schema validation tests (PHPUnit)...'",
-                    "@test:schema",
-                    "echo '🧪 Running unit tests (PHPUnit)...'",
-                    "@test:unit"
-                ],
-                "ci:unit": [
-                    "echo '🔎 Validating composer.json...'",
-                    "@lint:composer",
-                    "echo '🛡️  Auditing dependencies...'",
-                    "@security:audit",
-                    "echo '🎨 Checking code style (PHP CS Fixer)...'",
-                    "@lint:cs",
-                    "echo '🧠 Running static analysis (PHPStan)...'",
-                    "@lint:stan",
-                    "echo '🔧 Running Rector (automated refactoring check)...'",
-                    "@lint:rector",
-                    "echo '🧪 Running unit tests (PHPUnit)...'",
-                    "@test:unit"
-                ],
-                "fix:cs": [
-                    "vendor/bin/php-cs-fixer fix --config=.php-cs-fixer.dist.php"
-                ],
-                "fix:rector": [
-                    "vendor/bin/rector process --config=rector.php"
-                ],
-                "fix": [
-                    "echo '🎨 Fixing code style issues (PHP CS Fixer)...'",
-                    "@fix:cs",
-                    "echo '🔧 Fixing Rector findings (automated refactoring check)...'",
-                    "@fix:rector"
-                ]
-            },
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "PostNL SDK Team",
-                    "email": "postnl@example.com",
-                    "role": "Developer"
-                }
-            ],
-            "description": "Official PHP SDK for PostNL APIs.",
-            "homepage": "https://github.com/Postnl-Production/api-client-sdk",
-            "keywords": [
-                "api",
-                "http-client",
-                "php",
-                "postnl",
-                "psr-12",
-                "psr-18",
-                "psr-3",
-                "sdk"
-            ],
-            "support": {
-                "issues": "https://github.com/Postnl-Production/api-client-sdk/issues",
-                "source": "https://github.com/Postnl-Production/api-client-sdk"
-            },
-            "time": "2026-07-20T06:58:40+00:00"
-        },
-        {
             "name": "psr/http-client",
             "version": "1.0.3",
             "source": {
@@ -2659,107 +2400,6 @@
                 "source": "https://github.com/php-fig/http-message/tree/2.0"
             },
             "time": "2023-04-04T09:54:51+00:00"
-        },
-        {
-            "name": "psr/log",
-            "version": "3.0.2",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/php-fig/log.git",
-                "reference": "f16e1d5863e37f8d8c2a01719f5b34baa2b714d3"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/php-fig/log/zipball/f16e1d5863e37f8d8c2a01719f5b34baa2b714d3",
-                "reference": "f16e1d5863e37f8d8c2a01719f5b34baa2b714d3",
-                "shasum": ""
-            },
-            "require": {
-                "php": ">=8.0.0"
-            },
-            "type": "library",
-            "extra": {
-                "branch-alias": {
-                    "dev-master": "3.x-dev"
-                }
-            },
-            "autoload": {
-                "psr-4": {
-                    "Psr\\Log\\": "src"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "PHP-FIG",
-                    "homepage": "https://www.php-fig.org/"
-                }
-            ],
-            "description": "Common interface for logging libraries",
-            "homepage": "https://github.com/php-fig/log",
-            "keywords": [
-                "log",
-                "psr",
-                "psr-3"
-            ],
-            "support": {
-                "source": "https://github.com/php-fig/log/tree/3.0.2"
-            },
-            "time": "2024-09-11T13:17:53+00:00"
-        },
-        {
-            "name": "psr/simple-cache",
-            "version": "3.0.0",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/php-fig/simple-cache.git",
-                "reference": "764e0b3939f5ca87cb904f570ef9be2d78a07865"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/php-fig/simple-cache/zipball/764e0b3939f5ca87cb904f570ef9be2d78a07865",
-                "reference": "764e0b3939f5ca87cb904f570ef9be2d78a07865",
-                "shasum": ""
-            },
-            "require": {
-                "php": ">=8.0.0"
-            },
-            "type": "library",
-            "extra": {
-                "branch-alias": {
-                    "dev-master": "3.0.x-dev"
-                }
-            },
-            "autoload": {
-                "psr-4": {
-                    "Psr\\SimpleCache\\": "src/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "PHP-FIG",
-                    "homepage": "https://www.php-fig.org/"
-                }
-            ],
-            "description": "Common interfaces for simple caching",
-            "keywords": [
-                "cache",
-                "caching",
-                "psr",
-                "psr-16",
-                "simple-cache"
-            ],
-            "support": {
-                "source": "https://github.com/php-fig/simple-cache/tree/3.0.0"
-            },
-            "time": "2021-10-29T13:26:27+00:00"
         },
         {
             "name": "ralouphie/getallheaders",
@@ -4536,14 +4176,13 @@
     "aliases": [],
     "minimum-stability": "stable",
     "stability-flags": {
-        "clegginabox/pdf-merger": 20,
-        "postnl/api-client-sdk": 20
+        "clegginabox/pdf-merger": 20
     },
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
         "php": ">=7.4"
     },
-    "platform-dev": {},
-    "plugin-api-version": "2.9.0"
+    "platform-dev": [],
+    "plugin-api-version": "2.3.0"
 }

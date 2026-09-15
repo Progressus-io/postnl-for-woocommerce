@@ -6,6 +6,10 @@
   "main": "build/index.js",
   "scripts": {
     "build": "composer install && wp-scripts build && npm run updatepo && npm run makejson && composer install --no-dev && npm run archive",
+    "build:v4": "composer install && wp-scripts build && npm run updatepo && npm run makejson && npm run assert:sdk && npm run archive:v4",
+    "assert:sdk": "test -d vendor/postnl/api-client-sdk || (echo 'V4 SDK missing from vendor/ - check the postnl.repo.packagist.com credential' && exit 1)",
+    "archive:v4": "composer archive --file=woo-postnl-v4-test --format=zip",
+    "postarchive:v4": "rm -rf woo-postnl && unzip -q woo-postnl-v4-test.zip -d woo-postnl && rm woo-postnl-v4-test.zip && zip -qr woo-postnl-v4-test.zip woo-postnl && rm -rf woo-postnl",
     "build:dev": "composer install --prefer-dist --no-progress --no-interaction && npm run env start",
     "format": "wp-scripts format",
     "lint:css": "wp-scripts lint-style",

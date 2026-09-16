@@ -9,6 +9,7 @@ declare( strict_types = 1 );
 
 namespace PostNLWooCommerce\Tests\Rest_API\SDK;
 
+use Brain\Monkey\Filters;
 use Brain\Monkey\Functions;
 use Mockery;
 use PostNLWooCommerce\Logger;
@@ -55,6 +56,39 @@ class Logger_AdapterTest extends UnitTestCase {
 		$wc_logger->shouldReceive( 'log' )
 			->once()
 			->with( 'error', '[postnl-v4] boom', array( 'source' => 'PostNLWooCommerce' ) );
+
+		$this->make_adapter()->error( 'boom' );
+	}
+
+	/**
+	 * @testdox The finished line passes through postnl_logger_write_message and the filter's return value is what gets written
+	 */
+	public function test_postnl_logger_write_message_filter_rewrites_the_line(): void {
+		Filters\expectApplied( 'postnl_logger_write_message' )
+			->once()
+			->with( '[postnl-v4] apiKey=secret' )
+			->andReturn( '[postnl-v4] apiKey=[redacted]' );
+
+		$wc_logger = $this->fake_wc_logger();
+		$wc_logger->shouldReceive( 'log' )
+			->once()
+			->with( 'error', '[postnl-v4] apiKey=[redacted]', array( 'source' => 'PostNLWooCommerce' ) );
+
+		$this->make_adapter()->error( 'apiKey=secret' );
+	}
+
+	/**
+	 * @testdox An array returned from postnl_logger_write_message is print_r()ed, as Logger::write() does
+	 */
+	public function test_postnl_logger_write_message_array_return_is_serialized(): void {
+		Filters\expectApplied( 'postnl_logger_write_message' )
+			->once()
+			->andReturn( array( 'redacted' => true ) );
+
+		$wc_logger = $this->fake_wc_logger();
+		$wc_logger->shouldReceive( 'log' )
+			->once()
+			->with( 'error', print_r( array( 'redacted' => true ), true ), array( 'source' => 'PostNLWooCommerce' ) ); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_print_r
 
 		$this->make_adapter()->error( 'boom' );
 	}

@@ -17,25 +17,24 @@ use Postnl\Sdk\Cache\Exceptions\CacheException;
 use Postnl\Sdk\Enums\AuthFailureReason;
 use Postnl\Sdk\Enums\HttpStatus;
 use Postnl\Sdk\Enums\TransportFailureReason;
-use Postnl\Sdk\Exception\Auth\AuthException;
-use Postnl\Sdk\Exception\Client\AuthenticationException;
+use Postnl\Sdk\Exception\AbstractHttpSdkException;
+use Postnl\Sdk\Exception\Auth\AuthenticationException;
+use Postnl\Sdk\Exception\Auth\OAuthTokenException;
 use Postnl\Sdk\Exception\Client\ClientException;
 use Postnl\Sdk\Exception\Client\RateLimitException;
 use Postnl\Sdk\Exception\Client\TimeoutException;
 use Postnl\Sdk\Exception\Client\ValidationException;
 use Postnl\Sdk\Exception\Data\FieldError;
 use Postnl\Sdk\Exception\Data\ProblemDetails;
-use Postnl\Sdk\Exception\ExceptionNormalizer;
-use Postnl\Sdk\Exception\HttpSdkException;
-use Postnl\Sdk\Exception\InvalidArgumentSdkException;
-use Postnl\Sdk\Exception\PayloadMappingException;
 use Postnl\Sdk\Exception\PostnlSdkException;
-use Postnl\Sdk\Exception\Retry\RetryExhaustedException;
-use Postnl\Sdk\Exception\RuntimeSdkException;
-use Postnl\Sdk\Exception\SchemaMismatchException;
+use Postnl\Sdk\Exception\Runtime\InvalidArgumentSdkException;
+use Postnl\Sdk\Exception\Runtime\PayloadMappingException;
+use Postnl\Sdk\Exception\Runtime\RuntimeSdkException;
+use Postnl\Sdk\Exception\Runtime\SchemaMismatchException;
+use Postnl\Sdk\Exception\Runtime\UnknownExtensionException;
 use Postnl\Sdk\Exception\Server\ServerException;
 use Postnl\Sdk\Exception\Transport\TransportException;
-use Postnl\Sdk\Exception\UnknownExtensionException;
+use Postnl\Sdk\Exception\Utils\ExceptionNormalizer;
 use PostNLWooCommerce\Rest_API\SDK\Exception_Converter;
 use PostNLWooCommerce\Tests\UnitTestCase;
 use Psr\Http\Message\RequestInterface;
@@ -112,8 +111,6 @@ class Exception_ConverterTest extends UnitTestCase {
 	public function test_authentication_exception_maps_to_credentials_message( int $status_code, HttpStatus $status ): void {
 		$sdk = new AuthenticationException(
 			'Unauthorized',
-			$status,
-			$status_code,
 			$this->request(),
 			$this->response( $status_code ),
 			$this->problem( detail: 'Token rejected' )
@@ -140,7 +137,7 @@ class Exception_ConverterTest extends UnitTestCase {
 	 * @testdox A pre-request AuthException also maps to the credentials message with status 0
 	 */
 	public function test_pre_request_auth_exception_maps_to_credentials_message(): void {
-		$sdk = new AuthException( AuthFailureReason::InvalidCredentials, 'OAuth token acquisition failed' );
+		$sdk = new OAuthTokenException( AuthFailureReason::InvalidCredentials, 'OAuth token acquisition failed' );
 
 		$error = Exception_Converter::convert( $sdk );
 
@@ -160,8 +157,6 @@ class Exception_ConverterTest extends UnitTestCase {
 	public function test_validation_exception_bubbles_field_errors( int $status_code, HttpStatus $status ): void {
 		$sdk = new ValidationException(
 			'Bad Request',
-			$status,
-			$status_code,
 			$this->request(),
 			$this->response( $status_code ),
 			$this->problem(
@@ -199,8 +194,6 @@ class Exception_ConverterTest extends UnitTestCase {
 		// Distinct values so the assertion pins which of the two the converter reads.
 		$sdk = new ValidationException(
 			'The request body is malformed',
-			HttpStatus::BadRequest,
-			400,
 			$this->request(),
 			$this->response( 400 ),
 			$this->problem( detail: 'A different ProblemDetails narrative' )
@@ -220,8 +213,6 @@ class Exception_ConverterTest extends UnitTestCase {
 	public function test_rate_limit_exception_maps_to_temporary_message(): void {
 		$sdk = new RateLimitException(
 			'Too Many Requests',
-			HttpStatus::TooManyRequests,
-			429,
 			$this->request(),
 			$this->response( 429 ),
 			$this->problem()
@@ -239,8 +230,6 @@ class Exception_ConverterTest extends UnitTestCase {
 	public function test_timeout_exception_maps_to_temporary_message(): void {
 		$sdk = new TimeoutException(
 			'Request Timeout',
-			HttpStatus::RequestTimeout,
-			408,
 			$this->request(),
 			$this->response( 408 ),
 			$this->problem()
@@ -258,8 +247,6 @@ class Exception_ConverterTest extends UnitTestCase {
 	public function test_server_exception_maps_to_temporary_message(): void {
 		$sdk = new ServerException(
 			'Service Unavailable',
-			HttpStatus::ServiceUnavailable,
-			503,
 			$this->request(),
 			$this->response( 503 ),
 			$this->problem( trace_id: 'trace-503' )
@@ -293,10 +280,19 @@ class Exception_ConverterTest extends UnitTestCase {
 	}
 
 	/**
-	 * @testdox An exhausted retry chain maps to the temporarily-unavailable message
+	 * @testdox An exhausted retry chain surfaces as the rethrown retryable failure's temporary message
+	 *
+	 * The SDK no longer raises a dedicated exhaustion type; when the retry ceiling
+	 * is reached it rethrows the last underlying failure, so a retryable 5xx that
+	 * exhausted its retries still converts to the temporarily-unavailable message.
 	 */
 	public function test_retry_exhausted_exception_maps_to_temporary_message(): void {
-		$sdk = new RetryExhaustedException( $this->request(), 3, $this->response( 503 ) );
+		$sdk = new ServerException(
+			'Service Unavailable',
+			$this->request(),
+			$this->response( 503 ),
+			$this->problem()
+		);
 
 		$error = Exception_Converter::convert( $sdk );
 
@@ -310,11 +306,9 @@ class Exception_ConverterTest extends UnitTestCase {
 	 * @testdox A generic 4xx client error uses the SDK message and preserves the status
 	 */
 	public function test_generic_client_exception_uses_sdk_message(): void {
-		// HttpSdkException::fromResponse() seeds the exception message from ProblemDetails, so mirror that here.
+		// AbstractHttpSdkException::fromResponse() seeds the exception message from ProblemDetails, so mirror that here.
 		$sdk = new ClientException(
 			'Shipment not found',
-			HttpStatus::NotFound,
-			404,
 			$this->request(),
 			$this->response( 404 ),
 			$this->problem( detail: 'Shipment not found', trace_id: 'trace-404' )
@@ -331,7 +325,7 @@ class Exception_ConverterTest extends UnitTestCase {
 	 */
 	public function test_empty_body_http_error_does_not_leak_unknown_error(): void {
 		// A real parsed error from an empty 404 body: the SDK cleans "Unknown error" to the status reason.
-		$sdk = HttpSdkException::fromResponse( $this->request(), $this->response( 404 ) );
+		$sdk = AbstractHttpSdkException::fromResponse( $this->request(), $this->response( 404 ) );
 
 		$error = Exception_Converter::convert( $sdk );
 
@@ -384,8 +378,6 @@ class Exception_ConverterTest extends UnitTestCase {
 	public function test_convert_returns_plain_exception(): void {
 		$sdk = new ClientException(
 			'Conflict',
-			HttpStatus::Conflict,
-			409,
 			$this->request(),
 			$this->response( 409 ),
 			$this->problem( detail: 'Conflict' )
@@ -409,8 +401,6 @@ class Exception_ConverterTest extends UnitTestCase {
 	public function test_non_retryable_server_exception_keeps_postnl_message( int $status_code, HttpStatus $status, string $detail ): void {
 		$sdk = new ServerException(
 			$detail,
-			$status,
-			$status_code,
 			$this->request(),
 			$this->response( $status_code ),
 			$this->problem( detail: $detail )
@@ -446,8 +436,6 @@ class Exception_ConverterTest extends UnitTestCase {
 	public function test_retryable_server_exception_still_maps_to_temporary_message( int $status_code, ?HttpStatus $status ): void {
 		$sdk = new ServerException(
 			'Upstream failure',
-			$status,
-			$status_code,
 			$this->request(),
 			$this->response( $status_code ),
 			$this->problem()
@@ -571,7 +559,7 @@ class Exception_ConverterTest extends UnitTestCase {
 	 * @testdox An unmapped 4xx status passes the SDK's cleaned reason phrase through
 	 */
 	public function test_unmapped_client_status_passes_reason_phrase_through(): void {
-		$sdk = HttpSdkException::fromResponse( $this->request(), $this->response( 402 ) );
+		$sdk = AbstractHttpSdkException::fromResponse( $this->request(), $this->response( 402 ) );
 
 		$error = Exception_Converter::convert( $sdk );
 

@@ -19,6 +19,7 @@ use Postnl\Sdk\Enums\Payload\LabelResolution;
 use Postnl\Sdk\Enums\Payload\MinimalAgeCheck;
 use Postnl\Sdk\Enums\Payload\ReceiverType;
 use Postnl\Sdk\Enums\Payload\ShipmentType;
+use Postnl\Sdk\Enums\Payload\TransactionCode;
 use Postnl\Sdk\RequestData\V4\Address;
 use Postnl\Sdk\RequestData\V4\Contact;
 use Postnl\Sdk\RequestData\V4\CustomerReferences;
@@ -28,10 +29,10 @@ use Postnl\Sdk\RequestData\V4\InternationalShipment\Content;
 use Postnl\Sdk\RequestData\V4\InternationalShipment\Customs;
 use Postnl\Sdk\RequestData\V4\InternationalShipment\InternationalShipmentData;
 use Postnl\Sdk\RequestData\V4\LabelSettings;
+use Postnl\Sdk\RequestData\V4\RequestShippingItem;
 use Postnl\Sdk\RequestData\V4\Services;
 use Postnl\Sdk\RequestData\V4\ShipmentParty;
 use Postnl\Sdk\RequestData\V4\ShipmentDelivery\ShipmentDeliveryRequest;
-use Postnl\Sdk\ResponseData\V4\ShippingItem;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -148,7 +149,7 @@ class Request_Builder {
 	 * single-collo collapse is what this replaces.
 	 *
 	 * @param array $fields Builder input keyed as documented on build().
-	 * @return ShippingItem[]
+	 * @return RequestShippingItem[]
 	 */
 	private static function items( array $fields ): array {
 		$barcodes = (array) ( $fields['barcodes'] ?? array() );
@@ -164,13 +165,13 @@ class Request_Builder {
 
 		$items = array();
 		foreach ( $barcodes as $barcode ) {
-			$items[] = new ShippingItem(
+			$items[] = new RequestShippingItem(
 				barcode: self::maybe_null( (string) $barcode ),
 				customerReferences: new CustomerReferences(
 					shipmentReference: $reference
 				),
 				dimensions: new Dimensions(
-					weightGr: $weight_gr
+					weight: $weight_gr
 				)
 			);
 		}
@@ -228,7 +229,7 @@ class Request_Builder {
 
 		return new Customs(
 			content: $content,
-			transactionCode: self::maybe_null( (string) ( $data['transaction_code'] ?? '' ) ),
+			transactionCode: TransactionCode::tryFrom( (string) ( $data['transaction_code'] ?? '' ) ),
 			currency: Currency::tryFrom( strtoupper( (string) ( $data['currency'] ?? '' ) ) ),
 			associatedDocument: self::associated_document( $data['associated_document'] ?? array() ),
 			senderIdentification: self::maybe_null( (string) ( $data['sender_identification'] ?? '' ) ),
@@ -348,8 +349,7 @@ class Request_Builder {
 			email: self::maybe_null( (string) ( $fields['email'] ?? '' ) ),
 			firstName: self::maybe_null( (string) ( $fields['first_name'] ?? '' ) ),
 			lastName: self::maybe_null( (string) ( $fields['last_name'] ?? '' ) ),
-			mobileNumber: self::maybe_null( (string) ( $fields['phone'] ?? '' ) ),
-			companyName: self::maybe_null( (string) ( $fields['company'] ?? '' ) )
+			mobileNumber: self::maybe_null( (string) ( $fields['phone'] ?? '' ) )
 		);
 	}
 
@@ -390,7 +390,8 @@ class Request_Builder {
 	 * @return LabelResolution
 	 */
 	private static function resolution( int $resolution ): LabelResolution {
-		return LabelResolution::tryFrom( $resolution ) ?? LabelResolution::DPI_200;
+		// LabelResolution is string-backed in the SDK ('200'|'300'|'600').
+		return LabelResolution::tryFrom( (string) $resolution ) ?? LabelResolution::DPI_200;
 	}
 
 	/**

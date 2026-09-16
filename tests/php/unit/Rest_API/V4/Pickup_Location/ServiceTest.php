@@ -15,11 +15,11 @@ use Postnl\Sdk\Client\ClientBuilder;
 use Postnl\Sdk\Enums\Payload\Country;
 use Postnl\Sdk\Enums\Payload\PickUpLocationType;
 use Postnl\Sdk\RequestData\V4\Address;
-use Postnl\Sdk\ResponseData\V4\Locations\Location\DayOpeningTimes;
-use Postnl\Sdk\ResponseData\V4\Locations\Location\LocationOpeningHours;
-use Postnl\Sdk\ResponseData\V4\Locations\Location\PickupLocation;
-use Postnl\Sdk\ResponseData\V4\Locations\PickUpLocationsCollection;
 use Postnl\Sdk\ResponseData\V4\TimeSlot;
+use Postnl\Sdk\Service\PickupLocations\Response\Location\DayOpeningTimes;
+use Postnl\Sdk\Service\PickupLocations\Response\Location\LocationOpeningHours;
+use Postnl\Sdk\Service\PickupLocations\Response\Location\PickupLocation;
+use Postnl\Sdk\Service\PickupLocations\Response\PickUpLocationsCollection;
 use PostNLWooCommerce\Rest_API\SDK\Client_Factory;
 use PostNLWooCommerce\Rest_API\V4\Pickup_Location\Service;
 use PostNLWooCommerce\Shipping_Method\Settings;
@@ -142,9 +142,12 @@ class ServiceTest extends UnitTestCase {
 
 		$this->assertSame( Country::NL, $request->receiverAddress->countryIso );
 		$this->assertSame( '2521CA', $request->receiverAddress->postalCode, 'Postcode spaces are stripped.' );
-		$this->assertSame( '70', $request->receiverAddress->houseNumber );
-		$this->assertSame( 'Weimarstraat', $request->receiverAddress->street );
-		$this->assertSame( 'Den Haag', $request->receiverAddress->city );
+		// The V4 near-address contract accepts only country and postcode; houseNumber,
+		// street and city are left unset so the SDK omits them — sending them makes
+		// the API reject the call ("receiverAddress.houseNumber is not part of API contract").
+		$this->assertNull( $request->receiverAddress->houseNumber );
+		$this->assertNull( $request->receiverAddress->street );
+		$this->assertNull( $request->receiverAddress->city );
 	}
 
 	/**
@@ -165,9 +168,38 @@ class ServiceTest extends UnitTestCase {
 
 		$this->assertSame( Country::NL, $address->countryIso );
 		$this->assertSame( '2500CD', $address->postalCode );
-		$this->assertSame( '42', $address->houseNumber );
-		$this->assertSame( 'Church Road', $address->street );
-		$this->assertSame( 'Den Haag', $address->city );
+		// Only country and postcode are carried; see the mapping test above.
+		$this->assertNull( $address->houseNumber );
+		$this->assertNull( $address->street );
+		$this->assertNull( $address->city );
+	}
+
+	/**
+	 * @testdox A Belgian destination additionally carries street and city, but never houseNumber
+	 *
+	 * The V4 near-address contract is country-dependent: BE rejects the call without
+	 * street + city ("The city/street field is required when countryIso is BE"),
+	 * while still rejecting houseNumber. Verified against the live PostNL API.
+	 */
+	public function test_build_request_belgium_carries_street_and_city(): void {
+		$service = new Testable_Pickup_Service( new Client_Factory( $this->make_settings() ), $this->make_settings(), self::V4_KEY, self::LOCATIONS, new NullLogger() );
+
+		$address = $service->expose_build_request(
+			array(
+				'ship_to_different_address' => '1',
+				'shipping_country'          => 'BE',
+				'shipping_postcode'         => '1000',
+				'shipping_address_1'        => 'Rue Neuve',
+				'shipping_address_2'        => '1',
+				'shipping_city'             => 'Brussels',
+			)
+		)->receiverAddress;
+
+		$this->assertSame( Country::BE, $address->countryIso );
+		$this->assertSame( '1000', $address->postalCode );
+		$this->assertSame( 'Rue Neuve', $address->street );
+		$this->assertSame( 'Brussels', $address->city );
+		$this->assertNull( $address->houseNumber, 'houseNumber is not part of the near-address contract for BE either.' );
 	}
 
 	/**
@@ -438,9 +470,9 @@ class ServiceTest extends UnitTestCase {
 	/**
 	 * @testdox An identical second lookup is served from cache without a second HTTP call
 	 *
-	 * Drives the real Service through the SDK CachingPlugin + Cache_Adapter with an
+	 * Drives the real Service through the service-level Cache_Adapter with an
 	 * in-memory transient store and a call-counting HTTP client, proving the
-	 * /locations/ response is cached across identical requests within a request cycle.
+	 * locations response is cached across identical requests within a request cycle.
 	 */
 	public function test_second_identical_call_hits_cache(): void {
 		$this->with_transient_store();
@@ -607,7 +639,7 @@ class ServiceTest extends UnitTestCase {
 	 * @testdox A cache that silently stores nothing is reported through the logger
 	 *
 	 * Cache_Adapter warns once when a key clears no allowlisted prefix, which is the
-	 * only signal that a mis-wired CachingPlugin keyPrefix has turned caching off —
+	 * only signal that a mis-wired cache-key prefix has turned caching off —
 	 * it is otherwise indistinguishable from a permanently cold cache. The warning
 	 * can only fire if the Service hands the adapter its logger.
 	 */

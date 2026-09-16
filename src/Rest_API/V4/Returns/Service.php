@@ -11,7 +11,7 @@ namespace PostNLWooCommerce\Rest_API\V4\Returns;
 
 use Postnl\Sdk\Client\PostnlClientInterface;
 use Postnl\Sdk\Service\ReturnShipment\V4\Request\ReturnShipmentRequest;
-use Postnl\Sdk\Service\ReturnShipment\V4\Response\GenerateReturnResponseInterface;
+use Postnl\Sdk\Service\ReturnShipment\Response\ReturnShipmentResponseInterface;
 use PostNLWooCommerce\Order\Base as Order_Base;
 use PostNLWooCommerce\Rest_API\Contracts\Return_Label_Service_Interface;
 use PostNLWooCommerce\Rest_API\Legacy\Return_Label\Item_Info;
@@ -160,11 +160,11 @@ class Service extends Order_Base implements Return_Label_Service_Interface {
 	 * @param ReturnShipmentRequest $request Built request DTO.
 	 * @param array                 $fields  Flattened fields, read for the log reference.
 	 *
-	 * @return GenerateReturnResponseInterface
+	 * @return ReturnShipmentResponseInterface
 	 *
 	 * @throws \Exception Converted SDK error when the request fails.
 	 */
-	protected function generate_return( ReturnShipmentRequest $request, array $fields ): GenerateReturnResponseInterface {
+	protected function generate_return( ReturnShipmentRequest $request, array $fields ): ReturnShipmentResponseInterface {
 		try {
 			return $this->build_client()->returns()->generateReturn( $request );
 		} catch ( \Throwable $exception ) {
@@ -300,13 +300,13 @@ class Service extends Order_Base implements Return_Label_Service_Interface {
 	 * Reuses Order\Base::maybe_merge_labels() so the A4/A6 handling matches the
 	 * legacy path, then re-tags the merged record as V4.
 	 *
-	 * @param GenerateReturnResponseInterface $response         return/generate response.
+	 * @param ReturnShipmentResponseInterface $response         return/generate response.
 	 * @param \WC_Order                       $order            WooCommerce order.
 	 * @param string                          $fallback_barcode Barcode to use if the response omits one.
 	 * @return array
 	 * @throws \Exception When the response carries no return item or no label content.
 	 */
-	private function store_labels( GenerateReturnResponseInterface $response, $order, string $fallback_barcode ): array {
+	private function store_labels( ReturnShipmentResponseInterface $response, $order, string $fallback_barcode ): array {
 		$item = Response_Mapper::first_return_item( $response );
 
 		if ( null === $item ) {

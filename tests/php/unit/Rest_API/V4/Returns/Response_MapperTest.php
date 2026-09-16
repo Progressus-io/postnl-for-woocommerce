@@ -14,10 +14,10 @@ use Postnl\Sdk\Client\ResponseMeta;
 use Postnl\Sdk\Enums\Payload\LabelOutputType;
 use Postnl\Sdk\ResponseData\V4\Label;
 use Postnl\Sdk\ResponseData\V4\LabelsCollection;
-use Postnl\Sdk\ResponseData\V4\ReturnShippingItem;
-use Postnl\Sdk\ResponseData\V4\ReturnShippingItemsCollection;
 use Postnl\Sdk\ResponseData\V4\WarningsCollection;
-use Postnl\Sdk\Service\ReturnShipment\V4\Response\GenerateReturnResponseInterface;
+use Postnl\Sdk\Service\ReturnShipment\Response\ReturnShipmentResponseInterface;
+use Postnl\Sdk\Service\ReturnShipment\Response\ReturnShipmentResponseItem;
+use Postnl\Sdk\Service\ReturnShipment\Response\ReturnShipmentResponseItemsCollection;
 use PostNLWooCommerce\Rest_API\V4\Returns\Response_Mapper;
 use PostNLWooCommerce\Tests\UnitTestCase;
 
@@ -29,16 +29,16 @@ class Response_MapperTest extends UnitTestCase {
 	/**
 	 * Wrap return items in a stub return/generate response exposing items().
 	 *
-	 * @param ReturnShippingItem ...$items Items to expose.
-	 * @return GenerateReturnResponseInterface
+	 * @param ReturnShipmentResponseItem ...$items Items to expose.
+	 * @return ReturnShipmentResponseInterface
 	 */
-	private function response( ReturnShippingItem ...$items ): GenerateReturnResponseInterface {
-		$collection = new ReturnShippingItemsCollection( $items );
+	private function response( ReturnShipmentResponseItem ...$items ): ReturnShipmentResponseInterface {
+		$collection = new ReturnShipmentResponseItemsCollection( $items );
 
-		return new class( $collection ) implements GenerateReturnResponseInterface {
-			public function __construct( private ReturnShippingItemsCollection $items ) {}
+		return new class( $collection ) implements ReturnShipmentResponseInterface {
+			public function __construct( private ReturnShipmentResponseItemsCollection $items ) {}
 
-			public function items(): ReturnShippingItemsCollection {
+			public function items(): ReturnShipmentResponseItemsCollection {
 				return $this->items;
 			}
 
@@ -56,7 +56,7 @@ class Response_MapperTest extends UnitTestCase {
 	 * @testdox first_return_item() returns the single return item from the response.
 	 */
 	public function test_first_return_item_returns_item(): void {
-		$item = new ReturnShippingItem( barcode: '3SDEVCRET1' );
+		$item = new ReturnShipmentResponseItem( barcode: '3SDEVCRET1' );
 
 		$this->assertSame( $item, Response_Mapper::first_return_item( $this->response( $item ) ) );
 	}
@@ -75,35 +75,30 @@ class Response_MapperTest extends UnitTestCase {
 	 * last are the same object, so reading the wrong end could not be detected.
 	 */
 	public function test_first_return_item_returns_the_first_of_several(): void {
-		$first  = new ReturnShippingItem( barcode: '3SDEVCRET1' );
-		$second = new ReturnShippingItem( barcode: '3SDEVCRET2' );
+		$first  = new ReturnShipmentResponseItem( barcode: '3SDEVCRET1' );
+		$second = new ReturnShipmentResponseItem( barcode: '3SDEVCRET2' );
 
 		$this->assertSame( $first, Response_Mapper::first_return_item( $this->response( $first, $second ) ) );
 	}
 
 	/**
-	 * @testdox get_barcode() prefers the item barcode.
+	 * @testdox get_barcode() returns the item barcode.
 	 */
 	public function test_get_barcode_prefers_item_barcode(): void {
-		$item = new ReturnShippingItem( barcode: '3SDEVCRET9', returnBarcode: '3SRETURN9' );
+		$item = new ReturnShipmentResponseItem( barcode: '3SDEVCRET9' );
 
 		$this->assertSame( '3SDEVCRET9', Response_Mapper::get_barcode( $item, 'fallback' ) );
 	}
 
 	/**
-	 * @testdox get_barcode() falls back to the returnBarcode when the item barcode is absent.
-	 */
-	public function test_get_barcode_falls_back_to_return_barcode(): void {
-		$item = new ReturnShippingItem( barcode: null, returnBarcode: '3SRETURN9' );
-
-		$this->assertSame( '3SRETURN9', Response_Mapper::get_barcode( $item, 'fallback' ) );
-	}
-
-	/**
-	 * @testdox get_barcode() uses the supplied fallback when the response omits both barcodes.
+	 * @testdox get_barcode() uses the supplied fallback when the response omits the barcode.
+	 *
+	 * The return API's ResponseItem no longer carries a separate returnBarcode
+	 * (removed from the schema in SDK v2.0.0), so the item barcode is the only
+	 * barcode the mapper reads before falling back.
 	 */
 	public function test_get_barcode_uses_fallback(): void {
-		$item = new ReturnShippingItem( barcode: null, returnBarcode: null );
+		$item = new ReturnShipmentResponseItem( barcode: null );
 
 		$this->assertSame( 'fallback-barcode', Response_Mapper::get_barcode( $item, 'fallback-barcode' ) );
 	}
@@ -114,7 +109,7 @@ class Response_MapperTest extends UnitTestCase {
 	public function test_get_labels_filters_empty(): void {
 		$full  = new Label( label: base64_encode( 'PDF-BYTES' ), outputType: LabelOutputType::PDF, labelType: 'Return Label' );
 		$empty = new Label( label: null );
-		$item  = new ReturnShippingItem( labels: new LabelsCollection( array( $full, $empty ) ) );
+		$item  = new ReturnShipmentResponseItem( labels: new LabelsCollection( array( $full, $empty ) ) );
 
 		$labels = Response_Mapper::get_labels( $item );
 

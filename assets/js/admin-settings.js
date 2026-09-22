@@ -17,6 +17,90 @@
 			this.toggle_letterbox_24_fee_field();
 			jQuery( '#woocommerce_postnl_enable_pickup_points' ).on( 'change', this.toggle_default_checkout_tab );
 			this.toggle_default_checkout_tab();
+			this.init_new_api_key_check();
+		},
+
+		// Memoised check results, keyed by environment + key + customer details, so
+		// re-blurring the same values does not spend another barcode.
+		newApiKeyCheckCache: {},
+
+		// The in-flight check request, aborted when a fresh blur supersedes it.
+		newApiKeyCheckXhr: null,
+
+		/**
+		 * Check the "API Key" field against PostNL when the merchant leaves it, so
+		 * the status row is right while they are still typing rather than only after
+		 * a save. Empty and same-as-old keys are decided here without a call.
+		 */
+		init_new_api_key_check: function() {
+			if ( typeof postnlApiKeyCheck === 'undefined' ) {
+				return;
+			}
+
+			var self = this;
+			jQuery( '#woocommerce_postnl_api_keys_new, #woocommerce_postnl_api_keys_sandbox_new' ).on( 'blur', function() {
+				self.check_new_api_key( jQuery( this ) );
+			} );
+		},
+
+		check_new_api_key: function( $field ) {
+			var isSandbox = $field.attr( 'id' ).indexOf( 'sandbox' ) !== -1;
+			var env       = isSandbox ? 'sandbox' : 'production';
+			var $row      = jQuery( '.postnl-new-key-status-row[data-postnl-env="' + env + '"]' );
+			var key       = jQuery.trim( $field.val() );
+			var oldField  = isSandbox ? '#woocommerce_postnl_api_keys_sandbox' : '#woocommerce_postnl_api_keys';
+			var oldKey    = jQuery.trim( jQuery( oldField ).val() || '' );
+			// The value the field was rendered with, i.e. the saved key. Blurring
+			// it unchanged must not fire a check — the row already shows its state.
+			var savedKey  = jQuery.trim( $field.prop( 'defaultValue' ) || '' );
+
+			// Nothing distinct or unsaved to check: leave the row as rendered.
+			if ( '' === key || key === oldKey || key === savedKey ) {
+				return;
+			}
+
+			var code     = jQuery( '#woocommerce_postnl_customer_code' ).val() || '';
+			var num      = jQuery( '#woocommerce_postnl_customer_num' ).val() || '';
+			var cacheKey = [ env, key, code, num ].join( '|' );
+
+			if ( this.newApiKeyCheckCache[ cacheKey ] ) {
+				this.render_new_api_key_status( $row, this.newApiKeyCheckCache[ cacheKey ] );
+				return;
+			}
+
+			if ( this.newApiKeyCheckXhr ) {
+				this.newApiKeyCheckXhr.abort();
+			}
+
+			var self = this;
+			this.newApiKeyCheckXhr = jQuery.post(
+				postnlApiKeyCheck.ajaxUrl,
+				{
+					action: postnlApiKeyCheck.action,
+					nonce: postnlApiKeyCheck.nonce,
+					environment: env,
+					api_key: key,
+					customer_code: code,
+					customer_num: num
+				}
+			).done( function( response ) {
+				if ( response && response.success && response.data ) {
+					self.newApiKeyCheckCache[ cacheKey ] = response.data;
+					self.render_new_api_key_status( $row, response.data );
+				}
+			} );
+		},
+
+		render_new_api_key_status: function( $row, data ) {
+			$row.find( '.postnl-new-key-status-label' ).css( 'color', data.color ).text( data.label );
+			$row.find( '.postnl-new-key-status-summary' ).text( data.summary );
+
+			var $desc = $row.find( '.postnl-new-key-status-desc' );
+			if ( data.description ) {
+				$desc.html( data.description ).show();
+			} else {
+				$desc.empty().hide();
+			}
 		},
 
 		// TODO: drop the .val('delivery_day') reset. The PostNL::process_admin_options
@@ -48,12 +132,19 @@
 
 		display_api_key_field: function() {
 			var value = jQuery( '#woocommerce_postnl_environment_mode' ).val();
+			var productionRows = jQuery( '#woocommerce_postnl_api_keys' ).closest( 'tr' )
+				.add( jQuery( '#woocommerce_postnl_api_keys_new' ).closest( 'tr' ) )
+				.add( jQuery( '.postnl-new-key-status-row[data-postnl-env="production"]' ) );
+			var sandboxRows = jQuery( '#woocommerce_postnl_api_keys_sandbox' ).closest( 'tr' )
+				.add( jQuery( '#woocommerce_postnl_api_keys_sandbox_new' ).closest( 'tr' ) )
+				.add( jQuery( '.postnl-new-key-status-row[data-postnl-env="sandbox"]' ) );
+
 			if ( 'production' === value ) {
-				jQuery('#woocommerce_postnl_api_keys').closest('tr').show();
-				jQuery('#woocommerce_postnl_api_keys_sandbox').closest('tr').hide();
+				productionRows.show();
+				sandboxRows.hide();
 			} else {
-				jQuery('#woocommerce_postnl_api_keys').closest('tr').hide();
-				jQuery('#woocommerce_postnl_api_keys_sandbox').closest('tr').show();
+				productionRows.hide();
+				sandboxRows.show();
 			}
 		},
 

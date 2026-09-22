@@ -30,7 +30,6 @@ class EligibilityTest extends UnitTestCase {
 				'is_delivery_day' => false,
 				'is_pickup'       => false,
 				'has_return'      => false,
-				'delivery_type'   => 'Standard',
 				'origin'          => 'NL',
 				'destination'     => 'NL',
 				'mapped'          => array(
@@ -106,7 +105,6 @@ class EligibilityTest extends UnitTestCase {
 		$signals = $this->signals(
 			array(
 				'is_delivery_day' => true,
-				'delivery_type'   => 'Evening',
 				'delivery_window' => 'evening',
 			)
 		);

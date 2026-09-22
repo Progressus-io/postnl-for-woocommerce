@@ -67,7 +67,6 @@ class Eligibility {
 	 *     @type bool   $is_delivery_day     A delivery-day option was selected.
 	 *     @type bool   $is_pickup           A pickup point was selected.
 	 *     @type bool   $has_return          A return label/barcode is involved.
-	 *     @type string $delivery_type       'Standard' or 'Evening'.
 	 *     @type string $delivery_window     Normalised delivery-day window: 'evening',
 	 *                                        'morning' or 'standard'.
 	 *     @type string $origin              Origin country.

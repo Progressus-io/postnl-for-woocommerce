@@ -337,7 +337,6 @@ class Service extends Order_Base implements Label_Service_Interface {
 			'is_delivery_day' => $item_info->is_delivery_day(),
 			'is_pickup'       => $item_info->is_pickup_points(),
 			'has_return'      => $has_return,
-			'delivery_type'   => (string) ( $item_info->backend_data['delivery_type'] ?? 'Standard' ),
 			'delivery_window' => $this->resolve_delivery_window( $item_info ),
 			'origin'          => $origin,
 			'destination'     => $destination,

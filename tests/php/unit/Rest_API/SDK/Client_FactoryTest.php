@@ -9,11 +9,9 @@ declare( strict_types = 1 );
 
 namespace PostNLWooCommerce\Tests\Rest_API\SDK;
 
-use Postnl\Sdk\Auth\Method\ApiKeyAuth;
 use Postnl\Sdk\Client\ClientBuilder;
 use Postnl\Sdk\Client\PostnlClientInterface;
-use Postnl\Sdk\Exception\InvalidArgumentSdkException;
-use Postnl\Sdk\Transport\Retry\RetryConfig;
+use Postnl\Sdk\Transport\Retry\ExponentialBackoffRetryPolicy;
 use PostNLWooCommerce\Rest_API\SDK\Client_Factory;
 use PostNLWooCommerce\Tests\UnitTestCase;
 use Psr\Http\Client\ClientInterface;
@@ -119,16 +117,21 @@ class Client_FactoryTest extends UnitTestCase {
 	}
 
 	/**
-	 * @testdox An empty API key is rejected by the SDK rather than yielding an unusable client
+	 * @testdox An empty API key is accepted by the SDK builder; the non-empty guard lives upstream
 	 *
-	 * Pins the contract documented by build()'s @throws tag. Callers wiring this into
-	 * checkout must gate on a non-empty key or surface this exception deliberately.
+	 * withApiKey() trims and stores whatever it is handed without throwing, so the
+	 * "don't run V4 without a key" decision is the caller's (Service_Factory::has_v4_key()),
+	 * not this factory's. build() must not fatal on an empty key.
 	 */
-	public function test_empty_api_key_throws(): void {
-		$factory = new Client_Factory( $this->make_settings() );
+	public function test_empty_api_key_is_accepted(): void {
+		$spy = new Spy_Client_Factory( $this->make_settings() );
+		$spy->build( '   ', false );
 
-		$this->expectException( InvalidArgumentSdkException::class );
-		$factory->build( '   ', false );
+		$this->assertSame(
+			'',
+			$this->builder_prop( $spy->captured_builder, 'apiKey' ),
+			'withApiKey() trims the key, so a whitespace-only key stores as empty.'
+		);
 	}
 
 	/**
@@ -156,9 +159,10 @@ class Client_FactoryTest extends UnitTestCase {
 	public function test_source_system_35_is_configured(): void {
 		$spy = new Spy_Client_Factory( $this->make_settings() );
 		$spy->build( 'k', false );
-		$this->assertSame(
+		$this->assertContains(
 			'35',
-			$this->builder_prop( $spy->captured_builder, 'sourceSystem' )
+			$this->builder_prop( $spy->captured_builder, 'headers' ),
+			'SourceSystem 35 must be set as a request header on the builder.'
 		);
 	}
 
@@ -178,17 +182,17 @@ class Client_FactoryTest extends UnitTestCase {
 	 * @testdox The V4 API key passed to build() is the key configured on the SDK builder
 	 *
 	 * Without this assertion every other test still passes when the key argument is
-	 * dropped and a literal is hardcoded into Auth::apiKey(), because the memo tests
+	 * dropped and a literal is hardcoded into withApiKey(), because the memo tests
 	 * key off build()'s arguments rather than what actually reaches the builder.
 	 */
-	public function test_api_key_is_forwarded_to_auth(): void {
+	public function test_api_key_is_forwarded_to_the_builder(): void {
 		$spy = new Spy_Client_Factory( $this->make_settings() );
 		$spy->build( 'fake-v4-key-abc123', false );
 
-		$auth = $this->builder_prop( $spy->captured_builder, 'auth' );
-
-		$this->assertInstanceOf( ApiKeyAuth::class, $auth );
-		$this->assertSame( 'fake-v4-key-abc123', $auth->reveal() );
+		$this->assertSame(
+			'fake-v4-key-abc123',
+			$this->builder_prop( $spy->captured_builder, 'apiKey' )
+		);
 	}
 
 	/**
@@ -198,14 +202,10 @@ class Client_FactoryTest extends UnitTestCase {
 		$spy = new Spy_Client_Factory( $this->make_settings( '99999999', 'POSTNL' ) );
 		$spy->build( 'k', false );
 
-		$this->assertSame(
-			'99999999',
-			$this->builder_prop( $spy->captured_builder, 'customerNumber' )
-		);
-		$this->assertSame(
-			'POSTNL',
-			$this->builder_prop( $spy->captured_builder, 'customerCode' )
-		);
+		$identity = $this->builder_prop( $spy->captured_builder, 'identity' );
+
+		$this->assertSame( '99999999', $identity->customerNumber );
+		$this->assertSame( 'POSTNL', $identity->customerCode );
 	}
 
 	/**
@@ -215,9 +215,9 @@ class Client_FactoryTest extends UnitTestCase {
 		$spy = new Spy_Client_Factory( $this->make_settings() );
 		$spy->build( 'k', false );
 		$this->assertInstanceOf(
-			RetryConfig::class,
-			$this->builder_prop( $spy->captured_builder, 'retryConfig' ),
-			'Expected build() to configure a RetryConfig via withRetry().'
+			ExponentialBackoffRetryPolicy::class,
+			$this->builder_prop( $spy->captured_builder, 'retryPolicy' ),
+			'Expected build() to configure an ExponentialBackoffRetryPolicy via withRetry().'
 		);
 	}
 

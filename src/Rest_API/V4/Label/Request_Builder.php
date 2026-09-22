@@ -19,6 +19,7 @@ use Postnl\Sdk\Enums\Payload\LabelResolution;
 use Postnl\Sdk\Enums\Payload\MinimalAgeCheck;
 use Postnl\Sdk\Enums\Payload\ReceiverType;
 use Postnl\Sdk\Enums\Payload\ShipmentType;
+use Postnl\Sdk\Enums\Payload\TransactionCode;
 use Postnl\Sdk\RequestData\V4\Address;
 use Postnl\Sdk\RequestData\V4\Contact;
 use Postnl\Sdk\RequestData\V4\CustomerReferences;
@@ -28,10 +29,10 @@ use Postnl\Sdk\RequestData\V4\InternationalShipment\Content;
 use Postnl\Sdk\RequestData\V4\InternationalShipment\Customs;
 use Postnl\Sdk\RequestData\V4\InternationalShipment\InternationalShipmentData;
 use Postnl\Sdk\RequestData\V4\LabelSettings;
+use Postnl\Sdk\RequestData\V4\RequestShippingItem;
 use Postnl\Sdk\RequestData\V4\Services;
 use Postnl\Sdk\RequestData\V4\ShipmentParty;
 use Postnl\Sdk\RequestData\V4\ShipmentDelivery\ShipmentDeliveryRequest;
-use Postnl\Sdk\ResponseData\V4\ShippingItem;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -148,7 +149,7 @@ class Request_Builder {
 	 * single-collo collapse is what this replaces.
 	 *
 	 * @param array $fields Builder input keyed as documented on build().
-	 * @return ShippingItem[]
+	 * @return RequestShippingItem[]
 	 */
 	private static function items( array $fields ): array {
 		$barcodes = (array) ( $fields['barcodes'] ?? array() );
@@ -164,13 +165,13 @@ class Request_Builder {
 
 		$items = array();
 		foreach ( $barcodes as $barcode ) {
-			$items[] = new ShippingItem(
+			$items[] = new RequestShippingItem(
 				barcode: self::maybe_null( (string) $barcode ),
 				customerReferences: new CustomerReferences(
 					shipmentReference: $reference
 				),
 				dimensions: new Dimensions(
-					weightGr: $weight_gr
+					weight: $weight_gr
 				)
 			);
 		}
@@ -228,7 +229,7 @@ class Request_Builder {
 
 		return new Customs(
 			content: $content,
-			transactionCode: self::maybe_null( (string) ( $data['transaction_code'] ?? '' ) ),
+			transactionCode: TransactionCode::tryFrom( (string) ( $data['transaction_code'] ?? '' ) ),
 			currency: Currency::tryFrom( strtoupper( (string) ( $data['currency'] ?? '' ) ) ),
 			associatedDocument: self::associated_document( $data['associated_document'] ?? array() ),
 			senderIdentification: self::maybe_null( (string) ( $data['sender_identification'] ?? '' ) ),
@@ -326,14 +327,30 @@ class Request_Builder {
 	 * @return Address
 	 */
 	private static function address( array $fields ): Address {
+		$street           = (string) ( $fields['street'] ?? '' );
+		$house_number     = (string) ( $fields['house_number'] ?? '' );
+		$house_number_ext = (string) ( $fields['house_number_ext'] ?? '' );
+
+		// A filter (or a locale with no separate house-number field) can fold the
+		// number into the street: Street "Foo 12", HouseNr "". Legacy sends an empty
+		// HouseNr and PostNL reads the number off the street; here maybe_null() would
+		// drop the empty number and leave a street-only address the V4 endpoint may
+		// reject. The SDK Address DTO carries addressLine for exactly this combined
+		// form, so a numberless street is sent as addressLine and the split street is
+		// omitted. addressLine is the whole combined form (street + number + addition),
+		// so it is only used when there is no separate addition to send alongside it —
+		// an addition present with an empty number keeps the split fields instead.
+		$use_address_line = '' === $house_number && '' === $house_number_ext && '' !== $street;
+
 		return new Address(
 			countryIso: self::country( (string) ( $fields['country'] ?? '' ) ),
-			houseNumber: self::maybe_null( (string) ( $fields['house_number'] ?? '' ) ),
+			houseNumber: self::maybe_null( $house_number ),
 			postalCode: self::maybe_null( (string) ( $fields['postcode'] ?? '' ) ),
 			companyName: self::maybe_null( (string) ( $fields['company'] ?? '' ) ),
-			street: self::maybe_null( (string) ( $fields['street'] ?? '' ) ),
-			houseNumberAddition: self::maybe_null( (string) ( $fields['house_number_ext'] ?? '' ) ),
-			city: self::maybe_null( (string) ( $fields['city'] ?? '' ) )
+			street: $use_address_line ? null : self::maybe_null( $street ),
+			houseNumberAddition: self::maybe_null( $house_number_ext ),
+			city: self::maybe_null( (string) ( $fields['city'] ?? '' ) ),
+			addressLine: $use_address_line ? $street : null
 		);
 	}
 
@@ -348,8 +365,7 @@ class Request_Builder {
 			email: self::maybe_null( (string) ( $fields['email'] ?? '' ) ),
 			firstName: self::maybe_null( (string) ( $fields['first_name'] ?? '' ) ),
 			lastName: self::maybe_null( (string) ( $fields['last_name'] ?? '' ) ),
-			mobileNumber: self::maybe_null( (string) ( $fields['phone'] ?? '' ) ),
-			companyName: self::maybe_null( (string) ( $fields['company'] ?? '' ) )
+			mobileNumber: self::maybe_null( (string) ( $fields['phone'] ?? '' ) )
 		);
 	}
 
@@ -390,7 +406,8 @@ class Request_Builder {
 	 * @return LabelResolution
 	 */
 	private static function resolution( int $resolution ): LabelResolution {
-		return LabelResolution::tryFrom( $resolution ) ?? LabelResolution::DPI_200;
+		// LabelResolution is string-backed in the SDK ('200'|'300'|'600').
+		return LabelResolution::tryFrom( (string) $resolution ) ?? LabelResolution::DPI_200;
 	}
 
 	/**

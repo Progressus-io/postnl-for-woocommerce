@@ -291,6 +291,43 @@ class FilterCarryForwardTest extends IntegrationTestCase {
 	}
 
 	/**
+	 * @testdox A postnl_shipment_addresses callback that changes the country makes create() fall back to the legacy path.
+	 *
+	 * Eligibility (product code, shipping zone) is decided on the unfiltered address.
+	 * A filter that then rewrites the destination country would otherwise ship the
+	 * domestic product code to a foreign address, so create() must detect the change
+	 * after the overlay and hand the order to the legacy pipeline instead of sending a
+	 * V4 request.
+	 */
+	public function test_country_change_in_filter_falls_back_to_legacy(): void {
+		$to_germany = function ( $addresses ) {
+			foreach ( $addresses as $index => $address ) {
+				if ( '01' === ( $address['AddressType'] ?? '' ) ) {
+					$addresses[ $index ]['Countrycode'] = 'DE';
+				}
+			}
+
+			return $addresses;
+		};
+
+		$http    = new Failing_Http_Client();
+		$factory = new Spy_Label_Client_Factory( new Client_Factory_Settings(), $http );
+		$service = new Testable_Label_Service( $factory, 'v4-integration-key', new NullLogger() );
+
+		add_filter( 'postnl_shipment_addresses', $to_germany, 10 );
+
+		try {
+			$result = $service->create( $this->make_post_data() );
+		} finally {
+			remove_filter( 'postnl_shipment_addresses', $to_germany, 10 );
+		}
+
+		$this->assertSame( 1, $service->pipeline_calls, 'A country-changing filter must route the order to the legacy pipeline.' );
+		$this->assertSame( array( 'legacy-pipeline' => true ), $result, 'create() must return the legacy pipeline result on fallback.' );
+		$this->assertNull( $http->last_request, 'No V4 request may be sent once the filter has changed the destination country.' );
+	}
+
+	/**
 	 * Find the recipient (AddressType 01) entry in a legacy addresses array.
 	 *
 	 * @param array $addresses Legacy-shaped addresses array.
@@ -394,5 +431,33 @@ class FilterCarryForwardTest extends IntegrationTestCase {
 			'shipping_return_barcode' => '',
 			'is_return_activated'     => false,
 		);
+	}
+}
+
+/**
+ * Label service that records the legacy fallback instead of running the
+ * WooCommerce-bound pipeline, so the country-change fallback can be asserted
+ * without a live barcode/label call.
+ */
+class Testable_Label_Service extends V4_Label_Service {
+
+	/**
+	 * How many times the legacy fallback ran.
+	 *
+	 * @var int
+	 */
+	public int $pipeline_calls = 0;
+
+	/**
+	 * Record the fallback instead of running the real WooCommerce-bound pipeline.
+	 *
+	 * @param array $post_data Label post data.
+	 * @return array
+	 */
+	protected function create_label_pipeline( $post_data ) {
+		unset( $post_data );
+		++$this->pipeline_calls;
+
+		return array( 'legacy-pipeline' => true );
 	}
 }

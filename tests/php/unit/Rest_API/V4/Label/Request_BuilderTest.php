@@ -107,11 +107,79 @@ class Request_BuilderTest extends UnitTestCase {
 		$this->assertSame( 'consumer', $payload['receiver']['type'] );
 
 		$this->assertSame( 'pdf', $payload['labelSettings']['outputType'] );
-		$this->assertSame( 200, $payload['labelSettings']['resolution'] );
+		$this->assertSame( '200', $payload['labelSettings']['resolution'] );
 
 		$this->assertSame( '3SDEVC1234567', $payload['items'][0]['barcode'] );
 		$this->assertSame( 'ORDER-1001', $payload['items'][0]['customerReferences']['shipmentReference'] );
 		$this->assertSame( 2000, $payload['items'][0]['dimensions']['weight'], 'Weight must be sent in grams.' );
+	}
+
+	/**
+	 * @testdox build() folds a numberless street into addressLine and drops the split street.
+	 *
+	 * A filter (or a locale without a separate house-number field) can leave the
+	 * house number empty and carry it inside the street ('Foo 12', ''). Legacy sends
+	 * an empty HouseNr; the V4 SDK Address DTO carries the combined form in
+	 * addressLine, so the street must move there and the split street field must be
+	 * omitted so the two never conflict.
+	 */
+	public function test_build_folds_numberless_street_into_address_line(): void {
+		$fields                                 = $this->domestic_fields();
+		$fields['receiver']['street']           = 'Foo 12';
+		$fields['receiver']['house_number']     = '';
+		$fields['receiver']['house_number_ext'] = '';
+
+		$address = $this->payload( $fields )['receiver']['address'];
+
+		$this->assertSame( 'Foo 12', $address['addressLine'] ?? null, 'The combined street must travel as addressLine.' );
+		$this->assertNull( $address['street'] ?? null, 'The split street must not be sent when addressLine carries it.' );
+		$this->assertNull( $address['houseNumber'] ?? null, 'An empty house number must not be sent.' );
+	}
+
+	/**
+	 * @testdox build() keeps the split street and omits addressLine when a house number is present.
+	 */
+	public function test_build_keeps_split_street_when_house_number_present(): void {
+		$address = $this->payload( $this->domestic_fields() )['receiver']['address'];
+
+		$this->assertSame( 'Main Street', $address['street'] ?? null );
+		$this->assertSame( '9', $address['houseNumber'] ?? null );
+		$this->assertNull( $address['addressLine'] ?? null, 'A normal address must not use addressLine.' );
+	}
+
+	/**
+	 * @testdox build() keeps the split street when a numberless street also carries an addition.
+	 *
+	 * addressLine is the whole combined form (street + number + addition). With an empty
+	 * house number but a present addition, sending addressLine alongside a separate
+	 * houseNumberAddition would be contradictory, so the split fields are kept instead.
+	 */
+	public function test_build_keeps_split_fields_when_a_numberless_street_has_an_addition(): void {
+		$fields                                 = $this->domestic_fields();
+		$fields['receiver']['street']           = 'Foo 12';
+		$fields['receiver']['house_number']     = '';
+		$fields['receiver']['house_number_ext'] = 'bis';
+
+		$address = $this->payload( $fields )['receiver']['address'];
+
+		$this->assertNull( $address['addressLine'] ?? null, 'addressLine must not coexist with a separate addition.' );
+		$this->assertSame( 'Foo 12', $address['street'] ?? null, 'The split street must be kept.' );
+		$this->assertSame( 'bis', $address['houseNumberAddition'] ?? null, 'The addition must be kept.' );
+	}
+
+	/**
+	 * @testdox build() omits addressLine when both the street and the house number are empty.
+	 */
+	public function test_build_omits_address_line_when_street_is_empty(): void {
+		$fields                                 = $this->domestic_fields();
+		$fields['receiver']['street']           = '';
+		$fields['receiver']['house_number']     = '';
+		$fields['receiver']['house_number_ext'] = '';
+
+		$address = $this->payload( $fields )['receiver']['address'];
+
+		$this->assertNull( $address['addressLine'] ?? null, 'An empty street must not produce an addressLine.' );
+		$this->assertNull( $address['street'] ?? null );
 	}
 
 	/**
@@ -302,7 +370,7 @@ class Request_BuilderTest extends UnitTestCase {
 		$payload = $this->payload( $fields );
 
 		$this->assertSame( $expected_output_type, $payload['labelSettings']['outputType'] );
-		$this->assertSame( $expected_resolution, $payload['labelSettings']['resolution'] );
+		$this->assertSame( (string) $expected_resolution, $payload['labelSettings']['resolution'] );
 	}
 
 	/**

@@ -81,16 +81,20 @@ class Dropoff_Points extends Base {
 			}
 
 			foreach ( $pickup_point['Locations'] as $dropoff_option ) {
-				if ( empty( $dropoff_option['PartnerID'] ) || empty( $dropoff_option['PickupTime'] ) || empty( $dropoff_option['Distance'] ) || empty( $dropoff_option['Address'] ) ) {
+				// PartnerID, PickupTime and Distance are legacy checkout-response fields the
+				// V4 locations endpoint does not return; requiring them dropped every V4
+				// pickup point. Only the fields the plugin renders and stores a selection
+				// from — the location code and its address — are required.
+				if ( empty( $dropoff_option['LocationCode'] ) || empty( $dropoff_option['Address'] ) ) {
 					continue;
 				}
 
 				$return_data['dropoff_options'][] = array(
 					'show_desc'  => $show_desc,
-					'partner_id' => $dropoff_option['PartnerID'],
+					'partner_id' => $dropoff_option['PartnerID'] ?? '',
 					'loc_code'   => $dropoff_option['LocationCode'],
-					'time'       => $dropoff_option['PickupTime'],
-					'distance'   => $dropoff_option['Distance'],
+					'time'       => $dropoff_option['PickupTime'] ?? '',
+					'distance'   => $dropoff_option['Distance'] ?? '',
 					'date'       => $date,
 					'address'    => array(
 						'company'   => $dropoff_option['Address']['CompanyName'],

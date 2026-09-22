@@ -156,13 +156,38 @@ class Service extends Order_Base implements Label_Service_Interface {
 			return $this->create_label_pipeline( $post_data );
 		}
 
-		$fields             = $this->extract_fields( $item_info, $signals['mapped'], $post_data );
+		$fields         = $this->extract_fields( $item_info, $signals['mapped'], $post_data );
+		$country_before = (string) ( $fields['receiver']['country'] ?? '' );
+
 		$fields['receiver'] = Request_Builder::apply_filtered_receiver(
 			$fields['receiver'],
 			$this->filter_shipment_addresses( $item_info )
 		);
-		$request            = Request_Builder::build( $fields );
-		$response           = $this->confirm_label( $request, $fields );
+
+		$country_after = (string) ( $fields['receiver']['country'] ?? '' );
+
+		// Eligibility (product code, shipping zone) was decided on the unfiltered
+		// address. A postnl_shipment_addresses callback that rewrites the destination
+		// country would otherwise ship the domestic product code to a foreign address,
+		// and a code the SDK enum does not know is silently reset to NL by
+		// Request_Builder::country(). When the filter changed the country, hand the
+		// whole order back to the legacy pipeline, which passes the string through and
+		// lets PostNL judge it — exactly as it did before V4.
+		if ( $country_before !== $country_after ) {
+			$this->logger->warning(
+				sprintf(
+					'V4 label for order "%1$s": a postnl_shipment_addresses callback changed the destination country from "%2$s" to "%3$s" after eligibility was decided; falling back to the legacy label path.',
+					(string) ( $fields['reference'] ?? '' ),
+					$country_before,
+					$country_after
+				)
+			);
+
+			return $this->create_label_pipeline( $post_data );
+		}
+
+		$request  = Request_Builder::build( $fields );
+		$response = $this->confirm_label( $request, $fields );
 
 		$barcodes = ! empty( $fields['barcodes'] ) ? $fields['barcodes'] : array( (string) $fields['barcode'] );
 

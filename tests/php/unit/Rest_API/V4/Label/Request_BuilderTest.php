@@ -485,6 +485,76 @@ class Request_BuilderTest extends UnitTestCase {
 	}
 
 	/**
+	 * @testdox build() maps an evening deliveryWindow to a DeliveryWindow with service evening.
+	 */
+	public function test_delivery_window_evening_is_mapped(): void {
+		$fields             = $this->domestic_fields();
+		$fields['services'] = array( 'deliveryWindow' => 'evening' );
+
+		$services = $this->payload( $fields )['services'];
+
+		$this->assertSame( array( 'service' => 'evening' ), $services['deliveryWindow'] );
+	}
+
+	/**
+	 * @testdox build() builds the Services block for an evening window carrying no other service.
+	 *
+	 * A plain evening parcel carries only a deliveryWindow, so the block must not be
+	 * dropped as if it were empty.
+	 */
+	public function test_delivery_window_alone_builds_services(): void {
+		$fields             = $this->domestic_fields();
+		$fields['services'] = array( 'deliveryWindow' => 'evening' );
+
+		$services = $this->payload( $fields )['services'];
+
+		$this->assertArrayHasKey( 'deliveryWindow', $services );
+		$this->assertArrayNotHasKey( 'minimalAgeCheck', $services, 'Unset flags must be omitted.' );
+	}
+
+	/**
+	 * @testdox build() combines an evening window with a minimalAgeCheck service.
+	 */
+	public function test_delivery_window_combines_with_age_check(): void {
+		$fields             = $this->domestic_fields();
+		$fields['services'] = array(
+			'minimalAgeCheck' => '18+',
+			'deliveryWindow'  => 'evening',
+		);
+
+		$services = $this->payload( $fields )['services'];
+
+		$this->assertSame( array( 'service' => 'evening' ), $services['deliveryWindow'] );
+		$this->assertSame( '18+', $services['minimalAgeCheck'] );
+	}
+
+	/**
+	 * @testdox build() emits no DeliveryWindow for a standard, morning or unset window.
+	 * @dataProvider non_evening_window_provider
+	 *
+	 * @param string $window Delivery-window flag value.
+	 */
+	public function test_non_evening_window_omits_delivery_window( string $window ): void {
+		$fields             = $this->domestic_fields();
+		$fields['services'] = '' === $window ? array() : array( 'deliveryWindow' => $window );
+
+		$this->assertArrayNotHasKey( 'services', $this->payload( $fields ), 'Only an evening window builds a DeliveryWindow.' );
+	}
+
+	/**
+	 * Delivery-window flags that must not produce a DeliveryWindow block.
+	 *
+	 * @return array
+	 */
+	public static function non_evening_window_provider(): array {
+		return array(
+			'standard' => array( 'standard' ),
+			'morning'  => array( '08:00-12:00' ),
+			'unset'    => array( '' ),
+		);
+	}
+
+	/**
 	 * @testdox build() omits the internationalShipmentData block for a domestic parcel.
 	 */
 	public function test_international_block_omitted_for_domestic(): void {

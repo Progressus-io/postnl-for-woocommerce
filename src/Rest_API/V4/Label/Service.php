@@ -42,10 +42,11 @@ if ( ! defined( 'ABSPATH' ) ) {
  * combinations — for domestic NL shipments, plus EU/ROW international parcels
  * (4907/4909) carrying an InternationalShipmentData bundle and customs
  * declaration. The domestic NL 24h letterbox (mailbox parcel 2928) also falls
- * out here as a ShipmentType::LetterBox variant. Everything else — pickup
- * (DeliveryLocation), the 48h letterbox (2948), packet/mailbox international
- * products, returns, delivery-day/evening selection — falls back to the
- * untouched legacy pipeline until those flows are migrated. Because both
+ * out here as a ShipmentType::LetterBox variant. A home delivery-day selection
+ * (standard or evening) is handled here; evening rides on a deliveryWindow service.
+ * Everything else — pickup (DeliveryLocation), the 48h letterbox (2948),
+ * packet/mailbox international products, returns, morning (08:00-12:00) delivery —
+ * falls back to the untouched legacy pipeline until those flows are migrated. Because both
  * gates (a validated V4 key and the per-flow flag) default off, merging this
  * changes nothing for merchants.
  *
@@ -337,6 +338,7 @@ class Service extends Order_Base implements Label_Service_Interface {
 			'is_pickup'       => $item_info->is_pickup_points(),
 			'has_return'      => $has_return,
 			'delivery_type'   => (string) ( $item_info->backend_data['delivery_type'] ?? 'Standard' ),
+			'delivery_window' => $this->resolve_delivery_window( $item_info ),
 			'origin'          => $origin,
 			'destination'     => $destination,
 			'mapped'          => Eligibility::resolve_mapped(
@@ -347,6 +349,33 @@ class Service extends Order_Base implements Label_Service_Interface {
 				(string) $item_info->get_product_code()
 			),
 		);
+	}
+
+	/**
+	 * Normalise the order's delivery-day selection into a V4 delivery-window key.
+	 *
+	 * Evening is read from either the backend delivery_type (which only ever records
+	 * 'Standard' or 'Evening') or the frontend delivery-day type, so an evening order
+	 * is caught whichever field carries it. Morning is the 08:00-12:00 frontend window,
+	 * which only the frontend type records — the backend collapses it to 'Standard'.
+	 * Everything else is standard/daytime and carries no window.
+	 *
+	 * @param Shipping\Item_Info $item_info Parsed legacy item info.
+	 * @return string One of 'evening', 'morning', 'standard'.
+	 */
+	private function resolve_delivery_window( Shipping\Item_Info $item_info ): string {
+		$frontend_type = (string) ( $item_info->delivery_day['type'] ?? '' );
+		$backend_type  = (string) ( $item_info->backend_data['delivery_type'] ?? '' );
+
+		if ( 'Evening' === $frontend_type || 'Evening' === $backend_type ) {
+			return 'evening';
+		}
+
+		if ( '08:00-12:00' === $frontend_type ) {
+			return 'morning';
+		}
+
+		return 'standard';
 	}
 
 	/**
@@ -368,6 +397,18 @@ class Service extends Order_Base implements Label_Service_Interface {
 		// go unused, exactly as on V1.
 		$barcodes = array_values( array_filter( (array) ( $post_data['barcodes'] ?? array() ), 'is_scalar' ) );
 		$barcodes = array_slice( $barcodes, 0, $num_labels );
+
+		$services = Eligibility::resolve_services(
+			$mapped['services'] ?? array(),
+			(float) ( $item_info->shipment['subtotal'] ?? 0 )
+		);
+
+		// deliveryWindow is a Request_Builder concern layered on the mapped product, not a
+		// mapper output: an evening parcel keeps the same product code and gains a window
+		// service. Morning never reaches here — Eligibility keeps it on the legacy path.
+		if ( 'evening' === $this->resolve_delivery_window( $item_info ) ) {
+			$services['deliveryWindow'] = 'evening';
+		}
 
 		return array(
 			'sender'        => array(
@@ -401,10 +442,7 @@ class Service extends Order_Base implements Label_Service_Interface {
 			// only record of it when the label call issues the barcodes instead, and
 			// Request_Builder ignores it whenever a barcode is supplied.
 			'num_labels'    => $num_labels,
-			'services'      => Eligibility::resolve_services(
-				$mapped['services'] ?? array(),
-				(float) ( $item_info->shipment['subtotal'] ?? 0 )
-			),
+			'services'      => $services,
 			'international' => $this->extract_international( $item_info, $mapped ),
 			'label'         => Request_Builder::printer_type_to_label_settings(
 				(string) ( $item_info->shipment['printer_type'] ?? '' )

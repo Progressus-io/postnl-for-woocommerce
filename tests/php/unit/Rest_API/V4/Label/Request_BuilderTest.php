@@ -148,6 +148,41 @@ class Request_BuilderTest extends UnitTestCase {
 	}
 
 	/**
+	 * @testdox build() keeps the split street when a numberless street also carries an addition.
+	 *
+	 * addressLine is the whole combined form (street + number + addition). With an empty
+	 * house number but a present addition, sending addressLine alongside a separate
+	 * houseNumberAddition would be contradictory, so the split fields are kept instead.
+	 */
+	public function test_build_keeps_split_fields_when_a_numberless_street_has_an_addition(): void {
+		$fields                                 = $this->domestic_fields();
+		$fields['receiver']['street']           = 'Foo 12';
+		$fields['receiver']['house_number']     = '';
+		$fields['receiver']['house_number_ext'] = 'bis';
+
+		$address = $this->payload( $fields )['receiver']['address'];
+
+		$this->assertNull( $address['addressLine'] ?? null, 'addressLine must not coexist with a separate addition.' );
+		$this->assertSame( 'Foo 12', $address['street'] ?? null, 'The split street must be kept.' );
+		$this->assertSame( 'bis', $address['houseNumberAddition'] ?? null, 'The addition must be kept.' );
+	}
+
+	/**
+	 * @testdox build() omits addressLine when both the street and the house number are empty.
+	 */
+	public function test_build_omits_address_line_when_street_is_empty(): void {
+		$fields                                 = $this->domestic_fields();
+		$fields['receiver']['street']           = '';
+		$fields['receiver']['house_number']     = '';
+		$fields['receiver']['house_number_ext'] = '';
+
+		$address = $this->payload( $fields )['receiver']['address'];
+
+		$this->assertNull( $address['addressLine'] ?? null, 'An empty street must not produce an addressLine.' );
+		$this->assertNull( $address['street'] ?? null );
+	}
+
+	/**
 	 * @testdox build() emits one item per collo with a shared reference and weight for a multi-collo shipment.
 	 */
 	public function test_builds_multi_collo_items(): void {

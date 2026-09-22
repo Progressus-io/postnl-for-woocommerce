@@ -355,6 +355,63 @@ class ServiceTest extends UnitTestCase {
 	}
 
 	/**
+	 * @testdox extract_fields() attaches an evening delivery window and omits it for every other selection.
+	 * @dataProvider delivery_window_provider
+	 *
+	 * Covers resolve_delivery_window()'s three branches (frontend 'Evening', backend
+	 * 'Evening', frontend '08:00-12:00' morning) and the extract_fields() line that
+	 * only injects the window for evening. Morning is included even though Eligibility
+	 * keeps it on legacy, to pin that extract_fields itself never turns it into a
+	 * standard-daytime V4 shipment.
+	 *
+	 * @param string      $frontend_type Frontend delivery_day type.
+	 * @param string      $backend_type  Backend delivery_type.
+	 * @param string|null $expected      Expected services['deliveryWindow'], or null when omitted.
+	 */
+	public function test_extract_fields_attaches_the_delivery_window( string $frontend_type, string $backend_type, ?string $expected ): void {
+		$service = new Testable_Label_Service(
+			new Spy_Label_Client_Factory( new Client_Factory_Settings(), new Failing_Http_Client() ),
+			self::V4_KEY,
+			new NullLogger()
+		);
+
+		$item_info = new Fake_Shipping_Item_Info(
+			array( 'subtotal' => 42.00 ),
+			array(),
+			'' === $backend_type ? array() : array( 'delivery_type' => $backend_type )
+		);
+		$item_info->delivery_day = array( 'type' => $frontend_type );
+
+		$fields = $this->extract_fields(
+			$service,
+			$item_info,
+			array( 'shipmentType' => 'parcel', 'services' => array() ),
+			array()
+		);
+
+		if ( null === $expected ) {
+			$this->assertArrayNotHasKey( 'deliveryWindow', $fields['services'], 'A non-evening selection must attach no delivery window.' );
+		} else {
+			$this->assertSame( $expected, $fields['services']['deliveryWindow'], 'An evening selection must attach the evening delivery window.' );
+		}
+	}
+
+	/**
+	 * Delivery-day selections mapped to the expected injected window.
+	 *
+	 * @return array
+	 */
+	public static function delivery_window_provider(): array {
+		return array(
+			'evening from the frontend type'  => array( 'Evening', '', 'evening' ),
+			'evening from the backend type'   => array( '', 'Evening', 'evening' ),
+			'morning gets no V4 window'       => array( '08:00-12:00', 'Standard', null ),
+			'standard daytime gets no window' => array( 'Daytime', 'Standard', null ),
+			'no delivery-day selection'       => array( '', '', null ),
+		);
+	}
+
+	/**
 	 * @testdox The collo count reaches the builder even when no barcodes are supplied
 	 *
 	 * The harvest path calls create() with neither barcodes[] nor main_barcode, so

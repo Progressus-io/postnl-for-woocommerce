@@ -115,6 +115,39 @@ class Request_BuilderTest extends UnitTestCase {
 	}
 
 	/**
+	 * @testdox build() folds a numberless street into addressLine and drops the split street.
+	 *
+	 * A filter (or a locale without a separate house-number field) can leave the
+	 * house number empty and carry it inside the street ('Foo 12', ''). Legacy sends
+	 * an empty HouseNr; the V4 SDK Address DTO carries the combined form in
+	 * addressLine, so the street must move there and the split street field must be
+	 * omitted so the two never conflict.
+	 */
+	public function test_build_folds_numberless_street_into_address_line(): void {
+		$fields                                 = $this->domestic_fields();
+		$fields['receiver']['street']           = 'Foo 12';
+		$fields['receiver']['house_number']     = '';
+		$fields['receiver']['house_number_ext'] = '';
+
+		$address = $this->payload( $fields )['receiver']['address'];
+
+		$this->assertSame( 'Foo 12', $address['addressLine'] ?? null, 'The combined street must travel as addressLine.' );
+		$this->assertNull( $address['street'] ?? null, 'The split street must not be sent when addressLine carries it.' );
+		$this->assertNull( $address['houseNumber'] ?? null, 'An empty house number must not be sent.' );
+	}
+
+	/**
+	 * @testdox build() keeps the split street and omits addressLine when a house number is present.
+	 */
+	public function test_build_keeps_split_street_when_house_number_present(): void {
+		$address = $this->payload( $this->domestic_fields() )['receiver']['address'];
+
+		$this->assertSame( 'Main Street', $address['street'] ?? null );
+		$this->assertSame( '9', $address['houseNumber'] ?? null );
+		$this->assertNull( $address['addressLine'] ?? null, 'A normal address must not use addressLine.' );
+	}
+
+	/**
 	 * @testdox build() emits one item per collo with a shared reference and weight for a multi-collo shipment.
 	 */
 	public function test_builds_multi_collo_items(): void {

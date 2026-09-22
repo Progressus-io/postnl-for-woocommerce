@@ -327,14 +327,27 @@ class Request_Builder {
 	 * @return Address
 	 */
 	private static function address( array $fields ): Address {
+		$street       = (string) ( $fields['street'] ?? '' );
+		$house_number = (string) ( $fields['house_number'] ?? '' );
+
+		// A filter (or a locale with no separate house-number field) can fold the
+		// number into the street: Street "Foo 12", HouseNr "". Legacy sends an empty
+		// HouseNr and PostNL reads the number off the street; here maybe_null() would
+		// drop the empty number and leave a street-only address the V4 endpoint may
+		// reject. The SDK Address DTO carries addressLine for exactly this combined
+		// form, so a numberless-but-present street is sent as addressLine and the
+		// split street field is omitted so the two never conflict.
+		$use_address_line = '' === $house_number && '' !== $street;
+
 		return new Address(
 			countryIso: self::country( (string) ( $fields['country'] ?? '' ) ),
-			houseNumber: self::maybe_null( (string) ( $fields['house_number'] ?? '' ) ),
+			houseNumber: self::maybe_null( $house_number ),
 			postalCode: self::maybe_null( (string) ( $fields['postcode'] ?? '' ) ),
 			companyName: self::maybe_null( (string) ( $fields['company'] ?? '' ) ),
-			street: self::maybe_null( (string) ( $fields['street'] ?? '' ) ),
+			street: $use_address_line ? null : self::maybe_null( $street ),
 			houseNumberAddition: self::maybe_null( (string) ( $fields['house_number_ext'] ?? '' ) ),
-			city: self::maybe_null( (string) ( $fields['city'] ?? '' ) )
+			city: self::maybe_null( (string) ( $fields['city'] ?? '' ) ),
+			addressLine: $use_address_line ? $street : null
 		);
 	}
 

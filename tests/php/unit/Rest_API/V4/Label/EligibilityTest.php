@@ -84,6 +84,54 @@ class EligibilityTest extends UnitTestCase {
 	}
 
 	/**
+	 * @testdox is_eligible() accepts a domestic parcel with a delivery-day selection.
+	 *
+	 * A home delivery-day selection is the common NL case: it no longer forces a
+	 * fall-back, so a standard delivery-day parcel routes to V4.
+	 */
+	public function test_delivery_day_parcel_is_eligible(): void {
+		$this->assertTrue(
+			Eligibility::is_eligible( $this->signals( array( 'is_delivery_day' => true ) ) ),
+			'A standard delivery-day parcel should route to V4.'
+		);
+	}
+
+	/**
+	 * @testdox is_eligible() accepts an evening delivery-day parcel.
+	 *
+	 * Evening rides on a deliveryWindow service layered on the same product code, so it
+	 * maps like any parcel; only morning (08:00-12:00) still falls back.
+	 */
+	public function test_evening_parcel_is_eligible(): void {
+		$signals = $this->signals(
+			array(
+				'is_delivery_day' => true,
+				'delivery_type'   => 'Evening',
+				'delivery_window' => 'evening',
+			)
+		);
+
+		$this->assertTrue( Eligibility::is_eligible( $signals ), 'An evening delivery-day parcel should route to V4.' );
+	}
+
+	/**
+	 * @testdox is_eligible() keeps a morning (08:00-12:00) parcel on the legacy path.
+	 *
+	 * Morning has no confirmed V4 delivery window, so it stays on legacy rather than
+	 * silently shipping as standard daytime, even though its product code has a V4 row.
+	 */
+	public function test_morning_parcel_falls_back(): void {
+		$signals = $this->signals(
+			array(
+				'is_delivery_day' => true,
+				'delivery_window' => 'morning',
+			)
+		);
+
+		$this->assertFalse( Eligibility::is_eligible( $signals ), 'A morning delivery-day parcel must fall back to legacy.' );
+	}
+
+	/**
 	 * @testdox is_eligible() accepts an EU/ROW international parcel from NL or BE.
 	 * @dataProvider international_provider
 	 *
@@ -215,10 +263,9 @@ class EligibilityTest extends UnitTestCase {
 	public static function ineligible_provider(): array {
 		return array(
 			'zero collo'                 => array( array( 'num_labels' => 0 ), 'an invalid collo count' ),
-			'delivery-day selected'      => array( array( 'is_delivery_day' => true ), 'a delivery-day option' ),
 			'pickup selected'            => array( array( 'is_pickup' => true ), 'a pickup point' ),
 			'return involved'            => array( array( 'has_return' => true ), 'a return label' ),
-			'evening delivery'           => array( array( 'delivery_type' => 'Evening' ), 'evening delivery' ),
+			'morning delivery'           => array( array( 'delivery_window' => 'morning' ), 'a morning (08:00-12:00) window' ),
 			'non-NL origin'              => array( array( 'origin' => 'BE' ), 'a non-NL origin' ),
 			'non-NL destination'         => array( array( 'destination' => 'BE' ), 'a non-NL destination' ),
 			// Identical to the eligible happy path except for the one flag under test.

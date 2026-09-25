@@ -513,19 +513,24 @@ class Request_BuilderTest extends UnitTestCase {
 	}
 
 	/**
-	 * @testdox build() combines an evening window with a minimalAgeCheck service.
+	 * @testdox build() sends a supplied handover date as the labelconfirm handoverDate.
+	 *
+	 * labelconfirm carries no delivery-date field, so a delivery-day label anchors on
+	 * handoverDate; without it the endpoint defaults to today and misdates the parcel.
+	 * The SDK formats a DateTimeInterface as yyyy-MM-dd from the object's own timezone.
 	 */
-	public function test_delivery_window_combines_with_age_check(): void {
-		$fields             = $this->domestic_fields();
-		$fields['services'] = array(
-			'minimalAgeCheck' => '18+',
-			'deliveryWindow'  => 'evening',
-		);
+	public function test_handover_date_is_sent(): void {
+		$fields                  = $this->domestic_fields();
+		$fields['handover_date'] = new \DateTimeImmutable( '2026-07-14 09:00:00' );
 
-		$services = $this->payload( $fields )['services'];
+		$this->assertSame( '2026-07-14', $this->payload( $fields )['handoverDate'] );
+	}
 
-		$this->assertSame( array( 'service' => 'evening' ), $services['deliveryWindow'] );
-		$this->assertSame( '18+', $services['minimalAgeCheck'] );
+	/**
+	 * @testdox build() omits handoverDate when none is supplied.
+	 */
+	public function test_handover_date_is_omitted_when_absent(): void {
+		$this->assertArrayNotHasKey( 'handoverDate', $this->payload( $this->domestic_fields() ) );
 	}
 
 	/**

@@ -353,20 +353,18 @@ class Service extends Order_Base implements Label_Service_Interface {
 	/**
 	 * Normalise the order's delivery-day selection into a V4 delivery-window key.
 	 *
-	 * Evening is read from either the backend delivery_type (which only ever records
-	 * 'Standard' or 'Evening') or the frontend delivery-day type, so an evening order
-	 * is caught whichever field carries it. Morning is the 08:00-12:00 frontend window,
-	 * which only the frontend type records — the backend collapses it to 'Standard'.
-	 * Everything else is standard/daytime and carries no window.
+	 * The window is read from the frontend delivery-day type, the only field that
+	 * records it: no order meta-box field writes backend_data['delivery_type'], so it
+	 * is always 'Standard'. 'Evening' maps to evening, '08:00-12:00' to morning, and
+	 * everything else is standard/daytime and carries no window.
 	 *
 	 * @param Shipping\Item_Info $item_info Parsed legacy item info.
 	 * @return string One of 'evening', 'morning', 'standard'.
 	 */
 	private function resolve_delivery_window( Shipping\Item_Info $item_info ): string {
 		$frontend_type = (string) ( $item_info->delivery_day['type'] ?? '' );
-		$backend_type  = (string) ( $item_info->backend_data['delivery_type'] ?? '' );
 
-		if ( 'Evening' === $frontend_type || 'Evening' === $backend_type ) {
+		if ( 'Evening' === $frontend_type ) {
 			return 'evening';
 		}
 
@@ -375,6 +373,60 @@ class Service extends Order_Base implements Label_Service_Interface {
 		}
 
 		return 'standard';
+	}
+
+	/**
+	 * Resolve the handover date to send on a delivery-day label.
+	 *
+	 * V4 labelconfirm has no delivery-date field — the customer's date is chosen at
+	 * checkout via the timeframe API — so the label anchors on handoverDate, the
+	 * merchant-to-PostNL drop-off date. PostNL delivers the day after handover, so
+	 * the handover for a chosen delivery date D is D minus one day, clamped to today
+	 * because a past handover date is rejected and the drop-off cannot precede the
+	 * day the label is generated. Returns null for a non-delivery-day order, which
+	 * lets labelconfirm apply its own default.
+	 *
+	 * @param Shipping\Item_Info $item_info Parsed legacy item info.
+	 * @return \DateTimeImmutable|null
+	 *
+	 * @throws \Exception When an evening delivery date has already passed, so the
+	 *                    merchant sees a readable message instead of a raw API error.
+	 */
+	private function resolve_handover_date( Shipping\Item_Info $item_info ): ?\DateTimeImmutable {
+		$date_raw = (string) ( $item_info->delivery_day['date'] ?? '' );
+
+		if ( '' === $date_raw ) {
+			return null;
+		}
+
+		$today         = $this->now()->setTime( 0, 0 );
+		$delivery_date = \DateTimeImmutable::createFromFormat( '!d-m-Y', $date_raw, $today->getTimezone() );
+
+		if ( false === $delivery_date ) {
+			return null;
+		}
+
+		// An evening label generated after the customer's chosen date can no longer be
+		// handed over in time; surface a clear message rather than silently shipping it
+		// for a different evening or letting PostNL reject a past handover date.
+		if ( 'evening' === $this->resolve_delivery_window( $item_info ) && $delivery_date < $today ) {
+			throw new \Exception(
+				esc_html__( 'The selected evening delivery date has already passed. Ask the customer to choose a new delivery date, or generate a standard label.', 'postnl-for-woocommerce' )
+			);
+		}
+
+		$handover = $delivery_date->modify( '-1 day' );
+
+		return $handover < $today ? $today : $handover;
+	}
+
+	/**
+	 * Current site-timezone datetime; a seam for deterministic tests.
+	 *
+	 * @return \DateTimeImmutable
+	 */
+	protected function now(): \DateTimeImmutable {
+		return current_datetime();
 	}
 
 	/**
@@ -442,6 +494,7 @@ class Service extends Order_Base implements Label_Service_Interface {
 			// Request_Builder ignores it whenever a barcode is supplied.
 			'num_labels'    => $num_labels,
 			'services'      => $services,
+			'handover_date' => $this->resolve_handover_date( $item_info ),
 			'international' => $this->extract_international( $item_info, $mapped ),
 			'label'         => Request_Builder::printer_type_to_label_settings(
 				(string) ( $item_info->shipment['printer_type'] ?? '' )

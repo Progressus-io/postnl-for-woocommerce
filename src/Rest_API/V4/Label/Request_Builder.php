@@ -90,6 +90,9 @@ class Request_Builder {
 	 *                                  pre-issued barcode; the barcodes win otherwise.
 	 *     @type array  $label         Label output: output_type (pdf|zpl|jpg|gif|png)
 	 *                                  and resolution (200|300|600).
+	 *     @type mixed  $handover_date Optional DateTimeInterface, the merchant-to-PostNL
+	 *                                  drop-off date. Set for delivery-day orders so the
+	 *                                  window anchors on the right day; omitted otherwise.
 	 *     @type array  $services      Optional resolved service flags: deliveryConfirmation
 	 *                                  ('signature'|'deliverycode'), insuredValue (float),
 	 *                                  statedAddressOnly (bool), returnWhenNotHome (bool),
@@ -129,10 +132,29 @@ class Request_Builder {
 			receiver: $receiver,
 			labelSettings: $label_settings,
 			shipmentType: self::shipment_type( (string) ( $fields['shipment_type'] ?? 'parcel' ) ),
+			handoverDate: self::handover_date( $fields['handover_date'] ?? null ),
 			services: self::services( $fields['services'] ?? array() ),
 			internationalShipmentData: self::international( $fields['international'] ?? array() ),
 			items: self::items( $fields )
 		);
+	}
+
+	/**
+	 * Pass through a caller-supplied handover date, or null when none is set.
+	 *
+	 * The labelconfirm request carries no delivery-date field — in V4 the delivery
+	 * date is chosen at checkout via the timeframe API, not sent on the label — so the
+	 * only date the label anchors on is handoverDate (the merchant-to-PostNL drop-off
+	 * date). Without it labelconfirm defaults to today, which rejects an evening label
+	 * handed over on a Friday and otherwise books the parcel for the wrong evening.
+	 * Service::resolve_handover_date() computes it for delivery-day orders. The SDK
+	 * formats it as yyyy-MM-dd from the object's own timezone.
+	 *
+	 * @param mixed $handover A DateTimeInterface, or null/other when no date applies.
+	 * @return \DateTimeInterface|null
+	 */
+	private static function handover_date( $handover ): ?\DateTimeInterface {
+		return $handover instanceof \DateTimeInterface ? $handover : null;
 	}
 
 	/**

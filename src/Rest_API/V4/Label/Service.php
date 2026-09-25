@@ -42,10 +42,11 @@ if ( ! defined( 'ABSPATH' ) ) {
  * combinations — for domestic NL shipments, plus EU/ROW international parcels
  * (4907/4909) carrying an InternationalShipmentData bundle and customs
  * declaration. The domestic NL 24h letterbox (mailbox parcel 2928) also falls
- * out here as a ShipmentType::LetterBox variant. Everything else — pickup
- * (DeliveryLocation), the 48h letterbox (2948), packet/mailbox international
- * products, returns, delivery-day/evening selection — falls back to the
- * untouched legacy pipeline until those flows are migrated. Because both
+ * out here as a ShipmentType::LetterBox variant. A home delivery-day selection
+ * (standard or evening) is handled here; evening rides on a deliveryWindow service.
+ * Everything else — pickup (DeliveryLocation), the 48h letterbox (2948),
+ * packet/mailbox international products, returns, morning (08:00-12:00) delivery —
+ * falls back to the untouched legacy pipeline until those flows are migrated. Because both
  * gates (a validated V4 key and the per-flow flag) default off, merging this
  * changes nothing for merchants.
  *
@@ -336,7 +337,7 @@ class Service extends Order_Base implements Label_Service_Interface {
 			'is_delivery_day' => $item_info->is_delivery_day(),
 			'is_pickup'       => $item_info->is_pickup_points(),
 			'has_return'      => $has_return,
-			'delivery_type'   => (string) ( $item_info->backend_data['delivery_type'] ?? 'Standard' ),
+			'delivery_window' => $this->resolve_delivery_window( $item_info ),
 			'origin'          => $origin,
 			'destination'     => $destination,
 			'mapped'          => Eligibility::resolve_mapped(
@@ -347,6 +348,85 @@ class Service extends Order_Base implements Label_Service_Interface {
 				(string) $item_info->get_product_code()
 			),
 		);
+	}
+
+	/**
+	 * Normalise the order's delivery-day selection into a V4 delivery-window key.
+	 *
+	 * The window is read from the frontend delivery-day type, the only field that
+	 * records it: no order meta-box field writes backend_data['delivery_type'], so it
+	 * is always 'Standard'. 'Evening' maps to evening, '08:00-12:00' to morning, and
+	 * everything else is standard/daytime and carries no window.
+	 *
+	 * @param Shipping\Item_Info $item_info Parsed legacy item info.
+	 * @return string One of 'evening', 'morning', 'standard'.
+	 */
+	private function resolve_delivery_window( Shipping\Item_Info $item_info ): string {
+		$frontend_type = (string) ( $item_info->delivery_day['type'] ?? '' );
+
+		if ( 'Evening' === $frontend_type ) {
+			return 'evening';
+		}
+
+		if ( '08:00-12:00' === $frontend_type ) {
+			return 'morning';
+		}
+
+		return 'standard';
+	}
+
+	/**
+	 * Resolve the handover date to send on a delivery-day label.
+	 *
+	 * V4 labelconfirm has no delivery-date field — the customer's date is chosen at
+	 * checkout via the timeframe API — so the label anchors on handoverDate, the
+	 * merchant-to-PostNL drop-off date. PostNL delivers the day after handover, so
+	 * the handover for a chosen delivery date D is D minus one day, clamped to today
+	 * because a past handover date is rejected and the drop-off cannot precede the
+	 * day the label is generated. Returns null for a non-delivery-day order, which
+	 * lets labelconfirm apply its own default.
+	 *
+	 * @param Shipping\Item_Info $item_info Parsed legacy item info.
+	 * @return \DateTimeImmutable|null
+	 *
+	 * @throws \Exception When an evening delivery date has already passed, so the
+	 *                    merchant sees a readable message instead of a raw API error.
+	 */
+	private function resolve_handover_date( Shipping\Item_Info $item_info ): ?\DateTimeImmutable {
+		$date_raw = (string) ( $item_info->delivery_day['date'] ?? '' );
+
+		if ( '' === $date_raw ) {
+			return null;
+		}
+
+		$today         = $this->now()->setTime( 0, 0 );
+		$delivery_date = \DateTimeImmutable::createFromFormat( '!d-m-Y', $date_raw, $today->getTimezone() );
+
+		if ( false === $delivery_date ) {
+			return null;
+		}
+
+		// An evening label generated after the customer's chosen date can no longer be
+		// handed over in time; surface a clear message rather than silently shipping it
+		// for a different evening or letting PostNL reject a past handover date.
+		if ( 'evening' === $this->resolve_delivery_window( $item_info ) && $delivery_date < $today ) {
+			throw new \Exception(
+				esc_html__( 'The selected evening delivery date has already passed. Ask the customer to choose a new delivery date, or generate a standard label.', 'postnl-for-woocommerce' )
+			);
+		}
+
+		$handover = $delivery_date->modify( '-1 day' );
+
+		return $handover < $today ? $today : $handover;
+	}
+
+	/**
+	 * Current site-timezone datetime; a seam for deterministic tests.
+	 *
+	 * @return \DateTimeImmutable
+	 */
+	protected function now(): \DateTimeImmutable {
+		return current_datetime();
 	}
 
 	/**
@@ -368,6 +448,18 @@ class Service extends Order_Base implements Label_Service_Interface {
 		// go unused, exactly as on V1.
 		$barcodes = array_values( array_filter( (array) ( $post_data['barcodes'] ?? array() ), 'is_scalar' ) );
 		$barcodes = array_slice( $barcodes, 0, $num_labels );
+
+		$services = Eligibility::resolve_services(
+			$mapped['services'] ?? array(),
+			(float) ( $item_info->shipment['subtotal'] ?? 0 )
+		);
+
+		// deliveryWindow is a Request_Builder concern layered on the mapped product, not a
+		// mapper output: an evening parcel keeps the same product code and gains a window
+		// service. Morning never reaches here — Eligibility keeps it on the legacy path.
+		if ( 'evening' === $this->resolve_delivery_window( $item_info ) ) {
+			$services['deliveryWindow'] = 'evening';
+		}
 
 		return array(
 			'sender'        => array(
@@ -401,10 +493,8 @@ class Service extends Order_Base implements Label_Service_Interface {
 			// only record of it when the label call issues the barcodes instead, and
 			// Request_Builder ignores it whenever a barcode is supplied.
 			'num_labels'    => $num_labels,
-			'services'      => Eligibility::resolve_services(
-				$mapped['services'] ?? array(),
-				(float) ( $item_info->shipment['subtotal'] ?? 0 )
-			),
+			'services'      => $services,
+			'handover_date' => $this->resolve_handover_date( $item_info ),
 			'international' => $this->extract_international( $item_info, $mapped ),
 			'label'         => Request_Builder::printer_type_to_label_settings(
 				(string) ( $item_info->shipment['printer_type'] ?? '' )

@@ -485,6 +485,81 @@ class Request_BuilderTest extends UnitTestCase {
 	}
 
 	/**
+	 * @testdox build() maps an evening deliveryWindow to a DeliveryWindow with service evening.
+	 */
+	public function test_delivery_window_evening_is_mapped(): void {
+		$fields             = $this->domestic_fields();
+		$fields['services'] = array( 'deliveryWindow' => 'evening' );
+
+		$services = $this->payload( $fields )['services'];
+
+		$this->assertSame( array( 'service' => 'evening' ), $services['deliveryWindow'] );
+	}
+
+	/**
+	 * @testdox build() builds the Services block for an evening window carrying no other service.
+	 *
+	 * A plain evening parcel carries only a deliveryWindow, so the block must not be
+	 * dropped as if it were empty.
+	 */
+	public function test_delivery_window_alone_builds_services(): void {
+		$fields             = $this->domestic_fields();
+		$fields['services'] = array( 'deliveryWindow' => 'evening' );
+
+		$services = $this->payload( $fields )['services'];
+
+		$this->assertArrayHasKey( 'deliveryWindow', $services );
+		$this->assertArrayNotHasKey( 'minimalAgeCheck', $services, 'Unset flags must be omitted.' );
+	}
+
+	/**
+	 * @testdox build() sends a supplied handover date as the labelconfirm handoverDate.
+	 *
+	 * labelconfirm carries no delivery-date field, so a delivery-day label anchors on
+	 * handoverDate; without it the endpoint defaults to today and misdates the parcel.
+	 * The SDK formats a DateTimeInterface as yyyy-MM-dd from the object's own timezone.
+	 */
+	public function test_handover_date_is_sent(): void {
+		$fields                  = $this->domestic_fields();
+		$fields['handover_date'] = new \DateTimeImmutable( '2026-07-14 09:00:00' );
+
+		$this->assertSame( '2026-07-14', $this->payload( $fields )['handoverDate'] );
+	}
+
+	/**
+	 * @testdox build() omits handoverDate when none is supplied.
+	 */
+	public function test_handover_date_is_omitted_when_absent(): void {
+		$this->assertArrayNotHasKey( 'handoverDate', $this->payload( $this->domestic_fields() ) );
+	}
+
+	/**
+	 * @testdox build() emits no DeliveryWindow for a standard, morning or unset window.
+	 * @dataProvider non_evening_window_provider
+	 *
+	 * @param string $window Delivery-window flag value.
+	 */
+	public function test_non_evening_window_omits_delivery_window( string $window ): void {
+		$fields             = $this->domestic_fields();
+		$fields['services'] = '' === $window ? array() : array( 'deliveryWindow' => $window );
+
+		$this->assertArrayNotHasKey( 'services', $this->payload( $fields ), 'Only an evening window builds a DeliveryWindow.' );
+	}
+
+	/**
+	 * Delivery-window flags that must not produce a DeliveryWindow block.
+	 *
+	 * @return array
+	 */
+	public static function non_evening_window_provider(): array {
+		return array(
+			'standard' => array( 'standard' ),
+			'morning'  => array( '08:00-12:00' ),
+			'unset'    => array( '' ),
+		);
+	}
+
+	/**
 	 * @testdox build() omits the internationalShipmentData block for a domestic parcel.
 	 */
 	public function test_international_block_omitted_for_domestic(): void {

@@ -20,8 +20,8 @@ use PostNLWooCommerce\Tests\UnitTestCase;
  *
  * Coverage:
  *  - Total row count = 89 (from provider data and from runtime calls)
- *  - has_v4_equivalent true  count = 42 (provider + runtime)
- *  - has_v4_equivalent false count = 47 (provider + runtime)
+ *  - has_v4_equivalent true  count = 50 (provider + runtime)
+ *  - has_v4_equivalent false count = 39 (provider + runtime)
  *  - All v4_mapped rows: expected shipmentType / services / deliveryLocation / internationalShipmentData
  *  - All legacy_only rows: reason = not_yet_available_in_v4
  *  - All needs_confirmation rows: reason = needs_confirmation
@@ -50,7 +50,7 @@ class V4_MapperTest extends UnitTestCase {
 	}
 
 	/**
-	 * @testdox Provider expected data: has_v4_equivalent true count = 42
+	 * @testdox Provider expected data: has_v4_equivalent true count = 50
 	 */
 	public function test_provider_v4_equivalent_true_count(): void {
 		$count = 0;
@@ -59,11 +59,11 @@ class V4_MapperTest extends UnitTestCase {
 				$count++;
 			}
 		}
-		$this->assertSame( 42, $count, 'Exactly 42 rows must be marked has_v4_equivalent=true.' );
+		$this->assertSame( 50, $count, 'Exactly 50 rows must be marked has_v4_equivalent=true.' );
 	}
 
 	/**
-	 * @testdox Provider expected data: has_v4_equivalent false count = 47
+	 * @testdox Provider expected data: has_v4_equivalent false count = 39
 	 */
 	public function test_provider_v4_equivalent_false_count(): void {
 		$count = 0;
@@ -72,7 +72,7 @@ class V4_MapperTest extends UnitTestCase {
 				$count++;
 			}
 		}
-		$this->assertSame( 47, $count, 'Exactly 47 rows must be marked has_v4_equivalent=false.' );
+		$this->assertSame( 39, $count, 'Exactly 39 rows must be marked has_v4_equivalent=false.' );
 	}
 
 	// =========================================================================
@@ -80,7 +80,7 @@ class V4_MapperTest extends UnitTestCase {
 	// =========================================================================
 
 	/**
-	 * @testdox Runtime: V4_Mapper::has_v4_equivalent() returns true for exactly 42 provider inputs
+	 * @testdox Runtime: V4_Mapper::has_v4_equivalent() returns true for exactly 50 provider inputs
 	 */
 	public function test_runtime_v4_equivalent_true_count(): void {
 		$count = 0;
@@ -89,11 +89,11 @@ class V4_MapperTest extends UnitTestCase {
 				$count++;
 			}
 		}
-		$this->assertSame( 42, $count );
+		$this->assertSame( 50, $count );
 	}
 
 	/**
-	 * @testdox Runtime: V4_Mapper::has_v4_equivalent() returns false for exactly 47 provider inputs
+	 * @testdox Runtime: V4_Mapper::has_v4_equivalent() returns false for exactly 39 provider inputs
 	 */
 	public function test_runtime_v4_equivalent_false_count(): void {
 		$count = 0;
@@ -102,7 +102,7 @@ class V4_MapperTest extends UnitTestCase {
 				$count++;
 			}
 		}
-		$this->assertSame( 47, $count );
+		$this->assertSame( 39, $count );
 	}
 
 	// =========================================================================
@@ -333,7 +333,7 @@ class V4_MapperTest extends UnitTestCase {
 	public function test_has_v4_equivalent_returns_false_for_needs_confirmation(): void {
 		$this->assertFalse(
 			V4_Mapper::has_v4_equivalent(
-				array( 'origin' => 'NL', 'destination' => 'NL', 'flow' => 'delivery_day', 'options' => array( 'id_check' ) )
+				array( 'origin' => 'NL', 'destination' => 'NL', 'flow' => 'delivery_day', 'options' => array( 'letterbox_48' ) )
 			)
 		);
 	}
@@ -634,45 +634,45 @@ class V4_MapperTest extends UnitTestCase {
 					array( 'origin' => 'NL', 'destination' => 'NL', 'flow' => 'delivery_day', 'options' => array( 'letterbox_48' ) ),
 					$leg( 89, '2948', $nc ),
 				),
-			'NL→NL/dd row 13: [id_check] needs_confirmation'
+			'NL→NL/dd row 13: [id_check] 18+'
 				=> array(
 					array( 'origin' => 'NL', 'destination' => 'NL', 'flow' => 'delivery_day', 'options' => array( 'id_check' ) ),
-					$leg( 13, '3438', $nc ),
+					$v4( 13, '3438', 'parcel', array( 'minimalAgeCheck' => '18+' ) ),
 				),
-			'NL→NL/dd row 14: [id_check,signature_on_delivery] needs_confirmation'
+			'NL→NL/dd row 14: [id_check,signature_on_delivery] 18+'
 				=> array(
 					array( 'origin' => 'NL', 'destination' => 'NL', 'flow' => 'delivery_day', 'options' => array( 'id_check', 'signature_on_delivery' ) ),
-					$leg( 14, '3438', $nc ),
+					$v4( 14, '3438', 'parcel', array( 'minimalAgeCheck' => '18+' ) ),
 				),
-			'NL→NL/dd row 15: [id_check,only_home_address] needs_confirmation'
+			'NL→NL/dd row 15: [id_check,only_home_address] 18+'
 				=> array(
 					array( 'origin' => 'NL', 'destination' => 'NL', 'flow' => 'delivery_day', 'options' => array( 'id_check', 'only_home_address' ) ),
-					$leg( 15, '3438', $nc ),
+					$v4( 15, '3438', 'parcel', array( 'minimalAgeCheck' => '18+' ) ),
 				),
-			'NL→NL/dd row 16: [id_check,only_home_address,signature_on_delivery] needs_confirmation'
+			'NL→NL/dd row 16: [id_check,only_home_address,signature_on_delivery] 18+'
 				=> array(
 					array( 'origin' => 'NL', 'destination' => 'NL', 'flow' => 'delivery_day', 'options' => array( 'id_check', 'only_home_address', 'signature_on_delivery' ) ),
-					$leg( 16, '3438', $nc ),
+					$v4( 16, '3438', 'parcel', array( 'minimalAgeCheck' => '18+' ) ),
 				),
-			'NL→NL/dd row 17: [id_check,insured_shipping] needs_confirmation'
+			'NL→NL/dd row 17: [id_check,insured_shipping] 18+'
 				=> array(
 					array( 'origin' => 'NL', 'destination' => 'NL', 'flow' => 'delivery_day', 'options' => array( 'id_check', 'insured_shipping' ) ),
-					$leg( 17, '3443', $nc ),
+					$v4( 17, '3443', 'parcel', array( 'insuredValue' => '<order_total>', 'minimalAgeCheck' => '18+' ) ),
 				),
-			'NL→NL/dd row 18: [id_check,insured_shipping,signature_on_delivery] needs_confirmation'
+			'NL→NL/dd row 18: [id_check,insured_shipping,signature_on_delivery] 18+'
 				=> array(
 					array( 'origin' => 'NL', 'destination' => 'NL', 'flow' => 'delivery_day', 'options' => array( 'id_check', 'insured_shipping', 'signature_on_delivery' ) ),
-					$leg( 18, '3443', $nc ),
+					$v4( 18, '3443', 'parcel', array( 'insuredValue' => '<order_total>', 'minimalAgeCheck' => '18+' ) ),
 				),
-			'NL→NL/dd row 19: [id_check,insured_shipping,only_home_address] needs_confirmation'
+			'NL→NL/dd row 19: [id_check,insured_shipping,only_home_address] 18+'
 				=> array(
 					array( 'origin' => 'NL', 'destination' => 'NL', 'flow' => 'delivery_day', 'options' => array( 'id_check', 'insured_shipping', 'only_home_address' ) ),
-					$leg( 19, '3443', $nc ),
+					$v4( 19, '3443', 'parcel', array( 'insuredValue' => '<order_total>', 'minimalAgeCheck' => '18+' ) ),
 				),
-			'NL→NL/dd row 20: [id_check,insured_shipping,only_home_address,signature_on_delivery] needs_confirmation'
+			'NL→NL/dd row 20: [id_check,insured_shipping,only_home_address,signature_on_delivery] 18+'
 				=> array(
 					array( 'origin' => 'NL', 'destination' => 'NL', 'flow' => 'delivery_day', 'options' => array( 'id_check', 'insured_shipping', 'only_home_address', 'signature_on_delivery' ) ),
-					$leg( 20, '3443', $nc ),
+					$v4( 20, '3443', 'parcel', array( 'insuredValue' => '<order_total>', 'minimalAgeCheck' => '18+' ) ),
 				),
 
 			// -----------------------------------------------------------------
@@ -1132,28 +1132,27 @@ class V4_MapperTest extends UnitTestCase {
 	}
 
 	/**
-	 * @testdox No matrix row emits minimalAgeCheck yet, so ID Check still routes to legacy
+	 * @testdox Exactly the eight NL→NL id_check rows map to V4 with minimalAgeCheck 18+
 	 *
-	 * Request_Builder handles minimalAgeCheck and the PR description advertises 16+/18+
-	 * support, but every id_check combination is a legacy_result. Pinning the count at
-	 * zero means promoting an ID Check row to V4 without also confirming the age-check
-	 * mapping is a visible, deliberate test edit rather than a silent behaviour change.
+	 * Codes 3438 and 3443 were reclassified from needs_confirmation to V4 after a sandbox
+	 * probe confirmed labelconfirm accepts minimalAgeCheck 18+ alongside signature and an
+	 * insured value. Pinning the exact set means promoting or dropping an ID Check row is
+	 * a deliberate, visible test edit rather than a silent behaviour change.
 	 */
-	public function test_no_row_emits_minimal_age_check_yet(): void {
+	public function test_id_check_rows_emit_minimal_age_check(): void {
 		$emitting = array();
 
 		foreach ( self::combination_matrix_provider() as $name => $row ) {
-			$services = V4_Mapper::map( $row[0] )['services'] ?? array();
+			$result   = V4_Mapper::map( $row[0] );
+			$services = $result['services'] ?? array();
 
 			if ( isset( $services['minimalAgeCheck'] ) ) {
+				$this->assertTrue( $result['has_v4_equivalent'], "Row '{$name}' emits minimalAgeCheck but is not a V4 result." );
+				$this->assertSame( '18+', $services['minimalAgeCheck'], "Row '{$name}' must emit minimalAgeCheck 18+." );
 				$emitting[] = $name;
 			}
 		}
 
-		$this->assertSame(
-			array(),
-			$emitting,
-			'A row now emits minimalAgeCheck. Confirm the age-check mapping against the portal, then update this test.'
-		);
+		$this->assertCount( 8, $emitting, 'Exactly the eight NL→NL id_check rows must emit minimalAgeCheck.' );
 	}
 }

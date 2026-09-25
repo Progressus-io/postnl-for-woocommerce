@@ -52,8 +52,10 @@ class ServiceTest extends UnitTestCase {
 		parent::setUp();
 		$this->seed_settings_singleton();
 
-		// Exception_Converter translates its messages; surface them verbatim in failures.
+		// Exception_Converter and the handover-date guard translate their messages;
+		// surface them verbatim in failures.
 		Functions\when( '__' )->returnArg( 1 );
+		Functions\when( 'esc_html__' )->returnArg( 1 );
 	}
 
 	protected function tearDown(): void {
@@ -352,6 +354,182 @@ class ServiceTest extends UnitTestCase {
 		);
 
 		$this->assertSame( array(), $fields['services'] );
+	}
+
+	/**
+	 * @testdox extract_fields() attaches an evening delivery window and omits it for every other selection.
+	 * @dataProvider delivery_window_provider
+	 *
+	 * Covers resolve_delivery_window()'s branches (frontend 'Evening' and '08:00-12:00'
+	 * morning) and the extract_fields() line that only injects the window for evening.
+	 * Morning is included even though Eligibility keeps it on legacy, to pin that
+	 * extract_fields itself never turns it into a standard-daytime V4 shipment.
+	 *
+	 * @param string      $frontend_type Frontend delivery_day type.
+	 * @param string      $backend_type  Backend delivery_type.
+	 * @param string|null $expected      Expected services['deliveryWindow'], or null when omitted.
+	 */
+	public function test_extract_fields_attaches_the_delivery_window( string $frontend_type, string $backend_type, ?string $expected ): void {
+		$service = new Testable_Label_Service(
+			new Spy_Label_Client_Factory( new Client_Factory_Settings(), new Failing_Http_Client() ),
+			self::V4_KEY,
+			new NullLogger()
+		);
+
+		$item_info = new Fake_Shipping_Item_Info(
+			array( 'subtotal' => 42.00 ),
+			array(),
+			'' === $backend_type ? array() : array( 'delivery_type' => $backend_type )
+		);
+		$item_info->delivery_day = array( 'type' => $frontend_type );
+
+		$fields = $this->extract_fields(
+			$service,
+			$item_info,
+			array( 'shipmentType' => 'parcel', 'services' => array() ),
+			array()
+		);
+
+		if ( null === $expected ) {
+			$this->assertArrayNotHasKey( 'deliveryWindow', $fields['services'], 'A non-evening selection must attach no delivery window.' );
+		} else {
+			$this->assertSame( $expected, $fields['services']['deliveryWindow'], 'An evening selection must attach the evening delivery window.' );
+		}
+	}
+
+	/**
+	 * Delivery-day selections mapped to the expected injected window.
+	 *
+	 * @return array
+	 */
+	public static function delivery_window_provider(): array {
+		return array(
+			'evening from the frontend type'  => array( 'Evening', '', 'evening' ),
+			'morning gets no V4 window'       => array( '08:00-12:00', 'Standard', null ),
+			'standard daytime gets no window' => array( 'Daytime', 'Standard', null ),
+			'no delivery-day selection'       => array( '', '', null ),
+		);
+	}
+
+	// ── Handover date ────────────────────────────────────────────────────────
+
+	/**
+	 * @testdox extract_fields() sends the handover date as the day before the chosen delivery date.
+	 *
+	 * V4 labelconfirm carries no delivery-date field, so a delivery-day label anchors
+	 * on handoverDate; PostNL delivers the day after handover, so a delivery date of
+	 * 14-07 hands over on 13-07. Without this the endpoint defaults to today and
+	 * misdates the parcel.
+	 */
+	public function test_extract_fields_sends_the_handover_date(): void {
+		Functions\when( 'current_datetime' )->justReturn(
+			new \DateTimeImmutable( '2026-07-10 09:00:00', new \DateTimeZone( 'Europe/Amsterdam' ) )
+		);
+
+		$fields = $this->extract_fields_for_delivery_date( '14-07-2026', 'Evening' );
+
+		$this->assertInstanceOf( \DateTimeImmutable::class, $fields['handover_date'] );
+		$this->assertSame( '2026-07-13', $fields['handover_date']->format( 'Y-m-d' ), 'Handover is the day before the chosen delivery date.' );
+	}
+
+	/**
+	 * @testdox extract_fields() clamps a handover date that would fall in the past to today.
+	 *
+	 * A standard delivery-day label generated after the chosen date must not send a
+	 * past handover date, which labelconfirm rejects; it clamps to the day the label
+	 * is generated instead.
+	 */
+	public function test_extract_fields_clamps_a_past_handover_to_today(): void {
+		Functions\when( 'current_datetime' )->justReturn(
+			new \DateTimeImmutable( '2026-07-20 09:00:00', new \DateTimeZone( 'Europe/Amsterdam' ) )
+		);
+
+		$fields = $this->extract_fields_for_delivery_date( '14-07-2026', 'Daytime' );
+
+		$this->assertSame( '2026-07-20', $fields['handover_date']->format( 'Y-m-d' ), 'A past handover date clamps to today.' );
+	}
+
+	/**
+	 * @testdox extract_fields() rejects an evening label whose chosen date has already passed.
+	 *
+	 * A past evening date can no longer be honoured, so the merchant gets a readable
+	 * message rather than a raw API rejection or a parcel silently rebooked.
+	 */
+	public function test_extract_fields_rejects_a_past_evening_label(): void {
+		Functions\when( 'current_datetime' )->justReturn(
+			new \DateTimeImmutable( '2026-07-20 09:00:00', new \DateTimeZone( 'Europe/Amsterdam' ) )
+		);
+
+		$this->expectException( \Exception::class );
+		$this->expectExceptionMessage( 'evening delivery date has already passed' );
+
+		$this->extract_fields_for_delivery_date( '14-07-2026', 'Evening' );
+	}
+
+	/**
+	 * @testdox A morning delivery-day order is not V4-eligible through the signal path.
+	 *
+	 * gather_signals() feeds resolve_delivery_window() into the eligibility signal, so
+	 * a morning order has to surface as 'morning' and be turned away — replacing the
+	 * window with a constant would otherwise route it to V4 unnoticed.
+	 */
+	public function test_a_morning_order_is_not_v4_eligible(): void {
+		$service = new Testable_Label_Service(
+			new Spy_Label_Client_Factory( new Client_Factory_Settings(), new Failing_Http_Client() ),
+			self::V4_KEY,
+			new NullLogger()
+		);
+
+		$item_info                = new Delivery_Window_Item_Info( array( 'subtotal' => 42.00 ) );
+		$item_info->delivery_day  = array( 'type' => '08:00-12:00' );
+
+		$signals = $this->gather_signals( $service, $item_info, array() );
+
+		$this->assertSame( 'morning', $signals['delivery_window'], 'A morning selection must surface as the morning window signal.' );
+		$this->assertFalse( \PostNLWooCommerce\Rest_API\V4\Label\Eligibility::is_eligible( $signals ), 'A morning order must be turned away.' );
+	}
+
+	/**
+	 * Run extract_fields() for a delivery-day order with the given date and frontend type.
+	 *
+	 * @param string $date          Delivery date in the d-m-Y form the parser stores.
+	 * @param string $frontend_type Frontend delivery-day type, e.g. 'Evening' or 'Daytime'.
+	 * @return array
+	 */
+	private function extract_fields_for_delivery_date( string $date, string $frontend_type ): array {
+		$service = new Testable_Label_Service(
+			new Spy_Label_Client_Factory( new Client_Factory_Settings(), new Failing_Http_Client() ),
+			self::V4_KEY,
+			new NullLogger()
+		);
+
+		$item_info               = new Fake_Shipping_Item_Info( array( 'subtotal' => 42.00 ) );
+		$item_info->delivery_day = array(
+			'date' => $date,
+			'type' => $frontend_type,
+		);
+
+		return $this->extract_fields(
+			$service,
+			$item_info,
+			array( 'shipmentType' => 'parcel', 'services' => array() ),
+			array()
+		);
+	}
+
+	/**
+	 * Call Service::gather_signals(), which is private, via reflection.
+	 *
+	 * @param Service            $service   Service under test.
+	 * @param Shipping\Item_Info $item_info Parsed legacy item info.
+	 * @param array              $post_data Label post data.
+	 * @return array
+	 */
+	private function gather_signals( Service $service, Shipping\Item_Info $item_info, array $post_data ): array {
+		$method = new \ReflectionMethod( Service::class, 'gather_signals' );
+		$method->setAccessible( true );
+
+		return $method->invoke( $service, $item_info, $post_data );
 	}
 
 	/**
@@ -1198,6 +1376,26 @@ class Fake_Shipping_Item_Info extends Shipping\Item_Info {
 		$this->shipper      = array( 'country' => 'NL' );
 		$this->receiver     = array( 'country' => 'NL' );
 		$this->backend_data = $backend_data;
+	}
+}
+
+/**
+ * Item_Info stand-in for the gather_signals() path, which — unlike extract_fields()
+ * — reads the delivery-day and product-code accessors. Those resolve off api_args
+ * the fake never builds, so they are stubbed to a plain domestic delivery-day order.
+ */
+class Delivery_Window_Item_Info extends Fake_Shipping_Item_Info {
+
+	public function is_delivery_day() {
+		return true;
+	}
+
+	public function is_pickup_points() {
+		return false;
+	}
+
+	public function get_product_code() {
+		return '3085';
 	}
 }
 

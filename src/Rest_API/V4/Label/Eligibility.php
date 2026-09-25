@@ -67,7 +67,8 @@ class Eligibility {
 	 *     @type bool   $is_delivery_day     A delivery-day option was selected.
 	 *     @type bool   $is_pickup           A pickup point was selected.
 	 *     @type bool   $has_return          A return label/barcode is involved.
-	 *     @type string $delivery_type       'Standard' or 'Evening'.
+	 *     @type string $delivery_window     Normalised delivery-day window: 'evening',
+	 *                                        'morning' or 'standard'.
 	 *     @type string $origin              Origin country.
 	 *     @type string $destination         Shipping zone.
 	 *     @type array  $mapped              V4_Mapper::map() result.
@@ -81,7 +82,9 @@ class Eligibility {
 			return false;
 		}
 
-		if ( ! empty( $signals['is_delivery_day'] ) || ! empty( $signals['is_pickup'] ) ) {
+		// A pickup point is a DeliveryLocation variant that lands separately, so it stays
+		// on legacy; a home delivery-day selection (standard or evening) is handled here.
+		if ( ! empty( $signals['is_pickup'] ) ) {
 			return false;
 		}
 
@@ -89,7 +92,11 @@ class Eligibility {
 			return false;
 		}
 
-		if ( 'Standard' !== ( $signals['delivery_type'] ?? 'Standard' ) ) {
+		// Evening is expressed as a deliveryWindow service on the same product code, so it
+		// maps like any parcel and is handled here. Morning (08:00-12:00) has no confirmed
+		// V4 window — guaranteedBefore 12:00 is rejected and there is no morning service —
+		// so it stays on legacy rather than silently shipping as standard daytime.
+		if ( 'morning' === ( $signals['delivery_window'] ?? '' ) ) {
 			return false;
 		}
 
@@ -117,6 +124,14 @@ class Eligibility {
 			return false;
 		}
 
+		// minimalAgeCheck and an evening deliveryWindow cannot be combined on the V4
+		// product — labelconfirm rejects the pair — so an 18+ order with an evening
+		// slot stays on legacy rather than being routed to a request PostNL rejects.
+		if ( 'evening' === ( $signals['delivery_window'] ?? '' )
+			&& array_key_exists( 'minimalAgeCheck', (array) ( $mapped['services'] ?? array() ) ) ) {
+			return false;
+		}
+
 		// Letterbox (mailbox parcel 2928) is a domestic-NL-only variant. The 48h
 		// variant (2948) never reaches here: it collapses onto the same 'letterbox'
 		// option key but keeps product code 2948, so the mapper's product-code
@@ -135,8 +150,8 @@ class Eligibility {
 	 * The matrix stores insuredValue as the '<order_total>' placeholder — a misnomer
 	 * kept for now to match V4_Mapper; the value substituted is the item subtotal, not
 	 * the order total. It is replaced here with the order's insured amount. All other
-	 * flags (deliveryConfirmation, statedAddressOnly, returnWhenNotHome) pass through
-	 * unchanged. minimalAgeCheck would too, but no matrix row emits it yet.
+	 * flags (deliveryConfirmation, statedAddressOnly, returnWhenNotHome, minimalAgeCheck)
+	 * pass through unchanged; the id_check rows (3438/3443) emit minimalAgeCheck.
 	 *
 	 * The insured amount must remain the order item subtotal (WC_Order::get_subtotal),
 	 * matching the value the legacy Shipping\Client puts in the Amounts block. Do not

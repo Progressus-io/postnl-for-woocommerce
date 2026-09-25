@@ -14,6 +14,7 @@ use Postnl\Sdk\Enums\Payload\Bundle;
 use Postnl\Sdk\Enums\Payload\Country;
 use Postnl\Sdk\Enums\Payload\Currency;
 use Postnl\Sdk\Enums\Payload\DeliveryConfirmation;
+use Postnl\Sdk\Enums\Payload\DeliveryWindowService;
 use Postnl\Sdk\Enums\Payload\LabelOutputType;
 use Postnl\Sdk\Enums\Payload\LabelResolution;
 use Postnl\Sdk\Enums\Payload\MinimalAgeCheck;
@@ -23,6 +24,7 @@ use Postnl\Sdk\Enums\Payload\TransactionCode;
 use Postnl\Sdk\RequestData\V4\Address;
 use Postnl\Sdk\RequestData\V4\Contact;
 use Postnl\Sdk\RequestData\V4\CustomerReferences;
+use Postnl\Sdk\RequestData\V4\DeliveryWindow;
 use Postnl\Sdk\RequestData\V4\Dimensions;
 use Postnl\Sdk\RequestData\V4\InternationalShipment\AssociatedDocument;
 use Postnl\Sdk\RequestData\V4\InternationalShipment\Content;
@@ -88,13 +90,15 @@ class Request_Builder {
 	 *                                  pre-issued barcode; the barcodes win otherwise.
 	 *     @type array  $label         Label output: output_type (pdf|zpl|jpg|gif|png)
 	 *                                  and resolution (200|300|600).
+	 *     @type mixed  $handover_date Optional DateTimeInterface, the merchant-to-PostNL
+	 *                                  drop-off date. Set for delivery-day orders so the
+	 *                                  window anchors on the right day; omitted otherwise.
 	 *     @type array  $services      Optional resolved service flags: deliveryConfirmation
 	 *                                  ('signature'|'deliverycode'), insuredValue (float),
-	 *                                  statedAddressOnly (bool), returnWhenNotHome (bool).
-	 *                                  minimalAgeCheck ('16+'|'18+') is accepted but no
-	 *                                  V4_Mapper row emits it yet — every id_check
-	 *                                  combination is still Legacy-only, so ID Check
-	 *                                  orders do not reach V4 at all.
+	 *                                  statedAddressOnly (bool), returnWhenNotHome (bool),
+	 *                                  minimalAgeCheck ('16+'|'18+') and deliveryWindow
+	 *                                  ('evening'). deliveryWindow is set from the order's
+	 *                                  delivery-day selection by the caller, not the mapper.
 	 *     @type array  $international  Optional EU/ROW data: bundle ('track_trace'|'insured'|
 	 *                                  'insured_plus') and customs (currency, transaction_code,
 	 *                                  associated_document{type,number}, sender_identification,
@@ -128,10 +132,29 @@ class Request_Builder {
 			receiver: $receiver,
 			labelSettings: $label_settings,
 			shipmentType: self::shipment_type( (string) ( $fields['shipment_type'] ?? 'parcel' ) ),
+			handoverDate: self::handover_date( $fields['handover_date'] ?? null ),
 			services: self::services( $fields['services'] ?? array() ),
 			internationalShipmentData: self::international( $fields['international'] ?? array() ),
 			items: self::items( $fields )
 		);
+	}
+
+	/**
+	 * Pass through a caller-supplied handover date, or null when none is set.
+	 *
+	 * The labelconfirm request carries no delivery-date field — in V4 the delivery
+	 * date is chosen at checkout via the timeframe API, not sent on the label — so the
+	 * only date the label anchors on is handoverDate (the merchant-to-PostNL drop-off
+	 * date). Without it labelconfirm defaults to today, which rejects an evening label
+	 * handed over on a Friday and otherwise books the parcel for the wrong evening.
+	 * Service::resolve_handover_date() computes it for delivery-day orders. The SDK
+	 * formats it as yyyy-MM-dd from the object's own timezone.
+	 *
+	 * @param mixed $handover A DateTimeInterface, or null/other when no date applies.
+	 * @return \DateTimeInterface|null
+	 */
+	private static function handover_date( $handover ): ?\DateTimeInterface {
+		return $handover instanceof \DateTimeInterface ? $handover : null;
 	}
 
 	/**
@@ -300,13 +323,14 @@ class Request_Builder {
 	private static function services( array $flags ): ?Services {
 		$confirmation = DeliveryConfirmation::tryFrom( (string) ( $flags['deliveryConfirmation'] ?? '' ) );
 		$age_check    = MinimalAgeCheck::tryFrom( (string) ( $flags['minimalAgeCheck'] ?? '' ) );
+		$window       = self::delivery_window( (string) ( $flags['deliveryWindow'] ?? '' ) );
 		// isset (not ! empty) so a legitimately zero insured value is still sent, matching
 		// the legacy Amounts block, which emits Value 0 rather than omitting the block.
 		$insured     = isset( $flags['insuredValue'] ) ? (float) $flags['insuredValue'] : null;
 		$stated_only = ! empty( $flags['statedAddressOnly'] ) ? true : null;
 		$return_home = ! empty( $flags['returnWhenNotHome'] ) ? true : null;
 
-		if ( null === $confirmation && null === $age_check && null === $insured
+		if ( null === $confirmation && null === $age_check && null === $window && null === $insured
 			&& null === $stated_only && null === $return_home ) {
 			return null;
 		}
@@ -315,9 +339,33 @@ class Request_Builder {
 			statedAddressOnly: $stated_only,
 			returnWhenNotHome: $return_home,
 			minimalAgeCheck: $age_check,
+			deliveryWindow: $window,
 			deliveryConfirmation: $confirmation,
 			insuredValue: $insured
 		);
+	}
+
+	/**
+	 * Translate a resolved delivery-window key into a V4 DeliveryWindow DTO.
+	 *
+	 * Only 'evening' is emitted, as a DeliveryWindow whose service is Evening and
+	 * nothing else. A sandbox probe confirmed that shape is what labelconfirm expects
+	 * for an evening shipment: the service enum's GuaranteedBefore* cases are rejected
+	 * as an unknown value, guaranteed delivery is a separate guaranteedBefore field,
+	 * and a duration made no difference. The plugin's checkout offers neither guaranteed
+	 * delivery nor a confirmed V4 morning (08:00-12:00) window, so a standard/daytime
+	 * selection carries no DeliveryWindow and morning never reaches here — Eligibility
+	 * keeps it on the legacy path.
+	 *
+	 * @param string $window Resolved window key, currently 'evening' or ''.
+	 * @return DeliveryWindow|null
+	 */
+	private static function delivery_window( string $window ): ?DeliveryWindow {
+		if ( 'evening' !== $window ) {
+			return null;
+		}
+
+		return new DeliveryWindow( service: DeliveryWindowService::Evening );
 	}
 
 	/**

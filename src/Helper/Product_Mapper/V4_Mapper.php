@@ -26,9 +26,10 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Runtime outcomes: has_v4_equivalent = true (50 rows) or false (39 rows).
  * needs_confirmation rows behave as Legacy-only at runtime until promoted to v4_mapped.
  *
- * Domestic NL id_check (18+) parcels 3438 and 3443 map to V4 via a minimalAgeCheck
- * service (sandbox-confirmed alongside signature/insured); their pickup and BE
- * counterparts stay Legacy-only.
+ * Domestic NL id_check (18+) parcels 3438 and 3443 map to V4 via a bare minimalAgeCheck
+ * service (plus insuredValue for 3443); every id_check combination collapses to that,
+ * as V1 does, since the age-check product rejects other services layered on top. Their
+ * pickup and BE counterparts stay Legacy-only.
  *
  * Not-yet-available codes are always Legacy-only; see NOT_YET_AVAILABLE_CODES.
  * EU/ROW parcels (4907/4909) map to V4 with an InternationalShipmentData bundle
@@ -279,35 +280,16 @@ class V4_Mapper {
 						'letterbox'                      => self::v4_result( 12, '2928', 'letterbox' ),
 						// letterbox_48 (2948, 48h Letterbox): V4 shape unconfirmed against the portal — keep on Legacy.
 						'letterbox_48'                   => self::legacy_result( 89, '2948', $nc ),
+						// Every id_check combination collapses to the bare age-check product,
+						// exactly as V1 does: the 3438/3443 products already include signature
+						// and are handled as stated-address home delivery, so emitting those
+						// services alongside minimalAgeCheck is rejected by labelconfirm as an
+						// invalid combination (and silently drops the insured value on 3443).
+						// The insured 3443 rows keep insuredValue; nothing else carries over.
 						'id_check'                       => self::v4_result( 13, '3438', 'parcel', array( 'minimalAgeCheck' => '18+' ) ),
-						'id_check+signature_on_delivery' => self::v4_result(
-							14,
-							'3438',
-							'parcel',
-							array(
-								'deliveryConfirmation' => 'signature',
-								'minimalAgeCheck'      => '18+',
-							)
-						),
-						'id_check+only_home_address'     => self::v4_result(
-							15,
-							'3438',
-							'parcel',
-							array(
-								'minimalAgeCheck'   => '18+',
-								'statedAddressOnly' => true,
-							)
-						),
-						'id_check+only_home_address+signature_on_delivery' => self::v4_result(
-							16,
-							'3438',
-							'parcel',
-							array(
-								'deliveryConfirmation' => 'signature',
-								'minimalAgeCheck'      => '18+',
-								'statedAddressOnly'    => true,
-							)
-						),
+						'id_check+signature_on_delivery' => self::v4_result( 14, '3438', 'parcel', array( 'minimalAgeCheck' => '18+' ) ),
+						'id_check+only_home_address'     => self::v4_result( 15, '3438', 'parcel', array( 'minimalAgeCheck' => '18+' ) ),
+						'id_check+only_home_address+signature_on_delivery' => self::v4_result( 16, '3438', 'parcel', array( 'minimalAgeCheck' => '18+' ) ),
 						'id_check+insured_shipping'      => self::v4_result(
 							17,
 							'3443',
@@ -322,9 +304,8 @@ class V4_Mapper {
 							'3443',
 							'parcel',
 							array(
-								'deliveryConfirmation' => 'signature',
-								'insuredValue'         => '<order_total>',
-								'minimalAgeCheck'      => '18+',
+								'insuredValue'    => '<order_total>',
+								'minimalAgeCheck' => '18+',
 							)
 						),
 						'id_check+insured_shipping+only_home_address' => self::v4_result(
@@ -332,9 +313,8 @@ class V4_Mapper {
 							'3443',
 							'parcel',
 							array(
-								'insuredValue'      => '<order_total>',
-								'minimalAgeCheck'   => '18+',
-								'statedAddressOnly' => true,
+								'insuredValue'    => '<order_total>',
+								'minimalAgeCheck' => '18+',
 							)
 						),
 						'id_check+insured_shipping+only_home_address+signature_on_delivery' => self::v4_result(
@@ -342,10 +322,8 @@ class V4_Mapper {
 							'3443',
 							'parcel',
 							array(
-								'deliveryConfirmation' => 'signature',
-								'insuredValue'         => '<order_total>',
-								'minimalAgeCheck'      => '18+',
-								'statedAddressOnly'    => true,
+								'insuredValue'    => '<order_total>',
+								'minimalAgeCheck' => '18+',
 							)
 						),
 					),

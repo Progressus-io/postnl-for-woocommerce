@@ -642,17 +642,17 @@ class V4_MapperTest extends UnitTestCase {
 			'NL→NL/dd row 14: [id_check,signature_on_delivery] 18+'
 				=> array(
 					array( 'origin' => 'NL', 'destination' => 'NL', 'flow' => 'delivery_day', 'options' => array( 'id_check', 'signature_on_delivery' ) ),
-					$v4( 14, '3438', 'parcel', array( 'deliveryConfirmation' => 'signature', 'minimalAgeCheck' => '18+' ) ),
+					$v4( 14, '3438', 'parcel', array( 'minimalAgeCheck' => '18+' ) ),
 				),
 			'NL→NL/dd row 15: [id_check,only_home_address] 18+'
 				=> array(
 					array( 'origin' => 'NL', 'destination' => 'NL', 'flow' => 'delivery_day', 'options' => array( 'id_check', 'only_home_address' ) ),
-					$v4( 15, '3438', 'parcel', array( 'minimalAgeCheck' => '18+', 'statedAddressOnly' => true ) ),
+					$v4( 15, '3438', 'parcel', array( 'minimalAgeCheck' => '18+' ) ),
 				),
 			'NL→NL/dd row 16: [id_check,only_home_address,signature_on_delivery] 18+'
 				=> array(
 					array( 'origin' => 'NL', 'destination' => 'NL', 'flow' => 'delivery_day', 'options' => array( 'id_check', 'only_home_address', 'signature_on_delivery' ) ),
-					$v4( 16, '3438', 'parcel', array( 'deliveryConfirmation' => 'signature', 'minimalAgeCheck' => '18+', 'statedAddressOnly' => true ) ),
+					$v4( 16, '3438', 'parcel', array( 'minimalAgeCheck' => '18+' ) ),
 				),
 			'NL→NL/dd row 17: [id_check,insured_shipping] 18+'
 				=> array(
@@ -662,17 +662,17 @@ class V4_MapperTest extends UnitTestCase {
 			'NL→NL/dd row 18: [id_check,insured_shipping,signature_on_delivery] 18+'
 				=> array(
 					array( 'origin' => 'NL', 'destination' => 'NL', 'flow' => 'delivery_day', 'options' => array( 'id_check', 'insured_shipping', 'signature_on_delivery' ) ),
-					$v4( 18, '3443', 'parcel', array( 'deliveryConfirmation' => 'signature', 'insuredValue' => '<order_total>', 'minimalAgeCheck' => '18+' ) ),
+					$v4( 18, '3443', 'parcel', array( 'insuredValue' => '<order_total>', 'minimalAgeCheck' => '18+' ) ),
 				),
 			'NL→NL/dd row 19: [id_check,insured_shipping,only_home_address] 18+'
 				=> array(
 					array( 'origin' => 'NL', 'destination' => 'NL', 'flow' => 'delivery_day', 'options' => array( 'id_check', 'insured_shipping', 'only_home_address' ) ),
-					$v4( 19, '3443', 'parcel', array( 'insuredValue' => '<order_total>', 'minimalAgeCheck' => '18+', 'statedAddressOnly' => true ) ),
+					$v4( 19, '3443', 'parcel', array( 'insuredValue' => '<order_total>', 'minimalAgeCheck' => '18+' ) ),
 				),
 			'NL→NL/dd row 20: [id_check,insured_shipping,only_home_address,signature_on_delivery] 18+'
 				=> array(
 					array( 'origin' => 'NL', 'destination' => 'NL', 'flow' => 'delivery_day', 'options' => array( 'id_check', 'insured_shipping', 'only_home_address', 'signature_on_delivery' ) ),
-					$v4( 20, '3443', 'parcel', array( 'deliveryConfirmation' => 'signature', 'insuredValue' => '<order_total>', 'minimalAgeCheck' => '18+', 'statedAddressOnly' => true ) ),
+					$v4( 20, '3443', 'parcel', array( 'insuredValue' => '<order_total>', 'minimalAgeCheck' => '18+' ) ),
 				),
 
 			// -----------------------------------------------------------------

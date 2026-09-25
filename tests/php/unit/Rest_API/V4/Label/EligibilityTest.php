@@ -130,6 +130,30 @@ class EligibilityTest extends UnitTestCase {
 	}
 
 	/**
+	 * @testdox is_eligible() keeps an 18+ order with an evening slot on the legacy path.
+	 *
+	 * labelconfirm rejects minimalAgeCheck combined with an evening deliveryWindow, so
+	 * an ID Check parcel that also picked evening must not be routed to V4 even though
+	 * evening alone and the age check alone each map cleanly.
+	 */
+	public function test_age_check_evening_combination_falls_back(): void {
+		$signals = $this->signals(
+			array(
+				'is_delivery_day' => true,
+				'delivery_window' => 'evening',
+				'mapped'          => array(
+					'has_v4_equivalent' => true,
+					'shipmentType'      => 'parcel',
+					'services'          => array( 'minimalAgeCheck' => '18+' ),
+					'deliveryLocation'  => array(),
+				),
+			)
+		);
+
+		$this->assertFalse( Eligibility::is_eligible( $signals ), 'An 18+ evening parcel must fall back to legacy.' );
+	}
+
+	/**
 	 * @testdox is_eligible() accepts an EU/ROW international parcel from NL or BE.
 	 * @dataProvider international_provider
 	 *

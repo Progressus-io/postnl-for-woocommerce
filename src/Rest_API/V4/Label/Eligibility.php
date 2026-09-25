@@ -124,6 +124,14 @@ class Eligibility {
 			return false;
 		}
 
+		// minimalAgeCheck and an evening deliveryWindow cannot be combined on the V4
+		// product — labelconfirm rejects the pair — so an 18+ order with an evening
+		// slot stays on legacy rather than being routed to a request PostNL rejects.
+		if ( 'evening' === ( $signals['delivery_window'] ?? '' )
+			&& array_key_exists( 'minimalAgeCheck', (array) ( $mapped['services'] ?? array() ) ) ) {
+			return false;
+		}
+
 		// Letterbox (mailbox parcel 2928) is a domestic-NL-only variant. The 48h
 		// variant (2948) never reaches here: it collapses onto the same 'letterbox'
 		// option key but keeps product code 2948, so the mapper's product-code

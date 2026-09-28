@@ -23,7 +23,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  *       'legacy_product_code' => optional string,
  *   )
  *
- * Runtime outcomes: has_v4_equivalent = true (50 rows) or false (39 rows).
+ * Runtime outcomes: has_v4_equivalent = true (49 rows) or false (40 rows).
  * needs_confirmation rows behave as Legacy-only at runtime until promoted to v4_mapped.
  *
  * Domestic NL id_check (18+) parcels 3438 and 3443 map to V4 via a bare minimalAgeCheck
@@ -230,16 +230,10 @@ class V4_Mapper {
 								'statedAddressOnly' => true,
 							)
 						),
-						'insured_shipping+return_no_answer+signature_on_delivery' => self::v4_result(
-							7,
-							'3094',
-							'parcel',
-							array(
-								'deliveryConfirmation' => 'signature',
-								'insuredValue'         => '<order_total>',
-								'returnWhenNotHome'    => true,
-							)
-						),
+						// 3094 (insured + return-when-not-home + signature) has no valid V4 shape:
+						// the deliverycode+insured product rejects returnWhenNotHome ("combination
+						// not allowed for this product"). Sandbox-confirmed, so it stays on legacy.
+						'insured_shipping+return_no_answer+signature_on_delivery' => self::legacy_result( 7, '3094', $nc ),
 						'only_home_address+signature_on_delivery' => self::v4_result(
 							8,
 							'3089',
@@ -249,12 +243,16 @@ class V4_Mapper {
 								'statedAddressOnly'    => true,
 							)
 						),
+						// An insured signature shipment is the V4 'deliverycode' product, which
+						// bundles signature-on-delivery with insurance; sending plain 'signature'
+						// with an insured value is rejected ("Insurance is not allowed for this
+						// product code"). Sandbox-confirmed.
 						'insured_shipping+signature_on_delivery' => self::v4_result(
 							9,
 							'3087',
 							'parcel',
 							array(
-								'deliveryConfirmation' => 'signature',
+								'deliveryConfirmation' => 'deliverycode',
 								'insuredValue'         => '<order_total>',
 							)
 						),

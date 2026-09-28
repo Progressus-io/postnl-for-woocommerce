@@ -428,6 +428,28 @@ class EligibilityTest extends UnitTestCase {
 	}
 
 	/**
+	 * @testdox An insured + return + signature parcel (3094) falls back to legacy.
+	 *
+	 * That combination has no valid V4 shape — the deliverycode + insured product
+	 * rejects returnWhenNotHome — so the mapper keeps it Legacy-only and it must not
+	 * route to V4.
+	 */
+	public function test_insured_return_signature_falls_back(): void {
+		$mapped = Eligibility::resolve_mapped(
+			'NL',
+			'NL',
+			false,
+			array( 'insured_shipping' => 'yes', 'return_no_answer' => 'yes', 'signature_on_delivery' => 'yes' ),
+			'3094'
+		);
+
+		$this->assertFalse(
+			Eligibility::is_eligible( $this->signals( array( 'mapped' => $mapped ) ) ),
+			'The 3094 insured + return + signature combination must fall back to legacy.'
+		);
+	}
+
+	/**
 	 * Every NL→NL delivery_day parcel row that has a V4 equivalent, with its
 	 * expected resolved services (insurance resolved to the 42.0 subtotal above).
 	 *
@@ -441,10 +463,9 @@ class EligibilityTest extends UnitTestCase {
 			'signature'                              => array( array( 'signature_on_delivery' => 'yes' ), '3189', array( 'deliveryConfirmation' => 'signature' ) ),
 			'home + return'                          => array( array( 'only_home_address' => 'yes', 'return_no_answer' => 'yes' ), '3390', array( 'returnWhenNotHome' => true, 'statedAddressOnly' => true ) ),
 			'home + signature'                       => array( array( 'only_home_address' => 'yes', 'signature_on_delivery' => 'yes' ), '3089', array( 'deliveryConfirmation' => 'signature', 'statedAddressOnly' => true ) ),
-			'insured + signature'                    => array( array( 'insured_shipping' => 'yes', 'signature_on_delivery' => 'yes' ), '3087', array( 'deliveryConfirmation' => 'signature', 'insuredValue' => 42.0 ) ),
+			'insured + signature'                    => array( array( 'insured_shipping' => 'yes', 'signature_on_delivery' => 'yes' ), '3087', array( 'deliveryConfirmation' => 'deliverycode', 'insuredValue' => 42.0 ) ),
 			'return + signature'                     => array( array( 'return_no_answer' => 'yes', 'signature_on_delivery' => 'yes' ), '3389', array( 'deliveryConfirmation' => 'signature', 'returnWhenNotHome' => true ) ),
 			'home + return + signature'              => array( array( 'only_home_address' => 'yes', 'return_no_answer' => 'yes', 'signature_on_delivery' => 'yes' ), '3096', array( 'deliveryConfirmation' => 'signature', 'returnWhenNotHome' => true, 'statedAddressOnly' => true ) ),
-			'insured + return + signature'           => array( array( 'insured_shipping' => 'yes', 'return_no_answer' => 'yes', 'signature_on_delivery' => 'yes' ), '3094', array( 'deliveryConfirmation' => 'signature', 'insuredValue' => 42.0, 'returnWhenNotHome' => true ) ),
 			'delivery_code + insured'                => array( array( 'delivery_code_at_door' => 'yes', 'insured_shipping' => 'yes' ), '3085', array( 'deliveryConfirmation' => 'deliverycode', 'insuredValue' => 42.0 ) ),
 		);
 	}

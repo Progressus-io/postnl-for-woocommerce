@@ -20,8 +20,8 @@ use PostNLWooCommerce\Tests\UnitTestCase;
  *
  * Coverage:
  *  - Total row count = 89 (from provider data and from runtime calls)
- *  - has_v4_equivalent true  count = 50 (provider + runtime)
- *  - has_v4_equivalent false count = 39 (provider + runtime)
+ *  - has_v4_equivalent true  count = 49 (provider + runtime)
+ *  - has_v4_equivalent false count = 40 (provider + runtime)
  *  - All v4_mapped rows: expected shipmentType / services / deliveryLocation / internationalShipmentData
  *  - All legacy_only rows: reason = not_yet_available_in_v4
  *  - All needs_confirmation rows: reason = needs_confirmation
@@ -50,7 +50,7 @@ class V4_MapperTest extends UnitTestCase {
 	}
 
 	/**
-	 * @testdox Provider expected data: has_v4_equivalent true count = 50
+	 * @testdox Provider expected data: has_v4_equivalent true count = 49
 	 */
 	public function test_provider_v4_equivalent_true_count(): void {
 		$count = 0;
@@ -59,11 +59,11 @@ class V4_MapperTest extends UnitTestCase {
 				$count++;
 			}
 		}
-		$this->assertSame( 50, $count, 'Exactly 50 rows must be marked has_v4_equivalent=true.' );
+		$this->assertSame( 49, $count, 'Exactly 49 rows must be marked has_v4_equivalent=true.' );
 	}
 
 	/**
-	 * @testdox Provider expected data: has_v4_equivalent false count = 39
+	 * @testdox Provider expected data: has_v4_equivalent false count = 40
 	 */
 	public function test_provider_v4_equivalent_false_count(): void {
 		$count = 0;
@@ -72,7 +72,7 @@ class V4_MapperTest extends UnitTestCase {
 				$count++;
 			}
 		}
-		$this->assertSame( 39, $count, 'Exactly 39 rows must be marked has_v4_equivalent=false.' );
+		$this->assertSame( 40, $count, 'Exactly 40 rows must be marked has_v4_equivalent=false.' );
 	}
 
 	// =========================================================================
@@ -80,7 +80,7 @@ class V4_MapperTest extends UnitTestCase {
 	// =========================================================================
 
 	/**
-	 * @testdox Runtime: V4_Mapper::has_v4_equivalent() returns true for exactly 50 provider inputs
+	 * @testdox Runtime: V4_Mapper::has_v4_equivalent() returns true for exactly 49 provider inputs
 	 */
 	public function test_runtime_v4_equivalent_true_count(): void {
 		$count = 0;
@@ -89,11 +89,11 @@ class V4_MapperTest extends UnitTestCase {
 				$count++;
 			}
 		}
-		$this->assertSame( 50, $count );
+		$this->assertSame( 49, $count );
 	}
 
 	/**
-	 * @testdox Runtime: V4_Mapper::has_v4_equivalent() returns false for exactly 39 provider inputs
+	 * @testdox Runtime: V4_Mapper::has_v4_equivalent() returns false for exactly 40 provider inputs
 	 */
 	public function test_runtime_v4_equivalent_false_count(): void {
 		$count = 0;
@@ -102,7 +102,7 @@ class V4_MapperTest extends UnitTestCase {
 				$count++;
 			}
 		}
-		$this->assertSame( 39, $count );
+		$this->assertSame( 40, $count );
 	}
 
 	// =========================================================================
@@ -602,7 +602,7 @@ class V4_MapperTest extends UnitTestCase {
 			'NL→NL/dd row 7: [signature_on_delivery,insured_shipping,return_no_answer]'
 				=> array(
 					array( 'origin' => 'NL', 'destination' => 'NL', 'flow' => 'delivery_day', 'options' => array( 'signature_on_delivery', 'insured_shipping', 'return_no_answer' ) ),
-					$v4( 7, '3094', 'parcel', array( 'deliveryConfirmation' => 'signature', 'insuredValue' => '<order_total>', 'returnWhenNotHome' => true ) ),
+					$leg( 7, '3094', $nc ),
 				),
 			'NL→NL/dd row 8: [signature_on_delivery,only_home_address]'
 				=> array(
@@ -612,7 +612,7 @@ class V4_MapperTest extends UnitTestCase {
 			'NL→NL/dd row 9: [insured_shipping,signature_on_delivery]'
 				=> array(
 					array( 'origin' => 'NL', 'destination' => 'NL', 'flow' => 'delivery_day', 'options' => array( 'insured_shipping', 'signature_on_delivery' ) ),
-					$v4( 9, '3087', 'parcel', array( 'deliveryConfirmation' => 'signature', 'insuredValue' => '<order_total>' ) ),
+					$v4( 9, '3087', 'parcel', array( 'deliveryConfirmation' => 'deliverycode', 'insuredValue' => '<order_total>' ) ),
 				),
 			'NL→NL/dd row 10: [signature_on_delivery,return_no_answer]'
 				=> array(

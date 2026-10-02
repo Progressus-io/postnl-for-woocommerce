@@ -20,7 +20,9 @@ use Postnl\Sdk\Service\PickupLocations\Response\Location\DayOpeningTimes;
 use Postnl\Sdk\Service\PickupLocations\Response\Location\LocationOpeningHours;
 use Postnl\Sdk\Service\PickupLocations\Response\Location\PickupLocation;
 use Postnl\Sdk\Service\PickupLocations\Response\PickUpLocationsCollection;
+use Postnl\Sdk\Service\PickupLocations\V4\Request\PickUpNearAddressRequest;
 use PostNLWooCommerce\Rest_API\SDK\Client_Factory;
+use PostNLWooCommerce\Rest_API\V4\Pickup_Location\Location_Types_Request;
 use PostNLWooCommerce\Rest_API\V4\Pickup_Location\Service;
 use PostNLWooCommerce\Shipping_Method\Settings;
 use PostNLWooCommerce\Tests\UnitTestCase;
@@ -667,6 +669,157 @@ class ServiceTest extends UnitTestCase {
 		$this->assertStringContainsString( 'cache bypassed', $warnings[0]['message'] );
 	}
 
+	// ── locationType / locationTypes fallback ────────────────────────────────
+
+	/**
+	 * @testdox A lookup PostNL refuses over locationType is retried once with locationTypes
+	 *
+	 * The published contract and SDK 3.0.0 send `locationType: "Retail"`; the sandbox
+	 * rejects that field and requires `locationTypes: ["retail"]`. Without the retry
+	 * no pickup point loads at checkout.
+	 */
+	public function test_refused_location_type_is_retried_with_location_types(): void {
+		$this->with_transient_store();
+		Functions\when( 'current_datetime' )->justReturn( new \DateTimeImmutable( '2026-07-14 10:00:00' ) );
+
+		$http    = new Scripted_Http_Client(
+			array( 400, $this->validation_error_body( 'locationType', "The field 'locationType' is not part of API contract." ) ),
+			array( 200, $this->locations_response_body() )
+		);
+		$logger  = new Spy_Logger();
+		$service = new Service( new Spy_Pickup_Client_Factory( $this->make_settings(), $http ), $this->make_settings(), self::V4_KEY, self::LOCATIONS, $logger );
+
+		$result = $service->get_pickup_locations( $this->nl_post_data() );
+
+		$this->assertCount( 2, $http->bodies, 'The refused lookup must be retried exactly once.' );
+		$this->assertSame( 'Retail', $http->bodies[0]['locationType'], 'The documented shape goes first.' );
+		$this->assertSame( array( 'retail' ), $http->bodies[1]['locationTypes'] );
+		$this->assertArrayNotHasKey( 'locationType', $http->bodies[1], 'The refused field must not be sent again.' );
+		$this->assertSame( $http->bodies[0]['receiverAddress'], $http->bodies[1]['receiverAddress'], 'Only the location type changes between the two shapes.' );
+		$this->assertSame( $http->bodies[0]['pickupDate'], $http->bodies[1]['pickupDate'] );
+		$this->assertSame( '176227', $result['PickupOptions'][0]['Locations'][0]['LocationCode'] );
+
+		$notices = array_values(
+			array_filter( $logger->records, static fn( array $record ) => LogLevel::NOTICE === $record['level'] )
+		);
+		$this->assertCount( 1, $notices, 'The retry must leave a trace in the log.' );
+	}
+
+	/**
+	 * @testdox A lookup PostNL accepts in the documented shape is sent once, with locationType
+	 */
+	public function test_accepted_location_type_is_not_retried(): void {
+		$this->with_transient_store();
+		Functions\when( 'current_datetime' )->justReturn( new \DateTimeImmutable( '2026-07-14 10:00:00' ) );
+
+		$http    = new Scripted_Http_Client( array( 200, $this->locations_response_body() ) );
+		$service = new Service( new Spy_Pickup_Client_Factory( $this->make_settings(), $http ), $this->make_settings(), self::V4_KEY, self::LOCATIONS, new NullLogger() );
+
+		$service->get_pickup_locations( $this->nl_post_data() );
+
+		$this->assertCount( 1, $http->bodies );
+		$this->assertSame( 'Retail', $http->bodies[0]['locationType'] );
+		$this->assertArrayNotHasKey( 'locationTypes', $http->bodies[0] );
+	}
+
+	/**
+	 * @testdox A validation error on any other field fails the lookup without a retry
+	 */
+	public function test_other_validation_errors_are_not_retried(): void {
+		$this->with_transient_store();
+		Functions\when( 'current_datetime' )->justReturn( new \DateTimeImmutable( '2026-07-14 10:00:00' ) );
+
+		$http    = new Scripted_Http_Client(
+			array( 400, $this->validation_error_body( 'postalCode', 'The postalCode field is required.' ) ),
+			array( 200, $this->locations_response_body() )
+		);
+		$service = new Service( new Spy_Pickup_Client_Factory( $this->make_settings(), $http ), $this->make_settings(), self::V4_KEY, self::LOCATIONS, new NullLogger() );
+
+		try {
+			$service->get_pickup_locations( $this->nl_post_data() );
+			$this->fail( 'A validation error unrelated to locationType must propagate.' );
+		} catch ( \Exception $error ) {
+			$this->assertStringContainsString( 'postalCode', $error->getMessage() );
+		}
+
+		$this->assertCount( 1, $http->bodies, 'Only the locationType refusal earns a retry.' );
+	}
+
+	/**
+	 * @testdox After a refusal, the next lookup in the same request goes straight to locationTypes
+	 */
+	public function test_later_lookups_skip_the_refused_shape(): void {
+		$this->with_transient_store();
+		Functions\when( 'current_datetime' )->justReturn( new \DateTimeImmutable( '2026-07-14 10:00:00' ) );
+
+		$http    = new Scripted_Http_Client(
+			array( 400, $this->validation_error_body( 'locationType', "The field 'locationType' is not part of API contract." ) ),
+			array( 200, $this->locations_response_body() ),
+			array( 200, $this->locations_response_body() )
+		);
+		$service = new Service( new Spy_Pickup_Client_Factory( $this->make_settings(), $http ), $this->make_settings(), self::V4_KEY, self::LOCATIONS, new NullLogger() );
+
+		$service->get_pickup_locations( $this->nl_post_data() );
+		$service->get_pickup_locations( array( 'shipping_postcode' => '1012 JS' ) + $this->nl_post_data() );
+
+		$this->assertCount( 3, $http->bodies, 'The second address must cost one call, not two.' );
+		$this->assertSame( array( 'retail' ), $http->bodies[2]['locationTypes'] );
+		$this->assertArrayNotHasKey( 'locationType', $http->bodies[2] );
+	}
+
+	/**
+	 * @testdox Location_Types_Request maps each SDK location type to its locationTypes value
+	 * @dataProvider location_type_provider
+	 *
+	 * @param PickUpLocationType|null $type     SDK location type.
+	 * @param array|null              $expected Expected locationTypes, or null when omitted.
+	 */
+	public function test_location_types_request_maps_the_location_type( ?PickUpLocationType $type, ?array $expected ): void {
+		$payload = ( new Location_Types_Request(
+			new PickUpNearAddressRequest(
+				numberOfLocations: 3,
+				receiverAddress: new Address( countryIso: Country::NL, postalCode: '2521CA' ),
+				locationType: $type,
+				pickupDate: '2026-07-15'
+			)
+		) )->toArray();
+
+		$this->assertArrayNotHasKey( 'locationType', $payload );
+		$this->assertSame( $expected, $payload['locationTypes'] ?? null );
+		$this->assertSame( 3, $payload['numberOfLocations'], 'Every other field passes through untouched.' );
+		$this->assertSame( '2026-07-15', $payload['pickupDate'] );
+	}
+
+	/**
+	 * SDK location types and the locationTypes list each becomes.
+	 *
+	 * @return array
+	 */
+	public static function location_type_provider(): array {
+		return array(
+			'retail'        => array( PickUpLocationType::Retail, array( 'retail' ) ),
+			'parcel locker' => array( PickUpLocationType::ParcelLocker, array( 'parcel_locker' ) ),
+			'none'          => array( null, null ),
+		);
+	}
+
+	/**
+	 * A PostNL problem+json validation error for one field.
+	 *
+	 * @param string $field   Field the error is reported on.
+	 * @param string $message Error message.
+	 * @return string
+	 */
+	private function validation_error_body( string $field, string $message ): string {
+		return (string) json_encode(
+			array(
+				'title'  => 'One or more validation errors occurred.',
+				'status' => 400,
+				'errors' => array( $field => array( $message ) ),
+			)
+		);
+	}
+
 	/**
 	 * Canned V4 near-address response body with a single retail location.
 	 *
@@ -938,6 +1091,60 @@ class Counting_Http_Client implements ClientInterface {
 		++$this->count;
 		$this->last_request = $request;
 		return new Response( 200, array( 'Content-Type' => 'application/json' ), $this->body );
+	}
+}
+
+/**
+ * PSR-18 client that answers each request with the next scripted response and
+ * records every decoded request body.
+ */
+class Scripted_Http_Client implements ClientInterface {
+
+	/**
+	 * Decoded JSON body of each request, in send order.
+	 *
+	 * @var array<int, array>
+	 */
+	public array $bodies = array();
+
+	/**
+	 * Remaining responses, each as array{0: int, 1: string} (status, JSON body).
+	 *
+	 * @var array<int, array>
+	 */
+	private array $responses;
+
+	/**
+	 * Constructor.
+	 *
+	 * @param array ...$responses Responses to return in order: status code, JSON body.
+	 */
+	public function __construct( array ...$responses ) {
+		$this->responses = $responses;
+	}
+
+	/**
+	 * Record the request and return the next scripted response.
+	 *
+	 * @param RequestInterface $request Outgoing request.
+	 * @return ResponseInterface
+	 *
+	 * @throws \LogicException When more requests are sent than responses were scripted.
+	 */
+	public function sendRequest( RequestInterface $request ): ResponseInterface {
+		$this->bodies[] = (array) json_decode( (string) $request->getBody(), true );
+
+		$next = array_shift( $this->responses );
+
+		if ( null === $next ) {
+			throw new \LogicException( 'More requests were sent than the test scripted responses for.' );
+		}
+
+		return new Response(
+			$next[0],
+			array( 'Content-Type' => 200 === $next[0] ? 'application/json' : 'application/problem+json' ),
+			$next[1]
+		);
 	}
 }
 

@@ -30,7 +30,6 @@ class EligibilityTest extends UnitTestCase {
 				'is_delivery_day' => false,
 				'is_pickup'       => false,
 				'has_return'      => false,
-				'delivery_type'   => 'Standard',
 				'origin'          => 'NL',
 				'destination'     => 'NL',
 				'mapped'          => array(
@@ -81,6 +80,153 @@ class EligibilityTest extends UnitTestCase {
 	 */
 	public function test_multi_collo_parcel_is_eligible(): void {
 		$this->assertTrue( Eligibility::is_eligible( $this->signals( array( 'num_labels' => 3 ) ) ) );
+	}
+
+	/**
+	 * @testdox is_eligible() accepts a domestic parcel with a delivery-day selection.
+	 *
+	 * A home delivery-day selection is the common NL case: it no longer forces a
+	 * fall-back, so a standard delivery-day parcel routes to V4.
+	 */
+	public function test_delivery_day_parcel_is_eligible(): void {
+		$this->assertTrue(
+			Eligibility::is_eligible( $this->signals( array( 'is_delivery_day' => true ) ) ),
+			'A standard delivery-day parcel should route to V4.'
+		);
+	}
+
+	/**
+	 * @testdox is_eligible() accepts an evening delivery-day parcel.
+	 *
+	 * Evening rides on a deliveryWindow service layered on the same product code, so it
+	 * maps like any parcel.
+	 */
+	public function test_evening_parcel_is_eligible(): void {
+		$signals = $this->signals(
+			array(
+				'is_delivery_day' => true,
+				'delivery_window' => 'evening',
+			)
+		);
+
+		$this->assertTrue( Eligibility::is_eligible( $signals ), 'An evening delivery-day parcel should route to V4.' );
+	}
+
+	/**
+	 * @testdox is_eligible() accepts a morning (08:00-12:00) parcel whose receiver can be contacted.
+	 *
+	 * Morning is PostNL's "Guaranteed Before 12:00" (legacy option 118/008), which
+	 * labelconfirm refuses without a receiver email or phone number.
+	 */
+	public function test_morning_parcel_needs_a_receiver_contact(): void {
+		$morning = array(
+			'is_delivery_day' => true,
+			'delivery_window' => 'morning',
+		);
+
+		$this->assertTrue(
+			Eligibility::is_eligible( $this->signals( $morning + array( 'has_contact' => true ) ) ),
+			'A morning parcel with a receiver contact should route to V4.'
+		);
+		$this->assertFalse(
+			Eligibility::is_eligible( $this->signals( $morning ) ),
+			'A morning parcel without a receiver contact must fall back to legacy.'
+		);
+	}
+
+	/**
+	 * @testdox is_eligible() keeps the service and window pairs labelconfirm rejects on the legacy path.
+	 * @dataProvider window_conflict_provider
+	 *
+	 * labelconfirm rejects minimalAgeCheck with an evening or guaranteed (morning)
+	 * window, and the delivery-code product with a morning one, even though each maps
+	 * cleanly on its own.
+	 *
+	 * @param string $window   Delivery window signal.
+	 * @param array  $services Mapped services.
+	 */
+	public function test_window_conflicts_fall_back( string $window, array $services ): void {
+		$signals = $this->signals(
+			array(
+				'is_delivery_day' => true,
+				'delivery_window' => $window,
+				'has_contact'     => true,
+				'mapped'          => array(
+					'has_v4_equivalent' => true,
+					'shipmentType'      => 'parcel',
+					'services'          => $services,
+					'deliveryLocation'  => array(),
+				),
+			)
+		);
+
+		$this->assertFalse( Eligibility::is_eligible( $signals ) );
+
+		$signals['delivery_window'] = 'standard';
+		$this->assertTrue( Eligibility::is_eligible( $signals ), 'The same services must route to V4 without a timed window.' );
+	}
+
+	/**
+	 * Timed windows paired with the services they cannot be combined with.
+	 *
+	 * @return array
+	 */
+	public static function window_conflict_provider(): array {
+		$age_check     = array( 'minimalAgeCheck' => '18+' );
+		$delivery_code = array( 'deliveryConfirmation' => 'deliverycode', 'insuredValue' => '<order_total>' );
+
+		return array(
+			'evening + 18+'           => array( 'evening', $age_check ),
+			'morning + 18+'           => array( 'morning', $age_check ),
+			'morning + delivery code' => array( 'morning', $delivery_code ),
+		);
+	}
+
+	/**
+	 * @testdox is_eligible() accepts a delivery-code parcel with an evening slot.
+	 *
+	 * The sandbox accepts that pair, unlike the morning one.
+	 */
+	public function test_evening_combines_with_delivery_code(): void {
+		$signals = $this->signals(
+			array(
+				'is_delivery_day' => true,
+				'delivery_window' => 'evening',
+				'mapped'          => array(
+					'has_v4_equivalent' => true,
+					'shipmentType'      => 'parcel',
+					'services'          => array( 'deliveryConfirmation' => 'deliverycode', 'insuredValue' => '<order_total>' ),
+					'deliveryLocation'  => array(),
+				),
+			)
+		);
+
+		$this->assertTrue( Eligibility::is_eligible( $signals ) );
+	}
+
+	/**
+	 * @testdox is_eligible() accepts an insured or signature parcel with an evening or morning slot.
+	 */
+	public function test_window_combines_with_signature_and_insurance(): void {
+		foreach ( array( 'evening', 'morning' ) as $window ) {
+			foreach ( array( array( 'deliveryConfirmation' => 'signature' ), array( 'insuredValue' => '<order_total>' ) ) as $services ) {
+				$signals = $this->signals(
+					array(
+						'is_delivery_day' => true,
+						'delivery_window' => $window,
+						'has_contact'     => true,
+						'mapped'          => array(
+							'has_v4_equivalent' => true,
+							'shipmentType'      => 'parcel',
+							'services'          => $services,
+							'deliveryLocation'  => array(),
+						),
+					)
+				);
+
+				$this->assertTrue( Eligibility::is_eligible( $signals ), "A {$window} parcel with " . key( $services ) . ' should route to V4.' );
+			}
+		}
 	}
 
 	/**
@@ -170,6 +316,7 @@ class EligibilityTest extends UnitTestCase {
 
 		$this->assertTrue( $mapped['has_v4_equivalent'] );
 		$this->assertSame( 'letterbox', $mapped['shipmentType'] );
+		$this->assertSame( array( 'deliveryWindowDuration' => '24hours' ), $mapped['services'], 'labelconfirm rejects a letterbox without a duration.' );
 		$this->assertTrue(
 			Eligibility::is_eligible( $this->signals( array( 'mapped' => $mapped ) ) ),
 			'A 24h letterbox should route to V4.'
@@ -177,19 +324,106 @@ class EligibilityTest extends UnitTestCase {
 	}
 
 	/**
-	 * @testdox resolve_mapped() keeps the 48h letterbox (2948) off V4 via the product-code mismatch guard.
+	 * @testdox resolve_mapped() maps a 48h letterbox (2948) to the non24hours duration, eligible end-to-end.
 	 *
-	 * The 24h and 48h letterbox share the collapsed 'letterbox' option key, so the
-	 * matrix row resolves to product 2928; a 2948 order fails the mismatch guard
-	 * and must fall back to legacy rather than ship as a 24h letterbox.
+	 * The meta box collapses both variants onto the 'letterbox' option, so only the
+	 * product code tells them apart; a 2948 order must not ship as a 24h letterbox.
 	 */
-	public function test_resolve_mapped_letterbox_48_falls_back(): void {
+	public function test_resolve_mapped_letterbox_48_is_eligible(): void {
 		$mapped = Eligibility::resolve_mapped( 'NL', 'NL', false, array( 'letterbox' => 'yes' ), '2948' );
 
-		$this->assertFalse( $mapped['has_v4_equivalent'], 'A 48h letterbox (2948) must not resolve to a V4 equivalent.' );
-		$this->assertFalse(
+		$this->assertTrue( $mapped['has_v4_equivalent'] );
+		$this->assertSame( '2948', $mapped['legacy_product_code'] );
+		$this->assertSame( 'letterbox', $mapped['shipmentType'] );
+		$this->assertSame( array( 'deliveryWindowDuration' => 'non24hours' ), $mapped['services'] );
+		$this->assertTrue(
 			Eligibility::is_eligible( $this->signals( array( 'mapped' => $mapped ) ) ),
-			'A 48h letterbox must fall back to the legacy path.'
+			'A 48h letterbox should route to V4.'
+		);
+	}
+
+	/**
+	 * @testdox A domestic NL pickup order routes to V4 with the mapped services.
+	 * @dataProvider pickup_provider
+	 *
+	 * @param array  $backend  Raw backend feature flags ('yes' strings).
+	 * @param string $code     Legacy product code resolved for that combination.
+	 * @param array  $services Expected mapped service flags.
+	 */
+	public function test_pickup_order_is_eligible( array $backend, string $code, array $services ): void {
+		$mapped = Eligibility::resolve_mapped( 'NL', 'NL', true, $backend, $code );
+
+		$this->assertSame( $services, $mapped['services'], "Unexpected services for pickup product {$code}." );
+		$this->assertTrue(
+			Eligibility::is_eligible(
+				$this->signals(
+					array(
+						'is_pickup' => true,
+						'pickup_id' => '176227',
+						'mapped'    => $mapped,
+					)
+				)
+			),
+			"Pickup product {$code} should route to V4."
+		);
+	}
+
+	/**
+	 * Every NL→NL pickup row with its expected mapped services.
+	 *
+	 * @return array
+	 */
+	public static function pickup_provider(): array {
+		return array(
+			'base'          => array( array(), '3533', array() ),
+			'insured'       => array( array( 'insured_shipping' => 'yes' ), '3534', array( 'insuredValue' => '<order_total>' ) ),
+			'18+'           => array( array( 'id_check' => 'yes' ), '3571', array( 'minimalAgeCheck' => '18+' ) ),
+			'18+ + insured' => array( array( 'id_check' => 'yes', 'insured_shipping' => 'yes' ), '3581', array( 'insuredValue' => '<order_total>', 'minimalAgeCheck' => '18+' ) ),
+		);
+	}
+
+	/**
+	 * @testdox An NL to BE parcel routes to V4 with the mapped services.
+	 * @dataProvider cross_border_provider
+	 *
+	 * @param array  $backend  Raw backend feature flags ('yes' strings).
+	 * @param string $code     Legacy product code resolved for that combination.
+	 * @param array  $services Expected resolved service flags.
+	 */
+	public function test_nl_to_be_parcel_is_eligible( array $backend, string $code, array $services ): void {
+		$mapped = Eligibility::resolve_mapped( 'NL', 'BE', false, $backend, $code );
+
+		$this->assertTrue(
+			Eligibility::is_eligible(
+				$this->signals(
+					array(
+						'destination' => 'BE',
+						'mapped'      => $mapped,
+					)
+				)
+			),
+			'NL to BE combination [' . implode( ',', array_keys( $backend ) ) . '] should route to V4.'
+		);
+		$this->assertSame( $services, Eligibility::resolve_services( $mapped['services'], 42.0 ) );
+	}
+
+	/**
+	 * Every NL→BE parcel row that has a V4 equivalent.
+	 *
+	 * @return array
+	 */
+	public static function cross_border_provider(): array {
+		return array(
+			'base'                => array( array(), '4946', array() ),
+			'only_home_address'   => array( array( 'only_home_address' => 'yes' ), '4941', array( 'statedAddressOnly' => true ) ),
+			'signature'           => array( array( 'signature_on_delivery' => 'yes' ), '4912', array( 'deliveryConfirmation' => 'signature' ) ),
+			'insured'             => array( array( 'insured_shipping' => 'yes' ), '4914', array( 'insuredValue' => 42.0 ) ),
+			'insured + T&T'       => array( array( 'insured_shipping' => 'yes', 'track_and_trace' => 'yes' ), '4914', array( 'insuredValue' => 42.0 ) ),
+			// Signature is implicit on the insured BE parcel and is never sent separately,
+			// so a signature selection collapses to the plain insured value.
+			'insured + signature' => array( array( 'insured_shipping' => 'yes', 'signature_on_delivery' => 'yes' ), '4914', array( 'insuredValue' => 42.0 ) ),
+			'insured + home'      => array( array( 'insured_shipping' => 'yes', 'only_home_address' => 'yes' ), '4914', array( 'insuredValue' => 42.0, 'statedAddressOnly' => true ) ),
+			'insured + home + signature' => array( array( 'insured_shipping' => 'yes', 'only_home_address' => 'yes', 'signature_on_delivery' => 'yes' ), '4914', array( 'insuredValue' => 42.0, 'statedAddressOnly' => true ) ),
 		);
 	}
 
@@ -215,18 +449,18 @@ class EligibilityTest extends UnitTestCase {
 	public static function ineligible_provider(): array {
 		return array(
 			'zero collo'                 => array( array( 'num_labels' => 0 ), 'an invalid collo count' ),
-			'delivery-day selected'      => array( array( 'is_delivery_day' => true ), 'a delivery-day option' ),
-			'pickup selected'            => array( array( 'is_pickup' => true ), 'a pickup point' ),
+			'pickup without a location'  => array( array( 'is_pickup' => true, 'mapped' => array( 'has_v4_equivalent' => true, 'shipmentType' => 'parcel', 'services' => array(), 'deliveryLocation' => array( 'pickupLocationId' => 'x' ) ) ), 'a pickup point with no location code' ),
+			'pickup on a home row'       => array( array( 'is_pickup' => true, 'pickup_id' => '176227' ), 'a pickup order mapped to a home-delivery row' ),
 			'return involved'            => array( array( 'has_return' => true ), 'a return label' ),
-			'evening delivery'           => array( array( 'delivery_type' => 'Evening' ), 'evening delivery' ),
-			'non-NL origin'              => array( array( 'origin' => 'BE' ), 'a non-NL origin' ),
-			'non-NL destination'         => array( array( 'destination' => 'BE' ), 'a non-NL destination' ),
+			'morning without a contact'  => array( array( 'delivery_window' => 'morning' ), 'a morning (08:00-12:00) window with no receiver email or phone' ),
+			'BE to NL'                   => array( array( 'origin' => 'BE' ), 'a BE origin shipping to NL' ),
+			'BE domestic'                => array( array( 'origin' => 'BE', 'destination' => 'BE' ), 'a BE domestic parcel' ),
 			// Identical to the eligible happy path except for the one flag under test.
 			// Leaving the other mapped keys out would let the shipmentType check reject
 			// this row first, so has_v4_equivalent itself would never be exercised.
 			'no v4 equivalent'           => array( array( 'mapped' => array( 'has_v4_equivalent' => false, 'shipmentType' => 'parcel', 'services' => array(), 'deliveryLocation' => array() ) ), 'no V4 equivalent' ),
 			'unsupported shipment type'  => array( array( 'mapped' => array( 'has_v4_equivalent' => true, 'shipmentType' => 'pallet', 'services' => array() ) ), 'an unsupported shipment type' ),
-			'mapped with pickup location' => array( array( 'mapped' => array( 'has_v4_equivalent' => true, 'shipmentType' => 'parcel', 'services' => array(), 'deliveryLocation' => array( 'pickupLocationId' => 'x' ) ) ), 'a pickup delivery location' ),
+			'home order on a pickup row' => array( array( 'mapped' => array( 'has_v4_equivalent' => true, 'shipmentType' => 'parcel', 'services' => array(), 'deliveryLocation' => array( 'pickupLocationId' => 'x' ) ) ), 'a home-delivery order mapped to a pickup row' ),
 		);
 	}
 
@@ -372,10 +606,10 @@ class EligibilityTest extends UnitTestCase {
 			'signature'                              => array( array( 'signature_on_delivery' => 'yes' ), '3189', array( 'deliveryConfirmation' => 'signature' ) ),
 			'home + return'                          => array( array( 'only_home_address' => 'yes', 'return_no_answer' => 'yes' ), '3390', array( 'returnWhenNotHome' => true, 'statedAddressOnly' => true ) ),
 			'home + signature'                       => array( array( 'only_home_address' => 'yes', 'signature_on_delivery' => 'yes' ), '3089', array( 'deliveryConfirmation' => 'signature', 'statedAddressOnly' => true ) ),
-			'insured + signature'                    => array( array( 'insured_shipping' => 'yes', 'signature_on_delivery' => 'yes' ), '3087', array( 'deliveryConfirmation' => 'signature', 'insuredValue' => 42.0 ) ),
+			'insured + signature'                    => array( array( 'insured_shipping' => 'yes', 'signature_on_delivery' => 'yes' ), '3087', array( 'insuredValue' => 42.0 ) ),
+			'insured + return + signature'           => array( array( 'insured_shipping' => 'yes', 'return_no_answer' => 'yes', 'signature_on_delivery' => 'yes' ), '3094', array( 'insuredValue' => 42.0, 'returnWhenNotHome' => true ) ),
 			'return + signature'                     => array( array( 'return_no_answer' => 'yes', 'signature_on_delivery' => 'yes' ), '3389', array( 'deliveryConfirmation' => 'signature', 'returnWhenNotHome' => true ) ),
 			'home + return + signature'              => array( array( 'only_home_address' => 'yes', 'return_no_answer' => 'yes', 'signature_on_delivery' => 'yes' ), '3096', array( 'deliveryConfirmation' => 'signature', 'returnWhenNotHome' => true, 'statedAddressOnly' => true ) ),
-			'insured + return + signature'           => array( array( 'insured_shipping' => 'yes', 'return_no_answer' => 'yes', 'signature_on_delivery' => 'yes' ), '3094', array( 'deliveryConfirmation' => 'signature', 'insuredValue' => 42.0, 'returnWhenNotHome' => true ) ),
 			'delivery_code + insured'                => array( array( 'delivery_code_at_door' => 'yes', 'insured_shipping' => 'yes' ), '3085', array( 'deliveryConfirmation' => 'deliverycode', 'insuredValue' => 42.0 ) ),
 		);
 	}

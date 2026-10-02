@@ -23,7 +23,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  *       'legacy_product_code' => optional string,
  *   )
  *
- * Runtime outcomes: has_v4_equivalent = true (58 rows) or false (31 rows).
+ * Runtime outcomes: has_v4_equivalent = true (60 rows) or false (29 rows).
  * needs_confirmation rows behave as Legacy-only at runtime until promoted to v4_mapped.
  *
  * Domestic NL id_check (18+) parcels 3438 and 3443 map to V4 via a bare minimalAgeCheck
@@ -354,20 +354,12 @@ class V4_Mapper {
 						'only_home_address'                => self::v4_result( 26, '4941', 'parcel', array( 'statedAddressOnly' => true ) ),
 						'signature_on_delivery'            => self::v4_result( 27, '4912', 'parcel', array( 'deliveryConfirmation' => 'signature' ) ),
 						'insured_shipping'                 => self::v4_result( 28, '4914', 'parcel', array( 'insuredValue' => '<order_total>' ) ),
-						// The insured BE parcel (4914) takes one of signature or stated-address on
-						// top of the insured value; both together are rejected ("Provided services
-						// can not be combined"), so rows 32 and 35 stay on legacy. track_and_trace
-						// has no V4 service: every parcel is tracked. Sandbox-confirmed.
+						// The insured BE parcel (4914) carries signature-on-delivery implicitly, so
+						// signature is never sent as a separate service; a selection of it collapses
+						// to the plain insured value. stated-address-only is the one extra service it
+						// accepts. track_and_trace has no V4 service: every parcel is tracked.
 						'insured_shipping+track_and_trace' => self::v4_result( 29, '4914', 'parcel', array( 'insuredValue' => '<order_total>' ) ),
-						'insured_shipping+signature_on_delivery' => self::v4_result(
-							30,
-							'4914',
-							'parcel',
-							array(
-								'deliveryConfirmation' => 'signature',
-								'insuredValue'         => '<order_total>',
-							)
-						),
+						'insured_shipping+signature_on_delivery' => self::v4_result( 30, '4914', 'parcel', array( 'insuredValue' => '<order_total>' ) ),
 						'insured_shipping+only_home_address' => self::v4_result(
 							31,
 							'4914',
@@ -377,16 +369,16 @@ class V4_Mapper {
 								'statedAddressOnly' => true,
 							)
 						),
-						'insured_shipping+only_home_address+signature_on_delivery' => self::legacy_result( 32, '4914', $nc ),
-						'insured_shipping+signature_on_delivery+track_and_trace' => self::v4_result(
-							33,
+						'insured_shipping+only_home_address+signature_on_delivery' => self::v4_result(
+							32,
 							'4914',
 							'parcel',
 							array(
-								'deliveryConfirmation' => 'signature',
-								'insuredValue'         => '<order_total>',
+								'insuredValue'      => '<order_total>',
+								'statedAddressOnly' => true,
 							)
 						),
+						'insured_shipping+signature_on_delivery+track_and_trace' => self::v4_result( 33, '4914', 'parcel', array( 'insuredValue' => '<order_total>' ) ),
 						'insured_shipping+only_home_address+track_and_trace' => self::v4_result(
 							34,
 							'4914',
@@ -396,7 +388,15 @@ class V4_Mapper {
 								'statedAddressOnly' => true,
 							)
 						),
-						'insured_shipping+only_home_address+signature_on_delivery+track_and_trace' => self::legacy_result( 35, '4914', $nc ),
+						'insured_shipping+only_home_address+signature_on_delivery+track_and_trace' => self::v4_result(
+							35,
+							'4914',
+							'parcel',
+							array(
+								'insuredValue'      => '<order_total>',
+								'statedAddressOnly' => true,
+							)
+						),
 						'mailboxpacket'                    => self::legacy_result( 36, '6440', $nc ),
 						'mailboxpacket+track_and_trace'    => self::legacy_result( 37, '6972', $nc ),
 						'packets'                          => self::legacy_result( 38, '6405', $nc ),

@@ -419,34 +419,11 @@ class EligibilityTest extends UnitTestCase {
 			'signature'           => array( array( 'signature_on_delivery' => 'yes' ), '4912', array( 'deliveryConfirmation' => 'signature' ) ),
 			'insured'             => array( array( 'insured_shipping' => 'yes' ), '4914', array( 'insuredValue' => 42.0 ) ),
 			'insured + T&T'       => array( array( 'insured_shipping' => 'yes', 'track_and_trace' => 'yes' ), '4914', array( 'insuredValue' => 42.0 ) ),
-			'insured + signature' => array( array( 'insured_shipping' => 'yes', 'signature_on_delivery' => 'yes' ), '4914', array( 'deliveryConfirmation' => 'signature', 'insuredValue' => 42.0 ) ),
+			// Signature is implicit on the insured BE parcel and is never sent separately,
+			// so a signature selection collapses to the plain insured value.
+			'insured + signature' => array( array( 'insured_shipping' => 'yes', 'signature_on_delivery' => 'yes' ), '4914', array( 'insuredValue' => 42.0 ) ),
 			'insured + home'      => array( array( 'insured_shipping' => 'yes', 'only_home_address' => 'yes' ), '4914', array( 'insuredValue' => 42.0, 'statedAddressOnly' => true ) ),
-		);
-	}
-
-	/**
-	 * @testdox An insured NL to BE parcel with both signature and stated address falls back to legacy.
-	 *
-	 * labelconfirm rejects those two services together on the insured BE parcel.
-	 */
-	public function test_nl_to_be_insured_signature_home_falls_back(): void {
-		$mapped = Eligibility::resolve_mapped(
-			'NL',
-			'BE',
-			false,
-			array( 'insured_shipping' => 'yes', 'only_home_address' => 'yes', 'signature_on_delivery' => 'yes' ),
-			'4914'
-		);
-
-		$this->assertFalse(
-			Eligibility::is_eligible(
-				$this->signals(
-					array(
-						'destination' => 'BE',
-						'mapped'      => $mapped,
-					)
-				)
-			)
+			'insured + home + signature' => array( array( 'insured_shipping' => 'yes', 'only_home_address' => 'yes', 'signature_on_delivery' => 'yes' ), '4914', array( 'insuredValue' => 42.0, 'statedAddressOnly' => true ) ),
 		);
 	}
 

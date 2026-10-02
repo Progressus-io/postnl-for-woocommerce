@@ -21,8 +21,8 @@ use PostNLWooCommerce\Tests\UnitTestCase;
  *
  * Coverage:
  *  - Total row count = 89 (from provider data and from runtime calls)
- *  - has_v4_equivalent true  count = 58 (provider + runtime)
- *  - has_v4_equivalent false count = 31 (provider + runtime)
+ *  - has_v4_equivalent true  count = 60 (provider + runtime)
+ *  - has_v4_equivalent false count = 29 (provider + runtime)
  *  - All v4_mapped rows: expected shipmentType / services / deliveryLocation / internationalShipmentData
  *  - All legacy_only rows: reason = not_yet_available_in_v4
  *  - All needs_confirmation rows: reason = needs_confirmation
@@ -51,7 +51,7 @@ class V4_MapperTest extends UnitTestCase {
 	}
 
 	/**
-	 * @testdox Provider expected data: has_v4_equivalent true count = 58
+	 * @testdox Provider expected data: has_v4_equivalent true count = 60
 	 */
 	public function test_provider_v4_equivalent_true_count(): void {
 		$count = 0;
@@ -60,11 +60,11 @@ class V4_MapperTest extends UnitTestCase {
 				$count++;
 			}
 		}
-		$this->assertSame( 58, $count, 'Exactly 58 rows must be marked has_v4_equivalent=true.' );
+		$this->assertSame( 60, $count, 'Exactly 60 rows must be marked has_v4_equivalent=true.' );
 	}
 
 	/**
-	 * @testdox Provider expected data: has_v4_equivalent false count = 31
+	 * @testdox Provider expected data: has_v4_equivalent false count = 29
 	 */
 	public function test_provider_v4_equivalent_false_count(): void {
 		$count = 0;
@@ -73,7 +73,7 @@ class V4_MapperTest extends UnitTestCase {
 				$count++;
 			}
 		}
-		$this->assertSame( 31, $count, 'Exactly 31 rows must be marked has_v4_equivalent=false.' );
+		$this->assertSame( 29, $count, 'Exactly 29 rows must be marked has_v4_equivalent=false.' );
 	}
 
 	// =========================================================================
@@ -81,7 +81,7 @@ class V4_MapperTest extends UnitTestCase {
 	// =========================================================================
 
 	/**
-	 * @testdox Runtime: V4_Mapper::has_v4_equivalent() returns true for exactly 58 provider inputs
+	 * @testdox Runtime: V4_Mapper::has_v4_equivalent() returns true for exactly 60 provider inputs
 	 */
 	public function test_runtime_v4_equivalent_true_count(): void {
 		$count = 0;
@@ -90,11 +90,11 @@ class V4_MapperTest extends UnitTestCase {
 				$count++;
 			}
 		}
-		$this->assertSame( 58, $count );
+		$this->assertSame( 60, $count );
 	}
 
 	/**
-	 * @testdox Runtime: V4_Mapper::has_v4_equivalent() returns false for exactly 31 provider inputs
+	 * @testdox Runtime: V4_Mapper::has_v4_equivalent() returns false for exactly 29 provider inputs
 	 */
 	public function test_runtime_v4_equivalent_false_count(): void {
 		$count = 0;
@@ -103,7 +103,7 @@ class V4_MapperTest extends UnitTestCase {
 				$count++;
 			}
 		}
-		$this->assertSame( 31, $count );
+		$this->assertSame( 29, $count );
 	}
 
 	// =========================================================================
@@ -733,32 +733,32 @@ class V4_MapperTest extends UnitTestCase {
 			'NL→BE/dd row 30: [insured_shipping,signature_on_delivery]'
 				=> array(
 					array( 'origin' => 'NL', 'destination' => 'BE', 'flow' => 'delivery_day', 'options' => array( 'insured_shipping', 'signature_on_delivery' ) ),
-					$v4( 30, '4914', 'parcel', array( 'deliveryConfirmation' => 'signature', 'insuredValue' => '<order_total>' ) ),
+					$v4( 30, '4914', 'parcel', array( 'insuredValue' => '<order_total>' ) ),
 				),
 			'NL→BE/dd row 31: [insured_shipping,only_home_address]'
 				=> array(
 					array( 'origin' => 'NL', 'destination' => 'BE', 'flow' => 'delivery_day', 'options' => array( 'insured_shipping', 'only_home_address' ) ),
 					$v4( 31, '4914', 'parcel', array( 'insuredValue' => '<order_total>', 'statedAddressOnly' => true ) ),
 				),
-			'NL→BE/dd row 32: [insured_shipping,signature_on_delivery,only_home_address] needs_confirmation'
+			'NL→BE/dd row 32: [insured_shipping,signature_on_delivery,only_home_address]'
 				=> array(
 					array( 'origin' => 'NL', 'destination' => 'BE', 'flow' => 'delivery_day', 'options' => array( 'insured_shipping', 'signature_on_delivery', 'only_home_address' ) ),
-					$leg( 32, '4914', $nc ),
+					$v4( 32, '4914', 'parcel', array( 'insuredValue' => '<order_total>', 'statedAddressOnly' => true ) ),
 				),
 			'NL→BE/dd row 33: [insured_shipping,track_and_trace,signature_on_delivery]'
 				=> array(
 					array( 'origin' => 'NL', 'destination' => 'BE', 'flow' => 'delivery_day', 'options' => array( 'insured_shipping', 'track_and_trace', 'signature_on_delivery' ) ),
-					$v4( 33, '4914', 'parcel', array( 'deliveryConfirmation' => 'signature', 'insuredValue' => '<order_total>' ) ),
+					$v4( 33, '4914', 'parcel', array( 'insuredValue' => '<order_total>' ) ),
 				),
 			'NL→BE/dd row 34: [insured_shipping,track_and_trace,only_home_address]'
 				=> array(
 					array( 'origin' => 'NL', 'destination' => 'BE', 'flow' => 'delivery_day', 'options' => array( 'insured_shipping', 'track_and_trace', 'only_home_address' ) ),
 					$v4( 34, '4914', 'parcel', array( 'insuredValue' => '<order_total>', 'statedAddressOnly' => true ) ),
 				),
-			'NL→BE/dd row 35: [insured_shipping,track_and_trace,signature_on_delivery,only_home_address] needs_confirmation'
+			'NL→BE/dd row 35: [insured_shipping,track_and_trace,signature_on_delivery,only_home_address]'
 				=> array(
 					array( 'origin' => 'NL', 'destination' => 'BE', 'flow' => 'delivery_day', 'options' => array( 'insured_shipping', 'track_and_trace', 'signature_on_delivery', 'only_home_address' ) ),
-					$leg( 35, '4914', $nc ),
+					$v4( 35, '4914', 'parcel', array( 'insuredValue' => '<order_total>', 'statedAddressOnly' => true ) ),
 				),
 			'NL→BE/dd row 36: [mailboxpacket] needs_confirmation'
 				=> array(

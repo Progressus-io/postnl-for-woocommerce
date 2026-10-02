@@ -144,7 +144,7 @@ class V4LabelRequestTest extends IntegrationTestCase {
 	}
 
 	/**
-	 * @testdox An insured NL to BE parcel with a signature is sent on V4 to the Belgian address.
+	 * @testdox An insured NL to BE parcel is sent on V4 to the Belgian address, signature implicit.
 	 */
 	public function test_nl_to_be_parcel_is_sent_on_v4(): void {
 		$payload = $this->request_payload(
@@ -156,7 +156,8 @@ class V4LabelRequestTest extends IntegrationTestCase {
 		);
 
 		$this->assertSame( 'BE', $payload['receiver']['address']['countryIso'] );
-		$this->assertSame( 'signature', $payload['services']['deliveryConfirmation'] );
+		// Signature is implicit on the insured BE parcel, so it is never sent separately.
+		$this->assertArrayNotHasKey( 'deliveryConfirmation', $payload['services'] );
 		$this->assertSame( 10.0, (float) $payload['services']['insuredValue'], 'The insured amount is the order item subtotal.' );
 	}
 

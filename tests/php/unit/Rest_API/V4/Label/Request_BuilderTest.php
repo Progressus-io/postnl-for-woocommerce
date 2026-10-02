@@ -497,6 +497,21 @@ class Request_BuilderTest extends UnitTestCase {
 	}
 
 	/**
+	 * @testdox build() maps a morning deliveryWindow to guaranteedBefore 12:00.
+	 *
+	 * The checkout's 08:00-12:00 slot is legacy option 118/008, which PostNL's product
+	 * conversion matrix maps to services.deliveryWindow.guaranteedBefore = "12:00".
+	 */
+	public function test_delivery_window_morning_is_mapped(): void {
+		$fields             = $this->domestic_fields();
+		$fields['services'] = array( 'deliveryWindow' => 'morning' );
+
+		$services = $this->payload( $fields )['services'];
+
+		$this->assertSame( array( 'guaranteedBefore' => '12:00' ), $services['deliveryWindow'] );
+	}
+
+	/**
 	 * @testdox build() builds the Services block for an evening window carrying no other service.
 	 *
 	 * A plain evening parcel carries only a deliveryWindow, so the block must not be
@@ -630,7 +645,7 @@ class Request_BuilderTest extends UnitTestCase {
 	}
 
 	/**
-	 * @testdox build() emits no DeliveryWindow for a standard, morning or unset window.
+	 * @testdox build() emits no DeliveryWindow for a standard, unrecognised or unset window.
 	 * @dataProvider non_evening_window_provider
 	 *
 	 * @param string $window Delivery-window flag value.
@@ -639,7 +654,7 @@ class Request_BuilderTest extends UnitTestCase {
 		$fields             = $this->domestic_fields();
 		$fields['services'] = '' === $window ? array() : array( 'deliveryWindow' => $window );
 
-		$this->assertArrayNotHasKey( 'services', $this->payload( $fields ), 'Only an evening window builds a DeliveryWindow.' );
+		$this->assertArrayNotHasKey( 'services', $this->payload( $fields ), 'Only the evening and morning keys build a DeliveryWindow.' );
 	}
 
 	/**
@@ -649,9 +664,9 @@ class Request_BuilderTest extends UnitTestCase {
 	 */
 	public static function non_evening_window_provider(): array {
 		return array(
-			'standard' => array( 'standard' ),
-			'morning'  => array( '08:00-12:00' ),
-			'unset'    => array( '' ),
+			'standard'          => array( 'standard' ),
+			'raw frontend type' => array( '08:00-12:00' ),
+			'unset'             => array( '' ),
 		);
 	}
 

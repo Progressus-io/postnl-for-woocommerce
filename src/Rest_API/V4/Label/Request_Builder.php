@@ -15,6 +15,7 @@ use Postnl\Sdk\Enums\Payload\Country;
 use Postnl\Sdk\Enums\Payload\Currency;
 use Postnl\Sdk\Enums\Payload\DeliveryConfirmation;
 use Postnl\Sdk\Enums\Payload\DeliveryWindowDuration;
+use Postnl\Sdk\Enums\Payload\DeliveryWindowGuaranteed;
 use Postnl\Sdk\Enums\Payload\DeliveryWindowService;
 use Postnl\Sdk\Enums\Payload\LabelOutputType;
 use Postnl\Sdk\Enums\Payload\LabelResolution;
@@ -102,7 +103,7 @@ class Request_Builder {
 	 *                                  ('signature'|'deliverycode'), insuredValue (float),
 	 *                                  statedAddressOnly (bool), returnWhenNotHome (bool),
 	 *                                  minimalAgeCheck ('16+'|'18+'), deliveryWindow
-	 *                                  ('evening') and deliveryWindowDuration
+	 *                                  ('evening'|'morning') and deliveryWindowDuration
 	 *                                  ('24hours'|'non24hours'). deliveryWindow is set from
 	 *                                  the order's delivery-day selection by the caller;
 	 *                                  the duration comes from the mapper's letterbox rows.
@@ -376,31 +377,32 @@ class Request_Builder {
 	/**
 	 * Translate the resolved delivery-window flags into a V4 DeliveryWindow DTO.
 	 *
-	 * The only service emitted is Evening. A sandbox probe confirmed that shape is what
+	 * Evening is the only service emitted. A sandbox probe confirmed that shape is what
 	 * labelconfirm expects for an evening shipment: the service enum's GuaranteedBefore*
 	 * cases are rejected as an unknown value, and guaranteed delivery is a separate
-	 * guaranteedBefore field. The plugin's checkout offers neither guaranteed delivery
-	 * nor a confirmed V4 morning (08:00-12:00) window, so a standard/daytime selection
-	 * carries no service and morning never reaches here — Eligibility keeps it on the
-	 * legacy path.
+	 * guaranteedBefore field. The checkout's morning (08:00-12:00) slot is legacy
+	 * option 118/008, which PostNL's product conversion matrix maps to
+	 * guaranteedBefore 12:00. A standard/daytime selection carries neither.
 	 *
 	 * The duration is what makes a letterbox valid: labelconfirm rejects one without
 	 * it, and it selects the 24h or the 48h product.
 	 *
-	 * @param string $window   Resolved window key, currently 'evening' or ''.
+	 * @param string $window   Resolved window key: 'evening', 'morning' or ''.
 	 * @param string $duration DeliveryWindowDuration value, or '' when none applies.
 	 * @return DeliveryWindow|null
 	 */
 	private static function delivery_window( string $window, string $duration ): ?DeliveryWindow {
-		$service  = 'evening' === $window ? DeliveryWindowService::Evening : null;
-		$duration = DeliveryWindowDuration::tryFrom( $duration );
+		$service    = 'evening' === $window ? DeliveryWindowService::Evening : null;
+		$guaranteed = 'morning' === $window ? DeliveryWindowGuaranteed::Before_12_00 : null;
+		$duration   = DeliveryWindowDuration::tryFrom( $duration );
 
-		if ( null === $service && null === $duration ) {
+		if ( null === $service && null === $guaranteed && null === $duration ) {
 			return null;
 		}
 
 		return new DeliveryWindow(
 			service: $service,
+			guaranteedBefore: $guaranteed,
 			duration: $duration
 		);
 	}

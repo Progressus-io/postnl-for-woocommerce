@@ -99,7 +99,7 @@ class EligibilityTest extends UnitTestCase {
 	 * @testdox is_eligible() accepts an evening delivery-day parcel.
 	 *
 	 * Evening rides on a deliveryWindow service layered on the same product code, so it
-	 * maps like any parcel; only morning (08:00-12:00) still falls back.
+	 * maps like any parcel.
 	 */
 	public function test_evening_parcel_is_eligible(): void {
 		$signals = $this->signals(
@@ -113,30 +113,81 @@ class EligibilityTest extends UnitTestCase {
 	}
 
 	/**
-	 * @testdox is_eligible() keeps a morning (08:00-12:00) parcel on the legacy path.
+	 * @testdox is_eligible() accepts a morning (08:00-12:00) parcel whose receiver can be contacted.
 	 *
-	 * Morning has no confirmed V4 delivery window, so it stays on legacy rather than
-	 * silently shipping as standard daytime, even though its product code has a V4 row.
+	 * Morning is PostNL's "Guaranteed Before 12:00" (legacy option 118/008), which
+	 * labelconfirm refuses without a receiver email or phone number.
 	 */
-	public function test_morning_parcel_falls_back(): void {
-		$signals = $this->signals(
-			array(
-				'is_delivery_day' => true,
-				'delivery_window' => 'morning',
-			)
+	public function test_morning_parcel_needs_a_receiver_contact(): void {
+		$morning = array(
+			'is_delivery_day' => true,
+			'delivery_window' => 'morning',
 		);
 
-		$this->assertFalse( Eligibility::is_eligible( $signals ), 'A morning delivery-day parcel must fall back to legacy.' );
+		$this->assertTrue(
+			Eligibility::is_eligible( $this->signals( $morning + array( 'has_contact' => true ) ) ),
+			'A morning parcel with a receiver contact should route to V4.'
+		);
+		$this->assertFalse(
+			Eligibility::is_eligible( $this->signals( $morning ) ),
+			'A morning parcel without a receiver contact must fall back to legacy.'
+		);
 	}
 
 	/**
-	 * @testdox is_eligible() keeps an 18+ order with an evening slot on the legacy path.
+	 * @testdox is_eligible() keeps the service and window pairs labelconfirm rejects on the legacy path.
+	 * @dataProvider window_conflict_provider
 	 *
-	 * labelconfirm rejects minimalAgeCheck combined with an evening deliveryWindow, so
-	 * an ID Check parcel that also picked evening must not be routed to V4 even though
-	 * evening alone and the age check alone each map cleanly.
+	 * labelconfirm rejects minimalAgeCheck with an evening or guaranteed (morning)
+	 * window, and the delivery-code product with a morning one, even though each maps
+	 * cleanly on its own.
+	 *
+	 * @param string $window   Delivery window signal.
+	 * @param array  $services Mapped services.
 	 */
-	public function test_age_check_evening_combination_falls_back(): void {
+	public function test_window_conflicts_fall_back( string $window, array $services ): void {
+		$signals = $this->signals(
+			array(
+				'is_delivery_day' => true,
+				'delivery_window' => $window,
+				'has_contact'     => true,
+				'mapped'          => array(
+					'has_v4_equivalent' => true,
+					'shipmentType'      => 'parcel',
+					'services'          => $services,
+					'deliveryLocation'  => array(),
+				),
+			)
+		);
+
+		$this->assertFalse( Eligibility::is_eligible( $signals ) );
+
+		$signals['delivery_window'] = 'standard';
+		$this->assertTrue( Eligibility::is_eligible( $signals ), 'The same services must route to V4 without a timed window.' );
+	}
+
+	/**
+	 * Timed windows paired with the services they cannot be combined with.
+	 *
+	 * @return array
+	 */
+	public static function window_conflict_provider(): array {
+		$age_check     = array( 'minimalAgeCheck' => '18+' );
+		$delivery_code = array( 'deliveryConfirmation' => 'deliverycode', 'insuredValue' => '<order_total>' );
+
+		return array(
+			'evening + 18+'           => array( 'evening', $age_check ),
+			'morning + 18+'           => array( 'morning', $age_check ),
+			'morning + delivery code' => array( 'morning', $delivery_code ),
+		);
+	}
+
+	/**
+	 * @testdox is_eligible() accepts a delivery-code parcel with an evening slot.
+	 *
+	 * The sandbox accepts that pair, unlike the morning one.
+	 */
+	public function test_evening_combines_with_delivery_code(): void {
 		$signals = $this->signals(
 			array(
 				'is_delivery_day' => true,
@@ -144,13 +195,38 @@ class EligibilityTest extends UnitTestCase {
 				'mapped'          => array(
 					'has_v4_equivalent' => true,
 					'shipmentType'      => 'parcel',
-					'services'          => array( 'minimalAgeCheck' => '18+' ),
+					'services'          => array( 'deliveryConfirmation' => 'deliverycode', 'insuredValue' => '<order_total>' ),
 					'deliveryLocation'  => array(),
 				),
 			)
 		);
 
-		$this->assertFalse( Eligibility::is_eligible( $signals ), 'An 18+ evening parcel must fall back to legacy.' );
+		$this->assertTrue( Eligibility::is_eligible( $signals ) );
+	}
+
+	/**
+	 * @testdox is_eligible() accepts an insured or signature parcel with an evening or morning slot.
+	 */
+	public function test_window_combines_with_signature_and_insurance(): void {
+		foreach ( array( 'evening', 'morning' ) as $window ) {
+			foreach ( array( array( 'deliveryConfirmation' => 'signature' ), array( 'insuredValue' => '<order_total>' ) ) as $services ) {
+				$signals = $this->signals(
+					array(
+						'is_delivery_day' => true,
+						'delivery_window' => $window,
+						'has_contact'     => true,
+						'mapped'          => array(
+							'has_v4_equivalent' => true,
+							'shipmentType'      => 'parcel',
+							'services'          => $services,
+							'deliveryLocation'  => array(),
+						),
+					)
+				);
+
+				$this->assertTrue( Eligibility::is_eligible( $signals ), "A {$window} parcel with " . key( $services ) . ' should route to V4.' );
+			}
+		}
 	}
 
 	/**
@@ -399,7 +475,7 @@ class EligibilityTest extends UnitTestCase {
 			'pickup without a location'  => array( array( 'is_pickup' => true, 'mapped' => array( 'has_v4_equivalent' => true, 'shipmentType' => 'parcel', 'services' => array(), 'deliveryLocation' => array( 'pickupLocationId' => 'x' ) ) ), 'a pickup point with no location code' ),
 			'pickup on a home row'       => array( array( 'is_pickup' => true, 'pickup_id' => '176227' ), 'a pickup order mapped to a home-delivery row' ),
 			'return involved'            => array( array( 'has_return' => true ), 'a return label' ),
-			'morning delivery'           => array( array( 'delivery_window' => 'morning' ), 'a morning (08:00-12:00) window' ),
+			'morning without a contact'  => array( array( 'delivery_window' => 'morning' ), 'a morning (08:00-12:00) window with no receiver email or phone' ),
 			'BE to NL'                   => array( array( 'origin' => 'BE' ), 'a BE origin shipping to NL' ),
 			'BE domestic'                => array( array( 'origin' => 'BE', 'destination' => 'BE' ), 'a BE domestic parcel' ),
 			// Identical to the eligible happy path except for the one flag under test.

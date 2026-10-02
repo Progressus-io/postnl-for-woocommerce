@@ -358,13 +358,11 @@ class ServiceTest extends UnitTestCase {
 	}
 
 	/**
-	 * @testdox extract_fields() attaches an evening delivery window and omits it for every other selection.
+	 * @testdox extract_fields() attaches an evening or morning delivery window and omits it for every other selection.
 	 * @dataProvider delivery_window_provider
 	 *
 	 * Covers resolve_delivery_window()'s branches (frontend 'Evening' and '08:00-12:00'
-	 * morning) and the extract_fields() line that only injects the window for evening.
-	 * Morning is included even though Eligibility keeps it on legacy, to pin that
-	 * extract_fields itself never turns it into a standard-daytime V4 shipment.
+	 * morning) and the extract_fields() line that injects the window for both.
 	 *
 	 * @param string      $frontend_type Frontend delivery_day type.
 	 * @param string      $backend_type  Backend delivery_type.
@@ -392,9 +390,9 @@ class ServiceTest extends UnitTestCase {
 		);
 
 		if ( null === $expected ) {
-			$this->assertArrayNotHasKey( 'deliveryWindow', $fields['services'], 'A non-evening selection must attach no delivery window.' );
+			$this->assertArrayNotHasKey( 'deliveryWindow', $fields['services'], 'A standard selection must attach no delivery window.' );
 		} else {
-			$this->assertSame( $expected, $fields['services']['deliveryWindow'], 'An evening selection must attach the evening delivery window.' );
+			$this->assertSame( $expected, $fields['services']['deliveryWindow'], 'An evening or morning selection must attach its delivery window.' );
 		}
 	}
 
@@ -406,7 +404,7 @@ class ServiceTest extends UnitTestCase {
 	public static function delivery_window_provider(): array {
 		return array(
 			'evening from the frontend type'  => array( 'Evening', '', 'evening' ),
-			'morning gets no V4 window'       => array( '08:00-12:00', 'Standard', null ),
+			'morning from the frontend type'  => array( '08:00-12:00', 'Standard', 'morning' ),
 			'standard daytime gets no window' => array( 'Daytime', 'Standard', null ),
 			'no delivery-day selection'       => array( '', '', null ),
 		);
@@ -528,9 +526,13 @@ class ServiceTest extends UnitTestCase {
 	}
 
 	/**
-	 * @testdox A missed evening is recorded on the order with the date the customer chose.
+	 * @testdox A missed evening or morning is recorded on the order with the slot and the date the customer chose.
+	 * @dataProvider missed_window_note_provider
+	 *
+	 * @param string $frontend_type Frontend delivery-day type.
+	 * @param string $slot          Slot name the note must carry.
 	 */
-	public function test_a_missed_evening_is_noted_on_the_order(): void {
+	public function test_a_missed_window_is_noted_on_the_order( string $frontend_type, string $slot ): void {
 		$service = new Testable_Label_Service(
 			new Spy_Label_Client_Factory( new Client_Factory_Settings(), new Failing_Http_Client() ),
 			self::V4_KEY,
@@ -540,7 +542,7 @@ class ServiceTest extends UnitTestCase {
 		$item_info               = new Delivery_Window_Item_Info( array( 'subtotal' => 42.00 ) );
 		$item_info->delivery_day = array(
 			'date' => '14-07-2026',
-			'type' => 'Evening',
+			'type' => $frontend_type,
 		);
 
 		$order = new class() {
@@ -551,13 +553,25 @@ class ServiceTest extends UnitTestCase {
 			}
 		};
 
-		$method = new \ReflectionMethod( Service::class, 'note_evening_passed' );
+		$method = new \ReflectionMethod( Service::class, 'note_window_passed' );
 		$method->setAccessible( true );
 		$method->invoke( $service, $order, $item_info );
 
 		$this->assertCount( 1, $order->notes );
-		$this->assertStringContainsString( '14-07-2026', $order->notes[0] );
+		$this->assertStringContainsString( $slot . ' delivery chosen for 14-07-2026', $order->notes[0] );
 		$this->assertStringContainsString( 'standard PostNL label', $order->notes[0] );
+	}
+
+	/**
+	 * Frontend delivery-day types and the slot name their missed-slot note carries.
+	 *
+	 * @return array
+	 */
+	public static function missed_window_note_provider(): array {
+		return array(
+			'evening' => array( 'Evening', 'evening' ),
+			'morning' => array( '08:00-12:00', 'morning' ),
+		);
 	}
 
 	// ── Pickup point ─────────────────────────────────────────────────────────
@@ -627,26 +641,57 @@ class ServiceTest extends UnitTestCase {
 	}
 
 	/**
-	 * @testdox A morning delivery-day order is not V4-eligible through the signal path.
+	 * @testdox A morning delivery-day order is V4-eligible through the signal path only when the receiver can be contacted.
+	 * @dataProvider morning_contact_provider
 	 *
-	 * gather_signals() feeds resolve_delivery_window() into the eligibility signal, so
-	 * a morning order has to surface as 'morning' and be turned away — replacing the
-	 * window with a constant would otherwise route it to V4 unnoticed.
+	 * Morning is PostNL's "Guaranteed Before 12:00", which labelconfirm refuses with
+	 * "Email or phone number of Receiver is required" when both are missing.
+	 *
+	 * @param array $shipment Parsed shipment data.
+	 * @param bool  $eligible Whether the order may route to V4.
 	 */
-	public function test_a_morning_order_is_not_v4_eligible(): void {
+	public function test_a_morning_order_needs_a_receiver_contact( array $shipment, bool $eligible ): void {
 		$service = new Testable_Label_Service(
 			new Spy_Label_Client_Factory( new Client_Factory_Settings(), new Failing_Http_Client() ),
 			self::V4_KEY,
 			new NullLogger()
 		);
 
-		$item_info                = new Delivery_Window_Item_Info( array( 'subtotal' => 42.00 ) );
-		$item_info->delivery_day  = array( 'type' => '08:00-12:00' );
+		$item_info               = new Delivery_Window_Item_Info( $shipment );
+		$item_info->delivery_day = array( 'type' => '08:00-12:00' );
 
 		$signals = $this->gather_signals( $service, $item_info, array() );
 
 		$this->assertSame( 'morning', $signals['delivery_window'], 'A morning selection must surface as the morning window signal.' );
-		$this->assertFalse( \PostNLWooCommerce\Rest_API\V4\Label\Eligibility::is_eligible( $signals ), 'A morning order must be turned away.' );
+		$this->assertSame( $eligible, \PostNLWooCommerce\Rest_API\V4\Label\Eligibility::is_eligible( $signals ) );
+	}
+
+	/**
+	 * Receiver contact details and whether a morning order may route to V4.
+	 *
+	 * @return array
+	 */
+	public static function morning_contact_provider(): array {
+		return array(
+			'email only'       => array( array( 'email' => 'buyer@example.com' ), true ),
+			'phone only'       => array( array( 'phone' => '0612345678' ), true ),
+			'neither'          => array( array( 'subtotal' => 42.00 ), false ),
+			'blank email only' => array( array( 'email' => ' ' ), false ),
+		);
+	}
+
+	/**
+	 * @testdox extract_fields() ships a morning slot missed on the delivery day as a standard label.
+	 */
+	public function test_extract_fields_ships_a_missed_morning_as_standard(): void {
+		Functions\when( 'current_datetime' )->justReturn(
+			new \DateTimeImmutable( '2026-07-14 09:00:00', new \DateTimeZone( 'Europe/Amsterdam' ) )
+		);
+
+		$fields = $this->extract_fields_for_delivery_date( '14-07-2026', '08:00-12:00' );
+
+		$this->assertArrayNotHasKey( 'deliveryWindow', $fields['services'] );
+		$this->assertSame( '2026-07-14', $fields['handover_date']->format( 'Y-m-d' ) );
 	}
 
 	/**

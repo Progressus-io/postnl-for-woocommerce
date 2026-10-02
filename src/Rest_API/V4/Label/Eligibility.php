@@ -92,6 +92,7 @@ class Eligibility {
 	 *     @type bool   $has_return          A return label/barcode is involved.
 	 *     @type string $delivery_window     Normalised delivery-day window: 'evening',
 	 *                                        'morning' or 'standard'.
+	 *     @type bool   $has_contact         The receiver has an email or phone number.
 	 *     @type string $origin              Origin country.
 	 *     @type string $destination         Shipping zone.
 	 *     @type array  $mapped              V4_Mapper::map() result.
@@ -117,11 +118,13 @@ class Eligibility {
 			return false;
 		}
 
-		// Evening is expressed as a deliveryWindow service on the same product code, so it
-		// maps like any parcel and is handled here. Morning (08:00-12:00) stays on legacy:
-		// the sandbox accepts guaranteedBefore 10:00 and 12:00, but guaranteed delivery may
-		// be a different product from the morning window, which PostNL has yet to confirm.
-		if ( 'morning' === ( $signals['delivery_window'] ?? '' ) ) {
+		// Evening and morning are deliveryWindow services on the same product code, so they
+		// map like any parcel. Morning (08:00-12:00, legacy option 118/008) is PostNL's
+		// "Guaranteed Before 12:00", which labelconfirm refuses without a receiver email
+		// or phone number.
+		$window = (string) ( $signals['delivery_window'] ?? '' );
+
+		if ( 'morning' === $window && empty( $signals['has_contact'] ) ) {
 			return false;
 		}
 
@@ -151,11 +154,16 @@ class Eligibility {
 			return false;
 		}
 
-		// minimalAgeCheck and an evening deliveryWindow cannot be combined on the V4
-		// product — labelconfirm rejects the pair — so an 18+ order with an evening
-		// slot stays on legacy rather than being routed to a request PostNL rejects.
-		if ( 'evening' === ( $signals['delivery_window'] ?? '' )
-			&& array_key_exists( 'minimalAgeCheck', (array) ( $mapped['services'] ?? array() ) ) ) {
+		// labelconfirm rejects the age check combined with an evening or morning window,
+		// and the delivery-code product combined with a morning one, so such an order
+		// stays on legacy rather than being routed to a request PostNL rejects.
+		$services = (array) ( $mapped['services'] ?? array() );
+
+		if ( in_array( $window, array( 'evening', 'morning' ), true ) && array_key_exists( 'minimalAgeCheck', $services ) ) {
+			return false;
+		}
+
+		if ( 'morning' === $window && 'deliverycode' === ( $services['deliveryConfirmation'] ?? '' ) ) {
 			return false;
 		}
 

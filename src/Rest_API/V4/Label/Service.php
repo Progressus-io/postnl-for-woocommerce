@@ -43,10 +43,10 @@ if ( ! defined( 'ABSPATH' ) ) {
  * international parcels (4907/4909) carrying an InternationalShipmentData bundle
  * and customs declaration. The domestic NL letterbox (mailbox parcel 2928/2948)
  * also falls out here as a ShipmentType::LetterBox variant. A home delivery-day
- * selection (standard or evening) is handled here; evening rides on a
- * deliveryWindow service. A domestic NL pickup point ships as a DeliveryLocation.
- * Everything else — packet/mailbox international products, returns, morning
- * (08:00-12:00) delivery, parcels from a BE origin to NL or BE —
+ * selection (standard, evening or morning) is handled here; evening and morning
+ * ride on a deliveryWindow service. A domestic NL pickup point ships as a
+ * DeliveryLocation. Everything else — packet/mailbox international products,
+ * returns, parcels from a BE origin to NL or BE —
  * falls back to the untouched legacy pipeline until those flows are migrated. Because both
  * gates (a validated V4 key and the per-flow flag) default off, merging this
  * changes nothing for merchants.
@@ -195,27 +195,30 @@ class Service extends Order_Base implements Label_Service_Interface {
 
 		$labels = $this->store_labels( $response, $post_data['order'], $barcodes );
 
-		if ( $this->has_evening_passed( $item_info ) ) {
-			$this->note_evening_passed( $post_data['order'], $item_info );
+		if ( $this->has_window_passed( $item_info ) ) {
+			$this->note_window_passed( $post_data['order'], $item_info );
 		}
 
 		return $labels;
 	}
 
 	/**
-	 * Record on the order that its evening slot was missed and a standard label was made.
+	 * Record on the order that its evening or morning slot was missed and a standard
+	 * label was made.
 	 *
 	 * @param \WC_Order          $order     WooCommerce order.
 	 * @param Shipping\Item_Info $item_info Parsed legacy item info.
 	 * @return void
 	 */
-	private function note_evening_passed( $order, Shipping\Item_Info $item_info ): void {
+	private function note_window_passed( $order, Shipping\Item_Info $item_info ): void {
+		$message = 'morning' === $this->resolve_delivery_window( $item_info )
+			/* translators: %s: delivery date chosen at checkout, e.g. 14-07-2026 */
+			? esc_html__( 'The morning delivery chosen for %s can no longer be met, so a standard PostNL label was created instead.', 'postnl-for-woocommerce' )
+			/* translators: %s: delivery date chosen at checkout, e.g. 14-07-2026 */
+			: esc_html__( 'The evening delivery chosen for %s can no longer be met, so a standard PostNL label was created instead.', 'postnl-for-woocommerce' );
+
 		$order->add_order_note(
-			sprintf(
-				/* translators: %s: delivery date chosen at checkout, e.g. 14-07-2026 */
-				esc_html__( 'The evening delivery chosen for %s can no longer be met, so a standard PostNL label was created instead.', 'postnl-for-woocommerce' ),
-				esc_html( (string) ( $item_info->delivery_day['date'] ?? '' ) )
-			)
+			sprintf( $message, esc_html( (string) ( $item_info->delivery_day['date'] ?? '' ) ) )
 		);
 	}
 
@@ -363,6 +366,7 @@ class Service extends Order_Base implements Label_Service_Interface {
 			'pickup_id'       => $this->resolve_pickup_location_id( $post_data ),
 			'has_return'      => $has_return,
 			'delivery_window' => $this->resolve_delivery_window( $item_info ),
+			'has_contact'     => '' !== trim( ( $item_info->shipment['email'] ?? '' ) . ( $item_info->shipment['phone'] ?? '' ) ),
 			'origin'          => $origin,
 			'destination'     => $destination,
 			'mapped'          => Eligibility::resolve_mapped(
@@ -472,16 +476,16 @@ class Service extends Order_Base implements Label_Service_Interface {
 	}
 
 	/**
-	 * Whether the order's evening slot can no longer be met.
+	 * Whether the order's evening or morning slot can no longer be met.
 	 *
-	 * PostNL delivers the evening after handover, so the label has to be made before
-	 * the chosen date: one made on or after it would be booked for a later evening.
+	 * PostNL delivers the day after handover, so the label has to be made before the
+	 * chosen date: one made on or after it would be booked for a later day.
 	 *
 	 * @param Shipping\Item_Info $item_info Parsed legacy item info.
 	 * @return bool
 	 */
-	private function has_evening_passed( Shipping\Item_Info $item_info ): bool {
-		if ( 'evening' !== $this->resolve_delivery_window( $item_info ) ) {
+	private function has_window_passed( Shipping\Item_Info $item_info ): bool {
+		if ( 'standard' === $this->resolve_delivery_window( $item_info ) ) {
 			return false;
 		}
 
@@ -525,11 +529,13 @@ class Service extends Order_Base implements Label_Service_Interface {
 		);
 
 		// deliveryWindow is a Request_Builder concern layered on the mapped product, not a
-		// mapper output: an evening parcel keeps the same product code and gains a window
-		// service. Morning never reaches here — Eligibility keeps it on the legacy path.
-		// A missed evening ships as a standard parcel; create() notes it on the order.
-		if ( 'evening' === $this->resolve_delivery_window( $item_info ) && ! $this->has_evening_passed( $item_info ) ) {
-			$services['deliveryWindow'] = 'evening';
+		// mapper output: an evening or morning parcel keeps the same product code and
+		// gains a window service. A missed slot ships as a standard parcel; create()
+		// notes it on the order.
+		$window = $this->resolve_delivery_window( $item_info );
+
+		if ( 'standard' !== $window && ! $this->has_window_passed( $item_info ) ) {
+			$services['deliveryWindow'] = $window;
 		}
 
 		return array(

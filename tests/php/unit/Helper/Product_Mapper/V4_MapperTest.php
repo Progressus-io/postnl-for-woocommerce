@@ -10,6 +10,7 @@ declare( strict_types = 1 );
 namespace PostNLWooCommerce\Tests\Unit\Helper\Product_Mapper;
 
 use Postnl\Sdk\Enums\Payload\DeliveryConfirmation;
+use Postnl\Sdk\Enums\Payload\DeliveryWindowDuration;
 use Postnl\Sdk\Enums\Payload\MinimalAgeCheck;
 use PostNLWooCommerce\Helper\Product_Mapper\V1_Mapper;
 use PostNLWooCommerce\Helper\Product_Mapper\V4_Mapper;
@@ -20,12 +21,12 @@ use PostNLWooCommerce\Tests\UnitTestCase;
  *
  * Coverage:
  *  - Total row count = 89 (from provider data and from runtime calls)
- *  - has_v4_equivalent true  count = 49 (provider + runtime)
- *  - has_v4_equivalent false count = 40 (provider + runtime)
+ *  - has_v4_equivalent true  count = 58 (provider + runtime)
+ *  - has_v4_equivalent false count = 31 (provider + runtime)
  *  - All v4_mapped rows: expected shipmentType / services / deliveryLocation / internationalShipmentData
  *  - All legacy_only rows: reason = not_yet_available_in_v4
  *  - All needs_confirmation rows: reason = needs_confirmation
- *  - NOT_YET_AVAILABLE_CODES contains all 10 required codes (incl. absent 1175, 3574, 4983)
+ *  - NOT_YET_AVAILABLE_CODES contains all 9 required codes (incl. absent 1175, 3574, 4983)
  *  - Unknown combinations return reason = unknown_combination
  *  - Optional legacy_product_code validation (REASON_PRODUCT_CODE_MISMATCH)
  *  - No silent gaps: every V1_Mapper::products_data() combination maps to a V4 shape or an
@@ -50,7 +51,7 @@ class V4_MapperTest extends UnitTestCase {
 	}
 
 	/**
-	 * @testdox Provider expected data: has_v4_equivalent true count = 49
+	 * @testdox Provider expected data: has_v4_equivalent true count = 58
 	 */
 	public function test_provider_v4_equivalent_true_count(): void {
 		$count = 0;
@@ -59,11 +60,11 @@ class V4_MapperTest extends UnitTestCase {
 				$count++;
 			}
 		}
-		$this->assertSame( 49, $count, 'Exactly 49 rows must be marked has_v4_equivalent=true.' );
+		$this->assertSame( 58, $count, 'Exactly 58 rows must be marked has_v4_equivalent=true.' );
 	}
 
 	/**
-	 * @testdox Provider expected data: has_v4_equivalent false count = 40
+	 * @testdox Provider expected data: has_v4_equivalent false count = 31
 	 */
 	public function test_provider_v4_equivalent_false_count(): void {
 		$count = 0;
@@ -72,7 +73,7 @@ class V4_MapperTest extends UnitTestCase {
 				$count++;
 			}
 		}
-		$this->assertSame( 40, $count, 'Exactly 40 rows must be marked has_v4_equivalent=false.' );
+		$this->assertSame( 31, $count, 'Exactly 31 rows must be marked has_v4_equivalent=false.' );
 	}
 
 	// =========================================================================
@@ -80,7 +81,7 @@ class V4_MapperTest extends UnitTestCase {
 	// =========================================================================
 
 	/**
-	 * @testdox Runtime: V4_Mapper::has_v4_equivalent() returns true for exactly 49 provider inputs
+	 * @testdox Runtime: V4_Mapper::has_v4_equivalent() returns true for exactly 58 provider inputs
 	 */
 	public function test_runtime_v4_equivalent_true_count(): void {
 		$count = 0;
@@ -89,11 +90,11 @@ class V4_MapperTest extends UnitTestCase {
 				$count++;
 			}
 		}
-		$this->assertSame( 49, $count );
+		$this->assertSame( 58, $count );
 	}
 
 	/**
-	 * @testdox Runtime: V4_Mapper::has_v4_equivalent() returns false for exactly 40 provider inputs
+	 * @testdox Runtime: V4_Mapper::has_v4_equivalent() returns false for exactly 31 provider inputs
 	 */
 	public function test_runtime_v4_equivalent_false_count(): void {
 		$count = 0;
@@ -102,7 +103,7 @@ class V4_MapperTest extends UnitTestCase {
 				$count++;
 			}
 		}
-		$this->assertSame( 40, $count );
+		$this->assertSame( 31, $count );
 	}
 
 	// =========================================================================
@@ -110,17 +111,17 @@ class V4_MapperTest extends UnitTestCase {
 	// =========================================================================
 
 	/**
-	 * @testdox NOT_YET_AVAILABLE_CODES contains exactly 10 entries
+	 * @testdox NOT_YET_AVAILABLE_CODES contains exactly 9 entries
 	 */
 	public function test_not_yet_available_codes_count(): void {
-		$this->assertCount( 10, V4_Mapper::NOT_YET_AVAILABLE_CODES );
+		$this->assertCount( 9, V4_Mapper::NOT_YET_AVAILABLE_CODES );
 	}
 
 	/**
-	 * @testdox NOT_YET_AVAILABLE_CODES contains all 10 required codes
+	 * @testdox NOT_YET_AVAILABLE_CODES contains all 9 required codes
 	 */
 	public function test_not_yet_available_codes_contains_all_required(): void {
-		$required = array( '1175', '3571', '3574', '4936', '4960', '4961', '4962', '4963', '4965', '4983' );
+		$required = array( '1175', '3574', '4936', '4960', '4961', '4962', '4963', '4965', '4983' );
 		foreach ( $required as $code ) {
 			$this->assertContains( $code, V4_Mapper::NOT_YET_AVAILABLE_CODES );
 		}
@@ -234,16 +235,16 @@ class V4_MapperTest extends UnitTestCase {
 		$result = V4_Mapper::map(
 			array(
 				'origin'              => 'NL',
-				'destination'         => 'NL',
+				'destination'         => 'BE',
 				'flow'                => 'pickup_points',
-				'options'             => array( 'id_check' ),
-				'legacy_product_code' => '3571',
+				'options'             => array(),
+				'legacy_product_code' => '4936',
 			)
 		);
 
 		$this->assertFalse( $result['has_v4_equivalent'] );
 		$this->assertSame( V4_Mapper::REASON_NOT_YET_AVAILABLE, $result['legacy_only_reason'] );
-		$this->assertSame( '3571', $result['legacy_product_code'] );
+		$this->assertSame( '4936', $result['legacy_product_code'] );
 	}
 
 	/**
@@ -322,7 +323,7 @@ class V4_MapperTest extends UnitTestCase {
 	public function test_has_v4_equivalent_returns_false_for_not_yet_available(): void {
 		$this->assertFalse(
 			V4_Mapper::has_v4_equivalent(
-				array( 'origin' => 'NL', 'destination' => 'NL', 'flow' => 'pickup_points', 'options' => array( 'id_check' ) )
+				array( 'origin' => 'NL', 'destination' => 'BE', 'flow' => 'pickup_points', 'options' => array() )
 			)
 		);
 	}
@@ -333,7 +334,7 @@ class V4_MapperTest extends UnitTestCase {
 	public function test_has_v4_equivalent_returns_false_for_needs_confirmation(): void {
 		$this->assertFalse(
 			V4_Mapper::has_v4_equivalent(
-				array( 'origin' => 'NL', 'destination' => 'NL', 'flow' => 'delivery_day', 'options' => array( 'letterbox_48' ) )
+				array( 'origin' => 'NL', 'destination' => 'BE', 'flow' => 'delivery_day', 'options' => array( 'mailboxpacket' ) )
 			)
 		);
 	}
@@ -602,7 +603,7 @@ class V4_MapperTest extends UnitTestCase {
 			'NL→NL/dd row 7: [signature_on_delivery,insured_shipping,return_no_answer]'
 				=> array(
 					array( 'origin' => 'NL', 'destination' => 'NL', 'flow' => 'delivery_day', 'options' => array( 'signature_on_delivery', 'insured_shipping', 'return_no_answer' ) ),
-					$leg( 7, '3094', $nc ),
+					$v4( 7, '3094', 'parcel', array( 'insuredValue' => '<order_total>', 'returnWhenNotHome' => true ) ),
 				),
 			'NL→NL/dd row 8: [signature_on_delivery,only_home_address]'
 				=> array(
@@ -612,7 +613,7 @@ class V4_MapperTest extends UnitTestCase {
 			'NL→NL/dd row 9: [insured_shipping,signature_on_delivery]'
 				=> array(
 					array( 'origin' => 'NL', 'destination' => 'NL', 'flow' => 'delivery_day', 'options' => array( 'insured_shipping', 'signature_on_delivery' ) ),
-					$v4( 9, '3087', 'parcel', array( 'deliveryConfirmation' => 'deliverycode', 'insuredValue' => '<order_total>' ) ),
+					$v4( 9, '3087', 'parcel', array( 'insuredValue' => '<order_total>' ) ),
 				),
 			'NL→NL/dd row 10: [signature_on_delivery,return_no_answer]'
 				=> array(
@@ -627,12 +628,12 @@ class V4_MapperTest extends UnitTestCase {
 			'NL→NL/dd row 12: [letterbox]'
 				=> array(
 					array( 'origin' => 'NL', 'destination' => 'NL', 'flow' => 'delivery_day', 'options' => array( 'letterbox' ) ),
-					$v4( 12, '2928', 'letterbox' ),
+					$v4( 12, '2928', 'letterbox', array( 'deliveryWindowDuration' => '24hours' ) ),
 				),
-			'NL→NL/dd row 89: [letterbox_48] needs_confirmation'
+			'NL→NL/dd row 89: [letterbox_48]'
 				=> array(
 					array( 'origin' => 'NL', 'destination' => 'NL', 'flow' => 'delivery_day', 'options' => array( 'letterbox_48' ) ),
-					$leg( 89, '2948', $nc ),
+					$v4( 89, '2948', 'letterbox', array( 'deliveryWindowDuration' => 'non24hours' ) ),
 				),
 			'NL→NL/dd row 13: [id_check] 18+'
 				=> array(
@@ -689,15 +690,15 @@ class V4_MapperTest extends UnitTestCase {
 					array( 'origin' => 'NL', 'destination' => 'NL', 'flow' => 'pickup_points', 'options' => array( 'insured_shipping' ) ),
 					$v4( 22, '3534', 'parcel', array( 'insuredValue' => '<order_total>' ), $pickup ),
 				),
-			'NL→NL/pp row 23: [id_check] not_yet_available'
+			'NL→NL/pp row 23: [id_check] 18+'
 				=> array(
 					array( 'origin' => 'NL', 'destination' => 'NL', 'flow' => 'pickup_points', 'options' => array( 'id_check' ) ),
-					$leg( 23, '3571', $nya ),
+					$v4( 23, '3571', 'parcel', array( 'minimalAgeCheck' => '18+' ), $pickup ),
 				),
-			'NL→NL/pp row 24: [id_check,insured_shipping] needs_confirmation'
+			'NL→NL/pp row 24: [id_check,insured_shipping] 18+'
 				=> array(
 					array( 'origin' => 'NL', 'destination' => 'NL', 'flow' => 'pickup_points', 'options' => array( 'id_check', 'insured_shipping' ) ),
-					$leg( 24, '3581', $nc ),
+					$v4( 24, '3581', 'parcel', array( 'insuredValue' => '<order_total>', 'minimalAgeCheck' => '18+' ), $pickup ),
 				),
 
 			// -----------------------------------------------------------------
@@ -724,35 +725,35 @@ class V4_MapperTest extends UnitTestCase {
 					array( 'origin' => 'NL', 'destination' => 'BE', 'flow' => 'delivery_day', 'options' => array( 'insured_shipping' ) ),
 					$v4( 28, '4914', 'parcel', array( 'insuredValue' => '<order_total>' ) ),
 				),
-			'NL→BE/dd row 29: [insured_shipping,track_and_trace] needs_confirmation'
+			'NL→BE/dd row 29: [insured_shipping,track_and_trace]'
 				=> array(
 					array( 'origin' => 'NL', 'destination' => 'BE', 'flow' => 'delivery_day', 'options' => array( 'insured_shipping', 'track_and_trace' ) ),
-					$leg( 29, '4914', $nc ),
+					$v4( 29, '4914', 'parcel', array( 'insuredValue' => '<order_total>' ) ),
 				),
-			'NL→BE/dd row 30: [insured_shipping,signature_on_delivery] needs_confirmation'
+			'NL→BE/dd row 30: [insured_shipping,signature_on_delivery]'
 				=> array(
 					array( 'origin' => 'NL', 'destination' => 'BE', 'flow' => 'delivery_day', 'options' => array( 'insured_shipping', 'signature_on_delivery' ) ),
-					$leg( 30, '4914', $nc ),
+					$v4( 30, '4914', 'parcel', array( 'deliveryConfirmation' => 'signature', 'insuredValue' => '<order_total>' ) ),
 				),
-			'NL→BE/dd row 31: [insured_shipping,only_home_address] needs_confirmation'
+			'NL→BE/dd row 31: [insured_shipping,only_home_address]'
 				=> array(
 					array( 'origin' => 'NL', 'destination' => 'BE', 'flow' => 'delivery_day', 'options' => array( 'insured_shipping', 'only_home_address' ) ),
-					$leg( 31, '4914', $nc ),
+					$v4( 31, '4914', 'parcel', array( 'insuredValue' => '<order_total>', 'statedAddressOnly' => true ) ),
 				),
 			'NL→BE/dd row 32: [insured_shipping,signature_on_delivery,only_home_address] needs_confirmation'
 				=> array(
 					array( 'origin' => 'NL', 'destination' => 'BE', 'flow' => 'delivery_day', 'options' => array( 'insured_shipping', 'signature_on_delivery', 'only_home_address' ) ),
 					$leg( 32, '4914', $nc ),
 				),
-			'NL→BE/dd row 33: [insured_shipping,track_and_trace,signature_on_delivery] needs_confirmation'
+			'NL→BE/dd row 33: [insured_shipping,track_and_trace,signature_on_delivery]'
 				=> array(
 					array( 'origin' => 'NL', 'destination' => 'BE', 'flow' => 'delivery_day', 'options' => array( 'insured_shipping', 'track_and_trace', 'signature_on_delivery' ) ),
-					$leg( 33, '4914', $nc ),
+					$v4( 33, '4914', 'parcel', array( 'deliveryConfirmation' => 'signature', 'insuredValue' => '<order_total>' ) ),
 				),
-			'NL→BE/dd row 34: [insured_shipping,track_and_trace,only_home_address] needs_confirmation'
+			'NL→BE/dd row 34: [insured_shipping,track_and_trace,only_home_address]'
 				=> array(
 					array( 'origin' => 'NL', 'destination' => 'BE', 'flow' => 'delivery_day', 'options' => array( 'insured_shipping', 'track_and_trace', 'only_home_address' ) ),
-					$leg( 34, '4914', $nc ),
+					$v4( 34, '4914', 'parcel', array( 'insuredValue' => '<order_total>', 'statedAddressOnly' => true ) ),
 				),
 			'NL→BE/dd row 35: [insured_shipping,track_and_trace,signature_on_delivery,only_home_address] needs_confirmation'
 				=> array(
@@ -1089,8 +1090,9 @@ class V4_MapperTest extends UnitTestCase {
 	/**
 	 * @testdox Every service string the matrix emits is a value the SDK enum accepts
 	 *
-	 * Request_Builder resolves these strings with DeliveryConfirmation::tryFrom() and
-	 * MinimalAgeCheck::tryFrom(), which return null for anything unrecognised. A null
+	 * Request_Builder resolves these strings with DeliveryConfirmation::tryFrom(),
+	 * MinimalAgeCheck::tryFrom() and DeliveryWindowDuration::tryFrom(), which return
+	 * null for anything unrecognised. A null
 	 * there does not raise anything: if it is the row's only service the whole Services
 	 * block is dropped and the parcel ships without the service the customer paid for.
 	 *
@@ -1122,6 +1124,15 @@ class V4_MapperTest extends UnitTestCase {
 				);
 				$checked++;
 			}
+
+			if ( isset( $services['deliveryWindowDuration'] ) ) {
+				$value = $services['deliveryWindowDuration'];
+				$this->assertNotNull(
+					DeliveryWindowDuration::tryFrom( (string) $value ),
+					"Row '{$name}' emits deliveryWindowDuration '{$value}', which DeliveryWindowDuration does not accept."
+				);
+				$checked++;
+			}
 		}
 
 		$this->assertGreaterThan(
@@ -1132,12 +1143,13 @@ class V4_MapperTest extends UnitTestCase {
 	}
 
 	/**
-	 * @testdox Exactly the eight NL→NL id_check rows map to V4 with minimalAgeCheck 18+
+	 * @testdox Exactly the ten NL→NL id_check rows map to V4 with minimalAgeCheck 18+
 	 *
 	 * Codes 3438 and 3443 were reclassified from needs_confirmation to V4 after a sandbox
 	 * probe confirmed labelconfirm accepts minimalAgeCheck 18+ alongside signature and an
-	 * insured value. Pinning the exact set means promoting or dropping an ID Check row is
-	 * a deliberate, visible test edit rather than a silent behaviour change.
+	 * insured value; the pickup codes 3571 and 3581 followed once the same check was
+	 * accepted on a DeliveryLocation. Pinning the exact set means promoting or dropping
+	 * an ID Check row is a deliberate, visible test edit rather than a silent behaviour change.
 	 */
 	public function test_id_check_rows_emit_minimal_age_check(): void {
 		$emitting = array();
@@ -1153,6 +1165,6 @@ class V4_MapperTest extends UnitTestCase {
 			}
 		}
 
-		$this->assertCount( 8, $emitting, 'Exactly the eight NL→NL id_check rows must emit minimalAgeCheck.' );
+		$this->assertCount( 10, $emitting, 'Exactly the ten NL→NL id_check rows must emit minimalAgeCheck.' );
 	}
 }

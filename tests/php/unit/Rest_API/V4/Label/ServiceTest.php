@@ -52,10 +52,11 @@ class ServiceTest extends UnitTestCase {
 		parent::setUp();
 		$this->seed_settings_singleton();
 
-		// Exception_Converter and the handover-date guard translate their messages;
-		// surface them verbatim in failures.
+		// Exception_Converter and the missed-evening order note translate and escape
+		// their messages; surface them verbatim in failures.
 		Functions\when( '__' )->returnArg( 1 );
 		Functions\when( 'esc_html__' )->returnArg( 1 );
+		Functions\when( 'esc_html' )->returnArg( 1 );
 	}
 
 	protected function tearDown(): void {
@@ -450,20 +451,179 @@ class ServiceTest extends UnitTestCase {
 	}
 
 	/**
-	 * @testdox extract_fields() rejects an evening label whose chosen date has already passed.
+	 * @testdox extract_fields() ships a missed evening as a standard label instead of blocking it.
+	 * @dataProvider missed_evening_provider
 	 *
-	 * A past evening date can no longer be honoured, so the merchant gets a readable
-	 * message rather than a raw API rejection or a parcel silently rebooked.
+	 * The delivery date is read-only in the admin, so an exception here left the
+	 * merchant with an order that could never get a label. PostNL delivers the evening
+	 * after handover, so a label made on the delivery day is already too late.
+	 *
+	 * @param string $today Date the label is generated on.
 	 */
-	public function test_extract_fields_rejects_a_past_evening_label(): void {
+	public function test_extract_fields_ships_a_missed_evening_as_standard( string $today ): void {
 		Functions\when( 'current_datetime' )->justReturn(
-			new \DateTimeImmutable( '2026-07-20 09:00:00', new \DateTimeZone( 'Europe/Amsterdam' ) )
+			new \DateTimeImmutable( $today . ' 09:00:00', new \DateTimeZone( 'Europe/Amsterdam' ) )
 		);
 
-		$this->expectException( \Exception::class );
-		$this->expectExceptionMessage( 'evening delivery date has already passed' );
+		$fields = $this->extract_fields_for_delivery_date( '14-07-2026', 'Evening' );
 
-		$this->extract_fields_for_delivery_date( '14-07-2026', 'Evening' );
+		$this->assertArrayNotHasKey( 'deliveryWindow', $fields['services'], 'A missed evening must not be booked for a later evening.' );
+		$this->assertSame( $today, $fields['handover_date']->format( 'Y-m-d' ), 'A missed evening hands over today, like any late delivery-day label.' );
+	}
+
+	/**
+	 * Label dates on or after the chosen evening of 14-07-2026.
+	 *
+	 * @return array
+	 */
+	public static function missed_evening_provider(): array {
+		return array(
+			'on the delivery day'    => array( '2026-07-14' ),
+			'after the delivery day' => array( '2026-07-20' ),
+		);
+	}
+
+	/**
+	 * @testdox extract_fields() keeps the evening window for a label made the day before delivery.
+	 */
+	public function test_extract_fields_keeps_the_evening_window_the_day_before(): void {
+		Functions\when( 'current_datetime' )->justReturn(
+			new \DateTimeImmutable( '2026-07-13 23:30:00', new \DateTimeZone( 'Europe/Amsterdam' ) )
+		);
+
+		$fields = $this->extract_fields_for_delivery_date( '14-07-2026', 'Evening' );
+
+		$this->assertSame( 'evening', $fields['services']['deliveryWindow'] );
+		$this->assertSame( '2026-07-13', $fields['handover_date']->format( 'Y-m-d' ) );
+	}
+
+	/**
+	 * @testdox extract_fields() sends no handover date for an order without a delivery day.
+	 *
+	 * The item-info parser turns an empty delivery date into 01-01-1970; read as a real
+	 * selection it clamps to today and every label would carry a handover date.
+	 */
+	public function test_extract_fields_sends_no_handover_date_without_a_delivery_day(): void {
+		Functions\when( 'current_datetime' )->justReturn(
+			new \DateTimeImmutable( '2026-07-10 09:00:00', new \DateTimeZone( 'Europe/Amsterdam' ) )
+		);
+
+		$service = new Testable_Label_Service(
+			new Spy_Label_Client_Factory( new Client_Factory_Settings(), new Failing_Http_Client() ),
+			self::V4_KEY,
+			new NullLogger()
+		);
+
+		$item_info               = new Fake_Shipping_Item_Info( array( 'subtotal' => 42.00 ) );
+		$item_info->delivery_day = array( 'date' => '01-01-1970' );
+
+		$fields = $this->extract_fields(
+			$service,
+			$item_info,
+			array( 'shipmentType' => 'parcel', 'services' => array() ),
+			array()
+		);
+
+		$this->assertNull( $fields['handover_date'] );
+	}
+
+	/**
+	 * @testdox A missed evening is recorded on the order with the date the customer chose.
+	 */
+	public function test_a_missed_evening_is_noted_on_the_order(): void {
+		$service = new Testable_Label_Service(
+			new Spy_Label_Client_Factory( new Client_Factory_Settings(), new Failing_Http_Client() ),
+			self::V4_KEY,
+			new NullLogger()
+		);
+
+		$item_info               = new Delivery_Window_Item_Info( array( 'subtotal' => 42.00 ) );
+		$item_info->delivery_day = array(
+			'date' => '14-07-2026',
+			'type' => 'Evening',
+		);
+
+		$order = new class() {
+			public array $notes = array();
+
+			public function add_order_note( $note ) {
+				$this->notes[] = $note;
+			}
+		};
+
+		$method = new \ReflectionMethod( Service::class, 'note_evening_passed' );
+		$method->setAccessible( true );
+		$method->invoke( $service, $order, $item_info );
+
+		$this->assertCount( 1, $order->notes );
+		$this->assertStringContainsString( '14-07-2026', $order->notes[0] );
+		$this->assertStringContainsString( 'standard PostNL label', $order->notes[0] );
+	}
+
+	// ── Pickup point ─────────────────────────────────────────────────────────
+
+	/**
+	 * @testdox gather_signals() extracts the location code from every form the pickup selection is stored in.
+	 * @dataProvider pickup_selection_provider
+	 *
+	 * @param string $selection Stored dropoff_points value.
+	 * @param string $expected  Expected location code.
+	 */
+	public function test_gather_signals_resolves_the_pickup_location_code( string $selection, string $expected ): void {
+		$service = new Testable_Label_Service(
+			new Spy_Label_Client_Factory( new Client_Factory_Settings(), new Failing_Http_Client() ),
+			self::V4_KEY,
+			new NullLogger()
+		);
+
+		$signals = $this->gather_signals(
+			$service,
+			new Pickup_Item_Info( array( 'subtotal' => 42.00 ) ),
+			array( 'saved_data' => array( 'frontend' => array( 'dropoff_points' => $selection ) ) )
+		);
+
+		$this->assertSame( $expected, $signals['pickup_id'] );
+		$this->assertSame(
+			'' !== $expected,
+			\PostNLWooCommerce\Rest_API\V4\Label\Eligibility::is_eligible( $signals ),
+			'A pickup order is V4-eligible only when a location code was resolved.'
+		);
+	}
+
+	/**
+	 * Stored pickup selections mapped to the location code they carry.
+	 *
+	 * @return array
+	 */
+	public static function pickup_selection_provider(): array {
+		return array(
+			'legacy checkout, blocks'  => array( 'PNPNL-01-176227', '176227' ),
+			'legacy checkout, classic' => array( 'pnpnl-01-176227', '176227' ),
+			'V4 checkout, blocks'      => array( '-176227', '176227' ),
+			'V4 checkout, classic'     => array( '176227', '176227' ),
+			'no trailing code'         => array( 'pnpnl-01-', '' ),
+		);
+	}
+
+	/**
+	 * @testdox extract_fields() carries the pickup location code to the request builder.
+	 */
+	public function test_extract_fields_carries_the_pickup_location_code(): void {
+		$service = new Testable_Label_Service(
+			new Spy_Label_Client_Factory( new Client_Factory_Settings(), new Failing_Http_Client() ),
+			self::V4_KEY,
+			new NullLogger()
+		);
+
+		$fields = $this->extract_fields(
+			$service,
+			new Pickup_Item_Info( array( 'subtotal' => 42.00 ) ),
+			array( 'shipmentType' => 'parcel', 'services' => array() ),
+			array( 'saved_data' => array( 'frontend' => array( 'dropoff_points' => 'PNPNL-01-176227' ) ) )
+		);
+
+		$this->assertSame( '176227', $fields['pickup_id'] );
+		$this->assertNull( $fields['handover_date'], 'A pickup order has no delivery-day handover date.' );
 	}
 
 	/**
@@ -503,7 +663,7 @@ class ServiceTest extends UnitTestCase {
 			new NullLogger()
 		);
 
-		$item_info               = new Fake_Shipping_Item_Info( array( 'subtotal' => 42.00 ) );
+		$item_info               = new Delivery_Window_Item_Info( array( 'subtotal' => 42.00 ) );
 		$item_info->delivery_day = array(
 			'date' => $date,
 			'type' => $frontend_type,
@@ -1396,6 +1556,24 @@ class Delivery_Window_Item_Info extends Fake_Shipping_Item_Info {
 
 	public function get_product_code() {
 		return '3085';
+	}
+}
+
+/**
+ * Item_Info stand-in for a domestic pickup-point order.
+ */
+class Pickup_Item_Info extends Fake_Shipping_Item_Info {
+
+	public function is_delivery_day() {
+		return false;
+	}
+
+	public function is_pickup_points() {
+		return true;
+	}
+
+	public function get_product_code() {
+		return '3533';
 	}
 }
 

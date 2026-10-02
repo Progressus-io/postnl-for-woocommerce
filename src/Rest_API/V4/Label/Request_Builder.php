@@ -14,6 +14,7 @@ use Postnl\Sdk\Enums\Payload\Bundle;
 use Postnl\Sdk\Enums\Payload\Country;
 use Postnl\Sdk\Enums\Payload\Currency;
 use Postnl\Sdk\Enums\Payload\DeliveryConfirmation;
+use Postnl\Sdk\Enums\Payload\DeliveryWindowDuration;
 use Postnl\Sdk\Enums\Payload\DeliveryWindowService;
 use Postnl\Sdk\Enums\Payload\LabelOutputType;
 use Postnl\Sdk\Enums\Payload\LabelResolution;
@@ -34,6 +35,7 @@ use Postnl\Sdk\RequestData\V4\LabelSettings;
 use Postnl\Sdk\RequestData\V4\RequestShippingItem;
 use Postnl\Sdk\RequestData\V4\Services;
 use Postnl\Sdk\RequestData\V4\ShipmentParty;
+use Postnl\Sdk\RequestData\V4\ShipmentDelivery\DeliveryLocation;
 use Postnl\Sdk\RequestData\V4\ShipmentDelivery\ShipmentDeliveryRequest;
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -50,8 +52,9 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * Scope: single parcel, single collo, optional delivery Services
  * (insurance, signature/delivery-code confirmation, stated-address-only,
- * return-when-not-home and their combinations) for domestic shipments, plus
- * EU/ROW international shipments carrying an InternationalShipmentData block
+ * return-when-not-home and their combinations) for domestic and NL to BE
+ * shipments, an optional pickup-point DeliveryLocation, plus EU/ROW
+ * international shipments carrying an InternationalShipmentData block
  * (service bundle + customs declaration). The customer number/code are
  * injected into the sender by the SDK client
  * (ClientBuilder::withCustomerCredentials), so they are deliberately absent
@@ -93,12 +96,16 @@ class Request_Builder {
 	 *     @type mixed  $handover_date Optional DateTimeInterface, the merchant-to-PostNL
 	 *                                  drop-off date. Set for delivery-day orders so the
 	 *                                  window anchors on the right day; omitted otherwise.
+	 *     @type string $pickup_id     Optional PostNL location code of the selected
+	 *                                  pickup point; sent as the deliveryLocation.
 	 *     @type array  $services      Optional resolved service flags: deliveryConfirmation
 	 *                                  ('signature'|'deliverycode'), insuredValue (float),
 	 *                                  statedAddressOnly (bool), returnWhenNotHome (bool),
-	 *                                  minimalAgeCheck ('16+'|'18+') and deliveryWindow
-	 *                                  ('evening'). deliveryWindow is set from the order's
-	 *                                  delivery-day selection by the caller, not the mapper.
+	 *                                  minimalAgeCheck ('16+'|'18+'), deliveryWindow
+	 *                                  ('evening') and deliveryWindowDuration
+	 *                                  ('24hours'|'non24hours'). deliveryWindow is set from
+	 *                                  the order's delivery-day selection by the caller;
+	 *                                  the duration comes from the mapper's letterbox rows.
 	 *     @type array  $international  Optional EU/ROW data: bundle ('track_trace'|'insured'|
 	 *                                  'insured_plus') and customs (currency, transaction_code,
 	 *                                  associated_document{type,number}, sender_identification,
@@ -133,6 +140,7 @@ class Request_Builder {
 			labelSettings: $label_settings,
 			shipmentType: self::shipment_type( (string) ( $fields['shipment_type'] ?? 'parcel' ) ),
 			handoverDate: self::handover_date( $fields['handover_date'] ?? null ),
+			deliveryLocation: self::delivery_location( (string) ( $fields['pickup_id'] ?? '' ) ),
 			services: self::services( $fields['services'] ?? array() ),
 			internationalShipmentData: self::international( $fields['international'] ?? array() ),
 			items: self::items( $fields )
@@ -155,6 +163,23 @@ class Request_Builder {
 	 */
 	private static function handover_date( $handover ): ?\DateTimeInterface {
 		return $handover instanceof \DateTimeInterface ? $handover : null;
+	}
+
+	/**
+	 * Build the DeliveryLocation for a pickup-point order, or null for home delivery.
+	 *
+	 * The location code alone identifies the pickup point; labelconfirm resolves its
+	 * address, and the receiver block keeps the customer's own address.
+	 *
+	 * @param string $pickup_id PostNL location code, or '' for home delivery.
+	 * @return DeliveryLocation|null
+	 */
+	private static function delivery_location( string $pickup_id ): ?DeliveryLocation {
+		if ( '' === $pickup_id ) {
+			return null;
+		}
+
+		return new DeliveryLocation( pickupLocationId: $pickup_id );
 	}
 
 	/**
@@ -323,7 +348,10 @@ class Request_Builder {
 	private static function services( array $flags ): ?Services {
 		$confirmation = DeliveryConfirmation::tryFrom( (string) ( $flags['deliveryConfirmation'] ?? '' ) );
 		$age_check    = MinimalAgeCheck::tryFrom( (string) ( $flags['minimalAgeCheck'] ?? '' ) );
-		$window       = self::delivery_window( (string) ( $flags['deliveryWindow'] ?? '' ) );
+		$window       = self::delivery_window(
+			(string) ( $flags['deliveryWindow'] ?? '' ),
+			(string) ( $flags['deliveryWindowDuration'] ?? '' )
+		);
 		// isset (not ! empty) so a legitimately zero insured value is still sent, matching
 		// the legacy Amounts block, which emits Value 0 rather than omitting the block.
 		$insured     = isset( $flags['insuredValue'] ) ? (float) $flags['insuredValue'] : null;
@@ -346,26 +374,35 @@ class Request_Builder {
 	}
 
 	/**
-	 * Translate a resolved delivery-window key into a V4 DeliveryWindow DTO.
+	 * Translate the resolved delivery-window flags into a V4 DeliveryWindow DTO.
 	 *
-	 * Only 'evening' is emitted, as a DeliveryWindow whose service is Evening and
-	 * nothing else. A sandbox probe confirmed that shape is what labelconfirm expects
-	 * for an evening shipment: the service enum's GuaranteedBefore* cases are rejected
-	 * as an unknown value, guaranteed delivery is a separate guaranteedBefore field,
-	 * and a duration made no difference. The plugin's checkout offers neither guaranteed
-	 * delivery nor a confirmed V4 morning (08:00-12:00) window, so a standard/daytime
-	 * selection carries no DeliveryWindow and morning never reaches here — Eligibility
-	 * keeps it on the legacy path.
+	 * The only service emitted is Evening. A sandbox probe confirmed that shape is what
+	 * labelconfirm expects for an evening shipment: the service enum's GuaranteedBefore*
+	 * cases are rejected as an unknown value, and guaranteed delivery is a separate
+	 * guaranteedBefore field. The plugin's checkout offers neither guaranteed delivery
+	 * nor a confirmed V4 morning (08:00-12:00) window, so a standard/daytime selection
+	 * carries no service and morning never reaches here — Eligibility keeps it on the
+	 * legacy path.
 	 *
-	 * @param string $window Resolved window key, currently 'evening' or ''.
+	 * The duration is what makes a letterbox valid: labelconfirm rejects one without
+	 * it, and it selects the 24h or the 48h product.
+	 *
+	 * @param string $window   Resolved window key, currently 'evening' or ''.
+	 * @param string $duration DeliveryWindowDuration value, or '' when none applies.
 	 * @return DeliveryWindow|null
 	 */
-	private static function delivery_window( string $window ): ?DeliveryWindow {
-		if ( 'evening' !== $window ) {
+	private static function delivery_window( string $window, string $duration ): ?DeliveryWindow {
+		$service  = 'evening' === $window ? DeliveryWindowService::Evening : null;
+		$duration = DeliveryWindowDuration::tryFrom( $duration );
+
+		if ( null === $service && null === $duration ) {
 			return null;
 		}
 
-		return new DeliveryWindow( service: DeliveryWindowService::Evening );
+		return new DeliveryWindow(
+			service: $service,
+			duration: $duration
+		);
 	}
 
 	/**

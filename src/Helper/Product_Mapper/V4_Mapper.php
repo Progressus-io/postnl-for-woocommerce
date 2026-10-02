@@ -23,13 +23,17 @@ if ( ! defined( 'ABSPATH' ) ) {
  *       'legacy_product_code' => optional string,
  *   )
  *
- * Runtime outcomes: has_v4_equivalent = true (49 rows) or false (40 rows).
+ * Runtime outcomes: has_v4_equivalent = true (58 rows) or false (31 rows).
  * needs_confirmation rows behave as Legacy-only at runtime until promoted to v4_mapped.
  *
  * Domestic NL id_check (18+) parcels 3438 and 3443 map to V4 via a bare minimalAgeCheck
  * service (plus insuredValue for 3443); every id_check combination collapses to that,
  * as V1 does, since the age-check product rejects other services layered on top. Their
- * pickup and BE counterparts stay Legacy-only.
+ * pickup counterparts (3571/3581) carry the same services plus a DeliveryLocation; the
+ * BE counterpart stays Legacy-only.
+ *
+ * Both letterbox variants map to ShipmentType letterbox and differ only in the
+ * deliveryWindowDuration service: '24hours' for 2928, 'non24hours' for 2948.
  *
  * Not-yet-available codes are always Legacy-only; see NOT_YET_AVAILABLE_CODES.
  * EU/ROW parcels (4907/4909) map to V4 with an InternationalShipmentData bundle
@@ -42,7 +46,6 @@ class V4_Mapper {
 
 	const NOT_YET_AVAILABLE_CODES = array(
 		'1175',
-		'3571',
 		'3574',
 		'4936',
 		'4960',
@@ -230,10 +233,19 @@ class V4_Mapper {
 								'statedAddressOnly' => true,
 							)
 						),
-						// 3094 (insured + return-when-not-home + signature) has no valid V4 shape:
-						// the deliverycode+insured product rejects returnWhenNotHome ("combination
-						// not allowed for this product"). Sandbox-confirmed, so it stays on legacy.
-						'insured_shipping+return_no_answer+signature_on_delivery' => self::legacy_result( 7, '3094', $nc ),
+						// As on row 9, insuredValue already covers the signature, so 3094 is that
+						// plus returnWhenNotHome. Adding deliveryConfirmation is rejected: 'signature'
+						// with "Insurance is not allowed for this product code", 'deliverycode' with
+						// "combination not allowed for this product". Sandbox-confirmed.
+						'insured_shipping+return_no_answer+signature_on_delivery' => self::v4_result(
+							7,
+							'3094',
+							'parcel',
+							array(
+								'insuredValue'      => '<order_total>',
+								'returnWhenNotHome' => true,
+							)
+						),
 						'only_home_address+signature_on_delivery' => self::v4_result(
 							8,
 							'3089',
@@ -243,19 +255,11 @@ class V4_Mapper {
 								'statedAddressOnly'    => true,
 							)
 						),
-						// An insured signature shipment is the V4 'deliverycode' product, which
-						// bundles signature-on-delivery with insurance; sending plain 'signature'
-						// with an insured value is rejected ("Insurance is not allowed for this
-						// product code"). Sandbox-confirmed.
-						'insured_shipping+signature_on_delivery' => self::v4_result(
-							9,
-							'3087',
-							'parcel',
-							array(
-								'deliveryConfirmation' => 'deliverycode',
-								'insuredValue'         => '<order_total>',
-							)
-						),
+						// insuredValue alone is the insured signature parcel. 'signature' with an
+						// insured value is rejected ("Insurance is not allowed for this product
+						// code"), and 'deliverycode' is row 2's delivery-code product, whose label
+						// drops the signature icon. Sandbox-confirmed.
+						'insured_shipping+signature_on_delivery' => self::v4_result( 9, '3087', 'parcel', array( 'insuredValue' => '<order_total>' ) ),
 						'return_no_answer+signature_on_delivery' => self::v4_result(
 							10,
 							'3389',
@@ -275,9 +279,10 @@ class V4_Mapper {
 								'statedAddressOnly'    => true,
 							)
 						),
-						'letterbox'                      => self::v4_result( 12, '2928', 'letterbox' ),
-						// letterbox_48 (2948, 48h Letterbox): V4 shape unconfirmed against the portal — keep on Legacy.
-						'letterbox_48'                   => self::legacy_result( 89, '2948', $nc ),
+						// labelconfirm rejects a letterbox without a deliveryWindow duration; the
+						// duration is also what separates the 24h from the 48h product. Sandbox-confirmed.
+						'letterbox'                      => self::v4_result( 12, '2928', 'letterbox', array( 'deliveryWindowDuration' => '24hours' ) ),
+						'letterbox_48'                   => self::v4_result( 89, '2948', 'letterbox', array( 'deliveryWindowDuration' => 'non24hours' ) ),
 						// Every id_check combination collapses to the bare age-check product,
 						// exactly as V1 does: the 3438/3443 products already include signature
 						// and are handled as stated-address home delivery, so emitting those
@@ -328,8 +333,19 @@ class V4_Mapper {
 					'pickup_points' => array(
 						'(base)'                    => self::v4_result( 21, '3533', 'parcel', array(), $pickup ),
 						'insured_shipping'          => self::v4_result( 22, '3534', 'parcel', array( 'insuredValue' => '<order_total>' ), $pickup ),
-						'id_check'                  => self::legacy_result( 23, '3571', $nya ),
-						'id_check+insured_shipping' => self::legacy_result( 24, '3581', $nc ),
+						// The sandbox accepts the age check on a pickup DeliveryLocation, with and
+						// without insurance; the product overview still lists 3571 as unavailable.
+						'id_check'                  => self::v4_result( 23, '3571', 'parcel', array( 'minimalAgeCheck' => '18+' ), $pickup ),
+						'id_check+insured_shipping' => self::v4_result(
+							24,
+							'3581',
+							'parcel',
+							array(
+								'insuredValue'    => '<order_total>',
+								'minimalAgeCheck' => '18+',
+							),
+							$pickup
+						),
 					),
 				),
 				'BE'  => array(
@@ -338,12 +354,48 @@ class V4_Mapper {
 						'only_home_address'                => self::v4_result( 26, '4941', 'parcel', array( 'statedAddressOnly' => true ) ),
 						'signature_on_delivery'            => self::v4_result( 27, '4912', 'parcel', array( 'deliveryConfirmation' => 'signature' ) ),
 						'insured_shipping'                 => self::v4_result( 28, '4914', 'parcel', array( 'insuredValue' => '<order_total>' ) ),
-						'insured_shipping+track_and_trace' => self::legacy_result( 29, '4914', $nc ),
-						'insured_shipping+signature_on_delivery' => self::legacy_result( 30, '4914', $nc ),
-						'insured_shipping+only_home_address' => self::legacy_result( 31, '4914', $nc ),
+						// The insured BE parcel (4914) takes one of signature or stated-address on
+						// top of the insured value; both together are rejected ("Provided services
+						// can not be combined"), so rows 32 and 35 stay on legacy. track_and_trace
+						// has no V4 service: every parcel is tracked. Sandbox-confirmed.
+						'insured_shipping+track_and_trace' => self::v4_result( 29, '4914', 'parcel', array( 'insuredValue' => '<order_total>' ) ),
+						'insured_shipping+signature_on_delivery' => self::v4_result(
+							30,
+							'4914',
+							'parcel',
+							array(
+								'deliveryConfirmation' => 'signature',
+								'insuredValue'         => '<order_total>',
+							)
+						),
+						'insured_shipping+only_home_address' => self::v4_result(
+							31,
+							'4914',
+							'parcel',
+							array(
+								'insuredValue'      => '<order_total>',
+								'statedAddressOnly' => true,
+							)
+						),
 						'insured_shipping+only_home_address+signature_on_delivery' => self::legacy_result( 32, '4914', $nc ),
-						'insured_shipping+signature_on_delivery+track_and_trace' => self::legacy_result( 33, '4914', $nc ),
-						'insured_shipping+only_home_address+track_and_trace' => self::legacy_result( 34, '4914', $nc ),
+						'insured_shipping+signature_on_delivery+track_and_trace' => self::v4_result(
+							33,
+							'4914',
+							'parcel',
+							array(
+								'deliveryConfirmation' => 'signature',
+								'insuredValue'         => '<order_total>',
+							)
+						),
+						'insured_shipping+only_home_address+track_and_trace' => self::v4_result(
+							34,
+							'4914',
+							'parcel',
+							array(
+								'insuredValue'      => '<order_total>',
+								'statedAddressOnly' => true,
+							)
+						),
 						'insured_shipping+only_home_address+signature_on_delivery+track_and_trace' => self::legacy_result( 35, '4914', $nc ),
 						'mailboxpacket'                    => self::legacy_result( 36, '6440', $nc ),
 						'mailboxpacket+track_and_trace'    => self::legacy_result( 37, '6972', $nc ),

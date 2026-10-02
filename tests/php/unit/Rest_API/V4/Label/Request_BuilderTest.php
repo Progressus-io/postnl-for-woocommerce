@@ -513,6 +513,102 @@ class Request_BuilderTest extends UnitTestCase {
 	}
 
 	/**
+	 * @testdox build() sends the letterbox duration as a DeliveryWindow with no service.
+	 * @dataProvider letterbox_duration_provider
+	 *
+	 * labelconfirm rejects a letterbox without a duration, and the duration is what
+	 * separates the 24h product from the 48h one.
+	 *
+	 * @param string $duration deliveryWindowDuration flag value.
+	 */
+	public function test_letterbox_duration_is_mapped( string $duration ): void {
+		$fields                  = $this->domestic_fields();
+		$fields['shipment_type'] = 'letterbox';
+		$fields['services']      = array( 'deliveryWindowDuration' => $duration );
+
+		$payload = $this->payload( $fields );
+
+		$this->assertSame( ShipmentType::LetterBox->value, $payload['shipmentType'] );
+		$this->assertSame( array( 'duration' => $duration ), $payload['services']['deliveryWindow'] );
+	}
+
+	/**
+	 * Letterbox durations the mapper emits.
+	 *
+	 * @return array
+	 */
+	public static function letterbox_duration_provider(): array {
+		return array(
+			'24h letterbox (2928)' => array( '24hours' ),
+			'48h letterbox (2948)' => array( 'non24hours' ),
+		);
+	}
+
+	/**
+	 * @testdox build() sends an evening service and a duration in one DeliveryWindow.
+	 */
+	public function test_delivery_window_carries_service_and_duration_together(): void {
+		$fields             = $this->domestic_fields();
+		$fields['services'] = array(
+			'deliveryWindow'         => 'evening',
+			'deliveryWindowDuration' => '24hours',
+		);
+
+		$this->assertSame(
+			array(
+				'service'  => 'evening',
+				'duration' => '24hours',
+			),
+			$this->payload( $fields )['services']['deliveryWindow']
+		);
+	}
+
+	/**
+	 * @testdox build() drops an unrecognised duration rather than sending the Services block.
+	 */
+	public function test_unrecognised_duration_omits_block(): void {
+		$fields             = $this->domestic_fields();
+		$fields['services'] = array( 'deliveryWindowDuration' => '72hours' );
+
+		$this->assertArrayNotHasKey( 'services', $this->payload( $fields ) );
+	}
+
+	/**
+	 * @testdox build() sends a pickup location code as the deliveryLocation and keeps the receiver's own address.
+	 */
+	public function test_pickup_location_is_sent_as_delivery_location(): void {
+		$fields              = $this->domestic_fields();
+		$fields['pickup_id'] = '176227';
+
+		$payload = $this->payload( $fields );
+
+		$this->assertSame( array( 'pickupLocationId' => '176227' ), $payload['deliveryLocation'] );
+		$this->assertSame( '1234AB', $payload['receiver']['address']['postalCode'], 'The receiver block must stay the customer, not the pickup point.' );
+	}
+
+	/**
+	 * @testdox build() omits deliveryLocation for a home delivery.
+	 * @dataProvider no_pickup_provider
+	 *
+	 * @param array $overrides Field overrides.
+	 */
+	public function test_delivery_location_is_omitted_without_a_pickup_point( array $overrides ): void {
+		$this->assertArrayNotHasKey( 'deliveryLocation', $this->payload( array_merge( $this->domestic_fields(), $overrides ) ) );
+	}
+
+	/**
+	 * Field sets that carry no pickup point.
+	 *
+	 * @return array
+	 */
+	public static function no_pickup_provider(): array {
+		return array(
+			'key absent' => array( array() ),
+			'empty code' => array( array( 'pickup_id' => '' ) ),
+		);
+	}
+
+	/**
 	 * @testdox build() sends a supplied handover date as the labelconfirm handoverDate.
 	 *
 	 * labelconfirm carries no delivery-date field, so a delivery-day label anchors on

@@ -333,8 +333,8 @@ class V4_Mapper {
 					'pickup_points' => array(
 						'(base)'                    => self::v4_result( 21, '3533', 'parcel', array(), $pickup ),
 						'insured_shipping'          => self::v4_result( 22, '3534', 'parcel', array( 'insuredValue' => '<order_total>' ), $pickup ),
-						// The sandbox accepts the age check on a pickup DeliveryLocation, with and
-						// without insurance; the product overview still lists 3571 as unavailable.
+						// PostNL's product conversion matrix lists both age-check pickup products
+						// as a DeliveryLocation plus minimalAgeCheck. Sandbox-confirmed.
 						'id_check'                  => self::v4_result( 23, '3571', 'parcel', array( 'minimalAgeCheck' => '18+' ), $pickup ),
 						'id_check+insured_shipping' => self::v4_result(
 							24,

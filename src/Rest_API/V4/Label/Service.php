@@ -425,30 +425,51 @@ class Service extends Order_Base implements Label_Service_Interface {
 	}
 
 	/**
-	 * Resolve the handover date to send on a delivery-day label.
+	 * Resolve the handover date to send on a delivery-day or pickup label.
 	 *
 	 * V4 labelconfirm has no delivery-date field — the customer's date is chosen at
-	 * checkout via the timeframe API — so the label anchors on handoverDate, the
-	 * merchant-to-PostNL drop-off date. PostNL delivers the day after handover, so
-	 * the handover for a chosen delivery date D is D minus one day, clamped to today
-	 * because a past handover date is rejected and the drop-off cannot precede the
-	 * day the label is generated. Returns null for an order without a delivery-day
-	 * selection, which lets labelconfirm apply its own default.
+	 * checkout via the timeframe or locations API — so the label anchors on
+	 * handoverDate, the merchant-to-PostNL drop-off date. PostNL delivers the day
+	 * after handover, so the handover for a delivery or pickup date D is D minus one
+	 * day, clamped to today because a past handover date is rejected and the drop-off
+	 * cannot precede the day the label is generated. Returns null for an order with
+	 * neither selection, which lets labelconfirm apply its own default.
 	 *
 	 * @param Shipping\Item_Info $item_info Parsed legacy item info.
 	 * @return \DateTimeImmutable|null
 	 */
 	private function resolve_handover_date( Shipping\Item_Info $item_info ): ?\DateTimeImmutable {
-		$delivery_date = $this->resolve_delivery_date( $item_info );
+		$arrival_date = $this->resolve_delivery_date( $item_info ) ?? $this->resolve_pickup_date( $item_info );
 
-		if ( null === $delivery_date ) {
+		if ( null === $arrival_date ) {
 			return null;
 		}
 
 		$today    = $this->now()->setTime( 0, 0 );
-		$handover = $delivery_date->modify( '-1 day' );
+		$handover = $arrival_date->modify( '-1 day' );
 
 		return $handover < $today ? $today : $handover;
+	}
+
+	/**
+	 * Parse the date the parcel reaches the pickup point the customer chose.
+	 *
+	 * @param Shipping\Item_Info $item_info Parsed legacy item info.
+	 * @return \DateTimeImmutable|null Midnight of the pickup date in the site timezone,
+	 *                                 or null without a pickup-point selection.
+	 */
+	private function resolve_pickup_date( Shipping\Item_Info $item_info ): ?\DateTimeImmutable {
+		if ( ! $item_info->is_pickup_points() ) {
+			return null;
+		}
+
+		$pickup_date = \DateTimeImmutable::createFromFormat(
+			'!d-m-Y',
+			(string) ( $item_info->pickup_points['date'] ?? '' ),
+			$this->now()->getTimezone()
+		);
+
+		return false === $pickup_date ? null : $pickup_date;
 	}
 
 	/**

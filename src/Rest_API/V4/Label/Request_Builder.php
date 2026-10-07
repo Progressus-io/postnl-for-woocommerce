@@ -95,8 +95,8 @@ class Request_Builder {
 	 *     @type array  $label         Label output: output_type (pdf|zpl|jpg|gif|png)
 	 *                                  and resolution (200|300|600).
 	 *     @type mixed  $handover_date Optional DateTimeInterface, the merchant-to-PostNL
-	 *                                  drop-off date. Set for delivery-day orders so the
-	 *                                  window anchors on the right day; omitted otherwise.
+	 *                                  drop-off date. Set for delivery-day and pickup orders
+	 *                                  so the parcel anchors on the right day; omitted otherwise.
 	 *     @type string $pickup_id     Optional PostNL location code of the selected
 	 *                                  pickup point; sent as the deliveryLocation.
 	 *     @type array  $services      Optional resolved service flags: deliveryConfirmation
@@ -156,7 +156,7 @@ class Request_Builder {
 	 * only date the label anchors on is handoverDate (the merchant-to-PostNL drop-off
 	 * date). Without it labelconfirm defaults to today, which rejects an evening label
 	 * handed over on a Friday and otherwise books the parcel for the wrong evening.
-	 * Service::resolve_handover_date() computes it for delivery-day orders. The SDK
+	 * Service::resolve_handover_date() computes it for delivery-day and pickup orders. The SDK
 	 * formats it as yyyy-MM-dd from the object's own timezone.
 	 *
 	 * @param mixed $handover A DateTimeInterface, or null/other when no date applies.

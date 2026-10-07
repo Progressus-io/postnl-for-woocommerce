@@ -623,6 +623,10 @@ class ServiceTest extends UnitTestCase {
 	 * @testdox extract_fields() carries the pickup location code to the request builder.
 	 */
 	public function test_extract_fields_carries_the_pickup_location_code(): void {
+		Functions\when( 'current_datetime' )->justReturn(
+			new \DateTimeImmutable( '2026-07-10 09:00:00', new \DateTimeZone( 'Europe/Amsterdam' ) )
+		);
+
 		$service = new Testable_Label_Service(
 			new Spy_Label_Client_Factory( new Client_Factory_Settings(), new Failing_Http_Client() ),
 			self::V4_KEY,
@@ -637,7 +641,50 @@ class ServiceTest extends UnitTestCase {
 		);
 
 		$this->assertSame( '176227', $fields['pickup_id'] );
-		$this->assertNull( $fields['handover_date'], 'A pickup order has no delivery-day handover date.' );
+		$this->assertNull( $fields['handover_date'], 'A pickup order without a pickup date has no handover date.' );
+	}
+
+	/**
+	 * @testdox extract_fields() sends the day before the pickup date as the handover date, clamped to today.
+	 * @dataProvider pickup_handover_provider
+	 *
+	 * @param string $today    Date the label is generated on.
+	 * @param string $expected Expected handover date.
+	 */
+	public function test_extract_fields_sends_the_pickup_handover_date( string $today, string $expected ): void {
+		Functions\when( 'current_datetime' )->justReturn(
+			new \DateTimeImmutable( $today . ' 09:00:00', new \DateTimeZone( 'Europe/Amsterdam' ) )
+		);
+
+		$service = new Testable_Label_Service(
+			new Spy_Label_Client_Factory( new Client_Factory_Settings(), new Failing_Http_Client() ),
+			self::V4_KEY,
+			new NullLogger()
+		);
+
+		$item_info                = new Pickup_Item_Info( array( 'subtotal' => 42.00 ) );
+		$item_info->pickup_points = array( 'date' => '14-07-2026' );
+
+		$fields = $this->extract_fields(
+			$service,
+			$item_info,
+			array( 'shipmentType' => 'parcel', 'services' => array() ),
+			array( 'saved_data' => array( 'frontend' => array( 'dropoff_points' => 'PNPNL-01-176227' ) ) )
+		);
+
+		$this->assertSame( $expected, $fields['handover_date']->format( 'Y-m-d' ) );
+	}
+
+	/**
+	 * Label dates against a pickup date of 14-07-2026 and the handover date they send.
+	 *
+	 * @return array
+	 */
+	public static function pickup_handover_provider(): array {
+		return array(
+			'before the pickup date' => array( '2026-07-10', '2026-07-13' ),
+			'after the pickup date'  => array( '2026-07-20', '2026-07-20' ),
+		);
 	}
 
 	/**

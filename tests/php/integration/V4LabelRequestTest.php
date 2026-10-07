@@ -114,7 +114,7 @@ class V4LabelRequestTest extends IntegrationTestCase {
 
 		$this->assertSame( array( 'pickupLocationId' => '176227' ), $payload['deliveryLocation'] );
 		$this->assertSame( '1234AB', $payload['receiver']['address']['postalCode'], 'The receiver must stay the customer.' );
-		$this->assertArrayNotHasKey( 'handoverDate', $payload );
+		$this->assertSame( current_datetime()->format( 'Y-m-d' ), $payload['handoverDate'], 'A past pickup date hands over today.' );
 	}
 
 	/**

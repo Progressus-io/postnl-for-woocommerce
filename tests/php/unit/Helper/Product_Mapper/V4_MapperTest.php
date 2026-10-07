@@ -21,12 +21,12 @@ use PostNLWooCommerce\Tests\UnitTestCase;
  *
  * Coverage:
  *  - Total row count = 89 (from provider data and from runtime calls)
- *  - has_v4_equivalent true  count = 60 (provider + runtime)
- *  - has_v4_equivalent false count = 29 (provider + runtime)
+ *  - has_v4_equivalent true  count = 61 (provider + runtime)
+ *  - has_v4_equivalent false count = 28 (provider + runtime)
  *  - All v4_mapped rows: expected shipmentType / services / deliveryLocation / internationalShipmentData
  *  - All legacy_only rows: reason = not_yet_available_in_v4
  *  - All needs_confirmation rows: reason = needs_confirmation
- *  - NOT_YET_AVAILABLE_CODES contains all 9 required codes (incl. absent 1175, 3574, 4983)
+ *  - NOT_YET_AVAILABLE_CODES contains all 8 required codes (incl. absent 1175, 3574, 4983)
  *  - Unknown combinations return reason = unknown_combination
  *  - Optional legacy_product_code validation (REASON_PRODUCT_CODE_MISMATCH)
  *  - No silent gaps: every V1_Mapper::products_data() combination maps to a V4 shape or an
@@ -51,7 +51,7 @@ class V4_MapperTest extends UnitTestCase {
 	}
 
 	/**
-	 * @testdox Provider expected data: has_v4_equivalent true count = 60
+	 * @testdox Provider expected data: has_v4_equivalent true count = 61
 	 */
 	public function test_provider_v4_equivalent_true_count(): void {
 		$count = 0;
@@ -60,11 +60,11 @@ class V4_MapperTest extends UnitTestCase {
 				$count++;
 			}
 		}
-		$this->assertSame( 60, $count, 'Exactly 60 rows must be marked has_v4_equivalent=true.' );
+		$this->assertSame( 61, $count, 'Exactly 61 rows must be marked has_v4_equivalent=true.' );
 	}
 
 	/**
-	 * @testdox Provider expected data: has_v4_equivalent false count = 29
+	 * @testdox Provider expected data: has_v4_equivalent false count = 28
 	 */
 	public function test_provider_v4_equivalent_false_count(): void {
 		$count = 0;
@@ -73,7 +73,7 @@ class V4_MapperTest extends UnitTestCase {
 				$count++;
 			}
 		}
-		$this->assertSame( 29, $count, 'Exactly 29 rows must be marked has_v4_equivalent=false.' );
+		$this->assertSame( 28, $count, 'Exactly 28 rows must be marked has_v4_equivalent=false.' );
 	}
 
 	// =========================================================================
@@ -81,7 +81,7 @@ class V4_MapperTest extends UnitTestCase {
 	// =========================================================================
 
 	/**
-	 * @testdox Runtime: V4_Mapper::has_v4_equivalent() returns true for exactly 60 provider inputs
+	 * @testdox Runtime: V4_Mapper::has_v4_equivalent() returns true for exactly 61 provider inputs
 	 */
 	public function test_runtime_v4_equivalent_true_count(): void {
 		$count = 0;
@@ -90,11 +90,11 @@ class V4_MapperTest extends UnitTestCase {
 				$count++;
 			}
 		}
-		$this->assertSame( 60, $count );
+		$this->assertSame( 61, $count );
 	}
 
 	/**
-	 * @testdox Runtime: V4_Mapper::has_v4_equivalent() returns false for exactly 29 provider inputs
+	 * @testdox Runtime: V4_Mapper::has_v4_equivalent() returns false for exactly 28 provider inputs
 	 */
 	public function test_runtime_v4_equivalent_false_count(): void {
 		$count = 0;
@@ -103,7 +103,7 @@ class V4_MapperTest extends UnitTestCase {
 				$count++;
 			}
 		}
-		$this->assertSame( 29, $count );
+		$this->assertSame( 28, $count );
 	}
 
 	// =========================================================================
@@ -111,17 +111,17 @@ class V4_MapperTest extends UnitTestCase {
 	// =========================================================================
 
 	/**
-	 * @testdox NOT_YET_AVAILABLE_CODES contains exactly 9 entries
+	 * @testdox NOT_YET_AVAILABLE_CODES contains exactly 8 entries
 	 */
 	public function test_not_yet_available_codes_count(): void {
-		$this->assertCount( 9, V4_Mapper::NOT_YET_AVAILABLE_CODES );
+		$this->assertCount( 8, V4_Mapper::NOT_YET_AVAILABLE_CODES );
 	}
 
 	/**
 	 * @testdox NOT_YET_AVAILABLE_CODES contains all 9 required codes
 	 */
 	public function test_not_yet_available_codes_contains_all_required(): void {
-		$required = array( '1175', '3574', '4936', '4960', '4961', '4962', '4963', '4965', '4983' );
+		$required = array( '1175', '3574', '4960', '4961', '4962', '4963', '4965', '4983' );
 		foreach ( $required as $code ) {
 			$this->assertContains( $code, V4_Mapper::NOT_YET_AVAILABLE_CODES );
 		}
@@ -234,17 +234,17 @@ class V4_MapperTest extends UnitTestCase {
 	public function test_matching_product_code_on_legacy_row_returns_legacy_result(): void {
 		$result = V4_Mapper::map(
 			array(
-				'origin'              => 'NL',
+				'origin'              => 'BE',
 				'destination'         => 'BE',
-				'flow'                => 'pickup_points',
+				'flow'                => 'delivery_day',
 				'options'             => array(),
-				'legacy_product_code' => '4936',
+				'legacy_product_code' => '4961',
 			)
 		);
 
 		$this->assertFalse( $result['has_v4_equivalent'] );
 		$this->assertSame( V4_Mapper::REASON_NOT_YET_AVAILABLE, $result['legacy_only_reason'] );
-		$this->assertSame( '4936', $result['legacy_product_code'] );
+		$this->assertSame( '4961', $result['legacy_product_code'] );
 	}
 
 	/**
@@ -323,7 +323,7 @@ class V4_MapperTest extends UnitTestCase {
 	public function test_has_v4_equivalent_returns_false_for_not_yet_available(): void {
 		$this->assertFalse(
 			V4_Mapper::has_v4_equivalent(
-				array( 'origin' => 'NL', 'destination' => 'BE', 'flow' => 'pickup_points', 'options' => array() )
+				array( 'origin' => 'BE', 'destination' => 'BE', 'flow' => 'delivery_day', 'options' => array() )
 			)
 		);
 	}
@@ -790,10 +790,10 @@ class V4_MapperTest extends UnitTestCase {
 			// NL → BE / pickup_points  (1 row)
 			// -----------------------------------------------------------------
 
-			'NL→BE/pp row 41: (base) not_yet_available'
+			'NL→BE/pp row 41: (base)'
 				=> array(
 					array( 'origin' => 'NL', 'destination' => 'BE', 'flow' => 'pickup_points', 'options' => array() ),
-					$leg( 41, '4936', $nya ),
+					$v4( 41, '4936', 'parcel', array(), $pickup ),
 				),
 
 			// -----------------------------------------------------------------

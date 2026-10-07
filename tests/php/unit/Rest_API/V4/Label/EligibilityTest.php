@@ -455,6 +455,7 @@ class EligibilityTest extends UnitTestCase {
 			'BE standard'          => array( 'BE', false, array( 'standard_belgium' => 'yes' ), '4946' ),
 			'BE only home address' => array( 'BE', false, array( 'standard_belgium' => 'yes', 'only_home_address' => 'yes' ), '4941' ),
 			'BE signature'         => array( 'BE', false, array( 'standard_belgium' => 'yes', 'signature_on_delivery' => 'yes' ), '4912' ),
+			'BE pickup'            => array( 'BE', true, array( 'standard_belgium' => 'yes' ), '4936' ),
 			'EU parcel'            => array( 'EU', false, array( 'eu_parcel' => 'yes', 'track_and_trace' => 'yes' ), '4907' ),
 			'ROW parcel'           => array( 'ROW', false, array( 'parcel_non_eu' => 'yes', 'track_and_trace' => 'yes' ), '4909' ),
 		);

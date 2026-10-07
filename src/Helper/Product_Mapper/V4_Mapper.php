@@ -23,7 +23,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  *       'legacy_product_code' => optional string,
  *   )
  *
- * Runtime outcomes: has_v4_equivalent = true (60 rows) or false (29 rows).
+ * Runtime outcomes: has_v4_equivalent = true (61 rows) or false (28 rows).
  * needs_confirmation rows behave as Legacy-only at runtime until promoted to v4_mapped.
  *
  * Domestic NL id_check (18+) parcels 3438 and 3443 map to V4 via a bare minimalAgeCheck
@@ -47,7 +47,6 @@ class V4_Mapper {
 	const NOT_YET_AVAILABLE_CODES = array(
 		'1175',
 		'3574',
-		'4936',
 		'4960',
 		'4961',
 		'4962',
@@ -404,7 +403,8 @@ class V4_Mapper {
 						'insured_shipping+packets+track_and_trace' => self::legacy_result( 40, '6906', $nc ),
 					),
 					'pickup_points' => array(
-						'(base)' => self::legacy_result( 41, '4936', $nya ),
+						// Sandbox-confirmed; insured is rejected ("Provided services can not be combined").
+						'(base)' => self::v4_result( 41, '4936', 'parcel', array(), $pickup ),
 					),
 				),
 				'EU'  => array(

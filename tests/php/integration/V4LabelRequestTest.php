@@ -118,6 +118,21 @@ class V4LabelRequestTest extends IntegrationTestCase {
 	}
 
 	/**
+	 * @testdox Options set through the bulk "Change shipping options" action reach V4 with their services.
+	 */
+	public function test_bulk_options_reach_v4(): void {
+		$payload = $this->request_payload(
+			'BE',
+			array(
+				'standard_belgium'  => 'yes',
+				'only_home_address' => 'yes',
+			)
+		);
+
+		$this->assertTrue( $payload['services']['statedAddressOnly'] );
+	}
+
+	/**
 	 * @testdox A letterbox order sends the letterbox shipment type with the duration of its variant.
 	 * @dataProvider letterbox_provider
 	 *

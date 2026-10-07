@@ -91,4 +91,21 @@ class UtilsTest extends UnitTestCase {
 		$this->assertSame( array(), $result['options'], 'Non-array input should yield empty options' );
 		$this->assertSame( '', $result['type'], 'Non-array input should report an empty variant' );
 	}
+
+	/**
+	 * @testdox Should drop the return label flag and the bulk action base product markers from the selected label features.
+	 */
+	public function test_get_selected_label_features_drops_non_features(): void {
+		$features = Utils::get_selected_label_features(
+			array(
+				''                      => 'yes',
+				'standard_belgium'      => 'yes',
+				'create_return_label'   => 'yes',
+				'signature_on_delivery' => 'yes',
+				'only_home_address'     => '',
+			)
+		);
+
+		$this->assertSame( array( 'signature_on_delivery' => 'yes' ), $features );
+	}
 }

@@ -428,6 +428,39 @@ class EligibilityTest extends UnitTestCase {
 	}
 
 	/**
+	 * @testdox Options set through the bulk "Change shipping options" action route to V4 like the same options set in the order meta box.
+	 * @dataProvider bulk_options_provider
+	 *
+	 * @param string $destination Destination zone.
+	 * @param bool   $is_pickup   Whether the order ships to a pickup point.
+	 * @param array  $backend     Backend options as the bulk action stores them.
+	 * @param string $code        Legacy product code resolved for that combination.
+	 */
+	public function test_bulk_options_route_to_v4( string $destination, bool $is_pickup, array $backend, string $code ): void {
+		$mapped = Eligibility::resolve_mapped( 'NL', $destination, $is_pickup, $backend, $code );
+
+		$this->assertTrue( $mapped['has_v4_equivalent'], 'The bulk action base product marker must not make the combination unknown.' );
+		$this->assertSame( $code, $mapped['legacy_product_code'] );
+	}
+
+	/**
+	 * Default shipping option tokens the bulk action stores, with their legacy product code.
+	 *
+	 * @return array
+	 */
+	public static function bulk_options_provider(): array {
+		return array(
+			'NL standard'          => array( 'NL', false, array( 'standard_shipment' => 'yes' ), '3085' ),
+			'NL pickup standard'   => array( 'NL', true, array( '' => 'yes' ), '3533' ),
+			'BE standard'          => array( 'BE', false, array( 'standard_belgium' => 'yes' ), '4946' ),
+			'BE only home address' => array( 'BE', false, array( 'standard_belgium' => 'yes', 'only_home_address' => 'yes' ), '4941' ),
+			'BE signature'         => array( 'BE', false, array( 'standard_belgium' => 'yes', 'signature_on_delivery' => 'yes' ), '4912' ),
+			'EU parcel'            => array( 'EU', false, array( 'eu_parcel' => 'yes', 'track_and_trace' => 'yes' ), '4907' ),
+			'ROW parcel'           => array( 'ROW', false, array( 'parcel_non_eu' => 'yes', 'track_and_trace' => 'yes' ), '4909' ),
+		);
+	}
+
+	/**
 	 * @testdox is_eligible() rejects orders outside the happy path.
 	 * @dataProvider ineligible_provider
 	 *

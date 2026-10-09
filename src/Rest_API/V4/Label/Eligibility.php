@@ -167,10 +167,18 @@ class Eligibility {
 			return false;
 		}
 
-		// Letterbox (mailbox parcel 2928/2948) is a domestic-NL-only variant. A parcel
-		// may be domestic, NL to BE or EU/ROW international.
+		// Letterbox is the domestic mailbox parcel (2928/2948) or, carrying an international
+		// bundle, the boxable packet (6440/6972). A packet (6405/6350/6906) only ships abroad.
+		// A parcel may be domestic, NL to BE or EU/ROW international.
+		$has_bundle              = ! empty( $mapped['internationalShipmentData'] );
+		$is_international_packet = ! $is_domestic && $has_bundle;
+
 		if ( 'letterbox' === $shipment_type ) {
-			return $is_domestic;
+			return $is_domestic ? ! $has_bundle : $is_international_packet;
+		}
+
+		if ( 'packet' === $shipment_type ) {
+			return $is_international_packet;
 		}
 
 		return 'parcel' === $shipment_type;

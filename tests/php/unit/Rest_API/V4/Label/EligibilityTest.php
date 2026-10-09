@@ -305,7 +305,42 @@ class EligibilityTest extends UnitTestCase {
 			)
 		);
 
-		$this->assertFalse( Eligibility::is_eligible( $signals ), 'An international letterbox must fall back to legacy.' );
+		$this->assertFalse( Eligibility::is_eligible( $signals ), 'An international letterbox without a bundle must fall back to legacy.' );
+	}
+
+	/**
+	 * @testdox NL packets and boxable packets route to V4 abroad and never domestically.
+	 * @dataProvider packet_provider
+	 *
+	 * @param string $destination Destination zone.
+	 * @param array  $options     Backend options.
+	 * @param string $code        Legacy product code.
+	 * @param string $type        Expected V4 shipment type.
+	 */
+	public function test_packet_is_eligible( string $destination, array $options, string $code, string $type ): void {
+		$mapped = Eligibility::resolve_mapped( 'NL', $destination, false, $options, $code );
+
+		$this->assertSame( $type, $mapped['shipmentType'] );
+		$this->assertTrue( Eligibility::is_eligible( $this->signals( array( 'destination' => $destination, 'mapped' => $mapped ) ) ) );
+		$this->assertFalse(
+			Eligibility::is_eligible( $this->signals( array( 'destination' => 'NL', 'mapped' => $mapped ) ) ),
+			'An international packet row must never ship domestically.'
+		);
+	}
+
+	/**
+	 * Every NL packet and boxable packet product with its V4 shipment type.
+	 *
+	 * @return array
+	 */
+	public static function packet_provider(): array {
+		return array(
+			'BE boxable'             => array( 'BE', array( 'mailboxpacket' => 'yes' ), '6440', 'letterbox' ),
+			'EU boxable + T&T'       => array( 'EU', array( 'mailboxpacket' => 'yes', 'track_and_trace' => 'yes' ), '6972', 'letterbox' ),
+			'ROW packet'             => array( 'ROW', array( 'packets' => 'yes' ), '6405', 'packet' ),
+			'EU packet + T&T'        => array( 'EU', array( 'packets' => 'yes', 'track_and_trace' => 'yes' ), '6350', 'packet' ),
+			'ROW packet + T&T + ins' => array( 'ROW', array( 'packets' => 'yes', 'track_and_trace' => 'yes', 'insured_shipping' => 'yes' ), '6906', 'packet' ),
+		);
 	}
 
 	/**

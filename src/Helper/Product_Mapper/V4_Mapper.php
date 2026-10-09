@@ -23,7 +23,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  *       'legacy_product_code' => optional string,
  *   )
  *
- * Runtime outcomes: has_v4_equivalent = true (63 rows) or false (28 rows).
+ * Runtime outcomes: has_v4_equivalent = true (78 rows) or false (13 rows).
  * needs_confirmation rows behave as Legacy-only at runtime until promoted to v4_mapped.
  *
  * Domestic NL id_check (18+) parcels 3438 and 3443 map to V4 via a bare minimalAgeCheck
@@ -37,8 +37,9 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * Not-yet-available codes are always Legacy-only; see NOT_YET_AVAILABLE_CODES.
  * EU/ROW parcels (4907/4909) map to V4 with an InternationalShipmentData bundle
- * (see SDK_SERVICES_BUNDLE_GAP). EU/ROW packet/mailbox products and international
- * pickup stay Legacy-only.
+ * (see SDK_SERVICES_BUNDLE_GAP). Packets from NL map to ShipmentType packet and boxable
+ * (mailbox) packets to letterbox, each with its bundle, as in PostNL's V4 request examples.
+ * BE-origin packets and international pickup stay Legacy-only.
  *
  * Source: PostNL Product Overview documentation.
  */
@@ -202,6 +203,7 @@ class V4_Mapper {
 		// bundles are flat-coverage tiers or still expect a declared amount is an open question
 		// with PostNL, tracked as Q14 in docs/postnl-v4-migration/flip-checklist.md and a
 		// pre-flip gate for the label flow.
+		$untracked    = array( 'bundle' => 'untracked' );
 		$track_trace  = array( 'bundle' => 'track_trace' );
 		$insured      = array( 'bundle' => 'insured' );
 		$insured_plus = array( 'bundle' => 'insured_plus' );
@@ -396,11 +398,11 @@ class V4_Mapper {
 								'statedAddressOnly' => true,
 							)
 						),
-						'mailboxpacket'                    => self::legacy_result( 36, '6440', $nc ),
-						'mailboxpacket+track_and_trace'    => self::legacy_result( 37, '6972', $nc ),
-						'packets'                          => self::legacy_result( 38, '6405', $nc ),
-						'packets+track_and_trace'          => self::legacy_result( 39, '6350', $nc ),
-						'insured_shipping+packets+track_and_trace' => self::legacy_result( 40, '6906', $nc ),
+						'mailboxpacket'                    => self::v4_result( 36, '6440', 'letterbox', array(), array(), $untracked ),
+						'mailboxpacket+track_and_trace'    => self::v4_result( 37, '6972', 'letterbox', array(), array(), $track_trace ),
+						'packets'                          => self::v4_result( 38, '6405', 'packet', array(), array(), $untracked ),
+						'packets+track_and_trace'          => self::v4_result( 39, '6350', 'packet', array(), array(), $track_trace ),
+						'insured_shipping+packets+track_and_trace' => self::v4_result( 40, '6906', 'packet', array(), array(), $insured ),
 					),
 					'pickup_points' => array(
 						// Sandbox-confirmed; insured is rejected ("Provided services can not be combined").
@@ -413,11 +415,11 @@ class V4_Mapper {
 						'track_and_trace'                  => self::v4_result( 43, '4907', 'parcel', array(), array(), $track_trace ),
 						'insured_shipping+track_and_trace' => self::v4_result( 44, '4907', 'parcel', array(), array(), $insured ),
 						'insured_plus+track_and_trace'     => self::v4_result( 45, '4907', 'parcel', array(), array(), $insured_plus ),
-						'mailboxpacket'                    => self::legacy_result( 46, '6440', $nc ),
-						'mailboxpacket+track_and_trace'    => self::legacy_result( 47, '6972', $nc ),
-						'packets'                          => self::legacy_result( 48, '6405', $nc ),
-						'packets+track_and_trace'          => self::legacy_result( 49, '6350', $nc ),
-						'insured_shipping+packets+track_and_trace' => self::legacy_result( 50, '6906', $nc ),
+						'mailboxpacket'                    => self::v4_result( 46, '6440', 'letterbox', array(), array(), $untracked ),
+						'mailboxpacket+track_and_trace'    => self::v4_result( 47, '6972', 'letterbox', array(), array(), $track_trace ),
+						'packets'                          => self::v4_result( 48, '6405', 'packet', array(), array(), $untracked ),
+						'packets+track_and_trace'          => self::v4_result( 49, '6350', 'packet', array(), array(), $track_trace ),
+						'insured_shipping+packets+track_and_trace' => self::v4_result( 50, '6906', 'packet', array(), array(), $insured ),
 					),
 					'pickup_points' => array(
 						'(base)' => self::legacy_result( 51, '4907', $nc ),
@@ -425,16 +427,16 @@ class V4_Mapper {
 				),
 				'ROW' => array(
 					'delivery_day'  => array(
-						'(base)'                        => self::v4_result( 52, '4909', 'parcel', array(), array(), $track_trace ),
-						'track_and_trace'               => self::v4_result( 53, '4909', 'parcel', array(), array(), $track_trace ),
-						'insured_plus+track_and_trace'  => self::v4_result( 54, '4909', 'parcel', array(), array(), $insured_plus ),
+						'(base)'                           => self::v4_result( 52, '4909', 'parcel', array(), array(), $track_trace ),
+						'track_and_trace'                  => self::v4_result( 53, '4909', 'parcel', array(), array(), $track_trace ),
+						'insured_plus+track_and_trace'     => self::v4_result( 54, '4909', 'parcel', array(), array(), $insured_plus ),
 						// Not a V1 matrix row: V1 resolves the "Parcel non-EU Insured" setting to the base 4909, whose option 004/015 is insured.
 						'insured_shipping+track_and_trace' => self::v4_result( 90, '4909', 'parcel', array(), array(), $insured ),
-						'mailboxpacket'                 => self::legacy_result( 55, '6440', $nc ),
-						'mailboxpacket+track_and_trace' => self::legacy_result( 56, '6972', $nc ),
-						'packets'                       => self::legacy_result( 57, '6405', $nc ),
-						'packets+track_and_trace'       => self::legacy_result( 58, '6350', $nc ),
-						'insured_shipping+packets+track_and_trace' => self::legacy_result( 59, '6906', $nc ),
+						'mailboxpacket'                    => self::v4_result( 55, '6440', 'letterbox', array(), array(), $untracked ),
+						'mailboxpacket+track_and_trace'    => self::v4_result( 56, '6972', 'letterbox', array(), array(), $track_trace ),
+						'packets'                          => self::v4_result( 57, '6405', 'packet', array(), array(), $untracked ),
+						'packets+track_and_trace'          => self::v4_result( 58, '6350', 'packet', array(), array(), $track_trace ),
+						'insured_shipping+packets+track_and_trace' => self::v4_result( 59, '6906', 'packet', array(), array(), $insured ),
 					),
 					'pickup_points' => array(
 						'(base)' => self::legacy_result( 60, '4909', $nc ),
@@ -511,9 +513,9 @@ class V4_Mapper {
 				),
 				'ROW' => array(
 					'delivery_day' => array(
-						'(base)'                       => self::v4_result( 86, '4909', 'parcel', array(), array(), $track_trace ),
-						'track_and_trace'              => self::v4_result( 87, '4909', 'parcel', array(), array(), $track_trace ),
-						'insured_plus+track_and_trace' => self::v4_result( 88, '4909', 'parcel', array(), array(), $insured_plus ),
+						'(base)'                           => self::v4_result( 86, '4909', 'parcel', array(), array(), $track_trace ),
+						'track_and_trace'                  => self::v4_result( 87, '4909', 'parcel', array(), array(), $track_trace ),
+						'insured_plus+track_and_trace'     => self::v4_result( 88, '4909', 'parcel', array(), array(), $insured_plus ),
 						'insured_shipping+track_and_trace' => self::v4_result( 91, '4909', 'parcel', array(), array(), $insured ),
 					),
 				),

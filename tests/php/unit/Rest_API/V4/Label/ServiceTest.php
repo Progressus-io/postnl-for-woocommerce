@@ -52,8 +52,11 @@ class ServiceTest extends UnitTestCase {
 		parent::setUp();
 		$this->seed_settings_singleton();
 
-		// Exception_Converter translates its messages; surface them verbatim in failures.
+		// Exception_Converter and the missed-evening order note translate and escape
+		// their messages; surface them verbatim in failures.
 		Functions\when( '__' )->returnArg( 1 );
+		Functions\when( 'esc_html__' )->returnArg( 1 );
+		Functions\when( 'esc_html' )->returnArg( 1 );
 	}
 
 	protected function tearDown(): void {
@@ -352,6 +355,433 @@ class ServiceTest extends UnitTestCase {
 		);
 
 		$this->assertSame( array(), $fields['services'] );
+	}
+
+	/**
+	 * @testdox extract_fields() attaches an evening or morning delivery window and omits it for every other selection.
+	 * @dataProvider delivery_window_provider
+	 *
+	 * Covers resolve_delivery_window()'s branches (frontend 'Evening' and '08:00-12:00'
+	 * morning) and the extract_fields() line that injects the window for both.
+	 *
+	 * @param string      $frontend_type Frontend delivery_day type.
+	 * @param string      $backend_type  Backend delivery_type.
+	 * @param string|null $expected      Expected services['deliveryWindow'], or null when omitted.
+	 */
+	public function test_extract_fields_attaches_the_delivery_window( string $frontend_type, string $backend_type, ?string $expected ): void {
+		$service = new Testable_Label_Service(
+			new Spy_Label_Client_Factory( new Client_Factory_Settings(), new Failing_Http_Client() ),
+			self::V4_KEY,
+			new NullLogger()
+		);
+
+		$item_info = new Fake_Shipping_Item_Info(
+			array( 'subtotal' => 42.00 ),
+			array(),
+			'' === $backend_type ? array() : array( 'delivery_type' => $backend_type )
+		);
+		$item_info->delivery_day = array( 'type' => $frontend_type );
+
+		$fields = $this->extract_fields(
+			$service,
+			$item_info,
+			array( 'shipmentType' => 'parcel', 'services' => array() ),
+			array()
+		);
+
+		if ( null === $expected ) {
+			$this->assertArrayNotHasKey( 'deliveryWindow', $fields['services'], 'A standard selection must attach no delivery window.' );
+		} else {
+			$this->assertSame( $expected, $fields['services']['deliveryWindow'], 'An evening or morning selection must attach its delivery window.' );
+		}
+	}
+
+	/**
+	 * Delivery-day selections mapped to the expected injected window.
+	 *
+	 * @return array
+	 */
+	public static function delivery_window_provider(): array {
+		return array(
+			'evening from the frontend type'  => array( 'Evening', '', 'evening' ),
+			'morning from the frontend type'  => array( '08:00-12:00', 'Standard', 'morning' ),
+			'standard daytime gets no window' => array( 'Daytime', 'Standard', null ),
+			'no delivery-day selection'       => array( '', '', null ),
+		);
+	}
+
+	// ── Handover date ────────────────────────────────────────────────────────
+
+	/**
+	 * @testdox extract_fields() sends the handover date as the day before the chosen delivery date.
+	 *
+	 * V4 labelconfirm carries no delivery-date field, so a delivery-day label anchors
+	 * on handoverDate; PostNL delivers the day after handover, so a delivery date of
+	 * 14-07 hands over on 13-07. Without this the endpoint defaults to today and
+	 * misdates the parcel.
+	 */
+	public function test_extract_fields_sends_the_handover_date(): void {
+		Functions\when( 'current_datetime' )->justReturn(
+			new \DateTimeImmutable( '2026-07-10 09:00:00', new \DateTimeZone( 'Europe/Amsterdam' ) )
+		);
+
+		$fields = $this->extract_fields_for_delivery_date( '14-07-2026', 'Evening' );
+
+		$this->assertInstanceOf( \DateTimeImmutable::class, $fields['handover_date'] );
+		$this->assertSame( '2026-07-13', $fields['handover_date']->format( 'Y-m-d' ), 'Handover is the day before the chosen delivery date.' );
+	}
+
+	/**
+	 * @testdox extract_fields() clamps a handover date that would fall in the past to today.
+	 *
+	 * A standard delivery-day label generated after the chosen date must not send a
+	 * past handover date, which labelconfirm rejects; it clamps to the day the label
+	 * is generated instead.
+	 */
+	public function test_extract_fields_clamps_a_past_handover_to_today(): void {
+		Functions\when( 'current_datetime' )->justReturn(
+			new \DateTimeImmutable( '2026-07-20 09:00:00', new \DateTimeZone( 'Europe/Amsterdam' ) )
+		);
+
+		$fields = $this->extract_fields_for_delivery_date( '14-07-2026', 'Daytime' );
+
+		$this->assertSame( '2026-07-20', $fields['handover_date']->format( 'Y-m-d' ), 'A past handover date clamps to today.' );
+	}
+
+	/**
+	 * @testdox extract_fields() ships a missed evening as a standard label instead of blocking it.
+	 * @dataProvider missed_evening_provider
+	 *
+	 * The delivery date is read-only in the admin, so an exception here left the
+	 * merchant with an order that could never get a label. PostNL delivers the evening
+	 * after handover, so a label made on the delivery day is already too late.
+	 *
+	 * @param string $today Date the label is generated on.
+	 */
+	public function test_extract_fields_ships_a_missed_evening_as_standard( string $today ): void {
+		Functions\when( 'current_datetime' )->justReturn(
+			new \DateTimeImmutable( $today . ' 09:00:00', new \DateTimeZone( 'Europe/Amsterdam' ) )
+		);
+
+		$fields = $this->extract_fields_for_delivery_date( '14-07-2026', 'Evening' );
+
+		$this->assertArrayNotHasKey( 'deliveryWindow', $fields['services'], 'A missed evening must not be booked for a later evening.' );
+		$this->assertSame( $today, $fields['handover_date']->format( 'Y-m-d' ), 'A missed evening hands over today, like any late delivery-day label.' );
+	}
+
+	/**
+	 * Label dates on or after the chosen evening of 14-07-2026.
+	 *
+	 * @return array
+	 */
+	public static function missed_evening_provider(): array {
+		return array(
+			'on the delivery day'    => array( '2026-07-14' ),
+			'after the delivery day' => array( '2026-07-20' ),
+		);
+	}
+
+	/**
+	 * @testdox extract_fields() keeps the evening window for a label made the day before delivery.
+	 */
+	public function test_extract_fields_keeps_the_evening_window_the_day_before(): void {
+		Functions\when( 'current_datetime' )->justReturn(
+			new \DateTimeImmutable( '2026-07-13 23:30:00', new \DateTimeZone( 'Europe/Amsterdam' ) )
+		);
+
+		$fields = $this->extract_fields_for_delivery_date( '14-07-2026', 'Evening' );
+
+		$this->assertSame( 'evening', $fields['services']['deliveryWindow'] );
+		$this->assertSame( '2026-07-13', $fields['handover_date']->format( 'Y-m-d' ) );
+	}
+
+	/**
+	 * @testdox extract_fields() sends no handover date for an order without a delivery day.
+	 *
+	 * The item-info parser turns an empty delivery date into 01-01-1970; read as a real
+	 * selection it clamps to today and every label would carry a handover date.
+	 */
+	public function test_extract_fields_sends_no_handover_date_without_a_delivery_day(): void {
+		Functions\when( 'current_datetime' )->justReturn(
+			new \DateTimeImmutable( '2026-07-10 09:00:00', new \DateTimeZone( 'Europe/Amsterdam' ) )
+		);
+
+		$service = new Testable_Label_Service(
+			new Spy_Label_Client_Factory( new Client_Factory_Settings(), new Failing_Http_Client() ),
+			self::V4_KEY,
+			new NullLogger()
+		);
+
+		$item_info               = new Fake_Shipping_Item_Info( array( 'subtotal' => 42.00 ) );
+		$item_info->delivery_day = array( 'date' => '01-01-1970' );
+
+		$fields = $this->extract_fields(
+			$service,
+			$item_info,
+			array( 'shipmentType' => 'parcel', 'services' => array() ),
+			array()
+		);
+
+		$this->assertNull( $fields['handover_date'] );
+	}
+
+	/**
+	 * @testdox A missed evening or morning is recorded on the order with the slot and the date the customer chose.
+	 * @dataProvider missed_window_note_provider
+	 *
+	 * @param string $frontend_type Frontend delivery-day type.
+	 * @param string $slot          Slot name the note must carry.
+	 */
+	public function test_a_missed_window_is_noted_on_the_order( string $frontend_type, string $slot ): void {
+		$service = new Testable_Label_Service(
+			new Spy_Label_Client_Factory( new Client_Factory_Settings(), new Failing_Http_Client() ),
+			self::V4_KEY,
+			new NullLogger()
+		);
+
+		$item_info               = new Delivery_Window_Item_Info( array( 'subtotal' => 42.00 ) );
+		$item_info->delivery_day = array(
+			'date' => '14-07-2026',
+			'type' => $frontend_type,
+		);
+
+		$order = new class() {
+			public array $notes = array();
+
+			public function add_order_note( $note ) {
+				$this->notes[] = $note;
+			}
+		};
+
+		$method = new \ReflectionMethod( Service::class, 'note_window_passed' );
+		$method->setAccessible( true );
+		$method->invoke( $service, $order, $item_info );
+
+		$this->assertCount( 1, $order->notes );
+		$this->assertStringContainsString( $slot . ' delivery chosen for 14-07-2026', $order->notes[0] );
+		$this->assertStringContainsString( 'standard PostNL label', $order->notes[0] );
+	}
+
+	/**
+	 * Frontend delivery-day types and the slot name their missed-slot note carries.
+	 *
+	 * @return array
+	 */
+	public static function missed_window_note_provider(): array {
+		return array(
+			'evening' => array( 'Evening', 'evening' ),
+			'morning' => array( '08:00-12:00', 'morning' ),
+		);
+	}
+
+	// ── Pickup point ─────────────────────────────────────────────────────────
+
+	/**
+	 * @testdox gather_signals() extracts the location code from every form the pickup selection is stored in.
+	 * @dataProvider pickup_selection_provider
+	 *
+	 * @param string $selection Stored dropoff_points value.
+	 * @param string $expected  Expected location code.
+	 */
+	public function test_gather_signals_resolves_the_pickup_location_code( string $selection, string $expected ): void {
+		$service = new Testable_Label_Service(
+			new Spy_Label_Client_Factory( new Client_Factory_Settings(), new Failing_Http_Client() ),
+			self::V4_KEY,
+			new NullLogger()
+		);
+
+		$signals = $this->gather_signals(
+			$service,
+			new Pickup_Item_Info( array( 'subtotal' => 42.00 ) ),
+			array( 'saved_data' => array( 'frontend' => array( 'dropoff_points' => $selection ) ) )
+		);
+
+		$this->assertSame( $expected, $signals['pickup_id'] );
+		$this->assertSame(
+			'' !== $expected,
+			\PostNLWooCommerce\Rest_API\V4\Label\Eligibility::is_eligible( $signals ),
+			'A pickup order is V4-eligible only when a location code was resolved.'
+		);
+	}
+
+	/**
+	 * Stored pickup selections mapped to the location code they carry.
+	 *
+	 * @return array
+	 */
+	public static function pickup_selection_provider(): array {
+		return array(
+			'legacy checkout, blocks'  => array( 'PNPNL-01-176227', '176227' ),
+			'legacy checkout, classic' => array( 'pnpnl-01-176227', '176227' ),
+			'V4 checkout, blocks'      => array( '-176227', '176227' ),
+			'V4 checkout, classic'     => array( '176227', '176227' ),
+			'no trailing code'         => array( 'pnpnl-01-', '' ),
+		);
+	}
+
+	/**
+	 * @testdox extract_fields() carries the pickup location code to the request builder.
+	 */
+	public function test_extract_fields_carries_the_pickup_location_code(): void {
+		Functions\when( 'current_datetime' )->justReturn(
+			new \DateTimeImmutable( '2026-07-10 09:00:00', new \DateTimeZone( 'Europe/Amsterdam' ) )
+		);
+
+		$service = new Testable_Label_Service(
+			new Spy_Label_Client_Factory( new Client_Factory_Settings(), new Failing_Http_Client() ),
+			self::V4_KEY,
+			new NullLogger()
+		);
+
+		$fields = $this->extract_fields(
+			$service,
+			new Pickup_Item_Info( array( 'subtotal' => 42.00 ) ),
+			array( 'shipmentType' => 'parcel', 'services' => array() ),
+			array( 'saved_data' => array( 'frontend' => array( 'dropoff_points' => 'PNPNL-01-176227' ) ) )
+		);
+
+		$this->assertSame( '176227', $fields['pickup_id'] );
+		$this->assertNull( $fields['handover_date'], 'A pickup order without a pickup date has no handover date.' );
+	}
+
+	/**
+	 * @testdox extract_fields() sends the day before the pickup date as the handover date, clamped to today.
+	 * @dataProvider pickup_handover_provider
+	 *
+	 * @param string $today    Date the label is generated on.
+	 * @param string $expected Expected handover date.
+	 */
+	public function test_extract_fields_sends_the_pickup_handover_date( string $today, string $expected ): void {
+		Functions\when( 'current_datetime' )->justReturn(
+			new \DateTimeImmutable( $today . ' 09:00:00', new \DateTimeZone( 'Europe/Amsterdam' ) )
+		);
+
+		$service = new Testable_Label_Service(
+			new Spy_Label_Client_Factory( new Client_Factory_Settings(), new Failing_Http_Client() ),
+			self::V4_KEY,
+			new NullLogger()
+		);
+
+		$item_info                = new Pickup_Item_Info( array( 'subtotal' => 42.00 ) );
+		$item_info->pickup_points = array( 'date' => '14-07-2026' );
+
+		$fields = $this->extract_fields(
+			$service,
+			$item_info,
+			array( 'shipmentType' => 'parcel', 'services' => array() ),
+			array( 'saved_data' => array( 'frontend' => array( 'dropoff_points' => 'PNPNL-01-176227' ) ) )
+		);
+
+		$this->assertSame( $expected, $fields['handover_date']->format( 'Y-m-d' ) );
+	}
+
+	/**
+	 * Label dates against a pickup date of 14-07-2026 and the handover date they send.
+	 *
+	 * @return array
+	 */
+	public static function pickup_handover_provider(): array {
+		return array(
+			'before the pickup date' => array( '2026-07-10', '2026-07-13' ),
+			'after the pickup date'  => array( '2026-07-20', '2026-07-20' ),
+		);
+	}
+
+	/**
+	 * @testdox A morning delivery-day order is V4-eligible through the signal path only when the receiver can be contacted.
+	 * @dataProvider morning_contact_provider
+	 *
+	 * Morning is PostNL's "Guaranteed Before 12:00", which labelconfirm refuses with
+	 * "Email or phone number of Receiver is required" when both are missing.
+	 *
+	 * @param array $shipment Parsed shipment data.
+	 * @param bool  $eligible Whether the order may route to V4.
+	 */
+	public function test_a_morning_order_needs_a_receiver_contact( array $shipment, bool $eligible ): void {
+		$service = new Testable_Label_Service(
+			new Spy_Label_Client_Factory( new Client_Factory_Settings(), new Failing_Http_Client() ),
+			self::V4_KEY,
+			new NullLogger()
+		);
+
+		$item_info               = new Delivery_Window_Item_Info( $shipment );
+		$item_info->delivery_day = array( 'type' => '08:00-12:00' );
+
+		$signals = $this->gather_signals( $service, $item_info, array() );
+
+		$this->assertSame( 'morning', $signals['delivery_window'], 'A morning selection must surface as the morning window signal.' );
+		$this->assertSame( $eligible, \PostNLWooCommerce\Rest_API\V4\Label\Eligibility::is_eligible( $signals ) );
+	}
+
+	/**
+	 * Receiver contact details and whether a morning order may route to V4.
+	 *
+	 * @return array
+	 */
+	public static function morning_contact_provider(): array {
+		return array(
+			'email only'       => array( array( 'email' => 'buyer@example.com' ), true ),
+			'phone only'       => array( array( 'phone' => '0612345678' ), true ),
+			'neither'          => array( array( 'subtotal' => 42.00 ), false ),
+			'blank email only' => array( array( 'email' => ' ' ), false ),
+		);
+	}
+
+	/**
+	 * @testdox extract_fields() ships a morning slot missed on the delivery day as a standard label.
+	 */
+	public function test_extract_fields_ships_a_missed_morning_as_standard(): void {
+		Functions\when( 'current_datetime' )->justReturn(
+			new \DateTimeImmutable( '2026-07-14 09:00:00', new \DateTimeZone( 'Europe/Amsterdam' ) )
+		);
+
+		$fields = $this->extract_fields_for_delivery_date( '14-07-2026', '08:00-12:00' );
+
+		$this->assertArrayNotHasKey( 'deliveryWindow', $fields['services'] );
+		$this->assertSame( '2026-07-14', $fields['handover_date']->format( 'Y-m-d' ) );
+	}
+
+	/**
+	 * Run extract_fields() for a delivery-day order with the given date and frontend type.
+	 *
+	 * @param string $date          Delivery date in the d-m-Y form the parser stores.
+	 * @param string $frontend_type Frontend delivery-day type, e.g. 'Evening' or 'Daytime'.
+	 * @return array
+	 */
+	private function extract_fields_for_delivery_date( string $date, string $frontend_type ): array {
+		$service = new Testable_Label_Service(
+			new Spy_Label_Client_Factory( new Client_Factory_Settings(), new Failing_Http_Client() ),
+			self::V4_KEY,
+			new NullLogger()
+		);
+
+		$item_info               = new Delivery_Window_Item_Info( array( 'subtotal' => 42.00 ) );
+		$item_info->delivery_day = array(
+			'date' => $date,
+			'type' => $frontend_type,
+		);
+
+		return $this->extract_fields(
+			$service,
+			$item_info,
+			array( 'shipmentType' => 'parcel', 'services' => array() ),
+			array()
+		);
+	}
+
+	/**
+	 * Call Service::gather_signals(), which is private, via reflection.
+	 *
+	 * @param Service            $service   Service under test.
+	 * @param Shipping\Item_Info $item_info Parsed legacy item info.
+	 * @param array              $post_data Label post data.
+	 * @return array
+	 */
+	private function gather_signals( Service $service, Shipping\Item_Info $item_info, array $post_data ): array {
+		$method = new \ReflectionMethod( Service::class, 'gather_signals' );
+		$method->setAccessible( true );
+
+		return $method->invoke( $service, $item_info, $post_data );
 	}
 
 	/**
@@ -1198,6 +1628,44 @@ class Fake_Shipping_Item_Info extends Shipping\Item_Info {
 		$this->shipper      = array( 'country' => 'NL' );
 		$this->receiver     = array( 'country' => 'NL' );
 		$this->backend_data = $backend_data;
+	}
+}
+
+/**
+ * Item_Info stand-in for the gather_signals() path, which — unlike extract_fields()
+ * — reads the delivery-day and product-code accessors. Those resolve off api_args
+ * the fake never builds, so they are stubbed to a plain domestic delivery-day order.
+ */
+class Delivery_Window_Item_Info extends Fake_Shipping_Item_Info {
+
+	public function is_delivery_day() {
+		return true;
+	}
+
+	public function is_pickup_points() {
+		return false;
+	}
+
+	public function get_product_code() {
+		return '3085';
+	}
+}
+
+/**
+ * Item_Info stand-in for a domestic pickup-point order.
+ */
+class Pickup_Item_Info extends Fake_Shipping_Item_Info {
+
+	public function is_delivery_day() {
+		return false;
+	}
+
+	public function is_pickup_points() {
+		return true;
+	}
+
+	public function get_product_code() {
+		return '3533';
 	}
 }
 

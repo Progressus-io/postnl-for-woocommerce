@@ -78,8 +78,9 @@ class Eligibility {
 
 	/**
 	 * Decide whether the collected signals describe a shipment the V4 service
-	 * handles — a domestic NL, NL to BE or EU/ROW international parcel (single- or
-	 * multi-collo), or a domestic NL letterbox (mailbox parcel 2928/2948).
+	 * handles — a domestic NL, NL to BE, BE to BE or NL, or EU/ROW international parcel
+	 * (single- or multi-collo), a domestic NL letterbox (mailbox parcel 2928/2948), or an
+	 * international packet.
 	 *
 	 * @param array $signals {
 	 *     Signal set assembled by Service::gather_signals().
@@ -131,14 +132,19 @@ class Eligibility {
 		$origin      = (string) ( $signals['origin'] ?? '' );
 		$destination = (string) ( $signals['destination'] ?? '' );
 
-		// Domestic NL, NL to BE, or an EU/ROW international parcel from NL/BE. Parcels
-		// from a BE origin to NL or BE stay on legacy: unverified against the sandbox.
+		// Domestic NL, NL to BE, BE to BE or NL, or an EU/ROW international parcel from NL/BE.
 		$is_domestic      = ( 'NL' === $origin && 'NL' === $destination );
 		$is_cross_border  = ( 'NL' === $origin && 'BE' === $destination );
+		$is_from_be       = ( 'BE' === $origin && in_array( $destination, array( 'BE', 'NL' ), true ) );
 		$is_international = in_array( $origin, array( 'NL', 'BE' ), true )
 			&& in_array( $destination, array( 'EU', 'ROW' ), true );
 
-		if ( ! $is_domestic && ! $is_cross_border && ! $is_international ) {
+		if ( ! $is_domestic && ! $is_cross_border && ! $is_from_be && ! $is_international ) {
+			return false;
+		}
+
+		// An evening or morning slot from a BE store has not been verified against the sandbox.
+		if ( $is_from_be && in_array( $window, array( 'evening', 'morning' ), true ) ) {
 			return false;
 		}
 

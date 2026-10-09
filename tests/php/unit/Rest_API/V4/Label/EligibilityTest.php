@@ -463,6 +463,53 @@ class EligibilityTest extends UnitTestCase {
 	}
 
 	/**
+	 * @testdox A parcel from a BE store to BE or NL routes to V4 with the mapped services.
+	 * @dataProvider be_origin_provider
+	 *
+	 * @param string $destination Destination zone.
+	 * @param bool   $is_pickup   Whether the order ships to a pickup point.
+	 * @param array  $backend     Raw backend feature flags.
+	 * @param string $code        Legacy product code.
+	 */
+	public function test_be_origin_parcel_is_eligible( string $destination, bool $is_pickup, array $backend, string $code ): void {
+		$mapped = Eligibility::resolve_mapped( 'BE', $destination, $is_pickup, $backend, $code );
+
+		$this->assertTrue(
+			Eligibility::is_eligible(
+				$this->signals(
+					array(
+						'origin'      => 'BE',
+						'destination' => $destination,
+						'is_pickup'   => $is_pickup,
+						'pickup_id'   => $is_pickup ? '409816' : '',
+						'mapped'      => $mapped,
+					)
+				)
+			),
+			"BE to {$destination} product {$code} should route to V4."
+		);
+	}
+
+	/**
+	 * BE-origin rows that have a V4 equivalent.
+	 *
+	 * @return array
+	 */
+	public static function be_origin_provider(): array {
+		return array(
+			'BE base'                 => array( 'BE', false, array(), '4961' ),
+			'BE home'                 => array( 'BE', false, array( 'only_home_address' => 'yes' ), '4960' ),
+			'BE signature'            => array( 'BE', false, array( 'signature_on_delivery' => 'yes' ), '4963' ),
+			'BE home + signature'     => array( 'BE', false, array( 'only_home_address' => 'yes', 'signature_on_delivery' => 'yes' ), '4962' ),
+			'BE insured + home'       => array( 'BE', false, array( 'insured_shipping' => 'yes', 'only_home_address' => 'yes' ), '4965' ),
+			'BE pickup'               => array( 'BE', true, array(), '4880' ),
+			'NL base'                 => array( 'NL', false, array(), '4890' ),
+			'NL home + signature'     => array( 'NL', false, array( 'only_home_address' => 'yes', 'signature_on_delivery' => 'yes' ), '4894' ),
+			'NL pickup'               => array( 'NL', true, array(), '4898' ),
+		);
+	}
+
+	/**
 	 * @testdox Options set through the bulk "Change shipping options" action route to V4 like the same options set in the order meta box.
 	 * @dataProvider bulk_options_provider
 	 *
@@ -522,8 +569,8 @@ class EligibilityTest extends UnitTestCase {
 			'pickup on a home row'       => array( array( 'is_pickup' => true, 'pickup_id' => '176227' ), 'a pickup order mapped to a home-delivery row' ),
 			'return involved'            => array( array( 'has_return' => true ), 'a return label' ),
 			'morning without a contact'  => array( array( 'delivery_window' => 'morning' ), 'a morning (08:00-12:00) window with no receiver email or phone' ),
-			'BE to NL'                   => array( array( 'origin' => 'BE' ), 'a BE origin shipping to NL' ),
-			'BE domestic'                => array( array( 'origin' => 'BE', 'destination' => 'BE' ), 'a BE domestic parcel' ),
+			'BE to NL evening'           => array( array( 'origin' => 'BE', 'delivery_window' => 'evening' ), 'an evening slot from a BE store' ),
+			'BE domestic morning'        => array( array( 'origin' => 'BE', 'destination' => 'BE', 'delivery_window' => 'morning', 'has_contact' => true ), 'a morning slot from a BE store' ),
 			// Identical to the eligible happy path except for the one flag under test.
 			// Leaving the other mapped keys out would let the shipmentType check reject
 			// this row first, so has_v4_equivalent itself would never be exercised.

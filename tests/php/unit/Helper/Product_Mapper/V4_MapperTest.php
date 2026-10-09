@@ -21,8 +21,8 @@ use PostNLWooCommerce\Tests\UnitTestCase;
  *
  * Coverage:
  *  - Total row count = 89 (from provider data and from runtime calls)
- *  - has_v4_equivalent true  count = 78 (provider + runtime)
- *  - has_v4_equivalent false count = 13 (provider + runtime)
+ *  - has_v4_equivalent true  count = 88 (provider + runtime)
+ *  - has_v4_equivalent false count = 3 (provider + runtime)
  *  - All v4_mapped rows: expected shipmentType / services / deliveryLocation / internationalShipmentData
  *  - All legacy_only rows: reason = not_yet_available_in_v4
  *  - All needs_confirmation rows: reason = needs_confirmation
@@ -51,7 +51,7 @@ class V4_MapperTest extends UnitTestCase {
 	}
 
 	/**
-	 * @testdox Provider expected data: has_v4_equivalent true count = 78
+	 * @testdox Provider expected data: has_v4_equivalent true count = 88
 	 */
 	public function test_provider_v4_equivalent_true_count(): void {
 		$count = 0;
@@ -60,11 +60,11 @@ class V4_MapperTest extends UnitTestCase {
 				$count++;
 			}
 		}
-		$this->assertSame( 78, $count, 'Exactly 78 rows must be marked has_v4_equivalent=true.' );
+		$this->assertSame( 88, $count, 'Exactly 88 rows must be marked has_v4_equivalent=true.' );
 	}
 
 	/**
-	 * @testdox Provider expected data: has_v4_equivalent false count = 13
+	 * @testdox Provider expected data: has_v4_equivalent false count = 3
 	 */
 	public function test_provider_v4_equivalent_false_count(): void {
 		$count = 0;
@@ -73,7 +73,7 @@ class V4_MapperTest extends UnitTestCase {
 				$count++;
 			}
 		}
-		$this->assertSame( 13, $count, 'Exactly 13 rows must be marked has_v4_equivalent=false.' );
+		$this->assertSame( 3, $count, 'Exactly 3 rows must be marked has_v4_equivalent=false.' );
 	}
 
 	// =========================================================================
@@ -81,7 +81,7 @@ class V4_MapperTest extends UnitTestCase {
 	// =========================================================================
 
 	/**
-	 * @testdox Runtime: V4_Mapper::has_v4_equivalent() returns true for exactly 78 provider inputs
+	 * @testdox Runtime: V4_Mapper::has_v4_equivalent() returns true for exactly 88 provider inputs
 	 */
 	public function test_runtime_v4_equivalent_true_count(): void {
 		$count = 0;
@@ -90,11 +90,11 @@ class V4_MapperTest extends UnitTestCase {
 				$count++;
 			}
 		}
-		$this->assertSame( 78, $count );
+		$this->assertSame( 88, $count );
 	}
 
 	/**
-	 * @testdox Runtime: V4_Mapper::has_v4_equivalent() returns false for exactly 13 provider inputs
+	 * @testdox Runtime: V4_Mapper::has_v4_equivalent() returns false for exactly 3 provider inputs
 	 */
 	public function test_runtime_v4_equivalent_false_count(): void {
 		$count = 0;
@@ -103,7 +103,7 @@ class V4_MapperTest extends UnitTestCase {
 				$count++;
 			}
 		}
-		$this->assertSame( 13, $count );
+		$this->assertSame( 3, $count );
 	}
 
 	// =========================================================================
@@ -111,20 +111,10 @@ class V4_MapperTest extends UnitTestCase {
 	// =========================================================================
 
 	/**
-	 * @testdox NOT_YET_AVAILABLE_CODES contains exactly 8 entries
+	 * @testdox NOT_YET_AVAILABLE_CODES contains exactly 3 entries
 	 */
 	public function test_not_yet_available_codes_count(): void {
-		$this->assertCount( 8, V4_Mapper::NOT_YET_AVAILABLE_CODES );
-	}
-
-	/**
-	 * @testdox NOT_YET_AVAILABLE_CODES contains all 9 required codes
-	 */
-	public function test_not_yet_available_codes_contains_all_required(): void {
-		$required = array( '1175', '3574', '4960', '4961', '4962', '4963', '4965', '4983' );
-		foreach ( $required as $code ) {
-			$this->assertContains( $code, V4_Mapper::NOT_YET_AVAILABLE_CODES );
-		}
+		$this->assertCount( 3, V4_Mapper::NOT_YET_AVAILABLE_CODES );
 	}
 
 	/**
@@ -235,16 +225,16 @@ class V4_MapperTest extends UnitTestCase {
 		$result = V4_Mapper::map(
 			array(
 				'origin'              => 'BE',
-				'destination'         => 'BE',
+				'destination'         => 'NL',
 				'flow'                => 'delivery_day',
-				'options'             => array(),
-				'legacy_product_code' => '4961',
+				'options'             => array( 'id_check', 'only_home_address', 'signature_on_delivery' ),
+				'legacy_product_code' => '4895',
 			)
 		);
 
 		$this->assertFalse( $result['has_v4_equivalent'] );
-		$this->assertSame( V4_Mapper::REASON_NOT_YET_AVAILABLE, $result['legacy_only_reason'] );
-		$this->assertSame( '4961', $result['legacy_product_code'] );
+		$this->assertSame( V4_Mapper::REASON_NEEDS_CONFIRMATION, $result['legacy_only_reason'] );
+		$this->assertSame( '4895', $result['legacy_product_code'] );
 	}
 
 	/**
@@ -318,12 +308,12 @@ class V4_MapperTest extends UnitTestCase {
 	}
 
 	/**
-	 * @testdox has_v4_equivalent() returns false for a not_yet_available combination
+	 * @testdox has_v4_equivalent() returns false for an unknown combination
 	 */
-	public function test_has_v4_equivalent_returns_false_for_not_yet_available(): void {
+	public function test_has_v4_equivalent_returns_false_for_unknown_combination(): void {
 		$this->assertFalse(
 			V4_Mapper::has_v4_equivalent(
-				array( 'origin' => 'BE', 'destination' => 'BE', 'flow' => 'delivery_day', 'options' => array() )
+				array( 'origin' => 'BE', 'destination' => 'BE', 'flow' => 'delivery_day', 'options' => array( 'letterbox' ) )
 			)
 		);
 	}
@@ -334,7 +324,7 @@ class V4_MapperTest extends UnitTestCase {
 	public function test_has_v4_equivalent_returns_false_for_needs_confirmation(): void {
 		$this->assertFalse(
 			V4_Mapper::has_v4_equivalent(
-				array( 'origin' => 'BE', 'destination' => 'EU', 'flow' => 'delivery_day', 'options' => array( 'mailboxpacket' ) )
+				array( 'origin' => 'BE', 'destination' => 'NL', 'flow' => 'delivery_day', 'options' => array( 'id_check', 'only_home_address', 'signature_on_delivery' ) )
 			)
 		);
 	}
@@ -437,7 +427,7 @@ class V4_MapperTest extends UnitTestCase {
 	}
 
 	/**
-	 * @testdox EU/ROW parcels (4907/4909) and NL packets map to V4 with a bundle; BE packets and international pickup stay Legacy-only
+	 * @testdox EU/ROW parcels (4907/4909) and packets map to V4 with a bundle; international pickup stays Legacy-only
 	 */
 	public function test_international_parcels_map_to_v4_with_bundle(): void {
 		$parcel_codes = array( '4907', '4909' );
@@ -458,10 +448,10 @@ class V4_MapperTest extends UnitTestCase {
 			$label  = sprintf( '%s→%s [%s]', $combination['origin'], $combination['destination'], implode( ',', $combination['options'] ) ?: '(base)' );
 
 			$is_parcel = 'delivery_day' === $combination['flow'] && in_array( $result['legacy_product_code'], $parcel_codes, true );
-			$is_packet = 'NL' === $combination['origin'] && isset( $packet_types[ $result['legacy_product_code'] ] );
+			$is_packet = isset( $packet_types[ $result['legacy_product_code'] ] );
 
 			if ( $is_packet ) {
-				$this->assertTrue( $result['has_v4_equivalent'], "NL packet must map to V4: {$label}" );
+				$this->assertTrue( $result['has_v4_equivalent'], "Packet must map to V4: {$label}" );
 				$this->assertSame( $packet_types[ $result['legacy_product_code'] ], $result['shipmentType'], $label );
 				$this->assertContains( $result['internationalShipmentData']['bundle'] ?? '', array( 'untracked', 'track_trace', 'insured' ), $label );
 			} elseif ( $is_parcel ) {
@@ -470,25 +460,21 @@ class V4_MapperTest extends UnitTestCase {
 				$this->assertArrayHasKey( 'bundle', $result['internationalShipmentData'], "International parcel must carry a bundle: {$label}" );
 				$this->assertContains( $result['internationalShipmentData']['bundle'], array( 'track_trace', 'insured', 'insured_plus' ), $label );
 			} else {
-				$this->assertFalse( $result['has_v4_equivalent'], "BE packets and international pickup must stay Legacy-only: {$label}" );
+				$this->assertFalse( $result['has_v4_equivalent'], "International pickup must stay Legacy-only: {$label}" );
 			}
 		}
 	}
 
 	/**
-	 * @testdox Load-bearing guard: every combination resolving to a NOT_YET_AVAILABLE code returns REASON_NOT_YET_AVAILABLE
+	 * @testdox No combination that maps to V4 resolves to a NOT_YET_AVAILABLE code
 	 */
-	public function test_not_yet_available_guard_is_load_bearing(): void {
-		$asserted = 0;
+	public function test_no_v4_row_carries_a_not_yet_available_code(): void {
 		foreach ( self::v1_combinations() as $combination ) {
 			$result = V4_Mapper::map( $combination );
-			if ( in_array( $result['legacy_product_code'], V4_Mapper::NOT_YET_AVAILABLE_CODES, true ) ) {
-				$this->assertFalse( $result['has_v4_equivalent'] );
-				$this->assertSame( V4_Mapper::REASON_NOT_YET_AVAILABLE, $result['legacy_only_reason'] );
-				$asserted++;
+			if ( $result['has_v4_equivalent'] ) {
+				$this->assertNotContains( $result['legacy_product_code'], V4_Mapper::NOT_YET_AVAILABLE_CODES );
 			}
 		}
-		$this->assertGreaterThan( 0, $asserted, 'Expected at least one not-yet-available code in the matrix.' );
 	}
 
 	// =========================================================================
@@ -931,30 +917,46 @@ class V4_MapperTest extends UnitTestCase {
 			// BE → BE / delivery_day  (5 rows — all not_yet_available)
 			// -----------------------------------------------------------------
 
-			'BE→BE/dd row 61: (base) not_yet_available'
+			'BE→BE/dd row 61: (base)'
 				=> array(
 					array( 'origin' => 'BE', 'destination' => 'BE', 'flow' => 'delivery_day', 'options' => array() ),
-					$leg( 61, '4961', $nya ),
+					$v4( 61, '4961', 'parcel' ),
 				),
-			'BE→BE/dd row 62: [only_home_address] not_yet_available'
+			'BE→BE/dd row 62: [only_home_address]'
 				=> array(
 					array( 'origin' => 'BE', 'destination' => 'BE', 'flow' => 'delivery_day', 'options' => array( 'only_home_address' ) ),
-					$leg( 62, '4960', $nya ),
+					$v4( 62, '4960', 'parcel', array( 'statedAddressOnly' => true ) ),
 				),
-			'BE→BE/dd row 63: [signature_on_delivery] not_yet_available'
+			'BE→BE/dd row 63: [signature_on_delivery]'
 				=> array(
 					array( 'origin' => 'BE', 'destination' => 'BE', 'flow' => 'delivery_day', 'options' => array( 'signature_on_delivery' ) ),
-					$leg( 63, '4963', $nya ),
+					$v4( 63, '4963', 'parcel', array( 'deliveryConfirmation' => 'signature' ) ),
 				),
-			'BE→BE/dd row 64: [signature_on_delivery,only_home_address] not_yet_available'
+			'BE→BE/dd row 64: [signature_on_delivery,only_home_address]'
 				=> array(
 					array( 'origin' => 'BE', 'destination' => 'BE', 'flow' => 'delivery_day', 'options' => array( 'signature_on_delivery', 'only_home_address' ) ),
-					$leg( 64, '4962', $nya ),
+					$v4(
+						64,
+						'4962',
+						'parcel',
+						array(
+							'deliveryConfirmation' => 'signature',
+							'statedAddressOnly'    => true,
+						)
+					),
 				),
-			'BE→BE/dd row 65: [insured_shipping,only_home_address] not_yet_available'
+			'BE→BE/dd row 65: [insured_shipping,only_home_address]'
 				=> array(
 					array( 'origin' => 'BE', 'destination' => 'BE', 'flow' => 'delivery_day', 'options' => array( 'insured_shipping', 'only_home_address' ) ),
-					$leg( 65, '4965', $nya ),
+					$v4(
+						65,
+						'4965',
+						'parcel',
+						array(
+							'insuredValue'      => '<order_total>',
+							'statedAddressOnly' => true,
+						)
+					),
 				),
 
 			// -----------------------------------------------------------------
@@ -1054,27 +1056,27 @@ class V4_MapperTest extends UnitTestCase {
 			'BE→EU/dd row 81: [mailboxpacket]'
 				=> array(
 					array( 'origin' => 'BE', 'destination' => 'EU', 'flow' => 'delivery_day', 'options' => array( 'mailboxpacket' ) ),
-					$leg( 81, '6440', $nc ),
+					$v4( 81, '6440', 'letterbox', array(), array(), $untracked ),
 				),
 			'BE→EU/dd row 82: [track_and_trace,mailboxpacket]'
 				=> array(
 					array( 'origin' => 'BE', 'destination' => 'EU', 'flow' => 'delivery_day', 'options' => array( 'track_and_trace', 'mailboxpacket' ) ),
-					$leg( 82, '6972', $nc ),
+					$v4( 82, '6972', 'letterbox', array(), array(), $track_trace ),
 				),
 			'BE→EU/dd row 83: [packets]'
 				=> array(
 					array( 'origin' => 'BE', 'destination' => 'EU', 'flow' => 'delivery_day', 'options' => array( 'packets' ) ),
-					$leg( 83, '6405', $nc ),
+					$v4( 83, '6405', 'packet', array(), array(), $untracked ),
 				),
 			'BE→EU/dd row 84: [track_and_trace,packets]'
 				=> array(
 					array( 'origin' => 'BE', 'destination' => 'EU', 'flow' => 'delivery_day', 'options' => array( 'track_and_trace', 'packets' ) ),
-					$leg( 84, '6350', $nc ),
+					$v4( 84, '6350', 'packet', array(), array(), $track_trace ),
 				),
 			'BE→EU/dd row 85: [track_and_trace,packets,insured_shipping]'
 				=> array(
 					array( 'origin' => 'BE', 'destination' => 'EU', 'flow' => 'delivery_day', 'options' => array( 'track_and_trace', 'packets', 'insured_shipping' ) ),
-					$leg( 85, '6906', $nc ),
+					$v4( 85, '6906', 'packet', array(), array(), $insured ),
 				),
 
 			// -----------------------------------------------------------------

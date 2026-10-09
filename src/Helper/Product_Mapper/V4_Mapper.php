@@ -23,7 +23,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  *       'legacy_product_code' => optional string,
  *   )
  *
- * Runtime outcomes: has_v4_equivalent = true (78 rows) or false (13 rows).
+ * Runtime outcomes: has_v4_equivalent = true (88 rows) or false (3 rows).
  * needs_confirmation rows behave as Legacy-only at runtime until promoted to v4_mapped.
  *
  * Domestic NL id_check (18+) parcels 3438 and 3443 map to V4 via a bare minimalAgeCheck
@@ -39,7 +39,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * EU/ROW parcels (4907/4909) map to V4 with an InternationalShipmentData bundle
  * (see SDK_SERVICES_BUNDLE_GAP). Packets from NL map to ShipmentType packet and boxable
  * (mailbox) packets to letterbox, each with its bundle, as in PostNL's V4 request examples.
- * BE-origin packets and international pickup stay Legacy-only.
+ * BE to EU packets map the same way. International pickup stays Legacy-only.
  *
  * Source: PostNL Product Overview documentation.
  */
@@ -48,11 +48,6 @@ class V4_Mapper {
 	const NOT_YET_AVAILABLE_CODES = array(
 		'1175',
 		'3574',
-		'4960',
-		'4961',
-		'4962',
-		'4963',
-		'4965',
 		'4983',
 	);
 
@@ -446,11 +441,27 @@ class V4_Mapper {
 			'BE' => array(
 				'BE'  => array(
 					'delivery_day'  => array(
-						'(base)'                => self::legacy_result( 61, '4961', $nya ),
-						'only_home_address'     => self::legacy_result( 62, '4960', $nya ),
-						'signature_on_delivery' => self::legacy_result( 63, '4963', $nya ),
-						'only_home_address+signature_on_delivery' => self::legacy_result( 64, '4962', $nya ),
-						'insured_shipping+only_home_address' => self::legacy_result( 65, '4965', $nya ),
+						'(base)'                => self::v4_result( 61, '4961', 'parcel' ),
+						'only_home_address'     => self::v4_result( 62, '4960', 'parcel', array( 'statedAddressOnly' => true ) ),
+						'signature_on_delivery' => self::v4_result( 63, '4963', 'parcel', array( 'deliveryConfirmation' => 'signature' ) ),
+						'only_home_address+signature_on_delivery' => self::v4_result(
+							64,
+							'4962',
+							'parcel',
+							array(
+								'deliveryConfirmation' => 'signature',
+								'statedAddressOnly'    => true,
+							)
+						),
+						'insured_shipping+only_home_address' => self::v4_result(
+							65,
+							'4965',
+							'parcel',
+							array(
+								'insuredValue'      => '<order_total>',
+								'statedAddressOnly' => true,
+							)
+						),
 					),
 					'pickup_points' => array(
 						'(base)'           => self::v4_result( 66, '4880', 'parcel', array(), $pickup ),
@@ -504,11 +515,11 @@ class V4_Mapper {
 						'track_and_trace'                  => self::v4_result( 78, '4907', 'parcel', array(), array(), $track_trace ),
 						'insured_shipping+track_and_trace' => self::v4_result( 79, '4907', 'parcel', array(), array(), $insured ),
 						'insured_plus+track_and_trace'     => self::v4_result( 80, '4907', 'parcel', array(), array(), $insured_plus ),
-						'mailboxpacket'                    => self::legacy_result( 81, '6440', $nc ),
-						'mailboxpacket+track_and_trace'    => self::legacy_result( 82, '6972', $nc ),
-						'packets'                          => self::legacy_result( 83, '6405', $nc ),
-						'packets+track_and_trace'          => self::legacy_result( 84, '6350', $nc ),
-						'insured_shipping+packets+track_and_trace' => self::legacy_result( 85, '6906', $nc ),
+						'mailboxpacket'                    => self::v4_result( 81, '6440', 'letterbox', array(), array(), $untracked ),
+						'mailboxpacket+track_and_trace'    => self::v4_result( 82, '6972', 'letterbox', array(), array(), $track_trace ),
+						'packets'                          => self::v4_result( 83, '6405', 'packet', array(), array(), $untracked ),
+						'packets+track_and_trace'          => self::v4_result( 84, '6350', 'packet', array(), array(), $track_trace ),
+						'insured_shipping+packets+track_and_trace' => self::v4_result( 85, '6906', 'packet', array(), array(), $insured ),
 					),
 				),
 				'ROW' => array(

@@ -17,11 +17,11 @@ use PostNLWooCommerce\Helper\Product_Mapper\V4_Mapper;
 use PostNLWooCommerce\Tests\UnitTestCase;
 
 /**
- * Exhaustive tests for V4_Mapper, driven by the 89-row combination matrix.
+ * Exhaustive tests for V4_Mapper, driven by the 91-row combination matrix.
  *
  * Coverage:
  *  - Total row count = 89 (from provider data and from runtime calls)
- *  - has_v4_equivalent true  count = 61 (provider + runtime)
+ *  - has_v4_equivalent true  count = 63 (provider + runtime)
  *  - has_v4_equivalent false count = 28 (provider + runtime)
  *  - All v4_mapped rows: expected shipmentType / services / deliveryLocation / internationalShipmentData
  *  - All legacy_only rows: reason = not_yet_available_in_v4
@@ -33,7 +33,7 @@ use PostNLWooCommerce\Tests\UnitTestCase;
  *    explicit Legacy-only reason, never REASON_UNKNOWN_COMBINATION
  *  - SDK bundle gap marker and the load-bearing not-yet-available guard
  *
- * Source: PostNL Product Overview documentation; the 89 rows mirror V1_Mapper::products_data().
+ * Source: PostNL Product Overview documentation; rows 1-89 mirror V1_Mapper::products_data(); rows 90-91 cover the non-EU insured setting V1 resolves to its base product.
  *
  * @covers \PostNLWooCommerce\Helper\Product_Mapper\V4_Mapper
  */
@@ -44,14 +44,14 @@ class V4_MapperTest extends UnitTestCase {
 	// =========================================================================
 
 	/**
-	 * @testdox combination_matrix_provider() covers exactly 89 rows
+	 * @testdox combination_matrix_provider() covers exactly 91 rows
 	 */
 	public function test_total_covered_rows(): void {
-		$this->assertCount( 89, self::combination_matrix_provider() );
+		$this->assertCount( 91, self::combination_matrix_provider() );
 	}
 
 	/**
-	 * @testdox Provider expected data: has_v4_equivalent true count = 61
+	 * @testdox Provider expected data: has_v4_equivalent true count = 63
 	 */
 	public function test_provider_v4_equivalent_true_count(): void {
 		$count = 0;
@@ -60,7 +60,7 @@ class V4_MapperTest extends UnitTestCase {
 				$count++;
 			}
 		}
-		$this->assertSame( 61, $count, 'Exactly 61 rows must be marked has_v4_equivalent=true.' );
+		$this->assertSame( 63, $count, 'Exactly 63 rows must be marked has_v4_equivalent=true.' );
 	}
 
 	/**
@@ -81,7 +81,7 @@ class V4_MapperTest extends UnitTestCase {
 	// =========================================================================
 
 	/**
-	 * @testdox Runtime: V4_Mapper::has_v4_equivalent() returns true for exactly 61 provider inputs
+	 * @testdox Runtime: V4_Mapper::has_v4_equivalent() returns true for exactly 63 provider inputs
 	 */
 	public function test_runtime_v4_equivalent_true_count(): void {
 		$count = 0;
@@ -90,7 +90,7 @@ class V4_MapperTest extends UnitTestCase {
 				$count++;
 			}
 		}
-		$this->assertSame( 61, $count );
+		$this->assertSame( 63, $count );
 	}
 
 	/**
@@ -482,7 +482,7 @@ class V4_MapperTest extends UnitTestCase {
 	}
 
 	// =========================================================================
-	// Per-row assertions (data provider — all 89 rows)
+	// Per-row assertions (data provider — all 91 rows)
 	// =========================================================================
 
 	/**
@@ -516,7 +516,7 @@ class V4_MapperTest extends UnitTestCase {
 	}
 
 	// =========================================================================
-	// Data provider — all 89 rows
+	// Data provider — all 91 rows
 	// =========================================================================
 
 	/**
@@ -875,6 +875,11 @@ class V4_MapperTest extends UnitTestCase {
 					array( 'origin' => 'NL', 'destination' => 'ROW', 'flow' => 'delivery_day', 'options' => array( 'track_and_trace', 'insured_plus' ) ),
 					$v4( 54, '4909', 'parcel', array(), array(), $insured_plus ),
 				),
+			'NL→ROW/dd row 90: [track_and_trace,insured_shipping]'
+				=> array(
+					array( 'origin' => 'NL', 'destination' => 'ROW', 'flow' => 'delivery_day', 'options' => array( 'track_and_trace', 'insured_shipping' ) ),
+					$v4( 90, '4909', 'parcel', array(), array(), $insured ),
+				),
 			'NL→ROW/dd row 55: [mailboxpacket]'
 				=> array(
 					array( 'origin' => 'NL', 'destination' => 'ROW', 'flow' => 'delivery_day', 'options' => array( 'mailboxpacket' ) ),
@@ -1079,6 +1084,11 @@ class V4_MapperTest extends UnitTestCase {
 				=> array(
 					array( 'origin' => 'BE', 'destination' => 'ROW', 'flow' => 'delivery_day', 'options' => array( 'track_and_trace', 'insured_plus' ) ),
 					$v4( 88, '4909', 'parcel', array(), array(), $insured_plus ),
+				),
+			'BE→ROW/dd row 91: [track_and_trace,insured_shipping]'
+				=> array(
+					array( 'origin' => 'BE', 'destination' => 'ROW', 'flow' => 'delivery_day', 'options' => array( 'track_and_trace', 'insured_shipping' ) ),
+					$v4( 91, '4909', 'parcel', array(), array(), $insured ),
 				),
 
 		);

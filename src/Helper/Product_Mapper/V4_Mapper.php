@@ -23,7 +23,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  *       'legacy_product_code' => optional string,
  *   )
  *
- * Runtime outcomes: has_v4_equivalent = true (61 rows) or false (28 rows).
+ * Runtime outcomes: has_v4_equivalent = true (63 rows) or false (28 rows).
  * needs_confirmation rows behave as Legacy-only at runtime until promoted to v4_mapped.
  *
  * Domestic NL id_check (18+) parcels 3438 and 3443 map to V4 via a bare minimalAgeCheck
@@ -180,7 +180,7 @@ class V4_Mapper {
 	}
 
 	/**
-	 * 89-row combination matrix indexed for O(1) lookup.
+	 * 91-row combination matrix indexed for O(1) lookup.
 	 *
 	 * @return array
 	 */
@@ -428,6 +428,8 @@ class V4_Mapper {
 						'(base)'                        => self::v4_result( 52, '4909', 'parcel', array(), array(), $track_trace ),
 						'track_and_trace'               => self::v4_result( 53, '4909', 'parcel', array(), array(), $track_trace ),
 						'insured_plus+track_and_trace'  => self::v4_result( 54, '4909', 'parcel', array(), array(), $insured_plus ),
+						// Not a V1 matrix row: V1 resolves the "Parcel non-EU Insured" setting to the base 4909, whose option 004/015 is insured.
+						'insured_shipping+track_and_trace' => self::v4_result( 90, '4909', 'parcel', array(), array(), $insured ),
 						'mailboxpacket'                 => self::legacy_result( 55, '6440', $nc ),
 						'mailboxpacket+track_and_trace' => self::legacy_result( 56, '6972', $nc ),
 						'packets'                       => self::legacy_result( 57, '6405', $nc ),
@@ -512,6 +514,7 @@ class V4_Mapper {
 						'(base)'                       => self::v4_result( 86, '4909', 'parcel', array(), array(), $track_trace ),
 						'track_and_trace'              => self::v4_result( 87, '4909', 'parcel', array(), array(), $track_trace ),
 						'insured_plus+track_and_trace' => self::v4_result( 88, '4909', 'parcel', array(), array(), $insured_plus ),
+						'insured_shipping+track_and_trace' => self::v4_result( 91, '4909', 'parcel', array(), array(), $insured ),
 					),
 				),
 			),

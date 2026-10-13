@@ -569,6 +569,7 @@ class Service extends Order_Base implements Label_Service_Interface {
 				'postcode'         => $item_info->shipper['postcode'] ?? '',
 				'city'             => $item_info->shipper['city'] ?? '',
 				'country'          => $item_info->shipper['country'] ?? '',
+				'email'            => $this->sender_email( $item_info ),
 			),
 			'receiver'      => array(
 				'company'          => $item_info->receiver['company'] ?? '',
@@ -602,6 +603,37 @@ class Service extends Order_Base implements Label_Service_Interface {
 				(string) ( $item_info->shipment['printer_type'] ?? '' )
 			),
 		);
+	}
+
+	/**
+	 * The shipping confirmation email to send as the sender contact, or '' to omit it.
+	 *
+	 * PostNL caps the email at 50 characters. An address that is longer or invalid is
+	 * left out so the label still goes through; the warning leaves the address out of
+	 * the log.
+	 *
+	 * @param Shipping\Item_Info $item_info Parsed legacy item info.
+	 * @return string
+	 */
+	private function sender_email( Shipping\Item_Info $item_info ): string {
+		$email = trim( (string) ( $item_info->shipper['shipping_confirmation_email'] ?? '' ) );
+
+		if ( '' === $email ) {
+			return '';
+		}
+
+		if ( strlen( $email ) > 50 || ! is_email( $email ) ) {
+			$this->logger->warning(
+				sprintf(
+					'V4 label for order "%s": the shipping confirmation email is invalid or longer than 50 characters; the label is sent without a sender email.',
+					(string) ( $item_info->shipment['order_number'] ?? '' )
+				)
+			);
+
+			return '';
+		}
+
+		return $email;
 	}
 
 	/**

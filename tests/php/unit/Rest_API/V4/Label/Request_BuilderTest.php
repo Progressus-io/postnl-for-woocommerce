@@ -115,6 +115,23 @@ class Request_BuilderTest extends UnitTestCase {
 	}
 
 	/**
+	 * @testdox build() sends the sender email as a contact with no name fields.
+	 */
+	public function test_sender_email_is_sent_as_an_email_only_contact(): void {
+		$fields                    = $this->domestic_fields();
+		$fields['sender']['email'] = 'shop@example.com';
+
+		$this->assertSame( array( 'email' => 'shop@example.com' ), $this->payload( $fields )['sender']['contact'] );
+	}
+
+	/**
+	 * @testdox build() omits the sender contact without a sender email.
+	 */
+	public function test_sender_contact_is_omitted_without_an_email(): void {
+		$this->assertArrayNotHasKey( 'contact', $this->payload( $this->domestic_fields() )['sender'] );
+	}
+
+	/**
 	 * @testdox build() sends the receiver type when the caller supplies one.
 	 */
 	public function test_receiver_type_is_sent_when_given(): void {

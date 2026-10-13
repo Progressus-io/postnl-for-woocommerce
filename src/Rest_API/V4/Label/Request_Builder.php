@@ -73,7 +73,8 @@ class Request_Builder {
 	 *     Flat, pre-parsed values sourced from the legacy Shipping\Item_Info.
 	 *
 	 *     @type array  $sender        Store address: company, street, house_number,
-	 *                                  house_number_ext, postcode, city, country.
+	 *                                  house_number_ext, postcode, city, country, plus an
+	 *                                  optional email sent as the sender contact.
 	 *     @type array  $receiver      Recipient: company, first_name, last_name, street,
 	 *                                  house_number, house_number_ext, postcode, city,
 	 *                                  country, email, phone.
@@ -122,8 +123,11 @@ class Request_Builder {
 		$receiver_fields = $fields['receiver'] ?? array();
 		$label_fields    = $fields['label'] ?? array();
 
-		$sender = ShipmentParty::asSender(
-			address: self::address( $sender_fields )
+		// asSender() takes no contact, and the sender contact carries the email only.
+		$sender_email = self::maybe_null( (string) ( $sender_fields['email'] ?? '' ) );
+		$sender       = new ShipmentParty(
+			address: self::address( $sender_fields ),
+			contact: null === $sender_email ? null : new Contact( email: $sender_email )
 		);
 
 		$receiver = ShipmentParty::asReceiver(

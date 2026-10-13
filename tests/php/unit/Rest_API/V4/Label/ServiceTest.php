@@ -1335,6 +1335,43 @@ class ServiceTest extends UnitTestCase {
 		$this->assertArrayNotHasKey( 'customs', $fields['international'] );
 	}
 
+	// ── Sender email ─────────────────────────────────────────────────────────
+
+	/**
+	 * @testdox The shipping confirmation email is sent as the sender email, and left out when empty, invalid or over 50 characters
+	 *
+	 * @testWith ["shop@example.com", "shop@example.com", false]
+	 *           ["", "", false]
+	 *           ["not-an-email", "", true]
+	 *           ["a-very-long-mailbox-name-for-the-shop@example-domain.com", "", true]
+	 */
+	public function test_sender_email_comes_from_the_confirmation_email_setting( string $setting, string $expected, bool $warns ): void {
+		Functions\when( 'is_email' )->alias(
+			static fn( string $email ) => false !== filter_var( $email, FILTER_VALIDATE_EMAIL ) ? $email : false
+		);
+
+		$logger    = new Spy_Logger();
+		$item_info = new Fake_Shipping_Item_Info( array( 'order_number' => 'ORDER-1001' ) );
+
+		$item_info->shipper['shipping_confirmation_email'] = $setting;
+
+		$fields   = $this->extract_fields(
+			$this->service_with_logger( $logger ),
+			$item_info,
+			array( 'shipmentType' => 'parcel', 'services' => array() ),
+			array()
+		);
+		$warnings = $this->warning_records( $logger );
+
+		$this->assertSame( $expected, $fields['sender']['email'] );
+		$this->assertCount( $warns ? 1 : 0, $warnings );
+
+		if ( $warns ) {
+			$this->assertStringContainsString( 'ORDER-1001', $warnings[0]['message'] );
+			$this->assertStringNotContainsString( $setting, $warnings[0]['message'], 'The email address must not reach the log.' );
+		}
+	}
+
 	// ── Receiver type ────────────────────────────────────────────────────────
 
 	/**

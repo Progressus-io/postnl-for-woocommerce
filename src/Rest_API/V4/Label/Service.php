@@ -583,6 +583,8 @@ class Service extends Order_Base implements Label_Service_Interface {
 				'email'            => $item_info->shipment['email'] ?? '',
 				'phone'            => $item_info->shipment['phone'] ?? '',
 			),
+			// PostNL only reads the receiver type on Parcel EU.
+			'receiver_type' => '4907' === (string) ( $mapped['legacy_product_code'] ?? '' ) ? 'consumer' : '',
 			'shipment_type' => $mapped['shipmentType'] ?? 'parcel',
 			'weight_gr'     => (int) ( $item_info->shipment['total_weight'] ?? 0 ),
 			'reference'     => (string) ( $item_info->shipment['order_number'] ?? '' ),

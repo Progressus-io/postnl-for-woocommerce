@@ -1335,6 +1335,29 @@ class ServiceTest extends UnitTestCase {
 		$this->assertArrayNotHasKey( 'customs', $fields['international'] );
 	}
 
+	// ── Receiver type ────────────────────────────────────────────────────────
+
+	/**
+	 * @testdox The receiver type is consumer on Parcel EU and omitted on every other product
+	 *
+	 * @testWith ["4907", "consumer"]
+	 *           ["4909", ""]
+	 *           ["3085", ""]
+	 */
+	public function test_receiver_type_is_set_on_parcel_eu_only( string $product_code, string $expected ): void {
+		$mapped                        = $this->international_mapped();
+		$mapped['legacy_product_code'] = $product_code;
+
+		$fields = $this->extract_fields(
+			$this->service_with_logger( new Spy_Logger() ),
+			$this->international_item_info( 'EUR', 'NL' ),
+			$mapped,
+			array()
+		);
+
+		$this->assertSame( $expected, $fields['receiver_type'] );
+	}
+
 	// ── Unmappable international enum values ─────────────────────────────────
 
 	/**

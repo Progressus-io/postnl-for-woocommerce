@@ -77,6 +77,8 @@ class Request_Builder {
 	 *     @type array  $receiver      Recipient: company, first_name, last_name, street,
 	 *                                  house_number, house_number_ext, postcode, city,
 	 *                                  country, email, phone.
+	 *     @type string $receiver_type Optional ReceiverType value ('consumer'|'business');
+	 *                                  omitted when empty. PostNL reads it on EU parcels only.
 	 *     @type string $shipment_type V4 ShipmentType value, e.g. 'parcel'.
 	 *     @type int    $weight_gr     Total shipment weight in grams.
 	 *     @type string $reference     Merchant shipment reference (order number).
@@ -127,7 +129,7 @@ class Request_Builder {
 		$receiver = ShipmentParty::asReceiver(
 			address: self::address( $receiver_fields ),
 			contact: self::contact( $receiver_fields ),
-			receiverType: ReceiverType::Consumer
+			receiverType: ReceiverType::tryFrom( (string) ( $fields['receiver_type'] ?? '' ) )
 		);
 
 		$label_settings = new LabelSettings(

@@ -104,7 +104,7 @@ class Request_BuilderTest extends UnitTestCase {
 		$this->assertSame( 'buyer@example.com', $payload['receiver']['contact']['email'] );
 		$this->assertSame( 'Jan', $payload['receiver']['contact']['firstName'], 'The given name must not land in lastName.' );
 		$this->assertSame( 'Jansen', $payload['receiver']['contact']['lastName'], 'The family name must not land in firstName.' );
-		$this->assertSame( 'consumer', $payload['receiver']['type'] );
+		$this->assertArrayNotHasKey( 'type', $payload['receiver'], 'The receiver type is for Parcel EU only.' );
 
 		$this->assertSame( 'pdf', $payload['labelSettings']['outputType'] );
 		$this->assertSame( '200', $payload['labelSettings']['resolution'] );
@@ -112,6 +112,16 @@ class Request_BuilderTest extends UnitTestCase {
 		$this->assertSame( '3SDEVC1234567', $payload['items'][0]['barcode'] );
 		$this->assertSame( 'ORDER-1001', $payload['items'][0]['customerReferences']['shipmentReference'] );
 		$this->assertSame( 2000, $payload['items'][0]['dimensions']['weight'], 'Weight must be sent in grams.' );
+	}
+
+	/**
+	 * @testdox build() sends the receiver type when the caller supplies one.
+	 */
+	public function test_receiver_type_is_sent_when_given(): void {
+		$fields                  = $this->domestic_fields();
+		$fields['receiver_type'] = 'consumer';
+
+		$this->assertSame( 'consumer', $this->payload( $fields )['receiver']['type'] );
 	}
 
 	/**

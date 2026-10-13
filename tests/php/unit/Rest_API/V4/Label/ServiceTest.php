@@ -107,6 +107,11 @@ class ServiceTest extends UnitTestCase {
 				return true;
 			}
 
+			/**
+			 * Return label setting the return-barcode checks read.
+			 *
+			 * @return string
+			 */
 			public function get_return_shipment_and_labels() {
 				return $this->return_type;
 			}
@@ -1379,19 +1384,23 @@ class ServiceTest extends UnitTestCase {
 	}
 
 	/**
-	 * @testdox An order that would get a shipment & return barcode counts as having a return
+	 * @testdox An order that would get a return barcode counts as having a return, and one with returns off does not
 	 *
 	 * Return barcodes are only requested on the legacy path, so such an order must
-	 * not be labelled on V4 without one.
+	 * not be labelled on V4 without one. A store that never saved the return setting
+	 * reads as '', which legacy treats as asking for a return barcode.
+	 *
+	 * @testWith ["", true]
+	 *           ["none", false]
 	 */
-	public function test_a_shipment_and_return_order_has_a_return(): void {
-		Settings::get_instance()->return_type = 'shipping_return';
+	public function test_an_order_that_would_get_a_return_barcode_has_a_return( string $return_type, bool $has_return ): void {
+		Settings::get_instance()->return_type = $return_type;
 
 		$service = $this->service_with_logger( new Spy_Logger() );
 
 		$item_info = new Delivery_Window_Item_Info( array( 'shipping_product' => array( 'code' => '3085' ) ) );
 
-		$this->assertTrue( $this->gather_signals( $service, $item_info, array() )['has_return'] );
+		$this->assertSame( $has_return, $this->gather_signals( $service, $item_info, array() )['has_return'] );
 	}
 
 	/**

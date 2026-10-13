@@ -158,7 +158,7 @@ class Service extends Order_Base implements Label_Service_Interface {
 			return $this->create_label_pipeline( $post_data );
 		}
 
-		$fields         = $this->extract_fields( $item_info, $signals['mapped'], $post_data );
+		$fields         = $this->extract_fields( $item_info, $signals['mapped'], $post_data, $signals['destination'] );
 		$country_before = (string) ( $fields['receiver']['country'] ?? '' );
 
 		$fields['receiver'] = Request_Builder::apply_filtered_receiver(
@@ -529,10 +529,11 @@ class Service extends Order_Base implements Label_Service_Interface {
 	 *
 	 * @param Shipping\Item_Info $item_info Parsed legacy item info.
 	 * @param array              $mapped    V4_Mapper::map() result.
-	 * @param array              $post_data Original label post data.
+	 * @param array              $post_data   Original label post data.
+	 * @param string             $destination Shipping zone (NL|BE|EU|ROW).
 	 * @return array
 	 */
-	private function extract_fields( Shipping\Item_Info $item_info, array $mapped, array $post_data ): array {
+	private function extract_fields( Shipping\Item_Info $item_info, array $mapped, array $post_data, string $destination ): array {
 		$num_labels = (int) ( $item_info->backend_data['num_labels'] ?? 1 );
 
 		// Legacy caps the collo count it puts on the wire through the num_labels
@@ -594,7 +595,7 @@ class Service extends Order_Base implements Label_Service_Interface {
 			'services'      => $services,
 			'handover_date' => $this->resolve_handover_date( $item_info ),
 			'pickup_id'     => $this->resolve_pickup_location_id( $post_data ),
-			'international' => $this->extract_international( $item_info, $mapped ),
+			'international' => $this->extract_international( $item_info, $mapped, $destination ),
 			'label'         => Request_Builder::printer_type_to_label_settings(
 				(string) ( $item_info->shipment['printer_type'] ?? '' )
 			),
@@ -606,13 +607,16 @@ class Service extends Order_Base implements Label_Service_Interface {
 	 *
 	 * Returns an empty array for a domestic shipment — the mapper only carries an
 	 * internationalShipmentData hint (the service bundle) for EU/ROW parcels, so
-	 * its presence is what distinguishes the two.
+	 * its presence is what distinguishes the two. Customs is declared for ROW only:
+	 * V4 accepts EU and NL to BE shipments without it, and rejects an EU parcel
+	 * whose store HS code it cannot validate.
 	 *
-	 * @param Shipping\Item_Info $item_info Parsed legacy item info.
-	 * @param array              $mapped    V4_Mapper::map() result.
+	 * @param Shipping\Item_Info $item_info   Parsed legacy item info.
+	 * @param array              $mapped      V4_Mapper::map() result.
+	 * @param string             $destination Shipping zone (NL|BE|EU|ROW).
 	 * @return array
 	 */
-	private function extract_international( Shipping\Item_Info $item_info, array $mapped ): array {
+	private function extract_international( Shipping\Item_Info $item_info, array $mapped, string $destination ): array {
 		$international = $mapped['internationalShipmentData'] ?? array();
 
 		if ( empty( $international ) ) {
@@ -620,9 +624,12 @@ class Service extends Order_Base implements Label_Service_Interface {
 		}
 
 		$fields = array(
-			'bundle'  => (string) ( $international['bundle'] ?? '' ),
-			'customs' => $this->extract_customs( $item_info ),
+			'bundle' => (string) ( $international['bundle'] ?? '' ),
 		);
+
+		if ( 'ROW' === $destination ) {
+			$fields['customs'] = $this->extract_customs( $item_info );
+		}
 
 		$this->warn_unmappable_international( $fields, (string) ( $item_info->shipment['order_number'] ?? '' ) );
 

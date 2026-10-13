@@ -774,7 +774,8 @@ class ServiceTest extends UnitTestCase {
 	 *
 	 * @param Service            $service   Service under test.
 	 * @param Shipping\Item_Info $item_info Parsed legacy item info.
-	 * @param array              $post_data Label post data.
+	 * @param array              $post_data   Label post data.
+	 * @param string             $destination Shipping zone (NL|BE|EU|ROW).
 	 * @return array
 	 */
 	private function gather_signals( Service $service, Shipping\Item_Info $item_info, array $post_data ): array {
@@ -1294,6 +1295,46 @@ class ServiceTest extends UnitTestCase {
 		$this->assertArrayNotHasKey( 'partner_id', $labels['label'] );
 	}
 
+	// ── Customs scope ────────────────────────────────────────────────────────
+
+	/**
+	 * @testdox Customs is declared for a ROW shipment
+	 */
+	public function test_row_shipment_carries_customs(): void {
+		$fields = $this->extract_fields(
+			$this->service_with_logger( new Spy_Logger() ),
+			$this->international_item_info( 'EUR', 'NL' ),
+			$this->international_mapped(),
+			array(),
+			'ROW'
+		);
+
+		$this->assertSame( 'insured', $fields['international']['bundle'] );
+		$this->assertSame( '610910', $fields['international']['customs']['content'][0]['hs_code'] );
+	}
+
+	/**
+	 * @testdox EU and BE shipments keep the bundle but send no customs
+	 *
+	 * V4 rejects an EU parcel whose store HS code it cannot validate, and PostNL
+	 * only asks for customs outside the EU.
+	 *
+	 * @testWith ["EU"]
+	 *           ["BE"]
+	 */
+	public function test_eu_and_be_shipments_send_no_customs( string $destination ): void {
+		$fields = $this->extract_fields(
+			$this->service_with_logger( new Spy_Logger() ),
+			$this->international_item_info( 'EUR', 'NL' ),
+			$this->international_mapped(),
+			array(),
+			$destination
+		);
+
+		$this->assertSame( 'insured', $fields['international']['bundle'] );
+		$this->assertArrayNotHasKey( 'customs', $fields['international'] );
+	}
+
 	// ── Unmappable international enum values ─────────────────────────────────
 
 	/**
@@ -1313,7 +1354,8 @@ class ServiceTest extends UnitTestCase {
 			$service,
 			$this->international_item_info( 'HUF', 'nl' ),
 			$this->international_mapped(),
-			array()
+			array(),
+			'ROW'
 		);
 
 		$warnings = $this->warning_records( $logger );
@@ -1345,7 +1387,8 @@ class ServiceTest extends UnitTestCase {
 			$service,
 			$this->international_item_info( 'eur', 'Netherlands' ),
 			$this->international_mapped(),
-			array()
+			array(),
+			'ROW'
 		);
 
 		$warnings = $this->warning_records( $logger );
@@ -1372,7 +1415,8 @@ class ServiceTest extends UnitTestCase {
 			$service,
 			$this->international_item_info( 'eur', 'nl' ),
 			$this->international_mapped(),
-			array()
+			array(),
+			'ROW'
 		);
 
 		$this->assertSame( array(), $this->warning_records( $logger ), 'A value the builder maps fine must not be reported as unmappable.' );
@@ -1492,17 +1536,18 @@ class ServiceTest extends UnitTestCase {
 	 * test wants to look at. extract_fields() is a pure translation with no
 	 * collaborators, so nothing outside the class has a reason to reach it.
 	 *
-	 * @param Service            $service   Service under test.
-	 * @param Shipping\Item_Info $item_info Parsed legacy item info.
-	 * @param array              $mapped    V4_Mapper::map() result.
-	 * @param array              $post_data Label post data.
+	 * @param Service            $service     Service under test.
+	 * @param Shipping\Item_Info $item_info   Parsed legacy item info.
+	 * @param array              $mapped      V4_Mapper::map() result.
+	 * @param array              $post_data   Label post data.
+	 * @param string             $destination Shipping zone (NL|BE|EU|ROW).
 	 * @return array
 	 */
-	private function extract_fields( Service $service, Shipping\Item_Info $item_info, array $mapped, array $post_data ): array {
+	private function extract_fields( Service $service, Shipping\Item_Info $item_info, array $mapped, array $post_data, string $destination = 'NL' ): array {
 		$method = new \ReflectionMethod( Service::class, 'extract_fields' );
 		$method->setAccessible( true );
 
-		return $method->invoke( $service, $item_info, $mapped, $post_data );
+		return $method->invoke( $service, $item_info, $mapped, $post_data, $destination );
 	}
 
 	private function error_records( Spy_Logger $logger ): array {

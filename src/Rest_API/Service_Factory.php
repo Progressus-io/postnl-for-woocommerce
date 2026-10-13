@@ -102,9 +102,8 @@ class Service_Factory {
 	/**
 	 * Memoised self-built V4 label service.
 	 *
-	 * Deliberately kept out of $v4_services so that array keeps its single meaning —
-	 * "a V4 service was explicitly injected for this flow" — which barcode_from_label()
-	 * depends on.
+	 * Deliberately kept out of $v4_services so that array keeps its single meaning:
+	 * "a V4 service was explicitly injected for this flow".
 	 *
 	 * @var V4_Label_Service|null
 	 */
@@ -210,15 +209,15 @@ class Service_Factory {
 	 * Whether the barcode is issued by the label response instead of a standalone
 	 * barcode request.
 	 *
-	 * Gated on the same condition as label_service(), so the reorder can never select
-	 * a Legacy label service that still expects a prefetched barcode.
+	 * True whenever label_service() returns a V4 service. That service prefetches the
+	 * barcodes itself for an order it hands back to the legacy pipeline.
 	 *
 	 * @return bool
 	 *
 	 * @since 6.0.0
 	 */
 	public function barcode_from_label(): bool {
-		return $this->should_use_v4( 'label' ) && isset( $this->v4_services['label'] );
+		return $this->should_use_v4( 'label' );
 	}
 
 	/**
@@ -270,12 +269,8 @@ class Service_Factory {
 			if ( isset( $this->v4_services['label'] ) ) {
 				return $this->v4_services['label'];
 			}
-			// Memoised apart from $v4_services on purpose. That array means "deliberately
-			// injected", and barcode_from_label() reads it to decide whether Order\Base may
-			// skip the barcode prefetch. Caching a self-built instance there would flip that
-			// answer mid-request: in a bulk run the first order prefetches a barcode and
-			// builds this service, and every later order on the same Order\Bulk instance
-			// would then skip the prefetch and hand Shipping\Item_Info no main_barcode.
+			// Memoised apart from $v4_services on purpose: that array means "deliberately
+			// injected".
 			if ( null === $this->label_v4_memo ) {
 				$logger              = $this->v4_logger();
 				$this->label_v4_memo = new V4_Label_Service(
@@ -321,7 +316,7 @@ class Service_Factory {
 				return $this->v4_services['return_label'];
 			}
 			// Memoised apart from $v4_services for the same reason as label_service():
-			// that array means "deliberately injected", and barcode_from_label() reads it.
+			// that array means "deliberately injected".
 			// Caching a self-built instance there would give the array two meanings, and
 			// the next predicate written against it would silently get the wrong answer.
 			if ( null === $this->return_label_v4_memo ) {
@@ -369,7 +364,7 @@ class Service_Factory {
 				return $this->v4_services['smart_returns'];
 			}
 			// Memoised apart from $v4_services for the same reason as label_service():
-			// that array means "deliberately injected", and barcode_from_label() reads it.
+			// that array means "deliberately injected".
 			// Caching a self-built instance there would give the array two meanings, and
 			// the next predicate written against it would silently get the wrong answer.
 			if ( null === $this->smart_returns_v4_memo ) {

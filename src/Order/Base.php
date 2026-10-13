@@ -12,6 +12,7 @@ use PostNLWooCommerce\Rest_API\Service_Factory;
 use PostNLWooCommerce\Rest_API\Shipping;
 use PostNLWooCommerce\Rest_API\Return_Label;
 use PostNLWooCommerce\Rest_API\Letterbox;
+use PostNLWooCommerce\Rest_API\V4\Label\Service as V4_Label_Service;
 use PostNLWooCommerce\Shipping_Method\Settings;
 use PostNLWooCommerce\Helper\Mapping;
 use PostNLWooCommerce\Library\CustomizedPDFMerger;
@@ -636,22 +637,21 @@ abstract class Base {
 			// V4: the label call issues the barcode(s); there is no standalone barcode
 			// request. Generate the label first, then harvest the barcode(s) out of the
 			// label response into the same barcodes[] shape the prefetch path produces.
+			// The V4 service reports one barcode per collo, including the ones it
+			// prefetched for an order handed to legacy: the merged label keeps only the
+			// first collo's.
+			$label_post_data['is_return_activated'] = $this->is_return_function_activated( $order );
+
+			$label_service = $this->service_factory()->label_service();
+			$labels        = $label_service->create( $label_post_data );
+			$issued        = $label_service instanceof V4_Label_Service ? $label_service->issued_barcodes() : array();
+			$barcodes      = ! empty( $issued ) ? $issued : $this->harvest_barcodes_or_fail( $labels );
+		} else {
+			$label_post_data                        = $this->prefetch_label_barcodes( $label_post_data );
 			$label_post_data['is_return_activated'] = $this->is_return_function_activated( $order );
 
 			$labels   = $this->create_label( $label_post_data );
-			$barcodes = $this->harvest_barcodes_or_fail( $labels );
-		} else {
-			$barcodes                        = $this->maybe_create_multi_barcodes( $label_post_data );
-			$label_post_data['main_barcode'] = $barcodes[0]; // for MainBarcode.
-			$label_post_data['barcodes']     = $barcodes;
-
-			// Need to be refactored.
-			$shipping_item_info                         = new Shipping\Item_Info( $label_post_data );
-			$label_post_data['return_barcode']          = $this->maybe_create_return_barcode( $label_post_data, $shipping_item_info );
-			$label_post_data['shipping_return_barcode'] = $this->maybe_create_shipping_return_barcode( $label_post_data, $shipping_item_info );
-			$label_post_data['is_return_activated']     = $this->is_return_function_activated( $order );
-
-			$labels = $this->create_label( $label_post_data );
+			$barcodes = $label_post_data['barcodes'];
 		}
 
 		/*

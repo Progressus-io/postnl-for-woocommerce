@@ -944,6 +944,31 @@ abstract class Base {
 	}
 
 	/**
+	 * Add the barcodes a legacy label request needs to the label post data.
+	 *
+	 * V4 issues the barcode on the label call, so only the legacy path, including a
+	 * V4 order handed back to it, requests them up front.
+	 *
+	 * @param array $label_post_data Label post data.
+	 *
+	 * @return array Label post data with main_barcode, barcodes and the return barcodes.
+	 *
+	 * @throws \Exception Error when a barcode request fails.
+	 */
+	protected function prefetch_label_barcodes( $label_post_data ) {
+		$barcodes                        = $this->maybe_create_multi_barcodes( $label_post_data );
+		$label_post_data['main_barcode'] = $barcodes[0]; // for MainBarcode.
+		$label_post_data['barcodes']     = $barcodes;
+
+		// Need to be refactored.
+		$shipping_item_info                         = new Shipping\Item_Info( $label_post_data );
+		$label_post_data['return_barcode']          = $this->maybe_create_return_barcode( $label_post_data, $shipping_item_info );
+		$label_post_data['shipping_return_barcode'] = $this->maybe_create_shipping_return_barcode( $label_post_data, $shipping_item_info );
+
+		return $label_post_data;
+	}
+
+	/**
 	 * Harvest the barcode(s) out of a label-generation response.
 	 *
 	 * On V4 the label call issues the barcode, so it arrives under the same 'barcode'

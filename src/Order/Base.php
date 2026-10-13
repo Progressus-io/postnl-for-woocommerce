@@ -975,9 +975,9 @@ abstract class Base {
 	 * key put_label_content() already writes. Returned in the indexed shape
 	 * maybe_create_multi_barcodes() produces.
 	 *
-	 * Multi-collo parity is deferred to the V4 multi-collo label work: the merge
-	 * collapses N collo into one record, so this returns a single barcode where the
-	 * Legacy prefetch records N.
+	 * The merge collapses N collo into one record, so this returns a single barcode
+	 * for a multi-collo label. save_meta_value() prefers the V4 service's
+	 * issued_barcodes(), which keeps all N, and harvests only as a fallback.
 	 *
 	 * @param mixed $labels Label records returned by create_label().
 	 *
@@ -1083,9 +1083,14 @@ abstract class Base {
 	/**
 	 * Whether the order ships with a shipment & return barcode.
 	 *
+	 * Settings::get_return_shipment_and_labels() currently reads 'shipping_return'
+	 * as 'none', so this is false until that option is offered again.
+	 *
 	 * @param Shipping\Item_Info $shipping_item_info Parsed shipping item info.
 	 *
 	 * @return bool
+	 *
+	 * @since 6.0.0
 	 */
 	public function needs_shipping_return_barcode( $shipping_item_info ) {
 		if ( 'shipping_return' !== $this->settings->get_return_shipment_and_labels() ) {
@@ -1106,6 +1111,8 @@ abstract class Base {
 	 * @param Shipping\Item_Info $shipping_item_info Parsed shipping item info.
 	 *
 	 * @return bool
+	 *
+	 * @since 6.0.0
 	 */
 	public function needs_return_barcode( $post_data, $shipping_item_info ) {
 		$shipment_return_type = $this->settings->get_return_shipment_and_labels();
@@ -1131,15 +1138,16 @@ abstract class Base {
 
 		$not_allowed = array( '6440', '6972', '6405', '6350', '6906' );
 
-		return ! ( 'BE' === $shipping_item_info->receiver['country'] && in_array( $shipping_item_info->shipment['shipping_product']['code'], $not_allowed ) );
+		return ! ( 'BE' === $shipping_item_info->receiver['country'] && in_array( $shipping_item_info->shipment['shipping_product']['code'], $not_allowed, true ) );
 	}
 
 	/**
 	 * Create PostNL return barcode for current order
 	 *
-	 * @param array $post_data Order post data.
+	 * @param array              $post_data          Order post data.
+	 * @param Shipping\Item_Info $shipping_item_info Parsed shipping item info.
 	 *
-	 * @return array|Boolean
+	 * @return string Return barcode, or '' when the order has none.
 	 *
 	 * @throws \Exception Error when response has an error.
 	 */

@@ -160,9 +160,12 @@ class Service extends Order_Base implements Label_Service_Interface {
 	public function create( array $post_data ): array {
 		$this->issued_barcodes = array();
 
-		// Shipping\Item_Info requires the key; V4 issues the barcode itself, and
+		// Shipping\Item_Info reads both keys; V4 issues the barcode itself, and
 		// create_legacy_label() prefetches one when the order goes to legacy.
-		$post_data += array( 'main_barcode' => '' );
+		$post_data += array(
+			'main_barcode' => '',
+			'barcodes'     => array(),
+		);
 
 		$item_info = new Shipping\Item_Info( $post_data );
 		$signals   = $this->gather_signals( $item_info, $post_data );
@@ -222,10 +225,12 @@ class Service extends Order_Base implements Label_Service_Interface {
 	 * @return array
 	 *
 	 * @throws \Exception If a barcode request or the legacy label call fails.
+	 *
+	 * @since 6.0.0
 	 */
 	protected function create_legacy_label( array $post_data ): array {
 		if ( empty( $post_data['main_barcode'] ) ) {
-			$post_data                 = $this->prefetch_label_barcodes( $post_data );
+			$post_data             = $this->prefetch_label_barcodes( $post_data );
 			$this->issued_barcodes = $post_data['barcodes'];
 		}
 
@@ -240,6 +245,8 @@ class Service extends Order_Base implements Label_Service_Interface {
 	 * keeps only the first collo's barcode.
 	 *
 	 * @return string[]
+	 *
+	 * @since 6.0.0
 	 */
 	public function issued_barcodes(): array {
 		return $this->issued_barcodes;
@@ -402,7 +409,8 @@ class Service extends Order_Base implements Label_Service_Interface {
 			|| 'yes' === ( $backend_raw['create_return_label'] ?? '' )
 			|| 'yes' === ( $backend_raw['create_shipment_return_label'] ?? '' )
 			// The return barcodes are only requested on the legacy path, so an order
-			// that would get one has to go there.
+			// that would get one has to go there. That includes a store that never
+			// saved the return setting, which legacy reads as asking for one.
 			|| $this->needs_return_barcode( $post_data, $item_info )
 			|| $this->needs_shipping_return_barcode( $item_info );
 

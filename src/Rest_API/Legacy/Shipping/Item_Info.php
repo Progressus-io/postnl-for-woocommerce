@@ -618,17 +618,11 @@ class Item_Info extends Base_Info {
 					return $date;
 				},
 			),
+			// Optional: the V4 locations lookup returns no pickup time.
 			'time'      => array(
 				'default'  => '',
-				'validate' => function ( $hour ) use ( $self ) {
-					if ( empty( $hour ) && $self->is_pickup_points() ) {
-						throw new \Exception(
-							__( 'Pickup "Time" is empty!', 'postnl-for-woocommerce' )
-						);
-					}
-				},
 				'sanitize' => function ( $value ) {
-					return $value . ':00';
+					return '' === (string) $value ? '' : $value . ':00';
 				},
 			),
 			'company'   => array(

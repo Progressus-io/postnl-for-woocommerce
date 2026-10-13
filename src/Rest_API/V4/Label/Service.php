@@ -527,8 +527,8 @@ class Service extends Order_Base implements Label_Service_Interface {
 	/**
 	 * Flatten the parsed item info into the field array Request_Builder consumes.
 	 *
-	 * @param Shipping\Item_Info $item_info Parsed legacy item info.
-	 * @param array              $mapped    V4_Mapper::map() result.
+	 * @param Shipping\Item_Info $item_info   Parsed legacy item info.
+	 * @param array              $mapped      V4_Mapper::map() result.
 	 * @param array              $post_data   Original label post data.
 	 * @param string             $destination Shipping zone (NL|BE|EU|ROW).
 	 * @return array

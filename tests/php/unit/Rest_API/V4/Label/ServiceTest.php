@@ -774,8 +774,7 @@ class ServiceTest extends UnitTestCase {
 	 *
 	 * @param Service            $service   Service under test.
 	 * @param Shipping\Item_Info $item_info Parsed legacy item info.
-	 * @param array              $post_data   Label post data.
-	 * @param string             $destination Shipping zone (NL|BE|EU|ROW).
+	 * @param array              $post_data Label post data.
 	 * @return array
 	 */
 	private function gather_signals( Service $service, Shipping\Item_Info $item_info, array $post_data ): array {

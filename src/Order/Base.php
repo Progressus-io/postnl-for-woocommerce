@@ -1048,26 +1048,65 @@ abstract class Base {
 	 * @throws \Exception Error when response has an error.
 	 */
 	public function maybe_create_shipping_return_barcode( $label_post_data, $shipping_item_info ) {
-		$shipment_return_type = $this->settings->get_return_shipment_and_labels();
-
-		if ( 'none' === $shipment_return_type ) {
-			return '';
-		}
-
-		if ( 'shipping_return' !== $shipment_return_type ) {
-			return '';
-		}
-
-		if ( 'NL' !== $shipping_item_info->receiver['country'] ) {
-			return '';
-		}
-
-		if ( '2928' === $shipping_item_info->shipment['shipping_product']['code'] ||
-			'2948' === $shipping_item_info->shipment['shipping_product']['code'] ) {
+		if ( ! $this->needs_shipping_return_barcode( $shipping_item_info ) ) {
 			return '';
 		}
 
 		return $label_post_data['main_barcode'];
+	}
+
+	/**
+	 * Whether the order ships with a shipment & return barcode.
+	 *
+	 * @param Shipping\Item_Info $shipping_item_info Parsed shipping item info.
+	 *
+	 * @return bool
+	 */
+	public function needs_shipping_return_barcode( $shipping_item_info ) {
+		if ( 'shipping_return' !== $this->settings->get_return_shipment_and_labels() ) {
+			return false;
+		}
+
+		if ( 'NL' !== $shipping_item_info->receiver['country'] ) {
+			return false;
+		}
+
+		return ! in_array( $shipping_item_info->shipment['shipping_product']['code'], array( '2928', '2948' ), true );
+	}
+
+	/**
+	 * Whether the order ships with a separate return barcode.
+	 *
+	 * @param array              $post_data          Order post data.
+	 * @param Shipping\Item_Info $shipping_item_info Parsed shipping item info.
+	 *
+	 * @return bool
+	 */
+	public function needs_return_barcode( $post_data, $shipping_item_info ) {
+		$shipment_return_type = $this->settings->get_return_shipment_and_labels();
+		if ( 'none' === $shipment_return_type ) {
+			return false;
+		}
+
+		if ( ! in_array( $shipping_item_info->receiver['country'], array( 'BE', 'NL' ) ) ) {
+			return false;
+		}
+
+		if ( 'shipping_return' === $shipment_return_type &&
+			'BE' !== $shipping_item_info->receiver['country'] ) {
+			return false;
+		}
+
+		if ( 'in_box' === $shipment_return_type &&
+			( ! isset( $post_data['saved_data']['backend']['create_return_label'] ) ||
+				'yes' !== $post_data['saved_data']['backend']['create_return_label'] )
+		) {
+			return false;
+		}
+
+		$not_allowed = array( '6440', '6972', '6405', '6350', '6906' );
+
+		return ! ( 'BE' === $shipping_item_info->receiver['country'] && in_array( $shipping_item_info->shipment['shipping_product']['code'], $not_allowed ) );
 	}
 
 	/**
@@ -1080,29 +1119,7 @@ abstract class Base {
 	 * @throws \Exception Error when response has an error.
 	 */
 	public function maybe_create_return_barcode( $post_data, $shipping_item_info ) {
-		$shipment_return_type = $this->settings->get_return_shipment_and_labels();
-		if ( 'none' === $shipment_return_type ) {
-			return '';
-		}
-
-		if ( ! in_array( $shipping_item_info->receiver['country'], array( 'BE', 'NL' ) ) ) {
-			return '';
-		}
-
-		if ( 'shipping_return' === $shipment_return_type &&
-			'BE' !== $shipping_item_info->receiver['country'] ) {
-			return '';
-		}
-
-		if ( 'in_box' === $shipment_return_type &&
-			( ! isset( $post_data['saved_data']['backend']['create_return_label'] ) ||
-				'yes' !== $post_data['saved_data']['backend']['create_return_label'] )
-		) {
-			return '';
-		}
-
-		$not_allowed = array( '6440', '6972', '6405', '6350', '6906' );
-		if ( 'BE' === $shipping_item_info->receiver['country'] && in_array( $shipping_item_info->shipment['shipping_product']['code'], $not_allowed ) ) {
+		if ( ! $this->needs_return_barcode( $post_data, $shipping_item_info ) ) {
 			return '';
 		}
 

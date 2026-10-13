@@ -630,16 +630,32 @@ class Service_FactoryTest extends UnitTestCase {
 	}
 
 	/**
-	 * @testdox barcode_from_label() is false with key + label flag on but no V4 label service
+	 * @testdox barcode_from_label() is true with key + label flag on, without an injected service
 	 *
-	 * The safety gate: the reorder must stay dormant until a V4 label service exists,
-	 * so a Legacy label service is never asked to build a request without a prefetched
-	 * barcode.
+	 * label_service() builds the V4 service itself, which prefetches barcodes only for
+	 * an order it hands to the legacy pipeline.
 	 */
-	public function test_barcode_from_label_false_without_v4_label_service(): void {
+	public function test_barcode_from_label_true_with_self_built_v4_label_service(): void {
 		Filters\expectApplied( 'postnl_sdk_enable_label' )->andReturn( true );
 
 		$factory = new Service_Factory( $this->settings_with_key() );
+
+		$this->assertTrue( $factory->barcode_from_label() );
+		$this->assertInstanceOf( V4_Label_Service::class, $factory->label_service() );
+	}
+
+	/**
+	 * @testdox barcode_from_label() is false when the SDK is missing, so the barcode is prefetched for Legacy
+	 */
+	public function test_barcode_from_label_false_without_sdk(): void {
+		Filters\expectApplied( 'postnl_sdk_enable_label' )->andReturn( true );
+
+		$factory = new class( $this->settings_with_key() ) extends Service_Factory {
+			protected static function sdk_available(): bool {
+				return false;
+			}
+		};
+
 		$this->assertFalse( $factory->barcode_from_label() );
 	}
 
@@ -723,29 +739,21 @@ class Service_FactoryTest extends UnitTestCase {
 	}
 
 	/**
-	 * @testdox Calling label_service() does not flip barcode_from_label() to true
+	 * @testdox Calling label_service() does not change barcode_from_label()
 	 *
-	 * Pins the bulk-run crash: barcode_from_label() answers "has a V4 label service been
-	 * deliberately injected", so a lazily self-built instance must never register as one.
-	 * If label_service() memoizes into the same store barcode_from_label() inspects, the
-	 * first order in a bulk run (check false) prefetches a barcode and builds the V4
-	 * service, and every later order on the same Order\Bulk instance (check now true)
-	 * skips the prefetch — leaving main_barcode absent and Shipping\Item_Info throwing
-	 * "Barcode is empty!".
+	 * In a bulk run every order on the same Order\Bulk instance has to take the same
+	 * path, so building the service must not flip the answer between orders.
 	 */
 	public function test_label_service_call_does_not_flip_barcode_from_label(): void {
 		Filters\expectApplied( 'postnl_sdk_enable_label' )->andReturn( true );
 
 		$factory = new Service_Factory( $this->settings_with_key() );
 
-		$this->assertFalse( $factory->barcode_from_label(), 'Precondition: nothing injected yet.' );
+		$this->assertTrue( $factory->barcode_from_label() );
 
 		$factory->label_service();
 
-		$this->assertFalse(
-			$factory->barcode_from_label(),
-			'Self-building the V4 label service must not register it as an injected service.'
-		);
+		$this->assertTrue( $factory->barcode_from_label() );
 	}
 
 	/**

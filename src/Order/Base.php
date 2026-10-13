@@ -12,6 +12,7 @@ use PostNLWooCommerce\Rest_API\Service_Factory;
 use PostNLWooCommerce\Rest_API\Shipping;
 use PostNLWooCommerce\Rest_API\Return_Label;
 use PostNLWooCommerce\Rest_API\Letterbox;
+use PostNLWooCommerce\Rest_API\V4\Label\Service as V4_Label_Service;
 use PostNLWooCommerce\Shipping_Method\Settings;
 use PostNLWooCommerce\Helper\Mapping;
 use PostNLWooCommerce\Library\CustomizedPDFMerger;
@@ -636,22 +637,21 @@ abstract class Base {
 			// V4: the label call issues the barcode(s); there is no standalone barcode
 			// request. Generate the label first, then harvest the barcode(s) out of the
 			// label response into the same barcodes[] shape the prefetch path produces.
+			// The V4 service reports one barcode per collo, including the ones it
+			// prefetched for an order handed to legacy: the merged label keeps only the
+			// first collo's.
+			$label_post_data['is_return_activated'] = $this->is_return_function_activated( $order );
+
+			$label_service = $this->service_factory()->label_service();
+			$labels        = $label_service->create( $label_post_data );
+			$issued        = $label_service instanceof V4_Label_Service ? $label_service->issued_barcodes() : array();
+			$barcodes      = ! empty( $issued ) ? $issued : $this->harvest_barcodes_or_fail( $labels );
+		} else {
+			$label_post_data                        = $this->prefetch_label_barcodes( $label_post_data );
 			$label_post_data['is_return_activated'] = $this->is_return_function_activated( $order );
 
 			$labels   = $this->create_label( $label_post_data );
-			$barcodes = $this->harvest_barcodes_or_fail( $labels );
-		} else {
-			$barcodes                        = $this->maybe_create_multi_barcodes( $label_post_data );
-			$label_post_data['main_barcode'] = $barcodes[0]; // for MainBarcode.
-			$label_post_data['barcodes']     = $barcodes;
-
-			// Need to be refactored.
-			$shipping_item_info                         = new Shipping\Item_Info( $label_post_data );
-			$label_post_data['return_barcode']          = $this->maybe_create_return_barcode( $label_post_data, $shipping_item_info );
-			$label_post_data['shipping_return_barcode'] = $this->maybe_create_shipping_return_barcode( $label_post_data, $shipping_item_info );
-			$label_post_data['is_return_activated']     = $this->is_return_function_activated( $order );
-
-			$labels = $this->create_label( $label_post_data );
+			$barcodes = $label_post_data['barcodes'];
 		}
 
 		/*
@@ -944,15 +944,40 @@ abstract class Base {
 	}
 
 	/**
+	 * Add the barcodes a legacy label request needs to the label post data.
+	 *
+	 * V4 issues the barcode on the label call, so only the legacy path, including a
+	 * V4 order handed back to it, requests them up front.
+	 *
+	 * @param array $label_post_data Label post data.
+	 *
+	 * @return array Label post data with main_barcode, barcodes and the return barcodes.
+	 *
+	 * @throws \Exception Error when a barcode request fails.
+	 */
+	protected function prefetch_label_barcodes( $label_post_data ) {
+		$barcodes                        = $this->maybe_create_multi_barcodes( $label_post_data );
+		$label_post_data['main_barcode'] = $barcodes[0]; // for MainBarcode.
+		$label_post_data['barcodes']     = $barcodes;
+
+		// Need to be refactored.
+		$shipping_item_info                         = new Shipping\Item_Info( $label_post_data );
+		$label_post_data['return_barcode']          = $this->maybe_create_return_barcode( $label_post_data, $shipping_item_info );
+		$label_post_data['shipping_return_barcode'] = $this->maybe_create_shipping_return_barcode( $label_post_data, $shipping_item_info );
+
+		return $label_post_data;
+	}
+
+	/**
 	 * Harvest the barcode(s) out of a label-generation response.
 	 *
 	 * On V4 the label call issues the barcode, so it arrives under the same 'barcode'
 	 * key put_label_content() already writes. Returned in the indexed shape
 	 * maybe_create_multi_barcodes() produces.
 	 *
-	 * Multi-collo parity is deferred to the V4 multi-collo label work: the merge
-	 * collapses N collo into one record, so this returns a single barcode where the
-	 * Legacy prefetch records N.
+	 * The merge collapses N collo into one record, so this returns a single barcode
+	 * for a multi-collo label. save_meta_value() prefers the V4 service's
+	 * issued_barcodes(), which keeps all N, and harvests only as a fallback.
 	 *
 	 * @param mixed $labels Label records returned by create_label().
 	 *
@@ -1048,22 +1073,7 @@ abstract class Base {
 	 * @throws \Exception Error when response has an error.
 	 */
 	public function maybe_create_shipping_return_barcode( $label_post_data, $shipping_item_info ) {
-		$shipment_return_type = $this->settings->get_return_shipment_and_labels();
-
-		if ( 'none' === $shipment_return_type ) {
-			return '';
-		}
-
-		if ( 'shipping_return' !== $shipment_return_type ) {
-			return '';
-		}
-
-		if ( 'NL' !== $shipping_item_info->receiver['country'] ) {
-			return '';
-		}
-
-		if ( '2928' === $shipping_item_info->shipment['shipping_product']['code'] ||
-			'2948' === $shipping_item_info->shipment['shipping_product']['code'] ) {
+		if ( ! $this->needs_shipping_return_barcode( $shipping_item_info ) ) {
 			return '';
 		}
 
@@ -1071,38 +1081,78 @@ abstract class Base {
 	}
 
 	/**
-	 * Create PostNL return barcode for current order
+	 * Whether the order ships with a shipment & return barcode.
 	 *
-	 * @param array $post_data Order post data.
+	 * Settings::get_return_shipment_and_labels() currently reads 'shipping_return'
+	 * as 'none', so this is false until that option is offered again.
 	 *
-	 * @return array|Boolean
+	 * @param Shipping\Item_Info $shipping_item_info Parsed shipping item info.
 	 *
-	 * @throws \Exception Error when response has an error.
+	 * @return bool
+	 *
+	 * @since 6.0.0
 	 */
-	public function maybe_create_return_barcode( $post_data, $shipping_item_info ) {
+	public function needs_shipping_return_barcode( $shipping_item_info ) {
+		if ( 'shipping_return' !== $this->settings->get_return_shipment_and_labels() ) {
+			return false;
+		}
+
+		if ( 'NL' !== $shipping_item_info->receiver['country'] ) {
+			return false;
+		}
+
+		return ! in_array( $shipping_item_info->shipment['shipping_product']['code'], array( '2928', '2948' ), true );
+	}
+
+	/**
+	 * Whether the order ships with a separate return barcode.
+	 *
+	 * @param array              $post_data          Order post data.
+	 * @param Shipping\Item_Info $shipping_item_info Parsed shipping item info.
+	 *
+	 * @return bool
+	 *
+	 * @since 6.0.0
+	 */
+	public function needs_return_barcode( $post_data, $shipping_item_info ) {
 		$shipment_return_type = $this->settings->get_return_shipment_and_labels();
 		if ( 'none' === $shipment_return_type ) {
-			return '';
+			return false;
 		}
 
 		if ( ! in_array( $shipping_item_info->receiver['country'], array( 'BE', 'NL' ) ) ) {
-			return '';
+			return false;
 		}
 
 		if ( 'shipping_return' === $shipment_return_type &&
 			'BE' !== $shipping_item_info->receiver['country'] ) {
-			return '';
+			return false;
 		}
 
 		if ( 'in_box' === $shipment_return_type &&
 			( ! isset( $post_data['saved_data']['backend']['create_return_label'] ) ||
 				'yes' !== $post_data['saved_data']['backend']['create_return_label'] )
 		) {
-			return '';
+			return false;
 		}
 
 		$not_allowed = array( '6440', '6972', '6405', '6350', '6906' );
-		if ( 'BE' === $shipping_item_info->receiver['country'] && in_array( $shipping_item_info->shipment['shipping_product']['code'], $not_allowed ) ) {
+
+		return ! ( 'BE' === $shipping_item_info->receiver['country'] && in_array( $shipping_item_info->shipment['shipping_product']['code'], $not_allowed, true ) );
+	}
+
+	/**
+	 * Create PostNL return barcode for current order
+	 *
+	 * @param array              $post_data          Order post data.
+	 * @param Shipping\Item_Info $shipping_item_info Parsed shipping item info.
+	 *
+	 * @return string Return barcode, or '' when the order has none.
+	 *
+	 * @throws \Exception Error when response has an error.
+	 */
+	public function maybe_create_return_barcode( $post_data, $shipping_item_info ) {
+		if ( ! $this->needs_return_barcode( $post_data, $shipping_item_info ) ) {
 			return '';
 		}
 

@@ -96,8 +96,24 @@ class ServiceTest extends UnitTestCase {
 			// phpcs:ignore Generic.CodeAnalysis.UselessOverridingMethod.Found -- Skips the real constructor, which needs WooCommerce.
 			public function __construct() {}
 
+			/**
+			 * Return label setting the return-barcode checks read.
+			 *
+			 * @var string
+			 */
+			public $return_type = 'none';
+
 			public function is_sandbox() {
 				return true;
+			}
+
+			/**
+			 * Return label setting the return-barcode checks read.
+			 *
+			 * @return string
+			 */
+			public function get_return_shipment_and_labels() {
+				return $this->return_type;
 			}
 		};
 
@@ -932,6 +948,11 @@ class ServiceTest extends UnitTestCase {
 			array_column( $service->merge_records, 'barcode' ),
 			'Each record keeps its own collo barcode.'
 		);
+		$this->assertSame(
+			array( '3SRESP1', '3SRESP2', '3SRESP3' ),
+			$service->issued_barcodes(),
+			'Every collo barcode is reported, since the merged record keeps only the first.'
+		);
 	}
 
 	/**
@@ -1334,6 +1355,81 @@ class ServiceTest extends UnitTestCase {
 		$this->assertArrayNotHasKey( 'customs', $fields['international'] );
 	}
 
+	// ── Legacy fallback barcodes ─────────────────────────────────────────────
+
+	/**
+	 * @testdox An order handed to legacy without a barcode prefetches one per collo and reports them
+	 */
+	public function test_legacy_fallback_prefetches_the_barcodes(): void {
+		$service = $this->fallback_service();
+
+		$this->create_legacy_label( $service, array( 'main_barcode' => '' ) );
+
+		$this->assertSame( 1, $service->prefetch_calls );
+		$this->assertSame( '3SDEVC0000001', $service->pipeline_post_data['main_barcode'] );
+		$this->assertSame( array( '3SDEVC0000001', '3SDEVC0000002' ), $service->issued_barcodes() );
+	}
+
+	/**
+	 * @testdox An order handed to legacy with a barcode already set prefetches nothing
+	 */
+	public function test_legacy_fallback_keeps_a_passed_barcode(): void {
+		$service = $this->fallback_service();
+
+		$this->create_legacy_label( $service, array( 'main_barcode' => '3SDEVC1234567' ) );
+
+		$this->assertSame( 0, $service->prefetch_calls );
+		$this->assertSame( '3SDEVC1234567', $service->pipeline_post_data['main_barcode'] );
+		$this->assertSame( array(), $service->issued_barcodes() );
+	}
+
+	/**
+	 * @testdox An order that would get a return barcode counts as having a return, and one with returns off does not
+	 *
+	 * Return barcodes are only requested on the legacy path, so such an order must
+	 * not be labelled on V4 without one. A store that never saved the return setting
+	 * reads as '', which legacy treats as asking for a return barcode.
+	 *
+	 * @testWith ["", true]
+	 *           ["none", false]
+	 */
+	public function test_an_order_that_would_get_a_return_barcode_has_a_return( string $return_type, bool $has_return ): void {
+		Settings::get_instance()->return_type = $return_type;
+
+		$service = $this->service_with_logger( new Spy_Logger() );
+
+		$item_info = new Delivery_Window_Item_Info( array( 'shipping_product' => array( 'code' => '3085' ) ) );
+
+		$this->assertSame( $has_return, $this->gather_signals( $service, $item_info, array() )['has_return'] );
+	}
+
+	/**
+	 * A V4 label service whose prefetch and legacy pipeline are recorded, not run.
+	 *
+	 * @return Fallback_Spy_Label_Service
+	 */
+	private function fallback_service(): Fallback_Spy_Label_Service {
+		return new Fallback_Spy_Label_Service(
+			new Spy_Label_Client_Factory( new Client_Factory_Settings(), new Failing_Http_Client() ),
+			self::V4_KEY,
+			new NullLogger()
+		);
+	}
+
+	/**
+	 * Call Service::create_legacy_label(), which is protected, via reflection.
+	 *
+	 * @param Service $service   Service under test.
+	 * @param array   $post_data Label post data.
+	 * @return array
+	 */
+	private function create_legacy_label( Service $service, array $post_data ): array {
+		$method = new \ReflectionMethod( Service::class, 'create_legacy_label' );
+		$method->setAccessible( true );
+
+		return $method->invoke( $service, $post_data );
+	}
+
 	// ── Sender email ─────────────────────────────────────────────────────────
 
 	/**
@@ -1633,6 +1729,54 @@ class Testable_Label_Service extends Service {
 		return $this->confirm_label( $request, $fields );
 	}
 
+}
+
+/**
+ * Records the legacy fallback's barcode prefetch and pipeline call instead of
+ * running them, since both need WooCommerce and a live barcode API.
+ */
+class Fallback_Spy_Label_Service extends Service {
+
+	/**
+	 * How many times the prefetch ran.
+	 *
+	 * @var int
+	 */
+	public int $prefetch_calls = 0;
+
+	/**
+	 * Post data the legacy pipeline received.
+	 *
+	 * @var array
+	 */
+	public array $pipeline_post_data = array();
+
+	/**
+	 * Answer with two collo barcodes.
+	 *
+	 * @param array $label_post_data Label post data.
+	 * @return array
+	 */
+	protected function prefetch_label_barcodes( $label_post_data ) {
+		++$this->prefetch_calls;
+
+		$label_post_data['barcodes']     = array( '3SDEVC0000001', '3SDEVC0000002' );
+		$label_post_data['main_barcode'] = '3SDEVC0000001';
+
+		return $label_post_data;
+	}
+
+	/**
+	 * Record the post data instead of calling the V1 label API.
+	 *
+	 * @param array $post_data Label post data.
+	 * @return array
+	 */
+	protected function create_label_pipeline( $post_data ) {
+		$this->pipeline_post_data = $post_data;
+
+		return array();
+	}
 }
 
 /**

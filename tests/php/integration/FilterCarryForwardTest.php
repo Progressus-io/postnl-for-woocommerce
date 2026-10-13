@@ -19,6 +19,7 @@ use PostNLWooCommerce\Logger;
 use PostNLWooCommerce\Rest_API\Legacy\Shipping\Client as Legacy_Shipping_Client;
 use PostNLWooCommerce\Rest_API\SDK\Logger_Adapter;
 use PostNLWooCommerce\Rest_API\V4\Label\Service as V4_Label_Service;
+use PostNLWooCommerce\Shipping_Method\Settings;
 use PostNLWooCommerce\Tests\IntegrationTestCase;
 use PostNLWooCommerce\Tests\Support\Client_Factory_Settings;
 use PostNLWooCommerce\Tests\Support\Failing_Http_Client;
@@ -54,6 +55,13 @@ class FilterCarryForwardTest extends IntegrationTestCase {
 	private $product_ids = array();
 
 	/**
+	 * Backup of the return setting, overridden so the orders stay on V4.
+	 *
+	 * @var string|null
+	 */
+	private $orig_return_setting = null;
+
+	/**
 	 * Configure a complete NL store address so the shipper resolves to a valid
 	 * domestic origin — Item_Info validation rejects an unconfigured store — and
 	 * pin the weight unit so the expected gram value is deterministic.
@@ -73,6 +81,12 @@ class FilterCarryForwardTest extends IntegrationTestCase {
 			$this->orig_options[ $option ] = get_option( $option );
 			update_option( $option, $value );
 		}
+
+		// An order that would get a return barcode goes to the legacy path.
+		$settings                  = Settings::get_instance();
+		$this->orig_return_setting = $settings->settings['return_shipment_and_labels'] ?? null;
+
+		$settings->settings['return_shipment_and_labels'] = 'none';
 	}
 
 	/**
@@ -89,6 +103,12 @@ class FilterCarryForwardTest extends IntegrationTestCase {
 
 		foreach ( $this->product_ids as $product_id ) {
 			wp_delete_post( $product_id, true );
+		}
+
+		if ( null === $this->orig_return_setting ) {
+			unset( Settings::get_instance()->settings['return_shipment_and_labels'] );
+		} else {
+			Settings::get_instance()->settings['return_shipment_and_labels'] = $this->orig_return_setting;
 		}
 
 		parent::tearDown();

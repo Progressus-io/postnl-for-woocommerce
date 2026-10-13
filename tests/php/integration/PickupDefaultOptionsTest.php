@@ -42,6 +42,9 @@ class PickupDefaultOptionsTest extends IntegrationTestCase {
 	 */
 	private $order_ids = array();
 
+	/**
+	 * Pin an NL store with an ID Check pickup default and an insured BE default.
+	 */
 	protected function setUp(): void {
 		parent::setUp();
 
@@ -55,6 +58,9 @@ class PickupDefaultOptionsTest extends IntegrationTestCase {
 		$settings->settings['default_shipping_options_be']     = 'insured_shipping';
 	}
 
+	/**
+	 * Restore the settings and store country, and remove the orders created.
+	 */
 	protected function tearDown(): void {
 		foreach ( $this->order_ids as $order_id ) {
 			$order = wc_get_order( $order_id );
@@ -122,10 +128,16 @@ class PickupDefaultOptionsTest extends IntegrationTestCase {
 	 */
 	private function make_order_handler(): Order_Base {
 		return new class() extends Order_Base {
+			/**
+			 * Skip the parent constructor, which registers the admin hooks.
+			 */
 			public function __construct() {
 				$this->settings  = Settings::get_instance();
 				$this->meta_name = '_' . $this->prefix . 'order_metadata';
 			}
+			/**
+			 * No hooks for this test double.
+			 */
 			public function init_hooks() {}
 		};
 	}

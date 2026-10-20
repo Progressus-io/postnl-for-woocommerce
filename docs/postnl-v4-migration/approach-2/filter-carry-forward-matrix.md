@@ -89,12 +89,13 @@ merchants until a flow is turned on.
 
 ## Known differences from legacy (in-scope)
 
-- **Only the recipient (AddressType `01`) entry is applied on V4.** V4 currently
-  handles only the happy-path domestic parcel — eligibility rejects pickup and
-  return — so `apply_filtered_receiver()` reads the first `01` entry and ignores
-  any `09` (pickup) / `08` (return) / second `01` entry a filter might add.
-  Legacy forwards every entry to the API. This is acceptable for the migrated
-  scope; when pickup/return migrate to V4 those entry types must be honoured too.
+- **Only the recipient (AddressType `01`) entry is applied on V4.**
+  `apply_filtered_receiver()` reads the first `01` entry and ignores any `09`
+  (pickup) / `08` (return) / second `01` entry a filter might add. Legacy forwards
+  every entry to the API. A pickup order ships on V4 by location code
+  (`deliveryLocation.pickupLocationId`), not by address, so a filter that rewrites
+  the `09` pickup entry has no effect there. Returns still fall back to legacy;
+  when they migrate, the `08` entry must be honoured.
 
 - **The filter's `$client` argument is a fresh instance, not the request sender.**
   The documented contract is to modify and return `$addresses`. A third party that

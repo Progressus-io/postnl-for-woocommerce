@@ -523,11 +523,10 @@ class Utils {
 			}
 		);
 
-		if ( isset( $selected_features['create_return_label'] ) ) {
-			unset( $selected_features['create_return_label'] );
-		}
+		// Bulk "Change shipping options" stores the settings tokens as-is, including these base product markers.
+		$non_features = array( 'create_return_label', '', 'standard_shipment', 'standard_belgium', 'eu_parcel', 'parcel_non_eu' );
 
-		return $selected_features;
+		return array_diff_key( $selected_features, array_flip( $non_features ) );
 	}
 
 	/**

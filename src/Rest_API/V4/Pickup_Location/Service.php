@@ -423,17 +423,25 @@ class Service implements Pickup_Location_Service_Interface {
 	protected function map_location( $location ): array {
 		// phpcs:disable WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- Third-party SDK DTO properties are camelCase.
 		$address = $location->address;
+		$city    = null !== $address ? (string) $address->city : '';
+		$name    = trim( (string) $location->name );
+
+		// The SDK declares name nullable, and Shipping\Item_Info rejects a pickup order with an empty company name.
+		if ( '' === $name ) {
+			/* translators: %s: pickup location city. */
+			$name = trim( sprintf( __( 'PostNL Point %s', 'postnl-for-woocommerce' ), $city ) );
+		}
 
 		return array(
 			'LocationCode' => (string) $location->pickupLocationId,
-			'Name'         => (string) $location->name,
+			'Name'         => $name,
 			'Distance'     => null === $location->distance ? '' : (string) $location->distance,
 			'Address'      => array(
-				'CompanyName' => (string) $location->name,
+				'CompanyName' => $name,
 				'Street'      => null !== $address ? (string) $address->street : '',
 				'HouseNr'     => null !== $address ? (string) $address->houseNumber : '',
 				'Zipcode'     => null !== $address ? (string) $address->postalCode : '',
-				'City'        => null !== $address ? (string) $address->city : '',
+				'City'        => $city,
 				'Countrycode' => ( null !== $address && null !== $address->countryIso ) ? $address->countryIso->value : '',
 			),
 			'OpeningHours' => $this->map_opening_hours( $location->openingTimes ),

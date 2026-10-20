@@ -322,6 +322,36 @@ class ServiceTest extends UnitTestCase {
 	}
 
 	/**
+	 * @testdox A location without a name falls back to "PostNL Point" plus the city
+	 */
+	public function test_map_response_falls_back_when_name_is_null(): void {
+		Functions\when( '__' )->returnArg( 1 );
+
+		$service = new Testable_Pickup_Service( new Client_Factory( $this->make_settings() ), $this->make_settings(), self::V4_KEY, self::LOCATIONS, new NullLogger() );
+
+		$collection = new PickUpLocationsCollection(
+			array(
+				new PickupLocation(
+					pickupLocationId: '404015',
+					name: null,
+					address: new Address( countryIso: Country::NL, postalCode: '2595AK', city: 'Den Haag', street: 'Prinses Beatrixlaan' )
+				),
+				new PickupLocation(
+					pickupLocationId: '411641',
+					name: null
+				),
+			)
+		);
+
+		$locations = $service->expose_map_response( $collection )[0]['Locations'];
+
+		$this->assertSame( 'PostNL Point Den Haag', $locations[0]['Name'] );
+		$this->assertSame( 'PostNL Point Den Haag', $locations[0]['Address']['CompanyName'] );
+		$this->assertSame( 'PostNL Point', $locations[1]['Name'] );
+		$this->assertSame( 'PostNL Point', $locations[1]['Address']['CompanyName'] );
+	}
+
+	/**
 	 * @testdox A closed day (no times) maps to an empty Times list without warnings
 	 */
 	public function test_map_response_maps_closed_day(): void {

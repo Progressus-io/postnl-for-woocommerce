@@ -11,9 +11,10 @@ namespace PostNLWooCommerce\Rest_API\V4\Returns;
 
 use Postnl\Sdk\Client\PostnlClientInterface;
 use Postnl\Sdk\Service\ReturnShipment\V4\Request\ReturnShipmentRequest;
-use Postnl\Sdk\Service\ReturnShipment\V4\Response\GenerateReturnResponseInterface;
+use Postnl\Sdk\Service\ReturnShipment\Response\ReturnShipmentResponseInterface;
 use PostNLWooCommerce\Order\Base as Order_Base;
 use PostNLWooCommerce\Rest_API\Contracts\Return_Label_Service_Interface;
+use PostNLWooCommerce\Rest_API\Legacy\Return_Label\Client as Legacy_Return_Client;
 use PostNLWooCommerce\Rest_API\Legacy\Return_Label\Item_Info;
 use PostNLWooCommerce\Rest_API\Legacy\Return_Label_Service as Legacy_Return_Label_Service;
 use PostNLWooCommerce\Rest_API\SDK\Client_Factory;
@@ -144,11 +145,83 @@ class Service extends Order_Base implements Return_Label_Service_Interface {
 			return $this->maybe_create_return_label_pipeline( $post_data );
 		}
 
-		$fields   = $this->extract_fields( $item_info, $post_data );
+		$fields         = $this->extract_fields( $item_info, $post_data );
+		$country_before = (string) ( $fields['sender']['country'] ?? '' );
+
+		// On a return the consumer is the sender, and the legacy return client fires
+		// postnl_shipment_addresses with that consumer as the AddressType '01' entry
+		// (Legacy\Return_Label\Client inherits get_shipment_addresses()). Overlay the
+		// filtered entry onto the sender so a third-party address rewrite reaches the
+		// V4 return the same way it reaches the label. apply_filtered_receiver() maps
+		// the '01' entry onto a flat address array whichever party it describes.
+		$fields['sender'] = Label_Request_Builder::apply_filtered_receiver(
+			$fields['sender'],
+			$this->filter_shipment_addresses( $item_info )
+		);
+
+		$country_after = (string) ( $fields['sender']['country'] ?? '' );
+
+		// Eligibility keys on the consumer country (NL retailPrint only). A filter that
+		// rewrites it to a non-NL country makes this a consumerPrint return this service
+		// does not build, so hand it back to the legacy pipeline rather than send a
+		// retailPrint return for a foreign consumer.
+		if ( $country_before !== $country_after ) {
+			$this->logger->warning(
+				sprintf(
+					'V4 return label for order "%1$s": a postnl_shipment_addresses callback changed the consumer country from "%2$s" to "%3$s"; falling back to the legacy return path.',
+					(string) ( $fields['reference'] ?? '' ),
+					$country_before,
+					$country_after
+				)
+			);
+
+			return $this->maybe_create_return_label_pipeline( $post_data );
+		}
+
 		$request  = Request_Builder::build( $fields );
 		$response = $this->generate_return( $request, $fields );
 
 		return $this->store_labels( $response, $post_data['order'], (string) $fields['barcode'] );
+	}
+
+	/**
+	 * Fire the postnl_shipment_addresses filter from the V4 return path.
+	 *
+	 * Legacy return labels fire this filter: Legacy\Return_Label\Client extends
+	 * Shipping\Client and inherits get_shipment_addresses(), whose AddressType '01'
+	 * entry is the consumer returning the parcel. Reusing that client verbatim keeps
+	 * the ( array $addresses, Shipping\Client $client ) shape byte-identical to the
+	 * legacy return path, and the caller overlays the (possibly modified) '01' entry
+	 * back onto the sender — the consumer — so a third-party rewrite reaches the V4
+	 * return request too.
+	 *
+	 * A callback that forgets to return hands back null; the : array return type
+	 * would turn that into a TypeError (an \Error the AJAX handlers do not catch), so
+	 * it is named and rethrown as the plain \Exception those handlers display,
+	 * matching V4\Label\Service::filter_shipment_addresses().
+	 *
+	 * @param Item_Info $item_info Parsed legacy return item info.
+	 * @return array Filtered legacy-shaped address array.
+	 *
+	 * @throws \Exception When a filter callback returns something other than an array.
+	 */
+	protected function filter_shipment_addresses( Item_Info $item_info ): array {
+		$addresses = ( new Legacy_Return_Client( $item_info ) )->get_shipment_addresses();
+
+		if ( ! is_array( $addresses ) ) {
+			$this->logger->error(
+				sprintf(
+					'A postnl_shipment_addresses callback returned %s instead of an array; V4 return label creation aborted.',
+					gettype( $addresses )
+				)
+			);
+
+			throw new \Exception(
+				esc_html__( 'A plugin hooked into postnl_shipment_addresses returned an invalid address list.', 'postnl-for-woocommerce' )
+			);
+		}
+
+		return $addresses;
 	}
 
 	/**
@@ -160,11 +233,11 @@ class Service extends Order_Base implements Return_Label_Service_Interface {
 	 * @param ReturnShipmentRequest $request Built request DTO.
 	 * @param array                 $fields  Flattened fields, read for the log reference.
 	 *
-	 * @return GenerateReturnResponseInterface
+	 * @return ReturnShipmentResponseInterface
 	 *
 	 * @throws \Exception Converted SDK error when the request fails.
 	 */
-	protected function generate_return( ReturnShipmentRequest $request, array $fields ): GenerateReturnResponseInterface {
+	protected function generate_return( ReturnShipmentRequest $request, array $fields ): ReturnShipmentResponseInterface {
 		try {
 			return $this->build_client()->returns()->generateReturn( $request );
 		} catch ( \Throwable $exception ) {
@@ -300,13 +373,13 @@ class Service extends Order_Base implements Return_Label_Service_Interface {
 	 * Reuses Order\Base::maybe_merge_labels() so the A4/A6 handling matches the
 	 * legacy path, then re-tags the merged record as V4.
 	 *
-	 * @param GenerateReturnResponseInterface $response         return/generate response.
+	 * @param ReturnShipmentResponseInterface $response         return/generate response.
 	 * @param \WC_Order                       $order            WooCommerce order.
 	 * @param string                          $fallback_barcode Barcode to use if the response omits one.
 	 * @return array
 	 * @throws \Exception When the response carries no return item or no label content.
 	 */
-	private function store_labels( GenerateReturnResponseInterface $response, $order, string $fallback_barcode ): array {
+	private function store_labels( ReturnShipmentResponseInterface $response, $order, string $fallback_barcode ): array {
 		$item = Response_Mapper::first_return_item( $response );
 
 		if ( null === $item ) {

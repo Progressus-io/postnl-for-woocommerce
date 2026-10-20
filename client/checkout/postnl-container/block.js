@@ -362,7 +362,6 @@ export const Block = ( { checkoutExtensionData } ) => {
 	 */
 	const clearAllPostNLData = useCallback( () => {
 		clearSessionData();
-		previousShippingAddress.current = null;
 		clearAllExtensionData( setExtensionData );
 		clearBackendDeliveryFee();
 	}, [ setExtensionData ] );
@@ -402,6 +401,9 @@ export const Block = ( { checkoutExtensionData } ) => {
 				setDeliveryOptions( [] );
 				setDropoffOptions( [] );
 				clearAllPostNLData();
+				// Forget the last-fetched address so returning to a supported
+				// country re-fetches even if that address was queried before.
+				previousShippingAddress.current = null;
 			}
 			return;
 		}

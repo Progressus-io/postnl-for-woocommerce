@@ -10,8 +10,8 @@ declare( strict_types = 1 );
 namespace PostNLWooCommerce\Rest_API\V4\Label;
 
 use Postnl\Sdk\ResponseData\V4\Label;
-use Postnl\Sdk\ResponseData\V4\ShipmentShippingItem;
-use Postnl\Sdk\Service\ShipmentDelivery\V4\Response\LabelConfirmResponseInterface;
+use Postnl\Sdk\Service\ShipmentDelivery\Response\ShipmentDeliveryResponseInterface;
+use Postnl\Sdk\Service\ShipmentDelivery\Response\ShipmentDeliveryResponseItem;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -35,10 +35,10 @@ class Response_Mapper {
 	 *
 	 * A single domestic parcel yields exactly one shipment item.
 	 *
-	 * @param LabelConfirmResponseInterface $response Response from labelconfirm.
-	 * @return ShipmentShippingItem|null
+	 * @param ShipmentDeliveryResponseInterface $response Response from labelconfirm.
+	 * @return ShipmentDeliveryResponseItem|null
 	 */
-	public static function first_shipment_item( LabelConfirmResponseInterface $response ): ?ShipmentShippingItem {
+	public static function first_shipment_item( ShipmentDeliveryResponseInterface $response ): ?ShipmentDeliveryResponseItem {
 		$items = $response->items();
 
 		return $items->isEmpty() ? null : $items->first();
@@ -50,10 +50,10 @@ class Response_Mapper {
 	 * A multi-collo shipment yields one item per collo, each with its own barcode
 	 * and label document(s).
 	 *
-	 * @param LabelConfirmResponseInterface $response Response from labelconfirm.
-	 * @return ShipmentShippingItem[]
+	 * @param ShipmentDeliveryResponseInterface $response Response from labelconfirm.
+	 * @return ShipmentDeliveryResponseItem[]
 	 */
-	public static function all_shipment_items( LabelConfirmResponseInterface $response ): array {
+	public static function all_shipment_items( ShipmentDeliveryResponseInterface $response ): array {
 		return array_values( $response->items()->all() );
 	}
 
@@ -64,11 +64,11 @@ class Response_Mapper {
 	 * the item; the fallback is used only when the response omits it (e.g. a
 	 * barcode was pre-supplied on the request).
 	 *
-	 * @param ShipmentShippingItem $item     Shipment item from the response.
-	 * @param string               $fallback Barcode to use when none is returned.
+	 * @param ShipmentDeliveryResponseItem $item     Shipment item from the response.
+	 * @param string                       $fallback Barcode to use when none is returned.
 	 * @return string
 	 */
-	public static function get_barcode( ShipmentShippingItem $item, string $fallback = '' ): string {
+	public static function get_barcode( ShipmentDeliveryResponseItem $item, string $fallback = '' ): string {
 		if ( null !== $item->barcode && '' !== $item->barcode ) {
 			return $item->barcode;
 		}
@@ -82,10 +82,10 @@ class Response_Mapper {
 	 * For EU/ROW shipments the labelconfirm response echoes the delivering
 	 * partner's barcode and id; both are empty for a domestic shipment.
 	 *
-	 * @param ShipmentShippingItem $item Shipment item from the response.
+	 * @param ShipmentDeliveryResponseItem $item Shipment item from the response.
 	 * @return string
 	 */
-	public static function get_partner_barcode( ShipmentShippingItem $item ): string {
+	public static function get_partner_barcode( ShipmentDeliveryResponseItem $item ): string {
 		// phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- Third-party SDK DTO property.
 		return null !== $item->partnerBarcode ? $item->partnerBarcode : '';
 	}
@@ -93,10 +93,10 @@ class Response_Mapper {
 	/**
 	 * Return the international partner id issued for a shipment item.
 	 *
-	 * @param ShipmentShippingItem $item Shipment item from the response.
+	 * @param ShipmentDeliveryResponseItem $item Shipment item from the response.
 	 * @return string
 	 */
-	public static function get_partner_id( ShipmentShippingItem $item ): string {
+	public static function get_partner_id( ShipmentDeliveryResponseItem $item ): string {
 		// phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- Third-party SDK DTO property.
 		return null !== $item->partnerId ? $item->partnerId : '';
 	}
@@ -104,10 +104,10 @@ class Response_Mapper {
 	/**
 	 * Return the non-empty Label objects attached to a shipment item.
 	 *
-	 * @param ShipmentShippingItem $item Shipment item from the response.
+	 * @param ShipmentDeliveryResponseItem $item Shipment item from the response.
 	 * @return Label[]
 	 */
-	public static function get_labels( ShipmentShippingItem $item ): array {
+	public static function get_labels( ShipmentDeliveryResponseItem $item ): array {
 		if ( null === $item->labels ) {
 			return array();
 		}

@@ -16,11 +16,11 @@ use Postnl\Sdk\Enums\Payload\LabelResolution;
 use Postnl\Sdk\Enums\Payload\ShipmentType;
 use Postnl\Sdk\RequestData\V4\Address;
 use Postnl\Sdk\RequestData\V4\Contact;
-use Postnl\Sdk\RequestData\V4\CustomerReferences;
 use Postnl\Sdk\RequestData\V4\Dimensions;
 use Postnl\Sdk\RequestData\V4\LabelSettings;
 use Postnl\Sdk\RequestData\V4\ShipmentParty;
-use Postnl\Sdk\ResponseData\V4\ShippingItem;
+use Postnl\Sdk\Service\ReturnShipment\V4\Request\ReturnCustomerReferences;
+use Postnl\Sdk\Service\ReturnShipment\V4\Request\ReturnShipmentItem;
 use Postnl\Sdk\Service\ReturnShipment\V4\Request\ReturnShipmentRequest;
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -98,13 +98,13 @@ class Request_Builder {
 			printMethod: self::print_method( (string) ( $fields['print_method'] ?? 'retailPrint' ) )
 		);
 
-		$item = new ShippingItem(
+		$item = new ReturnShipmentItem(
 			barcode: self::maybe_null( (string) ( $fields['barcode'] ?? '' ) ),
-			customerReferences: new CustomerReferences(
-				shipmentReference: self::maybe_null( (string) ( $fields['reference'] ?? '' ) )
-			),
 			dimensions: new Dimensions(
-				weightGr: max( 1, (int) ( $fields['weight_gr'] ?? 0 ) )
+				weight: max( 1, (int) ( $fields['weight_gr'] ?? 0 ) )
+			),
+			customerReferences: new ReturnCustomerReferences(
+				shipmentReference: self::maybe_null( (string) ( $fields['reference'] ?? '' ) )
 			)
 		);
 
@@ -146,8 +146,7 @@ class Request_Builder {
 			email: self::maybe_null( (string) ( $fields['email'] ?? '' ) ),
 			firstName: self::maybe_null( (string) ( $fields['first_name'] ?? '' ) ),
 			lastName: self::maybe_null( (string) ( $fields['last_name'] ?? '' ) ),
-			mobileNumber: self::maybe_null( (string) ( $fields['phone'] ?? '' ) ),
-			companyName: self::maybe_null( (string) ( $fields['company'] ?? '' ) )
+			mobileNumber: self::maybe_null( (string) ( $fields['phone'] ?? '' ) )
 		);
 	}
 
@@ -194,7 +193,8 @@ class Request_Builder {
 	 * @return LabelResolution
 	 */
 	private static function resolution( int $resolution ): LabelResolution {
-		return LabelResolution::tryFrom( $resolution ) ?? LabelResolution::DPI_200;
+		// LabelResolution is string-backed in the SDK ('200'|'300'|'600').
+		return LabelResolution::tryFrom( (string) $resolution ) ?? LabelResolution::DPI_200;
 	}
 
 	/**

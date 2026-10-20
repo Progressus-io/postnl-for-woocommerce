@@ -538,11 +538,30 @@ class Extend_Block_Core {
 		// Proceed to fetch delivery and dropoff options
 		$order_data = $sanitized_data;
 
-		$delivery_day     = new Delivery_Day();
-		$dropoff          = new Dropoff_Points();
-		$checkout_data    = $container->get_checkout_data( $order_data );
-		$delivery_options = $delivery_day->get_content_data( $checkout_data['response'], $checkout_data['post_data'] );
-		$dropoff_options  = $dropoff->get_content_data( $checkout_data['response'], $checkout_data['post_data'] );
+		$delivery_day = new Delivery_Day();
+		$dropoff      = new Dropoff_Points();
+
+		// A checkout lookup that throws must degrade to a hidden container, never a
+		// 500: an unhandled error here leaves the block spinner stuck in an endless
+		// loading loop instead of quietly hiding the options.
+		try {
+			$checkout_data    = $container->get_checkout_data( $order_data );
+			$delivery_options = $delivery_day->get_content_data( $checkout_data['response'], $checkout_data['post_data'] );
+			$dropoff_options  = $dropoff->get_content_data( $checkout_data['response'], $checkout_data['post_data'] );
+		} catch ( \Exception $e ) {
+			Utils::clear_postnl_checkout_session();
+			wp_send_json_success(
+				array(
+					'message'           => 'Failed to fetch delivery options.',
+					'show_container'    => false,
+					'validated_address' => $validated_address,
+					'delivery_options'  => array(),
+					'dropoff_options'   => array(),
+				),
+				200
+			);
+			wp_die();
+		}
 
 		$is_free_shipping = Utils::is_free_shipping_applied();
 

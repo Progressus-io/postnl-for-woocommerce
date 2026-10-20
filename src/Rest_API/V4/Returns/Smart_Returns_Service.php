@@ -12,7 +12,7 @@ namespace PostNLWooCommerce\Rest_API\V4\Returns;
 use Postnl\Sdk\Client\PostnlClientInterface;
 use Postnl\Sdk\ResponseData\V4\Label;
 use Postnl\Sdk\Service\ReturnShipment\V4\Request\ReturnShipmentRequest;
-use Postnl\Sdk\Service\ReturnShipment\V4\Response\GenerateReturnResponseInterface;
+use Postnl\Sdk\Service\ReturnShipment\Response\ReturnShipmentResponseInterface;
 use PostNLWooCommerce\Rest_API\Contracts\Smart_Returns_Service_Interface;
 use PostNLWooCommerce\Rest_API\Legacy\Smart_Returns\Item_Info;
 use PostNLWooCommerce\Rest_API\Legacy\Smart_Returns_Service as Legacy_Smart_Returns_Service;
@@ -262,11 +262,11 @@ class Smart_Returns_Service implements Smart_Returns_Service_Interface {
 	 * @param ReturnShipmentRequest $request      Built return/generate request.
 	 * @param string                $order_number Merchant order number, used in log entries.
 	 *
-	 * @return GenerateReturnResponseInterface
+	 * @return ReturnShipmentResponseInterface
 	 *
 	 * @throws \Exception The converted, merchant-facing error.
 	 */
-	protected function generate_smart_return( ReturnShipmentRequest $request, string $order_number ): GenerateReturnResponseInterface {
+	protected function generate_smart_return( ReturnShipmentRequest $request, string $order_number ): ReturnShipmentResponseInterface {
 		try {
 			return $this->build_client()->returns()->generateReturn( $request );
 		} catch ( \Throwable $exception ) {

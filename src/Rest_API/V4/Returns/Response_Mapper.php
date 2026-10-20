@@ -10,8 +10,8 @@ declare( strict_types = 1 );
 namespace PostNLWooCommerce\Rest_API\V4\Returns;
 
 use Postnl\Sdk\ResponseData\V4\Label;
-use Postnl\Sdk\ResponseData\V4\ReturnShippingItem;
-use Postnl\Sdk\Service\ReturnShipment\V4\Response\GenerateReturnResponseInterface;
+use Postnl\Sdk\Service\ReturnShipment\Response\ReturnShipmentResponseInterface;
+use Postnl\Sdk\Service\ReturnShipment\Response\ReturnShipmentResponseItem;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -33,10 +33,10 @@ class Response_Mapper {
 	/**
 	 * Return the first return item from the response, or null when empty.
 	 *
-	 * @param GenerateReturnResponseInterface $response Response from return/generate.
-	 * @return ReturnShippingItem|null
+	 * @param ReturnShipmentResponseInterface $response Response from return/generate.
+	 * @return ReturnShipmentResponseItem|null
 	 */
-	public static function first_return_item( GenerateReturnResponseInterface $response ): ?ReturnShippingItem {
+	public static function first_return_item( ReturnShipmentResponseInterface $response ): ?ReturnShipmentResponseItem {
 		$items = $response->items();
 
 		return $items->isEmpty() ? null : $items->first();
@@ -45,22 +45,18 @@ class Response_Mapper {
 	/**
 	 * Return the barcode issued for a return item.
 	 *
-	 * Prefers the item barcode, then the returnBarcode, then the supplied
-	 * fallback (used only when the response omits both).
+	 * Prefers the item barcode, then the supplied fallback (used only when the
+	 * response omits it). The return API's ResponseItem no longer carries a
+	 * separate returnBarcode (removed from the schema in SDK v2.0.0); the return
+	 * barcode is the item barcode.
 	 *
-	 * @param ReturnShippingItem $item     Return item from the response.
-	 * @param string             $fallback Barcode to use when none is returned.
+	 * @param ReturnShipmentResponseItem $item     Return item from the response.
+	 * @param string                     $fallback Barcode to use when none is returned.
 	 * @return string
 	 */
-	public static function get_barcode( ReturnShippingItem $item, string $fallback = '' ): string {
+	public static function get_barcode( ReturnShipmentResponseItem $item, string $fallback = '' ): string {
 		if ( null !== $item->barcode && '' !== $item->barcode ) {
 			return $item->barcode;
-		}
-
-		// phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- Third-party SDK DTO property.
-		if ( null !== $item->returnBarcode && '' !== $item->returnBarcode ) {
-			// phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- Third-party SDK DTO property.
-			return $item->returnBarcode;
 		}
 
 		return $fallback;
@@ -69,10 +65,10 @@ class Response_Mapper {
 	/**
 	 * Return the non-empty Label objects attached to a return item.
 	 *
-	 * @param ReturnShippingItem $item Return item from the response.
+	 * @param ReturnShipmentResponseItem $item Return item from the response.
 	 * @return Label[]
 	 */
-	public static function get_labels( ReturnShippingItem $item ): array {
+	public static function get_labels( ReturnShipmentResponseItem $item ): array {
 		if ( null === $item->labels ) {
 			return array();
 		}

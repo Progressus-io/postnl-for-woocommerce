@@ -9,11 +9,10 @@ declare( strict_types = 1 );
 
 namespace PostNLWooCommerce\Rest_API\SDK;
 
-use Postnl\Sdk\Exception\AuthExceptionInterface;
+use Postnl\Sdk\Exception\AbstractHttpSdkException;
+use Postnl\Sdk\Exception\Auth\AuthExceptionInterface;
 use Postnl\Sdk\Exception\Client\ValidationException;
-use Postnl\Sdk\Exception\HttpSdkException;
-use Postnl\Sdk\Exception\Retry\RetryExhaustedException;
-use Postnl\Sdk\Exception\RetryableExceptionInterface;
+use Postnl\Sdk\Exception\Retry\RetryableExceptionInterface;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -73,7 +72,7 @@ class Exception_Converter {
 			return self::to_error( __( 'PostNL is temporarily unavailable. Please try again.', 'postnl-for-woocommerce' ), $exception );
 		}
 
-		if ( $exception instanceof HttpSdkException ) {
+		if ( $exception instanceof AbstractHttpSdkException ) {
 			// PostNL's own description of the failure, already cleaned by the SDK.
 			return self::to_error( $exception->getMessage(), $exception );
 		}
@@ -92,17 +91,14 @@ class Exception_Converter {
 	 * every 5xx but reports false for permanent ones such as 501. The SDK's own
 	 * retry policy gates on isRetryable() for the same reason.
 	 *
-	 * RetryExhaustedException does not implement the interface, so it is checked
-	 * separately; the policy only ever raises it after retryable failures.
+	 * When the retry ceiling is hit the SDK rethrows the last underlying failure
+	 * rather than a dedicated exhaustion type, so a genuinely transient failure
+	 * that exhausted its retries still arrives as a retryable exception here.
 	 *
 	 * @param \Throwable $exception Original SDK exception being converted.
 	 * @return bool
 	 */
 	private static function is_transient( \Throwable $exception ): bool {
-		if ( $exception instanceof RetryExhaustedException ) {
-			return true;
-		}
-
 		return $exception instanceof RetryableExceptionInterface && $exception->isRetryable();
 	}
 
@@ -135,7 +131,8 @@ class Exception_Converter {
 		$parts = array();
 
 		foreach ( $exception->getFieldErrors() as $field_error ) {
-			$parts[] = sprintf( '%1$s: %2$s', $field_error->field, $field_error->message );
+			// FieldError::$field is nullable (error formats without a field reference); default it for display.
+			$parts[] = sprintf( '%1$s: %2$s', $field_error->field ?? __( 'request', 'postnl-for-woocommerce' ), $field_error->message );
 		}
 
 		if ( empty( $parts ) ) {
@@ -152,7 +149,7 @@ class Exception_Converter {
 	 * @return string Empty string when no traceId is available.
 	 */
 	private static function trace_suffix( \Throwable $exception ): string {
-		if ( $exception instanceof HttpSdkException ) {
+		if ( $exception instanceof AbstractHttpSdkException ) {
 			// phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- Third-party SDK DTO property.
 			$trace_id = $exception->problemDetails->traceId;
 

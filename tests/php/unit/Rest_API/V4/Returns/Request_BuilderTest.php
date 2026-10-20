@@ -167,11 +167,11 @@ class Request_BuilderTest extends UnitTestCase {
 	 * return label, so the fixture uses 600 to keep the two apart.
 	 */
 	public function test_resolution_is_sent(): void {
-		$this->assertSame( 600, $this->payload( $this->return_fields() )['labelSettings']['resolution'] );
+		$this->assertSame( '600', $this->payload( $this->return_fields() )['labelSettings']['resolution'] );
 
 		$fields                        = $this->return_fields();
 		$fields['label']['resolution'] = 300;
-		$this->assertSame( 300, $this->payload( $fields )['labelSettings']['resolution'] );
+		$this->assertSame( '300', $this->payload( $fields )['labelSettings']['resolution'] );
 	}
 
 	/**
@@ -181,7 +181,7 @@ class Request_BuilderTest extends UnitTestCase {
 		$fields                        = $this->return_fields();
 		$fields['label']['resolution'] = 150;
 
-		$this->assertSame( 200, $this->payload( $fields )['labelSettings']['resolution'] );
+		$this->assertSame( '200', $this->payload( $fields )['labelSettings']['resolution'] );
 	}
 
 	/**

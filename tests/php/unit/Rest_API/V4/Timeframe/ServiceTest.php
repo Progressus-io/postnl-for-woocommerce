@@ -689,6 +689,25 @@ class ServiceTest extends UnitTestCase {
 		$this->assertSame( 2, $http->count, 'A different postcode is a different lookup and must reach PostNL.' );
 	}
 
+	/**
+	 * @testdox An empty timeframe result is not cached, so the next lookup asks PostNL again
+	 */
+	public function test_empty_result_is_not_cached(): void {
+		$this->with_transient_store();
+		Functions\when( 'current_datetime' )->justReturn( new \DateTimeImmutable( '2026-07-14 10:00:00' ) );
+
+		$http    = new Counting_Http_Client( (string) wp_json_encode( array( 'deliveryDates' => array() ) ) );
+		$factory = new Spy_Timeframe_Client_Factory( $this->make_settings(), $http );
+		$service = new Service( $factory, $this->make_settings(), self::V4_KEY, self::DAYS, new NullLogger() );
+
+		$first = $service->get_delivery_options( $this->nl_post_data() );
+		$service->get_delivery_options( $this->nl_post_data() );
+
+		$this->assertSame( array(), $first['DeliveryOptions'] );
+		$this->assertSame( 2, $http->count, 'An empty result must not be served from cache.' );
+		$this->assertSame( array(), $this->store );
+	}
+
 	// ── Authentication ───────────────────────────────────────────────────────
 
 	/**

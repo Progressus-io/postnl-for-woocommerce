@@ -548,11 +548,11 @@ class Extend_Block_Core {
 			$checkout_data    = $container->get_checkout_data( $order_data );
 			$delivery_options = $delivery_day->get_content_data( $checkout_data['response'], $checkout_data['post_data'] );
 			$dropoff_options  = $dropoff->get_content_data( $checkout_data['response'], $checkout_data['post_data'] );
-		} catch ( \Exception $e ) {
+		} catch ( \Throwable $e ) {
 			Utils::clear_postnl_checkout_session();
 			wp_send_json_success(
 				array(
-					'message'           => 'Failed to fetch delivery options.',
+					'message'           => __( 'Failed to fetch delivery options.', 'postnl-for-woocommerce' ),
 					'show_container'    => false,
 					'validated_address' => $validated_address,
 					'delivery_options'  => array(),

@@ -324,6 +324,39 @@ class ServiceTest extends UnitTestCase {
 	}
 
 	/**
+	 * @testdox A location without a name falls back to "PostNL Point" plus the city
+	 */
+	public function test_map_response_falls_back_when_name_is_null(): void {
+		Functions\when( '__' )->returnArg( 1 );
+
+		$service = new Testable_Pickup_Service( new Client_Factory( $this->make_settings() ), $this->make_settings(), self::V4_KEY, self::LOCATIONS, new NullLogger() );
+
+		$collection = new PickUpLocationsCollection(
+			array(
+				new PickupLocation(
+					pickupLocationId: '404015',
+					name: null,
+					address: new Address( countryIso: Country::NL, postalCode: '2595AK', city: 'Den Haag', street: 'Prinses Beatrixlaan' )
+				),
+				new PickupLocation(
+					pickupLocationId: '411641',
+					name: null
+				),
+			)
+		);
+
+		$raw = $service->expose_map_response( $collection )[0]['Locations'];
+		$this->assertSame( '', $raw[0]['Name'], 'The mapped (cacheable) result must not carry a translated name.' );
+
+		$locations = $service->expose_finalize_result( array( 'PickupOptions' => $service->expose_map_response( $collection ) ) )['PickupOptions'][0]['Locations'];
+
+		$this->assertSame( 'PostNL Point Den Haag', $locations[0]['Name'] );
+		$this->assertSame( 'PostNL Point Den Haag', $locations[0]['Address']['CompanyName'] );
+		$this->assertSame( 'PostNL Point', $locations[1]['Name'] );
+		$this->assertSame( 'PostNL Point', $locations[1]['Address']['CompanyName'] );
+	}
+
+	/**
 	 * @testdox A closed day (no times) maps to an empty Times list without warnings
 	 */
 	public function test_map_response_maps_closed_day(): void {
@@ -821,6 +854,81 @@ class ServiceTest extends UnitTestCase {
 	}
 
 	/**
+	 * @testdox A cached unnamed location gets the fallback name in each visitor's language
+	 *
+	 * The cache key has no locale, so the translated fallback must be applied after
+	 * the cache. Otherwise the first visitor's language is served to everyone.
+	 */
+	public function test_fallback_name_is_translated_after_the_cache(): void {
+		$this->with_transient_store();
+		Functions\when( 'current_datetime' )->justReturn( new \DateTimeImmutable( '2026-07-14 10:00:00' ) );
+
+		$body = (string) wp_json_encode(
+			array(
+				'locations' => array(
+					array(
+						'pickupLocationId' => '404015',
+						'address'          => array(
+							'street'     => 'Prinses Beatrixlaan',
+							'postalCode' => '2595AK',
+							'city'       => 'Den Haag',
+							'countryIso' => 'NL',
+						),
+					),
+				),
+			)
+		);
+
+		$http    = new Counting_Http_Client( $body );
+		$factory = new Spy_Pickup_Client_Factory( $this->make_settings(), $http );
+		$service = new Service( $factory, $this->make_settings(), self::V4_KEY, self::LOCATIONS, new NullLogger() );
+
+		$first = $service->get_pickup_locations( $this->nl_post_data() );
+
+		Functions\when( '__' )->alias( fn( $text ) => 'PostNL Point %s' === $text ? 'PostNL-punt %s' : $text );
+		$second = $service->get_pickup_locations( $this->nl_post_data() );
+
+		$this->assertSame( 1, $http->count, 'The second lookup must be served from cache.' );
+		$this->assertSame( 'PostNL Point Den Haag', $first['PickupOptions'][0]['Locations'][0]['Name'] );
+		$this->assertSame( 'PostNL-punt Den Haag', $second['PickupOptions'][0]['Locations'][0]['Name'] );
+		$this->assertSame( 'PostNL-punt Den Haag', $second['PickupOptions'][0]['Locations'][0]['Address']['CompanyName'] );
+	}
+
+	/**
+	 * @testdox A V4 result marks each PickupOptions group with the V4 source
+	 */
+	public function test_result_groups_are_marked_as_v4(): void {
+		$this->with_transient_store();
+		Functions\when( 'current_datetime' )->justReturn( new \DateTimeImmutable( '2026-07-14 10:00:00' ) );
+
+		$factory = new Spy_Pickup_Client_Factory( $this->make_settings(), new Counting_Http_Client( $this->locations_response_body() ) );
+		$service = new Service( $factory, $this->make_settings(), self::V4_KEY, self::LOCATIONS, new NullLogger() );
+
+		$result = $service->get_pickup_locations( $this->nl_post_data() );
+
+		$this->assertSame( Service::SOURCE_V4, $result['PickupOptions'][0]['Source'] );
+	}
+
+	/**
+	 * @testdox An empty locations result is not cached, so the next lookup asks PostNL again
+	 */
+	public function test_empty_result_is_not_cached(): void {
+		$this->with_transient_store();
+		Functions\when( 'current_datetime' )->justReturn( new \DateTimeImmutable( '2026-07-14 10:00:00' ) );
+
+		$http    = new Counting_Http_Client( (string) wp_json_encode( array( 'locations' => array() ) ) );
+		$factory = new Spy_Pickup_Client_Factory( $this->make_settings(), $http );
+		$service = new Service( $factory, $this->make_settings(), self::V4_KEY, self::LOCATIONS, new NullLogger() );
+
+		$first = $service->get_pickup_locations( $this->nl_post_data() );
+		$service->get_pickup_locations( $this->nl_post_data() );
+
+		$this->assertSame( array(), $first['PickupOptions'] );
+		$this->assertSame( 2, $http->count, 'An empty result must not be served from cache.' );
+		$this->assertSame( array(), $this->store );
+	}
+
+	/**
 	 * Canned V4 near-address response body with a single retail location.
 	 *
 	 * @return string
@@ -913,6 +1021,16 @@ class Testable_Pickup_Service extends Service {
 	 */
 	public function expose_map_response( PickUpLocationsCollection $collection ): array {
 		return $this->map_response( $collection );
+	}
+
+	/**
+	 * Public wrapper for finalize_result().
+	 *
+	 * @param array $result Mapped or cached result.
+	 * @return array
+	 */
+	public function expose_finalize_result( array $result ): array {
+		return $this->finalize_result( $result );
 	}
 
 	/**

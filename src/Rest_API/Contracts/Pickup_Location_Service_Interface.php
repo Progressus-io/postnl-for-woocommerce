@@ -25,6 +25,14 @@ if ( ! defined( 'ABSPATH' ) ) {
 interface Pickup_Location_Service_Interface {
 
 	/**
+	 * Source value a V4 transport sets on each PickupOptions group.
+	 *
+	 * Frontend\Dropoff_Points reads it to relax the legacy-only location fields
+	 * (PartnerID, PickupTime) for V4 locations. Legacy responses carry no Source.
+	 */
+	const SOURCE_V4 = 'v4';
+
+	/**
 	 * Retrieve available PostNL pickup locations for a given checkout address.
 	 *
 	 * Derived from Frontend\Container::get_checkout_data(), which uses the same

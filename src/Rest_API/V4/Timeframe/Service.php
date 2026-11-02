@@ -185,8 +185,11 @@ class Service implements Timeframe_Service_Interface {
 
 			$result = array( 'DeliveryOptions' => $this->map_response( $response->timeframes() ) );
 
-			// TTL is owned by Cache_Adapter (resolved from postnl_v4_cache_ttl at construction).
-			$cache->set( $cache_key, $result );
+			// An empty list is not cached, so a brief gap at PostNL does not hide delivery
+			// days for the whole TTL. The TTL is owned by Cache_Adapter.
+			if ( ! empty( $result['DeliveryOptions'] ) ) {
+				$cache->set( $cache_key, $result );
+			}
 
 			return $result;
 		} catch ( \Throwable $exception ) {

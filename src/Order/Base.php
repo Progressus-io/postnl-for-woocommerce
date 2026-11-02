@@ -954,6 +954,8 @@ abstract class Base {
 	 * @return array Label post data with main_barcode, barcodes and the return barcodes.
 	 *
 	 * @throws \Exception Error when a barcode request fails.
+	 *
+	 * @since 6.0.0
 	 */
 	protected function prefetch_label_barcodes( $label_post_data ) {
 		$barcodes                        = $this->maybe_create_multi_barcodes( $label_post_data );

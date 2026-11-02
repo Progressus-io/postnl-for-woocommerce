@@ -12,6 +12,15 @@ declare( strict_types = 1 );
 
 namespace PostNLWooCommerce\Tests\Integration;
 
+use Postnl\Sdk\Client\ResponseMeta;
+use Postnl\Sdk\Enums\Payload\LabelOutputType;
+use Postnl\Sdk\RequestData\V4\ShipmentDelivery\ShipmentDeliveryRequest;
+use Postnl\Sdk\ResponseData\V4\Label;
+use Postnl\Sdk\ResponseData\V4\LabelsCollection;
+use Postnl\Sdk\ResponseData\V4\WarningsCollection;
+use Postnl\Sdk\Service\ShipmentDelivery\Response\ShipmentDeliveryResponseInterface;
+use Postnl\Sdk\Service\ShipmentDelivery\Response\ShipmentDeliveryResponseItem;
+use Postnl\Sdk\Service\ShipmentDelivery\Response\ShipmentDeliveryResponseItemsCollection;
 use PostNLWooCommerce\Order\Base as Order_Base;
 use PostNLWooCommerce\Rest_API\Contracts\Barcode_Service_Interface;
 use PostNLWooCommerce\Rest_API\Contracts\Label_Service_Interface;
@@ -130,6 +139,33 @@ class OrderLabelBarcodeRoutingTest extends IntegrationTestCase {
 
 		$this->assertSame( 0, $barcodes->calls );
 		$this->assertSame( array( '3SLABEL0001' ), array_column( $result['saved_data']['barcodes'], 'value' ) );
+	}
+
+	/**
+	 * @testdox A V4 label service reused for the next order stores only that order's barcodes.
+	 */
+	public function test_reused_v4_label_service_stores_only_each_orders_barcodes(): void {
+		add_filter( 'postnl_sdk_enable_label', '__return_true' );
+
+		$label   = new Stubbed_Response_V4_Label_Service(
+			array(
+				array( '3SORDERONE1', '3SORDERONE2' ),
+				array( '3SORDERTWO1' ),
+			)
+		);
+		$handler = $this->make_handler( new Counting_Barcode_Service(), $label );
+
+		try {
+			$first  = $handler->save_meta_value( $this->make_order(), array( 'postnl_num_labels' => '2' ) );
+			$second = $handler->save_meta_value( $this->make_order(), array( 'postnl_num_labels' => '1' ) );
+		} finally {
+			foreach ( $label->label_files as $label_file ) {
+				wp_delete_file( $label_file );
+			}
+		}
+
+		$this->assertSame( array( '3SORDERONE1', '3SORDERONE2' ), array_column( $first['saved_data']['barcodes'], 'value' ) );
+		$this->assertSame( array( '3SORDERTWO1' ), array_column( $second['saved_data']['barcodes'], 'value' ) );
 	}
 
 	/**
@@ -330,6 +366,109 @@ class Recording_V4_Label_Service extends V4_Label_Service {
 	 */
 	public function issued_barcodes(): array {
 		return $this->reported;
+	}
+}
+
+/**
+ * V4 label service that runs the real create() on queued responses instead of calling PostNL.
+ */
+class Stubbed_Response_V4_Label_Service extends V4_Label_Service {
+
+	/**
+	 * Label files written to disk, for the test to remove.
+	 *
+	 * @var string[]
+	 */
+	public array $label_files = array();
+
+	/**
+	 * Collo barcodes per queued response.
+	 *
+	 * @var array<int, string[]>
+	 */
+	private array $responses;
+
+	/**
+	 * @param array<int, string[]> $responses Collo barcodes per queued response.
+	 */
+	public function __construct( array $responses ) {
+		parent::__construct( new Client_Factory( Settings::get_instance(), new NullLogger() ), 'integration-key', new NullLogger() );
+		$this->responses = $responses;
+	}
+
+	/**
+	 * Answer with the next queued response.
+	 *
+	 * @param ShipmentDeliveryRequest $request Label request.
+	 * @param array                   $fields  Request fields.
+	 * @return ShipmentDeliveryResponseInterface
+	 */
+	protected function confirm_label( ShipmentDeliveryRequest $request, array $fields ): ShipmentDeliveryResponseInterface {
+		$items = array_map(
+			static function ( string $barcode ): ShipmentDeliveryResponseItem {
+				$label = new Label(
+					label: base64_encode( 'PDF-BYTES-' . $barcode ),
+					outputType: LabelOutputType::PDF,
+					labelType: 'Label'
+				);
+
+				return new ShipmentDeliveryResponseItem(
+					barcode: $barcode,
+					labels: new LabelsCollection( array( $label ) ),
+					partnerId: null,
+					partnerBarcode: null
+				);
+			},
+			array_shift( $this->responses )
+		);
+
+		return new class( new ShipmentDeliveryResponseItemsCollection( $items ) ) implements ShipmentDeliveryResponseInterface {
+			/**
+			 * @param ShipmentDeliveryResponseItemsCollection $items Collo items.
+			 */
+			public function __construct( private ShipmentDeliveryResponseItemsCollection $items ) {}
+
+			/**
+			 * @return ShipmentDeliveryResponseItemsCollection
+			 */
+			public function items(): ShipmentDeliveryResponseItemsCollection {
+				return $this->items;
+			}
+
+			/**
+			 * @return ResponseMeta
+			 */
+			public function meta(): ResponseMeta {
+				throw new \LogicException( 'meta() is not exercised by this test.' );
+			}
+
+			/**
+			 * @return WarningsCollection
+			 */
+			public function warnings(): WarningsCollection {
+				throw new \LogicException( 'warnings() is not exercised by this test.' );
+			}
+		};
+	}
+
+	/**
+	 * Skip the PDF merge, which can't read the stub label bytes, and record the files.
+	 *
+	 * @param array  $labels     Label records built from the response.
+	 * @param mixed  $order      Order object.
+	 * @param string $barcode    Barcode the merged record is keyed on.
+	 * @param string $label_type Parent label type.
+	 * @return array
+	 */
+	public function maybe_merge_labels( $labels, $order, $barcode, $label_type ) {
+		$this->label_files = array_merge( $this->label_files, array_column( $labels, 'filepath' ) );
+
+		return array(
+			$label_type => array(
+				'type'    => $label_type,
+				'barcode' => $barcode,
+			),
+		);
 	}
 }
 

@@ -189,7 +189,7 @@ class Service implements Pickup_Location_Service_Interface {
 
 		$cached = $cache->get( $cache_key );
 		if ( is_array( $cached ) ) {
-			return $cached;
+			return $this->finalize_result( $cached );
 		}
 
 		try {
@@ -197,10 +197,13 @@ class Service implements Pickup_Location_Service_Interface {
 
 			$result = array( 'PickupOptions' => $this->map_response( $response->locations() ) );
 
-			// TTL is owned by Cache_Adapter (resolved from postnl_v4_cache_ttl at construction).
-			$cache->set( $cache_key, $result );
+			// An empty list is not cached, so a brief gap at PostNL does not hide pickup
+			// points for the whole TTL. The TTL is owned by Cache_Adapter.
+			if ( ! empty( $result['PickupOptions'] ) ) {
+				$cache->set( $cache_key, $result );
+			}
 
-			return $result;
+			return $this->finalize_result( $result );
 		} catch ( \Throwable $exception ) {
 			// Exception_Converter returns a plugin-shaped \Exception; its message can
 			// carry raw API text (field errors, upstream messages) — escape on output.
@@ -468,22 +471,71 @@ class Service implements Pickup_Location_Service_Interface {
 	protected function map_location( $location ): array {
 		// phpcs:disable WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- Third-party SDK DTO properties are camelCase.
 		$address = $location->address;
+		$city    = null !== $address ? (string) $address->city : '';
+
+		// An unnamed location stays empty here; finalize_result() fills the translated fallback after the cache.
+		$name = trim( (string) $location->name );
 
 		return array(
 			'LocationCode' => (string) $location->pickupLocationId,
-			'Name'         => (string) $location->name,
+			'Name'         => $name,
 			'Distance'     => null === $location->distance ? '' : (string) $location->distance,
 			'Address'      => array(
-				'CompanyName' => (string) $location->name,
+				'CompanyName' => $name,
 				'Street'      => null !== $address ? (string) $address->street : '',
 				'HouseNr'     => null !== $address ? (string) $address->houseNumber : '',
 				'Zipcode'     => null !== $address ? (string) $address->postalCode : '',
-				'City'        => null !== $address ? (string) $address->city : '',
+				'City'        => $city,
 				'Countrycode' => ( null !== $address && null !== $address->countryIso ) ? $address->countryIso->value : '',
 			),
 			'OpeningHours' => $this->map_opening_hours( $location->openingTimes ),
 		);
 		// phpcs:enable WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase
+	}
+
+	/**
+	 * Apply the per-request parts of a result that must not be cached.
+	 *
+	 * The cache key has no locale, so the translated fallback name for an unnamed
+	 * location is filled here, after the cache, in the current visitor's language.
+	 * The SDK declares name nullable, and Shipping\Item_Info rejects a pickup order
+	 * with an empty company name.
+	 *
+	 * Each group is also marked with Source = SOURCE_V4, so Frontend\Dropoff_Points can
+	 * relax its legacy field checks for V4 locations only.
+	 *
+	 * @since 6.0.0
+	 *
+	 * @param array $result Mapped or cached result carrying PickupOptions.
+	 *
+	 * @return array
+	 */
+	protected function finalize_result( array $result ): array {
+		if ( empty( $result['PickupOptions'] ) || ! is_array( $result['PickupOptions'] ) ) {
+			return $result;
+		}
+
+		foreach ( $result['PickupOptions'] as $group_index => $group ) {
+			$result['PickupOptions'][ $group_index ]['Source'] = self::SOURCE_V4;
+
+			if ( empty( $group['Locations'] ) || ! is_array( $group['Locations'] ) ) {
+				continue;
+			}
+
+			foreach ( $group['Locations'] as $location_index => $location ) {
+				if ( '' !== trim( (string) ( $location['Name'] ?? '' ) ) ) {
+					continue;
+				}
+
+				/* translators: %s: pickup location city. */
+				$name = trim( sprintf( __( 'PostNL Point %s', 'postnl-for-woocommerce' ), (string) ( $location['Address']['City'] ?? '' ) ) );
+
+				$result['PickupOptions'][ $group_index ]['Locations'][ $location_index ]['Name']                   = $name;
+				$result['PickupOptions'][ $group_index ]['Locations'][ $location_index ]['Address']['CompanyName'] = $name;
+			}
+		}
+
+		return $result;
 	}
 
 	/**

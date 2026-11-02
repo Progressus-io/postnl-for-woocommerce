@@ -21,6 +21,11 @@ import { Block as DeliveryDayBlock } from '../postnl-delivery-day/block';
 import { Block as DropoffPointsBlock } from '../postnl-dropoff-points/block';
 import { clearSessionData } from '../../utils/session-manager';
 import {
+	createLookupRetryState,
+	registerFailedLookup,
+	resetLookupRetries,
+} from '../../utils/lookup-retry';
+import {
 	batchSetExtensionData,
 	clearAllExtensionData,
 	clearBackendDeliveryFee,
@@ -357,6 +362,9 @@ export const Block = ( { checkoutExtensionData } ) => {
 	// Ref to store the previous shipping address
 	const previousShippingAddress = useRef( null );
 
+	// Retry budget for a lookup that failed, so it is retried on a later cart update without looping.
+	const lookupRetry = useRef( createLookupRetryState() );
+
 	/**
 	 * Clear all PostNL data: session, extension data, and backend cart fee.
 	 */
@@ -475,6 +483,7 @@ export const Block = ( { checkoutExtensionData } ) => {
 				.then( ( response ) => {
 					if ( response.data.success && response.data.data ) {
 						const respData = response.data.data;
+						resetLookupRetries( lookupRetry.current );
 
 						// If validated_address returned, update shipping address if needed
 						if (
@@ -550,6 +559,16 @@ export const Block = ( { checkoutExtensionData } ) => {
 					window.dispatchEvent( event );
 				} )
 				.catch( () => {
+					if (
+						registerFailedLookup(
+							lookupRetry.current,
+							shippingAddress,
+							isAddressEqual
+						)
+					) {
+						previousShippingAddress.current = null;
+					}
+
 					// On error, hide container and clear options
 					setShowContainer( false );
 					setLetterbox( false );

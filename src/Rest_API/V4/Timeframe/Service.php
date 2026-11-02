@@ -219,7 +219,7 @@ class Service implements Timeframe_Service_Interface {
 	 *
 	 * Mirrors Legacy\Checkout\Item_Info: delivery days are always requested
 	 * (Base_Info hardcodes delivery_days_enabled), evening is added when enabled,
-	 * and morning stays a daytime sub-window (V4 has no separate morning service).
+	 * and morning is not requested (V4 has no morning delivery-window service; see map_option()).
 	 *
 	 * @param array $post_data Checkout POST data.
 	 *
@@ -337,7 +337,7 @@ class Service implements Timeframe_Service_Interface {
 	 *
 	 * Covers everything that changes the result: the receiver address, the
 	 * handover date, the requested services and day count, and the settings the
-	 * mapping reads (drop-off days, evening/morning toggles). A settings change
+	 * mapping reads (drop-off days, evening toggle). A settings change
 	 * therefore yields a new key — a miss that recomputes immediately — rather
 	 * than serving a stale mapping. Prefixed with PREFIX_TIMEFRAME so it clears
 	 * Cache_Adapter's allowlist.
@@ -362,7 +362,6 @@ class Service implements Timeframe_Service_Interface {
 			implode( ',', array_map( static fn( DeliveryWindowService $service ): string => $service->value, $this->build_services() ) ),
 			implode( ',', $this->get_dropoff_days() ),
 			$this->is_evening_enabled() ? 'e1' : 'e0',
-			$this->is_morning_enabled() ? 'm1' : 'm0',
 			(string) $this->settings->get_customer_code(),
 			(string) $this->settings->get_customer_num(),
 		);
@@ -434,18 +433,24 @@ class Service implements Timeframe_Service_Interface {
 	/**
 	 * Translate a V4 timeframe into the legacy option code the checkout expects.
 	 *
-	 * Evening and morning windows are only offered when the merchant enabled that
-	 * delivery option; otherwise the window is dropped rather than relabelled to
-	 * 'Daytime'. Relabelling would put a window on the checkout that the legacy
-	 * path never showed: a second, identical 'Daytime' radio which — being
-	 * fee-free and first in the list — becomes the preselected default that gets
-	 * saved on the order (Frontend\Container::get_default_value()).
+	 * Evening windows are only offered when the merchant enabled evening delivery;
+	 * otherwise the window is dropped rather than relabelled to 'Daytime'.
+	 * Relabelling would put a window on the checkout that the legacy path never
+	 * showed: a second 'Daytime' radio which, being fee-free and first in the
+	 * list, becomes the preselected default saved on the order
+	 * (Frontend\Container::get_default_value()).
 	 *
-	 * The classification is deliberately separate from the toggles: PostNL returns
+	 * The classification is deliberately separate from the toggle: PostNL returns
 	 * late windows under the 'daytime' service and TimeSlot::isEvening() only
 	 * checks from >= 17:00, so a 17:00-21:00 daytime window is an evening window
-	 * here and must disappear when evening delivery is off. A genuinely plain
-	 * window (e.g. 09:00-18:00) stays 'Daytime' whatever the toggles say.
+	 * here and must disappear when evening delivery is off.
+	 *
+	 * Every other window is 'Daytime', including one that ends by 12:00. V1
+	 * offers such a window (e.g. 09:30-12:00) as plain Daytime next to a separate
+	 * 08:00-12:00 Morning option, so TimeSlot::isMorning(), which only checks the
+	 * end time, must not turn it into the morning option. V4 has no morning
+	 * delivery-window service; the morning option returns once its V4 service is
+	 * confirmed with PostNL.
 	 *
 	 * @param \Postnl\Sdk\Service\Timeframes\Response\Timeframe $timeframe SDK timeframe entry.
 	 *
@@ -457,10 +462,6 @@ class Service implements Timeframe_Service_Interface {
 
 		if ( DeliveryWindowService::Evening->value === $service || ( null !== $slot && $slot->isEvening() ) ) {
 			return $this->is_evening_enabled() ? 'Evening' : null;
-		}
-
-		if ( null !== $slot && $slot->isMorning() ) {
-			return $this->is_morning_enabled() ? '08:00-12:00' : null;
 		}
 
 		return 'Daytime';
@@ -610,15 +611,6 @@ class Service implements Timeframe_Service_Interface {
 	 */
 	private function is_evening_enabled(): bool {
 		return (bool) $this->settings->is_evening_delivery_enabled();
-	}
-
-	/**
-	 * Whether morning delivery is enabled in settings.
-	 *
-	 * @return bool
-	 */
-	private function is_morning_enabled(): bool {
-		return (bool) $this->settings->is_morning_delivery_enabled();
 	}
 
 	/**

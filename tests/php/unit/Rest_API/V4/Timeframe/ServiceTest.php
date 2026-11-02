@@ -275,7 +275,7 @@ class ServiceTest extends UnitTestCase {
 						array(
 							'From'    => '08:00:00',
 							'To'      => '12:00:00',
-							'Options' => array( '08:00-12:00' ),
+							'Options' => array( 'Daytime' ),
 						),
 						array(
 							'From'    => '18:00:00',
@@ -325,19 +325,24 @@ class ServiceTest extends UnitTestCase {
 	}
 
 	/**
-	 * @testdox A morning window is dropped, not relabelled, when morning delivery is disabled
+	 * @testdox A daytime window ending by 12:00 stays Daytime, with morning delivery on or off
 	 *
-	 * Relabelling it to Daytime would render two identical Daytime radios and, being
-	 * fee-free and first in the list, make the morning window the preselected default
-	 * that lands on the label (Frontend\Container::get_default_value()).
+	 * V1 offers a window such as 09:30-12:00 as plain Daytime next to a separate
+	 * 08:00-12:00 Morning option. TimeSlot::isMorning() only checks the end time, so
+	 * using it would show this window as the morning option and hide the Daytime one.
+	 *
+	 * @dataProvider morning_toggle_provider
+	 *
+	 * @param bool $morning Whether morning delivery is enabled.
 	 */
-	public function test_morning_window_is_dropped_when_disabled(): void {
-		$service = new Testable_Timeframe_Service( new Client_Factory( $this->make_settings( true, false ) ), $this->make_settings( true, false ), self::V4_KEY, self::DAYS, new NullLogger() );
+	public function test_daytime_window_ending_by_noon_stays_daytime( bool $morning ): void {
+		$settings = $this->make_settings( true, $morning );
+		$service  = new Testable_Timeframe_Service( new Client_Factory( $settings ), $settings, self::V4_KEY, self::DAYS, new NullLogger() );
 
 		$collection = new MultipleServicesTimeframeCollection(
 			array(
-				new Timeframe( deliveryDate: '14-07-2026', timeFrame: new TimeSlot( from: '08:00:00', until: '12:00:00' ), availability: true, service: 'daytime' ),
-				new Timeframe( deliveryDate: '14-07-2026', timeFrame: new TimeSlot( from: '09:00:00', until: '18:00:00' ), availability: true, service: 'daytime' ),
+				new Timeframe( deliveryDate: '14-07-2026', timeFrame: new TimeSlot( from: '09:30:00', until: '12:00:00' ), availability: true, service: 'daytime' ),
+				new Timeframe( deliveryDate: '14-07-2026', timeFrame: new TimeSlot( from: '18:00:00', until: '22:00:00' ), availability: true, service: 'evening' ),
 			)
 		);
 
@@ -347,14 +352,31 @@ class ServiceTest extends UnitTestCase {
 					'DeliveryDate' => '14-07-2026',
 					'Timeframe'    => array(
 						array(
-							'From'    => '09:00:00',
-							'To'      => '18:00:00',
+							'From'    => '09:30:00',
+							'To'      => '12:00:00',
 							'Options' => array( 'Daytime' ),
+						),
+						array(
+							'From'    => '18:00:00',
+							'To'      => '22:00:00',
+							'Options' => array( 'Evening' ),
 						),
 					),
 				),
 			),
 			$service->expose_map_response( $collection )
+		);
+	}
+
+	/**
+	 * Morning delivery toggle states.
+	 *
+	 * @return array<string, array{0: bool}>
+	 */
+	public static function morning_toggle_provider(): array {
+		return array(
+			'morning on'  => array( true ),
+			'morning off' => array( false ),
 		);
 	}
 
@@ -369,7 +391,7 @@ class ServiceTest extends UnitTestCase {
 
 		$collection = new MultipleServicesTimeframeCollection(
 			array(
-				new Timeframe( deliveryDate: '14-07-2026', timeFrame: new TimeSlot( from: '08:00:00', until: '12:00:00' ), availability: true, service: 'daytime' ),
+				new Timeframe( deliveryDate: '14-07-2026', timeFrame: new TimeSlot( from: '18:00:00', until: '22:00:00' ), availability: true, service: 'evening' ),
 				new Timeframe( deliveryDate: '15-07-2026', timeFrame: new TimeSlot( from: '09:00:00', until: '18:00:00' ), availability: true, service: 'daytime' ),
 			)
 		);

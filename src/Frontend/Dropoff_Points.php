@@ -7,6 +7,8 @@
 
 namespace PostNLWooCommerce\Frontend;
 
+use PostNLWooCommerce\Rest_API\Contracts\Pickup_Location_Service_Interface;
+
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
@@ -80,12 +82,10 @@ class Dropoff_Points extends Base {
 				continue;
 			}
 
+			$is_v4 = Pickup_Location_Service_Interface::SOURCE_V4 === ( $pickup_point['Source'] ?? '' );
+
 			foreach ( $pickup_point['Locations'] as $dropoff_option ) {
-				// PartnerID, PickupTime and Distance are legacy checkout-response fields the
-				// V4 locations endpoint does not return; requiring them dropped every V4
-				// pickup point. Only the fields the plugin renders and stores a selection
-				// from — the location code and its address — are required.
-				if ( empty( $dropoff_option['LocationCode'] ) || empty( $dropoff_option['Address'] ) ) {
+				if ( ! $this->is_usable_location( $dropoff_option, $is_v4 ) ) {
 					continue;
 				}
 
@@ -110,6 +110,29 @@ class Dropoff_Points extends Base {
 		}
 
 		return $return_data;
+	}
+
+	/**
+	 * Whether a pickup location carries the fields the checkout needs.
+	 *
+	 * Legacy locations keep the original check, so the legacy checkout shows the same
+	 * locations as before. The V4 locations endpoint returns no PartnerID or
+	 * PickupTime, so a V4 location only needs its code and address.
+	 *
+	 * @param array $location Location from the PickupOptions response.
+	 * @param bool  $is_v4    Whether the location came from the V4 pickup service.
+	 *
+	 * @return bool
+	 */
+	protected function is_usable_location( $location, $is_v4 ) {
+		if ( $is_v4 ) {
+			return ! empty( $location['LocationCode'] ) && ! empty( $location['Address'] );
+		}
+
+		return ! empty( $location['PartnerID'] )
+			&& ! empty( $location['PickupTime'] )
+			&& ! empty( $location['Distance'] )
+			&& ! empty( $location['Address'] );
 	}
 
 	/**

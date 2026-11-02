@@ -197,6 +197,12 @@ abstract class Base {
 		$frontend_data = $this->get_frontend_data( $order->get_id() );
 
 		if ( ! empty( $frontend_data['dropoff_points'] ) ) {
+			// The pickup default is an NL pickup setting; a pickup order elsewhere has
+			// no option to pre-select, matching the empty options in the meta box.
+			if ( 'NL' !== $shipping_zone ) {
+				return array();
+			}
+
 			$shipping_zone = 'PICKUP';
 		}
 

@@ -84,6 +84,14 @@ class Service_FactoryTest extends UnitTestCase {
 				return 'original-legacy-key';
 			}
 			/** @return string */
+			public function get_api_key_sandbox() {
+				return 'original-legacy-sandbox-key';
+			}
+			/** @return bool */
+			public function is_sandbox() {
+				return true;
+			}
+			/** @return string */
 			public function get_effective_api_key() {
 				return '' !== $this->get_api_key_new() && $this->validated
 					? $this->get_api_key_new()
@@ -163,6 +171,21 @@ class Service_FactoryTest extends UnitTestCase {
 			/** @return bool */
 			public function is_logging_enabled() {
 				return false;
+			}
+
+			/** @return string */
+			public function get_api_key() {
+				return 'original-legacy-key';
+			}
+
+			/** @return string */
+			public function get_api_key_sandbox() {
+				return 'original-legacy-sandbox-key';
+			}
+
+			/** @return bool */
+			public function is_sandbox() {
+				return true;
 			}
 
 			/** @return string */
@@ -413,8 +436,8 @@ class Service_FactoryTest extends UnitTestCase {
 	/**
 	 * @testdox SDK not installed: V4 flows fall back to Legacy even with key + flag + stub
 	 *
-	 * The SDK is a require-dev dependency stripped from a normal --no-dev build, so a
-	 * site can have an API key and a flow flag on with no bundled SDK. should_use_v4()
+	 * The SDK is a `require` dependency, but a build can still ship a vendor/ without
+	 * it, so a site can have an API key and a flow flag on with no bundled SDK. should_use_v4()
 	 * must then stay on Legacy rather than routing to a V4 service that fatals on a
 	 * missing SDK class the moment a flow builds its request. Overriding the protected
 	 * sdk_available() seam simulates the SDK being absent.
@@ -1020,5 +1043,63 @@ class Service_FactoryTest extends UnitTestCase {
 
 		$this->assertInstanceOf( Legacy_Checkout_Service::class, $factory->timeframe_service() );
 		$this->assertInstanceOf( Legacy_Checkout_Service::class, $factory->pickup_location_service() );
+	}
+
+	// -------------------------------------------------------------------------
+	// Scenario 11 — every self-built V4 service authenticates with the "API Key" field
+	// -------------------------------------------------------------------------
+
+	/**
+	 * @testdox $flow V4 service authenticates with the validated "API Key", not the old key fields
+	 *
+	 * Both settings doubles return a different value from the old production and
+	 * sandbox key fields, so a factory that hands a V4 service get_api_key(),
+	 * get_api_key_sandbox() or any environment-aware resolver fails here.
+	 *
+	 * @dataProvider v4_key_services_provider
+	 *
+	 * @param string $flow          Router flow the filter enables.
+	 * @param string $method        Factory getter that builds the service.
+	 * @param string $class         Expected V4 service class.
+	 * @param bool   $real_settings Whether the service needs the concrete Settings double.
+	 */
+	public function test_v4_services_receive_validated_api_key( string $flow, string $method, string $class, bool $real_settings ): void {
+		Filters\expectApplied( 'postnl_sdk_enable_' . $flow )->andReturn( true );
+
+		$settings = $real_settings
+			? $this->real_settings_with_key( 'validated-api-key-field' )
+			: $this->settings_with_key( 'validated-api-key-field' );
+		$service  = ( new Service_Factory( $settings ) )->$method();
+
+		$this->assertInstanceOf( $class, $service );
+		$this->assertSame( 'validated-api-key-field', $this->read_v4_key( $service ) );
+	}
+
+	/**
+	 * Every V4 service the factory builds itself, with the settings double it needs.
+	 *
+	 * @return array<string, array{0: string, 1: string, 2: string, 3: bool}>
+	 */
+	public static function v4_key_services_provider(): array {
+		return array(
+			'label'           => array( 'label', 'label_service', V4_Label_Service::class, false ),
+			'return_label'    => array( 'return_label', 'return_label_service', V4_Returns_Service::class, false ),
+			'smart_returns'   => array( 'smart_returns', 'smart_returns_service', V4_Smart_Returns_Service::class, false ),
+			'timeframe'       => array( 'timeframe', 'timeframe_service', V4_Timeframe_Service::class, true ),
+			'pickup_location' => array( 'pickup_location', 'pickup_location_service', V4_Pickup_Location_Service::class, true ),
+		);
+	}
+
+	/**
+	 * Read the private API key a V4 service was constructed with.
+	 *
+	 * @param object $service V4 service instance.
+	 * @return string
+	 */
+	private function read_v4_key( object $service ): string {
+		$property = new \ReflectionProperty( $service, 'v4_key' );
+		$property->setAccessible( true );
+
+		return (string) $property->getValue( $service );
 	}
 }

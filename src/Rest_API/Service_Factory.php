@@ -503,8 +503,8 @@ class Service_Factory {
 	/**
 	 * Whether the PostNL PHP SDK is actually installed and loadable.
 	 *
-	 * The SDK is a require-dev dependency, so a normal `--no-dev` release build (and
-	 * anything built without the dedicated V4 build step) ships without it. Without
+	 * The SDK is a `require` dependency, but a build can still ship a `vendor/`
+	 * without it (an older release zip, a manual copy, a stale autoloader). Without
 	 * this guard, a site that has an API key and a flow flag on but no bundled SDK
 	 * would pass has_v4_key(), route to a V4 service, and then fatal with
 	 * "Class ...\\MultipleServicesTimeframeRequest not found" the moment a flow builds

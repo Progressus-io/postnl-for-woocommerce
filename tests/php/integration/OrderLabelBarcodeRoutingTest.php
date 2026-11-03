@@ -216,6 +216,20 @@ class OrderLabelBarcodeRoutingTest extends IntegrationTestCase {
 			public function get_api_key_sandbox() {
 				return 'integration-key';
 			}
+
+			/**
+			 * @return string
+			 */
+			public function get_api_key_new() {
+				return 'integration-key';
+			}
+
+			/**
+			 * @return bool
+			 */
+			public function is_api_key_new_validated() {
+				return true;
+			}
 		};
 
 		$factory = new Service_Factory( $key_settings );

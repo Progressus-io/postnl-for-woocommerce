@@ -653,7 +653,7 @@ class Extend_Block_Core {
 			Utils::clear_postnl_checkout_session();
 			wp_send_json_success(
 				array(
-					'message'           => 'Failed to fetch delivery options.',
+					'message'           => __( 'Failed to fetch delivery options.', 'postnl-for-woocommerce' ),
 					'show_container'    => false,
 					'lookup_failed'     => true,
 					'validated_address' => $validated_address,

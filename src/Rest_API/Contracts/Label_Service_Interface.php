@@ -63,10 +63,12 @@ interface Label_Service_Interface {
 	 *         @type array  $frontend  Customer-selected checkout options, e.g.
 	 *                                 delivery_day_*, dropoff_points_*.
 	 *     }
-	 *     @type string    $main_barcode            Required. The primary barcode
-	 *                                              string for the first shipment.
-	 *     @type string[]  $barcodes                Required. All barcodes for
-	 *                                              multi-collo; index 0 is main.
+	 *     @type string    $main_barcode            The primary barcode string for
+	 *                                              the first shipment. Required on
+	 *                                              legacy; the V4 service gets its own.
+	 *     @type string[]  $barcodes                All barcodes for multi-collo;
+	 *                                              index 0 is main. Required on
+	 *                                              legacy; the V4 service gets its own.
 	 *     @type string    $return_barcode          Return barcode string.
 	 *                                              Empty string when not applicable.
 	 *     @type string    $shipping_return_barcode Shipping-return barcode string.

@@ -198,10 +198,7 @@ class Request_Builder {
 	 *
 	 * When no barcode is pre-issued the count comes from num_labels instead, so an
 	 * order that lets labelconfirm issue its barcodes is not collapsed into one
-	 * collo. That labelconfirm auto-issues a barcode per barcode-less item is an
-	 * API assumption the SDK docs do not cover (flip-checklist Q15c); if it is
-	 * unsupported the request fails loudly, which is the point — the silent
-	 * single-collo collapse is what this replaces.
+	 * collo. The V4 sandbox issues one barcode per barcode-less item.
 	 *
 	 * @param array $fields Builder input keyed as documented on build().
 	 * @return RequestShippingItem[]

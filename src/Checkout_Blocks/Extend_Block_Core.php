@@ -554,6 +554,7 @@ class Extend_Block_Core {
 				array(
 					'message'           => __( 'Failed to fetch delivery options.', 'postnl-for-woocommerce' ),
 					'show_container'    => false,
+					'lookup_failed'     => true,
 					'validated_address' => $validated_address,
 					'delivery_options'  => array(),
 					'dropoff_options'   => array(),
@@ -654,6 +655,7 @@ class Extend_Block_Core {
 				array(
 					'message'           => 'Failed to fetch delivery options.',
 					'show_container'    => false,
+					'lookup_failed'     => true,
 					'validated_address' => $validated_address,
 					'delivery_options'  => array(),
 					'dropoff_options'   => array(),

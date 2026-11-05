@@ -470,14 +470,14 @@ class Cache_AdapterTest extends UnitTestCase {
 	}
 
 	/**
-	 * @testdox The SDK's default keyPrefix is not cacheable, so an unwired CachingPlugin caches nothing
+	 * @testdox A key whose prefix is not on the allowlist is not cached
 	 */
 	public function test_sdk_default_key_prefix_is_not_cacheable(): void {
 		Functions\expect( 'set_transient' )->never();
 
-		$sdk_default_key = 'sdk_postnl_http_' . hash( 'sha256', 'get|https://api.postnl.nl/v4/timeframe/|' );
+		$unlisted_key = 'sdk_postnl_http_' . hash( 'sha256', 'get|https://api.postnl.nl/v4/timeframe/|' );
 
-		$this->assertFalse( ( new Cache_Adapter( 'tenant-key' ) )->set( $sdk_default_key, 'v' ) );
+		$this->assertFalse( ( new Cache_Adapter( 'tenant-key' ) )->set( $unlisted_key, 'v' ) );
 	}
 
 	/**
@@ -501,7 +501,7 @@ class Cache_AdapterTest extends UnitTestCase {
 		$this->with_transient_store();
 		$adapter = new Cache_Adapter( 'tenant-key' );
 
-		// Key and payload shaped as CachingPlugin builds and stores them.
+		// Key and payload shaped as a calling service builds and stores them.
 		$key      = Cache_Adapter::PREFIX_TIMEFRAME . hash( 'sha256', 'post|https://api.postnl.nl/v4/timeframe/calculate|{"cd":"1234"}' );
 		$response = array(
 			'body'       => '{"Timeframes":[]}',
@@ -558,19 +558,19 @@ class Cache_AdapterTest extends UnitTestCase {
 
 	/**
 	 * @dataProvider non_positive_ttl_provider
-	 * @testdox get_ttl() falls back to the default rather than returning a value CachingPlugin would reject
+	 * @testdox get_ttl() falls back to the default rather than returning a non-positive value
 	 *
 	 * @param int $filtered Value returned by the filter.
 	 */
-	public function test_get_ttl_never_returns_a_value_caching_plugin_would_reject( int $filtered ): void {
+	public function test_get_ttl_never_returns_a_non_positive_value( int $filtered ): void {
 		Filters\expectApplied( 'postnl_v4_cache_ttl' )->andReturn( $filtered );
 
 		$this->assertSame( Cache_Adapter::DEFAULT_TTL, Cache_Adapter::get_ttl() );
 	}
 
 	/**
-	 * CachingPlugin throws InvalidArgumentSdkException on a TTL of zero or less,
-	 * so the shared accessor must never hand one back.
+	 * set_transient() reads a TTL of zero or less as "never expires", so the
+	 * shared accessor must never hand one back.
 	 *
 	 * @return array<string, array{int}>
 	 */

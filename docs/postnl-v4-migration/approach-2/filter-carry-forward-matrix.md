@@ -13,7 +13,7 @@ merchants until a flow is turned on.
 
 | Extension point | Legacy fire point | Parameter shape | V4 label | V4 returns | V4 smart returns |
 |---|---|---|---|---|---|
-| `postnl_shipment_addresses` | `Legacy\Shipping\Client::get_shipment_addresses()` — inherited by `Legacy\Return_Label\Client`, so legacy **return labels fire it too** | `( array $addresses, Shipping\Client $client )` | **Fired (new)** — `V4\Label\Service::filter_shipment_addresses()` reuses the legacy address builder verbatim, then overlays the filtered recipient back onto the request | **GAP — does not fire.** `Order\Base` builds a `Legacy\Return_Label\Client` for every legacy return label, which inherits `get_shipment_addresses()` and the filter. `V4\Returns\Service::create()` never calls it. Once `postnl_sdk_enable_return_label` is turned on, a merchant's address-rewrite plugin silently stops applying to return labels. Must be wired (or the flag blocked) before that flip. | n/a — legacy smart returns extends `Rest_API\Base`, not `Shipping\Client`, and never fired it |
+| `postnl_shipment_addresses` | `Legacy\Shipping\Client::get_shipment_addresses()` — inherited by `Legacy\Return_Label\Client`, so legacy **return labels fire it too** | `( array $addresses, Shipping\Client $client )` | **Fired (new)** — `V4\Label\Service::filter_shipment_addresses()` reuses the legacy address builder verbatim, then overlays the filtered recipient back onto the request | **Fires (fixed)** — `V4\Returns\Service::filter_shipment_addresses()` reuses `Legacy\Return_Label\Client` (which inherits `get_shipment_addresses()` and the filter), then overlays the filtered AddressType `01` entry — the consumer, who is the sender on a return — back onto the request. Same `( array $addresses, Shipping\Client $client )` shape as legacy. | n/a — legacy smart returns extends `Rest_API\Base`, not `Shipping\Client`, and never fired it |
 | `postnl_order_weight` | `Legacy\Shipping\Item_Info::calculate_order_weight()` | `( float $total_weight, WC_Order $order )` | Fires — V4 service builds the shared `Shipping\Item_Info` | Fires — `Return_Label\Item_Info` extends `Shipping\Item_Info` | n/a — `Smart_Returns\Item_Info` extends `Base_Info`; legacy never fired it |
 | `postnl_order_meta_box_fields` | `Order\Base::meta_box_fields()` | `( array $fields, string $context )` | Fires — shared admin meta box (not a per-service request step) | Fires — shared | n/a — smart returns is email-only |
 | `postnl_logger_write_message` | `Logger::write()` (legacy); `SDK\Logger_Adapter::log()` (every V4 service) | `( string $message )` | **Fires (fixed)** — `Logger_Adapter::log()` applies it to the finished `[postnl-v4] …` line before writing. It did not fire before this task: the adapter wrote to `wc_get_logger()` directly and never passed through `Logger::write()`. | Fires (fixed) — same adapter | Fires (fixed) — same adapter |
@@ -31,15 +31,28 @@ merchants until a flow is turned on.
   extends `Rest_API\Base`, not `Shipping\Client`), so its V4 counterpart does not
   either — carry-forward means match legacy, not add new surface.
 
-- **`postnl_shipment_addresses` on the returns path is an open gap.** Legacy
-  return labels *do* fire it: `Legacy\Return_Label\Client` extends
-  `Shipping\Client`, overrides only `get_customer_address()`, and so inherits
-  `get_shipments()` and the `apply_filters()` call. `V4\Returns\Service` builds
-  its request from a flat field array and never fires it. This task leaves the
-  returns flag (`postnl_sdk_enable_return_label`) off, so nothing changes today, but
-  the flag must not be turned on until the filter is wired into the returns
-  service (mapping the filtered entries back onto the return request, as the
-  label service does) or the gap is accepted and recorded in the flip checklist.
+- **`postnl_shipment_addresses` on the returns path now fires.** Legacy return
+  labels fire it: `Legacy\Return_Label\Client` extends `Shipping\Client`,
+  overrides only `get_customer_address()`, and so inherits `get_shipments()` and
+  the `apply_filters()` call, whose AddressType `01` entry is the consumer
+  returning the parcel. `V4\Returns\Service::filter_shipment_addresses()` builds
+  that same legacy client to fire the filter with the identical
+  `( array $addresses, Shipping\Client $client )` shape, and overlays the filtered
+  `01` entry back onto the sender — the consumer is the sender on a return — via
+  the shared `V4\Label\Request_Builder::apply_filtered_receiver()`. The merchant
+  return address travels in the legacy `Customer.Address` (AddressType `02`) block,
+  which the filter never exposed on legacy either, so it is not overlaid. Only the
+  `01` entry is honoured, matching the label path.
+
+- **Eligibility is re-checked after the filter runs.** `Eligibility::is_eligible()`
+  is decided on the unfiltered address, so a filter that rewrites the destination
+  country (say NL to DE) would otherwise keep the domestic product code on a
+  foreign address, and a code the SDK `Country` enum does not know (`'UK'`, `'NLD'`)
+  would be reset to NL by `Request_Builder::country()`. Both the label and the
+  return service now compare the country before and after the overlay; when it
+  changed they log a warning and fall back to the legacy pipeline, which passes
+  the string through and lets PostNL judge it — the pre-V4 behaviour for exactly
+  the orders a filter touches in a way V4 does not model.
 
 - **A bad filter return fails loudly on V4.** A `postnl_shipment_addresses`
   callback that forgets to `return` (so the filter yields `null`), or that sets a
@@ -90,26 +103,28 @@ merchants until a flow is turned on.
   built only to fire the filter with the identical shape. No known consumer does
   this.
 
-- **An empty house number is omitted on V4, sent as `""` on legacy.** A filter
-  that folds the house number into the street (`'Street' => 'Foo 12',
-  'HouseNr' => ''`, the usual Belgium/Germany pattern) makes legacy send
-  `HouseNr: ""`. On V4, `Request_Builder::maybe_null()` turns `''` into `null`
-  and the SDK omits the field. The SDK `Address` DTO has an `addressLine` field
-  for exactly this combined form; the builder does not use it yet. Whether
-  PostNL's V4 validation accepts a street-only address is not verified.
+- **An empty house number now travels as `addressLine`.** A filter that folds the
+  house number into the street (`'Street' => 'Foo 12', 'HouseNr' => ''`, the usual
+  Belgium/Germany pattern) makes legacy send `HouseNr: ""`. On V4,
+  `Request_Builder::maybe_null()` would turn `''` into `null` and leave a
+  street-only address the endpoint may reject. `Request_Builder::address()` now
+  detects the numberless-but-present street and sends the street via the SDK
+  `Address.addressLine` field — the combined-form field PostNL documents for
+  exactly this case — omitting the split `street` so the two never conflict. A
+  normal address (house number present) is unchanged. PostNL's acceptance of the
+  `addressLine` form has not been confirmed against the live endpoint, so verify
+  it in sandbox before flipping `postnl_sdk_enable_label`.
 
-- **The contact block reads the filtered name on V4, not on legacy.** Legacy
-  `Contacts` carry only email and phone. On V4, `Request_Builder::contact()`
-  reads `first_name`, `last_name` and `company` from the same receiver array the
-  filtered recipient was overlaid onto. So a filter that changes the recipient
-  name changes the contact's name too, only on V4.
-
-- **Eligibility is decided on the unfiltered address.** `Eligibility::is_eligible()`
-  runs before the filter. A filter that changes `Countrycode` (say NL to DE)
-  keeps the domestic product code with a foreign address, and a code the SDK
-  `Country` enum does not know (`'UK'`, `'NLD'`) is reset to NL by
-  `Request_Builder::country()`. Legacy passes the string through and PostNL
-  rejects it. Not handled in this task; see the open items in the PR.
+- **The contact block reads the filtered name on V4, not on legacy — kept by
+  design.** Legacy `Contacts` carry only email and phone; the recipient name lives
+  in the Addresses `01` block. The V4 `Address` DTO has no first/last-name field,
+  so a recipient's name can only travel on `Contact`. `Request_Builder::contact()`
+  therefore reads `first_name`, `last_name` and `company` from the same receiver
+  array the filtered recipient was overlaid onto. This is deliberate: a filter that
+  rewrites the recipient name must reach the printed label, and `Contact` is the
+  only V4 field that holds a name. Forcing the contact name to stay unfiltered
+  would silently drop legitimate name rewrites on V4, a regression, so this
+  difference stands.
 
 ## Verification
 

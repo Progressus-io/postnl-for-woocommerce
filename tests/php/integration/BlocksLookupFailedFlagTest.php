@@ -109,6 +109,7 @@ class BlocksLookupFailedFlagTest extends IntegrationTestCase {
 		$response = $this->call_handler();
 
 		$this->assertTrue( $response['success'] );
+		$this->assertSame( 'Failed to fetch delivery options.', $response['data']['message'] );
 		$this->assertTrue( $response['data']['lookup_failed'] ?? false, 'A failed lookup must carry lookup_failed so the client spends its retry budget.' );
 		$this->assertFalse( $response['data']['show_container'] );
 	}
@@ -135,6 +136,7 @@ class BlocksLookupFailedFlagTest extends IntegrationTestCase {
 		$response = $this->call_handler();
 
 		$this->assertTrue( $response['success'] );
+		$this->assertSame( 'No delivery or dropoff options available.', $response['data']['message'] );
 		$this->assertArrayNotHasKey( 'lookup_failed', $response['data'], 'An empty result is not a failure and must reset the retry budget.' );
 		$this->assertFalse( $response['data']['show_container'] );
 	}
@@ -159,12 +161,14 @@ class BlocksLookupFailedFlagTest extends IntegrationTestCase {
 		$_POST = array(
 			'nonce' => wp_create_nonce( 'postnl_delivery_day_nonce' ),
 			'data'  => array(
-				'shipping_country'      => 'NL',
-				'shipping_postcode'     => '2132WT',
-				'shipping_house_number' => '3',
-				'shipping_address_1'    => 'Siriusdreef',
-				'shipping_city'         => 'Hoofddorp',
-				'shipping_method'       => 'postnl',
+				'shipping_country'          => 'NL',
+				'shipping_postcode'         => '2132WT',
+				'shipping_house_number'     => '3',
+				'shipping_address_1'        => 'Siriusdreef',
+				'shipping_city'             => 'Hoofddorp',
+				'shipping_method'           => 'postnl',
+				// The blocks checkout always sends this; without it the shipping fields are copied from billing.
+				'ship_to_different_address' => '1',
 			),
 		);
 

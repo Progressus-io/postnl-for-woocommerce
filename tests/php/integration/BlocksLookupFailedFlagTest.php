@@ -35,6 +35,13 @@ class BlocksLookupFailedFlagTest extends IntegrationTestCase {
 	private $orig_country = null;
 
 	/**
+	 * Backup of the store address options.
+	 *
+	 * @var array
+	 */
+	private $orig_store_address = array();
+
+	/**
 	 * Backup of the $_POST superglobal.
 	 *
 	 * @var array
@@ -50,6 +57,17 @@ class BlocksLookupFailedFlagTest extends IntegrationTestCase {
 		$this->orig_country = get_option( 'woocommerce_default_country' );
 		update_option( 'woocommerce_default_country', 'NL' );
 
+		// The legacy request validates the store address before it sends anything.
+		$store_address = array(
+			'woocommerce_store_address'  => 'Prinses Beatrixlaan 23',
+			'woocommerce_store_city'     => 'Den Haag',
+			'woocommerce_store_postcode' => '2595AK',
+		);
+		foreach ( $store_address as $option => $value ) {
+			$this->orig_store_address[ $option ] = get_option( $option );
+			update_option( $option, $value );
+		}
+
 		if ( null === WC()->cart ) {
 			wc_load_cart();
 		}
@@ -61,6 +79,9 @@ class BlocksLookupFailedFlagTest extends IntegrationTestCase {
 		$settings->settings['api_keys_new']         = '';
 		$settings->settings['api_keys_sandbox_new'] = '';
 		$settings->settings['validate_nl_address']  = 'no';
+		// The legacy request also validates these before it sends anything.
+		$settings->settings['cut_off_time'] = '18:00';
+		$settings->settings['transit_time'] = '1';
 
 		$this->orig_post = $_POST;
 
@@ -87,6 +108,11 @@ class BlocksLookupFailedFlagTest extends IntegrationTestCase {
 			update_option( 'woocommerce_default_country', $this->orig_country );
 			$this->orig_country = null;
 		}
+
+		foreach ( $this->orig_store_address as $option => $value ) {
+			update_option( $option, $value );
+		}
+		$this->orig_store_address = array();
 
 		if ( null !== WC()->session ) {
 			WC()->session->__unset( 'postnl_checkout_post_data' );

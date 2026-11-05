@@ -173,8 +173,9 @@ class BlocksLookupFailedFlagTest extends IntegrationTestCase {
 	 * @return callable
 	 */
 	public function get_die_handler(): callable {
+		// An \Error, because the handler wraps its success responses in catch ( \Exception ).
 		return static function () {
-			throw new \RuntimeException( 'wp_die' );
+			throw new \Error( 'wp_die' );
 		};
 	}
 
@@ -208,7 +209,7 @@ class BlocksLookupFailedFlagTest extends IntegrationTestCase {
 		ob_start();
 		try {
 			$handler->handle_set_checkout_post_data();
-		} catch ( \RuntimeException $e ) {
+		} catch ( \Error $e ) {
 			$this->assertSame( 'wp_die', $e->getMessage() );
 		}
 		$output = (string) ob_get_clean();

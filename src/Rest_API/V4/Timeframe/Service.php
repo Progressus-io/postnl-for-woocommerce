@@ -218,8 +218,8 @@ class Service implements Timeframe_Service_Interface {
 	 * Build the SDK request from the checkout address and shipping settings.
 	 *
 	 * Mirrors Legacy\Checkout\Item_Info: delivery days are always requested
-	 * (Base_Info hardcodes delivery_days_enabled), evening is added when enabled,
-	 * and morning is not requested (V4 has no morning delivery-window service; see map_option()).
+	 * (Base_Info hardcodes delivery_days_enabled), and evening and morning are
+	 * added when enabled.
 	 *
 	 * @param array $post_data Checkout POST data.
 	 *
@@ -308,6 +308,9 @@ class Service implements Timeframe_Service_Interface {
 	/**
 	 * Delivery-window services to request.
 	 *
+	 * Morning delivery is PostNL's "Guaranteed before 10" (characteristic 118,
+	 * option 007), so it is requested whenever the merchant enabled morning delivery.
+	 *
 	 * @return DeliveryWindowService[]
 	 */
 	protected function build_services(): array {
@@ -315,6 +318,10 @@ class Service implements Timeframe_Service_Interface {
 
 		if ( $this->is_evening_enabled() ) {
 			$services[] = DeliveryWindowService::Evening;
+		}
+
+		if ( $this->is_morning_enabled() ) {
+			$services[] = DeliveryWindowService::GuaranteedBefore10;
 		}
 
 		return $services;
@@ -385,6 +392,11 @@ class Service implements Timeframe_Service_Interface {
 	 * drive this filtering are part of the cache key, so a settings change
 	 * recomputes rather than serving a stale mapping.
 	 *
+	 * PostNL does not guarantee the order of deliveryDates, and the checkout lists
+	 * dates as given, so the result is sorted by date. Within a date PostNL lists
+	 * the paid services first, while both checkouts preselect the first window,
+	 * so Daytime windows are moved ahead of the paid ones.
+	 *
 	 * @param MultipleServicesTimeframeCollection $collection SDK timeframe collection.
 	 *
 	 * @return array<int, array{DeliveryDate: string, Timeframe: array<int, array{From: string, To: string, Options: string[]}>}>
@@ -427,7 +439,57 @@ class Service implements Timeframe_Service_Interface {
 			);
 		}
 
-		return array_values( $by_date );
+		foreach ( $by_date as $date => $entry ) {
+			$by_date[ $date ]['Timeframe'] = $this->daytime_first( $entry['Timeframe'] );
+		}
+
+		return $this->sort_by_date( array_values( $by_date ) );
+	}
+
+	/**
+	 * Move Daytime windows ahead of the paid ones, keeping each group's order.
+	 *
+	 * @param array<int, array{From: string, To: string, Options: string[]}> $windows Windows of one delivery date.
+	 *
+	 * @return array<int, array{From: string, To: string, Options: string[]}>
+	 */
+	private function daytime_first( array $windows ): array {
+		$daytime = array();
+		$paid    = array();
+
+		foreach ( $windows as $window ) {
+			if ( array( 'Daytime' ) === $window['Options'] ) {
+				$daytime[] = $window;
+			} else {
+				$paid[] = $window;
+			}
+		}
+
+		return array_merge( $daytime, $paid );
+	}
+
+	/**
+	 * Sort mapped delivery dates in ascending date order.
+	 *
+	 * An unreadable date sorts after every readable one, keeping its place among
+	 * the other unreadable dates.
+	 *
+	 * @param array<int, array{DeliveryDate: string, Timeframe: array}> $dates Mapped delivery dates.
+	 *
+	 * @return array<int, array{DeliveryDate: string, Timeframe: array}>
+	 */
+	private function sort_by_date( array $dates ): array {
+		usort(
+			$dates,
+			function ( array $a, array $b ): int {
+				$a_date = $this->parse_delivery_date( $a['DeliveryDate'] );
+				$b_date = $this->parse_delivery_date( $b['DeliveryDate'] );
+
+				return ( $a_date ? $a_date->getTimestamp() : PHP_INT_MAX ) <=> ( $b_date ? $b_date->getTimestamp() : PHP_INT_MAX );
+			}
+		);
+
+		return $dates;
 	}
 
 	/**
@@ -445,12 +507,14 @@ class Service implements Timeframe_Service_Interface {
 	 * checks from >= 17:00, so a 17:00-21:00 daytime window is an evening window
 	 * here and must disappear when evening delivery is off.
 	 *
+	 * A "guaranteed before 10" window is the morning option. It keeps the legacy
+	 * '08:00-12:00' code, which the checkout fee and the label mapping read as
+	 * morning, and is dropped when morning delivery is off.
+	 *
 	 * Every other window is 'Daytime', including one that ends by 12:00. V1
 	 * offers such a window (e.g. 09:30-12:00) as plain Daytime next to a separate
 	 * 08:00-12:00 Morning option, so TimeSlot::isMorning(), which only checks the
-	 * end time, must not turn it into the morning option. V4 has no morning
-	 * delivery-window service; the morning option returns once its V4 service is
-	 * confirmed with PostNL.
+	 * end time, must not turn it into the morning option.
 	 *
 	 * @param \Postnl\Sdk\Service\Timeframes\Response\Timeframe $timeframe SDK timeframe entry.
 	 *
@@ -459,6 +523,10 @@ class Service implements Timeframe_Service_Interface {
 	protected function map_option( $timeframe ): ?string {
 		$service = is_string( $timeframe->service ) ? strtolower( $timeframe->service ) : '';
 		$slot    = $timeframe->timeFrame;
+
+		if ( DeliveryWindowService::GuaranteedBefore10->value === $service ) {
+			return $this->is_morning_enabled() ? '08:00-12:00' : null;
+		}
 
 		if ( DeliveryWindowService::Evening->value === $service || ( null !== $slot && $slot->isEvening() ) ) {
 			return $this->is_evening_enabled() ? 'Evening' : null;
@@ -528,26 +596,46 @@ class Service implements Timeframe_Service_Interface {
 	 * enabled drop-off day.
 	 *
 	 * With every day enabled this is a no-op; with none enabled
-	 * get_delivery_options() has already short-circuited before mapping.
+	 * get_delivery_options() has already short-circuited before mapping. This is
+	 * also what keeps Monday off the checkout unless Sunday is a drop-off day.
 	 *
-	 * @param string   $date         Delivery date in the d-m-Y format PostNL returns, e.g. '14-07-2026'.
+	 * @param string   $date         Delivery date, e.g. '2026-07-14' or '14-07-2026'.
 	 * @param string[] $dropoff_days Enabled drop-off weekday keys.
 	 *
 	 * @return bool
 	 */
 	private function is_reachable_delivery_date( string $date, array $dropoff_days ): bool {
-		$delivery = \DateTimeImmutable::createFromFormat( '!d-m-Y', $date );
+		$delivery = $this->parse_delivery_date( $date );
 
 		// An unreadable date is kept rather than filtered away: if PostNL ever
 		// returns another format, dropping every date would leave the customer an
 		// empty delivery-day widget with nothing to explain it.
-		if ( false === $delivery ) {
+		if ( null === $delivery ) {
 			return true;
 		}
 
 		$handover = $delivery->modify( '-1 day' );
 
 		return in_array( self::WEEKDAYS[ (int) $handover->format( 'N' ) ], $dropoff_days, true );
+	}
+
+	/**
+	 * Parse a delivery date as V4 returns it (Y-m-d) or in the legacy d-m-Y format.
+	 *
+	 * @param string $date Delivery date string.
+	 *
+	 * @return \DateTimeImmutable|null Midnight of that date, or null when unreadable.
+	 */
+	private function parse_delivery_date( string $date ): ?\DateTimeImmutable {
+		foreach ( array( '!Y-m-d', '!d-m-Y' ) as $format ) {
+			$parsed = \DateTimeImmutable::createFromFormat( $format, $date );
+
+			if ( false !== $parsed && $parsed->format( substr( $format, 1 ) ) === $date ) {
+				return $parsed;
+			}
+		}
+
+		return null;
 	}
 
 	/**
@@ -611,6 +699,15 @@ class Service implements Timeframe_Service_Interface {
 	 */
 	private function is_evening_enabled(): bool {
 		return (bool) $this->settings->is_evening_delivery_enabled();
+	}
+
+	/**
+	 * Whether morning delivery is enabled in settings.
+	 *
+	 * @return bool
+	 */
+	private function is_morning_enabled(): bool {
+		return (bool) $this->settings->is_morning_delivery_enabled();
 	}
 
 	/**

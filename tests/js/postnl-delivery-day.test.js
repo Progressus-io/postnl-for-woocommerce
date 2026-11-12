@@ -208,6 +208,109 @@ describe( 'PostNL Delivery Day Block', () => {
 		} );
 	} );
 
+	describe( 'default selection with paid windows', () => {
+		/**
+		 * One date in the order the server sends it: free Daytime first, then the
+		 * paid morning and evening windows.
+		 *
+		 * @return {Array} Delivery options.
+		 */
+		const daytimeFirstOptions = () => [
+			{
+				date: '2026-11-17',
+				display_date: 'November 17',
+				day: 'Tuesday',
+				options: [
+					{
+						from: '10:00',
+						to: '12:30',
+						type: 'Daytime',
+						price: 0,
+						price_formatted: '',
+						price_display: 0,
+					},
+					{
+						from: '08:00',
+						to: '10:00',
+						type: '08:00-12:00',
+						price: 2,
+						price_formatted: '2,00',
+						price_display: 2,
+					},
+					{
+						from: '17:30',
+						to: '22:00',
+						type: 'Evening',
+						price: 2,
+						price_formatted: '2,00',
+						price_display: 2,
+					},
+				],
+			},
+		];
+
+		it( 'should auto-select free Daytime without a fee', async () => {
+			renderComponent( { deliveryOptions: daytimeFirstOptions() } );
+
+			await waitFor( () => {
+				expect(
+					document.querySelector(
+						'input[value="2026-11-17_10:00-12:30_0"]'
+					)
+				).toBeChecked();
+			} );
+
+			expect( batchSetExtensionData ).toHaveBeenCalledWith(
+				mockSetExtensionData,
+				expect.objectContaining( {
+					deliveryDayType: 'Daytime',
+					deliveryDayPrice: '0',
+				} )
+			);
+			expect( mockOnPriceChange ).toHaveBeenCalledWith( {
+				numeric: 0,
+				formatted: '',
+			} );
+			expect( mockOnPriceChange ).not.toHaveBeenCalledWith(
+				expect.objectContaining( { numeric: 2 } )
+			);
+		} );
+
+		it( 'should add the morning fee only when the customer picks morning', async () => {
+			const user = userEvent.setup();
+			renderComponent( { deliveryOptions: daytimeFirstOptions() } );
+
+			await waitFor( () => {
+				expect(
+					document.querySelector(
+						'input[value="2026-11-17_10:00-12:30_0"]'
+					)
+				).toBeChecked();
+			} );
+			mockOnPriceChange.mockClear();
+
+			const morning = document.querySelector(
+				'input[value="2026-11-17_08:00-10:00_2"]'
+			);
+			await user.click( morning );
+
+			await waitFor( () => {
+				expect( morning ).toBeChecked();
+			} );
+			expect( batchSetExtensionData ).toHaveBeenLastCalledWith(
+				mockSetExtensionData,
+				expect.objectContaining( {
+					deliveryDayType: '08:00-12:00',
+					deliveryDayPrice: '2',
+				} )
+			);
+			expect( mockOnPriceChange ).toHaveBeenCalledWith( {
+				numeric: 2,
+				formatted: '2,00',
+			} );
+		} );
+	} );
+
 	describe( 'option selection', () => {
 		it( 'should handle option change', async () => {
 			const user = userEvent.setup();

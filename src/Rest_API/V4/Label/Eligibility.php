@@ -120,8 +120,8 @@ class Eligibility {
 		}
 
 		// Evening and morning are deliveryWindow services on the same product code, so they
-		// map like any parcel. Morning (08:00-12:00, legacy option 118/008) is PostNL's
-		// "Guaranteed Before 12:00", which labelconfirm refuses without a receiver email
+		// map like any parcel. Morning (characteristic 118, option 007) is PostNL's
+		// "Guaranteed before 10", which labelconfirm refuses without a receiver email
 		// or phone number.
 		$window = (string) ( $signals['delivery_window'] ?? '' );
 

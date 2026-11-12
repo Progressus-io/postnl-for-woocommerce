@@ -524,10 +524,10 @@ class Request_BuilderTest extends UnitTestCase {
 	}
 
 	/**
-	 * @testdox build() maps a morning deliveryWindow to guaranteedBefore 12:00.
+	 * @testdox build() maps a morning deliveryWindow to guaranteedBefore 10:00.
 	 *
-	 * The checkout's 08:00-12:00 slot is legacy option 118/008, which PostNL's product
-	 * conversion matrix maps to services.deliveryWindow.guaranteedBefore = "12:00".
+	 * Morning delivery is PostNL's "Guaranteed before 10" (characteristic 118, option 007),
+	 * which the v2 to v4 conversion table maps to services.deliveryWindow.guaranteedBefore = "10:00".
 	 */
 	public function test_delivery_window_morning_is_mapped(): void {
 		$fields             = $this->domestic_fields();
@@ -535,7 +535,7 @@ class Request_BuilderTest extends UnitTestCase {
 
 		$services = $this->payload( $fields )['services'];
 
-		$this->assertSame( array( 'guaranteedBefore' => '12:00' ), $services['deliveryWindow'] );
+		$this->assertSame( array( 'guaranteedBefore' => '10:00' ), $services['deliveryWindow'] );
 	}
 
 	/**

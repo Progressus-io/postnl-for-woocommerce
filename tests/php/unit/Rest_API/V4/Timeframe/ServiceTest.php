@@ -232,6 +232,35 @@ class ServiceTest extends UnitTestCase {
 	}
 
 	/**
+	 * @testdox Guaranteed before 10 is requested whenever morning delivery is enabled
+	 *
+	 * @dataProvider morning_services_provider
+	 *
+	 * @param bool                    $evening  Whether evening delivery is enabled.
+	 * @param bool                    $morning  Whether morning delivery is enabled.
+	 * @param DeliveryWindowService[] $expected Services the request must carry.
+	 */
+	public function test_build_request_services_follow_morning_setting( bool $evening, bool $morning, array $expected ): void {
+		$settings = $this->make_settings( $evening, $morning );
+		$service  = new Testable_Timeframe_Service( new Client_Factory( $settings ), $settings, self::V4_KEY, self::DAYS, new NullLogger() );
+
+		$this->assertSame( $expected, $service->expose_build_request( $this->nl_post_data() )->services );
+	}
+
+	/**
+	 * Evening and morning toggle combinations with the services each must request.
+	 *
+	 * @return array<string, array{0: bool, 1: bool, 2: DeliveryWindowService[]}>
+	 */
+	public static function morning_services_provider(): array {
+		return array(
+			'morning on, evening on'  => array( true, true, array( DeliveryWindowService::Daytime, DeliveryWindowService::Evening, DeliveryWindowService::GuaranteedBefore10 ) ),
+			'morning on, evening off' => array( false, true, array( DeliveryWindowService::Daytime, DeliveryWindowService::GuaranteedBefore10 ) ),
+			'morning off'             => array( true, false, array( DeliveryWindowService::Daytime, DeliveryWindowService::Evening ) ),
+		);
+	}
+
+	/**
 	 * @testdox The configured numberOfDays is passed through and clamped to the V4 range [1, 14]
 	 */
 	public function test_number_of_days_is_clamped(): void {
@@ -377,6 +406,212 @@ class ServiceTest extends UnitTestCase {
 		return array(
 			'morning on'  => array( true ),
 			'morning off' => array( false ),
+		);
+	}
+
+	/**
+	 * @testdox A Guaranteed before 10 window is offered as the morning option when morning delivery is on
+	 *
+	 * The window keeps the 08:00-12:00 option code the checkout fee and the label
+	 * mapping already read as morning.
+	 */
+	public function test_guaranteed_before_10_window_is_the_morning_option(): void {
+		$settings = $this->make_settings( false, true );
+		$service  = new Testable_Timeframe_Service( new Client_Factory( $settings ), $settings, self::V4_KEY, self::DAYS, new NullLogger() );
+
+		$collection = new MultipleServicesTimeframeCollection(
+			array(
+				new Timeframe( deliveryDate: '2026-07-14', timeFrame: new TimeSlot( from: '08:00:00', until: '10:00:00' ), availability: true, service: 'guaranteed before 10' ),
+				new Timeframe( deliveryDate: '2026-07-14', timeFrame: new TimeSlot( from: '09:15:00', until: '11:45:00' ), availability: true, service: 'daytime' ),
+			)
+		);
+
+		$this->assertSame(
+			array(
+				array(
+					'DeliveryDate' => '2026-07-14',
+					'Timeframe'    => array(
+						array(
+							'From'    => '09:15:00',
+							'To'      => '11:45:00',
+							'Options' => array( 'Daytime' ),
+						),
+						array(
+							'From'    => '08:00:00',
+							'To'      => '10:00:00',
+							'Options' => array( '08:00-12:00' ),
+						),
+					),
+				),
+			),
+			$service->expose_map_response( $collection )
+		);
+	}
+
+	/**
+	 * @testdox Daytime is the first window of every date, ahead of the paid morning and evening windows
+	 *
+	 * The sandbox lists guaranteed before 10, evening, then daytime, and the classic
+	 * and Blocks checkouts both preselect the first window of the first date.
+	 */
+	public function test_daytime_is_the_first_window_of_every_date(): void {
+		$settings = $this->make_settings( true, true );
+		$service  = new Testable_Timeframe_Service( new Client_Factory( $settings ), $settings, self::V4_KEY, self::DAYS, new NullLogger() );
+
+		$collection = new MultipleServicesTimeframeCollection(
+			array(
+				new Timeframe( deliveryDate: '2026-11-17', timeFrame: new TimeSlot( from: '08:00:00', until: '10:00:00' ), availability: true, service: 'guaranteed before 10' ),
+				new Timeframe( deliveryDate: '2026-11-17', timeFrame: new TimeSlot( from: '17:30:00', until: '22:00:00' ), availability: true, service: 'evening' ),
+				new Timeframe( deliveryDate: '2026-11-17', timeFrame: new TimeSlot( from: '10:00:00', until: '12:30:00' ), availability: true, service: 'daytime' ),
+				new Timeframe( deliveryDate: '2026-11-18', timeFrame: new TimeSlot( from: '17:30:00', until: '22:00:00' ), availability: true, service: 'evening' ),
+				new Timeframe( deliveryDate: '2026-11-18', timeFrame: new TimeSlot( from: '08:00:00', until: '10:00:00' ), availability: true, service: 'guaranteed before 10' ),
+				new Timeframe( deliveryDate: '2026-11-18', timeFrame: new TimeSlot( from: '09:30:00', until: '12:00:00' ), availability: true, service: 'daytime' ),
+			)
+		);
+
+		$this->assertSame(
+			array(
+				array( 'Daytime', '08:00-12:00', 'Evening' ),
+				array( 'Daytime', 'Evening', '08:00-12:00' ),
+			),
+			array_map(
+				static fn( array $day ): array => array_merge( ...array_column( $day['Timeframe'], 'Options' ) ),
+				$service->expose_map_response( $collection )
+			),
+			'Daytime leads each date; the paid windows keep PostNL order behind it.'
+		);
+	}
+
+	/**
+	 * @testdox An impossible calendar date is kept unfiltered and sorted after the readable dates
+	 *
+	 * '2026-02-30' and '31-02-2026' parse with day overflow into March, which would
+	 * put them through the drop-off filter and the sort as March dates.
+	 */
+	public function test_impossible_dates_are_unreadable_and_sorted_last(): void {
+		$settings = $this->make_settings( dropoff: array( 'tue', 'wed', 'thu', 'fri' ) );
+		$service  = new Testable_Timeframe_Service( new Client_Factory( $settings ), $settings, self::V4_KEY, self::DAYS, new NullLogger() );
+
+		$collection = new MultipleServicesTimeframeCollection(
+			array(
+				new Timeframe( deliveryDate: '2026-02-30', timeFrame: new TimeSlot( from: '09:00:00', until: '18:00:00' ), availability: true, service: 'daytime' ),
+				new Timeframe( deliveryDate: '31-02-2026', timeFrame: new TimeSlot( from: '09:00:00', until: '18:00:00' ), availability: true, service: 'daytime' ),
+				new Timeframe( deliveryDate: '2026-11-18', timeFrame: new TimeSlot( from: '09:00:00', until: '18:00:00' ), availability: true, service: 'daytime' ),
+			)
+		);
+
+		$this->assertSame(
+			array( '2026-11-18', '2026-02-30', '31-02-2026' ),
+			array_column( $service->expose_map_response( $collection ), 'DeliveryDate' )
+		);
+	}
+
+	/**
+	 * @testdox A Guaranteed before 10 window is dropped when morning delivery is off
+	 */
+	public function test_guaranteed_before_10_window_is_dropped_when_morning_is_off(): void {
+		$settings = $this->make_settings( false, false );
+		$service  = new Testable_Timeframe_Service( new Client_Factory( $settings ), $settings, self::V4_KEY, self::DAYS, new NullLogger() );
+
+		$collection = new MultipleServicesTimeframeCollection(
+			array(
+				new Timeframe( deliveryDate: '2026-07-14', timeFrame: new TimeSlot( from: '08:00:00', until: '10:00:00' ), availability: true, service: 'guaranteed before 10' ),
+			)
+		);
+
+		$this->assertSame( array(), $service->expose_map_response( $collection ) );
+	}
+
+	/**
+	 * @testdox Delivery dates are returned in ascending date order
+	 *
+	 * @dataProvider unsorted_dates_provider
+	 *
+	 * @param string[] $dates    Delivery dates in the order PostNL returns them.
+	 * @param string[] $expected Delivery dates in the order the checkout must show them.
+	 */
+	public function test_delivery_dates_are_sorted_ascending( array $dates, array $expected ): void {
+		$settings   = $this->make_settings();
+		$service    = new Testable_Timeframe_Service( new Client_Factory( $settings ), $settings, self::V4_KEY, self::DAYS, new NullLogger() );
+		$timeframes = array();
+
+		foreach ( $dates as $date ) {
+			$timeframes[] = new Timeframe( deliveryDate: $date, timeFrame: new TimeSlot( from: '09:00:00', until: '18:00:00' ), availability: true, service: 'daytime' );
+		}
+
+		$this->assertSame(
+			$expected,
+			array_column( $service->expose_map_response( new MultipleServicesTimeframeCollection( $timeframes ) ), 'DeliveryDate' )
+		);
+	}
+
+	/**
+	 * Unsorted delivery dates in each format the timeframe service accepts.
+	 *
+	 * @return array<string, array{0: string[], 1: string[]}>
+	 */
+	public static function unsorted_dates_provider(): array {
+		return array(
+			'Y-m-d, as V4 returns it' => array(
+				array( '2026-11-07', '2026-11-09', '2026-11-10', '2026-11-06' ),
+				array( '2026-11-06', '2026-11-07', '2026-11-09', '2026-11-10' ),
+			),
+			'd-m-Y'                   => array(
+				array( '07-11-2026', '09-11-2026', '10-11-2026', '06-11-2026' ),
+				array( '06-11-2026', '07-11-2026', '09-11-2026', '10-11-2026' ),
+			),
+			'across a month boundary' => array(
+				array( '2026-12-01', '2026-11-30' ),
+				array( '2026-11-30', '2026-12-01' ),
+			),
+			'd-m-Y across a month'    => array(
+				array( '01-12-2026', '30-11-2026' ),
+				array( '30-11-2026', '01-12-2026' ),
+			),
+		);
+	}
+
+	/**
+	 * @testdox Monday is offered only when Sunday is an active drop-off day
+	 *
+	 * @dataProvider monday_provider
+	 *
+	 * @param string[] $dropoff  Enabled drop-off weekday keys.
+	 * @param string[] $expected Delivery dates that must be offered.
+	 */
+	public function test_monday_requires_a_sunday_dropoff( array $dropoff, array $expected ): void {
+		$settings = $this->make_settings( dropoff: $dropoff );
+		$service  = new Testable_Timeframe_Service( new Client_Factory( $settings ), $settings, self::V4_KEY, self::DAYS, new NullLogger() );
+
+		$collection = new MultipleServicesTimeframeCollection(
+			array(
+				new Timeframe( deliveryDate: '2026-11-14', timeFrame: new TimeSlot( from: '08:30:00', until: '21:30:00' ), availability: true, service: 'daytime' ),
+				new Timeframe( deliveryDate: '2026-11-16', timeFrame: new TimeSlot( from: '09:15:00', until: '11:45:00' ), availability: true, service: 'daytime' ),
+				new Timeframe( deliveryDate: '2026-11-17', timeFrame: new TimeSlot( from: '10:00:00', until: '12:30:00' ), availability: true, service: 'daytime' ),
+			)
+		);
+
+		$this->assertSame(
+			$expected,
+			array_column( $service->expose_map_response( $collection ), 'DeliveryDate' )
+		);
+	}
+
+	/**
+	 * Drop-off day sets with the Saturday, Monday and Tuesday deliveries each allows.
+	 *
+	 * @return array<string, array{0: string[], 1: string[]}>
+	 */
+	public static function monday_provider(): array {
+		return array(
+			'Sunday is not a drop-off day' => array(
+				array( 'mon', 'tue', 'thu', 'fri' ),
+				array( '2026-11-14', '2026-11-17' ),
+			),
+			'Sunday is a drop-off day'     => array(
+				array( 'mon', 'tue', 'thu', 'fri', 'sun' ),
+				array( '2026-11-14', '2026-11-16', '2026-11-17' ),
+			),
 		);
 	}
 

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	Opt-in suite that calls the real PostNL sandbox. Not part of CI: every test
+	skips unless POSTNL_SANDBOX_API_KEY, POSTNL_SANDBOX_CUSTOMER_NUMBER and
+	POSTNL_SANDBOX_CUSTOMER_CODE are set. The sandbox allows 15 calls a minute,
+	which Sandbox_Test_Case enforces.
+-->
+<phpunit
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/10.5/phpunit.xsd"
+	bootstrap="tests/php/bootstrap-unit.php"
+	cacheDirectory=".phpunit.cache"
+	colors="true"
+>
+	<testsuites>
+		<testsuite name="Sandbox">
+			<directory>tests/php/sandbox</directory>
+		</testsuite>
+	</testsuites>
+</phpunit>

@@ -707,7 +707,7 @@ class ServiceTest extends UnitTestCase {
 	 * @testdox A morning delivery-day order is V4-eligible through the signal path only when the receiver can be contacted.
 	 * @dataProvider morning_contact_provider
 	 *
-	 * Morning is PostNL's "Guaranteed Before 12:00", which labelconfirm refuses with
+	 * Morning is PostNL's "Guaranteed before 10", which labelconfirm refuses with
 	 * "Email or phone number of Receiver is required" when both are missing.
 	 *
 	 * @param array $shipment Parsed shipment data.

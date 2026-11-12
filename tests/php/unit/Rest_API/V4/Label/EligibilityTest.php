@@ -115,7 +115,7 @@ class EligibilityTest extends UnitTestCase {
 	/**
 	 * @testdox is_eligible() accepts a morning (08:00-12:00) parcel whose receiver can be contacted.
 	 *
-	 * Morning is PostNL's "Guaranteed Before 12:00" (legacy option 118/008), which
+	 * Morning is PostNL's "Guaranteed before 10" (characteristic 118, option 007), which
 	 * labelconfirm refuses without a receiver email or phone number.
 	 */
 	public function test_morning_parcel_needs_a_receiver_contact(): void {

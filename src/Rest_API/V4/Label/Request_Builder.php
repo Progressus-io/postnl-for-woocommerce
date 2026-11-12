@@ -383,9 +383,10 @@ class Request_Builder {
 	 * Evening is the only service emitted. A sandbox probe confirmed that shape is what
 	 * labelconfirm expects for an evening shipment: the service enum's GuaranteedBefore*
 	 * cases are rejected as an unknown value, and guaranteed delivery is a separate
-	 * guaranteedBefore field. The checkout's morning (08:00-12:00) slot is legacy
-	 * option 118/008, which PostNL's product conversion matrix maps to
-	 * guaranteedBefore 12:00. A standard/daytime selection carries neither.
+	 * guaranteedBefore field. The checkout's morning slot is PostNL's "Guaranteed
+	 * before 10" (characteristic 118, option 007), which the v2 to v4 conversion
+	 * table maps to guaranteedBefore 10:00. Legacy V1 labels still send option 008
+	 * (before 12:00) for the same slot. A standard/daytime selection carries neither.
 	 *
 	 * The duration is what makes a letterbox valid: labelconfirm rejects one without
 	 * it, and it selects the 24h or the 48h product.
@@ -396,7 +397,7 @@ class Request_Builder {
 	 */
 	private static function delivery_window( string $window, string $duration ): ?DeliveryWindow {
 		$service    = 'evening' === $window ? DeliveryWindowService::Evening : null;
-		$guaranteed = 'morning' === $window ? DeliveryWindowGuaranteed::Before_12_00 : null;
+		$guaranteed = 'morning' === $window ? DeliveryWindowGuaranteed::Before_10_00 : null;
 		$duration   = DeliveryWindowDuration::tryFrom( $duration );
 
 		if ( null === $service && null === $guaranteed && null === $duration ) {

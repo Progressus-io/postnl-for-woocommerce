@@ -72,6 +72,7 @@ auth.*.json
 /.wp-env.json
 phpunit-unit.xml.dist
 phpunit-integration.xml.dist
+phpunit-sandbox.xml.dist
 
 # Stray vendor never declared as a dependency here (MyParcel SDK belongs to a
 # different plugin) — excluded so it can never be published even if it reappears

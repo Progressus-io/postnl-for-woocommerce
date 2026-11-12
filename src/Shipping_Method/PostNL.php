@@ -8,6 +8,7 @@
 namespace PostNLWooCommerce\Shipping_Method;
 
 use PostNLWooCommerce\Rest_API\Barcode\Key_Validator;
+use PostNLWooCommerce\Rest_API\Service_Factory;
 use PostNLWooCommerce\Utils;
 use WC_Admin_Settings;
 
@@ -241,7 +242,44 @@ class PostNL extends \WC_Shipping_Flat_Rate {
 			$form_fields = $settings->filter_setting_fields( '' );
 		}
 
-		$this->form_fields = $form_fields;
+		$this->form_fields = $this->maybe_hide_label_in_the_box( $form_fields );
+	}
+
+	/**
+	 * Hide the "Standard return option" field while labels run on V4, where label in the box is not offered.
+	 *
+	 * The field is left out of the form instead of being emptied, so saving the
+	 * settings keeps the stored choice and it applies again once V4 labels are off.
+	 *
+	 * @param array $form_fields Settings form fields.
+	 *
+	 * @return array
+	 *
+	 * @since 6.0.0
+	 */
+	protected function maybe_hide_label_in_the_box( array $form_fields ): array {
+		if ( ! isset( $form_fields['return_shipment_and_labels'] ) || $this->service_factory()->label_in_the_box_available() ) {
+			return $form_fields;
+		}
+
+		unset( $form_fields['return_shipment_and_labels'] );
+
+		if ( isset( $form_fields['return_settings_title'] ) ) {
+			$form_fields['return_settings_title']['description'] = esc_html__( 'Label in the box is not available with the new PostNL API. You can still offer returns with Smart Returns.', 'postnl-for-woocommerce' );
+		}
+
+		return $form_fields;
+	}
+
+	/**
+	 * Service factory that decides whether labels run on V4.
+	 *
+	 * @return Service_Factory
+	 *
+	 * @since 6.0.0
+	 */
+	protected function service_factory(): Service_Factory {
+		return new Service_Factory( Settings::get_instance() );
 	}
 
 	/**

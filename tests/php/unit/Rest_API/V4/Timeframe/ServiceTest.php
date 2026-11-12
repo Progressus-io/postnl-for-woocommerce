@@ -432,19 +432,77 @@ class ServiceTest extends UnitTestCase {
 					'DeliveryDate' => '2026-07-14',
 					'Timeframe'    => array(
 						array(
-							'From'    => '08:00:00',
-							'To'      => '10:00:00',
-							'Options' => array( '08:00-12:00' ),
-						),
-						array(
 							'From'    => '09:15:00',
 							'To'      => '11:45:00',
 							'Options' => array( 'Daytime' ),
+						),
+						array(
+							'From'    => '08:00:00',
+							'To'      => '10:00:00',
+							'Options' => array( '08:00-12:00' ),
 						),
 					),
 				),
 			),
 			$service->expose_map_response( $collection )
+		);
+	}
+
+	/**
+	 * @testdox Daytime is the first window of every date, ahead of the paid morning and evening windows
+	 *
+	 * The sandbox lists guaranteed before 10, evening, then daytime, and the classic
+	 * and Blocks checkouts both preselect the first window of the first date.
+	 */
+	public function test_daytime_is_the_first_window_of_every_date(): void {
+		$settings = $this->make_settings( true, true );
+		$service  = new Testable_Timeframe_Service( new Client_Factory( $settings ), $settings, self::V4_KEY, self::DAYS, new NullLogger() );
+
+		$collection = new MultipleServicesTimeframeCollection(
+			array(
+				new Timeframe( deliveryDate: '2026-11-17', timeFrame: new TimeSlot( from: '08:00:00', until: '10:00:00' ), availability: true, service: 'guaranteed before 10' ),
+				new Timeframe( deliveryDate: '2026-11-17', timeFrame: new TimeSlot( from: '17:30:00', until: '22:00:00' ), availability: true, service: 'evening' ),
+				new Timeframe( deliveryDate: '2026-11-17', timeFrame: new TimeSlot( from: '10:00:00', until: '12:30:00' ), availability: true, service: 'daytime' ),
+				new Timeframe( deliveryDate: '2026-11-18', timeFrame: new TimeSlot( from: '17:30:00', until: '22:00:00' ), availability: true, service: 'evening' ),
+				new Timeframe( deliveryDate: '2026-11-18', timeFrame: new TimeSlot( from: '08:00:00', until: '10:00:00' ), availability: true, service: 'guaranteed before 10' ),
+				new Timeframe( deliveryDate: '2026-11-18', timeFrame: new TimeSlot( from: '09:30:00', until: '12:00:00' ), availability: true, service: 'daytime' ),
+			)
+		);
+
+		$this->assertSame(
+			array(
+				array( 'Daytime', '08:00-12:00', 'Evening' ),
+				array( 'Daytime', 'Evening', '08:00-12:00' ),
+			),
+			array_map(
+				static fn( array $day ): array => array_merge( ...array_column( $day['Timeframe'], 'Options' ) ),
+				$service->expose_map_response( $collection )
+			),
+			'Daytime leads each date; the paid windows keep PostNL order behind it.'
+		);
+	}
+
+	/**
+	 * @testdox An impossible calendar date is kept unfiltered and sorted after the readable dates
+	 *
+	 * '2026-02-30' and '31-02-2026' parse with day overflow into March, which would
+	 * put them through the drop-off filter and the sort as March dates.
+	 */
+	public function test_impossible_dates_are_unreadable_and_sorted_last(): void {
+		$settings = $this->make_settings( dropoff: array( 'tue', 'wed', 'thu', 'fri' ) );
+		$service  = new Testable_Timeframe_Service( new Client_Factory( $settings ), $settings, self::V4_KEY, self::DAYS, new NullLogger() );
+
+		$collection = new MultipleServicesTimeframeCollection(
+			array(
+				new Timeframe( deliveryDate: '2026-02-30', timeFrame: new TimeSlot( from: '09:00:00', until: '18:00:00' ), availability: true, service: 'daytime' ),
+				new Timeframe( deliveryDate: '31-02-2026', timeFrame: new TimeSlot( from: '09:00:00', until: '18:00:00' ), availability: true, service: 'daytime' ),
+				new Timeframe( deliveryDate: '2026-11-18', timeFrame: new TimeSlot( from: '09:00:00', until: '18:00:00' ), availability: true, service: 'daytime' ),
+			)
+		);
+
+		$this->assertSame(
+			array( '2026-11-18', '2026-02-30', '31-02-2026' ),
+			array_column( $service->expose_map_response( $collection ), 'DeliveryDate' )
 		);
 	}
 
@@ -505,6 +563,10 @@ class ServiceTest extends UnitTestCase {
 			'across a month boundary' => array(
 				array( '2026-12-01', '2026-11-30' ),
 				array( '2026-11-30', '2026-12-01' ),
+			),
+			'd-m-Y across a month'    => array(
+				array( '01-12-2026', '30-11-2026' ),
+				array( '30-11-2026', '01-12-2026' ),
 			),
 		);
 	}

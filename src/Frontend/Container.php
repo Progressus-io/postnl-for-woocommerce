@@ -317,11 +317,13 @@ class Container {
 				$delivery_option['Timeframe']
 			);
 
-			$options = array_filter(
-				$options,
-				function ( $option ) use ( $non_standard_fees ) {
-					return ! isset( $non_standard_fees[ $option['type'] ] );
-				}
+			$options = array_values(
+				array_filter(
+					$options,
+					function ( $option ) use ( $non_standard_fees ) {
+						return ! isset( $non_standard_fees[ $option['type'] ] );
+					}
+				)
 			);
 
 			if ( empty( $options ) ) {

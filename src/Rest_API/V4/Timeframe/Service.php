@@ -308,8 +308,8 @@ class Service implements Timeframe_Service_Interface {
 	/**
 	 * Delivery-window services to request.
 	 *
-	 * Morning delivery is PostNL's "Guaranteed before 10" (007/118), so it is
-	 * requested whenever the merchant enabled morning delivery.
+	 * Morning delivery is PostNL's "Guaranteed before 10" (characteristic 118,
+	 * option 007), so it is requested whenever the merchant enabled morning delivery.
 	 *
 	 * @return DeliveryWindowService[]
 	 */
@@ -393,7 +393,9 @@ class Service implements Timeframe_Service_Interface {
 	 * recomputes rather than serving a stale mapping.
 	 *
 	 * PostNL does not guarantee the order of deliveryDates, and the checkout lists
-	 * dates as given, so the result is sorted by date.
+	 * dates as given, so the result is sorted by date. Within a date PostNL lists
+	 * the paid services first, while both checkouts preselect the first window,
+	 * so Daytime windows are moved ahead of the paid ones.
 	 *
 	 * @param MultipleServicesTimeframeCollection $collection SDK timeframe collection.
 	 *
@@ -437,7 +439,33 @@ class Service implements Timeframe_Service_Interface {
 			);
 		}
 
+		foreach ( $by_date as $date => $entry ) {
+			$by_date[ $date ]['Timeframe'] = $this->daytime_first( $entry['Timeframe'] );
+		}
+
 		return $this->sort_by_date( array_values( $by_date ) );
+	}
+
+	/**
+	 * Move Daytime windows ahead of the paid ones, keeping each group's order.
+	 *
+	 * @param array<int, array{From: string, To: string, Options: string[]}> $windows Windows of one delivery date.
+	 *
+	 * @return array<int, array{From: string, To: string, Options: string[]}>
+	 */
+	private function daytime_first( array $windows ): array {
+		$daytime = array();
+		$paid    = array();
+
+		foreach ( $windows as $window ) {
+			if ( array( 'Daytime' ) === $window['Options'] ) {
+				$daytime[] = $window;
+			} else {
+				$paid[] = $window;
+			}
+		}
+
+		return array_merge( $daytime, $paid );
 	}
 
 	/**

@@ -6,6 +6,7 @@ import {
 	MAX_LOOKUP_RETRIES,
 	createLookupRetryState,
 	registerFailedLookup,
+	registerLookupResponse,
 	resetLookupRetries,
 } from '../../client/utils/lookup-retry';
 
@@ -59,6 +60,41 @@ describe( 'lookup retry budget', () => {
 		}
 		resetLookupRetries( state );
 
+		expect( registerFailedLookup( state, address, samePostcode ) ).toBe(
+			true
+		);
+	} );
+
+	it( 'spends the budget on a lookup_failed response', () => {
+		const state = createLookupRetryState();
+		const failed = { show_container: false, lookup_failed: true };
+
+		for ( let i = 0; i < MAX_LOOKUP_RETRIES; i++ ) {
+			expect(
+				registerLookupResponse( state, failed, address, samePostcode )
+			).toBe( true );
+		}
+
+		expect(
+			registerLookupResponse( state, failed, address, samePostcode )
+		).toBe( false );
+	} );
+
+	it( 'resets the budget on a response without lookup_failed', () => {
+		const state = createLookupRetryState();
+
+		for ( let i = 0; i <= MAX_LOOKUP_RETRIES; i++ ) {
+			registerFailedLookup( state, address, samePostcode );
+		}
+
+		expect(
+			registerLookupResponse(
+				state,
+				{ show_container: false },
+				address,
+				samePostcode
+			)
+		).toBe( false );
 		expect( registerFailedLookup( state, address, samePostcode ) ).toBe(
 			true
 		);

@@ -246,10 +246,13 @@ class PostNL extends \WC_Shipping_Flat_Rate {
 	}
 
 	/**
-	 * Hide the "Standard return option" field while labels run on V4, where label in the box is not offered.
+	 * Tell the merchant label in the box is not offered while labels run on V4, and hide its NL-only setting.
 	 *
-	 * The field is left out of the form instead of being emptied, so saving the
-	 * settings keeps the stored choice and it applies again once V4 labels are off.
+	 * The "Standard return option" field is left out of the form instead of being
+	 * emptied, so saving the settings keeps the stored choice and it applies again
+	 * once V4 labels are off. A BE store has no such field but loses the automatic
+	 * return on BE>BE and BE>NL labels, so it gets the note as well. Smart Return
+	 * does not work for BE stores, so only the NL note points to it.
 	 *
 	 * @param array $form_fields Settings form fields.
 	 *
@@ -258,14 +261,19 @@ class PostNL extends \WC_Shipping_Flat_Rate {
 	 * @since 6.0.0
 	 */
 	protected function maybe_hide_label_in_the_box( array $form_fields ): array {
-		if ( ! isset( $form_fields['return_shipment_and_labels'] ) || $this->service_factory()->label_in_the_box_available() ) {
+		if ( $this->service_factory()->label_in_the_box_available() ) {
 			return $form_fields;
 		}
 
-		unset( $form_fields['return_shipment_and_labels'] );
+		if ( isset( $form_fields['return_shipment_and_labels'] ) ) {
+			unset( $form_fields['return_shipment_and_labels'] );
+			$note = esc_html__( 'Label in the box is not available with the new PostNL APIs. You can still offer returns with Smart Return.', 'postnl-for-woocommerce' );
+		} else {
+			$note = esc_html__( 'Label in the box is not available with the new PostNL APIs.', 'postnl-for-woocommerce' );
+		}
 
 		if ( isset( $form_fields['return_settings_title'] ) ) {
-			$form_fields['return_settings_title']['description'] = esc_html__( 'Label in the box is not available with the new PostNL API. You can still offer returns with Smart Returns.', 'postnl-for-woocommerce' );
+			$form_fields['return_settings_title']['description'] = $note;
 		}
 
 		return $form_fields;

@@ -526,8 +526,8 @@ class Request_BuilderTest extends UnitTestCase {
 	/**
 	 * @testdox build() maps a morning deliveryWindow to guaranteedBefore 10:00.
 	 *
-	 * Morning delivery is PostNL's "Guaranteed before 10" (007/118), which the v2 to v4
-	 * conversion table maps to services.deliveryWindow.guaranteedBefore = "10:00".
+	 * Morning delivery is PostNL's "Guaranteed before 10" (characteristic 118, option 007),
+	 * which the v2 to v4 conversion table maps to services.deliveryWindow.guaranteedBefore = "10:00".
 	 */
 	public function test_delivery_window_morning_is_mapped(): void {
 		$fields             = $this->domestic_fields();

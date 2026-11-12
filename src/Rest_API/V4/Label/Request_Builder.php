@@ -384,8 +384,9 @@ class Request_Builder {
 	 * labelconfirm expects for an evening shipment: the service enum's GuaranteedBefore*
 	 * cases are rejected as an unknown value, and guaranteed delivery is a separate
 	 * guaranteedBefore field. The checkout's morning slot is PostNL's "Guaranteed
-	 * before 10" (007/118), which the v2 to v4 conversion table maps to
-	 * guaranteedBefore 10:00. A standard/daytime selection carries neither.
+	 * before 10" (characteristic 118, option 007), which the v2 to v4 conversion
+	 * table maps to guaranteedBefore 10:00. Legacy V1 labels still send option 008
+	 * (before 12:00) for the same slot. A standard/daytime selection carries neither.
 	 *
 	 * The duration is what makes a letterbox valid: labelconfirm rejects one without
 	 * it, and it selects the 24h or the 48h product.

@@ -748,6 +748,96 @@ class Service_FactoryTest extends UnitTestCase {
 	}
 
 	// -------------------------------------------------------------------------
+	// Scenario 8b — label_in_the_box_available(): dropped whenever labels run on V4
+	// -------------------------------------------------------------------------
+
+	/**
+	 * label_in_the_box_available() is true with no V4 key, so legacy keeps label in the box.
+	 *
+	 * @testdox label_in_the_box_available() is true with no V4 key, so legacy keeps label in the box
+	 */
+	public function test_label_in_the_box_available_without_key(): void {
+		$factory = new Service_Factory( null );
+		$this->assertTrue( $factory->label_in_the_box_available() );
+	}
+
+	/**
+	 * label_in_the_box_available() is true with a key but the label flag off.
+	 *
+	 * @testdox label_in_the_box_available() is true with a key but the label flag off
+	 */
+	public function test_label_in_the_box_available_when_label_flag_off(): void {
+		$factory = new Service_Factory( $this->settings_with_key() );
+		$this->assertTrue( $factory->label_in_the_box_available() );
+	}
+
+	/**
+	 * label_in_the_box_available() is false with a V4 key and the label flag on.
+	 *
+	 * @testdox label_in_the_box_available() is false with a V4 key and the label flag on
+	 */
+	public function test_label_in_the_box_unavailable_on_v4_labels(): void {
+		Filters\expectApplied( 'postnl_sdk_enable_label' )->andReturn( true );
+
+		$factory = new Service_Factory( $this->settings_with_key() );
+		$this->assertFalse( $factory->label_in_the_box_available() );
+	}
+
+	/**
+	 * label_in_the_box_available() stays true when the SDK is missing, since labels then stay on legacy.
+	 *
+	 * @testdox label_in_the_box_available() stays true when the SDK is missing, since labels then stay on legacy
+	 */
+	public function test_label_in_the_box_available_without_sdk(): void {
+		Filters\expectApplied( 'postnl_sdk_enable_label' )->andReturn( true );
+
+		$factory = new class( $this->settings_with_key() ) extends Service_Factory {
+			/**
+			 * Report the SDK as not installed.
+			 *
+			 * @return bool
+			 */
+			protected static function sdk_available(): bool {
+				return false;
+			}
+		};
+
+		$this->assertTrue( $factory->label_in_the_box_available() );
+	}
+
+	/**
+	 * Dropping label in the box leaves Smart Returns on legacy when only the label flag is on.
+	 *
+	 * @testdox Dropping label in the box leaves Smart Returns on legacy when only the label flag is on
+	 *
+	 * Smart Returns has its own flag. Turning labels on V4 must neither move it to
+	 * V4 nor take it away.
+	 */
+	public function test_label_flag_does_not_change_smart_returns_routing(): void {
+		Filters\expectApplied( 'postnl_sdk_enable_label' )->andReturn( true );
+
+		$factory = new Service_Factory( $this->settings_with_key() );
+
+		$this->assertFalse( $factory->label_in_the_box_available() );
+		$this->assertInstanceOf( Legacy_Smart_Returns_Service::class, $factory->smart_returns_service() );
+	}
+
+	/**
+	 * Smart Returns still resolves to V4 when its own flag is on next to the label flag.
+	 *
+	 * @testdox Smart Returns still resolves to V4 when its own flag is on next to the label flag
+	 */
+	public function test_smart_returns_stays_on_v4_next_to_v4_labels(): void {
+		Filters\expectApplied( 'postnl_sdk_enable_label' )->andReturn( true );
+		Filters\expectApplied( 'postnl_sdk_enable_smart_returns' )->andReturn( true );
+
+		$factory = new Service_Factory( $this->settings_with_key() );
+
+		$this->assertFalse( $factory->label_in_the_box_available() );
+		$this->assertInstanceOf( V4_Smart_Returns_Service::class, $factory->smart_returns_service() );
+	}
+
+	// -------------------------------------------------------------------------
 	// Memoisation — shared checkout service instance
 	// -------------------------------------------------------------------------
 

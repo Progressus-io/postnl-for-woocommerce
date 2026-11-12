@@ -221,6 +221,21 @@ class Service_Factory {
 	}
 
 	/**
+	 * Whether the "Label in the box" return label may be requested.
+	 *
+	 * PostNL dropped label in the box on V4 for NL and BE stores, keeping it on the
+	 * legacy API only. So it is unavailable whenever labels run on V4, which also
+	 * stops the automatic return a BE store gets on every BE>BE and BE>NL label.
+	 *
+	 * @return bool
+	 *
+	 * @since 6.0.0
+	 */
+	public function label_in_the_box_available(): bool {
+		return ! $this->should_use_v4( 'label' );
+	}
+
+	/**
 	 * Return the timeframe (delivery options) service for the current configuration.
 	 *
 	 * @return Timeframe_Service_Interface

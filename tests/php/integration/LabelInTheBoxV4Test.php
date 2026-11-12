@@ -25,6 +25,7 @@ use Postnl\Sdk\Service\ShipmentDelivery\Response\ShipmentDeliveryResponseInterfa
 use Postnl\Sdk\Service\ShipmentDelivery\Response\ShipmentDeliveryResponseItem;
 use Postnl\Sdk\Service\ShipmentDelivery\Response\ShipmentDeliveryResponseItemsCollection;
 use PostNLWooCommerce\Order\Base as Order_Base;
+use PostNLWooCommerce\Order\Bulk;
 use PostNLWooCommerce\Rest_API\Contracts\Barcode_Service_Interface;
 use PostNLWooCommerce\Rest_API\Contracts\Label_Service_Interface;
 use PostNLWooCommerce\Rest_API\Legacy\Shipping\Item_Info as Shipping_Item_Info;
@@ -168,9 +169,50 @@ class LabelInTheBoxV4Test extends IntegrationTestCase {
 	}
 
 	/**
-	 * With labels on V4 the settings screen hides Label in the box but keeps Smart Returns.
+	 * With labels on V4 the bulk Create label modal has no Create Return Label field.
 	 *
-	 * @testdox With labels on V4 the settings screen hides Label in the box but keeps Smart Returns.
+	 * @testdox With labels on V4 the bulk Create label modal has no Create Return Label field.
+	 */
+	public function test_bulk_modal_has_no_create_return_label_on_v4(): void {
+		$this->use_store( 'NL', 'in_box' );
+		add_filter( 'postnl_sdk_enable_label', '__return_true' );
+
+		$this->assertNotContains( 'postnl_create_return_label', $this->bulk_field_ids( true ) );
+	}
+
+	/**
+	 * The V4 label service drops label in the box even when the caller passes it as available.
+	 *
+	 * Order\Base already passes false on V4, so this pins the flag create() sets itself.
+	 *
+	 * @testdox The V4 label service drops label in the box even when the caller passes it as available.
+	 */
+	public function test_v4_create_drops_label_in_the_box_passed_by_the_caller(): void {
+		$this->use_store( 'NL', 'in_box' );
+
+		$label = new In_Box_Recording_V4_Label_Service();
+		$label->create(
+			array(
+				'order'            => wc_get_order( $this->make_order( 'NL' ) ),
+				'saved_data'       => array(
+					'backend'  => array(
+						'delivery_type'       => 'Standard',
+						'create_return_label' => 'yes',
+					),
+					'frontend' => array(),
+				),
+				'label_in_the_box' => true,
+			)
+		);
+
+		$this->assertTrue( $label->confirmed, 'The label must be created on V4.' );
+		$this->assertFalse( $label->fell_back, 'An in-box return would send the label back to legacy.' );
+	}
+
+	/**
+	 * With labels on V4 an NL store's settings hide Label in the box and point to Smart Return.
+	 *
+	 * @testdox With labels on V4 an NL store's settings hide Label in the box and point to Smart Return.
 	 */
 	public function test_settings_hide_label_in_the_box_on_v4(): void {
 		$this->use_store( 'NL', 'in_box' );
@@ -179,8 +221,44 @@ class LabelInTheBoxV4Test extends IntegrationTestCase {
 		$fields = $this->make_shipping_method( true )->get_form_fields();
 
 		$this->assertArrayNotHasKey( 'return_shipment_and_labels', $fields );
-		$this->assertStringContainsString( 'Label in the box is not available', $fields['return_settings_title']['description'] ?? '' );
-		$this->assertArrayHasKey( 'activate_smart_return', $fields, 'Smart Returns must stay available.' );
+		$this->assertSame(
+			'Label in the box is not available with the new PostNL APIs. You can still offer returns with Smart Return.',
+			$fields['return_settings_title']['description'] ?? ''
+		);
+		$this->assertArrayHasKey( 'activate_smart_return', $fields, 'Smart Return must stay available.' );
+	}
+
+	/**
+	 * With labels on V4 a BE store's settings say Label in the box is not available, without pointing to Smart Return.
+	 *
+	 * Smart Return does not work for BE stores, so the BE note must not suggest it.
+	 *
+	 * @testdox With labels on V4 a BE store's settings say Label in the box is not available, without pointing to Smart Return.
+	 */
+	public function test_settings_note_for_be_store_on_v4(): void {
+		$this->use_store( 'BE' );
+		add_filter( 'postnl_sdk_enable_label', '__return_true' );
+
+		$fields = $this->make_shipping_method( true )->get_form_fields();
+
+		$this->assertSame(
+			'Label in the box is not available with the new PostNL APIs.',
+			$fields['return_settings_title']['description'] ?? ''
+		);
+	}
+
+	/**
+	 * Without V4 a BE store's settings show no label in the box note.
+	 *
+	 * @testdox Without V4 a BE store's settings show no label in the box note.
+	 */
+	public function test_no_settings_note_for_be_store_without_v4(): void {
+		$this->use_store( 'BE' );
+
+		$fields = $this->make_shipping_method( false )->get_form_fields();
+
+		$this->assertArrayHasKey( 'return_settings_title', $fields );
+		$this->assertArrayNotHasKey( 'description', $fields['return_settings_title'] );
 	}
 
 	/**
@@ -267,6 +345,7 @@ class LabelInTheBoxV4Test extends IntegrationTestCase {
 
 		$this->assertContains( 'postnl_create_return_label', $this->field_ids( $handler, 'display' ) );
 		$this->assertContains( 'postnl_create_return_label', $this->field_ids( $handler, 'save' ) );
+		$this->assertContains( 'postnl_create_return_label', $this->bulk_field_ids( false ) );
 		$this->assertArrayHasKey( 'return_shipment_and_labels', $this->make_shipping_method( false )->get_form_fields() );
 	}
 
@@ -434,7 +513,62 @@ class LabelInTheBoxV4Test extends IntegrationTestCase {
 	 * @return string[]
 	 */
 	private function field_ids( Order_Base $handler, string $context ): array {
+		// The 'display' context runs Order\Bulk::additional_meta_box(), which the plugin
+		// hooks at bootstrap when the stored store country is NL or BE. It calls
+		// get_current_screen(), an admin-only function, so load it here: the callback
+		// then sees no screen and passes the fields through, whatever the country was.
+		if ( ! function_exists( 'get_current_screen' ) ) {
+			require_once ABSPATH . 'wp-admin/includes/screen.php';
+		}
+
 		return array_column( $handler->meta_box_fields( false, $context ), 'id' );
+	}
+
+	/**
+	 * IDs of the fields in the bulk Create label modal, with a factory that sees a V4 key or none.
+	 *
+	 * @param bool $with_key Whether the factory sees a V4 key.
+	 * @return string[]
+	 */
+	private function bulk_field_ids( bool $with_key ): array {
+		$bulk = new class( $this->make_factory( $with_key ) ) extends Bulk {
+			/**
+			 * Factory deciding whether labels run on V4.
+			 *
+			 * @var Service_Factory
+			 */
+			private $test_factory;
+
+			/**
+			 * Skip the parent constructor, which registers the admin hooks.
+			 *
+			 * @param Service_Factory $factory Factory deciding whether labels run on V4.
+			 */
+			public function __construct( Service_Factory $factory ) {
+				$this->settings     = Settings::get_instance();
+				$this->test_factory = $factory;
+			}
+
+			/**
+			 * Serve the test factory.
+			 *
+			 * @return Service_Factory
+			 */
+			protected function service_factory(): Service_Factory {
+				return $this->test_factory;
+			}
+
+			/**
+			 * Expose the protected modal field builder.
+			 *
+			 * @return array[]
+			 */
+			public function modal_fields(): array {
+				return $this->create_label_fields();
+			}
+		};
+
+		return array_column( $bulk->modal_fields(), 'id' );
 	}
 
 	/**
@@ -584,14 +718,13 @@ class In_Box_Recording_V4_Label_Service extends V4_Label_Service {
 	}
 
 	/**
-	 * Record the post data, with the flag create() adds, then run the real create().
+	 * Record the post data exactly as received, then run the real create().
 	 *
 	 * @param array $post_data Label post data.
 	 * @return array
 	 */
 	public function create( array $post_data ): array {
-		$this->post_data                     = $post_data;
-		$this->post_data['label_in_the_box'] = false;
+		$this->post_data = $post_data;
 
 		return parent::create( $post_data );
 	}

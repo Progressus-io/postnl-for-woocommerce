@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "56dbdb7dc3c8511066a33df6c703b966",
+    "content-hash": "2a425fd96e61089abba8a446e8479ff2",
     "packages": [
         {
             "name": "clegginabox/pdf-merger",
@@ -459,11 +459,11 @@
         },
         {
             "name": "postnl/api-client-sdk",
-            "version": "v3.0.0",
+            "version": "v4.1.0",
             "dist": {
                 "type": "zip",
-                "url": "https://postnl.repo.packagist.com/progressus/dists/postnl/api-client-sdk/3.0.0.0/5107cb06a65727aee71df3b069c9decae76070fc.zip",
-                "reference": "5107cb06a65727aee71df3b069c9decae76070fc",
+                "url": "https://postnl.repo.packagist.com/progressus/dists/postnl/api-client-sdk/4.1.0.0/17fae0880c645977753c3785d8a4682e3bcb9e93.zip",
+                "reference": "17fae0880c645977753c3785d8a4682e3bcb9e93",
                 "mirrors": [
                     {
                         "url": "https://postnl.repo.packagist.com/progressus/dists/%package%/%version%/r%reference%.%type%",
@@ -493,7 +493,7 @@
                 "phpunit/phpunit": "^10.5.63",
                 "rector/rector": "^2.5.8",
                 "symfony/process": "^7.4.5",
-                "symfony/yaml": "^7.4.12"
+                "symfony/yaml": "^7.4.18"
             },
             "suggest": {
                 "ext-redis": "Required for Redis cache backend (phpredis extension)",
@@ -502,7 +502,7 @@
             "type": "library",
             "extra": {
                 "branch-alias": {
-                    "dev-main": "1.x-dev"
+                    "dev-main": "4.x-dev"
                 }
             },
             "autoload": {
@@ -628,10 +628,10 @@
             ],
             "support": {
                 "email": "developer@postnl.nl",
-                "source": "https://github.com/Postnl-Production/api-client-sdk/tree/v3.0.0",
+                "source": "https://github.com/Postnl-Production/api-client-sdk/tree/v4.1.0",
                 "issues": "https://github.com/Postnl-Production/api-client-sdk/issues"
             },
-            "time": "2026-08-31T14:12:29+00:00"
+            "time": "2026-10-17T17:31:11+00:00"
         },
         {
             "name": "psr/http-client",

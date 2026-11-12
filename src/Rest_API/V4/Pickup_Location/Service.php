@@ -11,10 +11,8 @@ namespace PostNLWooCommerce\Rest_API\V4\Pickup_Location;
 
 use Postnl\Sdk\Enums\Payload\Country;
 use Postnl\Sdk\Enums\Payload\PickUpLocationType;
-use Postnl\Sdk\Exception\Client\ValidationException;
 use Postnl\Sdk\RequestData\V4\Address;
 use Postnl\Sdk\Service\PickupLocations\Response\PickUpLocationsCollection;
-use Postnl\Sdk\Service\PickupLocations\Response\PickUpLocationsResponseInterface;
 use Postnl\Sdk\Service\PickupLocations\V4\Request\PickUpNearAddressRequest;
 use PostNLWooCommerce\Address_Utils;
 use PostNLWooCommerce\Rest_API\Contracts\Pickup_Location_Service_Interface;
@@ -131,13 +129,6 @@ class Service implements Pickup_Location_Service_Interface {
 	private $pickup_date = null;
 
 	/**
-	 * Whether PostNL refused `locationType` earlier in this request.
-	 *
-	 * @var bool
-	 */
-	private $use_location_types = false;
-
-	/**
 	 * Service constructor.
 	 *
 	 * The API key, the location count and the logger are all required rather than
@@ -193,7 +184,7 @@ class Service implements Pickup_Location_Service_Interface {
 		}
 
 		try {
-			$response = $this->request_locations( $this->build_request( $post_data ) );
+			$response = $this->build_client()->pickupLocations()->nearAddress( $this->build_request( $post_data ) );
 
 			$result = array( 'PickupOptions' => $this->map_response( $response->locations() ) );
 
@@ -227,44 +218,6 @@ class Service implements Pickup_Location_Service_Interface {
 	}
 
 	/**
-	 * Send the near-address request, retrying once in the `locationTypes` shape when
-	 * PostNL refuses the documented `locationType` field.
-	 *
-	 * The published contract and SDK 3.0.0 use `locationType`; the sandbox rejects it
-	 * and wants `locationTypes`. Which one production accepts can change without an
-	 * SDK release, so the documented shape goes first and the refusal decides. Once
-	 * refused, later lookups in this request skip straight to the accepted shape.
-	 *
-	 * @since 6.0.0
-	 *
-	 * @param PickUpNearAddressRequest $request Documented-shape request.
-	 *
-	 * @return PickUpLocationsResponseInterface
-	 *
-	 * @throws ValidationException When PostNL rejects the request over anything but `locationType`.
-	 */
-	private function request_locations( PickUpNearAddressRequest $request ): PickUpLocationsResponseInterface {
-		$locations = $this->build_client()->pickupLocations();
-
-		if ( $this->use_location_types ) {
-			return $locations->nearAddress( new Location_Types_Request( $request ) );
-		}
-
-		try {
-			return $locations->nearAddress( $request );
-		} catch ( ValidationException $exception ) {
-			if ( array() === $exception->getErrorsForField( 'locationType' ) ) {
-				throw $exception;
-			}
-
-			$this->logger->notice( 'V4 pickup-location lookup: PostNL refused the locationType field; retrying with locationTypes.' );
-			$this->use_location_types = true;
-
-			return $locations->nearAddress( new Location_Types_Request( $request ) );
-		}
-	}
-
-	/**
 	 * Build the SDK request from the checkout address and shipping settings.
 	 *
 	 * Only retail pickup points are requested, matching the legacy checkout, which
@@ -278,7 +231,7 @@ class Service implements Pickup_Location_Service_Interface {
 		return new PickUpNearAddressRequest(
 			numberOfLocations: $this->number_of_locations,
 			receiverAddress: $this->build_receiver_address( $post_data ),
-			locationType: PickUpLocationType::Retail,
+			locationTypes: array( PickUpLocationType::Retail ),
 			pickupDate: $this->get_pickup_date(),
 			customerCode: (string) $this->settings->get_customer_code(),
 			customerNumber: (string) $this->settings->get_customer_num()

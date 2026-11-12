@@ -60,3 +60,30 @@ export const resetLookupRetries = ( state ) => {
 	state.address = null;
 	state.count = 0;
 };
+
+/**
+ * Update the retry budget from a lookup response the server answered.
+ *
+ * The handler reports a failed PostNL lookup as a successful AJAX response with
+ * `lookup_failed` set, so it spends the budget like a failed request instead of
+ * resetting it.
+ *
+ * @param {{address: Object|null, count: number}} state         Retry state.
+ * @param {Object}                                respData      Response data.
+ * @param {Object}                                address       Address that was looked up.
+ * @param {Function}                              isSameAddress Address comparator.
+ * @return {boolean} True when the address may be fetched again.
+ */
+export const registerLookupResponse = (
+	state,
+	respData,
+	address,
+	isSameAddress
+) => {
+	if ( respData && respData.lookup_failed ) {
+		return registerFailedLookup( state, address, isSameAddress );
+	}
+
+	resetLookupRetries( state );
+	return false;
+};

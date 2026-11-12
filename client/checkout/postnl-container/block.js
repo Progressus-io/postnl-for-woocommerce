@@ -23,7 +23,7 @@ import { clearSessionData } from '../../utils/session-manager';
 import {
 	createLookupRetryState,
 	registerFailedLookup,
-	resetLookupRetries,
+	registerLookupResponse,
 } from '../../utils/lookup-retry';
 import {
 	batchSetExtensionData,
@@ -483,7 +483,17 @@ export const Block = ( { checkoutExtensionData } ) => {
 				.then( ( response ) => {
 					if ( response.data.success && response.data.data ) {
 						const respData = response.data.data;
-						resetLookupRetries( lookupRetry.current );
+
+						if (
+							registerLookupResponse(
+								lookupRetry.current,
+								respData,
+								shippingAddress,
+								isAddressEqual
+							)
+						) {
+							previousShippingAddress.current = null;
+						}
 
 						// If validated_address returned, update shipping address if needed
 						if (

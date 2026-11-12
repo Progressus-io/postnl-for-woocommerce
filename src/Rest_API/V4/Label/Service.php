@@ -98,6 +98,13 @@ class Service extends Order_Base implements Label_Service_Interface {
 	private $logger;
 
 	/**
+	 * Barcodes of the last create() call, one per collo.
+	 *
+	 * @var string[]
+	 */
+	private $issued_barcodes = array();
+
+	/**
 	 * Service constructor.
 	 *
 	 * The API key and the logger are both required rather than defaulted, matching
@@ -151,11 +158,20 @@ class Service extends Order_Base implements Label_Service_Interface {
 	 * @throws \Exception If the SDK request fails (converted to the legacy error shape).
 	 */
 	public function create( array $post_data ): array {
+		$this->issued_barcodes = array();
+
+		// Shipping\Item_Info reads both keys; V4 issues the barcode itself, and
+		// create_legacy_label() prefetches one when the order goes to legacy.
+		$post_data += array(
+			'main_barcode' => '',
+			'barcodes'     => array(),
+		);
+
 		$item_info = new Shipping\Item_Info( $post_data );
 		$signals   = $this->gather_signals( $item_info, $post_data );
 
 		if ( ! Eligibility::is_eligible( $signals ) ) {
-			return $this->create_label_pipeline( $post_data );
+			return $this->create_legacy_label( $post_data );
 		}
 
 		$fields         = $this->extract_fields( $item_info, $signals['mapped'], $post_data, $signals['destination'] );
@@ -185,7 +201,7 @@ class Service extends Order_Base implements Label_Service_Interface {
 				)
 			);
 
-			return $this->create_label_pipeline( $post_data );
+			return $this->create_legacy_label( $post_data );
 		}
 
 		$request  = Request_Builder::build( $fields );
@@ -200,6 +216,40 @@ class Service extends Order_Base implements Label_Service_Interface {
 		}
 
 		return $labels;
+	}
+
+	/**
+	 * Run the legacy pipeline, prefetching the barcodes it needs when none were passed.
+	 *
+	 * @param array $post_data Label post data.
+	 * @return array
+	 *
+	 * @throws \Exception If a barcode request or the legacy label call fails.
+	 *
+	 * @since 6.0.0
+	 */
+	protected function create_legacy_label( array $post_data ): array {
+		if ( empty( $post_data['main_barcode'] ) ) {
+			$post_data             = $this->prefetch_label_barcodes( $post_data );
+			$this->issued_barcodes = $post_data['barcodes'];
+		}
+
+		return $this->create_label_pipeline( $post_data );
+	}
+
+	/**
+	 * Barcodes of the last create() call, one per collo: the ones V4 issued, or the
+	 * ones prefetched for an order handed to legacy.
+	 *
+	 * The label records alone cannot give these back, since a multi-collo merge
+	 * keeps only the first collo's barcode.
+	 *
+	 * @return string[]
+	 *
+	 * @since 6.0.0
+	 */
+	public function issued_barcodes(): array {
+		return $this->issued_barcodes;
 	}
 
 	/**
@@ -357,7 +407,12 @@ class Service extends Order_Base implements Label_Service_Interface {
 			|| ! empty( $item_info->shipment['shipping_return_barcode'] )
 			|| ! empty( $item_info->shipment['return_options'] )
 			|| 'yes' === ( $backend_raw['create_return_label'] ?? '' )
-			|| 'yes' === ( $backend_raw['create_shipment_return_label'] ?? '' );
+			|| 'yes' === ( $backend_raw['create_shipment_return_label'] ?? '' )
+			// The return barcodes are only requested on the legacy path, so an order
+			// that would get one has to go there. That includes a store that never
+			// saved the return setting, which legacy reads as asking for one.
+			|| $this->needs_return_barcode( $post_data, $item_info )
+			|| $this->needs_shipping_return_barcode( $item_info );
 
 		return array(
 			'num_labels'      => (int) ( $item_info->backend_data['num_labels'] ?? 1 ),
@@ -819,6 +874,10 @@ class Service extends Order_Base implements Label_Service_Interface {
 		foreach ( $items as $index => $item ) {
 			$fallback     = (string) ( $fallbacks[ $index ] ?? $parent_barcode );
 			$item_barcode = Response_Mapper::get_barcode( $item, $fallback );
+
+			if ( '' !== $item_barcode ) {
+				$this->issued_barcodes[] = $item_barcode;
+			}
 
 			$partner_barcode = Response_Mapper::get_partner_barcode( $item );
 			$partner_id      = Response_Mapper::get_partner_id( $item );

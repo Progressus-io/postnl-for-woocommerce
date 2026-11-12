@@ -3,8 +3,10 @@
 	"license": "GPL-3.0",
 	"type": "wordpress-plugin",
 	"require": {
-		"php": ">=7.4",
-		"clegginabox/pdf-merger": "dev-master"
+		"php": ">=8.2",
+		"clegginabox/pdf-merger": "dev-master",
+		"postnl/api-client-sdk": "^3.0",
+		"guzzlehttp/guzzle": "^7.11"
 	},
 	"autoload": {
 		"psr-4": {
@@ -57,7 +59,6 @@
 		"phpunit/phpunit": "^10.5",
 		"yoast/phpunit-polyfills": "^2.0",
 		"brain/monkey": "^2.6",
-		"guzzlehttp/guzzle": "^7.11",
 		"league/oauth2-client": "^2.9"
 	},
 	"autoload-dev": {
@@ -92,5 +93,11 @@
 			"sh -c './vendor/bin/phpcs . --ignore=$(composer config phpcs-ignore) --standard=./.phpcs.l18n.xml --report-full --report-summary --colors -s'"
 		],
 		"test": [ "composer config name"]
+	},
+	"repositories": {
+		"private-packagist": {
+			"type": "composer",
+			"url": "https://postnl.repo.packagist.com/progressus/"
+		}
 	}
 }

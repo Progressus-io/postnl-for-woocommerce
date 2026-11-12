@@ -373,7 +373,7 @@ class Testable_Returns_Service extends Service {
 	 *
 	 * @param \Postnl\Sdk\Service\ReturnShipment\V4\Request\ReturnShipmentRequest $request Built request.
 	 * @param array                                                              $fields  Flattened fields.
-	 * @return \Postnl\Sdk\Service\ReturnShipment\V4\Response\GenerateReturnResponseInterface
+	 * @return \Postnl\Sdk\Service\ReturnShipment\Response\ReturnShipmentResponseInterface
 	 */
 	public function expose_generate_return( $request, array $fields ) {
 		return $this->generate_return( $request, $fields );

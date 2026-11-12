@@ -105,6 +105,17 @@ abstract class Base {
 	}
 
 	/**
+	 * Whether the "Label in the box" return label may be requested for this request.
+	 *
+	 * @return bool
+	 *
+	 * @since 6.0.0
+	 */
+	protected function is_label_in_the_box_available(): bool {
+		return $this->service_factory()->label_in_the_box_available();
+	}
+
+	/**
 	 * Get nonce field.
 	 *
 	 * @return array
@@ -426,7 +437,7 @@ abstract class Base {
 			),
 		);
 
-		if ( 'in_box' === $this->settings->get_return_shipment_and_labels() ) {
+		if ( 'in_box' === $this->settings->get_return_shipment_and_labels() && $this->is_label_in_the_box_available() ) {
 			$fields[] = array(
 				'id'            => $this->prefix . 'create_return_label',
 				'type'          => 'checkbox',
@@ -629,8 +640,9 @@ abstract class Base {
 		}
 
 		$label_post_data = array(
-			'order'      => $order,
-			'saved_data' => $saved_data,
+			'order'            => $order,
+			'saved_data'       => $saved_data,
+			'label_in_the_box' => $this->is_label_in_the_box_available(),
 		);
 
 		if ( $this->service_factory()->barcode_from_label() ) {
@@ -1109,6 +1121,8 @@ abstract class Base {
 	/**
 	 * Whether the order ships with a separate return barcode.
 	 *
+	 * Always false while labels run on V4, where label in the box is dropped.
+	 *
 	 * @param array              $post_data          Order post data.
 	 * @param Shipping\Item_Info $shipping_item_info Parsed shipping item info.
 	 *
@@ -1118,7 +1132,7 @@ abstract class Base {
 	 */
 	public function needs_return_barcode( $post_data, $shipping_item_info ) {
 		$shipment_return_type = $this->settings->get_return_shipment_and_labels();
-		if ( 'none' === $shipment_return_type ) {
+		if ( 'none' === $shipment_return_type || ! $this->is_label_in_the_box_available() ) {
 			return false;
 		}
 

@@ -146,6 +146,17 @@ class Service extends Order_Base implements Label_Service_Interface {
 	}
 
 	/**
+	 * Label in the box is never available here: this service only runs when labels are on V4.
+	 *
+	 * @return bool
+	 *
+	 * @since 6.0.0
+	 */
+	protected function is_label_in_the_box_available(): bool {
+		return false;
+	}
+
+	/**
 	 * Create a shipping label and return the normalized label record.
 	 *
 	 * Routes the happy-path domestic parcel to the V4 SDK; anything else runs
@@ -166,6 +177,9 @@ class Service extends Order_Base implements Label_Service_Interface {
 			'main_barcode' => '',
 			'barcodes'     => array(),
 		);
+
+		// Label in the box is dropped on V4, including for an order handed to legacy.
+		$post_data['label_in_the_box'] = false;
 
 		$item_info = new Shipping\Item_Info( $post_data );
 		$signals   = $this->gather_signals( $item_info, $post_data );
@@ -229,6 +243,8 @@ class Service extends Order_Base implements Label_Service_Interface {
 	 * @since 6.0.0
 	 */
 	protected function create_legacy_label( array $post_data ): array {
+		$post_data['label_in_the_box'] = false;
+
 		if ( empty( $post_data['main_barcode'] ) ) {
 			$post_data             = $this->prefetch_label_barcodes( $post_data );
 			$this->issued_barcodes = $post_data['barcodes'];
@@ -406,11 +422,12 @@ class Service extends Order_Base implements Label_Service_Interface {
 		$has_return = ! empty( $item_info->shipment['return_barcode'] )
 			|| ! empty( $item_info->shipment['shipping_return_barcode'] )
 			|| ! empty( $item_info->shipment['return_options'] )
-			|| 'yes' === ( $backend_raw['create_return_label'] ?? '' )
+			// create_return_label is left out: it asks for label in the box, which V4 drops.
 			|| 'yes' === ( $backend_raw['create_shipment_return_label'] ?? '' )
 			// The return barcodes are only requested on the legacy path, so an order
-			// that would get one has to go there. That includes a store that never
-			// saved the return setting, which legacy reads as asking for one.
+			// that would get one has to go there. needs_return_barcode() is false here
+			// because label in the box is dropped, so a BE store with no return setting
+			// no longer counts.
 			|| $this->needs_return_barcode( $post_data, $item_info )
 			|| $this->needs_shipping_return_barcode( $item_info );
 

@@ -82,7 +82,7 @@ class FilterCarryForwardTest extends IntegrationTestCase {
 			update_option( $option, $value );
 		}
 
-		// An order that would get a return barcode goes to the legacy path.
+		// Pin returns off so these tests do not depend on the stored return setting.
 		$settings                  = Settings::get_instance();
 		$this->orig_return_setting = $settings->settings['return_shipment_and_labels'] ?? null;
 

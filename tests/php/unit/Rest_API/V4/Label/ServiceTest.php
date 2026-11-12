@@ -1384,23 +1384,70 @@ class ServiceTest extends UnitTestCase {
 	}
 
 	/**
-	 * @testdox An order that would get a return barcode counts as having a return, and one with returns off does not
+	 * The V4 label service asks for no label-in-the-box return for an NL or BE store.
 	 *
-	 * Return barcodes are only requested on the legacy path, so such an order must
-	 * not be labelled on V4 without one. A store that never saved the return setting
-	 * reads as '', which legacy treats as asking for a return barcode.
+	 * @testdox The V4 label service asks for no label-in-the-box return for an NL or BE store
 	 *
-	 * @testWith ["", true]
-	 *           ["none", false]
+	 * PostNL dropped label in the box on V4 (ClickUp 868jpv52c). A Belgian store has
+	 * no return setting, which legacy reads as '' and answers with a return barcode on
+	 * every BE>BE and BE>NL label. An NL store can pick "Label in the box". Neither may
+	 * count as a return on V4, or Eligibility sends the order back to legacy.
+	 *
+	 * @testWith ["BE", "BE", ""]
+	 *           ["BE", "NL", ""]
+	 *           ["NL", "NL", "in_box"]
+	 *           ["NL", "BE", "in_box"]
+	 *           ["NL", "NL", ""]
 	 */
-	public function test_an_order_that_would_get_a_return_barcode_has_a_return( string $return_type, bool $has_return ): void {
+	public function test_v4_label_service_requests_no_label_in_the_box_return( string $origin, string $destination, string $return_type ): void {
 		Settings::get_instance()->return_type = $return_type;
 
 		$service = $this->service_with_logger( new Spy_Logger() );
 
-		$item_info = new Delivery_Window_Item_Info( array( 'shipping_product' => array( 'code' => '3085' ) ) );
+		$item_info           = new Delivery_Window_Item_Info( array( 'shipping_product' => array( 'code' => '3085' ) ) );
+		$item_info->shipper  = array( 'country' => $origin );
+		$item_info->receiver = array( 'country' => $destination );
 
-		$this->assertSame( $has_return, $this->gather_signals( $service, $item_info, array() )['has_return'] );
+		$post_data = array(
+			'saved_data' => array(
+				'backend' => array( 'create_return_label' => 'yes' ),
+			),
+		);
+
+		$this->assertFalse( $this->gather_signals( $service, $item_info, $post_data )['has_return'] );
+	}
+
+	/**
+	 * The V4 label service reports label in the box as unavailable.
+	 *
+	 * @testdox The V4 label service reports label in the box as unavailable
+	 *
+	 * Order\Base reads this to leave out the in-box return barcode. The V4 service
+	 * only runs when labels are on V4, so it answers false without a factory lookup.
+	 */
+	public function test_v4_label_service_reports_label_in_the_box_unavailable(): void {
+		$service = $this->service_with_logger( new Spy_Logger() );
+
+		$method = new \ReflectionMethod( Service::class, 'is_label_in_the_box_available' );
+		$method->setAccessible( true );
+
+		$this->assertFalse( $method->invoke( $service ) );
+	}
+
+	/**
+	 * A V4 order handed to legacy is told label in the box is unavailable.
+	 *
+	 * @testdox A V4 order handed to legacy is told label in the box is unavailable
+	 *
+	 * Shipping\Item_Info reads the flag to leave the in-box return options out of
+	 * the legacy request, so the fallback must carry it too.
+	 */
+	public function test_legacy_fallback_carries_no_label_in_the_box(): void {
+		$service = $this->fallback_service();
+
+		$this->create_legacy_label( $service, array( 'main_barcode' => '3SDEVC1234567' ) );
+
+		$this->assertFalse( $service->pipeline_post_data['label_in_the_box'] );
 	}
 
 	/**

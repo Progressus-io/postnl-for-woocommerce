@@ -230,6 +230,8 @@ class Item_Info extends Base_Info {
 			'return_barcode'          => isset( $post_data['return_barcode'] ) ? $post_data['return_barcode'] : '',
 			'shipping_return_barcode' => isset( $post_data['shipping_return_barcode'] ) ? $post_data['shipping_return_barcode'] : '',
 			'is_return_activated'     => isset( $post_data['is_return_activated'] ) && $post_data['is_return_activated'] ? 'yes' : 'no',
+			// Absent (a caller that predates the flag) keeps label in the box, as on legacy.
+			'label_in_the_box'        => ! isset( $post_data['label_in_the_box'] ) || (bool) $post_data['label_in_the_box'],
 			'currency'                => $order->get_currency(),
 			'total_weight'            => $order_weight,
 			'subtotal'                => $order->get_subtotal(),
@@ -1122,7 +1124,7 @@ class Item_Info extends Base_Info {
 	 */
 	public function get_return_options() {
 		$shipment_return_type = $this->settings->get_return_shipment_and_labels();
-		if ( 'none' === $shipment_return_type ) {
+		if ( 'none' === $shipment_return_type || ! ( $this->api_args['order_details']['label_in_the_box'] ?? true ) ) {
 			return array();
 		}
 

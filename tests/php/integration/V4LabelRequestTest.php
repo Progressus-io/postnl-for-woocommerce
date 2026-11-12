@@ -64,7 +64,7 @@ class V4LabelRequestTest extends IntegrationTestCase {
 			update_option( $option, $value );
 		}
 
-		// A return label in the box keeps a BE order on the legacy path.
+		// Pin returns off so these tests do not depend on the stored return setting.
 		$settings                  = Settings::get_instance();
 		$this->orig_return_setting = $settings->settings['return_shipment_and_labels'] ?? null;
 

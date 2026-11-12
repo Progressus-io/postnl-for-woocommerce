@@ -20,7 +20,6 @@ use Postnl\Sdk\Service\PickupLocations\Response\Location\DayOpeningTimes;
 use Postnl\Sdk\Service\PickupLocations\Response\Location\LocationOpeningHours;
 use Postnl\Sdk\Service\PickupLocations\Response\Location\PickupLocation;
 use Postnl\Sdk\Service\PickupLocations\Response\PickUpLocationsCollection;
-use Postnl\Sdk\Service\PickupLocations\V4\Request\PickUpNearAddressRequest;
 use PostNLWooCommerce\Rest_API\SDK\Client_Factory;
 use PostNLWooCommerce\Rest_API\V4\Pickup_Location\Service;
 use PostNLWooCommerce\Shipping_Method\Settings;
@@ -185,7 +184,7 @@ class ServiceTest extends UnitTestCase {
 	public function test_build_request_belgium_carries_street_and_city(): void {
 		$service = new Testable_Pickup_Service( new Client_Factory( $this->make_settings() ), $this->make_settings(), self::V4_KEY, self::LOCATIONS, new NullLogger() );
 
-		$address = $service->expose_build_request(
+		$request = $service->expose_build_request(
 			array(
 				'ship_to_different_address' => '1',
 				'shipping_country'          => 'BE',
@@ -194,8 +193,10 @@ class ServiceTest extends UnitTestCase {
 				'shipping_address_2'        => '1',
 				'shipping_city'             => 'Brussels',
 			)
-		)->receiverAddress;
+		);
+		$address = $request->receiverAddress;
 
+		$this->assertSame( array( PickUpLocationType::Retail ), $request->locationTypes, 'BE lookups request retail pickup points too.' );
 		$this->assertSame( Country::BE, $address->countryIso );
 		$this->assertSame( '1000', $address->postalCode );
 		$this->assertSame( 'Rue Neuve', $address->street );
@@ -732,7 +733,7 @@ class ServiceTest extends UnitTestCase {
 		Functions\when( 'current_datetime' )->justReturn( new \DateTimeImmutable( '2026-07-14 10:00:00' ) );
 
 		$http    = new Scripted_Http_Client(
-			array( 400, $this->validation_error_body( 'postalCode', 'The postalCode field is required.' ) ),
+			array( 400, $this->validation_error_body( 'locationTypes', "The field 'locationTypes' is invalid." ) ),
 			array( 200, $this->locations_response_body() )
 		);
 		$service = new Service( new Spy_Pickup_Client_Factory( $this->make_settings(), $http ), $this->make_settings(), self::V4_KEY, self::LOCATIONS, new NullLogger() );
@@ -741,7 +742,7 @@ class ServiceTest extends UnitTestCase {
 			$service->get_pickup_locations( $this->nl_post_data() );
 			$this->fail( 'A validation error must propagate.' );
 		} catch ( \Exception $error ) {
-			$this->assertStringContainsString( 'postalCode', $error->getMessage() );
+			$this->assertStringContainsString( 'locationTypes', $error->getMessage() );
 		}
 
 		$this->assertCount( 1, $http->bodies, 'A refused lookup is not retried.' );

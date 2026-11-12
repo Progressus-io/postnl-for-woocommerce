@@ -123,7 +123,7 @@ class Request_Builder {
 		$receiver_fields = $fields['receiver'] ?? array();
 		$label_fields    = $fields['label'] ?? array();
 
-		// asSender() takes no contact, and the sender contact carries the email only.
+		// The sender contact carries the email only.
 		$sender_email = self::maybe_null( (string) ( $sender_fields['email'] ?? '' ) );
 		$sender       = new ShipmentParty(
 			address: self::address( $sender_fields ),

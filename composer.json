@@ -5,7 +5,7 @@
 	"require": {
 		"php": ">=8.2",
 		"clegginabox/pdf-merger": "dev-master",
-		"postnl/api-client-sdk": "^3.0",
+		"postnl/api-client-sdk": "^4.1",
 		"guzzlehttp/guzzle": "^7.11"
 	},
 	"autoload": {

@@ -20,9 +20,7 @@ use Postnl\Sdk\Service\PickupLocations\Response\Location\DayOpeningTimes;
 use Postnl\Sdk\Service\PickupLocations\Response\Location\LocationOpeningHours;
 use Postnl\Sdk\Service\PickupLocations\Response\Location\PickupLocation;
 use Postnl\Sdk\Service\PickupLocations\Response\PickUpLocationsCollection;
-use Postnl\Sdk\Service\PickupLocations\V4\Request\PickUpNearAddressRequest;
 use PostNLWooCommerce\Rest_API\SDK\Client_Factory;
-use PostNLWooCommerce\Rest_API\V4\Pickup_Location\Location_Types_Request;
 use PostNLWooCommerce\Rest_API\V4\Pickup_Location\Service;
 use PostNLWooCommerce\Shipping_Method\Settings;
 use PostNLWooCommerce\Tests\UnitTestCase;
@@ -137,7 +135,7 @@ class ServiceTest extends UnitTestCase {
 		$request = $service->expose_build_request( $this->nl_post_data() );
 
 		$this->assertSame( 3, $request->numberOfLocations, 'The configured pickup-point count reaches the request.' );
-		$this->assertSame( PickUpLocationType::Retail, $request->locationType, 'Only retail pickup points are requested.' );
+		$this->assertSame( array( PickUpLocationType::Retail ), $request->locationTypes, 'Only retail pickup points are requested.' );
 		$this->assertSame( '2026-07-14', $request->pickupDate );
 		$this->assertSame( '11223344', $request->customerNumber );
 		$this->assertSame( 'DEVC', $request->customerCode );
@@ -186,7 +184,7 @@ class ServiceTest extends UnitTestCase {
 	public function test_build_request_belgium_carries_street_and_city(): void {
 		$service = new Testable_Pickup_Service( new Client_Factory( $this->make_settings() ), $this->make_settings(), self::V4_KEY, self::LOCATIONS, new NullLogger() );
 
-		$address = $service->expose_build_request(
+		$request = $service->expose_build_request(
 			array(
 				'ship_to_different_address' => '1',
 				'shipping_country'          => 'BE',
@@ -195,8 +193,10 @@ class ServiceTest extends UnitTestCase {
 				'shipping_address_2'        => '1',
 				'shipping_city'             => 'Brussels',
 			)
-		)->receiverAddress;
+		);
+		$address = $request->receiverAddress;
 
+		$this->assertSame( array( PickUpLocationType::Retail ), $request->locationTypes, 'BE lookups request retail pickup points too.' );
 		$this->assertSame( Country::BE, $address->countryIso );
 		$this->assertSame( '1000', $address->postalCode );
 		$this->assertSame( 'Rue Neuve', $address->street );
@@ -236,7 +236,7 @@ class ServiceTest extends UnitTestCase {
 			array(
 				new PickupLocation(
 					pickupLocationId: '176227',
-					locationType: 'Retail',
+					locationType: 'retail',
 					name: 'Jumbo Den Haag',
 					distance: 523,
 					address: new Address(
@@ -702,138 +702,50 @@ class ServiceTest extends UnitTestCase {
 		$this->assertStringContainsString( 'cache bypassed', $warnings[0]['message'] );
 	}
 
-	// ── locationType / locationTypes fallback ────────────────────────────────
+	// ── locationTypes request shape ──────────────────────────────────────────
 
 	/**
-	 * @testdox A lookup PostNL refuses over locationType is retried once with locationTypes
+	 * @testdox A lookup is sent once, filtering on locationTypes with the lower-case retail value
 	 *
-	 * The published contract and SDK 3.0.0 send `locationType: "Retail"`; the sandbox
-	 * rejects that field and requires `locationTypes: ["retail"]`. Without the retry
-	 * no pickup point loads at checkout.
+	 * SDK 4.0 replaced the single `locationType` field, which PostNL now rejects,
+	 * with the `locationTypes` list, so the request needs no fallback shape.
 	 */
-	public function test_refused_location_type_is_retried_with_location_types(): void {
-		$this->with_transient_store();
-		Functions\when( 'current_datetime' )->justReturn( new \DateTimeImmutable( '2026-07-14 10:00:00' ) );
-
-		$http    = new Scripted_Http_Client(
-			array( 400, $this->validation_error_body( 'locationType', "The field 'locationType' is not part of API contract." ) ),
-			array( 200, $this->locations_response_body() )
-		);
-		$logger  = new Spy_Logger();
-		$service = new Service( new Spy_Pickup_Client_Factory( $this->make_settings(), $http ), $this->make_settings(), self::V4_KEY, self::LOCATIONS, $logger );
-
-		$result = $service->get_pickup_locations( $this->nl_post_data() );
-
-		$this->assertCount( 2, $http->bodies, 'The refused lookup must be retried exactly once.' );
-		$this->assertSame( 'Retail', $http->bodies[0]['locationType'], 'The documented shape goes first.' );
-		$this->assertSame( array( 'retail' ), $http->bodies[1]['locationTypes'] );
-		$this->assertArrayNotHasKey( 'locationType', $http->bodies[1], 'The refused field must not be sent again.' );
-		$this->assertSame( $http->bodies[0]['receiverAddress'], $http->bodies[1]['receiverAddress'], 'Only the location type changes between the two shapes.' );
-		$this->assertSame( $http->bodies[0]['pickupDate'], $http->bodies[1]['pickupDate'] );
-		$this->assertSame( '176227', $result['PickupOptions'][0]['Locations'][0]['LocationCode'] );
-
-		$notices = array_values(
-			array_filter( $logger->records, static fn( array $record ) => LogLevel::NOTICE === $record['level'] )
-		);
-		$this->assertCount( 1, $notices, 'The retry must leave a trace in the log.' );
-	}
-
-	/**
-	 * @testdox A lookup PostNL accepts in the documented shape is sent once, with locationType
-	 */
-	public function test_accepted_location_type_is_not_retried(): void {
+	public function test_lookup_sends_location_types_once(): void {
 		$this->with_transient_store();
 		Functions\when( 'current_datetime' )->justReturn( new \DateTimeImmutable( '2026-07-14 10:00:00' ) );
 
 		$http    = new Scripted_Http_Client( array( 200, $this->locations_response_body() ) );
 		$service = new Service( new Spy_Pickup_Client_Factory( $this->make_settings(), $http ), $this->make_settings(), self::V4_KEY, self::LOCATIONS, new NullLogger() );
 
-		$service->get_pickup_locations( $this->nl_post_data() );
+		$result = $service->get_pickup_locations( $this->nl_post_data() );
 
 		$this->assertCount( 1, $http->bodies );
-		$this->assertSame( 'Retail', $http->bodies[0]['locationType'] );
-		$this->assertArrayNotHasKey( 'locationTypes', $http->bodies[0] );
+		$this->assertSame( array( 'retail' ), $http->bodies[0]['locationTypes'] );
+		$this->assertArrayNotHasKey( 'locationType', $http->bodies[0], 'The removed field must not be sent.' );
+		$this->assertSame( '176227', $result['PickupOptions'][0]['Locations'][0]['LocationCode'] );
 	}
 
 	/**
-	 * @testdox A validation error on any other field fails the lookup without a retry
+	 * @testdox A validation error fails the lookup without a retry
 	 */
-	public function test_other_validation_errors_are_not_retried(): void {
+	public function test_validation_errors_are_not_retried(): void {
 		$this->with_transient_store();
 		Functions\when( 'current_datetime' )->justReturn( new \DateTimeImmutable( '2026-07-14 10:00:00' ) );
 
 		$http    = new Scripted_Http_Client(
-			array( 400, $this->validation_error_body( 'postalCode', 'The postalCode field is required.' ) ),
+			array( 400, $this->validation_error_body( 'locationTypes', "The field 'locationTypes' is invalid." ) ),
 			array( 200, $this->locations_response_body() )
 		);
 		$service = new Service( new Spy_Pickup_Client_Factory( $this->make_settings(), $http ), $this->make_settings(), self::V4_KEY, self::LOCATIONS, new NullLogger() );
 
 		try {
 			$service->get_pickup_locations( $this->nl_post_data() );
-			$this->fail( 'A validation error unrelated to locationType must propagate.' );
+			$this->fail( 'A validation error must propagate.' );
 		} catch ( \Exception $error ) {
-			$this->assertStringContainsString( 'postalCode', $error->getMessage() );
+			$this->assertStringContainsString( 'locationTypes', $error->getMessage() );
 		}
 
-		$this->assertCount( 1, $http->bodies, 'Only the locationType refusal earns a retry.' );
-	}
-
-	/**
-	 * @testdox After a refusal, the next lookup in the same request goes straight to locationTypes
-	 */
-	public function test_later_lookups_skip_the_refused_shape(): void {
-		$this->with_transient_store();
-		Functions\when( 'current_datetime' )->justReturn( new \DateTimeImmutable( '2026-07-14 10:00:00' ) );
-
-		$http    = new Scripted_Http_Client(
-			array( 400, $this->validation_error_body( 'locationType', "The field 'locationType' is not part of API contract." ) ),
-			array( 200, $this->locations_response_body() ),
-			array( 200, $this->locations_response_body() )
-		);
-		$service = new Service( new Spy_Pickup_Client_Factory( $this->make_settings(), $http ), $this->make_settings(), self::V4_KEY, self::LOCATIONS, new NullLogger() );
-
-		$service->get_pickup_locations( $this->nl_post_data() );
-		$service->get_pickup_locations( array( 'shipping_postcode' => '1012 JS' ) + $this->nl_post_data() );
-
-		$this->assertCount( 3, $http->bodies, 'The second address must cost one call, not two.' );
-		$this->assertSame( array( 'retail' ), $http->bodies[2]['locationTypes'] );
-		$this->assertArrayNotHasKey( 'locationType', $http->bodies[2] );
-	}
-
-	/**
-	 * @testdox Location_Types_Request maps each SDK location type to its locationTypes value
-	 * @dataProvider location_type_provider
-	 *
-	 * @param PickUpLocationType|null $type     SDK location type.
-	 * @param array|null              $expected Expected locationTypes, or null when omitted.
-	 */
-	public function test_location_types_request_maps_the_location_type( ?PickUpLocationType $type, ?array $expected ): void {
-		$payload = ( new Location_Types_Request(
-			new PickUpNearAddressRequest(
-				numberOfLocations: 3,
-				receiverAddress: new Address( countryIso: Country::NL, postalCode: '2521CA' ),
-				locationType: $type,
-				pickupDate: '2026-07-15'
-			)
-		) )->toArray();
-
-		$this->assertArrayNotHasKey( 'locationType', $payload );
-		$this->assertSame( $expected, $payload['locationTypes'] ?? null );
-		$this->assertSame( 3, $payload['numberOfLocations'], 'Every other field passes through untouched.' );
-		$this->assertSame( '2026-07-15', $payload['pickupDate'] );
-	}
-
-	/**
-	 * SDK location types and the locationTypes list each becomes.
-	 *
-	 * @return array
-	 */
-	public static function location_type_provider(): array {
-		return array(
-			'retail'        => array( PickUpLocationType::Retail, array( 'retail' ) ),
-			'parcel locker' => array( PickUpLocationType::ParcelLocker, array( 'parcel_locker' ) ),
-			'none'          => array( null, null ),
-		);
+		$this->assertCount( 1, $http->bodies, 'A refused lookup is not retried.' );
 	}
 
 	/**
@@ -939,7 +851,7 @@ class ServiceTest extends UnitTestCase {
 				'locations' => array(
 					array(
 						'pickupLocationId' => '176227',
-						'locationType'     => 'Retail',
+						'locationType'     => 'retail',
 						'name'             => 'Jumbo Den Haag',
 						'distance'         => 523,
 						'address'          => array(

@@ -1121,6 +1121,8 @@ abstract class Base {
 	/**
 	 * Whether the order ships with a separate return barcode.
 	 *
+	 * Always false while labels run on V4, where label in the box is dropped.
+	 *
 	 * @param array              $post_data          Order post data.
 	 * @param Shipping\Item_Info $shipping_item_info Parsed shipping item info.
 	 *

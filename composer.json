@@ -31,6 +31,7 @@
 			"pnpm-lock.yaml",
 			"phpunit-unit.xml.dist",
 			"phpunit-integration.xml.dist",
+			"phpunit-sandbox.xml.dist",
 			"webpack.config.js",
 			"postcss.config.js",
 			"phpcs.xml",

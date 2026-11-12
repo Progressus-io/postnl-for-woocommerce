@@ -424,6 +424,74 @@ class Request_Builder {
 	}
 
 	/**
+	 * Overlay the filtered recipient address onto the receiver field set.
+	 *
+	 * The postnl_shipment_addresses filter operates on the legacy-shaped address
+	 * array (AddressType keys, CompanyName/HouseNr/… fields). This maps the
+	 * recipient entry (AddressType '01') — after any third-party modification —
+	 * back onto the flat receiver fields build() consumes, so a filter that
+	 * rewrites the address changes the V4 request too. Only the address fields are
+	 * touched; the contact fields (email, phone) live in the Contacts block, not
+	 * the address, and are left untouched.
+	 *
+	 * Each mapped value must be a scalar or null (null becomes ''). Casting an
+	 * array with (string) yields the literal word "Array" plus a warning nobody
+	 * sees, so the label would print a street called "Array"; an object without
+	 * __toString throws an \Error that the AJAX handlers' catch ( \Exception )
+	 * blocks never see. Legacy sends the nested value and PostNL rejects it with a
+	 * readable message, so the equivalent here is to name the offending key.
+	 *
+	 * @param array $receiver  Receiver fields as extracted from the order.
+	 * @param array $addresses Legacy-shaped address array returned by the filter.
+	 * @return array Receiver fields with the filtered recipient address applied.
+	 *
+	 * @throws \Exception When a filtered recipient field is neither scalar nor null.
+	 */
+	public static function apply_filtered_receiver( array $receiver, array $addresses ): array {
+		$map = array(
+			'company'          => 'CompanyName',
+			'first_name'       => 'FirstName',
+			'last_name'        => 'Name',
+			'street'           => 'Street',
+			'house_number'     => 'HouseNr',
+			'house_number_ext' => 'HouseNrExt',
+			'postcode'         => 'Zipcode',
+			'city'             => 'City',
+			'country'          => 'Countrycode',
+		);
+
+		foreach ( $addresses as $address ) {
+			if ( '01' !== ( $address['AddressType'] ?? '' ) ) {
+				continue;
+			}
+
+			foreach ( $map as $field => $legacy_key ) {
+				if ( ! array_key_exists( $legacy_key, $address ) ) {
+					continue;
+				}
+
+				$value = $address[ $legacy_key ];
+
+				if ( null !== $value && ! is_scalar( $value ) ) {
+					throw new \Exception(
+						sprintf(
+							/* translators: %s: address field name, e.g. Street */
+							esc_html__( 'A plugin hooked into postnl_shipment_addresses set the recipient %s to a non-scalar value.', 'postnl-for-woocommerce' ),
+							esc_html( $legacy_key )
+						)
+					);
+				}
+
+				$receiver[ $field ] = null === $value ? '' : (string) $value;
+			}
+
+			break;
+		}
+
+		return $receiver;
+	}
+
+	/**
 	 * Return null for an empty string so the DTO omits the field entirely.
 	 *
 	 * @param string $value Candidate value.

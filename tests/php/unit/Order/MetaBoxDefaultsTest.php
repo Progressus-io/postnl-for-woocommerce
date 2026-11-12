@@ -18,6 +18,8 @@ use ReflectionClass;
 use ReflectionProperty;
 
 /**
+ * Covers the default values meta_box_fields() gives the shipping option checkboxes.
+ *
  * @covers \PostNLWooCommerce\Order\Base::meta_box_fields
  */
 class MetaBoxDefaultsTest extends UnitTestCase {
@@ -57,51 +59,44 @@ class MetaBoxDefaultsTest extends UnitTestCase {
 	}
 
 	/**
-	 * Default settings whose options must be pre-selected in the meta box.
+	 * Default settings and the meta box options each must pre-select.
 	 *
 	 * @return array
 	 */
 	public static function default_settings_provider(): array {
 		return array(
-			'packets'                    => array( 'packets' ),
-			'packets + track and trace'  => array( 'packets|track_and_trace' ),
-			'packets + t&t + insured'    => array( 'packets|track_and_trace|insured_shipping' ),
-			'mailbox packet'             => array( 'mailboxpacket' ),
-			'mailbox packet + t&t'       => array( 'mailboxpacket|track_and_trace' ),
-			'eu parcel + t&t + ins plus' => array( 'eu_parcel|track_and_trace|insured_plus' ),
+			'packets'                      => array( 'packets', array( 'packets' ) ),
+			'packets + track and trace'    => array( 'packets|track_and_trace', array( 'packets', 'track_and_trace' ) ),
+			'packets + t&t + insured'      => array( 'packets|track_and_trace|insured_shipping', array( 'packets', 'track_and_trace', 'insured_shipping' ) ),
+			'packets + t&t + insured plus' => array( 'packets|track_and_trace|insured_plus', array( 'packets', 'track_and_trace', 'insured_plus' ) ),
+			'mailbox packet'               => array( 'mailboxpacket', array( 'mailboxpacket' ) ),
+			'mailbox packet + t&t'         => array( 'mailboxpacket|track_and_trace', array( 'mailboxpacket', 'track_and_trace' ) ),
+			'eu parcel + t&t + ins plus'   => array( 'eu_parcel|track_and_trace|insured_plus', array( 'track_and_trace', 'insured_plus' ) ),
+			'standard belgium + insured'   => array( 'standard_belgium|insured_shipping', array( 'insured_shipping' ) ),
 		);
 	}
 
 	/**
-	 * @testdox meta_box_fields() pre-selects every option of the default shipping product.
+	 * Pre-select the options of each default shipping product.
+	 *
+	 * @testdox meta_box_fields() pre-selects exactly the default options that have a meta box checkbox.
 	 *
 	 * @dataProvider default_settings_provider
 	 *
 	 * @param string $default_setting Pipe-separated default shipping option from the settings.
+	 * @param array  $expected        Options that must be pre-selected.
 	 */
-	public function test_preselects_default_shipping_product( string $default_setting ): void {
+	public function test_preselects_default_shipping_product( string $default_setting, array $expected ): void {
 		$values = $this->field_values( $default_setting );
 
-		foreach ( explode( '|', $default_setting ) as $option ) {
-			if ( ! array_key_exists( $option, $values ) ) {
-				continue;
-			}
-
-			$this->assertSame( 'yes', $values[ $option ], $option . ' must carry over from the default setting' );
+		foreach ( array( 'packets', 'mailboxpacket', 'track_and_trace', 'insured_shipping', 'insured_plus' ) as $option ) {
+			$this->assertArrayHasKey( $option, $values );
+			$this->assertSame(
+				in_array( $option, $expected, true ) ? 'yes' : '',
+				$values[ $option ],
+				$option . ' must match the ' . $default_setting . ' default'
+			);
 		}
-	}
-
-	/**
-	 * @testdox meta_box_fields() leaves the packet options unchecked when the default does not include them.
-	 */
-	public function test_leaves_unselected_options_empty(): void {
-		$values = $this->field_values( 'standard_belgium|insured_shipping' );
-
-		$this->assertSame( 'yes', $values['insured_shipping'] );
-		$this->assertSame( '', $values['packets'] );
-		$this->assertSame( '', $values['mailboxpacket'] );
-		$this->assertSame( '', $values['track_and_trace'] );
-		$this->assertSame( '', $values['insured_plus'] );
 	}
 }
 
@@ -120,9 +115,7 @@ class Meta_Box_Defaults_Base extends Base { // phpcs:ignore Generic.Files.OneObj
 	/**
 	 * Required by Order\Base; nothing to hook in a unit test.
 	 */
-	public function init_hooks() {
-		// Intentionally empty.
-	}
+	public function init_hooks() {}
 
 	/**
 	 * Return the fixed default options.

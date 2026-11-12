@@ -9,14 +9,11 @@ declare( strict_types = 1 );
 
 namespace PostNLWooCommerce\Tests\Sandbox;
 
-use GuzzleHttp\Client;
-use Postnl\Sdk\Client\ClientBuilder;
-use PostNLWooCommerce\Rest_API\SDK\Client_Factory;
+use Postnl\Sdk\Support\PayloadMapper;
 use PostNLWooCommerce\Rest_API\V4\Label\Request_Builder;
+use PostNLWooCommerce\Tests\Support\Recording_Http_Client;
 use PostNLWooCommerce\Tests\Support\Sandbox_Test_Case;
-use Psr\Http\Client\ClientInterface;
-use Psr\Http\Message\RequestInterface;
-use Psr\Http\Message\ResponseInterface;
+use PostNLWooCommerce\Tests\Support\Spy_Label_Client_Factory;
 
 /**
  * @coversNothing
@@ -27,14 +24,18 @@ class LabelSandboxTest extends Sandbox_Test_Case {
 	 * @testdox A morning order is confirmed by labelconfirm with guaranteedBefore 10:00
 	 */
 	public function test_morning_label_is_guaranteed_before_10(): void {
+		$request = Request_Builder::build( $this->morning_fields() );
+		$payload = $request->toArray( PayloadMapper::create() );
+		$this->assertSame( '10:00', $payload['services']['deliveryWindow']['guaranteedBefore'] ?? null, 'The built request does not carry guaranteedBefore 10:00.' );
+
 		$recorder = new Recording_Http_Client();
-		$factory  = new Recording_Client_Factory( $this, $recorder );
+		$factory  = new Spy_Label_Client_Factory( $this->credentials(), $recorder );
 
 		$this->throttle();
-		$response = $factory->build( $this->api_key, true )->shipmentDelivery()->labelConfirm( Request_Builder::build( $this->morning_fields() ) );
+		$response = $factory->build( $this->api_key, true )->shipmentDelivery()->labelConfirm( $request );
 
 		$sent = json_decode( (string) $recorder->last_request->getBody(), true );
-		$this->assertSame( '10:00', $sent['services']['deliveryWindow']['guaranteedBefore'] ?? null, 'The request did not carry guaranteedBefore 10:00.' );
+		$this->assertSame( '10:00', $sent['services']['deliveryWindow']['guaranteedBefore'] ?? null, 'The sent request did not carry guaranteedBefore 10:00.' );
 
 		$items = $response->items()->all();
 		$this->assertNotEmpty( $items, 'labelconfirm returned no items.' );
@@ -42,21 +43,42 @@ class LabelSandboxTest extends Sandbox_Test_Case {
 	}
 
 	/**
-	 * Customer number for the recording factory.
+	 * Settings stub exposing the sandbox customer credentials.
 	 *
-	 * @return string
+	 * @return object
 	 */
-	public function get_customer_num() {
-		return $this->customer_number;
-	}
+	private function credentials(): object {
+		return new class( $this->customer_number, $this->customer_code ) {
 
-	/**
-	 * Customer code for the recording factory.
-	 *
-	 * @return string
-	 */
-	public function get_customer_code() {
-		return $this->customer_code;
+			/**
+			 * Store the credentials.
+			 *
+			 * @param string $customer_number Sandbox customer number.
+			 * @param string $customer_code   Sandbox customer code.
+			 */
+			public function __construct(
+				private string $customer_number,
+				private string $customer_code
+			) {}
+
+			/**
+			 * Sandbox customer number.
+			 *
+			 * @return string
+			 */
+			public function get_customer_num() {
+				return $this->customer_number;
+			}
+
+			/**
+			 * Sandbox customer code.
+			 *
+			 * @return string
+			 */
+			public function get_customer_code() {
+				return $this->customer_code;
+			}
+		};
 	}
 
 	/**
@@ -95,67 +117,5 @@ class LabelSandboxTest extends Sandbox_Test_Case {
 			),
 			'services'      => array( 'deliveryWindow' => 'morning' ),
 		);
-	}
-}
-
-/**
- * Client_Factory that routes requests through a recording HTTP client.
- */
-class Recording_Client_Factory extends Client_Factory { // phpcs:ignore Generic.Files.OneObjectStructurePerFile.MultipleFound
-
-	/**
-	 * HTTP client the SDK sends through.
-	 *
-	 * @var ClientInterface
-	 */
-	private ClientInterface $http_client;
-
-	/**
-	 * Recording_Client_Factory constructor.
-	 *
-	 * @param object          $settings    Object exposing the customer credentials.
-	 * @param ClientInterface $http_client HTTP client the SDK sends through.
-	 */
-	public function __construct( object $settings, ClientInterface $http_client ) {
-		parent::__construct( $settings );
-		$this->http_client = $http_client;
-	}
-
-	/**
-	 * Configure the builder as production does, with the recording HTTP client.
-	 *
-	 * @param string $v4_key          PostNL V4 API key.
-	 * @param bool   $is_sandbox      Whether to target the sandbox.
-	 * @param string $customer_number Customer number.
-	 * @param string $customer_code   Customer code.
-	 * @return ClientBuilder
-	 */
-	protected function make_builder( string $v4_key, bool $is_sandbox, string $customer_number, string $customer_code ): ClientBuilder {
-		return parent::make_builder( $v4_key, $is_sandbox, $customer_number, $customer_code )->withHttpClient( $this->http_client );
-	}
-}
-
-/**
- * PSR-18 client that sends through Guzzle and keeps the last request.
- */
-class Recording_Http_Client implements ClientInterface { // phpcs:ignore Generic.Files.OneObjectStructurePerFile.MultipleFound
-
-	/**
-	 * Last request sent.
-	 *
-	 * @var RequestInterface|null
-	 */
-	public ?RequestInterface $last_request = null;
-
-	/**
-	 * Send the request and remember it.
-	 *
-	 * @param RequestInterface $request Outgoing request.
-	 * @return ResponseInterface
-	 */
-	public function sendRequest( RequestInterface $request ): ResponseInterface {
-		$this->last_request = $request;
-
-		return ( new Client( array( 'http_errors' => false ) ) )->send( $request );
 	}
 }

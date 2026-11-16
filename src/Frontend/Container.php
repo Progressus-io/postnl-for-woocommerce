@@ -8,6 +8,7 @@
 namespace PostNLWooCommerce\Frontend;
 
 use PostNLWooCommerce\Address_Utils;
+use PostNLWooCommerce\Main;
 use PostNLWooCommerce\Shipping_Method\Settings;
 use PostNLWooCommerce\Rest_API\Service_Factory;
 use PostNLWooCommerce\Rest_API\Contracts\Pickup_Location_Service_Interface;
@@ -520,8 +521,8 @@ class Container {
 
 			$post_data = Address_Utils::set_post_data_address( $post_data );
 
-			if ( empty( $post_data['shipping_postcode'] ) ) {
-				// Clear PostNL session data when postcode is missing.
+			if ( empty( $post_data['shipping_postcode'] ) || ! Address_Utils::is_postcode_complete( $receiver_country, $post_data['shipping_postcode'] ) ) {
+				// Clear PostNL session data when postcode is missing or incomplete.
 				Utils::clear_postnl_checkout_session();
 				return;
 			}
@@ -535,7 +536,8 @@ class Container {
 					Utils::clear_postnl_checkout_session();
 					return;
 				} elseif ( empty( $post_data['shipping_house_number'] ) && ! $is_reorder_nl_address_enabled ) {
-					throw new \Exception( 'Address does not contain house number!' );
+					wc_add_notice( 'Address does not contain house number!', 'error' );
+					return;
 				}
 
 				$this->validated_address( $post_data );
@@ -545,7 +547,8 @@ class Container {
 			$this->display_fields( $post_data );
 
 		} catch ( \Exception $e ) {
-			wc_add_notice( $e->getMessage(), 'error' );
+			Utils::clear_postnl_checkout_session();
+			Main::get_logger()->write( sprintf( 'PostNL delivery options lookup failed: %1$s', $e->getMessage() ) );
 		}
 	}
 

@@ -36,6 +36,33 @@ class Address_Utils {
 	}
 
 	/**
+	 * Check whether a postcode is complete enough to request delivery options.
+	 *
+	 * The checkout refreshes while the customer is still typing, so a partial
+	 * postcode must not reach the PostNL API. Countries without a rule here
+	 * are always treated as complete.
+	 *
+	 * @param string $country  Two-letter country code.
+	 * @param string $postcode Postcode as entered by the customer.
+	 *
+	 * @return bool
+	 */
+	public static function is_postcode_complete( $country, $postcode ) {
+		$patterns = array(
+			'NL' => '/^[1-9][0-9]{3}\s?[A-Z]{2}$/i',
+			'BE' => '/^[0-9]{4}$/',
+		);
+
+		$country = strtoupper( (string) $country );
+
+		if ( ! isset( $patterns[ $country ] ) ) {
+			return true;
+		}
+
+		return 1 === preg_match( $patterns[ $country ], trim( (string) $postcode ) );
+	}
+
+	/**
 	 * Set shipping address based on post data from checkout page.
 	 *
 	 * @param array $post_data Post data from checkout page.

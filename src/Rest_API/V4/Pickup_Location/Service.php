@@ -72,6 +72,17 @@ class Service implements Pickup_Location_Service_Interface {
 	private const LOCATION_TYPES = array( PickUpLocationType::Retail, PickUpLocationType::ParcelLocker );
 
 	/**
+	 * Location types requested when the pickup default carries an option a parcel
+	 * locker cannot deliver.
+	 */
+	private const RETAIL_ONLY_LOCATION_TYPES = array( PickUpLocationType::Retail );
+
+	/**
+	 * Pickup default options a parcel locker cannot deliver.
+	 */
+	private const LOCKER_EXCLUDED_OPTIONS = array( 'insured_shipping', 'id_check' );
+
+	/**
 	 * Legacy PickupOptions group Option for a retail pickup point.
 	 */
 	private const OPTION_PICKUP = 'Pickup';
@@ -236,7 +247,8 @@ class Service implements Pickup_Location_Service_Interface {
 	 * Build the SDK request from the checkout address and shipping settings.
 	 *
 	 * Retail points and parcel lockers are both requested, because the legacy
-	 * /shipment/v1/checkout response offers lockers too (its ParcelMachine group).
+	 * /shipment/v1/checkout response offers lockers too (its ParcelMachine group),
+	 * unless the pickup default rules lockers out (see location_types()).
 	 *
 	 * @param array $post_data Checkout POST data.
 	 *
@@ -246,7 +258,7 @@ class Service implements Pickup_Location_Service_Interface {
 		return new PickUpNearAddressRequest(
 			numberOfLocations: $this->number_of_locations,
 			receiverAddress: $this->build_receiver_address( $post_data ),
-			locationTypes: self::LOCATION_TYPES,
+			locationTypes: $this->location_types( $post_data ),
 			pickupDate: $this->get_pickup_date(),
 			customerCode: (string) $this->settings->get_customer_code(),
 			customerNumber: (string) $this->settings->get_customer_num()
@@ -295,6 +307,38 @@ class Service implements Pickup_Location_Service_Interface {
 			street: isset( $post_data['shipping_address_1'] ) ? (string) $post_data['shipping_address_1'] : '',
 			city: isset( $post_data['shipping_city'] ) ? (string) $post_data['shipping_city'] : ''
 		);
+	}
+
+	/**
+	 * Location types to request for a checkout address.
+	 *
+	 * PostNL asked for one exception: a parcel locker cannot take an Insured
+	 * Shipping or ID Check (18+) parcel, so when the "Default Shipping Pickup"
+	 * product includes either option only retail points are requested. That
+	 * default is applied to the label only for an NL destination (see
+	 * Order\Base::resolve_default_shipping_options()), so other destinations keep
+	 * both types.
+	 *
+	 * @param array $post_data Checkout POST data.
+	 *
+	 * @return PickUpLocationType[]
+	 */
+	protected function location_types( array $post_data ): array {
+		$post_data = Address_Utils::set_post_data_address( $post_data );
+
+		if ( 'NL' !== ( $post_data['shipping_country'] ?? '' ) ) {
+			return self::LOCATION_TYPES;
+		}
+
+		$pickup_defaults = (array) $this->settings->get_default_shipping_options( 'PICKUP' );
+
+		foreach ( self::LOCKER_EXCLUDED_OPTIONS as $option ) {
+			if ( 'yes' === ( $pickup_defaults[ $option ] ?? '' ) ) {
+				return self::RETAIL_ONLY_LOCATION_TYPES;
+			}
+		}
+
+		return self::LOCATION_TYPES;
 	}
 
 	/**
@@ -364,7 +408,7 @@ class Service implements Pickup_Location_Service_Interface {
 					static function ( PickUpLocationType $type ): string {
 						return $type->value;
 					},
-					self::LOCATION_TYPES
+					$this->location_types( $post_data )
 				)
 			),
 			$this->get_pickup_date(),

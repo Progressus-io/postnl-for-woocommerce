@@ -70,19 +70,26 @@ class ServiceTest extends UnitTestCase {
 	 * @param string   $cut_off Cut-off time (HH:MM).
 	 * @param string   $transit Transit time in days, as the setting stores it.
 	 * @param string[] $dropoff Enabled drop-off weekday keys.
+	 * @param string   $pickup_default "Default Shipping Pickup" value as stored, e.g. 'id_check|insured_shipping'.
 	 * @return Settings
 	 */
 	private function make_settings(
 		string $cut_off = '23:00',
 		string $transit = '1',
-		array $dropoff = self::ALL_DROPOFF_DAYS
+		array $dropoff = self::ALL_DROPOFF_DAYS,
+		string $pickup_default = ''
 	): Settings {
-		return new class( $cut_off, $transit, $dropoff ) extends Settings {
+		return new class( $cut_off, $transit, $dropoff, $pickup_default ) extends Settings {
 			public function __construct(
 				private string $cut_off,
 				private string $transit,
 				private array $dropoff,
+				private string $pickup_default,
 			) {}
+
+			public function get_default_shipping_options( $zone ) {
+				return 'PICKUP' === $zone ? array_fill_keys( explode( '|', $this->pickup_default ), 'yes' ) : array();
+			}
 
 			public function get_customer_code() {
 				return 'DEVC';
@@ -892,6 +899,89 @@ class ServiceTest extends UnitTestCase {
 		$this->assertSame( array( 'retail', 'parcel_locker' ), $http->bodies[0]['locationTypes'] );
 		$this->assertArrayNotHasKey( 'locationType', $http->bodies[0], 'The removed field must not be sent.' );
 		$this->assertSame( '176227', $result['PickupOptions'][0]['Locations'][0]['LocationCode'] );
+	}
+
+	/**
+	 * Location types each pickup default sends for an NL address.
+	 *
+	 * @return array<string, array{0: string, 1: string[]}>
+	 */
+	public static function pickup_default_location_types_provider(): array {
+		return array(
+			'standard shipping'      => array( '', array( 'retail', 'parcel_locker' ) ),
+			'insured shipping'       => array( 'insured_shipping', array( 'retail' ) ),
+			'ID check'               => array( 'id_check', array( 'retail' ) ),
+			'ID check and insured'   => array( 'id_check|insured_shipping', array( 'retail' ) ),
+		);
+	}
+
+	/**
+	 * @testdox An insured or ID Check pickup default requests retail points only
+	 * @dataProvider pickup_default_location_types_provider
+	 *
+	 * A parcel locker cannot take an insured or 18+ parcel, so PostNL asked for
+	 * lockers to be left out when the pickup default carries either option.
+	 *
+	 * @param string   $pickup_default "Default Shipping Pickup" value.
+	 * @param string[] $expected       locationTypes sent to PostNL.
+	 */
+	public function test_pickup_default_decides_the_location_types( string $pickup_default, array $expected ): void {
+		$this->with_transient_store();
+		Functions\when( 'current_datetime' )->justReturn( new \DateTimeImmutable( '2026-07-14 10:00:00' ) );
+
+		$settings = $this->make_settings( '23:00', '1', self::ALL_DROPOFF_DAYS, $pickup_default );
+		$http     = new Scripted_Http_Client( array( 200, $this->locations_response_body() ) );
+		$service  = new Service( new Spy_Pickup_Client_Factory( $settings, $http ), $settings, self::V4_KEY, self::LOCATIONS, new NullLogger() );
+
+		$service->get_pickup_locations( $this->nl_post_data() );
+
+		$this->assertCount( 1, $http->bodies );
+		$this->assertSame( $expected, $http->bodies[0]['locationTypes'] );
+	}
+
+	/**
+	 * @testdox A BE lookup keeps parcel lockers whatever the pickup default
+	 *
+	 * The pickup default is applied to the label only for an NL destination.
+	 */
+	public function test_belgian_lookup_ignores_the_pickup_default(): void {
+		$settings = $this->make_settings( '23:00', '1', self::ALL_DROPOFF_DAYS, 'id_check|insured_shipping' );
+		$service  = new Testable_Pickup_Service( new Client_Factory( $settings ), $settings, self::V4_KEY, self::LOCATIONS, new NullLogger() );
+
+		$request = $service->expose_build_request(
+			array(
+				'ship_to_different_address' => '1',
+				'shipping_country'          => 'BE',
+				'shipping_postcode'         => '1000',
+				'shipping_address_1'        => 'Rue Neuve',
+				'shipping_city'             => 'Brussels',
+			)
+		);
+
+		$this->assertSame( array( PickUpLocationType::Retail, PickUpLocationType::ParcelLocker ), $request->locationTypes );
+	}
+
+	/**
+	 * @testdox A retail-only lookup is cached apart from a lookup that includes lockers
+	 *
+	 * The same address under a different pickup default must not be served the
+	 * other request's cached list.
+	 */
+	public function test_retail_only_lookup_has_its_own_cache_key(): void {
+		$this->with_transient_store();
+		Functions\when( 'current_datetime' )->justReturn( new \DateTimeImmutable( '2026-07-14 10:00:00' ) );
+
+		$both     = $this->make_settings();
+		$retail   = $this->make_settings( '23:00', '1', self::ALL_DROPOFF_DAYS, 'insured_shipping' );
+		$http_one = new Scripted_Http_Client( array( 200, $this->locations_response_body() ) );
+		$http_two = new Scripted_Http_Client( array( 200, $this->locations_response_body() ) );
+
+		( new Service( new Spy_Pickup_Client_Factory( $both, $http_one ), $both, self::V4_KEY, self::LOCATIONS, new NullLogger() ) )->get_pickup_locations( $this->nl_post_data() );
+		( new Service( new Spy_Pickup_Client_Factory( $retail, $http_two ), $retail, self::V4_KEY, self::LOCATIONS, new NullLogger() ) )->get_pickup_locations( $this->nl_post_data() );
+
+		$this->assertCount( 1, $http_one->bodies );
+		$this->assertCount( 1, $http_two->bodies, 'The retail-only lookup must miss the cache filled by the two-type lookup.' );
+		$this->assertSame( array( 'retail' ), $http_two->bodies[0]['locationTypes'] );
 	}
 
 	/**

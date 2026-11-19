@@ -36,9 +36,9 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Frontend\Container consumes (see Pickup_Location_Service_Interface), so callers
  * cannot tell V4 from the legacy /shipment/v1/checkout path.
  *
- * V4 near-address returns a flat list of locations rather than the legacy
- * per-date PickupOptions groups, so the whole list is emitted as a single group
- * keyed on the computed pickup date.
+ * V4 near-address returns a flat list of retail points and parcel lockers rather
+ * than the legacy PickupOptions groups, so the list is regrouped by type under
+ * the computed pickup date: Option "Pickup" for retail, "ParcelMachine" for lockers.
  *
  * V4 provides no PartnerID or PickupTime for a location; those legacy-only fields
  * are reconciled where the two checkout halves are aggregated (task 17), not here.
@@ -65,6 +65,32 @@ class Service implements Pickup_Location_Service_Interface {
 	 * Maximum number of locations the V4 near-address endpoint accepts.
 	 */
 	private const V4_MAX_LOCATIONS = 10;
+
+	/**
+	 * Location types requested from the V4 near-address endpoint.
+	 */
+	private const LOCATION_TYPES = array( PickUpLocationType::Retail, PickUpLocationType::ParcelLocker );
+
+	/**
+	 * Location types requested when the pickup default carries an option a parcel
+	 * locker cannot deliver.
+	 */
+	private const RETAIL_ONLY_LOCATION_TYPES = array( PickUpLocationType::Retail );
+
+	/**
+	 * Pickup default options a parcel locker cannot deliver.
+	 */
+	private const LOCKER_EXCLUDED_OPTIONS = array( 'insured_shipping', 'id_check' );
+
+	/**
+	 * Legacy PickupOptions group Option for a retail pickup point.
+	 */
+	private const OPTION_PICKUP = 'Pickup';
+
+	/**
+	 * Legacy PickupOptions group Option for a parcel locker.
+	 */
+	private const OPTION_PARCEL_MACHINE = 'ParcelMachine';
 
 	/**
 	 * Cut-off time used when the merchant has not configured one, matching the
@@ -220,8 +246,9 @@ class Service implements Pickup_Location_Service_Interface {
 	/**
 	 * Build the SDK request from the checkout address and shipping settings.
 	 *
-	 * Only retail pickup points are requested, matching the legacy checkout, which
-	 * never surfaced parcel lockers.
+	 * Retail points and parcel lockers are both requested, because the legacy
+	 * /shipment/v1/checkout response offers lockers too (its ParcelMachine group),
+	 * unless the pickup default rules lockers out (see location_types()).
 	 *
 	 * @param array $post_data Checkout POST data.
 	 *
@@ -231,7 +258,7 @@ class Service implements Pickup_Location_Service_Interface {
 		return new PickUpNearAddressRequest(
 			numberOfLocations: $this->number_of_locations,
 			receiverAddress: $this->build_receiver_address( $post_data ),
-			locationTypes: array( PickUpLocationType::Retail ),
+			locationTypes: $this->location_types( $post_data ),
 			pickupDate: $this->get_pickup_date(),
 			customerCode: (string) $this->settings->get_customer_code(),
 			customerNumber: (string) $this->settings->get_customer_num()
@@ -283,6 +310,38 @@ class Service implements Pickup_Location_Service_Interface {
 	}
 
 	/**
+	 * Location types to request for a checkout address.
+	 *
+	 * PostNL asked for one exception: a parcel locker cannot take an Insured
+	 * Shipping or ID Check (18+) parcel, so when the "Default Shipping Pickup"
+	 * product includes either option only retail points are requested. That
+	 * default is applied to the label only for an NL destination (see
+	 * Order\Base::resolve_default_shipping_options()), so other destinations keep
+	 * both types.
+	 *
+	 * @param array $post_data Checkout POST data.
+	 *
+	 * @return PickUpLocationType[]
+	 */
+	protected function location_types( array $post_data ): array {
+		$post_data = Address_Utils::set_post_data_address( $post_data );
+
+		if ( 'NL' !== ( $post_data['shipping_country'] ?? '' ) ) {
+			return self::LOCATION_TYPES;
+		}
+
+		$pickup_defaults = (array) $this->settings->get_default_shipping_options( 'PICKUP' );
+
+		foreach ( self::LOCKER_EXCLUDED_OPTIONS as $option ) {
+			if ( 'yes' === ( $pickup_defaults[ $option ] ?? '' ) ) {
+				return self::RETAIL_ONLY_LOCATION_TYPES;
+			}
+		}
+
+		return self::LOCATION_TYPES;
+	}
+
+	/**
 	 * Short, log-safe description of the destination a failed lookup was for.
 	 *
 	 * Legacy Rest_API\Base::send_request() writes the entire request body — street,
@@ -322,7 +381,7 @@ class Service implements Pickup_Location_Service_Interface {
 	 * Cache key for a checkout address's mapped pickup options.
 	 *
 	 * Covers everything that changes the result: the receiver address, the number
-	 * of locations requested, and the settings that drive the pickup date (cut-off
+	 * and types of locations requested, and the settings that drive the pickup date (cut-off
 	 * time, transit time, drop-off days). A settings change therefore yields a new
 	 * key — a miss that recomputes immediately — rather than serving a stale list.
 	 * Prefixed with PREFIX_LOCATIONS so it clears Cache_Adapter's allowlist.
@@ -343,6 +402,15 @@ class Service implements Pickup_Location_Service_Interface {
 			(string) ( $post_data['shipping_address_1'] ?? '' ),
 			(string) ( $post_data['shipping_city'] ?? '' ),
 			(string) $this->number_of_locations,
+			implode(
+				',',
+				array_map(
+					static function ( PickUpLocationType $type ): string {
+						return $type->value;
+					},
+					$this->location_types( $post_data )
+				)
+			),
 			$this->get_pickup_date(),
 			(string) $this->settings->get_customer_code(),
 			(string) $this->settings->get_customer_num(),
@@ -354,9 +422,16 @@ class Service implements Pickup_Location_Service_Interface {
 	/**
 	 * Map the SDK locations collection into the legacy PickupOptions shape.
 	 *
-	 * V4 returns a flat list; the legacy shape groups locations under a pickup
-	 * date, so the whole list becomes a single group. An empty collection yields
-	 * an empty PickupOptions array, which hides the pickup tab.
+	 * V4 returns one flat list of both location types, not sorted by distance. The
+	 * legacy response groups locations by type under the pickup date: Option
+	 * "Pickup" for retail points, then Option "ParcelMachine" for parcel lockers.
+	 * Frontend\Dropoff_Points copies that Option onto each location as its type,
+	 * which the checkout saves as dropoff_points_type, so the groups are rebuilt here.
+	 *
+	 * The list is sorted nearest first and cut to the configured number before it
+	 * is split, so the count covers both types together and the nearest locations
+	 * win whatever their type. A type with no locations gets no group, and an empty
+	 * collection yields an empty PickupOptions array, which hides the pickup tab.
 	 *
 	 * The group's PickupDate is the customer-facing one and is emitted as d-m-Y,
 	 * not the ISO date the request carries: Frontend\Dropoff_Points reads it into
@@ -367,25 +442,82 @@ class Service implements Pickup_Location_Service_Interface {
 	 *
 	 * @param PickUpLocationsCollection $collection SDK locations collection.
 	 *
-	 * @return array<int, array{PickupDate: string, Locations: array<int, array>}>
+	 * @return array<int, array{PickupDate: string, Option: string, Locations: array<int, array>}>
 	 */
 	protected function map_response( PickUpLocationsCollection $collection ): array {
-		$locations = array();
-
-		foreach ( $collection->all() as $location ) {
-			$locations[] = $this->map_location( $location );
-		}
-
-		if ( empty( $locations ) ) {
-			return array();
-		}
-
-		return array(
-			array(
-				'PickupDate' => $this->get_display_pickup_date(),
-				'Locations'  => $locations,
-			),
+		$by_option = array(
+			self::OPTION_PICKUP         => array(),
+			self::OPTION_PARCEL_MACHINE => array(),
 		);
+
+		foreach ( $this->nearest_locations( $collection->all() ) as $location ) {
+			$by_option[ $this->legacy_option( $location ) ][] = $this->map_location( $location );
+		}
+
+		$groups = array();
+
+		foreach ( $by_option as $option => $locations ) {
+			if ( empty( $locations ) ) {
+				continue;
+			}
+
+			$groups[] = array(
+				'PickupDate' => $this->get_display_pickup_date(),
+				'Option'     => $option,
+				'Locations'  => $locations,
+			);
+		}
+
+		return $groups;
+	}
+
+	/**
+	 * Sort the locations nearest first and keep the configured number.
+	 *
+	 * A location without a distance sorts after every location that has one, and
+	 * equal distances keep the order PostNL returned them in.
+	 *
+	 * @param array<int, \Postnl\Sdk\Service\PickupLocations\Response\Location\PickupLocation> $locations SDK locations.
+	 *
+	 * @return array<int, \Postnl\Sdk\Service\PickupLocations\Response\Location\PickupLocation>
+	 */
+	private function nearest_locations( array $locations ): array {
+		$locations = array_values( $locations );
+		$order     = array_keys( $locations );
+
+		usort(
+			$order,
+			static function ( int $a, int $b ) use ( $locations ): int {
+				$distance_a = $locations[ $a ]->distance ?? PHP_INT_MAX;
+				$distance_b = $locations[ $b ]->distance ?? PHP_INT_MAX;
+
+				return array( $distance_a, $a ) <=> array( $distance_b, $b );
+			}
+		);
+
+		$nearest = array();
+
+		foreach ( array_slice( $order, 0, $this->number_of_locations ) as $index ) {
+			$nearest[] = $locations[ $index ];
+		}
+
+		return $nearest;
+	}
+
+	/**
+	 * The legacy PickupOptions Option for a V4 location's type.
+	 *
+	 * Only a parcel locker maps to ParcelMachine. A missing or unknown type stays a
+	 * retail Pickup, which is how every V4 location was shown before lockers were
+	 * requested.
+	 *
+	 * @param \Postnl\Sdk\Service\PickupLocations\Response\Location\PickupLocation $location SDK location entry.
+	 *
+	 * @return string
+	 */
+	private function legacy_option( $location ): string {
+		// phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- Third-party SDK DTO property is camelCase.
+		return PickUpLocationType::ParcelLocker->value === $location->locationType ? self::OPTION_PARCEL_MACHINE : self::OPTION_PICKUP;
 	}
 
 	/**

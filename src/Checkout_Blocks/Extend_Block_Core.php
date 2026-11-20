@@ -433,7 +433,7 @@ class Extend_Block_Core {
 			Utils::clear_postnl_checkout_session();
 			wp_send_json_success(
 				array(
-					'message'          => 'No delivery options for Local pickup.',
+					'message'          => esc_html__( 'No delivery options for Local pickup.', 'postnl-for-woocommerce' ),
 					'show_container'   => false,
 					'delivery_options' => array(),
 					'dropoff_options'  => array(),

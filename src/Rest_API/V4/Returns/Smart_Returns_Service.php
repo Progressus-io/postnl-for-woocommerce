@@ -177,8 +177,9 @@ class Smart_Returns_Service implements Smart_Returns_Service_Interface {
 			);
 		}
 
-		$candidates = array();
-		$rejected   = array();
+		$chosen   = null;
+		$returned = array();
+		$rejected = array();
 
 		foreach ( Response_Mapper::get_labels( $item ) as $label ) {
 			if ( '' === Response_Mapper::decode_content( $label ) ) {
@@ -186,49 +187,44 @@ class Smart_Returns_Service implements Smart_Returns_Service_Interface {
 			}
 
 			$output_type = self::label_output_type( $label );
+			$returned[]  = self::describe_label( $label ) . '/' . $output_type;
 
-			if ( isset( self::PRINTCODE_MIME_TYPES[ $output_type ] ) ) {
-				$candidates[] = $label;
-			} else {
+			if ( ! isset( self::PRINTCODE_MIME_TYPES[ $output_type ] ) ) {
 				$rejected[] = $output_type;
+				continue;
+			}
+
+			if ( null === $chosen && self::is_printcode_label( $label ) ) {
+				$chosen = $label;
 			}
 		}
 
-		if ( empty( $candidates ) ) {
-			if ( ! empty( $rejected ) ) {
-				$this->logger->error(
-					sprintf(
-						'V4 smart return for order "%1$s" answered with no embeddable printcode image; returned output type(s): %2$s. The consumer email was not sent.',
-						$order_number,
-						implode( ', ', $rejected )
-					)
+		if ( null === $chosen ) {
+			if ( empty( $returned ) ) {
+				throw new \Exception(
+					esc_html__( 'Cannot create the Smart Return. Printcode content is missing.', 'postnl-for-woocommerce' )
 				);
+			}
+
+			$this->logger->error(
+				sprintf(
+					'V4 smart return for order "%1$s" answered with no embeddable PrintcodeLabel; returned label(s): %2$s. The consumer email was not sent.',
+					$order_number,
+					implode( ', ', $returned )
+				)
+			);
+
+			if ( ! empty( $rejected ) ) {
 				throw new \Exception(
 					esc_html__( 'Cannot create the Smart Return. PostNL returned the printcode in a format that cannot be shown in the customer email. Check the PostNL logs for details.', 'postnl-for-woocommerce' )
 				);
 			}
 
 			throw new \Exception(
-				esc_html__( 'Cannot create the Smart Return. Printcode content is missing.', 'postnl-for-woocommerce' )
+				esc_html__( 'Cannot create the Smart Return. The Smart Return printcode could not be found.', 'postnl-for-woocommerce' )
 			);
 		}
 
-		if ( count( $candidates ) > 1 || ! empty( $rejected ) ) {
-			// Which document combinations return/generate can produce is still a
-			// sandbox question (flip checklist); record what arrived so a wrong
-			// pick is traceable instead of invisible.
-			$this->logger->warning(
-				sprintf(
-					'V4 smart return for order "%1$s" returned %2$d usable label(s) (types: %3$s)%4$s; the first usable one was emailed.',
-					$order_number,
-					count( $candidates ),
-					implode( ', ', array_map( array( __CLASS__, 'describe_label' ), $candidates ) ),
-					empty( $rejected ) ? '' : ' plus rejected type(s): ' . implode( ', ', $rejected )
-				)
-			);
-		}
-
-		$chosen      = $candidates[0];
 		$output_type = self::label_output_type( $chosen );
 		$barcode     = Response_Mapper::get_barcode( $item );
 
@@ -369,6 +365,20 @@ class Smart_Returns_Service implements Smart_Returns_Service_Interface {
 	private static function label_output_type( Label $label ): string {
 		// phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- Third-party SDK DTO property.
 		return null !== $label->outputType ? strtolower( $label->outputType->value ) : 'png';
+	}
+
+	/**
+	 * Whether a label is the printcode the consumer shows at the counter.
+	 *
+	 * return/generate answers with the full return Label and the PrintcodeLabel;
+	 * only the latter may reach the consumer, as on the legacy branch.
+	 *
+	 * @param Label $label Label object from the response.
+	 * @return bool
+	 */
+	private static function is_printcode_label( Label $label ): bool {
+		// phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- Third-party SDK DTO property.
+		return null !== $label->labelType && 0 === strcasecmp( trim( $label->labelType ), 'PrintcodeLabel' );
 	}
 
 	/**

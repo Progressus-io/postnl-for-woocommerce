@@ -400,6 +400,10 @@ export const Block = ( { checkoutExtensionData } ) => {
 		setDropoffOptions( [] );
 		clearAllPostNLData();
 	}, [ isLocalPickup, clearAllPostNLData ] );
+
+	// Read inside async callbacks, so a lookup that resolves after the switch to pickup is ignored.
+	const isLocalPickupRef = useRef( isLocalPickup );
+	isLocalPickupRef.current = isLocalPickup;
 	const currentHouseNumber = shippingAddress?.[ 'postnl/house_number' ] || '';
 
 	useEffect( () => {
@@ -504,6 +508,10 @@ export const Block = ( { checkoutExtensionData } ) => {
 					},
 				} )
 				.then( ( response ) => {
+					if ( isLocalPickupRef.current ) {
+						return;
+					}
+
 					if ( response.data.success && response.data.data ) {
 						const respData = response.data.data;
 
@@ -621,7 +629,12 @@ export const Block = ( { checkoutExtensionData } ) => {
 	}, [ isComplete, letterbox, setExtensionData ] );
 
 	useEffect( () => {
-		if ( ! letterbox || ! showContainer || deliveryOptions.length === 0 ) {
+		if (
+			! letterbox ||
+			! showContainer ||
+			isLocalPickup ||
+			deliveryOptions.length === 0
+		) {
 			return;
 		}
 		const firstDelivery = deliveryOptions[ 0 ];
@@ -648,7 +661,7 @@ export const Block = ( { checkoutExtensionData } ) => {
 
 		// Clear dropoff point data using helper
 		clearDropoffPointExtensionData( setExtensionData );
-	}, [ letterbox, showContainer, deliveryOptions, setExtensionData ] );
+	}, [ letterbox, showContainer, isLocalPickup, deliveryOptions, setExtensionData ] );
 
 	return (
 		<div

@@ -92,6 +92,9 @@ export function isCountrySupported( country, supportedCountries = [] ) {
 
 /**
  * WooCommerce Local pickup method IDs: local_pickup (classic) and pickup_location (blocks).
+ * Mirrors Utils::get_local_pickup_method_ids() in PHP.
+ *
+ * @type {string[]}
  */
 export const LOCAL_PICKUP_METHOD_IDS = [ 'local_pickup', 'pickup_location' ];
 

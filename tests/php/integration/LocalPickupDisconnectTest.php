@@ -56,6 +56,13 @@ class LocalPickupDisconnectTest extends IntegrationTestCase {
 	private $api_calls = 0;
 
 	/**
+	 * Backup of the session and customer state the checkout handlers write.
+	 *
+	 * @var array
+	 */
+	private $orig_checkout = array();
+
+	/**
 	 * Prepare an NL store that lists Local pickup under the PostNL shipping methods.
 	 */
 	protected function setUp(): void {
@@ -89,6 +96,16 @@ class LocalPickupDisconnectTest extends IntegrationTestCase {
 		$settings->settings['reorder_nl_address']         = 'no';
 		$settings->settings['supported_shipping_methods'] = array( 'flat_rate', 'local_pickup', 'pickup_location' );
 
+		$this->orig_checkout = array(
+			'chosen'       => WC()->session->get( 'chosen_shipping_methods' ),
+			'country'      => WC()->customer->get_shipping_country(),
+			'postcode'     => WC()->customer->get_shipping_postcode(),
+			'address_1'    => WC()->customer->get_shipping_address_1(),
+			'address_2'    => WC()->customer->get_shipping_address_2(),
+			'city'         => WC()->customer->get_shipping_city(),
+			'house_number' => WC()->customer->get_meta( '_wc_shipping/postnl/house_number' ),
+		);
+
 		wc_clear_notices();
 		add_filter( 'pre_http_request', array( $this, 'fake_postnl_api' ), 10, 3 );
 	}
@@ -102,7 +119,14 @@ class LocalPickupDisconnectTest extends IntegrationTestCase {
 		remove_filter( 'wp_die_ajax_handler', array( $this, 'ajax_die_handler' ) );
 		unset( $_REQUEST['post_data'], $_POST['nonce'], $_POST['data'] );
 
-		WC()->session->set( 'chosen_shipping_methods', array() );
+		WC()->session->set( 'chosen_shipping_methods', $this->orig_checkout['chosen'] );
+		WC()->customer->set_shipping_country( $this->orig_checkout['country'] );
+		WC()->customer->set_shipping_postcode( $this->orig_checkout['postcode'] );
+		WC()->customer->set_shipping_address_1( $this->orig_checkout['address_1'] );
+		WC()->customer->set_shipping_address_2( $this->orig_checkout['address_2'] );
+		WC()->customer->set_shipping_city( $this->orig_checkout['city'] );
+		WC()->customer->update_meta_data( '_wc_shipping/postnl/house_number', $this->orig_checkout['house_number'] );
+		WC()->customer->save();
 
 		foreach ( $this->post_ids as $id ) {
 			$order = wc_get_order( $id );
@@ -163,13 +187,13 @@ class LocalPickupDisconnectTest extends IntegrationTestCase {
 	}
 
 	/**
-	 * Create an NL order with one shipping line and a letterbox-eligible product.
+	 * Create an NL order with the given shipping lines and a letterbox-eligible product.
 	 *
-	 * @param string $method_id Shipping method ID of the shipping line.
+	 * @param string ...$method_ids Shipping method ID of each shipping line.
 	 *
 	 * @return \WC_Order
 	 */
-	private function make_order( string $method_id ): \WC_Order {
+	private function make_order( string ...$method_ids ): \WC_Order {
 		$product = new \WC_Product_Simple();
 		$product->set_name( 'Letterbox item' );
 		$product->set_regular_price( '10' );
@@ -186,10 +210,12 @@ class LocalPickupDisconnectTest extends IntegrationTestCase {
 		$order->set_shipping_city( 'Gennep' );
 		$order->add_product( $product, 1 );
 
-		$item = new \WC_Order_Item_Shipping();
-		$item->set_method_id( $method_id );
-		$item->set_method_title( $method_id );
-		$order->add_item( $item );
+		foreach ( $method_ids as $method_id ) {
+			$item = new \WC_Order_Item_Shipping();
+			$item->set_method_id( $method_id );
+			$item->set_method_title( $method_id );
+			$order->add_item( $item );
+		}
 		$order->save();
 
 		$this->post_ids[] = $order->get_id();
@@ -240,6 +266,7 @@ class LocalPickupDisconnectTest extends IntegrationTestCase {
 	 * @testdox Local pickup is never a supported PostNL method nor offered in the Shipping Methods setting.
 	 */
 	public function test_local_pickup_is_never_supported(): void {
+		WC()->shipping()->load_shipping_methods();
 		$settings = Settings::get_instance();
 
 		$this->assertNotContains( 'local_pickup', $settings->get_supported_shipping_methods() );
@@ -247,6 +274,7 @@ class LocalPickupDisconnectTest extends IntegrationTestCase {
 		$this->assertContains( 'flat_rate', $settings->get_supported_shipping_methods() );
 		$this->assertArrayNotHasKey( 'local_pickup', $settings->get_shipping_methods() );
 		$this->assertArrayNotHasKey( 'pickup_location', $settings->get_shipping_methods() );
+		$this->assertArrayHasKey( 'flat_rate', $settings->get_shipping_methods() );
 	}
 
 	/**
@@ -313,6 +341,7 @@ class LocalPickupDisconnectTest extends IntegrationTestCase {
 			'extensions',
 			array(
 				'postnl' => array(
+					'houseNumber'     => '12',
 					'deliveryDay'     => '2026-11-23_08:30-21:30_0',
 					'deliveryDayDate' => '2026-11-23',
 					'deliveryDayFrom' => '08:30',
@@ -325,7 +354,10 @@ class LocalPickupDisconnectTest extends IntegrationTestCase {
 
 		$this->make_blocks_handler()->save_postnl_checkout_fields( $order, $request );
 
-		$this->assertEmpty( wc_get_order( $order->get_id() )->get_meta( '_postnl_order_metadata' ) );
+		$saved = wc_get_order( $order->get_id() );
+		$this->assertEmpty( $saved->get_meta( '_postnl_order_metadata' ) );
+		$this->assertEmpty( $saved->get_meta( '_postnl_letterbox_type' ) );
+		$this->assertTrue( $saved->meta_exists( '_shipping_house_number' ), 'The address part of the request is still saved.' );
 	}
 
 	/**
@@ -418,5 +450,128 @@ class LocalPickupDisconnectTest extends IntegrationTestCase {
 		$this->assertSame( 'error', $result['message']['type'] );
 		$this->assertStringContainsString( 'Local pickup', $result['message']['message'] );
 		$this->assertArrayNotHasKey( 'labels_data', $result );
+	}
+
+	/**
+	 * Give an order a label record, as a label created on an earlier version would.
+	 *
+	 * @param \WC_Order $order Order to label.
+	 *
+	 * @return \WC_Order The reloaded order.
+	 */
+	private function add_existing_label( \WC_Order $order ): \WC_Order {
+		$order->update_meta_data(
+			'_postnl_order_metadata',
+			array(
+				'backend' => array( 'signature_on_delivery' => 'yes' ),
+				'labels'  => array(
+					'label' => array(
+						'type'     => 'label',
+						'barcode'  => '3SDEVC000000001',
+						'filepath' => '/tmp/postnl-test-label.pdf',
+					),
+				),
+			)
+		);
+		$order->save();
+
+		return wc_get_order( $order->get_id() );
+	}
+
+	/**
+	 * @testdox A Local pickup order labelled before the change keeps its label, its box and its Print Label action.
+	 */
+	public function test_existing_label_on_local_pickup_order_stays_reachable(): void {
+		global $wp_meta_boxes;
+
+		require_once ABSPATH . 'wp-admin/includes/template.php';
+
+		$order  = $this->add_existing_label( $this->make_order( 'local_pickup' ) );
+		$single = $this->make_handler( Single::class );
+
+		$saved = $single->save_meta_value( $order->get_id(), array() );
+		$this->assertSame( '3SDEVC000000001', $saved['labels']['label']['barcode'] );
+		$this->assertSame( 0, $this->api_calls );
+
+		$wp_meta_boxes = array(); // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited
+		try {
+			$single->add_meta_box( Utils::get_order_screen_id(), $order );
+			$this->assertTrue( $this->has_label_box() );
+		} finally {
+			$wp_meta_boxes = array(); // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited
+		}
+
+		$actions = $this->make_handler( Bulk::class )->add_create_label_actions_button( array(), $order );
+		$this->assertSame( 'postnl-action-download-label', $actions['postnl-label']['action'] );
+	}
+
+	/**
+	 * @testdox A Local pickup order without a label gets no Create Label action in the orders list.
+	 */
+	public function test_local_pickup_order_without_label_has_no_create_action(): void {
+		$bulk = $this->make_handler( Bulk::class );
+
+		$this->assertSame( array(), $bulk->add_create_label_actions_button( array(), $this->make_order( 'local_pickup' ) ) );
+		$this->assertSame(
+			'postnl-action-create-label',
+			$bulk->add_create_label_actions_button( array(), $this->make_order( 'flat_rate' ) )['postnl-label']['action']
+		);
+	}
+
+	/**
+	 * @testdox Bulk "Change Shipping Options" skips a Local pickup order and still updates a PostNL order.
+	 */
+	public function test_bulk_change_shipping_options_skips_local_pickup(): void {
+		$pickup = $this->make_order( 'local_pickup' );
+		$postnl = $this->make_order( 'flat_rate' );
+
+		$_REQUEST['postnl_shipping_zone']               = 'NL';
+		$_REQUEST['postnl_default_shipping_options_nl'] = 'signature_on_delivery';
+
+		try {
+			$this->make_handler( Bulk::class )->bulk_action_change_shipping_options( '', 'postnl-change-shipping-options', array( $pickup->get_id(), $postnl->get_id() ) );
+		} finally {
+			unset( $_REQUEST['postnl_shipping_zone'], $_REQUEST['postnl_default_shipping_options_nl'] );
+			delete_option( '_postnl_bulk_action_confirmation' );
+		}
+
+		$this->assertEmpty( wc_get_order( $pickup->get_id() )->get_meta( '_postnl_order_metadata' ) );
+		$this->assertSame( 'yes', wc_get_order( $postnl->get_id() )->get_meta( '_postnl_order_metadata' )['backend']['signature_on_delivery'] ?? null );
+	}
+
+	/**
+	 * @testdox An order with one PostNL line and one Local pickup line stays a PostNL order; an order without shipping lines is not Local pickup.
+	 */
+	public function test_mixed_shipment_stays_postnl(): void {
+		$mixed = $this->make_order( 'local_pickup', 'flat_rate' );
+
+		$this->assertFalse( Utils::is_local_pickup_order( $mixed ) );
+		$this->assertNotSame( array(), $this->make_handler( Single::class )->get_shipping_options( $mixed ) );
+
+		$no_lines = new \WC_Order();
+		$no_lines->save();
+		$this->post_ids[] = $no_lines->get_id();
+
+		$this->assertFalse( Utils::is_local_pickup_order( $no_lines ) );
+	}
+
+	/**
+	 * @testdox The classic checkout saves no PostNL delivery day on a Local pickup order, and still does on a PostNL order.
+	 */
+	public function test_classic_order_save_skips_local_pickup(): void {
+		$posted = array(
+			'postnl_delivery_day'      => '2026-11-23_08:30-21:30_0',
+			'postnl_delivery_day_date' => '2026-11-23',
+		);
+
+		$pickup = $this->make_order( 'local_pickup' );
+		$postnl = $this->make_order( 'flat_rate' );
+
+		do_action( 'woocommerce_checkout_update_order_meta', $pickup->get_id(), $posted );
+		do_action( 'woocommerce_checkout_update_order_meta', $postnl->get_id(), $posted );
+
+		$this->assertEmpty( wc_get_order( $pickup->get_id() )->get_meta( '_postnl_order_metadata' ) );
+		$this->assertEmpty( wc_get_order( $pickup->get_id() )->get_meta( '_postnl_letterbox' ) );
+		$this->assertSame( '2026-11-23', wc_get_order( $postnl->get_id() )->get_meta( '_postnl_order_metadata' )['frontend']['delivery_day_date'] ?? null );
 	}
 }

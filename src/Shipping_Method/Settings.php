@@ -2131,11 +2131,15 @@ class Settings extends \WC_Settings_API {
 	 * @return array.
 	 */
 	public function get_shipping_methods() {
-		return wp_list_pluck( WC()->shipping()->shipping_methods, 'method_title', 'id' );
+		$methods = wp_list_pluck( WC()->shipping()->shipping_methods, 'method_title', 'id' );
+
+		return array_diff_key( $methods, array_flip( Utils::get_local_pickup_method_ids() ) );
 	}
 
 	/**
 	 * Get supported shipping methods from the settings.
+	 *
+	 * Local pickup is never a PostNL method, even when an older setting still lists it.
 	 *
 	 * @return array.
 	 */
@@ -2144,7 +2148,7 @@ class Settings extends \WC_Settings_API {
 		// Add PostNL method by default
 		$suppoted_shipping_methods[] = POSTNL_SETTINGS_ID;
 
-		return $suppoted_shipping_methods;
+		return array_values( array_diff( $suppoted_shipping_methods, Utils::get_local_pickup_method_ids() ) );
 	}
 
 	/**

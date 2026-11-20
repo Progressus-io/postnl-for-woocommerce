@@ -90,6 +90,35 @@ export function isCountrySupported( country, supportedCountries = [] ) {
 	return supportedCountries.includes( country );
 }
 
+/**
+ * WooCommerce Local pickup method IDs: local_pickup (classic) and pickup_location (blocks).
+ * Mirrors Utils::get_local_pickup_method_ids() in PHP.
+ *
+ * @type {string[]}
+ */
+export const LOCAL_PICKUP_METHOD_IDS = [ 'local_pickup', 'pickup_location' ];
+
+/**
+ * Check whether Local pickup is the selected rate in every cart package.
+ *
+ * @param {Array} shippingRates - Store API cart shippingRates (packages with shipping_rates).
+ * @return {boolean} True when every package with a selected rate uses Local pickup.
+ */
+export function isLocalPickupSelected( shippingRates = [] ) {
+	const selected = ( shippingRates || [] )
+		.map( ( pkg ) =>
+			( pkg?.shipping_rates || [] ).find( ( rate ) => rate?.selected )
+		)
+		.filter( Boolean );
+
+	return (
+		selected.length > 0 &&
+		selected.every( ( rate ) =>
+			LOCAL_PICKUP_METHOD_IDS.includes( rate.method_id )
+		)
+	);
+}
+
 export default {
 	batchSetExtensionData,
 	clearDeliveryDayExtensionData,
@@ -97,4 +126,5 @@ export default {
 	clearAllExtensionData,
 	clearBackendDeliveryFee,
 	isCountrySupported,
+	isLocalPickupSelected,
 };

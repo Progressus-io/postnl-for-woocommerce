@@ -26,6 +26,7 @@ import {
 	clearBackendDeliveryFee,
 	clearDropoffPointExtensionData,
 	isCountrySupported,
+	isLocalPickupSelected,
 } from '../../utils/extension-data-helper';
 
 /**
@@ -371,6 +372,38 @@ export const Block = ( { checkoutExtensionData } ) => {
 		( select ) => select( CHECKOUT_STORE_KEY ).isComplete(),
 		[]
 	);
+
+	// Local pickup is never shipped with PostNL, so it gets no delivery options.
+	const isLocalPickup = useSelect(
+		( select ) => {
+			const checkout = select( CHECKOUT_STORE_KEY );
+			if ( checkout?.prefersCollection?.() ) {
+				return true;
+			}
+
+			const store = select( CART_STORE_KEY );
+			if ( ! store || ! store.getCartData ) {
+				return false;
+			}
+
+			return isLocalPickupSelected( store.getCartData().shippingRates );
+		},
+		[ CART_STORE_KEY, CHECKOUT_STORE_KEY ]
+	);
+
+	useEffect( () => {
+		if ( ! isLocalPickup ) {
+			return;
+		}
+		setShowContainer( false );
+		setDeliveryOptions( [] );
+		setDropoffOptions( [] );
+		clearAllPostNLData();
+	}, [ isLocalPickup, clearAllPostNLData ] );
+
+	// Read inside async callbacks, so a lookup that resolves after the switch to pickup is ignored.
+	const isLocalPickupRef = useRef( isLocalPickup );
+	isLocalPickupRef.current = isLocalPickup;
 	const currentHouseNumber = shippingAddress?.[ 'postnl/house_number' ] || '';
 
 	useEffect( () => {
@@ -385,6 +418,10 @@ export const Block = ( { checkoutExtensionData } ) => {
 
 	// Fetch data shipping address
 	useEffect( () => {
+		if ( isLocalPickup ) {
+			return;
+		}
+
 		const country = shippingAddress?.country || '';
 		const isSupported = isCountrySupported( country, supportedCountries );
 		const wasSupported = isCountrySupported(
@@ -471,6 +508,10 @@ export const Block = ( { checkoutExtensionData } ) => {
 					},
 				} )
 				.then( ( response ) => {
+					if ( isLocalPickupRef.current ) {
+						return;
+					}
+
 					if ( response.data.success && response.data.data ) {
 						const respData = response.data.data;
 
@@ -574,6 +615,7 @@ export const Block = ( { checkoutExtensionData } ) => {
 		updateCustomerData,
 		clearAllPostNLData,
 		supportedCountries,
+		isLocalPickup,
 	] );
 
 	// Clear local data if checkout is complete or letterbox.
@@ -587,7 +629,12 @@ export const Block = ( { checkoutExtensionData } ) => {
 	}, [ isComplete, letterbox, setExtensionData ] );
 
 	useEffect( () => {
-		if ( ! letterbox || ! showContainer || deliveryOptions.length === 0 ) {
+		if (
+			! letterbox ||
+			! showContainer ||
+			isLocalPickup ||
+			deliveryOptions.length === 0
+		) {
 			return;
 		}
 		const firstDelivery = deliveryOptions[ 0 ];
@@ -614,7 +661,7 @@ export const Block = ( { checkoutExtensionData } ) => {
 
 		// Clear dropoff point data using helper
 		clearDropoffPointExtensionData( setExtensionData );
-	}, [ letterbox, showContainer, deliveryOptions, setExtensionData ] );
+	}, [ letterbox, showContainer, isLocalPickup, deliveryOptions, setExtensionData ] );
 
 	return (
 		<div
@@ -631,7 +678,7 @@ export const Block = ( { checkoutExtensionData } ) => {
 			) }
 
 			{ /* Content when not letterbox and showContainer */ }
-			{ ! letterbox && showContainer && (
+			{ ! letterbox && ! isLocalPickup && showContainer && (
 				<>
 					<div className="postnl_checkout_tab_container">
 						<ul className="postnl_checkout_tab_list">
@@ -702,7 +749,7 @@ export const Block = ( { checkoutExtensionData } ) => {
 			) }
 
 			{ /* Content when letterbox is true */ }
-			{ letterbox && showContainer && (
+			{ letterbox && ! isLocalPickup && showContainer && (
 				<div className="postnl-letterbox-message">
 					{ __(
 						'These items are eligible for letterbox delivery.',

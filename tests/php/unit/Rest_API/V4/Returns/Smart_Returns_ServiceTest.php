@@ -424,9 +424,49 @@ class Smart_Returns_ServiceTest extends UnitTestCase {
 
 		$this->assertSame( 'Meir', $receiver['street'] );
 		$this->assertSame( '1', $receiver['houseNumber'] );
+		$this->assertSame( 'A', $receiver['houseNumberAddition'] );
 		$this->assertSame( '2000', $receiver['postalCode'] );
 		$this->assertSame( 'Antwerpen', $receiver['city'] );
 		$this->assertSame( 'BE', $receiver['countryIso'] );
+	}
+
+	/**
+	 * Home return address parts a BE store must fill in.
+	 *
+	 * @return array<string, array{0:string}>
+	 */
+	public static function required_home_address_parts(): array {
+		return array(
+			'street'       => array( 'street' ),
+			'house number' => array( 'house_no' ),
+			'zipcode'      => array( 'zip' ),
+			'city'         => array( 'city' ),
+		);
+	}
+
+	/**
+	 * @testdox A BE store with an incomplete home return address gets a clear error and nothing is sent to PostNL.
+	 *
+	 * @dataProvider required_home_address_parts
+	 *
+	 * @param string $part Address part left empty.
+	 */
+	public function test_be_store_without_home_address_is_refused( string $part ): void {
+		$http                   = new Smart_Returns_Succeeding_Http_Client(
+			array( self::response_item( array( self::label( 'PNG-BYTES' ) ) ) )
+		);
+		$service                = $this->service( $http );
+		$service->item_info     = new Fake_Smart_Returns_Item_Info( 'BE', 'BE', true );
+		$service->home_settings = new Smart_Returns_Home_Address_Settings( array( $part => ' ' ) );
+
+		try {
+			$service->generate( $this->order( 'BE' ) );
+			$this->fail( 'An incomplete home return address must throw.' );
+		} catch ( \Exception $exception ) {
+			$this->assertStringContainsString( 'Fill in the street, house number, zipcode and city', $exception->getMessage() );
+		}
+
+		$this->assertNull( $http->last_request, 'Nothing may be sent to PostNL.' );
 	}
 
 	/**
@@ -749,8 +789,15 @@ class Testable_Smart_Returns_Service extends Smart_Returns_Service {
 	 * @return Settings
 	 */
 	protected function settings(): Settings {
-		return new Smart_Returns_Home_Address_Settings();
+		return $this->home_settings ?? new Smart_Returns_Home_Address_Settings();
 	}
+
+	/**
+	 * Settings double to answer the home return address, or null for the default one.
+	 *
+	 * @var Settings|null
+	 */
+	public $home_settings = null;
 }
 
 /**
@@ -794,42 +841,64 @@ class Fake_Smart_Returns_Item_Info extends Item_Info {
  */
 class Smart_Returns_Home_Address_Settings extends Settings {
 
-	// phpcs:ignore Generic.CodeAnalysis.UselessOverridingMethod.Found -- Skips the real constructor, which needs WooCommerce.
-	public function __construct() {}
+	/**
+	 * Home return address the getters answer.
+	 *
+	 * @var array<string, string>
+	 */
+	private $address;
+
+	/**
+	 * Skip the real constructor, which needs WooCommerce.
+	 *
+	 * @param array<string, string> $overrides Address parts to replace.
+	 */
+	public function __construct( array $overrides = array() ) {
+		$this->address = array_merge(
+			array(
+				'street'   => 'Meir',
+				'house_no' => '1',
+				'noext'    => 'A',
+				'city'     => 'Antwerpen',
+				'zip'      => '2000',
+			),
+			$overrides
+		);
+	}
 
 	/**
 	 * @return string
 	 */
 	public function get_return_address_street() {
-		return 'Meir';
+		return $this->address['street'];
 	}
 
 	/**
 	 * @return string
 	 */
 	public function get_return_address_house_no() {
-		return '1';
+		return $this->address['house_no'];
 	}
 
 	/**
 	 * @return string
 	 */
 	public function get_return_address_house_noext() {
-		return '';
+		return $this->address['noext'];
 	}
 
 	/**
 	 * @return string
 	 */
 	public function get_return_city() {
-		return 'Antwerpen';
+		return $this->address['city'];
 	}
 
 	/**
 	 * @return string
 	 */
 	public function get_return_zipcode() {
-		return '2000';
+		return $this->address['zip'];
 	}
 }
 

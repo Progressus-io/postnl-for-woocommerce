@@ -3,8 +3,8 @@
  * Integration tests for Smart Returns from and to Belgium on V4.
  *
  * The Smart Return button is offered for BE shipping addresses once Smart
- * Returns run on V4, and a Belgian store's settings hide the reply number
- * choice and point to Smart Return.
+ * Returns run on V4. Once they do, a Belgian store's settings hide the reply
+ * number choice and point to Smart Return; until then the form is unchanged.
  *
  * @package PostNLWooCommerce\Tests\Integration
  */
@@ -14,6 +14,7 @@ declare( strict_types = 1 );
 namespace PostNLWooCommerce\Tests\Integration;
 
 use PostNLWooCommerce\Order\Single;
+use PostNLWooCommerce\Rest_API\Legacy\Smart_Returns\Item_Info;
 use PostNLWooCommerce\Rest_API\Service_Factory;
 use PostNLWooCommerce\Shipping_Method\PostNL;
 use PostNLWooCommerce\Shipping_Method\Settings;
@@ -30,6 +31,11 @@ class SmartReturnsBelgiumTest extends IntegrationTestCase {
 	private const V4_KEY = 'test-v4-key';
 
 	/**
+	 * Option holding the hash of the validated sandbox V4 key.
+	 */
+	private const SANDBOX_HASH_OPTION = Settings::NEW_API_KEY_VALIDATED_HASH_OPTION . '_sandbox';
+
+	/**
 	 * Backup of the settings singleton's loaded option array.
 	 *
 	 * @var array
@@ -37,11 +43,11 @@ class SmartReturnsBelgiumTest extends IntegrationTestCase {
 	private $orig_settings = array();
 
 	/**
-	 * Backup of the store country.
+	 * Backup of the store options this test overrides.
 	 *
-	 * @var mixed
+	 * @var array
 	 */
-	private $orig_country;
+	private $orig_options = array();
 
 	/**
 	 * Orders created during the test.
@@ -56,7 +62,9 @@ class SmartReturnsBelgiumTest extends IntegrationTestCase {
 	protected function setUp(): void {
 		parent::setUp();
 
-		$this->orig_country = get_option( 'woocommerce_default_country' );
+		foreach ( array( 'woocommerce_default_country', 'woocommerce_store_address', 'woocommerce_store_city', 'woocommerce_store_postcode', self::SANDBOX_HASH_OPTION ) as $option ) {
+			$this->orig_options[ $option ] = get_option( $option );
+		}
 
 		$settings            = Settings::get_instance();
 		$this->orig_settings = $settings->settings;
@@ -68,7 +76,7 @@ class SmartReturnsBelgiumTest extends IntegrationTestCase {
 	}
 
 	/**
-	 * Restore settings, store country, flags and orders.
+	 * Restore settings, store options, flags and orders.
 	 */
 	protected function tearDown(): void {
 		remove_filter( 'postnl_sdk_enable_smart_returns', '__return_true' );
@@ -81,11 +89,42 @@ class SmartReturnsBelgiumTest extends IntegrationTestCase {
 			}
 		}
 
-		Settings::get_instance()->set_api_key_new_validated( false );
 		Settings::get_instance()->settings = $this->orig_settings;
-		update_option( 'woocommerce_default_country', $this->orig_country );
+
+		foreach ( $this->orig_options as $option => $value ) {
+			if ( false === $value ) {
+				delete_option( $option );
+			} else {
+				update_option( $option, $value );
+			}
+		}
 
 		parent::tearDown();
+	}
+
+	/**
+	 * Skip a test that needs V4 routing when the PostNL SDK is not installed.
+	 */
+	private function require_sdk(): void {
+		if ( ! class_exists( \Postnl\Sdk\Client\ClientBuilder::class ) ) {
+			$this->markTestSkipped( 'The PostNL SDK is not installed, so no flow can run on V4.' );
+		}
+	}
+
+	/**
+	 * Create an order shipped to the given country.
+	 *
+	 * @param string $country Shipping country.
+	 *
+	 * @return \WC_Order
+	 */
+	private function make_order( string $country ): \WC_Order {
+		$order = new \WC_Order();
+		$order->set_shipping_country( $country );
+		$order->save();
+		$this->order_ids[] = $order->get_id();
+
+		return $order;
 	}
 
 	/**
@@ -96,11 +135,6 @@ class SmartReturnsBelgiumTest extends IntegrationTestCase {
 	 * @return string
 	 */
 	private function button_html( string $country ): string {
-		$order = new \WC_Order();
-		$order->set_shipping_country( $country );
-		$order->save();
-		$this->order_ids[] = $order->get_id();
-
 		$single = new class() extends Single {
 			/**
 			 * Skip hook registration.
@@ -109,13 +143,16 @@ class SmartReturnsBelgiumTest extends IntegrationTestCase {
 		};
 
 		ob_start();
-		$single->send_smart_return_email_html( $order );
+		$single->send_smart_return_email_html( $this->make_order( $country ) );
 
 		return (string) ob_get_clean();
 	}
 
 	/**
 	 * Build the PostNL settings form for a store in the given country.
+	 *
+	 * The shipping method registers admin hooks when it is built; they are
+	 * removed again so no instance outlives the test.
 	 *
 	 * @param string $country Store country.
 	 *
@@ -126,8 +163,13 @@ class SmartReturnsBelgiumTest extends IntegrationTestCase {
 
 		$method = new PostNL();
 		$method->init_form_fields();
+		$fields = $method->form_fields;
 
-		return $method->form_fields;
+		remove_filter( 'woocommerce_shipping_instance_form_fields_' . $method->id, array( $method, 'instance_form_fields' ), 10 );
+		remove_action( 'woocommerce_update_options_shipping_' . $method->id, array( $method, 'process_admin_options' ) );
+		remove_action( 'admin_enqueue_scripts', array( $method, 'enqueue_shipping_method_assets' ) );
+
+		return $fields;
 	}
 
 	/**
@@ -136,6 +178,7 @@ class SmartReturnsBelgiumTest extends IntegrationTestCase {
 	public function test_button_for_be_address_follows_the_v4_flow(): void {
 		$this->assertStringNotContainsString( 'button-send-smart-return', $this->button_html( 'BE' ) );
 
+		$this->require_sdk();
 		add_filter( 'postnl_sdk_enable_smart_returns', '__return_true' );
 
 		$this->assertStringContainsString( 'button-send-smart-return', $this->button_html( 'BE' ) );
@@ -161,6 +204,7 @@ class SmartReturnsBelgiumTest extends IntegrationTestCase {
 
 		$this->assertFalse( $factory->uses_v4_for( 'smart_returns' ) );
 
+		$this->require_sdk();
 		add_filter( 'postnl_sdk_enable_smart_returns', '__return_true' );
 
 		$this->assertTrue( $factory->uses_v4_for( 'smart_returns' ) );
@@ -168,15 +212,32 @@ class SmartReturnsBelgiumTest extends IntegrationTestCase {
 	}
 
 	/**
-	 * @testdox A BE store's settings hide "Return to home address" and the freepost fields; an NL store keeps them.
+	 * @testdox A BE store keeps "Return to home address" and the freepost fields until Smart Returns run on V4.
 	 */
-	public function test_be_store_hides_reply_number_choice(): void {
+	public function test_be_store_keeps_reply_number_choice_until_v4(): void {
+		$be = $this->form_fields( 'BE' );
+
+		$this->assertArrayHasKey( 'return_address_or_reply_no', $be );
+		$this->assertArrayHasKey( 'freepost_zip', $be );
+		$this->assertArrayHasKey( 'freepost_city', $be );
+		$this->assertArrayHasKey( 'return_address_street', $be );
+	}
+
+	/**
+	 * @testdox With Smart Returns on V4 a BE store's settings hide the reply number choice; an NL store keeps it.
+	 */
+	public function test_be_store_hides_reply_number_choice_on_v4(): void {
+		$this->require_sdk();
+		add_filter( 'postnl_sdk_enable_smart_returns', '__return_true' );
+
 		$be = $this->form_fields( 'BE' );
 
 		$this->assertArrayNotHasKey( 'return_address_or_reply_no', $be );
 		$this->assertArrayNotHasKey( 'freepost_zip', $be );
 		$this->assertArrayNotHasKey( 'freepost_city', $be );
 		$this->assertArrayHasKey( 'return_address_street', $be );
+		$this->assertArrayHasKey( 'return_address_zip', $be );
+		$this->assertArrayHasKey( 'return_address_city', $be );
 
 		$nl = $this->form_fields( 'NL' );
 
@@ -186,17 +247,55 @@ class SmartReturnsBelgiumTest extends IntegrationTestCase {
 	}
 
 	/**
-	 * @testdox A BE store's settings note says label in the box is gone on V4 and points to Smart Return.
+	 * Flow flags and the Return Settings note a BE store gets for them.
+	 *
+	 * @return array<string, array{0:string[],1:string|null}>
 	 */
-	public function test_be_store_note_points_to_smart_return(): void {
+	public static function be_notes(): array {
+		$label = 'Label in the box is not available with the new PostNL APIs.';
+		$smart = 'You can offer returns with Smart Return. Returns are sent to your return address below.';
+
+		return array(
+			'labels on V4'              => array( array( 'label' ), $label ),
+			'Smart Returns on V4'       => array( array( 'smart_returns' ), $smart ),
+			'both on V4'                => array( array( 'label', 'smart_returns' ), $label . ' ' . $smart ),
+		);
+	}
+
+	/**
+	 * @testdox A BE store's settings note follows each V4 flow: label in the box gone, and the pointer to Smart Return.
+	 *
+	 * @dataProvider be_notes
+	 *
+	 * @param string[] $flows Flows switched to V4.
+	 * @param string   $note  Expected Return Settings description.
+	 */
+	public function test_be_store_note_follows_the_v4_flows( array $flows, string $note ): void {
 		$this->assertArrayNotHasKey( 'description', $this->form_fields( 'BE' )['return_settings_title'] );
 
-		add_filter( 'postnl_sdk_enable_label', '__return_true' );
-		add_filter( 'postnl_sdk_enable_smart_returns', '__return_true' );
+		$this->require_sdk();
+		foreach ( $flows as $flow ) {
+			add_filter( 'postnl_sdk_enable_' . $flow, '__return_true' );
+		}
 
-		$this->assertSame(
-			'Label in the box is not available with the new PostNL APIs. You can offer returns with Smart Return. Returns are sent to your return address below.',
-			$this->form_fields( 'BE' )['return_settings_title']['description']
-		);
+		$this->assertSame( $note, $this->form_fields( 'BE' )['return_settings_title']['description'] );
+	}
+
+	/**
+	 * @testdox The Smart Returns item info names a Belgian store as BE, which routes it to the home return address.
+	 */
+	public function test_item_info_reports_a_belgian_store(): void {
+		update_option( 'woocommerce_default_country', 'BE' );
+		update_option( 'woocommerce_store_address', 'Meir 1' );
+		update_option( 'woocommerce_store_city', 'Antwerpen' );
+		update_option( 'woocommerce_store_postcode', '2000' );
+
+		$order = $this->make_order( 'NL' );
+		$order->set_shipping_address_1( 'Hoofdstraat 1' );
+		$order->set_shipping_postcode( '6591BA' );
+		$order->set_shipping_city( 'Gennep' );
+		$order->save();
+
+		$this->assertSame( 'BE', ( new Item_Info( $order ) )->store['country'] );
 	}
 }

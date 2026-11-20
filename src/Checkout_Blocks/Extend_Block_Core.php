@@ -546,7 +546,7 @@ class Extend_Block_Core {
 			$delivery_options = $delivery_day->get_content_data( $checkout_data['response'], $checkout_data['post_data'] );
 			$dropoff_options  = $dropoff->get_content_data( $checkout_data['response'], $checkout_data['post_data'] );
 		} catch ( \Exception $e ) {
-			$this->send_delivery_options_failure( $validated_address );
+			$this->send_delivery_options_failure( $validated_address, $e );
 		}
 
 		$is_free_shipping = Utils::is_free_shipping_applied();
@@ -634,16 +634,18 @@ class Extend_Block_Core {
 			wp_die();
 
 		} catch ( \Exception $e ) {
-			$this->send_delivery_options_failure( $validated_address );
+			$this->send_delivery_options_failure( $validated_address, $e );
 		}
 	}
 
 	/**
-	 * Send the empty delivery options response used when the lookup fails.
+	 * Log the failed lookup and send the empty delivery options response.
 	 *
 	 * @param array|null $validated_address Validated address from the session.
+	 * @param \Exception $exception         Exception thrown by the lookup.
 	 */
-	private function send_delivery_options_failure( $validated_address ) {
+	private function send_delivery_options_failure( $validated_address, \Exception $exception ) {
+		Container::log_delivery_options_failure( $exception, 'blocks' );
 		Utils::clear_postnl_checkout_session();
 		wp_send_json_success(
 			array(

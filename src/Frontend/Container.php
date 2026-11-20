@@ -8,7 +8,6 @@
 namespace PostNLWooCommerce\Frontend;
 
 use PostNLWooCommerce\Address_Utils;
-use PostNLWooCommerce\Main;
 use PostNLWooCommerce\Shipping_Method\Settings;
 use PostNLWooCommerce\Rest_API\Service_Factory;
 use PostNLWooCommerce\Rest_API\Contracts\Pickup_Location_Service_Interface;
@@ -548,8 +547,92 @@ class Container {
 
 		} catch ( \Exception $e ) {
 			Utils::clear_postnl_checkout_session();
-			Main::get_logger()->write( sprintf( 'PostNL delivery options lookup failed: %1$s', $e->getMessage() ) );
+			self::log_delivery_options_failure( $e, 'classic' );
 		}
+	}
+
+	/**
+	 * Log a failed delivery options lookup to the WooCommerce log.
+	 *
+	 * The shopper no longer sees the API error, so this entry is written whatever
+	 * the plugin logging setting is. The API keys and the customer's address and
+	 * contact details are masked in case the PostNL error text repeats them.
+	 *
+	 * @param \Exception $exception Exception thrown by the lookup.
+	 * @param string     $checkout  Checkout type, classic or blocks.
+	 */
+	public static function log_delivery_options_failure( \Exception $exception, $checkout ) {
+		$logger = wc_get_logger();
+
+		if ( ! $logger ) {
+			return;
+		}
+
+		$logger->error(
+			sprintf(
+				'PostNL delivery options lookup failed on the %1$s checkout (code %2$s): %3$s',
+				$checkout,
+				$exception->getCode(),
+				self::mask_sensitive_values( $exception->getMessage() )
+			),
+			array( 'source' => 'PostNLWooCommerce' )
+		);
+	}
+
+	/**
+	 * Mask the API keys and the customer's personal data in a log message.
+	 *
+	 * Values shorter than three characters, such as a house number, are left
+	 * alone so the rest of the message stays readable.
+	 *
+	 * @param string $message Message to mask.
+	 *
+	 * @return string
+	 */
+	private static function mask_sensitive_values( $message ) {
+		$settings = Settings::get_instance();
+		$values   = array(
+			$settings->get_api_key(),
+			$settings->get_api_key_sandbox(),
+			$settings->get_api_key_new(),
+			$settings->get_api_key_sandbox_new(),
+		);
+
+		$customer = WC()->customer;
+
+		if ( $customer ) {
+			foreach ( array( 'billing', 'shipping' ) as $type ) {
+				foreach ( array( 'first_name', 'last_name', 'company', 'address_1', 'address_2', 'postcode', 'city', 'phone' ) as $field ) {
+					$getter = 'get_' . $type . '_' . $field;
+
+					if ( is_callable( array( $customer, $getter ) ) ) {
+						$values[] = $customer->$getter();
+					}
+				}
+			}
+
+			$values[] = $customer->get_billing_email();
+			$values[] = str_replace( ' ', '', (string) $customer->get_shipping_postcode() );
+			$values[] = str_replace( ' ', '', (string) $customer->get_billing_postcode() );
+		}
+
+		$values = array_unique( array_filter( array_map( 'trim', array_map( 'strval', $values ) ) ) );
+
+		// Longest first, so a value is never left half masked by a shorter one it contains.
+		usort(
+			$values,
+			function ( $a, $b ) {
+				return strlen( $b ) - strlen( $a );
+			}
+		);
+
+		foreach ( $values as $value ) {
+			if ( strlen( $value ) >= 3 ) {
+				$message = str_ireplace( $value, '[redacted]', $message );
+			}
+		}
+
+		return $message;
 	}
 
 	/**

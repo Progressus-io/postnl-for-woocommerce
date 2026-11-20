@@ -26,6 +26,7 @@ import {
 	clearBackendDeliveryFee,
 	clearDropoffPointExtensionData,
 	isCountrySupported,
+	isLocalPickupSelected,
 } from '../../utils/extension-data-helper';
 
 /**
@@ -371,6 +372,34 @@ export const Block = ( { checkoutExtensionData } ) => {
 		( select ) => select( CHECKOUT_STORE_KEY ).isComplete(),
 		[]
 	);
+
+	// Local pickup is never shipped with PostNL, so it gets no delivery options.
+	const isLocalPickup = useSelect(
+		( select ) => {
+			const checkout = select( CHECKOUT_STORE_KEY );
+			if ( checkout?.prefersCollection?.() ) {
+				return true;
+			}
+
+			const store = select( CART_STORE_KEY );
+			if ( ! store || ! store.getCartData ) {
+				return false;
+			}
+
+			return isLocalPickupSelected( store.getCartData().shippingRates );
+		},
+		[ CART_STORE_KEY, CHECKOUT_STORE_KEY ]
+	);
+
+	useEffect( () => {
+		if ( ! isLocalPickup ) {
+			return;
+		}
+		setShowContainer( false );
+		setDeliveryOptions( [] );
+		setDropoffOptions( [] );
+		clearAllPostNLData();
+	}, [ isLocalPickup, clearAllPostNLData ] );
 	const currentHouseNumber = shippingAddress?.[ 'postnl/house_number' ] || '';
 
 	useEffect( () => {
@@ -385,6 +414,10 @@ export const Block = ( { checkoutExtensionData } ) => {
 
 	// Fetch data shipping address
 	useEffect( () => {
+		if ( isLocalPickup ) {
+			return;
+		}
+
 		const country = shippingAddress?.country || '';
 		const isSupported = isCountrySupported( country, supportedCountries );
 		const wasSupported = isCountrySupported(
@@ -574,6 +607,7 @@ export const Block = ( { checkoutExtensionData } ) => {
 		updateCustomerData,
 		clearAllPostNLData,
 		supportedCountries,
+		isLocalPickup,
 	] );
 
 	// Clear local data if checkout is complete or letterbox.
@@ -631,7 +665,7 @@ export const Block = ( { checkoutExtensionData } ) => {
 			) }
 
 			{ /* Content when not letterbox and showContainer */ }
-			{ ! letterbox && showContainer && (
+			{ ! letterbox && ! isLocalPickup && showContainer && (
 				<>
 					<div className="postnl_checkout_tab_container">
 						<ul className="postnl_checkout_tab_list">
@@ -702,7 +736,7 @@ export const Block = ( { checkoutExtensionData } ) => {
 			) }
 
 			{ /* Content when letterbox is true */ }
-			{ letterbox && showContainer && (
+			{ letterbox && ! isLocalPickup && showContainer && (
 				<div className="postnl-letterbox-message">
 					{ __(
 						'These items are eligible for letterbox delivery.',

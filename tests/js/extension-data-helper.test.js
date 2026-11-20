@@ -11,6 +11,7 @@ import {
 	clearAllExtensionData,
 	clearBackendDeliveryFee,
 	isCountrySupported,
+	isLocalPickupSelected,
 } from '../../client/utils/extension-data-helper';
 
 describe( 'Extension Data Helper', () => {
@@ -547,6 +548,53 @@ describe( 'Extension Data Helper', () => {
 
 			expect( isCountrySupported( 'PL', manyCountries ) ).toBe( true );
 			expect( isCountrySupported( 'UK', manyCountries ) ).toBe( false );
+		} );
+	} );
+
+	describe( 'isLocalPickupSelected', () => {
+		const pkg = ( ...rates ) => ( { shipping_rates: rates } );
+		const rate = ( methodId, selected = false ) => ( {
+			method_id: methodId,
+			selected,
+		} );
+
+		it( 'returns true when the blocks Local pickup rate is selected', () => {
+			expect(
+				isLocalPickupSelected( [
+					pkg( rate( 'flat_rate' ), rate( 'pickup_location', true ) ),
+				] )
+			).toBe( true );
+		} );
+
+		it( 'returns true when the classic Local pickup rate is selected', () => {
+			expect(
+				isLocalPickupSelected( [ pkg( rate( 'local_pickup', true ) ) ] )
+			).toBe( true );
+		} );
+
+		it( 'returns false when a delivery rate is selected', () => {
+			expect(
+				isLocalPickupSelected( [
+					pkg( rate( 'flat_rate', true ), rate( 'pickup_location' ) ),
+				] )
+			).toBe( false );
+		} );
+
+		it( 'returns false when one package is shipped and another is picked up', () => {
+			expect(
+				isLocalPickupSelected( [
+					pkg( rate( 'pickup_location', true ) ),
+					pkg( rate( 'postnl', true ) ),
+				] )
+			).toBe( false );
+		} );
+
+		it( 'returns false when no rate is selected or rates are missing', () => {
+			expect(
+				isLocalPickupSelected( [ pkg( rate( 'pickup_location' ) ) ] )
+			).toBe( false );
+			expect( isLocalPickupSelected( [] ) ).toBe( false );
+			expect( isLocalPickupSelected( undefined ) ).toBe( false );
 		} );
 	} );
 } );

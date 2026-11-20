@@ -130,7 +130,7 @@ abstract class Base {
 	 */
 	public function get_shipping_options( $order ) {
 
-		if ( ! is_a( $order, 'WC_Order' ) ) {
+		if ( ! is_a( $order, 'WC_Order' ) || Utils::is_local_pickup_order( $order ) ) {
 			return array();
 		}
 
@@ -578,6 +578,10 @@ abstract class Base {
 
 		if ( ! is_a( $order, 'WC_Order' ) ) {
 			throw new \Exception( esc_html__( 'Order does not exist!', 'postnl-for-woocommerce' ) );
+		}
+
+		if ( Utils::is_local_pickup_order( $order ) ) {
+			throw new \Exception( esc_html__( 'Local pickup orders are not shipped with PostNL.', 'postnl-for-woocommerce' ) );
 		}
 
 		$saved_data = $this->get_data( $order_id );

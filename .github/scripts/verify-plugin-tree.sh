@@ -28,14 +28,17 @@ else
   echo "[$LABEL] Credential check passed — no auth files."
 fi
 
-# 2. The PostNL V4 SDK must NOT ship. It declares php >=8.2, which raises the
-#    package floor and makes Composer emit a platform_check.php that fatals
-#    every request on PHP < 8.2. It stays in require-dev until V4 ships.
-if [ -d "$DIR/vendor/postnl/api-client-sdk" ]; then
-  echo "::error::[$LABEL] vendor/postnl/api-client-sdk present — the SDK is dev-only until V4 ships; shipping it raises the PHP floor to 8.2 and fatals PHP 7.4 sites!"
+# 2. The PostNL V4 SDK must ship, with its licence. V4 runs every PostNL call
+#    through it, and its LICENSE.md has to travel with the redistributed code.
+SDK_DIR="$DIR/vendor/postnl/api-client-sdk"
+if [ ! -d "$SDK_DIR" ]; then
+  echo "::error::[$LABEL] vendor/postnl/api-client-sdk missing — V4 cannot call PostNL without the SDK!"
+  FAIL=1
+elif [ ! -f "$SDK_DIR/LICENSE.md" ]; then
+  echo "::error::[$LABEL] vendor/postnl/api-client-sdk/LICENSE.md missing — the SDK licence must ship with the SDK!"
   FAIL=1
 else
-  echo "[$LABEL] SDK check passed — vendor/postnl/api-client-sdk absent."
+  echo "[$LABEL] SDK check passed — vendor/postnl/api-client-sdk and its LICENSE.md present."
 fi
 
 # 3. Internal/dev files and stray vendors that must never be published. These
@@ -65,7 +68,7 @@ if [ "$FORBIDDEN_FOUND" -eq 0 ]; then
   echo "[$LABEL] Forbidden-path check passed — no internal/dev files or stray vendors."
 fi
 
-# 4. The generated platform check must not exceed the declared 7.4 floor.
+# 4. The generated platform check must not exceed the declared 8.2 floor.
 PLATFORM_CHECK="$DIR/vendor/composer/platform_check.php"
 if [ ! -f "$PLATFORM_CHECK" ]; then
   echo "::error::[$LABEL] vendor/composer/platform_check.php missing — cannot verify the production PHP floor!"
@@ -75,8 +78,8 @@ else
   if [ -z "$PHP_FLOOR" ]; then
     echo "::error::[$LABEL] could not parse the PHP floor from platform_check.php — the Composer format may have changed!"
     FAIL=1
-  elif [ "$PHP_FLOOR" -gt 70400 ]; then
-    echo "::error::[$LABEL] platform_check.php requires PHP_VERSION_ID >= $PHP_FLOOR, above the declared 7.4 floor (70400) — a dependency raised the requirement!"
+  elif [ "$PHP_FLOOR" -gt 80200 ]; then
+    echo "::error::[$LABEL] platform_check.php requires PHP_VERSION_ID >= $PHP_FLOOR, above the declared 8.2 floor (80200) — a dependency raised the requirement!"
     FAIL=1
   else
     echo "[$LABEL] PHP floor check passed — requires PHP_VERSION_ID >= $PHP_FLOOR."

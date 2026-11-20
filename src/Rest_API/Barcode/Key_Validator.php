@@ -7,10 +7,10 @@
  * the settings and we want to confirm it works before switching over to it.
  *
  * The call deliberately goes to the V1 Barcode endpoint with a plain apikey
- * header rather than through the PostNL SDK: the SDK is a dev-only dependency
- * (it raises the PHP floor to 8.2 and is stripped from the release build), so a
- * merchant build has no SDK to route to. This validator runs on every settings
- * save, so it must work on a plain PHP 7.4 install with no SDK present.
+ * header rather than through the PostNL SDK. It was written while the SDK was
+ * a dev-only dependency stripped from the release build; the SDK now ships
+ * with the plugin, but a plain request keeps this check independent of the
+ * SDK client wiring and of the V4 flow flags, and it runs on every settings save.
  *
  * @package PostNLWooCommerce\Rest_API\Barcode
  */

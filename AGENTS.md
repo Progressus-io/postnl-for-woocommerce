@@ -9,7 +9,7 @@ PostNL for WooCommerce is the official WooCommerce plugin for PostNL, the primar
 
 The plugin supports shipments originating from either the Netherlands (NL) or Belgium (BE), with destinations ranging from domestic NL/BE to EU and non-EU (global). It requires the store's base country to be NL or BE — this is enforced at initialization and shown as an admin notice if violated.
 
-The current version is **5.9.4** (package.json, plugin header, readme.txt must all match for deployment). It requires PHP ≥ 7.4, WordPress ≥ 6.7, and WooCommerce ≥ 10.2. The plugin supports both the classic (shortcode) WooCommerce checkout and the newer WooCommerce Cart/Checkout Blocks.
+The current version is **5.9.4** (package.json, plugin header, readme.txt must all match for deployment). It requires PHP ≥ 8.2 (the V4 SDK sets the floor), WordPress ≥ 6.7, and WooCommerce ≥ 10.2. The plugin supports both the classic (shortcode) WooCommerce checkout and the newer WooCommerce Cart/Checkout Blocks.
 
 ## Architecture
 

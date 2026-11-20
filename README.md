@@ -2,7 +2,7 @@
 
 * Contributors: PostNL
 * Tags: woocommerce, PostNL, Labels, Shipping
-* Requires PHP: 7.4
+* Requires PHP: 8.2
 * Requires at least: 6.7
 * Tested up to: 7.1
 * WC requires at least: 10.2

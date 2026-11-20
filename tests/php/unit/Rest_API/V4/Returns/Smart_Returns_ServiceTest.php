@@ -140,7 +140,7 @@ class Smart_Returns_ServiceTest extends UnitTestCase {
 	 * @param string $label_type  labelType string as PostNL would return it.
 	 * @return array
 	 */
-	private static function label( string $content, string $output_type = 'png', string $label_type = 'Printcode' ): array {
+	private static function label( string $content, string $output_type = 'png', string $label_type = 'PrintcodeLabel' ): array {
 		return array(
 			'label'      => base64_encode( $content ),
 			'outputType' => $output_type,
@@ -366,17 +366,17 @@ class Smart_Returns_ServiceTest extends UnitTestCase {
 	}
 
 	/**
-	 * @testdox More than one usable label logs a warning naming the label types; the first one is used.
+	 * @testdox The PrintcodeLabel is emailed when return/generate answers with the full Label first, as PostNL does.
 	 */
-	public function test_multiple_usable_labels_warn_and_the_first_wins(): void {
+	public function test_printcode_label_is_picked_over_the_full_label(): void {
 		$logger  = new Smart_Returns_Spy_Logger();
 		$service = $this->service(
 			new Smart_Returns_Succeeding_Http_Client(
 				array(
 					self::response_item(
 						array(
-							self::label( 'PRINTCODE-BYTES', 'png', 'Printcode' ),
-							self::label( 'LABEL-BYTES', 'png', 'Return Label' ),
+							self::label( 'LABEL-BYTES', 'png', 'Label' ),
+							self::label( 'PRINTCODE-BYTES', 'png', 'PrintcodeLabel' ),
 						)
 					),
 				)
@@ -387,10 +387,32 @@ class Smart_Returns_ServiceTest extends UnitTestCase {
 		$result = $service->generate( $this->order() );
 
 		$this->assertSame( 'PRINTCODE-BYTES', $result['content'] );
+		$this->assertSame( array(), $logger->records );
+	}
+
+	/**
+	 * @testdox A response without a PrintcodeLabel throws and logs the label types that came back.
+	 */
+	public function test_missing_printcode_label_throws_and_is_logged(): void {
+		$logger  = new Smart_Returns_Spy_Logger();
+		$service = $this->service(
+			new Smart_Returns_Succeeding_Http_Client(
+				array( self::response_item( array( self::label( 'LABEL-BYTES', 'png', 'Label' ) ) ) )
+			),
+			$logger
+		);
+
+		try {
+			$service->generate( $this->order() );
+			$this->fail( 'A response without a PrintcodeLabel must throw.' );
+		} catch ( \Exception $exception ) {
+			$this->assertStringContainsString( 'printcode could not be found', $exception->getMessage() );
+		}
+
 		$this->assertCount( 1, $logger->records );
-		$this->assertSame( 'warning', $logger->records[0]['level'] );
-		$this->assertStringContainsString( 'Printcode', $logger->records[0]['message'] );
-		$this->assertStringContainsString( 'Return Label', $logger->records[0]['message'] );
+		$this->assertSame( 'error', $logger->records[0]['level'] );
+		$this->assertStringContainsString( 'Label', $logger->records[0]['message'] );
+		$this->assertStringContainsString( 'ORDER-1001', $logger->records[0]['message'] );
 	}
 
 	/**

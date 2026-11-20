@@ -43,11 +43,11 @@
 			"auth.*.json",
 			"*.zip",
 			"*.patch",
-			"*.md",
+			"/*.md",
 			"jest.config.js",
 			"AGENTS.md",
 			"CLAUDE.md",
-			"docs"
+			"/docs"
 		]
 	},
 	"require-dev": {

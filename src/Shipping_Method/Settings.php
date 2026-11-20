@@ -1669,10 +1669,11 @@ class Settings extends \WC_Settings_API {
 	 * Get number delivery days from the settings.
 	 *
 	 * The field is only shown to NL stores, so a BE store never has a value.
-	 * An empty value falls back to the field default, otherwise the checkout
-	 * request asks PostNL for zero days and gets no delivery options.
+	 * An empty value falls back to the field default; otherwise the legacy
+	 * checkout request asks PostNL for zero days and gets no delivery options,
+	 * and V4 clamps it to a single day.
 	 *
-	 * @return Int
+	 * @return int
 	 */
 	public function get_number_delivery_days() {
 		$days = $this->get_country_option( 'number_delivery_days' );
@@ -1682,7 +1683,7 @@ class Settings extends \WC_Settings_API {
 			$days   = $fields['number_delivery_days']['default'];
 		}
 
-		return $days;
+		return (int) $days;
 	}
 
 	/**

@@ -80,9 +80,9 @@ interface Smart_Returns_Service_Interface {
 	 * }
 	 *
 	 * @throws \Exception If the API request fails (network error, authentication
-	 *                    failure, or the response body cannot be parsed).  A response
-	 *                    that does not contain a PrintcodeLabel is handled by the
-	 *                    caller (Order\Single) rather than by this method.
+	 *                    failure, or the response body cannot be parsed).  The legacy
+	 *                    implementation leaves a missing PrintcodeLabel to the caller
+	 *                    (Order\Single); the V4 implementation throws itself.
 	 */
 	public function generate( \WC_Order $order ): array;
 }

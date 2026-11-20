@@ -125,7 +125,7 @@ class Smart_Returns_Service implements Smart_Returns_Service_Interface {
 	 * @return array Normalized V4 result (api_version = v4) or the legacy response array.
 	 *
 	 * @throws \Exception If the SDK request fails (converted to the legacy error shape),
-	 *                    or the response carries no usable printcode image.
+	 *                    or the response carries no PrintcodeLabel the email can embed.
 	 */
 	public function generate( \WC_Order $order ): array {
 		if ( 'NL' !== $order->get_shipping_country() ) {
@@ -153,18 +153,20 @@ class Smart_Returns_Service implements Smart_Returns_Service_Interface {
 	/**
 	 * Send the request and normalize the response into the printcode array.
 	 *
-	 * The response is only accepted when it carries an image the consumer email
-	 * can embed (see PRINTCODE_MIME_TYPES): PostNL's instruction for retailPrint
-	 * is to send the consumer the printcode, never a PDF, so an unexpected format
-	 * fails loudly here instead of reaching the customer as a broken image with
-	 * the document attached.
+	 * The response is only accepted when it carries a PrintcodeLabel in an image
+	 * format the consumer email can embed (see PRINTCODE_MIME_TYPES); the full
+	 * return Label is never sent. PostNL's instruction for retailPrint is to send
+	 * the consumer the printcode, never a PDF, so an unexpected format fails
+	 * loudly here instead of reaching the customer as a broken image with the
+	 * document attached.
 	 *
 	 * @param ReturnShipmentRequest $request      Built return/generate request.
 	 * @param string                $order_number Merchant order number, used in log entries.
 	 *
 	 * @return array Normalized printcode result (api_version = v4).
 	 *
-	 * @throws \Exception If the SDK request fails or the response has no usable image.
+	 * @throws \Exception If the SDK request fails, the response has no PrintcodeLabel,
+	 *                    or the PrintcodeLabel cannot be embedded in the email.
 	 */
 	protected function create_printcode( ReturnShipmentRequest $request, string $order_number ): array {
 		$response = $this->generate_smart_return( $request, $order_number );
@@ -177,44 +179,52 @@ class Smart_Returns_Service implements Smart_Returns_Service_Interface {
 			);
 		}
 
-		$chosen   = null;
-		$returned = array();
-		$rejected = array();
+		$chosen               = null;
+		$returned             = array();
+		$has_content          = false;
+		$printcode_not_inline = false;
 
 		foreach ( Response_Mapper::get_labels( $item ) as $label ) {
-			if ( '' === Response_Mapper::decode_content( $label ) ) {
+			$output_type = self::label_output_type( $label );
+			$is_empty    = '' === Response_Mapper::decode_content( $label );
+			$returned[]  = self::describe_label( $label ) . '/' . $output_type . ( $is_empty ? ' (empty)' : '' );
+
+			if ( $is_empty ) {
 				continue;
 			}
 
-			$output_type = self::label_output_type( $label );
-			$returned[]  = self::describe_label( $label ) . '/' . $output_type;
+			$has_content = true;
+
+			if ( ! self::is_printcode_label( $label ) ) {
+				continue;
+			}
 
 			if ( ! isset( self::PRINTCODE_MIME_TYPES[ $output_type ] ) ) {
-				$rejected[] = $output_type;
+				$printcode_not_inline = true;
 				continue;
 			}
 
-			if ( null === $chosen && self::is_printcode_label( $label ) ) {
+			if ( null === $chosen ) {
 				$chosen = $label;
 			}
 		}
 
 		if ( null === $chosen ) {
-			if ( empty( $returned ) ) {
+			$this->logger->error(
+				sprintf(
+					'V4 smart return for order "%1$s" answered with no embeddable PrintcodeLabel; returned label(s): %2$s. The consumer email was not sent.',
+					$order_number,
+					empty( $returned ) ? 'none' : implode( ', ', $returned )
+				)
+			);
+
+			if ( ! $has_content ) {
 				throw new \Exception(
 					esc_html__( 'Cannot create the Smart Return. Printcode content is missing.', 'postnl-for-woocommerce' )
 				);
 			}
 
-			$this->logger->error(
-				sprintf(
-					'V4 smart return for order "%1$s" answered with no embeddable PrintcodeLabel; returned label(s): %2$s. The consumer email was not sent.',
-					$order_number,
-					implode( ', ', $returned )
-				)
-			);
-
-			if ( ! empty( $rejected ) ) {
+			if ( $printcode_not_inline ) {
 				throw new \Exception(
 					esc_html__( 'Cannot create the Smart Return. PostNL returned the printcode in a format that cannot be shown in the customer email. Check the PostNL logs for details.', 'postnl-for-woocommerce' )
 				);
@@ -382,8 +392,8 @@ class Smart_Returns_Service implements Smart_Returns_Service_Interface {
 	}
 
 	/**
-	 * Describe a label for a log entry: its labelType, or its output type when
-	 * the response does not name the document.
+	 * Describe a label for a log entry: its labelType, or "?" when the response
+	 * does not name the document.
 	 *
 	 * @param Label $label Label object from the response.
 	 * @return string
@@ -395,7 +405,7 @@ class Smart_Returns_Service implements Smart_Returns_Service_Interface {
 			return $label->labelType;
 		}
 
-		return self::label_output_type( $label );
+		return '?';
 	}
 
 	/**

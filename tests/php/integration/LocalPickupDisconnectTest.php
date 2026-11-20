@@ -15,6 +15,7 @@ namespace PostNLWooCommerce\Tests\Integration;
 
 use PostNLWooCommerce\Checkout_Blocks\Extend_Block_Core;
 use PostNLWooCommerce\Frontend\Container;
+use PostNLWooCommerce\Frontend\Delivery_Day;
 use PostNLWooCommerce\Order\Bulk;
 use PostNLWooCommerce\Order\Single;
 use PostNLWooCommerce\Product\Single as Product_Single;
@@ -567,8 +568,20 @@ class LocalPickupDisconnectTest extends IntegrationTestCase {
 		$pickup = $this->make_order( 'local_pickup' );
 		$postnl = $this->make_order( 'flat_rate' );
 
-		do_action( 'woocommerce_checkout_update_order_meta', $pickup->get_id(), $posted );
-		do_action( 'woocommerce_checkout_update_order_meta', $postnl->get_id(), $posted );
+		// Called on a handler built without hooks: the plugin registers the classic save
+		// hooks only when the checkout page is not a blocks checkout.
+		$classic = new class() extends Delivery_Day {
+			/**
+			 * Skip hook registration.
+			 */
+			public function init_hooks() {}
+		};
+
+		foreach ( array( $pickup, $postnl ) as $order ) {
+			$classic->save_data( $order->get_id(), $posted );
+			$classic->save_letterbox_data( $order->get_id(), $posted );
+			$classic->save_default_data( $order->get_id(), $posted );
+		}
 
 		$this->assertEmpty( wc_get_order( $pickup->get_id() )->get_meta( '_postnl_order_metadata' ) );
 		$this->assertEmpty( wc_get_order( $pickup->get_id() )->get_meta( '_postnl_letterbox' ) );

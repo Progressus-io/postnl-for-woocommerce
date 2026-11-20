@@ -248,12 +248,13 @@ class PostNL extends \WC_Shipping_Flat_Rate {
 	/**
 	 * Adjust the return settings for a Belgian store.
 	 *
-	 * Belgian stores return to their home address only, as business reply numbers
-	 * exist for NL stores alone, so the "Return to home address" choice and the
-	 * freepost fields are hidden. They are left out of the form rather than
-	 * emptied, so saving keeps the stored values. The note tells the merchant that
-	 * label in the box is gone once labels run on V4, and points to Smart Return
-	 * once Smart Returns run on V4.
+	 * Once Smart Returns run on V4, a Belgian store returns to its home address
+	 * only, as business reply numbers exist for NL stores alone, so the "Return
+	 * to home address" choice and the freepost fields are hidden. They are left
+	 * out of the form rather than emptied, so saving keeps the stored values, and
+	 * a store that still runs Smart Returns on the current API keeps the form it
+	 * has today. The note tells the merchant that label in the box is gone once
+	 * labels run on V4, and points to Smart Return once Smart Returns run on V4.
 	 *
 	 * @param array $form_fields Settings form fields.
 	 *
@@ -262,10 +263,12 @@ class PostNL extends \WC_Shipping_Flat_Rate {
 	 * @since 6.0.0
 	 */
 	protected function be_return_settings( array $form_fields ): array {
-		unset( $form_fields['return_address_or_reply_no'], $form_fields['freepost_zip'], $form_fields['freepost_city'] );
-
 		$factory = $this->service_factory();
 		$notes   = array();
+
+		if ( $factory->uses_v4_for( 'smart_returns' ) ) {
+			unset( $form_fields['return_address_or_reply_no'], $form_fields['freepost_zip'], $form_fields['freepost_city'] );
+		}
 
 		if ( $factory->uses_v4_for( 'label' ) ) {
 			$notes[] = esc_html__( 'Label in the box is not available with the new PostNL APIs.', 'postnl-for-woocommerce' );

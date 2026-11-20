@@ -52,6 +52,13 @@ class IncompletePostcodeLookupTest extends IntegrationTestCase {
 	private $api_fails = false;
 
 	/**
+	 * Messages written to the WooCommerce log during the test.
+	 *
+	 * @var array<int, array{level:string, message:string, source:string}>
+	 */
+	private $logged = array();
+
+	/**
 	 * Prepare an NL store, a cart session and a faked PostNL API.
 	 */
 	protected function setUp(): void {
@@ -84,9 +91,11 @@ class IncompletePostcodeLookupTest extends IntegrationTestCase {
 		$settings->settings['validate_nl_address']        = 'no';
 		$settings->settings['reorder_nl_address']         = 'no';
 		$settings->settings['supported_shipping_methods'] = array( 'flat_rate' );
+		$settings->settings['enable_logging']             = 'no';
 
 		wc_clear_notices();
 		add_filter( 'pre_http_request', array( $this, 'fake_postnl_api' ), 10, 3 );
+		add_filter( 'woocommerce_logger_log_message', array( $this, 'capture_log' ), 10, 3 );
 	}
 
 	/**
@@ -94,6 +103,7 @@ class IncompletePostcodeLookupTest extends IntegrationTestCase {
 	 */
 	protected function tearDown(): void {
 		remove_filter( 'pre_http_request', array( $this, 'fake_postnl_api' ), 10 );
+		remove_filter( 'woocommerce_logger_log_message', array( $this, 'capture_log' ), 10 );
 		remove_filter( 'wp_doing_ajax', '__return_true' );
 		remove_filter( 'wp_die_ajax_handler', array( $this, 'ajax_die_handler' ) );
 		unset( $_REQUEST['post_data'], $_POST['nonce'], $_POST['data'] );
@@ -123,8 +133,9 @@ class IncompletePostcodeLookupTest extends IntegrationTestCase {
 
 		++$this->api_calls;
 
+		// The error text repeats the API key and the postcode, so the tests can check both are masked.
 		$body = $this->api_fails
-			? array( 'Errors' => array( array( 'Description' => 'The provided postcode format is invalid' ) ) )
+			? array( 'Errors' => array( array( 'Description' => 'Invalid ApiKey test-key for postcode 6591 BA' ) ) )
 			: array(
 				'DeliveryOptions' => array(),
 				'PickupOptions'   => array(),
@@ -140,6 +151,62 @@ class IncompletePostcodeLookupTest extends IntegrationTestCase {
 			'cookies'  => array(),
 			'filename' => null,
 		);
+	}
+
+	/**
+	 * Record WooCommerce log entries and stop them reaching the log handlers.
+	 *
+	 * WC_Logger applies this filter once per handler, so entries are keyed to count each log call once.
+	 *
+	 * @param string $message Log message.
+	 * @param string $level   Log level.
+	 * @param array  $context Log context.
+	 *
+	 * @return null
+	 */
+	public function capture_log( $message, $level, $context ) {
+		$this->logged[ $level . '|' . $message ] = array(
+			'level'   => $level,
+			'message' => $message,
+			'source'  => $context['source'] ?? '',
+		);
+
+		return null;
+	}
+
+	/**
+	 * Return the logged delivery options failures.
+	 *
+	 * @return array<int, array{level:string, message:string, source:string}>
+	 */
+	private function logged_failures(): array {
+		return array_values(
+			array_filter(
+				$this->logged,
+				static function ( $entry ) {
+					return false !== strpos( $entry['message'], 'PostNL delivery options lookup failed' );
+				}
+			)
+		);
+	}
+
+	/**
+	 * Assert one failure was logged as an error under the plugin source, without the API key or postcode.
+	 *
+	 * @param string $checkout Checkout type named in the message.
+	 */
+	private function assert_failure_logged( string $checkout ): void {
+		$this->assertFalse( Settings::get_instance()->is_logging_enabled(), 'Plugin logging must be off for this test.' );
+
+		$failures = $this->logged_failures();
+
+		$this->assertCount( 1, $failures );
+		$this->assertSame( 'error', $failures[0]['level'] );
+		$this->assertSame( 'PostNLWooCommerce', $failures[0]['source'] );
+		$this->assertStringContainsString( 'on the ' . $checkout . ' checkout', $failures[0]['message'] );
+		$this->assertStringContainsString( 'Invalid ApiKey', $failures[0]['message'] );
+		$this->assertStringNotContainsString( 'test-key', $failures[0]['message'] );
+		$this->assertStringNotContainsString( '6591', $failures[0]['message'] );
 	}
 
 	/**
@@ -174,6 +241,12 @@ class IncompletePostcodeLookupTest extends IntegrationTestCase {
 				'shipping_method'    => array( 'flat_rate:1' ),
 			)
 		);
+
+		// WC_AJAX::update_order_review() saves the posted address on the customer before the order review renders.
+		WC()->customer->set_billing_country( $country );
+		WC()->customer->set_billing_postcode( $postcode );
+		WC()->customer->set_shipping_country( $country );
+		WC()->customer->set_shipping_postcode( $postcode );
 
 		ob_start();
 		( new Container( false ) )->postnl_fields();
@@ -292,6 +365,17 @@ class IncompletePostcodeLookupTest extends IntegrationTestCase {
 	}
 
 	/**
+	 * @testdox Classic checkout logs a PostNL API error while plugin logging is off.
+	 */
+	public function test_classic_api_error_is_logged_with_plugin_logging_off(): void {
+		$this->api_fails = true;
+
+		$this->run_classic( 'NL', '6591 BA' );
+
+		$this->assert_failure_logged( 'classic' );
+	}
+
+	/**
 	 * @testdox Blocks endpoint skips the lookup for a partial postcode.
 	 *
 	 * @dataProvider incomplete_postcodes
@@ -334,5 +418,26 @@ class IncompletePostcodeLookupTest extends IntegrationTestCase {
 		$this->assertTrue( $response['success'] );
 		$this->assertFalse( $response['data']['show_container'] );
 		$this->assertSame( array(), $response['data']['delivery_options'] );
+	}
+
+	/**
+	 * @testdox Blocks endpoint logs a PostNL API error while plugin logging is off.
+	 */
+	public function test_blocks_api_error_is_logged_with_plugin_logging_off(): void {
+		$this->api_fails = true;
+
+		$this->run_blocks( 'NL', '6591 BA' );
+
+		$this->assert_failure_logged( 'blocks' );
+	}
+
+	/**
+	 * @testdox Neither checkout logs a failure when the lookup succeeds.
+	 */
+	public function test_successful_lookup_logs_nothing(): void {
+		$this->run_classic( 'NL', '6591 BA' );
+		$this->run_blocks( 'NL', '6591 BA' );
+
+		$this->assertSame( array(), $this->logged_failures() );
 	}
 }

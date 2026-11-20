@@ -323,18 +323,30 @@ class Smart_Returns_Service implements Smart_Returns_Service_Interface {
 	 *
 	 * Item_Info sends a business reply number (Antwoordnummer) when "Return to home
 	 * address" is off, but reply numbers exist for NL stores only, so a Belgian
-	 * store would send an empty one. Kept pure so both receivers can be asserted.
+	 * store would send an empty one.
+	 *
+	 * @since 6.0.0
 	 *
 	 * @param array    $customer Legacy Smart_Returns\Item_Info::$customer.
 	 * @param Settings $settings Plugin settings.
 	 * @return array The customer array with the home return address.
+	 *
+	 * @throws \Exception If the street, house number, zipcode or city of the return address is empty.
 	 */
-	public static function with_home_return_address( array $customer, Settings $settings ): array {
-		$customer['return_address_1']           = $settings->get_return_address_street();
-		$customer['return_address_2']           = $settings->get_return_address_house_no();
-		$customer['return_address_house_noext'] = $settings->get_return_address_house_noext();
-		$customer['return_address_city']        = $settings->get_return_city();
-		$customer['return_address_zip']         = $settings->get_return_zipcode();
+	protected static function with_home_return_address( array $customer, Settings $settings ): array {
+		$customer['return_address_1']           = (string) $settings->get_return_address_street();
+		$customer['return_address_2']           = (string) $settings->get_return_address_house_no();
+		$customer['return_address_house_noext'] = (string) $settings->get_return_address_house_noext();
+		$customer['return_address_city']        = (string) $settings->get_return_city();
+		$customer['return_address_zip']         = (string) $settings->get_return_zipcode();
+
+		foreach ( array( 'return_address_1', 'return_address_2', 'return_address_city', 'return_address_zip' ) as $field ) {
+			if ( '' === trim( $customer[ $field ] ) ) {
+				throw new \Exception(
+					esc_html__( 'Cannot create the Smart Return. Fill in the street, house number, zipcode and city of your return address in the PostNL settings.', 'postnl-for-woocommerce' )
+				);
+			}
+		}
 
 		return $customer;
 	}

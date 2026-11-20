@@ -35,12 +35,15 @@ if ( ! defined( 'ABSPATH' ) ) {
  * (PNG/JPG) so Order\Single can show it in the customer email instead of the
  * legacy PrintcodeLabel PDF attachment.
  *
- * Scope: the NL retailPrint flow. PostNL confirmed (2026-05-21) the return/generate
+ * Scope: retailPrint returns from Dutch and Belgian consumers to NL and BE stores
+ * (NL>NL, NL>BE, BE>BE, BE>NL). PostNL confirmed (2026-05-21) the return/generate
  * endpoint replaces the legacy V2.2 /shipment/v2_2/label/ flow, with no separate
- * activation call and — for the consumer — "only the printcode, not a PDF". A
- * non-NL origin (consumerPrint is a BE-origin follow-on) falls back to the
- * untouched legacy Smart Returns pipeline. Because both gates (a validated V4 key
- * and the per-flow flag) default off, merging this changes nothing for merchants.
+ * activation call and — for the consumer — "only the printcode, not a PDF". PostNL
+ * picks the return product from the sender and receiver countries, so no product
+ * code is sent. Belgian stores return to their home address only, as business
+ * reply numbers exist for NL stores alone. Consumers in other countries fall back
+ * to the untouched legacy Smart Returns pipeline. Because both gates (a validated
+ * V4 key and the per-flow flag) default off, merging this changes nothing for merchants.
  *
  * Unlike the outbound return-label service this does not extend Order\Base or
  * write to order meta: a Smart Return produces an email-only printcode, exactly
@@ -113,10 +116,17 @@ class Smart_Returns_Service implements Smart_Returns_Service_Interface {
 	}
 
 	/**
+	 * Consumer countries whose Smart Returns run on V4.
+	 *
+	 * @var string[]
+	 */
+	private const V4_CONSUMER_COUNTRIES = array( 'NL', 'BE' );
+
+	/**
 	 * Generate a Smart Return printcode for the given order.
 	 *
-	 * Routes an NL order to the V4 return/generate endpoint (retailPrint) and
-	 * returns a normalized array carrying the printcode image; a non-NL order runs
+	 * Routes an NL or BE order to the V4 return/generate endpoint (retailPrint) and
+	 * returns a normalized array carrying the printcode image; any other order runs
 	 * the untouched legacy pipeline, whose raw response shape Order\Single already
 	 * handles.
 	 *
@@ -128,13 +138,19 @@ class Smart_Returns_Service implements Smart_Returns_Service_Interface {
 	 *                    or the response carries no PrintcodeLabel the email can embed.
 	 */
 	public function generate( \WC_Order $order ): array {
-		if ( 'NL' !== $order->get_shipping_country() ) {
+		if ( ! in_array( $order->get_shipping_country(), self::V4_CONSUMER_COUNTRIES, true ) ) {
 			return $this->legacy_service()->generate( $order );
 		}
 
 		$item_info = $this->item_info( $order );
-		$fields    = self::map_fields(
-			$item_info->customer,
+		$customer  = $item_info->customer;
+
+		if ( 'BE' === ( $item_info->store['country'] ?? '' ) ) {
+			$customer = self::with_home_return_address( $customer, $this->settings() );
+		}
+
+		$fields = self::map_fields(
+			$customer,
 			$item_info->store,
 			array(
 				'first_name' => $order->get_shipping_first_name(),
@@ -300,6 +316,48 @@ class Smart_Returns_Service implements Smart_Returns_Service_Interface {
 	 */
 	protected function legacy_service(): Smart_Returns_Service_Interface {
 		return new Legacy_Smart_Returns_Service();
+	}
+
+	/**
+	 * Point the return receiver at the merchant's home return address.
+	 *
+	 * Item_Info sends a business reply number (Antwoordnummer) when "Return to home
+	 * address" is off, but reply numbers exist for NL stores only, so a Belgian
+	 * store would send an empty one.
+	 *
+	 * @since 6.0.0
+	 *
+	 * @param array    $customer Legacy Smart_Returns\Item_Info::$customer.
+	 * @param Settings $settings Plugin settings.
+	 * @return array The customer array with the home return address.
+	 *
+	 * @throws \Exception If the street, house number, zipcode or city of the return address is empty.
+	 */
+	protected static function with_home_return_address( array $customer, Settings $settings ): array {
+		$customer['return_address_1']           = (string) $settings->get_return_address_street();
+		$customer['return_address_2']           = (string) $settings->get_return_address_house_no();
+		$customer['return_address_house_noext'] = (string) $settings->get_return_address_house_noext();
+		$customer['return_address_city']        = (string) $settings->get_return_city();
+		$customer['return_address_zip']         = (string) $settings->get_return_zipcode();
+
+		foreach ( array( 'return_address_1', 'return_address_2', 'return_address_city', 'return_address_zip' ) as $field ) {
+			if ( '' === trim( $customer[ $field ] ) ) {
+				throw new \Exception(
+					esc_html__( 'Cannot create the Smart Return. Fill in the street, house number, zipcode and city of your return address in the PostNL settings.', 'postnl-for-woocommerce' )
+				);
+			}
+		}
+
+		return $customer;
+	}
+
+	/**
+	 * Plugin settings used to resolve the home return address.
+	 *
+	 * @return Settings
+	 */
+	protected function settings(): Settings {
+		return Settings::get_instance();
 	}
 
 	/**

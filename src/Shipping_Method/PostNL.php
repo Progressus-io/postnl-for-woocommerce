@@ -8,6 +8,7 @@
 namespace PostNLWooCommerce\Shipping_Method;
 
 use PostNLWooCommerce\Rest_API\Barcode\Key_Validator;
+use PostNLWooCommerce\Rest_API\Service_Factory;
 use PostNLWooCommerce\Utils;
 use WC_Admin_Settings;
 
@@ -236,12 +237,63 @@ class PostNL extends \WC_Shipping_Flat_Rate {
 		if ( 'NL' === $base_country ) {
 			$form_fields = $settings->nl_setting_fields();
 		} elseif ( 'BE' === $base_country ) {
-			$form_fields = $settings->be_setting_fields();
+			$form_fields = $this->be_return_settings( $settings->be_setting_fields() );
 		} else {
 			$form_fields = $settings->filter_setting_fields( '' );
 		}
 
 		$this->form_fields = $form_fields;
+	}
+
+	/**
+	 * Adjust the return settings for a Belgian store.
+	 *
+	 * Once Smart Returns run on V4, a Belgian store returns to its home address
+	 * only, as business reply numbers exist for NL stores alone, so the "Return
+	 * to home address" choice and the freepost fields are hidden. They are left
+	 * out of the form rather than emptied, so saving keeps the stored values, and
+	 * a store that still runs Smart Returns on the current API keeps the form it
+	 * has today. The note tells the merchant that label in the box is gone once
+	 * labels run on V4, and points to Smart Return once Smart Returns run on V4.
+	 *
+	 * @param array $form_fields Settings form fields.
+	 *
+	 * @return array
+	 *
+	 * @since 6.0.0
+	 */
+	protected function be_return_settings( array $form_fields ): array {
+		$factory = $this->service_factory();
+		$notes   = array();
+
+		if ( $factory->uses_v4_for( 'smart_returns' ) ) {
+			unset( $form_fields['return_address_or_reply_no'], $form_fields['freepost_zip'], $form_fields['freepost_city'] );
+		}
+
+		if ( $factory->uses_v4_for( 'label' ) ) {
+			$notes[] = esc_html__( 'Label in the box is not available with the new PostNL APIs.', 'postnl-for-woocommerce' );
+		}
+
+		if ( $factory->uses_v4_for( 'smart_returns' ) ) {
+			$notes[] = esc_html__( 'You can offer returns with Smart Return. Returns are sent to your return address below.', 'postnl-for-woocommerce' );
+		}
+
+		if ( ! empty( $notes ) && isset( $form_fields['return_settings_title'] ) ) {
+			$form_fields['return_settings_title']['description'] = implode( ' ', $notes );
+		}
+
+		return $form_fields;
+	}
+
+	/**
+	 * Service factory that decides which flows run on V4.
+	 *
+	 * @return Service_Factory
+	 *
+	 * @since 6.0.0
+	 */
+	protected function service_factory(): Service_Factory {
+		return new Service_Factory( Settings::get_instance() );
 	}
 
 	/**

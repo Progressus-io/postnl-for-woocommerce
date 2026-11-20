@@ -187,7 +187,10 @@
 
 
         switch_return_home_address: function( event = false ) {
-            if( jQuery( '#woocommerce_postnl_return_address_or_reply_no' ).is(":checked") ) {
+            var returnToHome = jQuery( '#woocommerce_postnl_return_address_or_reply_no' );
+
+            // Belgian stores on the new APIs have no reply number, so the choice is not rendered and the home address applies.
+            if( ! returnToHome.length || returnToHome.is(":checked") ) {
                 jQuery('#woocommerce_postnl_return_replynumber').closest('tr').hide();
                 jQuery('#woocommerce_postnl_return_address_street').closest('tr').show();
                 jQuery('#woocommerce_postnl_return_address_house_no').closest('tr').show();

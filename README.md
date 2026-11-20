@@ -27,6 +27,9 @@ PostNL’s official extension for WooCommerce on WordPress. Manage your national
 
 ## Changelog
 
+### 5.9.13
+* Fix: Typing a postcode at checkout showed "The provided PostalCode format is invalid" and could move the cursor out of the field. Delivery options now load once the NL or BE postcode is complete.
+
 ### 5.9.12
 * Add: New API Key field for the upcoming PostNL API migration. Enter the key from the PostNL Business Portal Self Service module; the plugin checks it with PostNL when you save, shows whether it is valid, and a banner reminds you until it is entered.
 

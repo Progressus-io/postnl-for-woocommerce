@@ -39,8 +39,10 @@ if ( ! defined( 'ABSPATH' ) ) {
  * the three legacy return mechanisms collapse onto this one endpoint,
  * differentiated by printMethod and the receiver address:
  *
- * - printMethod is retailPrint for NL-origin returns (consumerPrint is a
- *   BE-origin follow-on, left unimplemented).
+ * - printMethod is retailPrint. The return-label flow (Returns\Service) sends
+ *   NL consumers only and leaves consumerPrint for BE consumers unimplemented;
+ *   Smart Returns (Returns\Smart_Returns_Service) also send BE consumers with
+ *   retailPrint, which the PostNL sandbox accepted on 2026-11-20.
  * - The sender is the consumer returning the item; the receiver is the merchant,
  *   whose address encodes reply-number (Antwoordnummer) vs return-to-home.
  * - returnPeriod is omitted (the V4 default is 35 days and PostNL do not want it
@@ -163,7 +165,7 @@ class Request_Builder {
 	/**
 	 * Resolve a print-method string into the SDK LabelPrintMethod enum.
 	 *
-	 * Defaults to retailPrint — the only method valid for the NL-origin flow.
+	 * Defaults to retailPrint, the method every flow in this plugin sends.
 	 *
 	 * @param string $print_method LabelPrintMethod value, e.g. 'retailPrint'.
 	 * @return LabelPrintMethod

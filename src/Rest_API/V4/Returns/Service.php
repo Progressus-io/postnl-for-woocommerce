@@ -289,7 +289,10 @@ class Service extends Order_Base implements Return_Label_Service_Interface {
 	 * "Sending the return from BE means only consumer is available. Sending from NL
 	 * means only retail is available." So a Dutch store shipping to a Belgian
 	 * customer is a consumerPrint return, and consumerPrint is a follow-on that is
-	 * not implemented — those fall back to the untouched legacy pipeline.
+	 * not implemented — those fall back to the untouched legacy pipeline. Smart
+	 * Returns are a separate flow: Smart_Returns_Service sends BE consumers with
+	 * retailPrint, which the PostNL sandbox accepted on 2026-11-20; confirm it on
+	 * production before the smart_returns flag is switched on.
 	 *
 	 * Reading the store address here instead would always be true, because the
 	 * plugin refuses to run unless the store is in NL or BE. Mapping::

@@ -46,7 +46,7 @@ class NumberDeliveryDaysTest extends IntegrationTestCase {
 
 		$this->orig_settings = Settings::get_instance()->settings;
 
-		foreach ( array( 'woocommerce_default_country', 'woocommerce_store_address', 'woocommerce_store_city', 'woocommerce_store_postcode' ) as $option ) {
+		foreach ( array( 'woocommerce_default_country', 'woocommerce_store_address', 'woocommerce_store_city', 'woocommerce_store_postcode', Settings::NEW_API_KEY_VALIDATED_HASH_OPTION . '_sandbox' ) as $option ) {
 			$this->orig_options[ $option ] = get_option( $option );
 		}
 	}
@@ -56,11 +56,14 @@ class NumberDeliveryDaysTest extends IntegrationTestCase {
 	 */
 	protected function tearDown(): void {
 		remove_filter( 'postnl_sdk_enable_timeframe', '__return_true' );
-		Settings::get_instance()->set_api_key_new_validated( false );
 		Settings::get_instance()->settings = $this->orig_settings;
 
 		foreach ( $this->orig_options as $option => $value ) {
-			update_option( $option, $value );
+			if ( false === $value ) {
+				delete_option( $option );
+			} else {
+				update_option( $option, $value );
+			}
 		}
 
 		parent::tearDown();
@@ -158,7 +161,7 @@ class NumberDeliveryDaysTest extends IntegrationTestCase {
 	}
 
 	/**
-	 * @testdox A BE store without a saved value sends numberOfDays 10 on the V4 timeframe request.
+	 * @testdox A BE store without a saved value builds the V4 timeframe service with 10 days.
 	 */
 	public function test_be_store_v4_request_uses_default_days(): void {
 		$this->use_store( 'BE', null );
@@ -167,17 +170,25 @@ class NumberDeliveryDaysTest extends IntegrationTestCase {
 	}
 
 	/**
-	 * @testdox An NL store still sends its saved number of delivery days.
+	 * @testdox An NL store still sends its saved number of delivery days on the legacy request.
 	 */
 	public function test_nl_store_keeps_saved_days(): void {
 		$this->use_store( 'NL', '5' );
 
 		$this->assertSame( 5, $this->legacy_days( 'NL' ) );
+	}
+
+	/**
+	 * @testdox An NL store's saved number of delivery days is what the V4 timeframe service is built with.
+	 */
+	public function test_nl_store_v4_keeps_saved_days(): void {
+		$this->use_store( 'NL', '5' );
+
 		$this->assertSame( 5, $this->v4_days() );
 	}
 
 	/**
-	 * @testdox An NL store without a saved value still sends the default of 10.
+	 * @testdox An NL store without a saved value sends the default of 10, not 0.
 	 */
 	public function test_nl_store_without_saved_value_uses_default_days(): void {
 		$this->use_store( 'NL', null );

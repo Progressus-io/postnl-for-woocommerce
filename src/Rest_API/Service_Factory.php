@@ -496,6 +496,21 @@ class Service_Factory {
 	}
 
 	/**
+	 * Whether a flow runs on V4 for the current configuration.
+	 *
+	 * Lets callers outside the factory, such as the order screen and the settings
+	 * form, offer what only V4 supports without reaching into the routing rules.
+	 *
+	 * @param string $flow Flow identifier, e.g. 'smart_returns'.
+	 * @return bool
+	 *
+	 * @since 6.0.0
+	 */
+	public function uses_v4_for( string $flow ): bool {
+		return $this->should_use_v4( $flow );
+	}
+
+	/**
 	 * Whether the PostNL PHP SDK is actually installed and loadable.
 	 *
 	 * The SDK is a `require` dependency, but a build can still ship a `vendor/`

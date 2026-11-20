@@ -173,6 +173,16 @@ class Bulk extends Base {
 				continue;
 			}
 
+			if ( Utils::is_local_pickup_order( $order ) ) {
+				$array_messages[] = array(
+					// Translators: %1$d is the order ID.
+					'message' => sprintf( esc_html__( 'Order #%1$d is a Local pickup order and is not shipped with PostNL.', 'postnl-for-woocommerce' ), $order_id ),
+					'type'    => 'error',
+				);
+
+				continue;
+			}
+
 			if ( ! $match_shipping_zones && ! $match_pickup_zone ) {
 				$array_messages[] = array(
 					// Translators: %1$d is the order ID.
@@ -639,12 +649,14 @@ class Bulk extends Base {
 	 * @param \WC_Order $order Current order object.
 	 */
 	public function add_create_label_actions_button( array $actions, \WC_Order $order ) {
-		// Display the button for all orders that have a PostNL as a shipping method.
-		if ( ! $this->is_postnl_shipping_method( $order ) ) {
+		$have_label_file = $this->have_label_file( $order );
+
+		// Display the button for orders that have a PostNL shipping method, or already have a label to print.
+		if ( ! $have_label_file && ! $this->is_postnl_shipping_method( $order ) ) {
 			return $actions;
 		}
 
-		if ( $this->have_label_file( $order ) ) {
+		if ( $have_label_file ) {
 			$actions['postnl-label'] = array(
 				'url'    => $this->get_download_label_url( $order->get_id() ),
 				'name'   => esc_html__( 'PostNL Print Label', 'postnl-for-woocommerce' ),

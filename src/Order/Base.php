@@ -121,6 +121,7 @@ abstract class Base {
 
 	/**
 	 * Get shipping options from the PostNL meta, if those no-exists then form the plugin settings.
+	 * Local pickup orders get none, as they are never shipped with PostNL.
 	 *
 	 * @param \WC_Order $order
 	 *
@@ -570,7 +571,8 @@ abstract class Base {
 	 * @param int   $order_id Order post ID.
 	 * @param array $meta_values PostNL meta values.
 	 *
-	 * @throws \Exception When the order is invalid, or the V4 label response carries no barcode.
+	 * @throws \Exception When the order is invalid, the order is Local pickup and has no label yet,
+	 *                    or the V4 label response carries no barcode.
 	 */
 	public function save_meta_value( $order_id, $meta_values ) {
 
@@ -578,10 +580,6 @@ abstract class Base {
 
 		if ( ! is_a( $order, 'WC_Order' ) ) {
 			throw new \Exception( esc_html__( 'Order does not exist!', 'postnl-for-woocommerce' ) );
-		}
-
-		if ( Utils::is_local_pickup_order( $order ) ) {
-			throw new \Exception( esc_html__( 'Local pickup orders are not shipped with PostNL.', 'postnl-for-woocommerce' ) );
 		}
 
 		$saved_data = $this->get_data( $order_id );
@@ -592,6 +590,11 @@ abstract class Base {
 				'saved_data' => $saved_data,
 				'labels'     => $saved_data['labels'],
 			);
+		}
+
+		// A Local pickup order keeps a label made before it was excluded, but never gets a new one.
+		if ( Utils::is_local_pickup_order( $order ) ) {
+			throw new \Exception( esc_html__( 'Local pickup orders are not shipped with PostNL.', 'postnl-for-woocommerce' ) );
 		}
 
 		// Get array of nonce fields.

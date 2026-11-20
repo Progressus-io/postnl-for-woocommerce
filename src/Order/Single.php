@@ -121,7 +121,8 @@ class Single extends Base {
 	public function add_meta_box( $post_type, $post_or_order_object ) {
 		$order = $this->init_order_object( $post_or_order_object );
 
-		if ( ! is_a( $order, 'WC_Order' ) || ! $this->is_postnl_shipping_method( $order ) ) {
+		// An order that already has a label keeps the box, so the label stays downloadable.
+		if ( ! is_a( $order, 'WC_Order' ) || ( ! $this->is_postnl_shipping_method( $order ) && ! $this->have_label_file( $order ) ) ) {
 			return;
 		}
 

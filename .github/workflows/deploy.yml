@@ -212,7 +212,7 @@ jobs:
           echo "zip-path=$ZIP_PATH" >> "$GITHUB_OUTPUT"
 
       # All paths: assert the release ZIP is clean — no credential files, the
-      # V4 SDK stays out of the shipped build, the PHP floor is intact, and no
+      # V4 SDK and its LICENSE.md ship, the PHP 8.2 floor holds, and no
       # internal/dev files or stray vendors slipped in. The exact same gate runs
       # against the SVN trunk/tag working copy before commit (see below), so
       # trunk can never publish a file the ZIP would not ship.

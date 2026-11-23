@@ -94,6 +94,7 @@ class IncompletePostcodeLookupTest extends IntegrationTestCase {
 		$settings->settings['enable_logging']             = 'no';
 
 		wc_clear_notices();
+		$this->clear_lookup_failure_throttle();
 		add_filter( 'pre_http_request', array( $this, 'fake_postnl_api' ), 10, 3 );
 		add_filter( 'woocommerce_logger_log_message', array( $this, 'capture_log' ), 10, 3 );
 	}

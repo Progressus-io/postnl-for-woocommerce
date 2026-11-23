@@ -557,6 +557,8 @@ class Container {
 	 * The shopper no longer sees the API error, so this entry is written whatever
 	 * the plugin logging setting is. The API keys and the customer's address and
 	 * contact details are masked in case the PostNL error text repeats them.
+	 * The same failure is written at most once per checkout type every 10 minutes,
+	 * because the blocks checkout retries a failed lookup every few seconds.
 	 *
 	 * @param \Exception $exception Exception thrown by the lookup.
 	 * @param string     $checkout  Checkout type, classic or blocks.
@@ -568,15 +570,26 @@ class Container {
 			return;
 		}
 
+		$message = self::mask_sensitive_values( $exception->getMessage() );
+
+		// Digits are left out of the key, so timings in cURL errors don't make each failure unique.
+		$throttled = 'postnl_lookup_failed_' . $checkout . '_' . md5( preg_replace( '/\d+/', '', $message ) );
+
+		if ( false !== get_transient( $throttled ) ) {
+			return;
+		}
+
 		$logger->error(
 			sprintf(
 				'PostNL delivery options lookup failed on the %1$s checkout (code %2$s): %3$s',
 				$checkout,
 				$exception->getCode(),
-				self::mask_sensitive_values( $exception->getMessage() )
+				$message
 			),
 			array( 'source' => 'PostNLWooCommerce' )
 		);
+
+		set_transient( $throttled, 1, 10 * MINUTE_IN_SECONDS );
 	}
 
 	/**

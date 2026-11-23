@@ -28,6 +28,13 @@ class Client extends Base implements Postcode_Check_Service_Interface {
 	public $endpoint = '/shipment/checkout/v1/postalcodecheck';
 
 	/**
+	 * Treat a 4xx or 5xx response as a failed check, such as a 401 for an invalid API key.
+	 *
+	 * @var bool
+	 */
+	protected $throw_on_http_error = true;
+
+	/**
 	 * Function for composing API request.
 	 */
 	public function compose_body_request() {

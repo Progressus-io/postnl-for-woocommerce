@@ -53,6 +53,13 @@ class DeliveryOptionsFailureLogTest extends IntegrationTestCase {
 	private $api_response = array();
 
 	/**
+	 * Faked postcode check response, used instead of $api_response when set.
+	 *
+	 * @var array{code?:int, message?:string, body?:string}
+	 */
+	private $postcode_check_response = array();
+
+	/**
 	 * Messages written to the WooCommerce log during the test.
 	 *
 	 * @var array<int, array{level:string, message:string, source:string}>
@@ -149,16 +156,21 @@ class DeliveryOptionsFailureLogTest extends IntegrationTestCase {
 
 		++$this->api_calls;
 
-		if ( isset( $this->api_response['error'] ) ) {
-			return new \WP_Error( 'http_request_failed', $this->api_response['error'] );
+		$response = $this->api_response;
+		if ( ! empty( $this->postcode_check_response ) && false !== strpos( $url, 'postalcodecheck' ) ) {
+			$response = $this->postcode_check_response;
+		}
+
+		if ( isset( $response['error'] ) ) {
+			return new \WP_Error( 'http_request_failed', $response['error'] );
 		}
 
 		return array(
 			'headers'  => array(),
-			'body'     => $this->api_response['body'],
+			'body'     => $response['body'],
 			'response' => array(
-				'code'    => $this->api_response['code'],
-				'message' => $this->api_response['message'],
+				'code'    => $response['code'],
+				'message' => $response['message'],
 			),
 			'cookies'  => array(),
 			'filename' => null,
@@ -375,6 +387,78 @@ class DeliveryOptionsFailureLogTest extends IntegrationTestCase {
 				'shipping_address_2'    => '',
 			)
 		);
+	}
+
+	/**
+	 * Make the postcode check reject the address format the way PostNL does, with a valid key.
+	 */
+	private function reject_postcode_check_address(): void {
+		$this->postcode_check_response = array(
+			'code'    => 400,
+			'message' => 'Bad Request',
+			'body'    => '{"errors": [{"status": "400", "title": "Bad Request", "detail": "Input field \'housenumber\' has the wrong format."}]}',
+		);
+
+		$this->api_response = array(
+			'code'    => 200,
+			'message' => 'OK',
+			'body'    => '{"DeliveryOptions":[{"DeliveryDate":"24-11-2026","Timeframe":[{"From":"08:30:00","To":"21:30:00","Options":["Daytime"]}]}],"PickupOptions":[]}',
+		);
+	}
+
+	/**
+	 * @testdox The postcode check returns no address on a 400 instead of throwing, so the address counts as unknown.
+	 */
+	public function test_postcode_check_returns_no_address_on_rejected_format(): void {
+		$this->reject_postcode_check_address();
+
+		$response = ( new Postcode_Check_Service() )->check(
+			array(
+				'shipping_country'      => 'NL',
+				'shipping_postcode'     => '6591 BA',
+				'shipping_house_number' => '1a',
+				'shipping_address_2'    => '',
+			)
+		);
+
+		$this->assertArrayNotHasKey( 0, $response );
+	}
+
+	/**
+	 * @testdox Classic checkout still looks up delivery options when the postcode check rejects the address format.
+	 */
+	public function test_classic_keeps_delivery_options_when_postcode_check_rejects_format(): void {
+		$this->reject_postcode_check_address();
+
+		$settings                                  = Settings::get_instance();
+		$settings->settings['validate_nl_address'] = 'yes';
+		$settings->settings['reorder_nl_address']  = 'yes';
+
+		$_REQUEST['post_data'] = http_build_query(
+			array(
+				'billing_first_name'   => 'Jan',
+				'billing_last_name'    => 'Jansen',
+				'billing_country'      => 'NL',
+				'billing_postcode'     => '6591 BA',
+				'billing_house_number' => '1a',
+				'billing_address_1'    => 'Hoofdstraat',
+				'billing_city'         => 'Teststad',
+				'shipping_method'      => array( 'flat_rate:1' ),
+			)
+		);
+
+		WC()->customer->set_billing_country( 'NL' );
+		WC()->customer->set_billing_postcode( '6591 BA' );
+		WC()->customer->set_shipping_country( 'NL' );
+		WC()->customer->set_shipping_postcode( '6591 BA' );
+
+		ob_start();
+		( new Container( false ) )->postnl_fields();
+		ob_end_clean();
+
+		$this->assertSame( 2, $this->api_calls, 'The delivery options lookup must still run after the postcode check.' );
+		$this->assertTrue( wc_has_notice( 'This is not a valid address!', 'notice' ) );
+		$this->assertCount( 0, $this->logged_failures() );
 	}
 
 	/**

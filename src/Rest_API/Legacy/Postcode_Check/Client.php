@@ -28,11 +28,27 @@ class Client extends Base implements Postcode_Check_Service_Interface {
 	public $endpoint = '/shipment/checkout/v1/postalcodecheck';
 
 	/**
-	 * Treat a 4xx or 5xx response as a failed check, such as a 401 for an invalid API key.
+	 * Treat a 4xx or 5xx response as a failed check, such as a 401 for an invalid API key. A 400 is let through.
 	 *
 	 * @var bool
 	 */
 	protected $throw_on_http_error = true;
+
+	/**
+	 * Let a 400 through: PostNL returns it for an address it can't parse, which the checkout treats as an unknown address.
+	 *
+	 * @param array  $response      Response from wp_remote_request().
+	 * @param string $body_response Response body.
+	 *
+	 * @throws \Exception On any other status of 400 or higher.
+	 */
+	protected function check_response_status( $response, $body_response ) {
+		if ( 400 === (int) wp_remote_retrieve_response_code( $response ) ) {
+			return;
+		}
+
+		parent::check_response_status( $response, $body_response );
+	}
 
 	/**
 	 * Function for composing API request.

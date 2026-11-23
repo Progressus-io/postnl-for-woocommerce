@@ -61,6 +61,18 @@ class ServiceTest extends UnitTestCase {
 	private array $store = array();
 
 	/**
+	 * Give the Service a WooCommerce instance without a cart.
+	 *
+	 * Brain Monkey defines WC() for the whole run once any test stubs it, so the
+	 * cart lookup would otherwise reach an unmocked function here.
+	 */
+	protected function setUp(): void {
+		parent::setUp();
+
+		Functions\when( 'WC' )->justReturn( (object) array( 'cart' => null ) );
+	}
+
+	/**
 	 * Build a settings double overriding exactly the getters the Service reads.
 	 *
 	 * It extends the real Settings so it satisfies the Service's typed parameter;
@@ -962,6 +974,106 @@ class ServiceTest extends UnitTestCase {
 	}
 
 	/**
+	 * A BE checkout POST payload.
+	 *
+	 * @return array<string, string>
+	 */
+	private function be_post_data(): array {
+		return array(
+			'ship_to_different_address' => '1',
+			'shipping_country'          => 'BE',
+			'shipping_postcode'         => '1000',
+			'shipping_address_1'        => 'Rue Neuve',
+			'shipping_city'             => 'Brussels',
+		);
+	}
+
+	/**
+	 * Destinations and pickup defaults an 18+ cart is looked up under.
+	 *
+	 * @return array<string, array{0: string, 1: string}>
+	 */
+	public static function adults_only_cart_provider(): array {
+		return array(
+			'NL address, standard shipping default' => array( 'NL', '' ),
+			'NL address, ID check default'          => array( 'NL', 'id_check' ),
+			'BE address, standard shipping default' => array( 'BE', '' ),
+			'BE address, insured shipping default'  => array( 'BE', 'insured_shipping' ),
+		);
+	}
+
+	/**
+	 * @testdox A cart with an 18+ product requests retail points only
+	 * @dataProvider adults_only_cart_provider
+	 *
+	 * A parcel locker cannot check an ID, so PostNL asked for lockers to be left
+	 * out for an 18+ cart, for every destination and whatever the pickup default is.
+	 *
+	 * @param string $country        Destination country.
+	 * @param string $pickup_default "Default Shipping Pickup" value.
+	 */
+	public function test_adults_only_cart_requests_retail_points_only( string $country, string $pickup_default ): void {
+		$this->with_transient_store();
+		Functions\when( 'current_datetime' )->justReturn( new \DateTimeImmutable( '2026-07-14 10:00:00' ) );
+
+		$settings = $this->make_settings( '23:00', '1', self::ALL_DROPOFF_DAYS, $pickup_default );
+		$http     = new Scripted_Http_Client( array( 200, $this->locations_response_body() ) );
+		$service  = new Adults_Only_Cart_Pickup_Service( new Spy_Pickup_Client_Factory( $settings, $http ), $settings, self::V4_KEY, self::LOCATIONS, new NullLogger() );
+
+		$service->get_pickup_locations( 'NL' === $country ? $this->nl_post_data() : $this->be_post_data() );
+
+		$this->assertCount( 1, $http->bodies );
+		$this->assertSame( array( 'retail' ), $http->bodies[0]['locationTypes'] );
+	}
+
+	/**
+	 * @testdox A cart without an 18+ product still requests retail points and parcel lockers
+	 * @dataProvider adults_only_cart_provider
+	 *
+	 * Only the NL pickup default may leave lockers out for a normal cart.
+	 *
+	 * @param string $country        Destination country.
+	 * @param string $pickup_default "Default Shipping Pickup" value.
+	 */
+	public function test_normal_cart_keeps_parcel_lockers( string $country, string $pickup_default ): void {
+		$this->with_transient_store();
+		Functions\when( 'current_datetime' )->justReturn( new \DateTimeImmutable( '2026-07-14 10:00:00' ) );
+
+		$settings = $this->make_settings( '23:00', '1', self::ALL_DROPOFF_DAYS, $pickup_default );
+		$http     = new Scripted_Http_Client( array( 200, $this->locations_response_body() ) );
+		$service  = new Service( new Spy_Pickup_Client_Factory( $settings, $http ), $settings, self::V4_KEY, self::LOCATIONS, new NullLogger() );
+
+		$service->get_pickup_locations( 'NL' === $country ? $this->nl_post_data() : $this->be_post_data() );
+
+		$expected = ( 'NL' === $country && '' !== $pickup_default ) ? array( 'retail' ) : array( 'retail', 'parcel_locker' );
+
+		$this->assertCount( 1, $http->bodies );
+		$this->assertSame( $expected, $http->bodies[0]['locationTypes'] );
+	}
+
+	/**
+	 * @testdox An 18+ cart lookup is cached apart from a normal cart lookup for the same address
+	 *
+	 * The location types are part of the cache key, so the shopper who adds an 18+
+	 * product is not served the list with lockers cached for the same address.
+	 */
+	public function test_adults_only_cart_lookup_has_its_own_cache_key(): void {
+		$this->with_transient_store();
+		Functions\when( 'current_datetime' )->justReturn( new \DateTimeImmutable( '2026-07-14 10:00:00' ) );
+
+		$settings = $this->make_settings();
+		$http_one = new Scripted_Http_Client( array( 200, $this->locations_response_body() ) );
+		$http_two = new Scripted_Http_Client( array( 200, $this->locations_response_body() ) );
+
+		( new Service( new Spy_Pickup_Client_Factory( $settings, $http_one ), $settings, self::V4_KEY, self::LOCATIONS, new NullLogger() ) )->get_pickup_locations( $this->nl_post_data() );
+		( new Adults_Only_Cart_Pickup_Service( new Spy_Pickup_Client_Factory( $settings, $http_two ), $settings, self::V4_KEY, self::LOCATIONS, new NullLogger() ) )->get_pickup_locations( $this->nl_post_data() );
+
+		$this->assertSame( array( 'retail', 'parcel_locker' ), $http_one->bodies[0]['locationTypes'] );
+		$this->assertCount( 1, $http_two->bodies, 'The 18+ cart lookup must miss the cache filled by the normal cart lookup.' );
+		$this->assertSame( array( 'retail' ), $http_two->bodies[0]['locationTypes'] );
+	}
+
+	/**
 	 * @testdox A retail-only lookup is cached apart from a lookup that includes lockers
 	 *
 	 * The same address under a different pickup default must not be served the
@@ -1211,6 +1323,24 @@ class Testable_Pickup_Service extends Service {
 	 */
 	protected function get_pickup_date(): string {
 		return '2026-07-14';
+	}
+}
+
+/**
+ * Service whose checkout cart always holds an 18+ product.
+ *
+ * The unit suite has no WooCommerce cart; the real cart is covered by the
+ * integration suite (AdultsOnlyCartPickupLocationsTest).
+ */
+class Adults_Only_Cart_Pickup_Service extends Service {
+
+	/**
+	 * Report an 18+ product in the cart.
+	 *
+	 * @return bool
+	 */
+	protected function cart_contains_adults_only_products(): bool {
+		return true;
 	}
 }
 

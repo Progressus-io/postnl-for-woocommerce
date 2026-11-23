@@ -27,6 +27,9 @@ PostNL’s official extension for WooCommerce on WordPress. Manage your national
 
 ## Changelog
 
+### 5.9.13
+* Fix: The Label & Tracking box on the order screen did not pre-select the default Packets, Mailbox Packet, Track & Trace or Insured Plus option from the settings.
+
 ### 5.9.12
 * Add: New API Key field for the upcoming PostNL API migration. Enter the key from the PostNL Business Portal Self Service module; the plugin checks it with PostNL when you save, shows whether it is valid, and a banner reminds you until it is entered.
 

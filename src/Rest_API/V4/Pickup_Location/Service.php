@@ -20,6 +20,7 @@ use PostNLWooCommerce\Rest_API\SDK\Cache_Adapter;
 use PostNLWooCommerce\Rest_API\SDK\Client_Factory;
 use PostNLWooCommerce\Rest_API\SDK\Exception_Converter;
 use PostNLWooCommerce\Shipping_Method\Settings;
+use PostNLWooCommerce\Utils;
 use Psr\Log\LoggerInterface;
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -72,8 +73,8 @@ class Service implements Pickup_Location_Service_Interface {
 	private const LOCATION_TYPES = array( PickUpLocationType::Retail, PickUpLocationType::ParcelLocker );
 
 	/**
-	 * Location types requested when the pickup default carries an option a parcel
-	 * locker cannot deliver.
+	 * Location types requested when the cart or the pickup default carries an
+	 * option a parcel locker cannot deliver.
 	 */
 	private const RETAIL_ONLY_LOCATION_TYPES = array( PickUpLocationType::Retail );
 
@@ -248,7 +249,7 @@ class Service implements Pickup_Location_Service_Interface {
 	 *
 	 * Retail points and parcel lockers are both requested, because the legacy
 	 * /shipment/v1/checkout response offers lockers too (its ParcelMachine group),
-	 * unless the pickup default rules lockers out (see location_types()).
+	 * unless the cart or the pickup default rules lockers out (see location_types()).
 	 *
 	 * @param array $post_data Checkout POST data.
 	 *
@@ -312,18 +313,25 @@ class Service implements Pickup_Location_Service_Interface {
 	/**
 	 * Location types to request for a checkout address.
 	 *
-	 * PostNL asked for one exception: a parcel locker cannot take an Insured
-	 * Shipping or ID Check (18+) parcel, so when the "Default Shipping Pickup"
-	 * product includes either option only retail points are requested. That
-	 * default is applied to the label only for an NL destination (see
-	 * Order\Base::resolve_default_shipping_options()), so other destinations keep
-	 * both types.
+	 * A parcel locker cannot take an Insured Shipping or ID Check (18+) parcel, so
+	 * PostNL asked for two exceptions where only retail points are requested:
+	 *
+	 * - The cart holds an 18+ product. This applies to every destination and
+	 *   whatever the "Default Shipping Pickup" product is.
+	 * - The "Default Shipping Pickup" product includes either option. That default
+	 *   is applied to the label only for an NL destination (see
+	 *   Order\Base::resolve_default_shipping_options()), so for this exception
+	 *   other destinations keep both types.
 	 *
 	 * @param array $post_data Checkout POST data.
 	 *
 	 * @return PickUpLocationType[]
 	 */
 	protected function location_types( array $post_data ): array {
+		if ( $this->cart_contains_adults_only_products() ) {
+			return self::RETAIL_ONLY_LOCATION_TYPES;
+		}
+
 		$post_data = Address_Utils::set_post_data_address( $post_data );
 
 		if ( 'NL' !== ( $post_data['shipping_country'] ?? '' ) ) {
@@ -339,6 +347,25 @@ class Service implements Pickup_Location_Service_Interface {
 		}
 
 		return self::LOCATION_TYPES;
+	}
+
+	/**
+	 * Whether the checkout cart holds a product marked as 18+.
+	 *
+	 * The classic and the blocks checkout both run the lookup in a front-end
+	 * request, where WooCommerce has loaded the cart. Without a cart there is
+	 * nothing to restrict.
+	 *
+	 * @return bool
+	 */
+	protected function cart_contains_adults_only_products(): bool {
+		$cart = function_exists( 'WC' ) ? WC()->cart : null;
+
+		if ( ! $cart instanceof \WC_Cart ) {
+			return false;
+		}
+
+		return Utils::contains_adults_only_products( $cart->get_cart() );
 	}
 
 	/**

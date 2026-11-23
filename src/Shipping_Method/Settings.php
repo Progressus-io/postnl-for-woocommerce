@@ -717,7 +717,7 @@ class Settings extends \WC_Settings_API {
 				'title'       => __( 'Default Shipping Pickup', 'postnl-for-woocommerce' ),
 				'type'        => 'select',
 				'description' => __( 'Shipping options Pickup.', 'postnl-for-woocommerce' ),
-				'default'     => 'id_check',
+				'default'     => '',
 				'for_country' => array( 'NL' ),
 				'options'     => array(
 					''                          => esc_html__( 'Standard Shipping', 'postnl-for-woocommerce' ),

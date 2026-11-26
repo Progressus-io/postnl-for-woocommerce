@@ -244,6 +244,63 @@ class AdultsOnlyCartPickupLocationsTest extends IntegrationTestCase {
 	}
 
 	/**
+	 * Put one variation of a variable product in the cart.
+	 *
+	 * @param bool $parent_adults_only    Whether the parent product is marked as 18+.
+	 * @param bool $variation_adults_only Whether the variation itself is marked as 18+.
+	 */
+	private function add_variation_to_cart( bool $parent_adults_only, bool $variation_adults_only ): void {
+		$attribute = new \WC_Product_Attribute();
+		$attribute->set_name( 'Size' );
+		$attribute->set_options( array( 'Large' ) );
+		$attribute->set_variation( true );
+
+		$parent = new \WC_Product_Variable();
+		$parent->set_name( 'Wine' );
+		$parent->set_status( 'publish' );
+		$parent->set_attributes( array( $attribute ) );
+		if ( $parent_adults_only ) {
+			$parent->update_meta_data( Single::ADULTS_ONLY_FIELD, 'yes' );
+		}
+		$this->product_ids[] = $parent->save();
+
+		$variation = new \WC_Product_Variation();
+		$variation->set_parent_id( $parent->get_id() );
+		$variation->set_attributes( array( 'size' => 'Large' ) );
+		$variation->set_regular_price( '12' );
+		$variation->set_status( 'publish' );
+		if ( $variation_adults_only ) {
+			$variation->update_meta_data( Single::ADULTS_ONLY_FIELD, 'yes' );
+		}
+		$this->product_ids[] = $variation->save();
+		\WC_Product_Variable::sync( $parent->get_id() );
+
+		$this->assertNotFalse(
+			WC()->cart->add_to_cart( $parent->get_id(), 1, $variation->get_id(), array( 'attribute_size' => 'Large' ) ),
+			'The variation must be in the cart.'
+		);
+	}
+
+	/**
+	 * Put a virtual product in the cart, which never ships.
+	 *
+	 * @param bool $adults_only Whether the product is marked as 18+.
+	 */
+	private function add_virtual_product_to_cart( bool $adults_only ): void {
+		$product = new \WC_Product_Simple();
+		$product->set_name( 'Tasting voucher' );
+		$product->set_regular_price( '10' );
+		$product->set_status( 'publish' );
+		$product->set_virtual( true );
+		if ( $adults_only ) {
+			$product->update_meta_data( Single::ADULTS_ONLY_FIELD, 'yes' );
+		}
+		$this->product_ids[] = $product->save();
+
+		$this->assertNotFalse( WC()->cart->add_to_cart( $product->get_id() ), 'The product must be in the cart.' );
+	}
+
+	/**
 	 * Shipping address fields for a destination country.
 	 *
 	 * @param string $country Destination country, NL or BE.
@@ -412,6 +469,46 @@ class AdultsOnlyCartPickupLocationsTest extends IntegrationTestCase {
 	 * @param string $country  Destination country.
 	 */
 	public function test_normal_cart_gets_retail_points_and_parcel_lockers( string $checkout, string $country ): void {
+		$this->add_product_to_cart( false );
+
+		$this->assertSame( array( 'retail', 'parcel_locker' ), $this->looked_up_location_types( $checkout, $country ) );
+	}
+
+	/**
+	 * @testdox A cart with a variation marked as 18+ is offered retail points only, even when its parent isn't marked.
+	 * @dataProvider checkout_and_country_provider
+	 *
+	 * @param string $checkout Checkout type.
+	 * @param string $country  Destination country.
+	 */
+	public function test_adults_only_variation_gets_retail_points_only( string $checkout, string $country ): void {
+		$this->add_variation_to_cart( false, true );
+
+		$this->assertSame( array( 'retail' ), $this->looked_up_location_types( $checkout, $country ) );
+	}
+
+	/**
+	 * @testdox A variation of a product marked as 18+ is offered retail points only.
+	 * @dataProvider checkout_and_country_provider
+	 *
+	 * @param string $checkout Checkout type.
+	 * @param string $country  Destination country.
+	 */
+	public function test_variation_of_adults_only_product_gets_retail_points_only( string $checkout, string $country ): void {
+		$this->add_variation_to_cart( true, false );
+
+		$this->assertSame( array( 'retail' ), $this->looked_up_location_types( $checkout, $country ) );
+	}
+
+	/**
+	 * @testdox A virtual 18+ product next to a shippable normal product keeps parcel lockers, since only the normal product ships.
+	 * @dataProvider checkout_and_country_provider
+	 *
+	 * @param string $checkout Checkout type.
+	 * @param string $country  Destination country.
+	 */
+	public function test_virtual_adults_only_product_keeps_parcel_lockers( string $checkout, string $country ): void {
+		$this->add_virtual_product_to_cart( true );
 		$this->add_product_to_cart( false );
 
 		$this->assertSame( array( 'retail', 'parcel_locker' ), $this->looked_up_location_types( $checkout, $country ) );

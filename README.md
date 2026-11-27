@@ -27,6 +27,9 @@ PostNL’s official extension for WooCommerce on WordPress. Manage your national
 
 ## Changelog
 
+### 5.9.14
+* Tweak: "Default Shipping Pickup" now defaults to Standard Shipping instead of ID Check (18+). Stores that already saved a value keep it.
+
 ### 5.9.13
 * Fix: The Label & Tracking box on the order screen did not pre-select the default Packets, Mailbox Packet, Track & Trace or Insured Plus option from the settings.
 * Fix: Typing a postcode at checkout showed "The provided PostalCode format is invalid" and could move the cursor out of the field. Delivery options now load once the NL or BE postcode is complete.

@@ -135,17 +135,22 @@ class Smart_Returns_ServiceTest extends UnitTestCase {
 	/**
 	 * A label entry for the succeeding fake client.
 	 *
-	 * @param string $content     Raw (pre-encoding) label bytes.
-	 * @param string $output_type SDK output type string.
-	 * @param string $label_type  labelType string as PostNL would return it.
+	 * @param string      $content     Raw (pre-encoding) label bytes.
+	 * @param string      $output_type SDK output type string.
+	 * @param string|null $label_type  labelType string as PostNL would return it, or null to omit it.
 	 * @return array
 	 */
-	private static function label( string $content, string $output_type = 'png', string $label_type = 'Printcode' ): array {
-		return array(
+	private static function label( string $content, string $output_type = 'png', ?string $label_type = 'PrintcodeLabel' ): array {
+		$label = array(
 			'label'      => base64_encode( $content ),
 			'outputType' => $output_type,
-			'labelType'  => $label_type,
 		);
+
+		if ( null !== $label_type ) {
+			$label['labelType'] = $label_type;
+		}
+
+		return $label;
 	}
 
 	/**
@@ -341,13 +346,20 @@ class Smart_Returns_ServiceTest extends UnitTestCase {
 	}
 
 	/**
-	 * @testdox A pdf-only response is rejected loudly instead of being mailed to the consumer.
+	 * @testdox A PrintcodeLabel in pdf is rejected loudly instead of being mailed to the consumer, even next to a png Label.
 	 */
 	public function test_pdf_only_response_is_rejected_and_logged(): void {
 		$logger  = new Smart_Returns_Spy_Logger();
 		$service = $this->service(
 			new Smart_Returns_Succeeding_Http_Client(
-				array( self::response_item( array( self::label( '%PDF-1.4', 'pdf', 'Return Label' ) ) ) )
+				array(
+					self::response_item(
+						array(
+							self::label( 'LABEL-BYTES', 'png', 'Label' ),
+							self::label( '%PDF-1.4', 'pdf', 'PrintcodeLabel' ),
+						)
+					),
+				)
 			),
 			$logger
 		);
@@ -366,17 +378,17 @@ class Smart_Returns_ServiceTest extends UnitTestCase {
 	}
 
 	/**
-	 * @testdox More than one usable label logs a warning naming the label types; the first one is used.
+	 * @testdox The PrintcodeLabel is emailed when return/generate answers with the full Label first, as PostNL does.
 	 */
-	public function test_multiple_usable_labels_warn_and_the_first_wins(): void {
+	public function test_printcode_label_is_picked_over_the_full_label(): void {
 		$logger  = new Smart_Returns_Spy_Logger();
 		$service = $this->service(
 			new Smart_Returns_Succeeding_Http_Client(
 				array(
 					self::response_item(
 						array(
-							self::label( 'PRINTCODE-BYTES', 'png', 'Printcode' ),
-							self::label( 'LABEL-BYTES', 'png', 'Return Label' ),
+							self::label( 'LABEL-BYTES', 'png', 'Label' ),
+							self::label( 'PRINTCODE-BYTES', 'png', 'PrintcodeLabel' ),
 						)
 					),
 				)
@@ -387,10 +399,160 @@ class Smart_Returns_ServiceTest extends UnitTestCase {
 		$result = $service->generate( $this->order() );
 
 		$this->assertSame( 'PRINTCODE-BYTES', $result['content'] );
+		$this->assertSame( array(), $logger->records );
+	}
+
+	/**
+	 * Responses without a usable PrintcodeLabel, with the label list the log must name.
+	 *
+	 * @return array<string, array{0:array,1:string}>
+	 */
+	public static function responses_without_printcode(): array {
+		return array(
+			'full label only'         => array( array( self::label( 'LABEL-BYTES', 'png', 'Label' ) ), 'Label/png' ),
+			'full label as pdf'       => array( array( self::label( '%PDF-1.4', 'pdf', 'Label' ) ), 'Label/pdf' ),
+			'empty printcode'         => array(
+				array( self::label( '', 'png', 'PrintcodeLabel' ), self::label( 'LABEL-BYTES', 'png', 'Label' ) ),
+				'PrintcodeLabel/png (empty), Label/png',
+			),
+			'other document name'     => array( array( self::label( 'PNG-BYTES', 'png', 'Printcode' ) ), 'Printcode/png' ),
+			'labelType not in answer' => array( array( self::label( 'PNG-BYTES', 'png', null ) ), '?/png' ),
+		);
+	}
+
+	/**
+	 * @testdox A response without a usable PrintcodeLabel throws "could not be found" and logs the labels that came back.
+	 *
+	 * @dataProvider responses_without_printcode
+	 *
+	 * @param array  $labels   Labels in the response.
+	 * @param string $returned Label list the log entry must contain.
+	 */
+	public function test_missing_printcode_label_throws_and_is_logged( array $labels, string $returned ): void {
+		$logger  = new Smart_Returns_Spy_Logger();
+		$service = $this->service(
+			new Smart_Returns_Succeeding_Http_Client( array( self::response_item( $labels ) ) ),
+			$logger
+		);
+
+		try {
+			$service->generate( $this->order() );
+			$this->fail( 'A response without a usable PrintcodeLabel must throw.' );
+		} catch ( \Exception $exception ) {
+			$this->assertStringContainsString( 'printcode could not be found', $exception->getMessage() );
+		}
+
 		$this->assertCount( 1, $logger->records );
-		$this->assertSame( 'warning', $logger->records[0]['level'] );
-		$this->assertStringContainsString( 'Printcode', $logger->records[0]['message'] );
-		$this->assertStringContainsString( 'Return Label', $logger->records[0]['message'] );
+		$this->assertSame( 'error', $logger->records[0]['level'] );
+		$this->assertStringContainsString( 'returned label(s): ' . $returned . '.', $logger->records[0]['message'] );
+		$this->assertStringContainsString( 'ORDER-1001', $logger->records[0]['message'] );
+	}
+
+	/**
+	 * @testdox The PrintcodeLabel is matched regardless of case and surrounding spaces.
+	 *
+	 * @testWith ["printcodelabel"]
+	 *           [" PrintcodeLabel "]
+	 *           ["PrintCodeLabel"]
+	 *
+	 * @param string $label_type labelType as PostNL might spell it.
+	 */
+	public function test_printcode_label_type_variants_are_picked( string $label_type ): void {
+		$service = $this->service(
+			new Smart_Returns_Succeeding_Http_Client(
+				array(
+					self::response_item(
+						array(
+							self::label( 'LABEL-BYTES', 'png', 'Label' ),
+							self::label( 'PRINTCODE-BYTES', 'png', $label_type ),
+						)
+					),
+				)
+			)
+		);
+
+		$this->assertSame( 'PRINTCODE-BYTES', $service->generate( $this->order() )['content'] );
+	}
+
+	/**
+	 * @testdox With two PrintcodeLabels the first one is emailed.
+	 */
+	public function test_first_printcode_label_wins(): void {
+		$service = $this->service(
+			new Smart_Returns_Succeeding_Http_Client(
+				array(
+					self::response_item(
+						array(
+							self::label( 'FIRST-BYTES', 'png', 'PrintcodeLabel' ),
+							self::label( 'SECOND-BYTES', 'png', 'PrintcodeLabel' ),
+						)
+					),
+				)
+			)
+		);
+
+		$this->assertSame( 'FIRST-BYTES', $service->generate( $this->order() )['content'] );
+	}
+
+	/**
+	 * @testdox A png PrintcodeLabel after a pdf one is emailed instead of rejecting the response.
+	 */
+	public function test_png_printcode_after_a_pdf_printcode_is_emailed(): void {
+		$service = $this->service(
+			new Smart_Returns_Succeeding_Http_Client(
+				array(
+					self::response_item(
+						array(
+							self::label( '%PDF-1.4', 'pdf', 'PrintcodeLabel' ),
+							self::label( 'PRINTCODE-BYTES', 'png', 'PrintcodeLabel' ),
+						)
+					),
+				)
+			)
+		);
+
+		$this->assertSame( 'PRINTCODE-BYTES', $service->generate( $this->order() )['content'] );
+	}
+
+	/**
+	 * Responses with no label content, with the label list the log must name.
+	 *
+	 * @return array<string, array{0:array,1:string}>
+	 */
+	public static function responses_without_content(): array {
+		return array(
+			'no labels'         => array( array(), 'none' ),
+			'only empty labels' => array(
+				array( self::label( '', 'png', 'PrintcodeLabel' ), self::label( '', 'png', 'Label' ) ),
+				'PrintcodeLabel/png (empty), Label/png (empty)',
+			),
+		);
+	}
+
+	/**
+	 * @testdox A response with no label content throws "content is missing" and logs the labels that came back.
+	 *
+	 * @dataProvider responses_without_content
+	 *
+	 * @param array  $labels   Labels in the response.
+	 * @param string $returned Label list the log entry must contain.
+	 */
+	public function test_response_without_content_throws_content_missing( array $labels, string $returned ): void {
+		$logger  = new Smart_Returns_Spy_Logger();
+		$service = $this->service(
+			new Smart_Returns_Succeeding_Http_Client( array( self::response_item( $labels ) ) ),
+			$logger
+		);
+
+		try {
+			$service->generate( $this->order() );
+			$this->fail( 'A response without label content must throw.' );
+		} catch ( \Exception $exception ) {
+			$this->assertStringContainsString( 'Printcode content is missing', $exception->getMessage() );
+		}
+
+		$this->assertCount( 1, $logger->records );
+		$this->assertStringContainsString( 'returned label(s): ' . $returned . '.', $logger->records[0]['message'] );
 	}
 
 	/**

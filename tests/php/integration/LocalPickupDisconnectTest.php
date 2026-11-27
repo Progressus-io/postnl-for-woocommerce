@@ -150,7 +150,7 @@ class LocalPickupDisconnectTest extends IntegrationTestCase {
 	}
 
 	/**
-	 * Answer every PostNL API request with an error so nothing is ever created.
+	 * Answer the postcode check with no address and every other PostNL API request with an error.
 	 *
 	 * @param false|array $preempt Short-circuit value.
 	 * @param array       $args    Request arguments.
@@ -164,6 +164,19 @@ class LocalPickupDisconnectTest extends IntegrationTestCase {
 		}
 
 		++$this->api_calls;
+
+		if ( false !== strpos( $url, 'postalcodecheck' ) ) {
+			return array(
+				'headers'  => array(),
+				'body'     => '[]',
+				'response' => array(
+					'code'    => 200,
+					'message' => 'OK',
+				),
+				'cookies'  => array(),
+				'filename' => null,
+			);
+		}
 
 		return array(
 			'headers'  => array(),
@@ -362,6 +375,101 @@ class LocalPickupDisconnectTest extends IntegrationTestCase {
 		$this->make_blocks_handler()->postnl_validate_address_in_cart( $errors, WC()->cart );
 
 		$this->assertSame( $expect_error, $errors->has_errors() );
+	}
+
+	/**
+	 * Rates chosen after PostNL rejected the address and whether the order must stay blocked.
+	 *
+	 * @return array
+	 */
+	public static function rejected_address_provider(): array {
+		return array(
+			'Local pickup'                => array( array( 'pickup_location:0' ), false ),
+			'PostNL rate'                 => array( array( 'flat_rate:1' ), true ),
+			'Local pickup and PostNL rate' => array( array( 'pickup_location:0', 'flat_rate:1' ), true ),
+		);
+	}
+
+	/**
+	 * @testdox Blocks checkout places a Local pickup order with an address PostNL rejected and still blocks a PostNL order.
+	 *
+	 * @dataProvider rejected_address_provider
+	 *
+	 * @param array $rates        Chosen shipping rate of each package.
+	 * @param bool  $expect_error Whether the cart must report the invalid address.
+	 */
+	public function test_blocks_rejected_address_blocks_only_postnl_orders( array $rates, bool $expect_error ): void {
+		WC()->session->set( 'chosen_shipping_methods', array( 'flat_rate:1' ) );
+		WC()->customer->set_shipping_country( 'NL' );
+
+		( new Container( false ) )->validated_address(
+			array(
+				'shipping_country'      => 'NL',
+				'shipping_postcode'     => '6591 BA',
+				'shipping_house_number' => '999',
+			)
+		);
+
+		$this->assertSame( 1, $this->api_calls );
+		$this->assertTrue( WC()->session->get( POSTNL_SETTINGS_ID . '_invalid_address_marker' ) );
+
+		WC()->session->set( 'chosen_shipping_methods', $rates );
+
+		$errors = new \WP_Error();
+		$this->make_blocks_handler()->postnl_validate_address_in_cart( $errors, WC()->cart );
+
+		$this->assertSame( $expect_error, $errors->has_errors() );
+		$this->assertSame( $expect_error, (bool) WC()->session->get( POSTNL_SETTINGS_ID . '_invalid_address_marker', false ) );
+	}
+
+	/**
+	 * Classic checkout method and whether PostNL must check the address.
+	 *
+	 * @return array
+	 */
+	public static function classic_rejected_address_provider(): array {
+		return array(
+			'Local pickup' => array( 'local_pickup:3', false ),
+			'PostNL rate'  => array( 'flat_rate:1', true ),
+		);
+	}
+
+	/**
+	 * @testdox Classic checkout checks an address PostNL rejects only for a PostNL method.
+	 *
+	 * @dataProvider classic_rejected_address_provider
+	 *
+	 * @param string $method         Posted shipping method.
+	 * @param bool   $expect_checked Whether the address check must run and warn.
+	 */
+	public function test_classic_rejected_address_is_checked_only_for_postnl_methods( string $method, bool $expect_checked ): void {
+		$settings                                  = Settings::get_instance();
+		$settings->settings['validate_nl_address'] = 'yes';
+		$settings->settings['reorder_nl_address']  = 'yes';
+
+		WC()->session->set( 'chosen_shipping_methods', array( $method ) );
+		WC()->session->set( POSTNL_SETTINGS_ID . '_invalid_address_marker', true );
+		WC()->customer->set_shipping_country( 'NL' );
+
+		$_REQUEST['post_data'] = http_build_query(
+			array(
+				'billing_country'      => 'NL',
+				'billing_postcode'     => '6591 BA',
+				'billing_house_number' => '999',
+				'billing_address_1'    => 'Hoofdstraat',
+				'billing_city'         => 'Gennep',
+				'shipping_method'      => array( $method ),
+			)
+		);
+
+		ob_start();
+		( new Container( false ) )->postnl_fields();
+		ob_end_clean();
+
+		$this->assertSame( $expect_checked, $this->api_calls > 0 );
+		$this->assertSame( $expect_checked, wc_has_notice( 'This is not a valid address!', 'notice' ) );
+		$this->assertCount( 0, wc_get_notices( 'error' ) );
+		$this->assertNull( WC()->session->get( POSTNL_SETTINGS_ID . '_invalid_address_marker' ) );
 	}
 
 	/**

@@ -494,7 +494,7 @@ class Utils {
 	 *
 	 * @return array
 	 *
-	 * @since 5.9.13
+	 * @since 5.9.14
 	 */
 	public static function get_local_pickup_method_ids() {
 		return array( 'local_pickup', 'pickup_location' );
@@ -507,7 +507,7 @@ class Utils {
 	 *
 	 * @return bool
 	 *
-	 * @since 5.9.13
+	 * @since 5.9.14
 	 */
 	public static function is_local_pickup_method( $method_id ) {
 		return in_array( self::get_cart_shipping_method_id( (string) $method_id ), self::get_local_pickup_method_ids(), true );
@@ -520,7 +520,7 @@ class Utils {
 	 *
 	 * @return bool
 	 *
-	 * @since 5.9.13
+	 * @since 5.9.14
 	 */
 	public static function is_local_pickup_order( $order ) {
 		if ( is_numeric( $order ) ) {
@@ -551,7 +551,7 @@ class Utils {
 	 *
 	 * @return bool
 	 *
-	 * @since 5.9.13
+	 * @since 5.9.14
 	 */
 	public static function is_local_pickup_chosen() {
 		$chosen = ( function_exists( 'WC' ) && WC()->session ) ? (array) WC()->session->get( 'chosen_shipping_methods', array() ) : array();

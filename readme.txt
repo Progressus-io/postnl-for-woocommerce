@@ -81,6 +81,9 @@ Follow these instructions (https://www.postnl.nl/Images/aanvragen-api-key-stappe
 
 == Changelog ==
 
+= 5.9.14 (2026-xx-xx) =
+* Fix: Local pickup orders no longer get PostNL delivery options, a PostNL product, a label or the Label & Tracking box.
+
 = 5.9.13 (2026-11-23) =
 * Fix: The Label & Tracking box on the order screen did not pre-select the default Packets, Mailbox Packet, Track & Trace or Insured Plus option from the settings.
 * Fix: Typing a postcode at checkout showed "The provided PostalCode format is invalid" and could move the cursor out of the field. Delivery options now load once the NL or BE postcode is complete.

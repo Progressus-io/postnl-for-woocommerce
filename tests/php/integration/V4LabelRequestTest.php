@@ -118,6 +118,31 @@ class V4LabelRequestTest extends IntegrationTestCase {
 	}
 
 	/**
+	 * @testdox A parcel locker order sends the locker's location code as the deliveryLocation, like a retail pickup.
+	 */
+	public function test_parcel_locker_order_sends_the_locker_as_delivery_location(): void {
+		$payload = $this->request_payload(
+			'NL',
+			array(),
+			array(
+				'dropoff_points'                   => '409465',
+				'dropoff_points_type'              => 'ParcelMachine',
+				'dropoff_points_address_company'   => 'Pakketautomaat',
+				'dropoff_points_address_address_1' => 'Weena',
+				'dropoff_points_address_address_2' => '691',
+				'dropoff_points_address_city'      => 'ROTTERDAM',
+				'dropoff_points_address_postcode'  => '3013AM',
+				'dropoff_points_address_country'   => 'NL',
+				'dropoff_points_date'              => '18-11-2026',
+				'dropoff_points_time'              => '',
+			)
+		);
+
+		$this->assertSame( array( 'pickupLocationId' => '409465' ), $payload['deliveryLocation'] );
+		$this->assertSame( '1234AB', $payload['receiver']['address']['postalCode'], 'The receiver must stay the customer, not the locker.' );
+	}
+
+	/**
 	 * @testdox Options set through the bulk "Change shipping options" action reach V4 with their services.
 	 */
 	public function test_bulk_options_reach_v4(): void {

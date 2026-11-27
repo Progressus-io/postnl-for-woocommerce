@@ -70,9 +70,19 @@ class Extend_Block_Core {
 
 	/**
 	 * Validate address in cart.
-	 * Only shows validation error for NL addresses.
+	 * Only shows validation error for NL addresses shipped with PostNL.
+	 *
+	 * @param \WP_Error $errors Cart errors collected by the Store API.
+	 * @param \WC_Cart  $cart   Cart object.
+	 *
+	 * @return void
 	 */
 	public function postnl_validate_address_in_cart( $errors, $cart ) {
+		if ( Utils::is_local_pickup_chosen() ) {
+			WC()->session->__unset( POSTNL_SETTINGS_ID . '_invalid_address_marker' );
+			return;
+		}
+
 		// Only validate NL addresses
 		$shipping_country = WC()->customer ? WC()->customer->get_shipping_country() : '';
 		if ( 'NL' !== $shipping_country ) {

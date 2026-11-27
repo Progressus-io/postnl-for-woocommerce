@@ -470,6 +470,25 @@ class Smart_Returns_ServiceTest extends UnitTestCase {
 	}
 
 	/**
+	 * @testdox A BE store without a house number addition still sends the Smart Return.
+	 */
+	public function test_be_store_without_house_number_addition_is_sent(): void {
+		$http                   = new Smart_Returns_Succeeding_Http_Client(
+			array( self::response_item( array( self::label( 'PNG-BYTES' ) ) ) )
+		);
+		$service                = $this->service( $http );
+		$service->item_info     = new Fake_Smart_Returns_Item_Info( 'BE', 'BE', true );
+		$service->home_settings = new Smart_Returns_Home_Address_Settings( array( 'noext' => '' ) );
+
+		$this->assertSame( 'v4', $service->generate( $this->order( 'BE' ) )['api_version'] );
+
+		$receiver = json_decode( (string) $http->last_request->getBody(), true )['receiver']['address'];
+
+		$this->assertSame( '1', $receiver['houseNumber'] );
+		$this->assertArrayNotHasKey( 'houseNumberAddition', $receiver );
+	}
+
+	/**
 	 * Consumer countries an NL store ships Smart Returns to.
 	 *
 	 * @return array<string, array{0:string}>

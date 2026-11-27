@@ -197,6 +197,71 @@ class SmartReturnsBelgiumTest extends IntegrationTestCase {
 	}
 
 	/**
+	 * @testdox With Smart Return off, the BE button stays hidden even when Smart Returns run on V4.
+	 */
+	public function test_be_button_needs_smart_return_enabled(): void {
+		$this->require_sdk();
+		add_filter( 'postnl_sdk_enable_smart_returns', '__return_true' );
+		Settings::get_instance()->settings['activate_smart_return'] = 'no';
+
+		$this->assertStringNotContainsString( 'button-send-smart-return', $this->button_html( 'BE' ) );
+	}
+
+	/**
+	 * @testdox Saving a BE store's settings with Smart Returns on V4 keeps the hidden reply number values.
+	 */
+	public function test_saving_be_settings_on_v4_keeps_hidden_values(): void {
+		$this->require_sdk();
+		add_filter( 'postnl_sdk_enable_smart_returns', '__return_true' );
+		update_option( 'woocommerce_default_country', 'BE' );
+
+		$option = 'woocommerce_' . POSTNL_SETTINGS_ID . '_settings';
+		$stored = get_option( $option );
+		update_option(
+			$option,
+			array_merge(
+				is_array( $stored ) ? $stored : array(),
+				array(
+					'return_address_or_reply_no' => 'no',
+					'freepost_zip'               => '9999ZZ',
+					'freepost_city'              => 'Freepost City',
+				)
+			)
+		);
+
+		$method = new class() extends PostNL {
+			/**
+			 * Run only the WooCommerce settings save, without the key validation call.
+			 */
+			public function save_form(): void {
+				\WC_Shipping_Method::process_admin_options();
+			}
+		};
+		remove_filter( 'woocommerce_shipping_instance_form_fields_' . $method->id, array( $method, 'instance_form_fields' ), 10 );
+		remove_action( 'woocommerce_update_options_shipping_' . $method->id, array( $method, 'process_admin_options' ) );
+		remove_action( 'admin_enqueue_scripts', array( $method, 'enqueue_shipping_method_assets' ) );
+
+		$this->assertArrayNotHasKey( 'freepost_zip', $method->get_form_fields() );
+
+		$_POST = array( $method->get_field_key( 'return_address_street' ) => 'Meir' );
+		$method->save_form();
+		$_POST = array();
+
+		$saved = get_option( $option );
+
+		if ( false === $stored ) {
+			delete_option( $option );
+		} else {
+			update_option( $option, $stored );
+		}
+
+		$this->assertSame( 'Meir', $saved['return_address_street'] );
+		$this->assertSame( 'no', $saved['return_address_or_reply_no'] );
+		$this->assertSame( '9999ZZ', $saved['freepost_zip'] );
+		$this->assertSame( 'Freepost City', $saved['freepost_city'] );
+	}
+
+	/**
 	 * @testdox uses_v4_for() reports the per-flow V4 routing.
 	 */
 	public function test_uses_v4_for_reports_the_flow(): void {

@@ -121,6 +121,7 @@ class LocalPickupDisconnectTest extends IntegrationTestCase {
 		unset( $_REQUEST['post_data'], $_POST['nonce'], $_POST['data'] );
 
 		WC()->session->set( 'chosen_shipping_methods', $this->orig_checkout['chosen'] );
+		WC()->session->__unset( POSTNL_SETTINGS_ID . '_invalid_address_marker' );
 		WC()->customer->set_shipping_country( $this->orig_checkout['country'] );
 		WC()->customer->set_shipping_postcode( $this->orig_checkout['postcode'] );
 		WC()->customer->set_shipping_address_1( $this->orig_checkout['address_1'] );
@@ -330,6 +331,37 @@ class LocalPickupDisconnectTest extends IntegrationTestCase {
 		$this->assertSame( 0, $this->api_calls );
 		$this->assertTrue( $response['success'] );
 		$this->assertFalse( $response['data']['show_container'] );
+	}
+
+	/**
+	 * Rate chosen at checkout and whether the invalid address error must block it.
+	 *
+	 * @return array
+	 */
+	public static function invalid_address_marker_provider(): array {
+		return array(
+			'Local pickup' => array( 'pickup_location:0', false ),
+			'PostNL rate'  => array( 'flat_rate:1', true ),
+		);
+	}
+
+	/**
+	 * @testdox A rejected NL delivery address blocks only PostNL rates at checkout.
+	 *
+	 * @dataProvider invalid_address_marker_provider
+	 *
+	 * @param string $rate         Chosen shipping rate.
+	 * @param bool   $expect_error Whether the cart must report the invalid address.
+	 */
+	public function test_invalid_address_marker_blocks_only_postnl_rates( string $rate, bool $expect_error ): void {
+		WC()->session->set( 'chosen_shipping_methods', array( $rate ) );
+		WC()->session->set( POSTNL_SETTINGS_ID . '_invalid_address_marker', true );
+		WC()->customer->set_shipping_country( 'NL' );
+
+		$errors = new \WP_Error();
+		$this->make_blocks_handler()->postnl_validate_address_in_cart( $errors, WC()->cart );
+
+		$this->assertSame( $expect_error, $errors->has_errors() );
 	}
 
 	/**

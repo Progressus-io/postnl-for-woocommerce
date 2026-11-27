@@ -461,6 +461,7 @@ class Extend_Block_Core {
 		// Check if required fields are present
 		if (
 			empty( $sanitized_data['shipping_postcode'] )
+			|| ! Address_Utils::is_postcode_complete( $shipping_country, $sanitized_data['shipping_postcode'] )
 			||
 			(
 				$this->settings->is_reorder_nl_address_enabled()
@@ -557,11 +558,15 @@ class Extend_Block_Core {
 		// Proceed to fetch delivery and dropoff options
 		$order_data = $sanitized_data;
 
-		$delivery_day     = new Delivery_Day();
-		$dropoff          = new Dropoff_Points();
-		$checkout_data    = $container->get_checkout_data( $order_data );
-		$delivery_options = $delivery_day->get_content_data( $checkout_data['response'], $checkout_data['post_data'] );
-		$dropoff_options  = $dropoff->get_content_data( $checkout_data['response'], $checkout_data['post_data'] );
+		try {
+			$delivery_day     = new Delivery_Day();
+			$dropoff          = new Dropoff_Points();
+			$checkout_data    = $container->get_checkout_data( $order_data );
+			$delivery_options = $delivery_day->get_content_data( $checkout_data['response'], $checkout_data['post_data'] );
+			$dropoff_options  = $dropoff->get_content_data( $checkout_data['response'], $checkout_data['post_data'] );
+		} catch ( \Exception $e ) {
+			$this->send_delivery_options_failure( $validated_address, $e );
+		}
 
 		$is_free_shipping = Utils::is_free_shipping_applied();
 
@@ -648,19 +653,29 @@ class Extend_Block_Core {
 			wp_die();
 
 		} catch ( \Exception $e ) {
-			// If fetching delivery options fails.
-			Utils::clear_postnl_checkout_session();
-			wp_send_json_success(
-				array(
-					'message'           => 'Failed to fetch delivery options.',
-					'show_container'    => false,
-					'validated_address' => $validated_address,
-					'delivery_options'  => array(),
-					'dropoff_options'   => array(),
-				),
-				200
-			);
-			wp_die();
+			$this->send_delivery_options_failure( $validated_address, $e );
 		}
+	}
+
+	/**
+	 * Log the failed lookup and send the empty delivery options response.
+	 *
+	 * @param array|null $validated_address Validated address from the session.
+	 * @param \Exception $exception         Exception thrown by the lookup.
+	 */
+	private function send_delivery_options_failure( $validated_address, \Exception $exception ) {
+		Container::log_delivery_options_failure( $exception, 'blocks' );
+		Utils::clear_postnl_checkout_session();
+		wp_send_json_success(
+			array(
+				'message'           => 'Failed to fetch delivery options.',
+				'show_container'    => false,
+				'validated_address' => $validated_address,
+				'delivery_options'  => array(),
+				'dropoff_options'   => array(),
+			),
+			200
+		);
+		wp_die();
 	}
 }

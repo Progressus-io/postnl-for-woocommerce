@@ -487,6 +487,90 @@ class Utils {
 	}
 
 	/**
+	 * Get the WooCommerce Local pickup method IDs.
+	 *
+	 * The classic checkout uses local_pickup and the blocks checkout uses
+	 * pickup_location. Neither is ever shipped with PostNL.
+	 *
+	 * @return array
+	 *
+	 * @since 5.9.14
+	 */
+	public static function get_local_pickup_method_ids() {
+		return array( 'local_pickup', 'pickup_location' );
+	}
+
+	/**
+	 * Check whether a shipping method or rate ID is a Local pickup method.
+	 *
+	 * @param string $method_id Method ID, with or without the instance suffix.
+	 *
+	 * @return bool
+	 *
+	 * @since 5.9.14
+	 */
+	public static function is_local_pickup_method( $method_id ) {
+		return in_array( self::get_cart_shipping_method_id( (string) $method_id ), self::get_local_pickup_method_ids(), true );
+	}
+
+	/**
+	 * Check whether every shipping line of an order is Local pickup.
+	 *
+	 * @param \WC_Order|int $order Order object or ID.
+	 *
+	 * @return bool
+	 *
+	 * @since 5.9.14
+	 */
+	public static function is_local_pickup_order( $order ) {
+		if ( is_numeric( $order ) ) {
+			$order = wc_get_order( $order );
+		}
+
+		if ( ! is_a( $order, 'WC_Order' ) ) {
+			return false;
+		}
+
+		$shipping_items = $order->get_shipping_methods();
+
+		if ( empty( $shipping_items ) ) {
+			return false;
+		}
+
+		foreach ( $shipping_items as $shipping_item ) {
+			if ( ! self::is_local_pickup_method( $shipping_item->get_method_id() ) ) {
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	/**
+	 * Check whether Local pickup is the chosen method for every cart package.
+	 *
+	 * @return bool
+	 *
+	 * @since 5.9.14
+	 */
+	public static function is_local_pickup_chosen() {
+		$chosen = ( function_exists( 'WC' ) && WC()->session ) ? (array) WC()->session->get( 'chosen_shipping_methods', array() ) : array();
+		$chosen = array_filter( $chosen );
+
+		if ( empty( $chosen ) ) {
+			return false;
+		}
+
+		foreach ( $chosen as $method ) {
+			if ( ! self::is_local_pickup_method( $method ) ) {
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	/**
 	 * Get barcode range.
 	 *
 	 * @param $barcode_type .
@@ -696,6 +780,10 @@ class Utils {
 		}
 
 		if ( ! is_a( $order, 'WC_Order' ) ) {
+			return false;
+		}
+
+		if ( self::is_local_pickup_order( $order ) ) {
 			return false;
 		}
 

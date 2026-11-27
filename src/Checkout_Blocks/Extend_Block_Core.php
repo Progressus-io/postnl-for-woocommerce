@@ -70,9 +70,19 @@ class Extend_Block_Core {
 
 	/**
 	 * Validate address in cart.
-	 * Only shows validation error for NL addresses.
+	 * Only shows validation error for NL addresses shipped with PostNL.
+	 *
+	 * @param \WP_Error $errors Cart errors collected by the Store API.
+	 * @param \WC_Cart  $cart   Cart object.
+	 *
+	 * @return void
 	 */
 	public function postnl_validate_address_in_cart( $errors, $cart ) {
+		if ( Utils::is_local_pickup_chosen() ) {
+			WC()->session->__unset( POSTNL_SETTINGS_ID . '_invalid_address_marker' );
+			return;
+		}
+
 		// Only validate NL addresses
 		$shipping_country = WC()->customer ? WC()->customer->get_shipping_country() : '';
 		if ( 'NL' !== $shipping_country ) {
@@ -310,6 +320,11 @@ class Extend_Block_Core {
 		// Update billing and shipping house numbers
 		$order->update_meta_data( '_shipping_house_number', $shipping_house_number );
 
+		if ( Utils::is_local_pickup_order( $order ) ) {
+			$order->save_meta_data();
+			return;
+		}
+
 		/**
 		 * Prepare Pickup Data
 		 */
@@ -422,6 +437,20 @@ class Extend_Block_Core {
 			WC()->customer->set_shipping_country( $sanitized_data['shipping_country'] );
 			WC()->customer->set_shipping_address_2( $sanitized_data['shipping_address_2'] ?? '' );
 			WC()->customer->save();
+		}
+
+		if ( Utils::is_local_pickup_chosen() ) {
+			Utils::clear_postnl_checkout_session();
+			wp_send_json_success(
+				array(
+					'message'          => esc_html__( 'No delivery options for Local pickup.', 'postnl-for-woocommerce' ),
+					'show_container'   => false,
+					'delivery_options' => array(),
+					'dropoff_options'  => array(),
+				),
+				200
+			);
+			wp_die();
 		}
 
 		// If not NL, clear session and return

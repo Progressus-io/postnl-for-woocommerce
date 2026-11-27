@@ -366,7 +366,7 @@ abstract class Base {
 	public function save_default_data( $order_id, $posted_data ) {
 		$order = wc_get_order( $order_id );
 
-		if ( ! is_a( $order, 'WC_Order' ) ) {
+		if ( ! is_a( $order, 'WC_Order' ) || Utils::is_local_pickup_order( $order ) ) {
 			return;
 		}
 
@@ -400,7 +400,7 @@ abstract class Base {
 	public function save_data( $order_id, $posted_data ) {
 		$order = wc_get_order( $order_id );
 
-		if ( ! is_a( $order, 'WC_Order' ) ) {
+		if ( ! is_a( $order, 'WC_Order' ) || Utils::is_local_pickup_order( $order ) ) {
 			return;
 		}
 

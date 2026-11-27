@@ -358,7 +358,7 @@ class Service_Factory {
 	public function smart_returns_service(): Smart_Returns_Service_Interface {
 		if ( $this->should_use_v4( 'smart_returns' ) ) {
 			// A service injected via inject_v4_service() wins; otherwise build the real V4
-			// service, which handles the NL retailPrint Smart Return and falls back to the
+			// service, which handles the NL and BE retailPrint Smart Return and falls back to the
 			// legacy pipeline for the rest.
 			if ( isset( $this->v4_services['smart_returns'] ) ) {
 				return $this->v4_services['smart_returns'];
@@ -493,6 +493,21 @@ class Service_Factory {
 	 */
 	private function should_use_v4( string $flow ): bool {
 		return $this->has_v4_key() && static::sdk_available() && Router::sdk_enabled_for( $flow );
+	}
+
+	/**
+	 * Whether a flow runs on V4 for the current configuration.
+	 *
+	 * Lets callers outside the factory, such as the order screen and the settings
+	 * form, offer what only V4 supports without reaching into the routing rules.
+	 *
+	 * @param string $flow Flow identifier, e.g. 'smart_returns'.
+	 * @return bool
+	 *
+	 * @since 6.0.0
+	 */
+	public function uses_v4_for( string $flow ): bool {
+		return $this->should_use_v4( $flow );
 	}
 
 	/**

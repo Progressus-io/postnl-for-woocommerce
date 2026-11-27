@@ -316,17 +316,200 @@ class Smart_Returns_ServiceTest extends UnitTestCase {
 	}
 
 	/**
-	 * @testdox generate() falls back to the legacy pipeline for a non-Dutch order.
+	 * @testdox generate() falls back to the legacy pipeline for a consumer outside NL and BE.
 	 */
-	public function test_generate_falls_back_for_a_non_dutch_order(): void {
+	public function test_generate_falls_back_outside_nl_and_be(): void {
 		$http    = new Smart_Returns_Succeeding_Http_Client( array() );
 		$service = $this->service( $http );
 
-		$result = $service->generate( $this->order( 'BE' ) );
+		$result = $service->generate( $this->order( 'DE' ) );
 
 		$this->assertSame( array( 'legacy-pipeline' => true ), $result );
 		$this->assertSame( 1, $service->legacy_calls );
-		$this->assertNull( $http->last_request, 'A non-Dutch order must never reach the V4 endpoint.' );
+		$this->assertNull( $http->last_request, 'A consumer outside NL and BE must never reach the V4 endpoint.' );
+	}
+
+	/**
+	 * Store and consumer countries of the four V4 Smart Return routes.
+	 *
+	 * @return array<string, array{0:string,1:string}>
+	 */
+	public static function v4_routes(): array {
+		return array(
+			'NL store, NL consumer' => array( 'NL', 'NL' ),
+			'NL store, BE consumer' => array( 'NL', 'BE' ),
+			'BE store, BE consumer' => array( 'BE', 'BE' ),
+			'BE store, NL consumer' => array( 'BE', 'NL' ),
+		);
+	}
+
+	/**
+	 * Send generate() for a route and return the decoded return/generate body.
+	 *
+	 * @param string $store_country    Store country.
+	 * @param string $consumer_country Consumer country.
+	 * @param bool   $reply_number     Whether Item_Info resolved the reply number receiver.
+	 * @return array
+	 */
+	private function route_request( string $store_country, string $consumer_country, bool $reply_number = false ): array {
+		$http               = new Smart_Returns_Succeeding_Http_Client(
+			array( self::response_item( array( self::label( 'PNG-BYTES' ) ) ) )
+		);
+		$service            = $this->service( $http );
+		$service->item_info = new Fake_Smart_Returns_Item_Info( $store_country, $consumer_country, $reply_number );
+
+		$result = $service->generate( $this->order( $consumer_country ) );
+
+		$this->assertSame( 'v4', $result['api_version'] );
+		$this->assertSame( 0, $service->legacy_calls, 'The route must not run the legacy pipeline.' );
+		$this->assertNotNull( $http->last_request, 'The route must reach the V4 endpoint.' );
+
+		return json_decode( (string) $http->last_request->getBody(), true );
+	}
+
+	/**
+	 * @testdox Each NL and BE route runs on V4 with retailPrint, from the consumer to the store.
+	 *
+	 * @dataProvider v4_routes
+	 *
+	 * @param string $store_country    Store country.
+	 * @param string $consumer_country Consumer country.
+	 */
+	public function test_routes_run_on_v4_with_retail_print( string $store_country, string $consumer_country ): void {
+		$body = $this->route_request( $store_country, $consumer_country );
+
+		$this->assertSame( 'retailPrint', $body['labelSettings']['printMethod'] );
+		$this->assertSame( $consumer_country, $body['sender']['address']['countryIso'] );
+		$this->assertSame( $store_country, $body['receiver']['address']['countryIso'] );
+	}
+
+	/**
+	 * @testdox An NL store with "Return to home address" off returns to its business reply number, also from a BE consumer.
+	 *
+	 * @dataProvider nl_store_consumers
+	 *
+	 * @param string $consumer_country Consumer country.
+	 */
+	public function test_nl_store_reply_number_receiver( string $consumer_country ): void {
+		$receiver = $this->route_request( 'NL', $consumer_country, true )['receiver']['address'];
+
+		$this->assertSame( 'Antwoordnummer', $receiver['street'] );
+		$this->assertSame( '12345', $receiver['houseNumber'] );
+		$this->assertSame( '9999ZZ', $receiver['postalCode'] );
+	}
+
+	/**
+	 * @testdox An NL store with "Return to home address" on returns to its home address.
+	 *
+	 * @dataProvider nl_store_consumers
+	 *
+	 * @param string $consumer_country Consumer country.
+	 */
+	public function test_nl_store_home_receiver( string $consumer_country ): void {
+		$receiver = $this->route_request( 'NL', $consumer_country )['receiver']['address'];
+
+		$this->assertSame( 'Siriusdreef', $receiver['street'] );
+		$this->assertSame( '42', $receiver['houseNumber'] );
+	}
+
+	/**
+	 * @testdox A BE store always returns to its home address, never to an empty reply number.
+	 *
+	 * @dataProvider be_store_consumers
+	 *
+	 * @param string $consumer_country Consumer country.
+	 */
+	public function test_be_store_is_forced_to_the_home_receiver( string $consumer_country ): void {
+		$receiver = $this->route_request( 'BE', $consumer_country, true )['receiver']['address'];
+
+		$this->assertSame( 'Meir', $receiver['street'] );
+		$this->assertSame( '1', $receiver['houseNumber'] );
+		$this->assertSame( 'A', $receiver['houseNumberAddition'] );
+		$this->assertSame( '2000', $receiver['postalCode'] );
+		$this->assertSame( 'Antwerpen', $receiver['city'] );
+		$this->assertSame( 'BE', $receiver['countryIso'] );
+	}
+
+	/**
+	 * Home return address parts a BE store must fill in.
+	 *
+	 * @return array<string, array{0:string}>
+	 */
+	public static function required_home_address_parts(): array {
+		return array(
+			'street'       => array( 'street' ),
+			'house number' => array( 'house_no' ),
+			'zipcode'      => array( 'zip' ),
+			'city'         => array( 'city' ),
+		);
+	}
+
+	/**
+	 * @testdox A BE store with an incomplete home return address gets a clear error and nothing is sent to PostNL.
+	 *
+	 * @dataProvider required_home_address_parts
+	 *
+	 * @param string $part Address part left empty.
+	 */
+	public function test_be_store_without_home_address_is_refused( string $part ): void {
+		$http                   = new Smart_Returns_Succeeding_Http_Client(
+			array( self::response_item( array( self::label( 'PNG-BYTES' ) ) ) )
+		);
+		$service                = $this->service( $http );
+		$service->item_info     = new Fake_Smart_Returns_Item_Info( 'BE', 'BE', true );
+		$service->home_settings = new Smart_Returns_Home_Address_Settings( array( $part => ' ' ) );
+
+		try {
+			$service->generate( $this->order( 'BE' ) );
+			$this->fail( 'An incomplete home return address must throw.' );
+		} catch ( \Exception $exception ) {
+			$this->assertStringContainsString( 'Fill in the street, house number, zipcode and city', $exception->getMessage() );
+		}
+
+		$this->assertNull( $http->last_request, 'Nothing may be sent to PostNL.' );
+	}
+
+	/**
+	 * @testdox A BE store without a house number addition still sends the Smart Return.
+	 */
+	public function test_be_store_without_house_number_addition_is_sent(): void {
+		$http                   = new Smart_Returns_Succeeding_Http_Client(
+			array( self::response_item( array( self::label( 'PNG-BYTES' ) ) ) )
+		);
+		$service                = $this->service( $http );
+		$service->item_info     = new Fake_Smart_Returns_Item_Info( 'BE', 'BE', true );
+		$service->home_settings = new Smart_Returns_Home_Address_Settings( array( 'noext' => '' ) );
+
+		$this->assertSame( 'v4', $service->generate( $this->order( 'BE' ) )['api_version'] );
+
+		$receiver = json_decode( (string) $http->last_request->getBody(), true )['receiver']['address'];
+
+		$this->assertSame( '1', $receiver['houseNumber'] );
+		$this->assertArrayNotHasKey( 'houseNumberAddition', $receiver );
+	}
+
+	/**
+	 * Consumer countries an NL store ships Smart Returns to.
+	 *
+	 * @return array<string, array{0:string}>
+	 */
+	public static function nl_store_consumers(): array {
+		return array(
+			'NL consumer' => array( 'NL' ),
+			'BE consumer' => array( 'BE' ),
+		);
+	}
+
+	/**
+	 * Consumer countries a BE store ships Smart Returns to.
+	 *
+	 * @return array<string, array{0:string}>
+	 */
+	public static function be_store_consumers(): array {
+		return array(
+			'BE consumer' => array( 'BE' ),
+			'NL consumer' => array( 'NL' ),
+		);
 	}
 
 	/**
@@ -670,8 +853,31 @@ class Testable_Smart_Returns_Service extends Smart_Returns_Service {
 	protected function item_info( \WC_Order $order ): Item_Info {
 		unset( $order );
 
-		return new Fake_Smart_Returns_Item_Info();
+		return $this->item_info ?? new Fake_Smart_Returns_Item_Info();
 	}
+
+	/**
+	 * Item info to hand to generate(), or null for the default NL route.
+	 *
+	 * @var Item_Info|null
+	 */
+	public $item_info = null;
+
+	/**
+	 * Answer the home return address without WooCommerce.
+	 *
+	 * @return Settings
+	 */
+	protected function settings(): Settings {
+		return $this->home_settings ?? new Smart_Returns_Home_Address_Settings();
+	}
+
+	/**
+	 * Settings double to answer the home return address, or null for the default one.
+	 *
+	 * @var Settings|null
+	 */
+	public $home_settings = null;
 }
 
 /**
@@ -680,27 +886,99 @@ class Testable_Smart_Returns_Service extends Smart_Returns_Service {
  */
 class Fake_Smart_Returns_Item_Info extends Item_Info {
 
-	// phpcs:ignore Generic.CodeAnalysis.UselessOverridingMethod.Found -- Deliberately skips the WooCommerce-bound parent constructor.
-	public function __construct() {
+	/**
+	 * Set the parsed customer and store as Item_Info would for the given route.
+	 *
+	 * @param string $store_country    Store (return receiver) country.
+	 * @param string $consumer_country Consumer (return sender) country.
+	 * @param bool   $reply_number     Whether "Return to home address" is off, so Item_Info sends the reply number.
+	 */
+	public function __construct( string $store_country = 'NL', string $consumer_country = 'NL', bool $reply_number = false ) {
 		$this->customer = array(
 			'company'                    => '',
 			'address_1'                  => 'Main Street',
 			'address_2'                  => 'B',
 			'house_number'               => '9',
-			'city'                       => 'Amsterdam',
-			'country'                    => 'NL',
-			'postcode'                   => '1234AB',
-			'return_address_1'           => 'Siriusdreef',
-			'return_address_2'           => '42',
+			'city'                       => 'BE' === $consumer_country ? 'Antwerpen' : 'Amsterdam',
+			'country'                    => $consumer_country,
+			'postcode'                   => 'BE' === $consumer_country ? '2060' : '1234AB',
+			'return_address_1'           => $reply_number ? 'Antwoordnummer' : 'Siriusdreef',
+			'return_address_2'           => $reply_number ? ( 'NL' === $store_country ? '12345' : '' ) : '42',
 			'return_address_house_noext' => '',
-			'return_address_city'        => 'Hoofddorp',
-			'return_address_zip'         => '2132WT',
+			'return_address_city'        => $reply_number ? 'Freepost City' : 'Hoofddorp',
+			'return_address_zip'         => $reply_number ? '9999ZZ' : '2132WT',
 		);
 		$this->store    = array(
 			'company' => 'My Shop',
-			'country' => 'NL',
+			'country' => $store_country,
 			'email'   => 'shop@example.com',
 		);
+	}
+}
+
+/**
+ * Settings double that answers the merchant home return address.
+ */
+class Smart_Returns_Home_Address_Settings extends Settings {
+
+	/**
+	 * Home return address the getters answer.
+	 *
+	 * @var array<string, string>
+	 */
+	private $address;
+
+	/**
+	 * Skip the real constructor, which needs WooCommerce.
+	 *
+	 * @param array<string, string> $overrides Address parts to replace.
+	 */
+	public function __construct( array $overrides = array() ) {
+		$this->address = array_merge(
+			array(
+				'street'   => 'Meir',
+				'house_no' => '1',
+				'noext'    => 'A',
+				'city'     => 'Antwerpen',
+				'zip'      => '2000',
+			),
+			$overrides
+		);
+	}
+
+	/**
+	 * @return string
+	 */
+	public function get_return_address_street() {
+		return $this->address['street'];
+	}
+
+	/**
+	 * @return string
+	 */
+	public function get_return_address_house_no() {
+		return $this->address['house_no'];
+	}
+
+	/**
+	 * @return string
+	 */
+	public function get_return_address_house_noext() {
+		return $this->address['noext'];
+	}
+
+	/**
+	 * @return string
+	 */
+	public function get_return_city() {
+		return $this->address['city'];
+	}
+
+	/**
+	 * @return string
+	 */
+	public function get_return_zipcode() {
+		return $this->address['zip'];
 	}
 }
 

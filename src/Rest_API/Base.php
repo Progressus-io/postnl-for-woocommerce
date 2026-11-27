@@ -84,6 +84,13 @@ class Base {
 	public $is_sandbox;
 
 	/**
+	 * Whether a response with an HTTP status of 400 or higher throws.
+	 *
+	 * @var bool
+	 */
+	protected $throw_on_http_error = false;
+
+	/**
 	 * Class constructor.
 	 *
 	 * @param Item_Info $item_info Set of Item_Info.
@@ -231,7 +238,7 @@ class Base {
 
 		$this->logger->write( sprintf( 'Begin send request to %1$s', $api_url ) );
 		$this->logger->write( 'API Request:' );
-		$this->logger->write( $request_args );
+		$this->logger->write( $this->mask_request_args( $request_args ) );
 
 		for ( $i = 1; $i <= 5; $i++ ) {
 			$response = wp_remote_request( $api_url, $request_args );
@@ -258,7 +265,49 @@ class Base {
 
 		$this->check_response_error( $body_response );
 
+		if ( $this->throw_on_http_error ) {
+			$this->check_response_status( $response, $body_response );
+		}
+
 		return json_decode( $body_response, true );
+	}
+
+	/**
+	 * Copy of the request arguments with the API key masked, for the debug log.
+	 *
+	 * @param array $request_args Request arguments.
+	 *
+	 * @return array
+	 */
+	protected function mask_request_args( $request_args ) {
+		if ( ! empty( $request_args['headers']['apikey'] ) ) {
+			$request_args['headers']['apikey'] = '[redacted]';
+		}
+
+		return $request_args;
+	}
+
+	/**
+	 * Throw when the HTTP status is 400 or higher.
+	 *
+	 * @param array  $response      Response from wp_remote_request().
+	 * @param string $body_response Response body.
+	 *
+	 * @throws \Exception With the body's message, or the HTTP reason when there is none, and the status as code.
+	 */
+	protected function check_response_status( $response, $body_response ) {
+		$status = (int) wp_remote_retrieve_response_code( $response );
+
+		if ( 400 > $status ) {
+			return;
+		}
+
+		$body    = json_decode( $body_response, true );
+		$message = ( is_array( $body ) && ! empty( $body['message'] ) && is_string( $body['message'] ) )
+			? $body['message']
+			: wp_remote_retrieve_response_message( $response );
+
+		throw new \Exception( $message, $status );
 	}
 
 	/**

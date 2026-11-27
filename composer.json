@@ -4,7 +4,8 @@
 	"type": "wordpress-plugin",
 	"require": {
 		"php": ">=7.4",
-		"clegginabox/pdf-merger": "dev-master"
+		"clegginabox/pdf-merger": "dev-master",
+		"setasign/fpdi": "^2.6.10"
 	},
 	"autoload": {
 		"psr-4": {

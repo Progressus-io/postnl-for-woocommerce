@@ -9,6 +9,7 @@ declare( strict_types = 1 );
 
 namespace PostNLWooCommerce\Tests\Integration;
 
+use PostNLWooCommerce\Shipping_Method\PostNL;
 use PostNLWooCommerce\Shipping_Method\Settings;
 use PostNLWooCommerce\Tests\IntegrationTestCase;
 
@@ -65,6 +66,57 @@ class DefaultPickupShippingOptionTest extends IntegrationTestCase {
 	}
 
 	/**
+	 * Preselect Standard Shipping on the settings screen, which reads the field default.
+	 *
+	 * @testdox A fresh install preselects Standard Shipping on the settings screen.
+	 */
+	public function test_fresh_install_settings_screen_preselects_standard_shipping(): void {
+		delete_option( Settings::get_instance()->get_option_key() );
+
+		$method = new PostNL();
+		$html   = $method->generate_settings_html( $method->get_form_fields(), false );
+
+		$this->assertSame( '', $method->get_option( self::FIELD ) );
+		$this->assertMatchesRegularExpression( '/<option value=""\s+selected=\'selected\'/', $html );
+	}
+
+	/**
+	 * Store Standard Shipping when the merchant saves the settings screen as rendered.
+	 *
+	 * @testdox Saving an untouched settings screen on a fresh install stores Standard Shipping.
+	 */
+	public function test_fresh_install_untouched_save_stores_standard_shipping(): void {
+		$settings = Settings::get_instance();
+		delete_option( $settings->get_option_key() );
+
+		$method = new PostNL();
+		$key    = $method->get_field_key( self::FIELD );
+
+		$_POST[ $key ] = $method->get_option( self::FIELD );
+		$method->process_admin_options();
+		unset( $_POST[ $key ] );
+
+		$stored = get_option( $settings->get_option_key() );
+		$this->assertSame( '', $stored[ self::FIELD ] );
+	}
+
+	/**
+	 * Fall back to Standard Shipping when saved settings predate the field.
+	 *
+	 * @testdox Saved settings without the pickup key resolve to Standard Shipping everywhere.
+	 */
+	public function test_saved_settings_without_the_key_resolve_to_standard_shipping(): void {
+		$settings = Settings::get_instance();
+
+		update_option( $settings->get_option_key(), array( 'enable_logging' => 'no' ) );
+		$settings->init_settings();
+
+		$this->assertSame( '', $settings->get_country_option( self::FIELD ) );
+		$this->assertSame( '', ( new PostNL() )->get_option( self::FIELD ) );
+		$this->assertArrayNotHasKey( self::FIELD, get_option( $settings->get_option_key() ), 'The stored option must not be rewritten' );
+	}
+
+	/**
 	 * Saved values and the options each must still resolve to.
 	 *
 	 * @return array
@@ -98,6 +150,7 @@ class DefaultPickupShippingOptionTest extends IntegrationTestCase {
 
 		$stored = get_option( $settings->get_option_key() );
 		$this->assertSame( $saved, $stored[ self::FIELD ], 'The stored option must not be rewritten' );
+		$this->assertSame( $saved, ( new PostNL() )->get_option( self::FIELD ), 'The settings screen must show the saved value' );
 	}
 
 	/**

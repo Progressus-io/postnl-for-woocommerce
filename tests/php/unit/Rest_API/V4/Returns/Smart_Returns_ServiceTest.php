@@ -495,6 +495,67 @@ class Smart_Returns_ServiceTest extends UnitTestCase {
 	}
 
 	/**
+	 * @testdox A png PrintcodeLabel after a pdf one is emailed instead of rejecting the response.
+	 */
+	public function test_png_printcode_after_a_pdf_printcode_is_emailed(): void {
+		$service = $this->service(
+			new Smart_Returns_Succeeding_Http_Client(
+				array(
+					self::response_item(
+						array(
+							self::label( '%PDF-1.4', 'pdf', 'PrintcodeLabel' ),
+							self::label( 'PRINTCODE-BYTES', 'png', 'PrintcodeLabel' ),
+						)
+					),
+				)
+			)
+		);
+
+		$this->assertSame( 'PRINTCODE-BYTES', $service->generate( $this->order() )['content'] );
+	}
+
+	/**
+	 * Responses with no label content, with the label list the log must name.
+	 *
+	 * @return array<string, array{0:array,1:string}>
+	 */
+	public static function responses_without_content(): array {
+		return array(
+			'no labels'         => array( array(), 'none' ),
+			'only empty labels' => array(
+				array( self::label( '', 'png', 'PrintcodeLabel' ), self::label( '', 'png', 'Label' ) ),
+				'PrintcodeLabel/png (empty), Label/png (empty)',
+			),
+		);
+	}
+
+	/**
+	 * @testdox A response with no label content throws "content is missing" and logs the labels that came back.
+	 *
+	 * @dataProvider responses_without_content
+	 *
+	 * @param array  $labels   Labels in the response.
+	 * @param string $returned Label list the log entry must contain.
+	 */
+	public function test_response_without_content_throws_content_missing( array $labels, string $returned ): void {
+		$logger  = new Smart_Returns_Spy_Logger();
+		$service = $this->service(
+			new Smart_Returns_Succeeding_Http_Client( array( self::response_item( $labels ) ) ),
+			$logger
+		);
+
+		try {
+			$service->generate( $this->order() );
+			$this->fail( 'A response without label content must throw.' );
+		} catch ( \Exception $exception ) {
+			$this->assertStringContainsString( 'Printcode content is missing', $exception->getMessage() );
+		}
+
+		$this->assertCount( 1, $logger->records );
+		$this->assertStringContainsString( 'returned label(s): ' . $returned . '.', $logger->records[0]['message'] );
+	}
+
+	/**
 	 * @testdox A response without a barcode number logs a warning and returns an empty barcode.
 	 */
 	public function test_missing_barcode_warns(): void {

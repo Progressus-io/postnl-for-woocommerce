@@ -27,6 +27,20 @@ class PostNL extends \WC_Shipping_Flat_Rate {
 	const MERCHANT_CODES_OPTION = 'postnl_merchant_codes';
 
 	/**
+	 * Object whose instance fields filter and script enqueue are registered.
+	 *
+	 * @var PostNL|null
+	 */
+	private static $shared_hooks_owner = null;
+
+	/**
+	 * Settings level object whose save action is registered.
+	 *
+	 * @var PostNL|null
+	 */
+	private static $save_hook_owner = null;
+
+	/**
 	 * Init and hook in the integration.
 	 *
 	 * @param int $instance_id Instance ID.
@@ -55,10 +69,37 @@ class PostNL extends \WC_Shipping_Flat_Rate {
 		$this->init();
 		$this->init_form_fields();
 		$this->init_settings();
+		$this->register_hooks();
+	}
 
-		add_filter( 'woocommerce_shipping_instance_form_fields_' . $this->id, array( $this, 'instance_form_fields' ), 10, 1 );
-		add_action( 'woocommerce_update_options_shipping_' . $this->id, array( $this, 'process_admin_options' ) );
-		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_shipping_method_assets' ) );
+	/**
+	 * Register the hooks once, however many shipping method objects are created.
+	 *
+	 * The instance fields filter and the script enqueue give the same result on
+	 * any object, so the first object registers them. Only the settings level
+	 * object (instance ID 0) saves the plugin settings, so the save action is
+	 * registered by the first object of that kind.
+	 *
+	 * @return void
+	 */
+	protected function register_hooks() {
+		$fields_hook = 'woocommerce_shipping_instance_form_fields_' . $this->id;
+		$save_hook   = 'woocommerce_update_options_shipping_' . $this->id;
+
+		if ( null === self::$shared_hooks_owner || false === has_filter( $fields_hook, array( self::$shared_hooks_owner, 'instance_form_fields' ) ) ) {
+			add_filter( $fields_hook, array( $this, 'instance_form_fields' ), 10, 1 );
+			add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_shipping_method_assets' ) );
+			self::$shared_hooks_owner = $this;
+		}
+
+		if ( 0 !== $this->instance_id ) {
+			return;
+		}
+
+		if ( null === self::$save_hook_owner || false === has_action( $save_hook, array( self::$save_hook_owner, 'process_admin_options' ) ) ) {
+			add_action( $save_hook, array( $this, 'process_admin_options' ) );
+			self::$save_hook_owner = $this;
+		}
 	}
 
 	/**

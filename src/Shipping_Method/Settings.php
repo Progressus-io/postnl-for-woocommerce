@@ -40,6 +40,13 @@ class Settings extends \WC_Settings_API {
 	const MERCHANT_CODES_OPTION = 'postnl_merchant_codes';
 
 	/**
+	 * Setting field keys per base country and stored legacy keys, kept for the request.
+	 *
+	 * @var array
+	 */
+	private $country_field_keys = array();
+
+	/**
 	 * Gets an instance of the settings.
 	 *
 	 * @return Settings
@@ -850,10 +857,39 @@ class Settings extends \WC_Settings_API {
 	 * @return String
 	 */
 	public function get_country_option( $field, $default_value = '' ) {
-		$base_country   = Utils::get_base_country();
-		$fields_country = array_keys( $this->filter_setting_fields( $base_country, false ) );
+		return in_array( $field, $this->get_country_field_keys(), true ) ? $this->get_option( $field, $default_value ) : '';
+	}
 
-		return in_array( $field, $fields_country, true ) ? $this->get_option( $field, $default_value ) : '';
+	/**
+	 * Get the setting field keys that apply to the base country.
+	 *
+	 * The list also depends on whether a legacy API key is stored, because
+	 * get_setting_fields() drops the legacy key fields when they are empty.
+	 *
+	 * @return array
+	 */
+	protected function get_country_field_keys() {
+		$base_country = Utils::get_base_country();
+		$cache_key    = $base_country
+			. '|' . (int) ( '' !== trim( (string) $this->get_option( 'api_keys' ) ) )
+			. '|' . (int) ( '' !== trim( (string) $this->get_option( 'api_keys_sandbox' ) ) );
+
+		if ( ! isset( $this->country_field_keys[ $cache_key ] ) ) {
+			$this->country_field_keys[ $cache_key ] = array_keys( $this->filter_setting_fields( $base_country, false ) );
+		}
+
+		return $this->country_field_keys[ $cache_key ];
+	}
+
+	/**
+	 * Load the settings and drop the cached field keys.
+	 *
+	 * @return void
+	 */
+	public function init_settings() {
+		$this->country_field_keys = array();
+
+		parent::init_settings();
 	}
 
 	/**
